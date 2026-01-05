@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
 import {
@@ -111,7 +112,9 @@ export default function WeeklyHubReportButtonAndForm({
         </DialogTrigger>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="text-xl font-semibold leading-7">Weekly team meeting</DialogHeader>
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold leading-7">Weekly team meeting</DialogTitle>
+        </DialogHeader>
         <Separator />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

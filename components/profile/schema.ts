@@ -29,7 +29,7 @@ const bankRoles = [
 export const ProfileSchema = z
   .object({
     name: stringValidation("Name is required"),
-    email: z.string().email("Invalid email address"),
+    email: z.email("Invalid email address"),
     idNumber: stringValidation("Please enter your ID number"),
     cellNumber: z
       .string()
@@ -46,14 +46,18 @@ export const ProfileSchema = z
     bankAccountNumber: z.string().optional(),
     bankAccountName: z.string().optional(),
     kra: z.string().optional(),
-    role: z.nativeEnum(ImplementerRole),
+    role: z.enum(ImplementerRole),
   })
   .superRefine((data, ctx) => {
     if (data.role === ImplementerRole.FELLOW) {
       const mpesaResult = mpesaFieldsSchema.safeParse(data);
       if (!mpesaResult.success) {
         mpesaResult.error.issues.forEach((issue) => {
-          ctx.addIssue(issue);
+          ctx.addIssue({
+            code: "custom",
+            message: issue.message,
+            path: issue.path,
+          });
         });
       }
     }
@@ -62,7 +66,11 @@ export const ProfileSchema = z
       const bankResult = bankFieldsSchema.safeParse(data);
       if (!bankResult.success) {
         bankResult.error.issues.forEach((issue) => {
-          ctx.addIssue(issue);
+          ctx.addIssue({
+            code: "custom",
+            message: issue.message,
+            path: issue.path,
+          });
         });
       }
     }

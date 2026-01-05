@@ -14,7 +14,7 @@ export default async function SupervisorSchedulePage() {
   }
 
   const [schools, schoolStats, supervisors, fellowRatings, hubSessionTypes] = await Promise.all([
-    await fetchSchoolData(supervisor?.hubId as string),
+    await fetchSchoolData(supervisor?.profile.hubId as string),
     await db.$queryRaw<
       {
         session_count: number;
@@ -36,12 +36,12 @@ export default async function SupervisorSchedulePage() {
         students c ON sch.id = c.school_id AND c.is_clinical_case=TRUE
     LEFT JOIN 
         fellows f ON h.id = f.hub_id
-        WHERE h.id=${supervisor?.hubId}
+        WHERE h.id=${supervisor?.profile.hubId}
     GROUP BY 
         h.id, h.hub_name`,
     await db.supervisor.findMany({
       where: {
-        hubId: supervisor?.hubId as string,
+        hubId: supervisor?.profile.hubId as string,
       },
       include: {
         supervisorAttendances: {
@@ -69,11 +69,11 @@ export default async function SupervisorSchedulePage() {
     FROM
     fellows fel
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${supervisor?.hubId}
+    WHERE fel.hub_id=${supervisor?.profile.hubId}
     GROUP BY fel.id`,
     await db.sessionName.findMany({
       where: {
-        hubId: supervisor?.hubId as string,
+        hubId: supervisor?.profile.hubId as string,
       },
     }),
   ]);
@@ -99,13 +99,16 @@ export default async function SupervisorSchedulePage() {
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
         <ScheduleCalendar
-          hubId={supervisor?.hubId!}
+          hubId={supervisor?.profile.hubId!}
           aria-label="Session schedule"
           schools={schools}
           supervisors={supervisors}
-          fellowRatings={fellowRatings}
-          role={supervisor?.user.membership.role!}
-          supervisorId={supervisor?.id}
+          fellowRatings={fellowRatings.map((rating) => ({
+            ...rating,
+            averageRating: Number(rating.averageRating),
+          }))}
+          role={supervisor?.session.user.activeMembership?.role!}
+          supervisorId={supervisor?.profile.id}
           hubSessionTypes={hubSessionTypes}
         />
       </div>

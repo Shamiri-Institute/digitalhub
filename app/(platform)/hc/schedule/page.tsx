@@ -1,6 +1,6 @@
 import { signOut } from "next-auth/react";
 import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
@@ -12,14 +12,12 @@ export default async function HubCoordinatorSchedulePage() {
   if (coordinator === null) {
     await signOut({ callbackUrl: "/login" });
   }
-  if (!coordinator?.assignedHubId) {
+  if (!coordinator?.profile?.assignedHubId) {
     return <div>Hub coordinator has no assigned hub</div>;
   }
 
-  const user = await getCurrentUser();
-
   const values = await Promise.all([
-    await fetchSchoolData(coordinator?.assignedHubId as string),
+    await fetchSchoolData(coordinator?.profile?.assignedHubId as string),
     await db.$queryRaw<
       {
         session_count: number;
@@ -41,12 +39,12 @@ export default async function HubCoordinatorSchedulePage() {
         students c ON sch.id = c.school_id AND c.is_clinical_case=TRUE
     LEFT JOIN 
         fellows f ON h.id = f.hub_id
-        WHERE h.id=${coordinator!.assignedHubId}
+        WHERE h.id=${coordinator?.profile?.assignedHubId}
     GROUP BY 
         h.id, h.hub_name`,
     await db.supervisor.findMany({
       where: {
-        hubId: coordinator?.assignedHubId as string,
+        hubId: coordinator?.profile?.assignedHubId as string,
       },
       include: {
         supervisorAttendances: {
@@ -74,11 +72,11 @@ export default async function HubCoordinatorSchedulePage() {
     FROM
     fellows fel
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${coordinator!.assignedHubId}
+    WHERE fel.hub_id=${coordinator?.profile?.assignedHubId}
     GROUP BY fel.id`,
     await db.sessionName.findMany({
       where: {
-        hubId: coordinator!.assignedHubId as string,
+        hubId: coordinator?.profile?.assignedHubId as string,
       },
     }),
   ]);
@@ -109,12 +107,15 @@ export default async function HubCoordinatorSchedulePage() {
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
         <ScheduleCalendar
-          hubId={coordinator.assignedHubId}
+          hubId={coordinator?.profile?.assignedHubId!}
           aria-label="Session schedule"
           schools={schools}
           supervisors={supervisors}
-          fellowRatings={fellowRatings}
-          role={user?.membership.role!}
+          fellowRatings={fellowRatings.map((rating) => ({
+            ...rating,
+            averageRating: Number(rating.averageRating),
+          }))}
+          role={coordinator?.session.user.activeMembership?.role!}
           hubSessionTypes={hubSessionTypes}
         />
       </div>

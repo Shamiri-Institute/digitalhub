@@ -1,7 +1,6 @@
 import type { ImplementerRole } from "@prisma/client";
 import Link from "next/link";
-import { useContext } from "react";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
+import type { Dispatch, SetStateAction } from "react";
 import type { SchoolsTableData } from "#/components/common/schools/columns";
 import { Icons } from "#/components/icons";
 import {
@@ -16,21 +15,27 @@ import {
 export default function SchoolTableDropdown({
   schoolRow,
   role,
+  state,
 }: {
   schoolRow: SchoolsTableData;
   role: ImplementerRole;
+  state: {
+    editDialog: boolean;
+    setEditDialog: Dispatch<SetStateAction<boolean>>;
+    pointSupervisorDialog: boolean;
+    setPointSupervisorDialog: Dispatch<SetStateAction<boolean>>;
+    schoolDropOutDialog: boolean;
+    setSchoolDropOutDialog: Dispatch<SetStateAction<boolean>>;
+    undoDropOutDialog: boolean;
+    setUndoDropOutDialog: Dispatch<SetStateAction<boolean>>;
+    school: SchoolsTableData | null;
+    setSchool: Dispatch<SetStateAction<SchoolsTableData | null>>;
+  };
 }) {
-  const context = useContext(SchoolInfoContext);
   return (
-    <DropdownMenu
-      onOpenChange={(value) => {
-        if (value) {
-          context.setSchool(schoolRow);
-        }
-      }}
-    >
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
+        <div className="absolute inset-0 border-l">
           <div className="flex h-full w-full items-center justify-center">
             <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
           </div>
@@ -55,70 +60,80 @@ export default function SchoolTableDropdown({
                   ? `/sc/schools/${schoolRow.visibleId}/fellows`
                   : role === "FELLOW"
                     ? `/fel/schools/${schoolRow.visibleId}/group`
-                    : "#"
+                    : role === "ADMIN"
+                      ? `/admin/schools/${schoolRow.visibleId}/supervisors`
+                      : "#"
             }
           >
             View school
           </Link>
         </DropdownMenuItem>
         {role === "HUB_COORDINATOR" || role === "SUPERVISOR" ? (
-          !schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
-            <div>
-              <DropdownMenuItem
-                onClick={() => {
-                  context.setEditDialog(true);
-                }}
-              >
-                Edit school information
-              </DropdownMenuItem>
-              {role === "HUB_COORDINATOR" && (
+          <>
+            {!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
+              <div>
                 <DropdownMenuItem
                   onClick={() => {
-                    context.setPointSupervisorDialog(true);
+                    state.setSchool(schoolRow);
+                    state.setEditDialog(true);
                   }}
                 >
-                  {context.school?.assignedSupervisorId !== null
-                    ? "Change point supervisor"
-                    : "Assign point supervisor"}
+                  Edit school information
                 </DropdownMenuItem>
-              )}
-              {role === "SUPERVISOR" && (
-                <>
+                {role === "HUB_COORDINATOR" && (
                   <DropdownMenuItem
                     onClick={() => {
-                      // context.setPointSupervisorDialog(true);
+                      state.setSchool(schoolRow);
+                      state.setPointSupervisorDialog(true);
                     }}
                   >
-                    Submit school report
+                    {state.school?.assignedSupervisorId !== null
+                      ? "Change point supervisor"
+                      : "Assign point supervisor"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      // context.setPointSupervisorDialog(true);
-                    }}
-                  >
-                    Submit school feedback
-                  </DropdownMenuItem>
-                </>
-              )}
+                )}
+                {role === "SUPERVISOR" && (
+                  <>
+                    <DropdownMenuItem
+                      disabled={true}
+                      onClick={() => {
+                        // context.setPointSupervisorDialog(true);
+                      }}
+                    >
+                      Submit school report
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={true}
+                      onClick={() => {
+                        // context.setPointSupervisorDialog(true);
+                      }}
+                    >
+                      Submit school feedback
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuItem
+                  className="text-shamiri-red"
+                  onClick={() => {
+                    state.setSchool(schoolRow);
+                    state.setSchoolDropOutDialog(true);
+                  }}
+                >
+                  Dropout school
+                </DropdownMenuItem>
+              </div>
+            ) : (
               <DropdownMenuItem
                 className="text-shamiri-red"
                 onClick={() => {
-                  context.setSchoolDropOutDialog(true);
+                  state.setSchool(schoolRow);
+                  state.setUndoDropOutDialog(true);
                 }}
               >
-                Dropout school
+                Undo dropout
               </DropdownMenuItem>
-            </div>
-          ) : (
-            <DropdownMenuItem
-              className="text-shamiri-red"
-              onClick={() => {
-                context.setUndoDropOutDialog(true);
-              }}
-            >
-              Undo dropout
-            </DropdownMenuItem>
-          )
+            )}
+          </>
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>

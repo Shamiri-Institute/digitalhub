@@ -3,7 +3,12 @@ const { withSentryConfig } = require("@sentry/nextjs");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["lh3.googleusercontent.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+    ],
   },
   env: {
     APP_ENV: process.env.APP_ENV,
@@ -33,6 +38,11 @@ const nextConfig = {
       {
         source: "/ops",
         destination: "/ops/reporting",
+        permanent: false,
+      },
+      {
+        source: "/admin",
+        destination: "/admin/schedule",
         permanent: false,
       },
       {

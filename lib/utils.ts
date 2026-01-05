@@ -98,7 +98,7 @@ export function isSessionScheduled(
 }
 
 export function stringValidation(message: string | undefined = "Required*") {
-  return z.string({ required_error: message }).trim().min(1, { message });
+  return z.string({ error: message }).trim().min(1, { error: message });
 }
 
 export function mapSessionTypeToSessionNumber(sessionType: string): number {

@@ -1,6 +1,7 @@
 import { ImplementerRole, SessionStatus } from "@prisma/client";
 import { addHours, addMinutes, format } from "date-fns";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import type * as React from "react";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
@@ -70,6 +71,7 @@ export function SessionList({
         role={role}
         fellowId={fellowId}
         supervisorId={supervisorId}
+        onHover={true}
       />
       <SessionDetail
         layout="compact"
@@ -80,8 +82,9 @@ export function SessionList({
         role={role}
         fellowId={fellowId}
         supervisorId={supervisorId}
+        onHover={true}
       />
-      <div className="w-full">
+      <div className="w-full overflow-visible">
         {moreSessions.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -89,22 +92,24 @@ export function SessionList({
                 + {moreSessions.length} more
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="flex min-w-48 flex-col gap-2 p-2">
-              {moreSessions.map((session, index) => {
-                return (
-                  <SessionDetail
-                    key={session.id}
-                    layout="compact"
-                    state={{
-                      session: moreSessions[index]!,
-                      ...dialogState,
-                    }}
-                    role={role}
-                    fellowId={fellowId}
-                    supervisorId={supervisorId}
-                  />
-                );
-              })}
+            <DropdownMenuContent className="max-h-[250px] min-w-72 overflow-auto p-2" align="start">
+              <div className="flex flex-col gap-2">
+                {moreSessions.map((session, index) => {
+                  return (
+                    <SessionDetail
+                      key={session.id}
+                      layout="compact"
+                      state={{
+                        session: moreSessions[index]!,
+                        ...dialogState,
+                      }}
+                      role={role}
+                      fellowId={fellowId}
+                      supervisorId={supervisorId}
+                    />
+                  );
+                })}
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -117,6 +122,7 @@ export function SessionDetail({
   state,
   layout,
   withDropdown = true,
+  onHover = false,
   role,
   fellowId,
   supervisorId,
@@ -133,6 +139,7 @@ export function SessionDetail({
   };
   layout: "compact" | "expanded";
   withDropdown?: boolean;
+  onHover?: boolean;
   role: ImplementerRole;
   fellowId?: string;
   supervisorId?: string;
@@ -141,9 +148,6 @@ export function SessionDetail({
     startTimeLabel: "",
     durationLabel: "",
   });
-
-  const searchParams = useSearchParams();
-  const mode = searchParams.get("mode") ?? undefined;
 
   const { session } = state;
 
@@ -171,67 +175,78 @@ export function SessionDetail({
   const renderSessionDetails = () => {
     return (
       <div
-        className={cn(
-          "w-full select-none rounded-[0.25rem] border",
-          {
-            "px-2 py-1": withDropdown,
-            "px-4 py-2": !withDropdown,
-          },
-          {
-            "border-green-border": completed,
-            "border-blue-border": !completed,
-            "border-red-border": cancelled,
-            "border-shamiri-text-dark-grey/30": rescheduled,
-          },
-          {
-            "bg-green-bg": completed,
-            "bg-blue-bg": !completed,
-            "bg-red-bg": cancelled,
-            "bg-shamiri-light-grey/60": rescheduled,
-          },
-        )}
+        className={cn("relative", {
+          "h-[30px]": isCompact,
+          "h-full": isExpanded,
+        })}
       >
+        {" "}
         <div
-          className={cn("font-semibold", {
-            "text-[0.825rem]": withDropdown,
-            "text-base": !withDropdown,
-            "text-green-base": completed,
-            "text-blue-base": !completed,
-            "text-red-base": cancelled,
-            "text-shamiri-text-dark-grey": rescheduled,
-          })}
+          className={cn(
+            "w-full select-none rounded-[0.25rem] border transition-all duration-75 ease-in-out",
+            { "absolute left-0 top-0": isCompact },
+            {
+              "group px-2 py-1 hover:z-50 hover:w-auto hover:drop-shadow-md":
+                withDropdown && onHover && isCompact,
+              "px-2 py-1": withDropdown && !onHover,
+              "px-4 py-2": !withDropdown,
+            },
+            {
+              "border-green-border": completed,
+              "border-blue-border": !completed,
+              "border-red-border": cancelled,
+              "border-shamiri-text-dark-grey/30": rescheduled && !session.occurred,
+            },
+            {
+              "bg-green-bg": completed,
+              "bg-blue-bg": !completed,
+              "bg-red-bg": cancelled,
+              "bg-shamiri-light-grey/60": rescheduled && !session.occurred,
+            },
+          )}
         >
-          <div className="flex items-center gap-1">
-            {completed && !cancelled && (
-              <Icons.checkCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
-            )}
-            {!completed && !cancelled && !rescheduled && (
-              <Icons.helpCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
-            )}
-            {cancelled && <Icons.crossCircleFilled className="h-3.5 w-3.5" />}
-            {rescheduled && <Icons.calendarCheck2 className="h-3.5 w-3.5" strokeWidth={2.5} />}
-            {isExpanded && <div>{sessionDisplayName(session.session?.sessionName)}</div>}
-            {isCompact && (
-              <div className="flex gap-1 truncate">
-                {sessionDisplayName(session.session?.sessionName)} - {timeLabels.startTimeLabel}
-                {(mode === "day" || !withDropdown) && (
-                  <div className="truncate">- {schoolName}</div>
+          <div
+            className={cn("font-semibold", {
+              "text-[0.825rem]": withDropdown,
+              "text-base": !withDropdown,
+              "text-green-base": completed,
+              "text-blue-base": !completed,
+              "text-red-base": cancelled,
+              "text-shamiri-text-dark-grey": rescheduled && !session.occurred,
+            })}
+          >
+            <div className="flex items-center gap-1">
+              {completed && !cancelled && (
+                <Icons.checkCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+              )}
+              {!completed && !cancelled && !rescheduled && (
+                <Icons.helpCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+              )}
+              {cancelled && <Icons.crossCircleFilled className="h-3.5 w-3.5 shrink-0" />}
+              {rescheduled && (
+                <Icons.calendarCheck2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+              )}
+              {isExpanded && <div>{sessionDisplayName(session.session?.sessionName)}</div>}
+              {isCompact && (
+                <div className="flex gap-1 truncate">
+                  {sessionDisplayName(session.session?.sessionName)} - {timeLabels.startTimeLabel}
+                  <div className="truncate group-hover:text-foreground">- {schoolName}</div>
+                </div>
+              )}
+            </div>
+            {isExpanded && (
+              <div className="text-left">
+                <div className="truncate">{schoolName}</div>
+                <div>
+                  {timeLabels.durationLabel}
+                  <span className="invisible">t</span>
+                </div>
+                {session.status === "Rescheduled" && (
+                  <span className="font-medium text-shamiri-light-red">RESCHEDULED</span>
                 )}
               </div>
             )}
           </div>
-          {isExpanded && (
-            <div className="text-left">
-              <div className="truncate">{schoolName}</div>
-              <div>
-                {timeLabels.durationLabel}
-                <span className="invisible">t</span>
-              </div>
-              {session.status === "Rescheduled" && (
-                <span className="font-medium text-shamiri-light-red">RESCHEDULED</span>
-              )}
-            </div>
-          )}
         </div>
       </div>
     );
@@ -272,6 +287,8 @@ export function SessionDropDown({
   supervisorId?: string;
 }) {
   const { session } = state;
+  const pathname = usePathname();
+  const isSchedulePage = pathname.includes("/schedule");
 
   return (
     <DropdownMenu>
@@ -283,25 +300,61 @@ export function SessionDropDown({
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {role === ImplementerRole.HUB_COORDINATOR && (
-          <DropdownMenuItem
-            onClick={() => {
-              state.setSession && state.setSession(session);
-              state.setSupervisorAttendanceDialog && state.setSupervisorAttendanceDialog(true);
-            }}
-            disabled={session.status === "Cancelled" || !session.occurred}
-          >
-            Mark supervisor attendance
-          </DropdownMenuItem>
-        )}
-        {role === ImplementerRole.SUPERVISOR &&
-          (session.session?.sessionType === "INTERVENTION" ||
-            session.session?.sessionType === "CLINICAL" ||
-            session.session?.sessionType === "DATA_COLLECTION") && (
+        {role === ImplementerRole.ADMIN && (
+          <>
+            {isSchedulePage && (
+              <Link href={`/admin/schools/${session.school?.visibleId}/sessions`}>
+                <DropdownMenuItem>View school</DropdownMenuItem>
+              </Link>
+            )}
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setStudentAttendanceDialog && state.setStudentAttendanceDialog(true);
+                state.setSession?.(session);
+                state.setSupervisorAttendanceDialog?.(true);
+              }}
+              disabled={session.status === "Cancelled" || !session.occurred}
+            >
+              View supervisor attendance
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setFellowAttendanceDialog?.(true);
+              }}
+              disabled={session.status === "Cancelled" || !session.occurred}
+            >
+              View fellow attendance
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={
+                session.status === "Cancelled" ||
+                !session.occurred ||
+                session.sessionRatings.length === 0
+              }
+              onClick={() => {
+                state.setSession?.(session);
+                state.setRatingsDialog?.(true);
+              }}
+            >
+              Weekly session report
+            </DropdownMenuItem>
+          </>
+        )}
+        {role === ImplementerRole.HUB_COORDINATOR && (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setSupervisorAttendanceDialog?.(true);
+              }}
+              disabled={session.status === "Cancelled" || !session.occurred}
+            >
+              Mark supervisor attendance
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setStudentAttendanceDialog?.(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -311,13 +364,14 @@ export function SessionDropDown({
             >
               Mark student attendance
             </DropdownMenuItem>
-          )}
+          </>
+        )}
         {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
           <>
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setFellowAttendanceDialog && state.setFellowAttendanceDialog(true);
+                state.setSession?.(session);
+                state.setFellowAttendanceDialog?.(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -338,8 +392,8 @@ export function SessionDropDown({
                     session.school?.assignedSupervisorId !== supervisorId)
                 }
                 onClick={() => {
-                  state.setSession && state.setSession(session);
-                  state.setRatingsDialog && state.setRatingsDialog(true);
+                  state.setSession?.(session);
+                  state.setRatingsDialog?.(true);
                 }}
               >
                 Weekly session report
@@ -347,8 +401,25 @@ export function SessionDropDown({
             )}
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setSessionOccurrenceDialog && state.setSessionOccurrenceDialog(true);
+                state.setSession?.(session);
+                state.setFellowAttendanceDialog?.(true);
+              }}
+              disabled={
+                session.status === "Cancelled" ||
+                session.session?.sessionType === "CLINICAL" ||
+                !session.occurred
+              }
+            >
+              Mark fellow attendance
+            </DropdownMenuItem>
+          </>
+        ) : null}
+        {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setSessionOccurrenceDialog?.(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -361,8 +432,8 @@ export function SessionDropDown({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setRescheduleSessionDialog && state.setRescheduleSessionDialog(true);
+                state.setSession?.(session);
+                state.setRescheduleSessionDialog?.(true);
               }}
               disabled={
                 session.occurred ||
@@ -374,8 +445,8 @@ export function SessionDropDown({
             <DropdownMenuItem
               className="text-shamiri-light-red"
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setCancelSessionDialog && state.setCancelSessionDialog(true);
+                state.setSession?.(session);
+                state.setCancelSessionDialog?.(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -387,11 +458,11 @@ export function SessionDropDown({
             </DropdownMenuItem>
           </>
         ) : null}
-        {role === "FELLOW" ? (
+        {role === ImplementerRole.FELLOW ? (
           <DropdownMenuItem
             onClick={() => {
-              state.setSession && state.setSession(session);
-              state.setStudentAttendanceDialog && state.setStudentAttendanceDialog(true);
+              state.setSession?.(session);
+              state.setStudentAttendanceDialog?.(true);
             }}
             disabled={
               session.status === "Cancelled" ||

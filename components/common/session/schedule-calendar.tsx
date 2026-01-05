@@ -13,7 +13,6 @@ import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { type CalendarState, useCalendarState } from "react-stately";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
-import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
 import {
   type DateRangeType,
   type Filters,
@@ -29,6 +28,7 @@ import { ScheduleNewSession } from "#/components/common/session/schedule-new-ses
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import StudentAttendance from "#/components/common/student/student-attendance";
+import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -36,22 +36,24 @@ import {
   DialogContent,
   DialogHeader,
   DialogPortal,
+  DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
-import { sessionDisplayName } from "#/lib/utils";
+import { cn, sessionDisplayName } from "#/lib/utils";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { type Mode, ModeProvider, useMode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { type Session, SessionsProvider, useSessions } from "./sessions-provider";
+import { type Session, SessionsContext, SessionsProvider, useSessions } from "./sessions-provider";
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
-  hubId: string;
+  hubId?: string;
+  implementerId?: string;
   schools: Prisma.SchoolGetPayload<{}>[];
   supervisors?: Prisma.SupervisorGetPayload<{
     include: {
@@ -80,12 +82,13 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
-  const { hubId, schools, ...calendarStateProps } = props;
+  const { hubId, implementerId, schools, ...calendarStateProps } = props;
   const { locale } = useLocale();
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? "month";
 
   const sessionTypes: { [key: string]: boolean } = {};
+
   props.hubSessionTypes?.map((sessionType) => {
     sessionTypes[sessionType.sessionName] = true;
   });
@@ -95,6 +98,14 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
   });
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
+
+  useEffect(() => {
+    setFilters({
+      sessionTypes,
+      statusTypes: statusFilterOptions,
+      dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
+    });
+  }, [props.hubSessionTypes]);
 
   const monthState = useCalendarState({
     ...calendarStateProps,
@@ -180,7 +191,12 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   }
 
   return (
-    <SessionsProvider hubId={hubId} filters={filters}>
+    <SessionsProvider
+      hubId={hubId}
+      implementerId={implementerId}
+      filters={filters}
+      role={props.role}
+    >
       <ModeProvider defaultMode={mode as Mode}>
         <TitleProvider>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
@@ -196,8 +212,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 <ScheduleFilterToggle sessionFilters={props.hubSessionTypes ?? []} />
               </FiltersContext.Provider>
             </div>
-            {(props.role === "HUB_COORDINATOR" || props.role === "SUPERVISOR") && (
-              <SessionsLoader>
+            {props.role === "HUB_COORDINATOR" || props.role === "SUPERVISOR" ? (
+              <div className="flex items-center gap-4">
+                <SessionsLoader />
                 <CreateSessionButton
                   open={newScheduleDialog}
                   setDialogOpen={setNewScheduleDialog}
@@ -205,8 +222,10 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                   hubSessionTypes={props.hubSessionTypes}
                   role={props.role}
                 />
-              </SessionsLoader>
-            )}
+              </div>
+            ) : props.role === "ADMIN" ? (
+              <SessionsLoader />
+            ) : null}
           </div>
           <div className="mt-4 w-full">
             <FiltersContext.Provider value={{ filters, setFilters }}>
@@ -214,8 +233,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 monthProps={{ state: monthState, weekdayStyle: "long" }}
                 weekProps={{ state: weekState }}
                 dayProps={{ state: dayState }}
-                listProps={{ state: listState, hubId }}
-                tableProps={{ state: tableState, hubId }}
+                listProps={{ state: listState }}
+                tableProps={{ state: tableState }}
                 supervisors={props.supervisors}
                 fellowRatings={props.fellowRatings}
                 role={props.role}
@@ -243,18 +262,19 @@ function CreateSessionButton({
   hubSessionTypes?: Prisma.SessionNameGetPayload<{}>[];
   role: ImplementerRole;
 }) {
+  const { loading } = useSessions({});
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger>
-        <div className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
-          <Icons.plusCircle className="h-5 w-5" />
-          <span className="text-white">Schedule a session</span>
-        </div>
+      <DialogTrigger asChild>
+        <Button variant="brand" disabled={loading} className="flex items-center gap-2 text-base">
+          <Icons.plusCircle className="h-4 w-4" />
+          <span>Schedule a session</span>
+        </Button>
       </DialogTrigger>
       <DialogPortal>
         <DialogContent>
           <DialogHeader className="border-b">
-            <span className="pb-4 text-xl font-bold">Schedule a session</span>
+            <DialogTitle className="pb-4 text-xl font-bold">Schedule a session</DialogTitle>
           </DialogHeader>
           <ScheduleNewSession
             toggleDialog={setDialogOpen}
@@ -274,35 +294,39 @@ function ScheduleTitle({ fallbackTitle }: { fallbackTitle: string }) {
   return <div className="text-2xl font-semibold leading-8">{title || fallbackTitle}</div>;
 }
 
-function SessionsLoader({ children }: { children: React.ReactNode }) {
+function SessionsLoader() {
   const { loading } = useSessions({});
 
   if (loading) {
     return (
-      <svg
-        className="-ml-1 mr-6 h-5 w-5 animate-spin text-blue-base"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        />
-      </svg>
+      <div className="flex items-center justify-center gap-2 px-4 text-shamiri-new-blue">
+        {/* <Icons.spinner className="h-3.5 w-3.5 animate-spin" /> */}
+        <svg
+          className="-ml-1 h-4 w-4 animate-spin"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+        <span>Loading sessions</span>
+      </div>
     );
   }
 
-  return <div className="h-9">{children}</div>;
+  return null;
 }
 
 function CalendarView({
@@ -329,11 +353,9 @@ function CalendarView({
   };
   listProps: {
     state: CalendarState;
-    hubId: string;
   };
   tableProps: {
     state: CalendarState;
-    hubId: string;
   };
   supervisors?: Prisma.SupervisorGetPayload<{
     include: {
@@ -360,6 +382,7 @@ function CalendarView({
   fellow?: CurrentFellow;
 }) {
   const { mode } = useMode();
+  const { loading } = useContext(SessionsContext);
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
@@ -387,7 +410,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.id}
+            fellowId={fellow?.profile.id}
           />
         );
       case "week":
@@ -406,7 +429,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.id}
+            fellowId={fellow?.profile.id}
           />
         ) : (
           <div>Loading...</div>
@@ -427,7 +450,7 @@ function CalendarView({
               setCancelSessionDialog,
             }}
             supervisorId={supervisorId}
-            fellowId={fellow?.id}
+            fellowId={fellow?.profile.id}
           />
         ) : (
           <div>Loading...</div>
@@ -448,11 +471,11 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.id}
+            fellowId={fellow?.profile.id}
           />
         );
       case "table":
-        if (role === "HUB_COORDINATOR") {
+        if (role === ImplementerRole.HUB_COORDINATOR) {
           return (
             <TableView
               {...tableProps}
@@ -469,7 +492,7 @@ function CalendarView({
   };
 
   return (
-    <div>
+    <div className={cn(loading && "pointer-events-none opacity-50 grayscale")}>
       {activeMode()}
       {session ? (
         <>
@@ -502,8 +525,8 @@ function CalendarView({
         </>
       ) : null}
       <FellowAttendance
-        supervisors={supervisors}
-        supervisorId={role === "SUPERVISOR" ? supervisorId : undefined}
+        supervisors={supervisors?.filter((supervisor) => supervisor.hubId === session?.hubId)}
+        supervisorId={role === ImplementerRole.SUPERVISOR ? supervisorId : undefined}
         fellowRatings={fellowRatings ?? []}
         role={role}
         session={session}
@@ -513,7 +536,7 @@ function CalendarView({
       <SupervisorAttendance
         isOpen={supervisorAttendanceDialog}
         setIsOpen={setSupervisorAttendanceDialog}
-        supervisors={supervisors}
+        supervisors={supervisors?.filter((supervisor) => supervisor.hubId === session?.hubId)}
         role={role}
         session={session}
       />
@@ -523,7 +546,7 @@ function CalendarView({
         role={role}
         session={session}
         fellows={supervisors?.find((supervisor) => supervisor.id === supervisorId)?.fellows ?? []}
-        fellowId={fellow?.id}
+        fellowId={fellow?.profile.id}
       />
       {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
         <SessionRatings
@@ -532,13 +555,7 @@ function CalendarView({
           supervisors={supervisors}
           open={ratingsDialog}
           onOpenChange={setRatingsDialog}
-          mode={
-            role === ImplementerRole.HUB_COORDINATOR
-              ? "view"
-              : role === ImplementerRole.SUPERVISOR
-                ? "add"
-                : undefined
-          }
+          mode={role === "HUB_COORDINATOR" ? "view" : role === "SUPERVISOR" ? "add" : undefined}
           role={role}
         >
           {session && (
@@ -573,10 +590,7 @@ function NavigationButtons({
   nextProps: AriaButtonProps;
 }) {
   return (
-    <div
-      className="inline-flex shrink-0 divide-x divide-gray-300 overflow-auto rounded-xl border border-gray-300 shadow-sm"
-      role="group"
-    >
+    <div className="inline-flex shrink-0 divide-x divide-gray-300 overflow-auto rounded-lg border border-gray-300 shadow-sm">
       <NavigationButton aria-label="Previous Month" {...prevProps}>
         <Icons.chevronLeft className="h-5 w-5" />
       </NavigationButton>

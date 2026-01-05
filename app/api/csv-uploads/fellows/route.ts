@@ -1,7 +1,7 @@
+import { Readable } from "node:stream";
 import type { Prisma } from "@prisma/client";
 import * as fastCsv from "fast-csv";
 import { type NextRequest, NextResponse } from "next/server";
-import { Readable } from "stream";
 import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Hub coordinator not found." }, { status: 404 });
     }
 
-    const hubId = hc.assignedHubId ?? (formData.get("hubId") as string);
-    const implementerId = hc.implementerId ?? (formData.get("implementerId") as string);
+    const hubId = hc.profile?.assignedHubId ?? (formData.get("hubId") as string);
+    const implementerId = hc.profile?.implementerId ?? (formData.get("implementerId") as string);
     const buffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);
 

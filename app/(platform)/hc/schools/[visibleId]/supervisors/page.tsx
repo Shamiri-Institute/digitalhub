@@ -1,6 +1,6 @@
-import SupervisorInfoProvider from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisor-info-provider";
-import SupervisorsDataTable from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
+import { signOut } from "next-auth/react";
 import { currentHubCoordinator } from "#/app/auth";
+import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
 import { db } from "#/lib/db";
 
 export default async function SupervisorsPage(props: { params: Promise<{ visibleId: string }> }) {
@@ -9,9 +9,12 @@ export default async function SupervisorsPage(props: { params: Promise<{ visible
   const { visibleId } = params;
 
   const coordinator = await currentHubCoordinator();
+  if (coordinator === null) {
+    await signOut({ callbackUrl: "/login" });
+  }
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: coordinator?.assignedHubId,
+      hubId: coordinator?.profile?.assignedHubId ?? null,
     },
     include: {
       assignedSchools: true,
@@ -32,10 +35,27 @@ export default async function SupervisorsPage(props: { params: Promise<{ visible
       supervisorName: "asc",
     },
   });
+  const school = await db.school.findUnique({
+    where: {
+      visibleId,
+    },
+    include: {
+      interventionSessions: {
+        include: {
+          session: true,
+        },
+      },
+    },
+  });
+  if (!coordinator?.session?.user.activeMembership?.role) {
+    return <div>Invalid role</div>;
+  }
 
   return (
-    <SupervisorInfoProvider>
-      <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
-    </SupervisorInfoProvider>
+    <SupervisorsDataTable
+      supervisors={supervisors}
+      role={coordinator.session.user.activeMembership.role}
+      school={school ?? null}
+    />
   );
 }

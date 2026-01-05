@@ -1,4 +1,4 @@
-import type { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, type Prisma, type SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { CheckCheck, InfoIcon } from "lucide-react";
@@ -17,7 +17,13 @@ import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogPortal,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -129,13 +135,13 @@ export default function FellowAttendance({
         <DialogPortal>
           <DialogContent className="w-3/4 max-w-none">
             <DialogHeader>
-              <span className="text-xl font-bold">
-                {role === "HUB_COORDINATOR"
+              <DialogTitle className="text-xl font-bold">
+                {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
                   ? "View fellow attendance"
-                  : role === "SUPERVISOR"
+                  : role === ImplementerRole.SUPERVISOR
                     ? "Mark fellow attendance"
                     : null}
-              </span>
+              </DialogTitle>
             </DialogHeader>
             {session && (
               <SessionDetail
@@ -198,6 +204,7 @@ export default function FellowAttendance({
                   row.original.processedAt === null
                 }
                 session={session}
+                role={role}
                 editColumns={true}
               />
               <div className="flex justify-end gap-6">
@@ -226,6 +233,7 @@ export function FellowAttendanceDataTable({
   enableRowSelection,
   session,
   overrideColumns,
+  role,
 }: {
   data: FellowAttendancesTableData[];
   editColumns?: boolean;
@@ -240,6 +248,7 @@ export function FellowAttendanceDataTable({
     setAttendance: Dispatch<SetStateAction<FellowAttendancesTableData | undefined>>;
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   }) => ColumnDef<FellowAttendancesTableData>[];
+  role: ImplementerRole;
 }) {
   const [selectedRows, setSelectedRows] = useState<Row<FellowAttendancesTableData>[]>([]);
   const [attendance, setAttendance] = useState<FellowAttendancesTableData | undefined>();
@@ -286,8 +295,12 @@ export function FellowAttendanceDataTable({
         rowSelectionDescription="fellows"
         enableRowSelection={enableRowSelection}
         onRowSelectionChange={setSelectedRows}
-        renderTableActions={!overrideColumns && renderTableActions()}
+        renderTableActions={
+          !overrideColumns && role === ImplementerRole.HUB_COORDINATOR && renderTableActions()
+        }
         columnVisibilityState={{
+          checkbox: role === ImplementerRole.ADMIN ? false : true,
+          button: role === ImplementerRole.ADMIN ? false : true,
           "Group Type": false,
         }}
       />

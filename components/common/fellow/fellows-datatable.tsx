@@ -1,6 +1,6 @@
 "use client";
 
-import { type ImplementerRole, Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
@@ -91,13 +91,23 @@ export default function FellowsDatatable({
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No fellows associated with this school"
         renderTableActions={!hideActions && renderTableActions()}
+        columnVisibilityState={{
+          checkbox: role === ImplementerRole.HUB_COORDINATOR,
+          Supervisor: false,
+        }}
       />
       {fellow && (
         <>
           <FellowDetailsForm
             open={detailsDialog}
             onOpenChange={setDetailsDialog}
-            mode={role === "HUB_COORDINATOR" ? "view" : role === "SUPERVISOR" ? "edit" : null}
+            mode={
+              role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
+                ? "view"
+                : role === ImplementerRole.SUPERVISOR
+                  ? "edit"
+                  : null
+            }
             fellow={fellow}
           />
           <AttendanceHistory
@@ -146,9 +156,11 @@ export default function FellowsDatatable({
                 onOpenChange={setStudentsDialog}
                 role={role}
               >
-                <DialogAlertWidget>
+                <DialogAlertWidget separator={false}>
                   <div className="flex items-center gap-2">
-                    <span>Group {fellow.groupName}</span>
+                    <span>{fellow.fellowName}</span>
+                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+                    <span>{fellow.groupName}</span>
                   </div>
                 </DialogAlertWidget>
               </StudentsInGroup>
@@ -196,13 +208,13 @@ export function FellowsDatatableMenu({
             state.setDetailsDialog(true);
           }}
         >
-          {role === "HUB_COORDINATOR"
+          {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
             ? "View fellow information"
-            : role === "SUPERVISOR"
+            : role === ImplementerRole.SUPERVISOR
               ? "Edit fellow information"
               : null}
         </DropdownMenuItem>
-        {role === "HUB_COORDINATOR" && (
+        {role === ImplementerRole.HUB_COORDINATOR && (
           <DropdownMenuItem
             disabled={fellow.droppedOut ?? undefined}
             onClick={() => {
@@ -222,15 +234,18 @@ export function FellowsDatatableMenu({
         >
           View students in group
         </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={fellow.groupId === null}
-          onClick={() => {
-            state.setFellow(fellow);
-            state.setReplaceDialog(true);
-          }}
-        >
-          Replace fellow
-        </DropdownMenuItem>
+        {role === ImplementerRole.HUB_COORDINATOR ||
+          (role === ImplementerRole.SUPERVISOR && (
+            <DropdownMenuItem
+              disabled={fellow.groupId === null}
+              onClick={() => {
+                state.setFellow(fellow);
+                state.setReplaceDialog(true);
+              }}
+            >
+              Replace fellow
+            </DropdownMenuItem>
+          ))}
         <DropdownMenuItem
           onClick={() => {
             state.setFellow(fellow);

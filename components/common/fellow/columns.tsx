@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
@@ -112,6 +112,15 @@ export const columns = ({
       accessorKey: "groupName",
       header: "Group Name",
       id: "Group Name",
+    },
+    {
+      id: "Supervisor",
+      header: "Supervisor",
+      cell: ({ row }) => {
+        return role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN ? (
+          <div>{row.original.supervisorName}</div>
+        ) : null;
+      },
     },
     {
       header: "Phone Number",

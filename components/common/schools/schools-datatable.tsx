@@ -1,14 +1,17 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import { ImplementerRole, type Supervisor } from "@prisma/client";
+import type { VisibilityState } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
-import { useContext } from "react";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
-import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
-import { columns } from "#/components/common/schools/columns";
+import { useState } from "react";
+import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
+import { columns, type SchoolsTableData } from "#/components/common/schools/columns";
+import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
 import SchoolDetailsForm from "#/components/common/schools/school-details-form";
+import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
 import SchoolsDataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
+import { cn } from "#/lib/utils";
 
 const schoolsCSVHeaders = [
   "school_name",
@@ -39,21 +42,39 @@ export const handleSchoolsCSVTemplateDownload = () => {
   link.click();
 };
 
-export default function SchoolsDatatable({ role }: { role: ImplementerRole }) {
-  // TODO: Refactor this component to not use context
-  const schoolsContext = useContext(SchoolsDataContext);
-  const schoolInfoContext = useContext(SchoolInfoContext);
+export default function SchoolsDatatable({
+  role,
+  schools,
+  supervisors,
+  disablePagination = false,
+  isSubComponent = false,
+  className,
+  columnVisibilityState,
+}: {
+  role: ImplementerRole;
+  schools: SchoolsTableData[];
+  supervisors?: Supervisor[];
+  disablePagination?: boolean;
+  isSubComponent?: boolean;
+  className?: string;
+  columnVisibilityState?: VisibilityState;
+}) {
+  const [editDialog, setEditDialog] = useState(false);
+  const [school, setSchool] = useState<SchoolsTableData | null>(null);
+  const [pointSupervisorDialog, setPointSupervisorDialog] = useState(false);
+  const [schoolDropOutDialog, setSchoolDropOutDialog] = useState(false);
+  const [undoDropOutDialog, setUndoDropOutDialog] = useState(false);
 
   const renderTableActions = () => {
     return (
-      role === "HUB_COORDINATOR" && (
+      role === ImplementerRole.HUB_COORDINATOR && (
         <>
-          <SchoolDetailsForm />
+          <SchoolDetailsForm school={school} open={editDialog} setOpen={setEditDialog} />
           <Button
             className="flex gap-1"
             onClick={() => {
-              schoolInfoContext.setSchool(null);
-              schoolInfoContext.setEditDialog(true);
+              setSchool(null);
+              setEditDialog(true);
             }}
           >
             <Plus className="h-4 w-4" />
@@ -63,22 +84,65 @@ export default function SchoolsDatatable({ role }: { role: ImplementerRole }) {
       )
     );
   };
+
   return (
-    <SchoolsDataTable
-      data={schoolsContext.schools}
-      columns={columns({ role })}
-      emptyStateMessage="No schools found for this hub"
-      className="data-table bg-white lg:mt-4"
-      columnVisibilityState={{
-        "School ID": false,
-        "Sub - county": false,
-        "Point teacher": false,
-        "Point teacher phone no.": false,
-        "Point teacher email": false,
-        "Point supervisor phone no.": false,
-        "Point supervisor email": false,
-      }}
-      renderTableActions={renderTableActions()}
-    />
+    <>
+      <SchoolsDataTable
+        data={schools}
+        columns={columns({
+          role,
+          state: {
+            editDialog,
+            setEditDialog,
+            pointSupervisorDialog,
+            setPointSupervisorDialog,
+            schoolDropOutDialog,
+            setSchoolDropOutDialog,
+            undoDropOutDialog,
+            setUndoDropOutDialog,
+            school,
+            setSchool,
+          },
+        })}
+        emptyStateMessage="No schools found for this hub"
+        className={cn("data-table bg-white lg:mt-4", className)}
+        columnVisibilityState={{
+          ...columnVisibilityState,
+          ...{
+            "School ID": false,
+            "Sub - county": false,
+            "Point teacher": false,
+            "Point teacher phone no.": false,
+            "Point teacher email": false,
+            "Point supervisor phone no.": false,
+            "Point supervisor email": false,
+          },
+        }}
+        renderTableActions={renderTableActions()}
+        disablePagination={disablePagination}
+        isSubComponent={isSubComponent}
+      />
+      {role === "HUB_COORDINATOR" && (
+        <>
+          <SchoolDetailsForm school={school} open={editDialog} setOpen={setEditDialog} />
+          <AssignPointSupervisor
+            supervisors={supervisors ?? []}
+            open={pointSupervisorDialog}
+            setOpen={setPointSupervisorDialog}
+            school={school}
+          />
+          <DropoutSchool
+            school={school}
+            open={schoolDropOutDialog}
+            setOpen={setSchoolDropOutDialog}
+          />
+          <UndoDropoutSchool
+            school={school}
+            open={undoDropOutDialog}
+            setOpen={setUndoDropOutDialog}
+          />
+        </>
+      )}
+    </>
   );
 }

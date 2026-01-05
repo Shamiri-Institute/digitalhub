@@ -45,7 +45,7 @@ export function SchedulingDialog({ children }: { children: React.ReactNode }) {
         </SheetHeader>
 
         {sessions.map((session, index) => (
-          <div key={index} className="border-b border-gray-200 p-4">
+          <div key={session.title} className="border-b border-gray-200 p-4">
             <div className="flex items-center text-lg font-semibold">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-white">
                 {index + 1}

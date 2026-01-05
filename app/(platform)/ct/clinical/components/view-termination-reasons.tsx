@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { Badge } from "#/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 
 interface TerminationData {
@@ -35,9 +41,7 @@ export function ViewTerminationReasons({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div onClick={() => setOpen(true)} className="cursor-pointer">
-        {children}
-      </div>
+      <DialogTrigger className="cursor-pointer">{children}</DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Termination Details - {pseudonym}</DialogTitle>
@@ -50,14 +54,14 @@ export function ViewTerminationReasons({
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Termination Reason</label>
+                <span className="text-sm font-medium">Termination Reason</span>
                 <div className="mt-1">
                   <Badge variant="destructive">{termination.terminationReason}</Badge>
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium">Additional Information</label>
+                <span className="text-sm font-medium">Additional Information</span>
                 <div className="mt-1 rounded-md bg-gray-50 p-3">
                   <p className="whitespace-pre-wrap text-sm">
                     {termination.terminationReasonExplanation}
