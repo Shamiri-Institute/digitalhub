@@ -15,10 +15,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  clinicalCasesColors,
-  possibleSessions,
-} from "#/components/charts/constants";
+import { clinicalCasesColors, possibleSessions } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
 type CaseData = { name: "Active" | "FollowUp" | "Terminated"; value: number };

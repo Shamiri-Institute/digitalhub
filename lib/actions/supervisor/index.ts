@@ -2,7 +2,7 @@
 
 import type { z } from "zod";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
-import { currentHubCoordinator, } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
