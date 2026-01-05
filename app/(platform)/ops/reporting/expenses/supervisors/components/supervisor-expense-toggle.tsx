@@ -17,7 +17,7 @@ export default function SupervisorFilterToggle({
   supervisors: Prisma.SupervisorGetPayload<{}>[];
 }) {
   const [open, setOpen] = useState(false);
-  const [filterIsActive, setFilterIsActive] = useState(false);
+  const [filterIsActive] = useState(false);
 
   return (
     <FilterToggle

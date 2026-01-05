@@ -6,15 +6,6 @@ import { fileColumns, type SchoolFilesTableData } from "#/components/common/file
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 
-interface FileTableData {
-  id: string;
-  name: string;
-  type: string;
-  size: string;
-  uploadedBy: string;
-  uploadedAt: string;
-}
-
 export default function FilesDatatableSkeleton({ role }: { role: ImplementerRole }) {
   const loadingColumns = fileColumns({
     setRenameDialog: () => {},

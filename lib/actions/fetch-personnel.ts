@@ -105,7 +105,7 @@ export async function fetchPersonnel() {
     project: ops.assignedHub?.project?.name,
   }));
 
-  const clinicalTeams: Personnel[] = (
+  const _clinicalTeams: Personnel[] = (
     await db.clinicalTeam.findMany({
       orderBy: { name: "asc" },
       include: {

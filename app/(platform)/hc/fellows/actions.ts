@@ -3,14 +3,6 @@
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 
-async function checkAuth() {
-  const hubCoordinator = await currentHubCoordinator();
-
-  if (!hubCoordinator) {
-    throw new Error("The session has not been authenticated");
-  }
-}
-
 export type FellowDropoutReasonsGraphData = {
   name: string;
   value: number;

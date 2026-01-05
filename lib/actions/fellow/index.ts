@@ -446,7 +446,7 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
 
 export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
-    const { profile, session: userSession } = await checkAuth();
+    const { session: userSession } = await checkAuth();
     if (!userSession) {
       return {
         success: false,
@@ -662,7 +662,7 @@ export async function markManyFellowAttendance(
   data: z.infer<typeof MarkAttendanceSchema>,
 ) {
   try {
-    const { profile, session: userSession } = await checkAuth();
+    const { session: userSession } = await checkAuth();
     if (!userSession) {
       return {
         success: false,
