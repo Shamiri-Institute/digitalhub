@@ -142,8 +142,11 @@ export default function StudentDetailsForm({
       transferOption >= 0 &&
       form.getValues("assignedGroupId") !== undefined
     ) {
-      const data = matchedStudents[transferOption]!;
-      const response = await transferStudentToGroup(data.id, form.getValues("assignedGroupId")!);
+      const data = matchedStudents[transferOption];
+      if (!data) return;
+      const assignedGroupId = form.getValues("assignedGroupId");
+      if (!assignedGroupId) return;
+      const response = await transferStudentToGroup(data.id, assignedGroupId);
       if (!response.success) {
         toast({
           variant: "destructive",

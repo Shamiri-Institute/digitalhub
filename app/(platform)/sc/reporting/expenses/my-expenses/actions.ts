@@ -95,7 +95,7 @@ export async function getSupervisorsInHub() {
   const hubCoordinator = await currentHubCoordinator();
   return await db.supervisor.findMany({
     where: {
-      hubId: hubCoordinator?.profile?.assignedHubId!,
+      hubId: hubCoordinator?.profile?.assignedHubId ?? "",
     },
   });
 }
@@ -155,8 +155,8 @@ export async function addSupervisorExpense({
       data: {
         id: objectId("reimb"),
         supervisorId: data.supervisor,
-        hubId: hubCoordinator.profile?.assignedHubId!,
-        hubCoordinatorId: hubCoordinator.profile?.id!,
+        hubId: hubCoordinator.profile?.assignedHubId ?? "",
+        hubCoordinatorId: hubCoordinator.profile?.id ?? "",
         incurredAt: new Date(data.week),
         amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,

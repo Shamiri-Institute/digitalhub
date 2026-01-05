@@ -123,7 +123,7 @@ export default function StudentsDatatable({
           </MarkAttendance>
           {student && (
             <AttendanceHistory
-              student={students.find((x) => x.id === student.id)!}
+              student={students.find((x) => x.id === student.id) ?? student}
               open={attendanceHistoryDialog}
               onOpenChange={setAttendanceHistoryDialog}
               markAttendance={setMarkAttendanceDialog}

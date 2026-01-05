@@ -203,11 +203,11 @@ export function SupervisorAttendanceDataTable({
           attendance
             ? [
                 {
-                  attendanceId: attendance.id!,
+                  attendanceId: attendance.id ?? "",
                   id: attendance.supervisorId,
                   attended: attendance.attendance ?? null,
                   absenceReason: attendance.absenceReason ?? null,
-                  sessionId: attendance.sessionId!,
+                  sessionId: attendance.sessionId ?? "",
                   schoolId: attendance.schoolId ?? null,
                   comments: attendance.absenceComments,
                 },

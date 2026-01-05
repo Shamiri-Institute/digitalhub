@@ -158,7 +158,7 @@ export async function addSupervisorExpense({
       data: {
         id: objectId("reimb"),
         supervisorId: data.supervisor,
-        hubId: opsUser.profile.assignedHubId!,
+        hubId: opsUser.profile.assignedHubId ?? "",
         hubCoordinatorId: opsUser.profile.id,
         incurredAt: new Date(data.week),
         amount: Number.parseInt(data.totalAmount),

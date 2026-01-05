@@ -104,7 +104,7 @@ export default function SessionsDatatable({
             isOpen={studentAttendanceDialog}
             setIsOpen={setStudentAttendanceDialog}
             role={role}
-            session={sessions.find((x) => x.id === session.id)!}
+            session={sessions.find((x) => x.id === session.id) ?? session}
             fellows={
               supervisors?.find((supervisor) => supervisor.id === supervisorId)?.fellows ?? []
             }

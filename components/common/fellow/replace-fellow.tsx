@@ -159,8 +159,8 @@ export default function ReplaceFellow({
                           <SelectContent className="max-h-[200px]">
                             {supervisorWatcher !== undefined
                               ? supervisors
-                                  .find((supervisor) => supervisorWatcher === supervisor.id)!
-                                  .fellows.filter(
+                                  .find((supervisor) => supervisorWatcher === supervisor.id)
+                                  ?.fellows.filter(
                                     (fellow) => !fellow.droppedOut && fellow.id !== fellowId,
                                   )
                                   .map((fellow) => {
@@ -172,8 +172,8 @@ export default function ReplaceFellow({
                                   })
                               : []}
                             {supervisorWatcher !== undefined &&
-                            supervisors.find((supervisor) => supervisorWatcher === supervisor.id)!
-                              .fellows.length === 0 ? (
+                            supervisors.find((supervisor) => supervisorWatcher === supervisor.id)
+                              ?.fellows.length === 0 ? (
                               <SelectItem value={" "} disabled={true}>
                                 Supervisor has no fellows assigned.
                               </SelectItem>

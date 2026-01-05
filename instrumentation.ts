@@ -5,7 +5,7 @@ import { constants } from "#/lib/constants";
 
 export async function register() {
   if (constants.NEXT_PUBLIC_ENV === "development") {
-    const url = new URL(process.env.DATABASE_URL!);
+    const url = new URL(process.env.DATABASE_URL ?? "");
     const databaseHost = url.hostname;
     const databaseName = url.pathname.slice(1);
 

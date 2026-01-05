@@ -94,7 +94,7 @@ export default function ViewFellowComplaint({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem key={complaint.fellowName} value={complaint.fellowName!}>
+                        <SelectItem key={complaint.fellowName} value={complaint.fellowName ?? ""}>
                           {complaint?.fellowName}
                         </SelectItem>
                       </SelectContent>
@@ -302,7 +302,7 @@ export default function ViewFellowComplaint({
                         <SelectContent>
                           <SelectItem
                             key={complaint?.reasonForComplaint}
-                            value={complaint?.reasonForComplaint!}
+                            value={complaint?.reasonForComplaint ?? ""}
                           >
                             {complaint?.reasonForComplaint}
                           </SelectItem>

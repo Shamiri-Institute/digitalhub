@@ -66,7 +66,7 @@ export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendan
       });
       await db.supervisorAttendance.create({
         data: {
-          supervisorId: id!,
+          supervisorId: id ?? "",
           schoolId: session.schoolId ?? undefined,
           projectId: session.projectId ?? CURRENT_PROJECT_ID,
           sessionId,
