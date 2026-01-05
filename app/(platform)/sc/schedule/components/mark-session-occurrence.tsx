@@ -259,7 +259,7 @@ function CustomIndicator({ className, label }: { className: string; label: strin
       <div className="flex items-center gap-3">
         <div
           className={cn(
-            "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow",
+            "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow-sm",
             className,
           )}
         />

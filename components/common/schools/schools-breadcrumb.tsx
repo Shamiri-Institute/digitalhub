@@ -89,7 +89,7 @@ export default function SchoolsBreadcrumb() {
       <div className="flex items-center gap-x-5 text-shamiri-text-dark-grey">
         <button
           type="button"
-          className="flex cursor-pointer items-center justify-center rounded-lg border p-3 hover:text-shamiri-new-blue hover:drop-shadow active:scale-95"
+          className="flex cursor-pointer items-center justify-center rounded-lg border p-3 hover:text-shamiri-new-blue hover:drop-shadow-sm active:scale-95"
           onClick={() => {
             router.back();
           }}

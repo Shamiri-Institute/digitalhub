@@ -27,7 +27,7 @@ export default function SessionHistoryWidget({
             <TooltipTrigger asChild={true}>
               <div
                 className={cn(
-                  "select-none rounded-[0.25rem] border px-1.5 py-0.5",
+                  "select-none rounded-lg border px-1.5 py-0.5",
                   {
                     "border-green-border": match?.attended === true,
                     "border-shamiri-text-dark-grey/30": match === undefined,
@@ -54,7 +54,7 @@ export default function SessionHistoryWidget({
                 </div>
               </div>
             </TooltipTrigger>
-            <TooltipContent align="start" className="border bg-white text-shamiri-black shadow">
+            <TooltipContent align="start" className="border bg-white text-shamiri-black shadow-sm">
               {match?.sessionOccurred ? (
                 <div className="grid grid-cols-2 gap-1">
                   <span className="opacity-70">Date: </span>

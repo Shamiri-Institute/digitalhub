@@ -9,7 +9,7 @@ const alertVariants = cva("w-full text-sm font-medium rounded-xl p-3", {
       primary: "bg-shamiri-new-light-blue border-2 border-blue-border text-shamiri-new-blue",
       default: "bg-background text-foreground rounded-lg border",
       destructive:
-        "border-2 border-red-border text-shamiri-light-red bg-shamiri-light-red-background-base/[.1]",
+        "border-2 border-red-border text-shamiri-light-red bg-shamiri-light-red-background-base/10",
     },
   },
   defaultVariants: {

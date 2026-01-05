@@ -12,7 +12,7 @@ export function ScheduleModeToggle({ role }: { role: ImplementerRole }) {
       onValueChange={(mode) => {
         if (mode) setMode(mode as Mode);
       }}
-      className="gap-0 divide-x divide-gray-300 overflow-hidden rounded-lg border border-gray-300 py-0 shadow-sm"
+      className="gap-0 divide-x divide-gray-300 overflow-hidden rounded-lg border border-gray-300 py-0 shadow-xs"
     >
       <ToggleGroupItem
         value="day"

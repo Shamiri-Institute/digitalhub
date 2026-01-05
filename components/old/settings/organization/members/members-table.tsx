@@ -49,7 +49,7 @@ const columns: ColumnDef<Member>[] = [
       return (
         <div className="flex whitespace-nowrap py-5 pr-3 text-sm">
           <div className="flex items-center overflow-hidden text-ellipsis">
-            <div className="h-[18px] w-[18px] flex-shrink-0 sm:h-11 sm:w-11">
+            <div className="h-[18px] w-[18px] shrink-0 sm:h-11 sm:w-11">
               <UserAvatar
                 className="sm:text- h-[18px] w-[18px] text-xs sm:h-11 sm:w-11"
                 src={avatarUrl || ""}
