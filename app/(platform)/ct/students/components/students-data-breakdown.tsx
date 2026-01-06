@@ -97,7 +97,7 @@ export default function StudentsDataBreakdown({
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {completionData.find((d) => d.name === "actual")?.value}%
+                  {`${completionData.find((d) => d.name === "actual")?.value ?? 0}%`}
                 </Label>
                 {completionData.map((entry) => (
                   <Cell key={entry.name} fill={entry.name === "actual" ? "#0085FF" : "#EFF6FF"} />

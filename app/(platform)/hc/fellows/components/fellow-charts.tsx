@@ -62,8 +62,8 @@ export default function FellowsCharts({
               <XAxis dataKey="sessionType" />
               <YAxis dataKey="attendance" />
               <Tooltip labelFormatter={(value) => `Session: ${value}`} />
-              <Bar dataKey="attendance" stackId="a" fill="#0085FF" label="Attendance count" />
-              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" label="Session type" />
+              <Bar dataKey="attendance" stackId="a" fill="#0085FF" name="Attendance count" />
+              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" name="Session type" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -138,14 +138,14 @@ export default function FellowsCharts({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line dataKey="behaviour_rating" stroke="#0085FF" label="Behaviour" />
-              <Line dataKey="program_delivery_rating" stroke="#00BA34" label="Program delivery" />
+              <Line dataKey="behaviour_rating" stroke="#0085FF" name="Behaviour" />
+              <Line dataKey="program_delivery_rating" stroke="#00BA34" name="Program delivery" />
               <Line
                 dataKey="dressing_and_grooming_rating"
                 stroke="#F98600"
-                label="Dressing and grooming"
+                name="Dressing and grooming"
               />
-              <Line dataKey="punctuality_rating" stroke="#8884d8" label="Punctuality" />
+              <Line dataKey="punctuality_rating" stroke="#8884d8" name="Punctuality" />
             </LineChart>
           </ResponsiveContainer>
         ) : null}
