@@ -110,7 +110,7 @@ const columns: ColumnDef<
     header: "Session",
     id: "Session",
     accessorFn: (row) => {
-      return row.session && row.session.session?.sessionLabel;
+      return row.session?.session?.sessionLabel;
     },
   },
   {
