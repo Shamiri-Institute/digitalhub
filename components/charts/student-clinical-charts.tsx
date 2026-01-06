@@ -138,10 +138,13 @@ export default function HubStudentClinicalDataCharts({
         showCardFooter={false}
       >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart width={307} height={307} data={filteredFormatedSessions}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="session" />
-            <YAxis dataKey="count" />
+          <BarChart
+            data={filteredFormatedSessions}
+            margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="session" tick={{ fontSize: 12 }} />
+            <YAxis dataKey="count" tick={{ fontSize: 12 }} width={35} />
             <Tooltip />
             <Bar dataKey="count" fill="#0085FF" name="Sessions" radius={[4, 4, 0, 0]} />
           </BarChart>
@@ -149,10 +152,13 @@ export default function HubStudentClinicalDataCharts({
       </ChartCard>
       <ChartCard title="Clinical cases by supervisor" showCardFooter={false}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart width={307} height={307} data={clinicalCasesBySupervisors}>
+          <BarChart
+            data={clinicalCasesBySupervisors}
+            margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+          >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="supervisorName" tick={false} axisLine={false} />
-            <YAxis dataKey="count" />
+            <YAxis dataKey="count" tick={{ fontSize: 12 }} width={35} />
             <Tooltip
               formatter={(value) => [`${value} cases`, "Cases"]}
               labelFormatter={(label) => label}
