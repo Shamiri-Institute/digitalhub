@@ -118,7 +118,7 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.0.6",
+    "@biomejs/biome": "^2.3.11",
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.1",
     "@faker-js/faker": "^9.3.0",
