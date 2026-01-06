@@ -29,6 +29,7 @@
       },
       "complexity": {
         "noBannedTypes": "error",
+        "noUselessFragments": "error",
         "noUselessTernary": "error",
         "useDateNow": "error",
         "useOptionalChain": "error",
