@@ -100,7 +100,7 @@ export async function fetchSessionAttendanceData(hubId: string) {
       fa.session_number ASC
   `;
 
-  sessionAttendanceData.map((val) => {
+  sessionAttendanceData.forEach((val) => {
     val.session_number = Math.round(val.session_number);
     val.count = Math.round(val.count);
   });
