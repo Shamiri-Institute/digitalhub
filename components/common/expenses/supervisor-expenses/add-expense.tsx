@@ -364,7 +364,7 @@ export default function AddSupervisorExpensesForm({
 
 export function ReceiptFileUpload({
   form,
-  className,
+  className: _className,
 }: {
   form: UseFormReturn<z.infer<typeof AddAddSupervisorExpenseSchema>>;
   className: string;

@@ -55,7 +55,7 @@ export default function ApproveSpecialSessionFellows({
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof RequestSpecialSessionSchema>) => {
+  const onSubmit = async (_data: z.infer<typeof RequestSpecialSessionSchema>) => {
     // todo: add action to approve special session
     form.reset();
     setDialogOpen(false);

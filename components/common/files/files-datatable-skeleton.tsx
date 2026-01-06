@@ -8,7 +8,7 @@ import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 
-export default function FilesDatatableSkeleton({ role }: { role: ImplementerRole }) {
+export default function FilesDatatableSkeleton({ role: _role }: { role: ImplementerRole }) {
   const loadingColumns = fileColumns({
     setRenameDialog: () => {},
     setFile: () => {},

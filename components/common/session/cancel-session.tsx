@@ -16,7 +16,7 @@ export default function CancelSession({
   sessionId,
   open,
   onOpenChange,
-  role,
+  role: _role,
   children,
 }: {
   sessionId: string;

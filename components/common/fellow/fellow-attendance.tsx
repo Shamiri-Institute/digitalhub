@@ -81,7 +81,7 @@ export default function FellowAttendance({
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const [selectedSupervisor, setSelectedSupervisor] = useState<string>();
+  const [_selectedSupervisor, setSelectedSupervisor] = useState<string>();
   const [fellows, setFellows] = useState<FellowAttendancesTableData[]>([]);
 
   const form = useForm<{ supervisor: string }>({
@@ -127,7 +127,7 @@ export default function FellowAttendance({
       });
       setFellows(attendances);
     }
-  }, [fellowRatings, selectedSupervisor, session, supervisors, watcher]);
+  }, [fellowRatings, _selectedSupervisor, session, supervisors, watcher]);
 
   return (
     <div>

@@ -50,7 +50,7 @@ export const columns: ColumnDef<FellowClinicalCasesData>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => <FellowsClinicalCasesDropdownActions />,
+    cell: () => <FellowsClinicalCasesDropdownActions />,
     enableHiding: false,
   },
 ];
