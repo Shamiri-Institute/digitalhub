@@ -4,7 +4,6 @@ import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import * as React from "react";
-import { clearAuthCookies } from "#/app/actions/clear-auth-cookies";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 
@@ -24,15 +23,9 @@ export default function AppError({
   }, [error]);
 
   const handleRedirectToLogin = async () => {
-    // Clear auth cookies using Server Action (SSR-safe, can delete HttpOnly cookies)
-    await clearAuthCookies();
-
-    // Clear client-side storage
     localStorage.clear();
     sessionStorage.clear();
-
     reset();
-
     await signOut({ redirect: false });
     window.location.replace("/login");
   };
