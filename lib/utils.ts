@@ -115,7 +115,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
 }
 
 export function handleMinutesChange(value: string): string {
-  const numericValue = Number.parseInt(value);
+  const numericValue = Number.parseInt(value, 10);
   if (Number.isNaN(numericValue)) return "00";
   if (numericValue < 0) return "00";
   if (numericValue > 59) return "59";

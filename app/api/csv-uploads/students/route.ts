@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
             groupName: row.GroupNumber,
             studentName: row.StudentName,
             admissionNumber: row.AdmissionNumber,
-            form: Number.parseInt(row.Form),
+            form: Number.parseInt(row.Form, 10),
             stream: row.Stream,
             gender: row.Gender,
             visibleId: studentId,

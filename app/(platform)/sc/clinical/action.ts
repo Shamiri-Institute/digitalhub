@@ -380,7 +380,7 @@ export async function createStudentClinicalCase(data: {
           id: data.studentId,
         },
         data: {
-          form: Number.parseInt(data.classForm),
+          form: Number.parseInt(data.classForm, 10),
           stream: data.stream,
           age: data.age,
           gender: data.gender,
@@ -510,7 +510,7 @@ export async function updateStudentInfo(data: EditStudentInfoFormValues) {
           studentName: data.studentName,
           gender: data.gender,
           admissionNumber: data.admissionNumber,
-          form: Number.parseInt(data.classForm),
+          form: Number.parseInt(data.classForm, 10),
           stream: data.stream,
         },
       });
