@@ -40,7 +40,7 @@ const terminationReasons = [
 const CaseTerminationSchema = z.object({
   sessionId: stringValidation("Session is required"),
   terminationReason: z.enum(terminationReasons, {
-    required_error: "Termination reason is required",
+    error: (issue) => (issue.input === undefined ? "Termination reason is required" : undefined),
   }),
   terminationExplanation: stringValidation("Termination explanation is required"),
 });
@@ -86,7 +86,7 @@ export default function CaseTerminationForm({
       }
       setDialogOpen(false);
       form.reset();
-    } catch (error) {
+    } catch {
       toast({
         title: "Something went wrong, please try again",
         variant: "destructive",

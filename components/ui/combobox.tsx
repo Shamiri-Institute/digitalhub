@@ -58,7 +58,7 @@ export function Combobox({
               className="h-9"
             />
             <CommandEmpty>No item found.</CommandEmpty>
-            <CommandGroup className="max-h-[12rem] overflow-y-scroll">
+            <CommandGroup className="max-h-48 overflow-y-scroll">
               {items.map((item) => (
                 <CommandItem
                   key={item.id}

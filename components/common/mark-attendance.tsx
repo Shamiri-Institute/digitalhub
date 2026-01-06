@@ -213,7 +213,9 @@ export function MarkAttendance({
                             return (
                               <SelectItem key={session.id} value={session.id}>
                                 <div className="flex items-center gap-2">
-                                  <span>{sessionDisplayName(session.session?.sessionName!)}</span>
+                                  <span>
+                                    {sessionDisplayName(session.session?.sessionName ?? "")}
+                                  </span>
                                   <span>-</span>
                                   <span>
                                     {format(new Date(session.sessionDate), "dd MMM yyyy")}
@@ -375,7 +377,7 @@ export function CustomIndicator({ className, label }: { className: string; label
       <div className="flex items-center gap-3">
         <div
           className={cn(
-            "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow",
+            "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow-sm",
             className,
           )}
         />

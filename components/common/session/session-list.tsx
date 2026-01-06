@@ -1,7 +1,7 @@
 import { ImplementerRole, SessionStatus } from "@prisma/client";
 import { addHours, addMinutes, format } from "date-fns";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type * as React from "react";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
@@ -59,31 +59,36 @@ export function SessionList({
     );
   }
 
+  const [firstSession, secondSession] = sessions;
   const moreSessions = sessions.slice(2);
   return (
     <div className="flex flex-col gap-2">
-      <SessionDetail
-        layout="compact"
-        state={{
-          session: sessions[0]!,
-          ...dialogState,
-        }}
-        role={role}
-        fellowId={fellowId}
-        supervisorId={supervisorId}
-        onHover={true}
-      />
-      <SessionDetail
-        layout="compact"
-        state={{
-          session: sessions[1]!,
-          ...dialogState,
-        }}
-        role={role}
-        fellowId={fellowId}
-        supervisorId={supervisorId}
-        onHover={true}
-      />
+      {firstSession && (
+        <SessionDetail
+          layout="compact"
+          state={{
+            session: firstSession,
+            ...dialogState,
+          }}
+          role={role}
+          fellowId={fellowId}
+          supervisorId={supervisorId}
+          onHover={true}
+        />
+      )}
+      {secondSession && (
+        <SessionDetail
+          layout="compact"
+          state={{
+            session: secondSession,
+            ...dialogState,
+          }}
+          role={role}
+          fellowId={fellowId}
+          supervisorId={supervisorId}
+          onHover={true}
+        />
+      )}
       <div className="w-full overflow-visible">
         {moreSessions.length > 0 && (
           <DropdownMenu>
@@ -94,13 +99,13 @@ export function SessionList({
             </DropdownMenuTrigger>
             <DropdownMenuContent className="max-h-[250px] min-w-72 overflow-auto p-2" align="start">
               <div className="flex flex-col gap-2">
-                {moreSessions.map((session, index) => {
+                {moreSessions.map((session) => {
                   return (
                     <SessionDetail
                       key={session.id}
                       layout="compact"
                       state={{
-                        session: moreSessions[index]!,
+                        session,
                         ...dialogState,
                       }}
                       role={role}
@@ -183,7 +188,7 @@ export function SessionDetail({
         {" "}
         <div
           className={cn(
-            "w-full select-none rounded-[0.25rem] border transition-all duration-75 ease-in-out",
+            "w-full select-none rounded-lg border transition-all duration-75 ease-in-out",
             { "absolute left-0 top-0": isCompact },
             {
               "group px-2 py-1 hover:z-50 hover:w-auto hover:drop-shadow-md":

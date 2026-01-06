@@ -203,11 +203,11 @@ export function SupervisorAttendanceDataTable({
           attendance
             ? [
                 {
-                  attendanceId: attendance.id!,
+                  attendanceId: attendance.id ?? "",
                   id: attendance.supervisorId,
                   attended: attendance.attendance ?? null,
                   absenceReason: attendance.absenceReason ?? null,
-                  sessionId: attendance.sessionId!,
+                  sessionId: attendance.sessionId ?? "",
                   schoolId: attendance.schoolId ?? null,
                   comments: attendance.absenceComments,
                 },
@@ -311,7 +311,7 @@ const columns = (state: {
         <div className="flex">
           <div
             className={cn(
-              "flex items-center rounded-[0.25rem] border px-1.5 py-0.5",
+              "flex items-center rounded-lg border px-1.5 py-0.5",
               {
                 "border-green-border": attended,
                 "border-red-border": !attended,

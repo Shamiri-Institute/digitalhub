@@ -7,7 +7,6 @@ import type { Dispatch, SetStateAction } from "react";
 import { SessionDropDown } from "#/components/common/session/session-list";
 import type { Session } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
-import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
 export type SessionData = Prisma.InterventionSessionGetPayload<{
@@ -83,7 +82,7 @@ export const columns = (state: {
         <div className="flex">
           <div
             className={cn(
-              "select-none rounded-[0.25rem] border px-1.5 py-0.5",
+              "select-none rounded-lg border px-1.5 py-0.5",
               {
                 "border-green-border": completed,
                 "border-blue-border": !completed,

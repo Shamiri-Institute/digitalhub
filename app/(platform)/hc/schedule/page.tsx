@@ -107,12 +107,15 @@ export default async function HubCoordinatorSchedulePage() {
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
         <ScheduleCalendar
-          hubId={coordinator?.profile?.assignedHubId!}
+          hubId={coordinator?.profile?.assignedHubId ?? ""}
           aria-label="Session schedule"
           schools={schools}
           supervisors={supervisors}
-          fellowRatings={fellowRatings}
-          role={coordinator?.session.user.activeMembership?.role!}
+          fellowRatings={fellowRatings.map((rating) => ({
+            ...rating,
+            averageRating: Number(rating.averageRating),
+          }))}
+          role={coordinator?.session.user.activeMembership?.role ?? "HUB_COORDINATOR"}
           hubSessionTypes={hubSessionTypes}
         />
       </div>

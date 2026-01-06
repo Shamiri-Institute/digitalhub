@@ -60,11 +60,11 @@ export class OnboardimplementerCommand extends Command<
     const subject = `${implementer.implementerName} joins Shamiri Digital Hub!`;
     const emailComponent: React.ReactElement<any> = implementerWelcomer({
       name: implementer.implementerName,
-      email: implementer.pointPersonEmail!,
+      email: implementer.pointPersonEmail ?? "",
       preview: subject,
     });
     await sendEmail({
-      to: implementer.pointPersonEmail!,
+      to: implementer.pointPersonEmail ?? "",
       subject: subject,
       react: emailComponent,
     });
@@ -75,7 +75,7 @@ export class OnboardimplementerCommand extends Command<
   private validate(input: OnboardimplementerInput) {
     const schema = z.object({
       name: z.string().min(1).max(255),
-      contactEmail: z.string().email(),
+      contactEmail: z.email(),
     });
 
     return schema.parse(input);

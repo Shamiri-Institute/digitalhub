@@ -23,7 +23,9 @@
     "rules": {
       "recommended": true,
       "correctness": {
-        "useExhaustiveDependencies": "warn"
+        "useExhaustiveDependencies": "warn",
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error"
       },
       "complexity": {
         "useLiteralKeys": "off"
@@ -31,8 +33,12 @@
       "a11y": {
         "noSvgWithoutTitle": "off"
       },
+      "suspicious": {
+        "noGlobalIsNan": "error"
+      },
       "style": {
         "noInferrableTypes": "error",
+        "noNonNullAssertion": "error",
         "noParameterAssign": "error",
         "noUnusedTemplateLiteral": "error",
         "noUselessElse": "error",

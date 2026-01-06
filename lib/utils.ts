@@ -51,7 +51,7 @@ export function parseEuropeanDate(dateString: string | null): Date | null {
   const month = Number(parts[1]);
   const day = Number(parts[0]);
 
-  if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+  if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return null;
 
   const date = new Date(year, month - 1, day);
 
@@ -98,12 +98,12 @@ export function isSessionScheduled(
 }
 
 export function stringValidation(message: string | undefined = "Required*") {
-  return z.string({ required_error: message }).trim().min(1, { message });
+  return z.string({ error: message }).trim().min(1, { error: message });
 }
 
 export function mapSessionTypeToSessionNumber(sessionType: string): number {
   if (sessionType[0] === "s" && sessionType.length === 2) {
-    return Number.parseInt(sessionType[1]!);
+    return Number.parseInt(sessionType[1] ?? "0");
   }
 
   throw new Error(`Invalid session type: ${sessionType}`);
@@ -171,7 +171,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
 export function handleMinutesChange(value: string): string {
   const numericValue = Number.parseInt(value);
-  if (isNaN(numericValue)) return "00";
+  if (Number.isNaN(numericValue)) return "00";
   if (numericValue < 0) return "00";
   if (numericValue > 59) return "59";
   return numericValue.toString().padStart(2, "0");

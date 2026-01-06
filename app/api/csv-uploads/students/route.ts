@@ -32,9 +32,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const file = formData.get("file") as File;
-    const hubId = formData.get("hubId") as string;
-    const implementerId = formData.get("implementerId") as string;
-    const projectId = formData.get("projectId") as string;
+    const _hubId = formData.get("hubId") as string;
+    const _implementerId = formData.get("implementerId") as string;
+    const _projectId = formData.get("projectId") as string;
 
     const buffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);

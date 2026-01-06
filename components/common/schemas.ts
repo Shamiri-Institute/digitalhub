@@ -5,9 +5,7 @@ import { stringValidation } from "#/lib/utils";
 export const SubmitComplaintSchema = z.object({
   id: stringValidation("Missing ID"),
   comments: stringValidation().optional(),
-  complaint: z.enum([COMPLAINT_TYPES[0]!, ...COMPLAINT_TYPES.slice(1)], {
-    errorMap: (_issue, _ctx) => ({
-      message: "Please select a complaint",
-    }),
+  complaint: z.enum(COMPLAINT_TYPES as unknown as [string, ...string[]], {
+    error: "Please select a complaint",
   }),
 });

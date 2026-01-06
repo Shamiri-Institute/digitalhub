@@ -19,7 +19,7 @@ export default async function SupervisorStudentsPage({
   }
 
   const [
-    schools, // TODO: use this to provide filter options
+    _schools, // TODO: use this to provide filter options
     totalNumberOfStudentsInHub,
     totalGroupSessions,
     hubClinicalCases,
@@ -160,7 +160,7 @@ export default async function SupervisorStudentsPage({
   const supervisorMap = new Map(supervisors.map((s) => [s.id, s.supervisorName]));
 
   const clinicalCasesBySupervisors = hubClinicalSessionsBySupervisor.map((item) => ({
-    supervisorName: supervisorMap.get(item.currentSupervisorId!) || "Unknown",
+    supervisorName: supervisorMap.get(item.currentSupervisorId ?? "") || "Unknown",
     count: item._count.currentSupervisorId,
   }));
 

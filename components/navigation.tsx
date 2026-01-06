@@ -32,7 +32,7 @@ const NavItem: React.FC<NavItemProps> = ({ href, Icon, children }) => {
           "text-base leading-5 lg:text-[1rem] lg:font-medium",
           "hover:bg-foreground/[0.035]",
           {
-            "bg-shamiri-blue/[0.075] hover:bg-shamiri-blue/[0.1]": pathname === href,
+            "bg-shamiri-blue/7.5 hover:bg-shamiri-blue/10": pathname === href,
           },
         )}
       >
