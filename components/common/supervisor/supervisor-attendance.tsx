@@ -192,8 +192,8 @@ export function SupervisorAttendanceDataTable({
         }
         renderTableActions={renderTableActions()}
         columnVisibilityState={{
-          checkbox: role === ImplementerRole.ADMIN ? false : true,
-          button: role === ImplementerRole.ADMIN ? false : true,
+          checkbox: role !== ImplementerRole.ADMIN,
+          button: role !== ImplementerRole.ADMIN,
         }}
       />
       <MarkAttendance

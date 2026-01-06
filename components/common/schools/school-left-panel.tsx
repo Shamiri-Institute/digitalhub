@@ -37,7 +37,7 @@ export default function SchoolLeftPanel({
   role?: ImplementerRole;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(!role ? true : false);
+  const [loading, setLoading] = useState(!role);
   const [school, setSchool] = useState<SchoolData | null>(null);
   const { visibleId } = useParams();
 
