@@ -113,7 +113,7 @@
     "sharp": "^0.32.6",
     "tailwind-merge": "^1.14.0",
     "tsx": "^4.7.0",
-    "typeid-js": "^0.3.0",
+    "typeid-js": "^1.2.0",
     "zod": "^4.3.5",
     "zustand": "^4.4.1"
   },
