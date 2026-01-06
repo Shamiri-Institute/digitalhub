@@ -1,6 +1,6 @@
-import * as csv from "csv-parse";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import * as csv from "csv-parse";
 
 /**
  * Loads and parse CSV file in ./data/ directory

@@ -299,8 +299,8 @@ export function FellowAttendanceDataTable({
           !overrideColumns && role === ImplementerRole.HUB_COORDINATOR && renderTableActions()
         }
         columnVisibilityState={{
-          checkbox: role === ImplementerRole.ADMIN ? false : true,
-          button: role === ImplementerRole.ADMIN ? false : true,
+          checkbox: role !== ImplementerRole.ADMIN,
+          button: role !== ImplementerRole.ADMIN,
           "Group Type": false,
         }}
       />

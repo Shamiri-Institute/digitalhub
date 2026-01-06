@@ -29,6 +29,7 @@
       },
       "complexity": {
         "noBannedTypes": "error",
+        "noUselessTernary": "error",
         "useLiteralKeys": "off"
       },
       "a11y": {
