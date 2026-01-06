@@ -6,6 +6,7 @@ import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/com
 import { currentSupervisor, getCurrentPersonnel } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
+import { getHighestValue } from "#/lib/utils";
 
 export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
 
@@ -577,10 +578,14 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
   caseStatus: string;
 }) {
   try {
+    // Calculate risk status from presenting issues
+    const riskStatus = getHighestValue(data.presentingIssues);
+
     const updateData =
       data.caseStatus === "Active"
         ? {
             emergencyPresentingIssuesBaseline: data.presentingIssues,
+            riskStatus,
           }
         : {
             emergencyPresentingIssuesEndpoint: data.presentingIssues,

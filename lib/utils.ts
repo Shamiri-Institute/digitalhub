@@ -76,13 +76,14 @@ export function ordinalSuffixOf(i: number): string {
 export function getHighestValue(data: { [k: string]: string }): riskStatusOptions {
   const values = Object.values(data);
 
-  if (values.includes("High")) {
+  // Check for UI risk level values from clinical-diagnosing-board
+  if (values.includes("Severe risk") || values.includes("High risk")) {
     return "High";
   }
-  if (values.includes("Med")) {
+  if (values.includes("Moderate risk")) {
     return "Medium";
   }
-  if (values.includes("Low")) {
+  if (values.includes("Low risk")) {
     return "Low";
   }
   return "No";
