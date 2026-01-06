@@ -85,7 +85,7 @@ export default function SupervisorCharts({
                 {dropoutData.map((reason) => (
                   <Cell
                     key={reason.name}
-                    // @ts-ignore
+                    // @ts-expect-error
                     fill={SCHOOL_DROPOUT_REASONS_MAPPING[reason.name]}
                   />
                 ))}
@@ -119,7 +119,7 @@ export default function SupervisorCharts({
                 {supervisorDataCompletenessPercentage.map(({ name }) => (
                   <Cell
                     key={name}
-                    // @ts-ignore
+                    // @ts-expect-error
                     fill={SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[name]}
                   />
                 ))}

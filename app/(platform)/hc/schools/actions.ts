@@ -2,7 +2,7 @@
 
 import { Prisma, sessionTypes } from "@prisma/client";
 import { format } from "date-fns";
-import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
 import { currentHubCoordinator } from "#/app/auth";
@@ -555,10 +555,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       const dates = new Set<string>();
       fellow.groups.forEach((group) => {
         group.school.interventionSessions.forEach((session) => {
-          const dateStr = format(
-            utcToZonedTime(session.sessionDate, "Africa/Nairobi"),
-            "yyyy-MM-dd",
-          );
+          const dateStr = format(toZonedTime(session.sessionDate, "Africa/Nairobi"), "yyyy-MM-dd");
           if (dateStr) {
             dates.add(dateStr);
           }
@@ -570,7 +567,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
     const availableFellows = fellows.filter((fellow) => {
       const fellowDates = fellowSessionDates.get(fellow.id);
       return !fellowDates?.has(
-        format(utcToZonedTime(parsedData.preSessionDate, "Africa/Nairobi"), "yyyy-MM-dd"),
+        format(toZonedTime(parsedData.preSessionDate, "Africa/Nairobi"), "yyyy-MM-dd"),
       );
     });
 
@@ -664,13 +661,13 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
 
       const interventionSessions: Prisma.InterventionSessionCreateManyInput[] = [];
 
-      const currentDate = utcToZonedTime(parsedData.preSessionDate, "Africa/Nairobi");
+      const currentDate = toZonedTime(parsedData.preSessionDate, "Africa/Nairobi");
       currentDate.setHours(16, 0, 0, 0); // Set to 4 PM Nairobi time
 
       for (const sessionName of sessionNames) {
         interventionSessions.push({
           id: objectId("session"),
-          sessionDate: zonedTimeToUtc(currentDate, "Africa/Nairobi"),
+          sessionDate: fromZonedTime(currentDate, "Africa/Nairobi"),
           status: "Scheduled",
           sessionType: sessionName.sessionName,
           sessionId: sessionName.id,
