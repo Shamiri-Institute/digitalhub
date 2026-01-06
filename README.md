@@ -12,6 +12,18 @@ Shamiri Institute is aiming for a digital solution that will help expand its rea
 
 Create a `.env.development` file in the root directory with the following variables:
 
+### Required Environment Variables
+
+The following `NEXT_PUBLIC_*` environment variables are **required** and will be validated at application startup. If any are missing, you'll see a clear error message indicating which variable is missing:
+
+- **`NEXT_PUBLIC_APP_URL`** - The base URL of your application (e.g., `http://localhost:3000`)
+- **`NEXT_PUBLIC_ENV`** - The environment name. Must be one of: `development`, `preview`, `production`, `testing`, or `training`
+- **`NEXT_PUBLIC_CURRENT_PROJECT_ID`** - The current project ID used for filtering queries and authentication (e.g., `2024_Project_1`)
+
+**Note:** These variables are inlined by Next.js at build time. If you encounter a similar error to "Missing required environment variable: NEXT_PUBLIC_*", ensure the variable is set in your `.env.development` file and restart your development server.
+
+### Complete Environment Variables List
+
 ```bash
 # Database
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/shamiri_db_dev"
@@ -45,9 +57,9 @@ S3_UPLOAD_REGION="your-s3-region"
 # Metabase Configuration
 METABASE_SECRET_KEY="your-metabase-secret-key" # Secret key for signing Metabase JWT tokens
 
-# Application Settings
+# Application Settings (REQUIRED)
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
-NEXT_PUBLIC_ENV="development"
+NEXT_PUBLIC_ENV="development" # Must be: development, preview, production, testing, or training
 APP_ENV="development"
 NEXT_PUBLIC_CURRENT_PROJECT_ID="[YEAR]_Project_[PHASE]" # Required: Project ID for filtering all queries and authentication
 
