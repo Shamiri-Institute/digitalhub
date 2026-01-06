@@ -73,6 +73,12 @@
     }
   },
   "html": { "formatter": { "selfCloseVoidElements": "always" } },
+  "css": {
+    "parser": {
+      "cssModules": true,
+      "tailwindDirectives": true
+    }
+  },
   "assist": {
     "enabled": true,
     "actions": { "source": { "organizeImports": "on" } }
