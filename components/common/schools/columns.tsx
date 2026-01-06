@@ -153,7 +153,7 @@ export const columns = ({
           if (recent && recent.sessionRatings.length > 0) {
             return (
               <Badge variant="shamiri-green">
-                {sessionDisplayName(recent.session?.sessionName) + " - Report submitted"}
+                {`${sessionDisplayName(recent.session?.sessionName)} - Report submitted`}
               </Badge>
             );
           }
