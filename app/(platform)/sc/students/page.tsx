@@ -8,7 +8,7 @@ import PageFooter from "#/components/ui/page-footer";
 import { db } from "#/lib/db";
 
 export default async function SupervisorStudentsPage({
-  searchParams,
+  searchParams: _searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {

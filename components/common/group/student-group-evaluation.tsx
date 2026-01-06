@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma, Project } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { addDays, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -58,7 +58,6 @@ export default function StudentGroupEvaluation({
   onOpenChange,
   evaluations,
   sessions,
-  project,
   mode,
   children,
 }: {
@@ -75,7 +74,6 @@ export default function StudentGroupEvaluation({
       session: true;
     };
   }>[];
-  project?: Project;
   mode: "view" | "add";
   children: React.ReactNode;
 }) {

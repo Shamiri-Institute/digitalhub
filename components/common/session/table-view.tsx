@@ -424,7 +424,7 @@ export function TableView({
             if (value) setSelectedDay(getCalendarDate(new Date(value)));
           }}
         >
-          {weekDays.map((date, index) => {
+          {weekDays.map((date) => {
             if (date !== null) {
               const day = dayFormatter.format(date.toDate(state.timeZone));
               return (

@@ -9,7 +9,7 @@ import { Button } from "#/components/ui/button";
 function PageLink({
   label,
   page,
-  previous = false,
+  previous: _previous = false,
 }: {
   label: string;
   page: { href: string; title: string };

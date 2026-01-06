@@ -82,7 +82,7 @@ export default function SupervisorCharts({
                 >
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
-                {dropoutData.map((reason, index) => (
+                {dropoutData.map((reason) => (
                   <Cell
                     key={reason.name}
                     // @ts-ignore
