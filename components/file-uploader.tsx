@@ -159,7 +159,7 @@ export default function FileUploader({
 }
 
 export function FileUploaderWithDrop({
-  label,
+  label: _label,
   onChange,
   files,
   className,
@@ -243,7 +243,7 @@ export function FileUploaderWithDrop({
         <div className="mt-3 flex w-full border-t border-gray-500 ">
           {files?.length !== 0 && (
             <div className="text-normal flex items-center space-y-1 pt-2 text-center text-gray-700">
-              {files.map((file: File, index) => (
+              {files.map((file: File) => (
                 <div key={file.name} className="flex items-center space-x-2">
                   <Icons.check className="h-4 w-4" />
                   <span key={file.name}>{file.name}</span>

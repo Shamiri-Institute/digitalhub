@@ -44,7 +44,7 @@ import { ReportFellowComplaintSchema } from "./schema";
 export default function ApproveRejectFellowComplaint({
   children,
   complaint,
-  fellows = [],
+  fellows: _fellows = [],
 }: {
   children: React.ReactNode;
   complaint: ComplaintData;

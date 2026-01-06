@@ -465,7 +465,7 @@ async function createAdminUsers(implementers: Implementer[], emails: Set<string>
 
 async function createHubCoordinators(
   hubs: Hub[],
-  implementers: Implementer[],
+  _implementers: Implementer[],
   emails: Set<string>,
 ) {
   console.log("creating hub coordinators");

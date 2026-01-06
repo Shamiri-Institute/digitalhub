@@ -45,8 +45,8 @@ export default function SubmitComplaint({
   open,
   onOpenChange,
   complaints,
-  role,
-  mode = "add",
+  role: _role,
+  mode: _mode = "add",
 }: {
   id?: string;
   children: React.ReactNode;
