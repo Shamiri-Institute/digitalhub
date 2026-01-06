@@ -88,8 +88,6 @@ export default function SupervisorDetailsForm({
         mpesaName: supervisor?.mpesaName ?? undefined,
       };
 
-      // TODO: fix TS issue with assigning string to enum type
-      // @ts-expect-error
       form.reset(defaultValues);
     }
   }, [open, supervisor, form]);
