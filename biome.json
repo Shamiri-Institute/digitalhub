@@ -51,7 +51,8 @@
         "useEnumInitializers": "error",
         "useNumberNamespace": "error",
         "useSelfClosingElements": "error",
-        "useSingleVarDeclarator": "error"
+        "useSingleVarDeclarator": "error",
+        "useTemplate": "error"
       }
     }
   },
