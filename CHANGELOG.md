@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.9.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.1...v1.9.2) (2026-01-06)
+
+
+### Bug Fixes
+
+* **lint): enforce noBannedTypes and noExplicitAny biome rules; fix(deps:** update vitest to v4 ([#551](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/551)) ([1d48261](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1d48261d8611d345cf205c6346c7ba3a410068c3))
+* **lint:** enforce noGlobalIsNan rule and replace isNaN with Number.i… ([#549](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/549)) ([06cbd98](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/06cbd985a63300d7f4797e3b5fb2388acd0fdb59))
+* **lint:** remove all non-null assertion operators (!) for runtime safety ([#548](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/548)) ([c26d0e9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c26d0e9191fae2bca540de190eb31a3c269234f5))
+
 ## [1.9.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.0...v1.9.1) (2026-01-05)
 
 ## [1.9.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.8.0...v1.9.0) (2026-01-05)
