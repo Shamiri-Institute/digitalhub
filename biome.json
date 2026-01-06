@@ -30,6 +30,7 @@
       "complexity": {
         "noBannedTypes": "error",
         "noUselessTernary": "error",
+        "useDateNow": "error",
         "useOptionalChain": "error",
         "useLiteralKeys": "off"
       },

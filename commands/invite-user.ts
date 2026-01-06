@@ -37,7 +37,7 @@ export class InviteUserCommand extends Command<
       })
       .parse(input);
 
-    const uniqueKey = `${email}${implementerId}${roleId}${new Date().getTime()}`;
+    const uniqueKey = `${email}${implementerId}${roleId}${Date.now()}`;
     const array = new TextEncoder().encode(uniqueKey);
     const digest = await crypto.subtle.digest("SHA-256", array);
     const secureToken = Buffer.from(digest).toString("base64");
