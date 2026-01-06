@@ -519,9 +519,7 @@ export default function SchoolDetailsForm({
                                         }
 
                                         if (isValidPhoneNumber(e.target.value, "KE")) {
-                                          const matchIndex = pointPersonPhoneErrors.findIndex(
-                                            (error) => error === index,
-                                          );
+                                          const matchIndex = pointPersonPhoneErrors.indexOf(index);
                                           if (matchIndex !== -1) {
                                             const errors = [...pointPersonPhoneErrors];
                                             errors.splice(matchIndex, 1);
