@@ -97,22 +97,31 @@ export async function getClinicalCasesStats() {
     },
   });
 
-  const stats = caseStats.reduce(
-    (acc, stat) => ({
-      ...acc,
-      [stat.caseStatus === "Terminated"
-        ? "completedCases"
-        : stat.caseStatus === "FollowUp"
-          ? "followUpCases"
-          : stat.caseStatus === "Active"
-            ? "activeCases"
-            : "other"]: stat._count.id,
-    }),
+  const stats = caseStats.reduce<{
+    totalCases: number;
+    completedCases: number;
+    followUpCases: number;
+    activeCases: number;
+    other: number;
+  }>(
+    (acc, stat) => {
+      const key =
+        stat.caseStatus === "Terminated"
+          ? "completedCases"
+          : stat.caseStatus === "FollowUp"
+            ? "followUpCases"
+            : stat.caseStatus === "Active"
+              ? "activeCases"
+              : "other";
+      acc[key] = stat._count.id;
+      return acc;
+    },
     {
       totalCases: 0,
       completedCases: 0,
       followUpCases: 0,
       activeCases: 0,
+      other: 0,
     },
   );
 
