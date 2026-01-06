@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { appUrl } from "#/app/api/utils";
-
 export async function GET() {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? "";
   return NextResponse.json({
     status: "ok",
-    host: appUrl(),
+    host: appUrl,
   });
 }
