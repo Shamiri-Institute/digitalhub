@@ -120,7 +120,7 @@ export function MarkAttendance({
   useEffect(() => {
     form.reset(getDefaultValues(sessionIdWatcher));
     if (!isOpen) {
-      setBulkMode && setBulkMode(false);
+      setBulkMode?.(false);
     }
   }, [sessions, id, form, isOpen, attendances, sessionIdWatcher]);
 
