@@ -143,9 +143,7 @@ export default function HubStudentClinicalDataCharts({
             <XAxis dataKey="session" />
             <YAxis dataKey="count" />
             <Tooltip />
-            <Legend />
-            <Bar dataKey="count" stackId="a" fill="#0085FF" name="Count" />
-            <Bar dataKey="session" stackId="a" fill="#CCE7FF" name="Session" />
+            <Bar dataKey="count" fill="#0085FF" name="Sessions" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -153,19 +151,17 @@ export default function HubStudentClinicalDataCharts({
         <ResponsiveContainer width="100%" height="100%">
           <BarChart width={307} height={307} data={clinicalCasesBySupervisors}>
             <CartesianGrid strokeDasharray="3 3" />
-            {/* <XAxis dataKey="supervisorName" /> */}
+            <XAxis
+              dataKey="supervisorName"
+              tick={{ fontSize: 10 }}
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
             <YAxis dataKey="count" />
             <Tooltip />
-            <Legend
-              layout="horizontal"
-              verticalAlign="bottom"
-              align="center"
-              iconType="square"
-              iconSize={10}
-              wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }}
-            />
-            <Bar dataKey="count" stackId="a" fill="#E92C9D" name="Cases" />
-            <Bar dataKey="supervisorName" stackId="a" fill="#ffdfea" name="Supervisor" />
+            <Bar dataKey="count" fill="#E92C9D" name="Cases" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -178,10 +174,10 @@ export default function HubStudentClinicalDataCharts({
               nameKey="initialReferredFrom"
               startAngle={90}
               endAngle={450}
-              outerRadius={80}
-              innerRadius={55}
+              outerRadius={100}
+              innerRadius={70}
             >
-              <Label position="center" className="text-xl font-semibold leading-8" fill="#000">
+              <Label position="center" className="text-2xl font-semibold leading-8" fill="#000">
                 {filteredByInitialReferredFrom.reduce((acc, d) => acc + d.count, 0)}
               </Label>
               {filteredByInitialReferredFrom.map((entry, index) => (
@@ -192,14 +188,6 @@ export default function HubStudentClinicalDataCharts({
               ))}
             </Pie>
             <Tooltip />
-            <Legend
-              layout="horizontal"
-              verticalAlign="bottom"
-              align="center"
-              iconType="circle"
-              iconSize={8}
-              wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }}
-            />
           </PieChart>
         </ResponsiveContainer>
       </ChartCard>

@@ -86,8 +86,8 @@ export default function HubStudentDemographicsCharts({
                 nameKey="age"
                 startAngle={90}
                 endAngle={450}
-                outerRadius={75}
-                innerRadius={50}
+                outerRadius={100}
+                innerRadius={70}
                 fill="#8884d8"
               >
                 {formatedStudentsGroupedByAge.map((val, index) => (
@@ -97,15 +97,6 @@ export default function HubStudentDemographicsCharts({
               <Tooltip
                 formatter={(value) => `${value} students`}
                 labelFormatter={(label) => `${label} years`}
-              />
-              <Legend
-                layout="horizontal"
-                verticalAlign="bottom"
-                align="center"
-                iconType="circle"
-                iconSize={8}
-                wrapperStyle={{ fontSize: "11px", paddingTop: "4px" }}
-                formatter={(value) => `${value} yrs`}
               />
             </PieChart>
           </ResponsiveContainer>
