@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, User } from "@prisma/client";
 import { format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -58,7 +58,7 @@ export default function SubmitComplaint({
     id: string;
     complaint: string;
     comments?: string;
-    createdBy?: Prisma.UserGetPayload<{}>;
+    createdBy?: User;
     createdAt: Date;
   }[];
 }) {

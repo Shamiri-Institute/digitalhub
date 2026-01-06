@@ -1,6 +1,6 @@
 "use client";
 
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma, type WeeklyFellowRatings } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -27,7 +27,7 @@ export default function MainFellowsDatatable({
   supervisors: Prisma.SupervisorGetPayload<{
     include: { fellows: true };
   }>[];
-  weeklyEvaluations: Prisma.WeeklyFellowRatingsGetPayload<{}>[];
+  weeklyEvaluations: WeeklyFellowRatings[];
   role: ImplementerRole;
 }) {
   const [fellow, setFellow] = useState<MainFellowTableData | null>(null);

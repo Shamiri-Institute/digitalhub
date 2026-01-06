@@ -1,5 +1,5 @@
 import { Readable } from "node:stream";
-import type { Prisma } from "@prisma/client";
+import type { School } from "@prisma/client";
 import * as fastCsv from "fast-csv";
 import { type NextRequest, NextResponse } from "next/server";
 import { currentHubCoordinator } from "#/app/auth";
@@ -106,10 +106,7 @@ async function validateRow(row: Record<string, string>, context: ValidationConte
   return true;
 }
 
-async function validateExistingSchools(
-  rows: Prisma.SchoolGetPayload<{}>[],
-  errorSchools: SchoolError[],
-) {
+async function validateExistingSchools(rows: School[], errorSchools: SchoolError[]) {
   const schoolNames = rows.map((row) => row.schoolName);
   const existingSchools = await db.school.findMany({
     where: {
@@ -168,8 +165,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rows: Prisma.SchoolGetPayload<{}>[] = await new Promise((resolve, reject) => {
-      const parsedRows: Prisma.SchoolGetPayload<{}>[] = [];
+    const rows: School[] = await new Promise((resolve, reject) => {
+      const parsedRows: School[] = [];
       const dataStream = Readable.from([fileBuffer]);
       let rowNumber = 1;
 

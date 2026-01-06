@@ -43,7 +43,7 @@ export function MonthView({
     month: "long",
     year: "numeric",
   });
-  const headerRowRef: any = useRef(null);
+  const headerRowRef = useRef<HTMLTableElement>(null);
 
   useEffect(() => {
     if (state.value) {

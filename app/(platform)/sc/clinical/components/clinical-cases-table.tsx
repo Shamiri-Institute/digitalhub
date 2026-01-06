@@ -1,5 +1,5 @@
 "use client";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Supervisor } from "@prisma/client";
 import { Plus } from "lucide-react";
 import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import { columns } from "#/app/(platform)/sc/clinical/columns";
@@ -44,7 +44,7 @@ export default function ClinicalCasesTable({
       };
     };
   }>[];
-  supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
+  supervisorsInHub: Supervisor[];
   currentSupervisorId: string;
   hubs: Prisma.HubGetPayload<{
     select: {
