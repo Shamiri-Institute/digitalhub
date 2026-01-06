@@ -5,6 +5,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
+export const runtime = "nodejs";
+
 const supervisorCSVHeaders = [
   "supervisor_name",
   "cell_number",

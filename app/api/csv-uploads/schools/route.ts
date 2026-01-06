@@ -6,6 +6,8 @@ import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
+export const runtime = "nodejs";
+
 const schoolsCSVHeaders = [
   "school_name",
   "numbers_expected",
