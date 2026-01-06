@@ -156,7 +156,7 @@ export default function CaseNotesForm({
         sessionId: data.sessionId,
         followUpPlanExplanation: data.followUpPlan.explanation,
         followUpPlan: data.followUpPlan.isGroupSession ? "GROUP" : "INDIVIDUAL",
-        orsAssessment: data.orsAssessment ? Number.parseInt(data.orsAssessment) : 0,
+        orsAssessment: data.orsAssessment ? Number.parseInt(data.orsAssessment, 10) : 0,
         interventionExplanation: data.interventionExplanation,
         studentResponseExplanation: data.studentResponseExplanation,
         presentingIssues: data.presentingIssues,

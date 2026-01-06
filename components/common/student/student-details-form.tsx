@@ -407,7 +407,7 @@ export default function StudentDetailsForm({
           <RadioGroup
             className="flex flex-col gap-3"
             onValueChange={(value) => {
-              setTransferOption(Number.parseInt(value));
+              setTransferOption(Number.parseInt(value, 10));
             }}
           >
             {matchedStudents.map((student, index) => {
