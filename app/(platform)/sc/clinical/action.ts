@@ -125,7 +125,7 @@ export async function getClinicalCasesStats() {
     },
   );
 
-  stats.totalCases = stats.completedCases + stats.followUpCases + stats.activeCases;
+  stats.totalCases = stats.completedCases + stats.followUpCases + stats.activeCases + stats.other;
 
   const activeCasesPercentage = (stats.activeCases / stats.totalCases) * 100;
   const followUpCasesPercentage = (stats.followUpCases / stats.totalCases) * 100;
