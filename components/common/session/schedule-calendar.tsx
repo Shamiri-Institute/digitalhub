@@ -841,7 +841,7 @@ function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[
                 <DropdownMenuCheckboxItem
                   key={date.value}
                   checked={dates === date.value}
-                  onCheckedChange={(value) => {
+                  onCheckedChange={(_value) => {
                     setDates(date.value);
                   }}
                   onSelect={(e) => {

@@ -34,7 +34,7 @@ export default function RescheduleSession({
   session,
   open,
   onOpenChange,
-  role,
+  role: _role,
   children,
 }: {
   session: Session;

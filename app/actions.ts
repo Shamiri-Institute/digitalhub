@@ -20,7 +20,7 @@ import { EditFellowSchema } from "#/lib/validators";
 import type { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
 export async function inviteUserToImplementer(
-  prevState: { message: string } | null,
+  _prevState: { message: string } | null,
   formData: FormData,
 ) {
   try {
@@ -669,7 +669,7 @@ export async function submitRepaymentRequest(data: {
 
 export async function AcceptRefferedClinicalCase(
   currentSupervisorId: string,
-  referredToSupervisorId: string | null,
+  _referredToSupervisorId: string | null,
   caseId: string,
 ) {
   try {

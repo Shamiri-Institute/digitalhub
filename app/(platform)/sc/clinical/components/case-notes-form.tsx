@@ -306,7 +306,7 @@ export default function CaseNotesForm({
             <FormField
               control={form.control}
               name="riskLevel"
-              render={({ field }) => (
+              render={({ field: _field }) => (
                 <FormItem>
                   <FormLabel>
                     Risk Level Assignment

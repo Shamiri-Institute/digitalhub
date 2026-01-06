@@ -25,7 +25,8 @@
       "correctness": {
         "useExhaustiveDependencies": "warn",
         "noUnusedVariables": "error",
-        "noUnusedImports": "error"
+        "noUnusedImports": "error",
+        "noUnusedFunctionParameters": "error"
       },
       "complexity": {
         "noBannedTypes": "error",

@@ -9,7 +9,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 
 export default function SupervisorClinicalCasesDropdownActions({
-  clinicalCase,
+  clinicalCase: _clinicalCase,
 }: {
   clinicalCase: SupervisorClinicalCasesData;
 }) {

@@ -20,7 +20,7 @@ import { toast } from "#/components/ui/use-toast";
 
 export default function HandleSessionAttendanceUpdate({
   row,
-  userRole = "SUPERVISOR",
+  userRole: _userRole = "SUPERVISOR",
 }: {
   row: Row<AttendanceRecord>;
   userRole: "CLINICAL_LEAD" | "SUPERVISOR";
