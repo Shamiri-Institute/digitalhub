@@ -1,6 +1,6 @@
 "use client";
 
-import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, Label, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { generateRandomColor, studentsGroupByColors } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
@@ -46,13 +46,13 @@ export default function HubStudentDemographicsCharts({
                 nameKey="form"
                 startAngle={90}
                 endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
+                outerRadius={75}
+                innerRadius={50}
                 fill="#8884d8"
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="text-xl font-semibold leading-8 text-shamiri-black"
                 >
                   {formatedStudentsGroupedByForm.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
@@ -64,6 +64,14 @@ export default function HubStudentDemographicsCharts({
                 ))}
               </Pie>
               <Tooltip formatter={(value) => `${value} students`} />
+              <Legend
+                layout="horizontal"
+                verticalAlign="bottom"
+                align="center"
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: "11px", paddingTop: "4px" }}
+              />
             </PieChart>
           </ResponsiveContainer>
         ) : null}
@@ -78,8 +86,8 @@ export default function HubStudentDemographicsCharts({
                 nameKey="age"
                 startAngle={90}
                 endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
+                outerRadius={75}
+                innerRadius={50}
                 fill="#8884d8"
               >
                 {formatedStudentsGroupedByAge.map((val, index) => (
@@ -89,6 +97,15 @@ export default function HubStudentDemographicsCharts({
               <Tooltip
                 formatter={(value) => `${value} students`}
                 labelFormatter={(label) => `${label} years`}
+              />
+              <Legend
+                layout="horizontal"
+                verticalAlign="bottom"
+                align="center"
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: "11px", paddingTop: "4px" }}
+                formatter={(value) => `${value} yrs`}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -105,24 +122,32 @@ export default function HubStudentDemographicsCharts({
                 nameKey="gender"
                 startAngle={90}
                 endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
+                outerRadius={75}
+                innerRadius={50}
                 fill="#8884d8"
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="text-xl font-semibold leading-8 text-shamiri-black"
                 >
                   {formatedStudentsGroupedByGender.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
-                {formatedStudentsGroupedByAge.map((val, index) => (
+                {formatedStudentsGroupedByGender.map((val, index) => (
                   <Cell
-                    key={val.age}
+                    key={val.gender}
                     fill={studentsGroupByColors[index % studentsGroupByColors.length]}
                   />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip formatter={(value) => `${value} students`} />
+              <Legend
+                layout="horizontal"
+                verticalAlign="bottom"
+                align="center"
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: "11px", paddingTop: "4px" }}
+              />
             </PieChart>
           </ResponsiveContainer>
         ) : null}
