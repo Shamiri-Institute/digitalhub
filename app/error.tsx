@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import * as React from "react";
+import { clearAuthCookies } from "#/app/actions/clear-auth-cookies";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 
@@ -23,21 +24,10 @@ export default function AppError({
   }, [error]);
 
   const handleRedirectToLogin = async () => {
-    const cookiesToClear = [
-      "next-auth.session-token",
-      "next-auth.callback-url",
-      "next-auth.csrf-token",
-      "__Secure-next-auth.session-token",
-      "__Secure-next-auth.callback-url",
-      "__Secure-next-auth.csrf-token",
-      "session",
-    ];
+    // Clear auth cookies using Server Action (SSR-safe, can delete HttpOnly cookies)
+    await clearAuthCookies();
 
-    cookiesToClear.forEach((cookie) => {
-      document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-      document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
-    });
-
+    // Clear client-side storage
     localStorage.clear();
     sessionStorage.clear();
 
