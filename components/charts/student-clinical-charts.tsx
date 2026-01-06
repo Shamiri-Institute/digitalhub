@@ -150,17 +150,13 @@ export default function HubStudentClinicalDataCharts({
       <ChartCard title="Clinical cases by supervisor" showCardFooter={false}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart width={307} height={307} data={clinicalCasesBySupervisors}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="supervisorName"
-              tick={{ fontSize: 10 }}
-              interval={0}
-              angle={-45}
-              textAnchor="end"
-              height={60}
-            />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="supervisorName" tick={false} axisLine={false} />
             <YAxis dataKey="count" />
-            <Tooltip />
+            <Tooltip
+              formatter={(value) => [`${value} cases`, "Cases"]}
+              labelFormatter={(label) => label}
+            />
             <Bar dataKey="count" fill="#E92C9D" name="Cases" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
