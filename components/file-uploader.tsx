@@ -101,7 +101,7 @@ export default function FileUploader({
 
       toast({
         title:
-          // @ts-ignore
+          // @ts-expect-error
           `Failed to upload file. Please try again later. ${JSON.stringify(error?.message)}`,
         variant: "destructive",
       });

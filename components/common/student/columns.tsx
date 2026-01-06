@@ -2,7 +2,7 @@
 
 import type { ImplementerRole, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import { parsePhoneNumber } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
 import StudentsDataTableMenu from "#/components/common/student/students-datatable-menu";

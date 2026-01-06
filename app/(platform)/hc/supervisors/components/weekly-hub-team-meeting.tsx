@@ -127,7 +127,7 @@ export default function WeeklyHubReportButtonAndForm({
                     <FormLabel>Select week</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      // @ts-ignore
+                      // @ts-expect-error
                       defaultValue={field.value}
                     >
                       <FormControl>
