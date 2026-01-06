@@ -12,7 +12,7 @@ export const sendEmail = async ({
 }: {
   to: string;
   subject: string;
-  react: React.ReactElement<any>;
+  react: React.ReactElement;
 }) => {
   const html = await render(react);
 

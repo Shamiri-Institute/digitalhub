@@ -1,5 +1,5 @@
 import { Readable } from "node:stream";
-import type { Prisma } from "@prisma/client";
+import type { Fellow } from "@prisma/client";
 import * as fastCsv from "fast-csv";
 import { type NextRequest, NextResponse } from "next/server";
 import { currentHubCoordinator } from "#/app/auth";
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rows: Prisma.FellowGetPayload<{}>[] = await new Promise((resolve, reject) => {
-      const parsedRows: Prisma.FellowGetPayload<{}>[] = [];
+    const rows: Fellow[] = await new Promise((resolve, reject) => {
+      const parsedRows: Fellow[] = [];
       const dataStream = Readable.from([fileBuffer]);
 
       dataStream

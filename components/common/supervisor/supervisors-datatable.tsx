@@ -108,7 +108,7 @@ export default function SupervisorsDataTable({
           row.original.droppedOut === null || !row.original.droppedOut
         }
         rowSelectionDescription={"supervisors"}
-        onRowSelectionChange={setSelectedRows as () => {}}
+        onRowSelectionChange={setSelectedRows}
       />
       {supervisor && (
         <DropoutSupervisor

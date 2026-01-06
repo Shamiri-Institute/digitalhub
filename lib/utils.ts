@@ -1,4 +1,4 @@
-import type { Prisma, riskStatusOptions } from "@prisma/client";
+import type { InterventionSession, riskStatusOptions } from "@prisma/client";
 import { type ClassValue, clsx } from "clsx";
 import type { Metadata } from "next";
 import { twMerge } from "tailwind-merge";
@@ -89,7 +89,7 @@ export function getHighestValue(data: { [k: string]: string }): riskStatusOption
 }
 
 export function isSessionScheduled(
-  sessions: Prisma.InterventionSessionGetPayload<{}>[],
+  sessions: InterventionSession[],
   sessionType: string, // s0, s1, s2, ...
 ) {
   return sessions.some(

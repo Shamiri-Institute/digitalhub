@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, InterventionSession, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
@@ -29,7 +29,7 @@ export type SupervisorsData = Prisma.SupervisorGetPayload<{
 
 export const columns = (state: {
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  sessions: Prisma.InterventionSessionGetPayload<{}>[];
+  sessions: InterventionSession[];
   setSupervisor: Dispatch<SetStateAction<SupervisorsData | null>>;
   role: ImplementerRole;
 }): ColumnDef<SupervisorsData>[] => [

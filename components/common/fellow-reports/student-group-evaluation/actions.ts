@@ -1,6 +1,18 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import { db } from "#/lib/db";
+
+type InterventionGroupReportWithRelations = Prisma.InterventionGroupReportGetPayload<{
+  include: {
+    group: {
+      include: {
+        leader: true;
+      };
+    };
+    session: true;
+  };
+}>;
 
 export type StudentGroupEvaluationType = {
   id: string;
@@ -19,7 +31,9 @@ export type StudentGroupEvaluationType = {
   }[];
 };
 
-const transformEvaluationData = (data: any[]): StudentGroupEvaluationType[] => {
+const transformEvaluationData = (
+  data: InterventionGroupReportWithRelations[],
+): StudentGroupEvaluationType[] => {
   const groupedByFellow = data.reduce<Record<string, StudentGroupEvaluationType>>((acc, item) => {
     const fellowId = item.group.leader.id;
     const groupName = item.group.groupName;
@@ -27,7 +41,7 @@ const transformEvaluationData = (data: any[]): StudentGroupEvaluationType[] => {
     if (!acc[fellowId]) {
       acc[fellowId] = {
         id: fellowId,
-        fellowName: item.group.leader.fellowName,
+        fellowName: item.group.leader.fellowName ?? "",
         groupName: groupName,
         avgCooperation: 0,
         avgEngagement: 0,
@@ -37,7 +51,7 @@ const transformEvaluationData = (data: any[]): StudentGroupEvaluationType[] => {
 
     const sessionData = {
       sessionId: item.id,
-      session: item?.session?.sessionType ?? item.sessionType ?? item.sessionType ?? "-",
+      session: item.session?.sessionType ?? "-",
       cooperation: item.cooperation1 ?? item.cooperation2 ?? item.cooperation3 ?? 0,
       engagement: item.engagement1 ?? item.engagement2 ?? item.engagement3 ?? 0,
       engagementComment: item.engagementComment ?? "",
@@ -45,11 +59,12 @@ const transformEvaluationData = (data: any[]): StudentGroupEvaluationType[] => {
       contentComment: item.contentComment ?? "",
     };
 
-    acc[fellowId].session.push(sessionData);
-
-    const sessions = acc[fellowId].session;
-    acc[fellowId].avgCooperation = calculateAverage(sessions.map((s) => s.cooperation));
-    acc[fellowId].avgEngagement = calculateAverage(sessions.map((s) => s.engagement));
+    const fellow = acc[fellowId];
+    if (fellow) {
+      fellow.session.push(sessionData);
+      fellow.avgCooperation = calculateAverage(fellow.session.map((s) => s.cooperation));
+      fellow.avgEngagement = calculateAverage(fellow.session.map((s) => s.engagement));
+    }
 
     return acc;
   }, {});
@@ -84,7 +99,10 @@ export async function loadStudentGroupEvaluations() {
   }
 }
 
-export async function editStudentGroupEvaluation(evaluationId: string, data: any) {
+export async function editStudentGroupEvaluation(
+  evaluationId: string,
+  data: Prisma.InterventionGroupReportUpdateInput,
+) {
   try {
     await db.interventionGroupReport.update({
       where: { id: evaluationId },

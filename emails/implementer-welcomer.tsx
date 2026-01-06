@@ -24,7 +24,7 @@ export default function implementerWelcomer({
   email: string;
   name: string;
   preview: string;
-}): React.ReactElement<any> {
+}): React.ReactElement {
   return (
     <Html>
       <Head />

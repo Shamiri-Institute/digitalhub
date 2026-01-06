@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { ClinicalScreeningInfo, ClinicalSessionAttendance } from "@prisma/client";
 import InfoCard from "#/app/(platform)/hc/students/components/info-card";
 
 export default function StudentsStats({
@@ -9,8 +9,8 @@ export default function StudentsStats({
 }: {
   totalNumberOfStudentsInHub: number;
   totalGroupSessions: number;
-  hubClinicalCases: Prisma.ClinicalScreeningInfoGetPayload<{}>[];
-  hubClinicalSessions: Prisma.ClinicalSessionAttendanceGetPayload<{}>[];
+  hubClinicalCases: ClinicalScreeningInfo[];
+  hubClinicalSessions: ClinicalSessionAttendance[];
 }) {
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">

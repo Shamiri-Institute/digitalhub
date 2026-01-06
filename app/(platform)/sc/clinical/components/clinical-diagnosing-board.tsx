@@ -55,7 +55,7 @@ type Severity = "Low risk" | "Moderate risk" | "High risk" | "Severe risk";
 
 const initializeIssues = (
   issues: typeof emergency_presenting_issues | typeof general_presenting_issues,
-  presentingIssues: any,
+  presentingIssues: unknown,
 ): Record<string, Severity> => {
   const initialState: Record<string, Severity> = {};
 

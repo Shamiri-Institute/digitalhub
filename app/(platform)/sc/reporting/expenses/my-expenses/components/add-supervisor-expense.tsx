@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Supervisor } from "@prisma/client";
 import AddSupervisorExpensesForm from "#/components/common/expenses/supervisor-expenses/add-expense";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -6,7 +6,7 @@ import { Button } from "#/components/ui/button";
 export default async function AddSupervisorExpenseTrigger({
   supervisorsInHub,
 }: {
-  supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
+  supervisorsInHub: Supervisor[];
 }) {
   return (
     <div className="flex justify-end">

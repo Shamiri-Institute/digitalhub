@@ -11,7 +11,15 @@ import { ProfileSwitcher } from "#/components/profile-switcher";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 
-export const navigation: Array<any> = [];
+interface NavigationItem {
+  path: string;
+  title: string;
+  Icon: Icon;
+  // Optional links property for hierarchical navigation groups (used by footer)
+  links?: { href: string; title: string }[];
+}
+
+export const navigation: NavigationItem[] = [];
 
 interface NavItemProps {
   href: string;
@@ -106,12 +114,6 @@ function AdminNavigation() {
       </ul>
     </nav>
   );
-}
-
-interface NavigationItem {
-  path: string;
-  title: string;
-  Icon: Icon;
 }
 
 const supervisorNavigationItems: NavigationItem[] = [

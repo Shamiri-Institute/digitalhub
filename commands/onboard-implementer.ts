@@ -58,7 +58,7 @@ export class OnboardimplementerCommand extends Command<
     }
 
     const subject = `${implementer.implementerName} joins Shamiri Digital Hub!`;
-    const emailComponent: React.ReactElement<any> = implementerWelcomer({
+    const emailComponent: React.ReactElement = implementerWelcomer({
       name: implementer.implementerName,
       email: implementer.pointPersonEmail ?? "",
       preview: subject,

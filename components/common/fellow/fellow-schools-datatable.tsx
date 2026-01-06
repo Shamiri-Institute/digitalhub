@@ -1,5 +1,5 @@
 "use client";
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, Project } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -30,7 +30,7 @@ export default function FellowSchoolsDatatable({
   role,
 }: {
   fellows: FellowsData[];
-  project?: Prisma.ProjectGetPayload<{}>;
+  project?: Project;
   role: ImplementerRole;
 }) {
   const [fellow, setFellow] = useState<FellowsData | null>(null);

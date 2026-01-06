@@ -1,4 +1,4 @@
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { Fellow, ImplementerRole, Prisma } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
@@ -47,7 +47,7 @@ export default function StudentAttendance({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
   session: Session | null;
-  fellows: Prisma.FellowGetPayload<{}>[];
+  fellows: Fellow[];
   fellowId?: string;
 }) {
   const pathname = usePathname();
@@ -56,7 +56,7 @@ export default function StudentAttendance({
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState(false);
   const [groups, setGroups] = useState<
     {
-      fellow: Prisma.FellowGetPayload<{}>;
+      fellow: Fellow;
       group:
         | Prisma.InterventionGroupGetPayload<{
             include: {
