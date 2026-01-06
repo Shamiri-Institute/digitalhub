@@ -997,7 +997,6 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
     const emergencyPresentingIssues = result_data?.emergencyPresentingIssues ?? {};
 
     const combinedPresentingIssues = {
-      // ...(emergencyPresentingIssues as { [k: string]: string }),
       ...(emergencyPresentingIssues as Record<string, string>),
       ...data.presentingIssues,
     };
