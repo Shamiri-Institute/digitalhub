@@ -1,7 +1,13 @@
 "use client";
 
 import { createCalendar, type DateValue, getLocalTimeZone, today } from "@internationalized/date";
-import { ImplementerRole, type Prisma, type School, type SessionName, SessionStatus } from "@prisma/client";
+import {
+  ImplementerRole,
+  type Prisma,
+  type School,
+  type SessionName,
+  SessionStatus,
+} from "@prisma/client";
 import type { AriaButtonProps } from "@react-aria/button";
 import { useButton } from "@react-aria/button";
 import { useFocusRing } from "@react-aria/focus";
@@ -620,11 +626,7 @@ function NavigationButton({ children, ...props }: { children: React.ReactNode })
   );
 }
 
-function ScheduleFilterToggle({
-  sessionFilters,
-}: {
-  sessionFilters: SessionName[];
-}) {
+function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[] }) {
   const [open, setOpen] = useState(false);
   const { filters, setFilters } = useContext(FiltersContext);
   const { mode } = useMode();

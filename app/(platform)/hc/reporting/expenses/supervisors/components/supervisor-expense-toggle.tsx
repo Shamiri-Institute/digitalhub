@@ -11,11 +11,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 
-export default function SupervisorFilterToggle({
-  supervisors,
-}: {
-  supervisors: Supervisor[];
-}) {
+export default function SupervisorFilterToggle({ supervisors }: { supervisors: Supervisor[] }) {
   const [open, setOpen] = useState(false);
   const [filterIsActive] = useState(false);
 

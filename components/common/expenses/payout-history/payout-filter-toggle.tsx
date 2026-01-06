@@ -11,11 +11,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 
-export default function FellowPayoutFilterToggle({
-  payout,
-}: {
-  payout: PayoutStatements[];
-}) {
+export default function FellowPayoutFilterToggle({ payout }: { payout: PayoutStatements[] }) {
   const [open, setOpen] = useState(false);
   const [filterIsActive] = useState(false);
 

@@ -13,11 +13,7 @@ import {
 } from "#/components/ui/select";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
 
-export default function StudentsFilterToggle({
-  students,
-}: {
-  students: Student[];
-}) {
+export default function StudentsFilterToggle({ students }: { students: Student[] }) {
   const [open, setOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<Student | null>(null);
   const [filterIsActive] = useState(false);

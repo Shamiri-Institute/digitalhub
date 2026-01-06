@@ -1,4 +1,9 @@
-import { type HubCoordinator, ImplementerRole, SessionStatus, type Supervisor } from "@prisma/client";
+import {
+  type HubCoordinator,
+  ImplementerRole,
+  SessionStatus,
+  type Supervisor,
+} from "@prisma/client";
 import { addDays, addHours, setHours, setMinutes } from "date-fns";
 
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
