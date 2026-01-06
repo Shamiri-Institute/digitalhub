@@ -80,8 +80,8 @@ export default function HubStudentsDetailsCharts({
               <XAxis dataKey="sessionType" />
               <YAxis dataKey="attendance" />
               <Tooltip labelFormatter={(value) => `Session: ${value}`} />
-              <Bar dataKey="attendance" stackId="a" fill="#0085FF" label="Attendance count" />
-              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" label="Session type" />
+              <Bar dataKey="attendance" stackId="a" fill="#0085FF" />
+              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}

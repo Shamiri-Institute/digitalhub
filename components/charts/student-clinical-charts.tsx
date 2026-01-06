@@ -103,10 +103,10 @@ export default function HubStudentClinicalDataCharts({
               nameKey="name"
               startAngle={90}
               endAngle={450}
-              outerRadius={100}
-              innerRadius={70}
+              outerRadius={80}
+              innerRadius={55}
             >
-              <Label position="center" className="text-2xl font-semibold leading-8" fill="#000">
+              <Label position="center" className="text-xl font-semibold leading-8" fill="#000">
                 {caseStatusCounts.reduce((acc, d) => acc + d.value, 0)}
               </Label>
               {caseStatusCounts.map((entry, index) => (
@@ -121,6 +121,14 @@ export default function HubStudentClinicalDataCharts({
               ))}
             </Pie>
             <Tooltip />
+            <Legend
+              layout="horizontal"
+              verticalAlign="bottom"
+              align="center"
+              iconType="circle"
+              iconSize={8}
+              wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }}
+            />
           </PieChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -130,26 +138,32 @@ export default function HubStudentClinicalDataCharts({
         showCardFooter={false}
       >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart width={307} height={307} data={filteredFormatedSessions}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="session" />
-            <YAxis dataKey="count" />
+          <BarChart
+            data={filteredFormatedSessions}
+            margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="session" tick={{ fontSize: 12 }} />
+            <YAxis dataKey="count" tick={{ fontSize: 12 }} width={35} />
             <Tooltip />
-            <Legend />
-            <Bar dataKey="count" stackId="a" fill="#0085FF" />
-            <Bar dataKey="session" stackId="a" fill="#CCE7FF" />
+            <Bar dataKey="count" fill="#0085FF" name="Sessions" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
       <ChartCard title="Clinical cases by supervisor" showCardFooter={false}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart width={307} height={307} data={clinicalCasesBySupervisors}>
-            <CartesianGrid strokeDasharray="3 3" />
-            {/* <XAxis dataKey="supervisorName" /> */}
-            <YAxis dataKey="count" />
-            <Tooltip />
-            <Bar dataKey="count" stackId="a" fill="#E92C9D" label="Count" />
-            <Bar dataKey="supervisorName" stackId="a" fill="#ffdfea" label="Supervisor" />
+          <BarChart
+            data={clinicalCasesBySupervisors}
+            margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="supervisorName" tick={false} axisLine={false} />
+            <YAxis dataKey="count" tick={{ fontSize: 12 }} width={35} />
+            <Tooltip
+              formatter={(value) => [`${value} cases`, "Cases"]}
+              labelFormatter={(label) => label}
+            />
+            <Bar dataKey="count" fill="#E92C9D" name="Cases" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
