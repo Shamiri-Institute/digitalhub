@@ -26,7 +26,7 @@ export default function StudentsFilterToggle({ students }: { students: Student[]
       setDefaultFilters={() => {}}
     >
       <div className="flex flex-col gap-y-2 p-1">
-        <Select onValueChange={(value) => {}}>
+        <Select onValueChange={(_value) => {}}>
           <SelectTrigger className="text-sm">
             <SelectValue placeholder="Pick school" />
           </SelectTrigger>

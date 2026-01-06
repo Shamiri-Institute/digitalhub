@@ -345,7 +345,7 @@ export async function submitWeeklyFellowEvaluation(
 }
 
 export async function replaceGroupLeader({
-  oldLeaderId,
+  oldLeaderId: _oldLeaderId,
   leaderId,
   groupId,
 }: {
