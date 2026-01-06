@@ -8,7 +8,6 @@ export default defineConfig({
       "#": path.resolve(__dirname, "./"),
     },
   },
-  // @ts-expect-error react plugin type compatibility with vitest
   plugins: [react()],
   test: {
     environment: "jsdom",
