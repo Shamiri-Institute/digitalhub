@@ -118,7 +118,7 @@ export async function loadSessionReport() {
       );
       school.avgWorkload = Number.parseFloat((school.avgWorkload / school.count).toFixed(2));
 
-      // @ts-ignore
+      // @ts-expect-error
       delete school.count;
     });
 

@@ -268,7 +268,6 @@ export async function fetchSessionRatingAverages(hubId: string) {
     return [];
   }
 
-  // @ts-ignore
   ratingAverages.forEach((item) => {
     item.student_behaviour = Number(item.student_behaviour);
     item.admin_support = Number(item.admin_support);
