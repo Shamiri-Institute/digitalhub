@@ -89,7 +89,7 @@ export default function SupervisorDetailsForm({
       };
 
       // TODO: fix TS issue with assigning string to enum type
-      // @ts-ignore
+      // @ts-expect-error
       form.reset(defaultValues);
     }
   }, [open, supervisor, form]);

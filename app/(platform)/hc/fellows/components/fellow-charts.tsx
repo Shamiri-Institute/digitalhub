@@ -120,7 +120,7 @@ export default function FellowsCharts({
                 {fellowsDataCompletenessPercentage?.map(({ name }) => (
                   <Cell
                     key={name}
-                    // @ts-ignore
+                    // @ts-expect-error
                     fill={SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[name]}
                   />
                 ))}

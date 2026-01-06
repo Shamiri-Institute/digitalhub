@@ -228,7 +228,7 @@ export default function DataTable<TData, TValue>({
                       "min-w-[80px] bg-background-secondary/50 px-4! text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
                       header.column.columnDef.id !== "checkbox" && "truncate",
                       ["actions", "select"].includes(
-                        //@ts-ignore
+                        //@ts-expect-error
                         header.column.columnDef.header,
                       )
                         ? "py-3"
