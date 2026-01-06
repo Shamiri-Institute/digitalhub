@@ -1,7 +1,7 @@
+import { Readable } from "node:stream";
 import type { Prisma } from "@prisma/client";
 import * as fastCsv from "fast-csv";
 import { type NextRequest, NextResponse } from "next/server";
-import { Readable } from "stream";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     await hasRequiredHeaders(csvStream);
 
-    const rows: Prisma.StudentGetPayload<{
+    type StudentRow = Prisma.StudentGetPayload<{
       select: {
         id: boolean;
         createdAt: boolean;
@@ -59,50 +59,43 @@ export async function POST(request: NextRequest) {
         yearOfImplementation: boolean;
         age: boolean;
       };
-    }>[] = [];
+    }>;
 
-    const dataStream = Readable.from([fileBuffer]);
+    const rows: StudentRow[] = await new Promise((resolve, reject) => {
+      const parsedRows: StudentRow[] = [];
+      const dataStream = Readable.from([fileBuffer]);
 
-    dataStream
-      .pipe(fastCsv.parse({ headers: true }))
-      .on("data", async (row) => {
-        const studentId = objectId("stu");
-        rows.push({
-          id: studentId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          schoolId: school.id,
-          groupName: row.GroupNumber,
-          studentName: row.StudentName,
-          admissionNumber: row.AdmissionNumber,
-          form: Number.parseInt(row.Form),
-          stream: row.Stream,
-          gender: row.Gender,
-          visibleId: studentId,
-          yearOfImplementation: new Date().getFullYear(),
-          age: null,
-        });
-      })
-      .on("error", (err) => {
-        return NextResponse.json({ error: err }, { status: 500 });
-      })
-      .on("end", async () => {
-        try {
-          await db.student.createMany({ data: rows });
-
-          return NextResponse.json({
-            status: 200,
-            message: "File uploaded successfully.",
+      dataStream
+        .pipe(fastCsv.parse({ headers: true }))
+        .on("data", (row) => {
+          const studentId = objectId("stu");
+          parsedRows.push({
+            id: studentId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            schoolId: school.id,
+            groupName: row.GroupNumber,
+            studentName: row.StudentName,
+            admissionNumber: row.AdmissionNumber,
+            form: Number.parseInt(row.Form),
+            stream: row.Stream,
+            gender: row.Gender,
+            visibleId: studentId,
+            yearOfImplementation: new Date().getFullYear(),
+            age: null,
           });
-        } catch (error) {
-          console.error("Error uploading to database:", error);
-          return NextResponse.json({ error: "Error uploading to database" }, { status: 500 });
-        }
-      });
+        })
+        .on("error", (err) => reject(err))
+        .on("end", () => resolve(parsedRows));
+    });
+
+    await db.$transaction(async (prisma) => {
+      await prisma.student.createMany({ data: rows });
+    });
 
     return NextResponse.json({
       status: 200,
-      message: "File uploaded successfully.",
+      message: `${rows.length} students uploaded successfully.`,
     });
   } catch (error) {
     console.error(error);
