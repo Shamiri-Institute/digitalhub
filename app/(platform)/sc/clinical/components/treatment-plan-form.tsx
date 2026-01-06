@@ -83,8 +83,8 @@ export default function TreatmentPlanForm({
       const responese = await createTreatmentPlan({
         caseId: clinicalCase.id,
         role,
-        currentOrsScore: data.currentOrsScore ? Number.parseInt(data.currentOrsScore) : 0,
-        plannedSessions: Number.parseInt(data.plannedSessions),
+        currentOrsScore: data.currentOrsScore ? Number.parseInt(data.currentOrsScore, 10) : 0,
+        plannedSessions: Number.parseInt(data.plannedSessions, 10),
         sessionFrequency: data.sessionFrequency,
         treatmentInterventions: data.treatmentInterventions,
         otherIntervention: data.otherIntervention,

@@ -85,7 +85,7 @@ async function validateRow(row: Record<string, string>, context: ValidationConte
     });
 
     const studentsPerFellow = fellowsCount
-      ? Number.parseInt(row.numbers_expected) / fellowsCount
+      ? Number.parseInt(row.numbers_expected, 10) / fellowsCount
       : Number.POSITIVE_INFINITY;
 
     if (studentsPerFellow > 15) {
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
             parsedRows.push({
               id: schoolId,
               schoolName: row.school_name,
-              numbersExpected: Number.parseInt(row.numbers_expected),
+              numbersExpected: Number.parseInt(row.numbers_expected, 10),
               schoolDemographics: row.school_demographics,
               boardingDay: row.boardingorday,
               schoolType: row.school_type,
