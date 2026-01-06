@@ -79,7 +79,7 @@ export default function ChartArea({
                   <Cell
                     key={reason.name}
                     // FIXME: remove this ts-ignore to be consistent across the app
-                    // @ts-ignore
+                    // @ts-expect-error
                     fill={SCHOOL_DROPOUT_REASONS_MAPPING[reason.name]}
                   />
                 ))}
@@ -113,7 +113,7 @@ export default function ChartArea({
                   <Cell
                     key={name}
                     // FIXME: remove this ts-ignore to be consistent across the app
-                    // @ts-ignore
+                    // @ts-expect-error
                     fill={SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[name]}
                   />
                 ))}

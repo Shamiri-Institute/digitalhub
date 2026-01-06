@@ -16,7 +16,7 @@ import {
   sessionTypes,
 } from "@prisma/client";
 import { isBefore, startOfMonth } from "date-fns";
-import { zonedTimeToUtc } from "date-fns-tz";
+import { fromZonedTime } from "date-fns-tz";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -1393,7 +1393,7 @@ async function createInterventionSessionsForSchools(
 
     interventionSessions.push({
       id: objectId("session"),
-      sessionDate: zonedTimeToUtc(new Date(staticDate), "Africa/Nairobi"),
+      sessionDate: fromZonedTime(new Date(staticDate), "Africa/Nairobi"),
       status: "Scheduled",
       sessionType: sessionName.sessionName,
       sessionId: sessionName.id,
@@ -1446,7 +1446,7 @@ async function createInterventionSessionsForSchools(
       // Create session for this school
       interventionSessions.push({
         id: objectId("session"),
-        sessionDate: zonedTimeToUtc(new Date(currentDate), "Africa/Nairobi"),
+        sessionDate: fromZonedTime(new Date(currentDate), "Africa/Nairobi"),
         status: "Scheduled",
         sessionType: sessionName.sessionName,
         sessionId: sessionName.id,
