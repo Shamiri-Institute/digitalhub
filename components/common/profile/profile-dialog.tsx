@@ -178,8 +178,7 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
   };
 
   const showBankInfo =
-    session &&
-    session.user?.activeMembership?.role &&
+    session?.user?.activeMembership?.role &&
     (session.user.activeMembership.role === ImplementerRole.SUPERVISOR ||
       session.user.activeMembership.role === ImplementerRole.HUB_COORDINATOR ||
       session.user.activeMembership.role === ImplementerRole.CLINICAL_LEAD);
