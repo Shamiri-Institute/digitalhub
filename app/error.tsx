@@ -23,26 +23,9 @@ export default function AppError({
   }, [error]);
 
   const handleRedirectToLogin = async () => {
-    const cookiesToClear = [
-      "next-auth.session-token",
-      "next-auth.callback-url",
-      "next-auth.csrf-token",
-      "__Secure-next-auth.session-token",
-      "__Secure-next-auth.callback-url",
-      "__Secure-next-auth.csrf-token",
-      "session",
-    ];
-
-    cookiesToClear.forEach((cookie) => {
-      document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-      document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
-    });
-
     localStorage.clear();
     sessionStorage.clear();
-
     reset();
-
     await signOut({ redirect: false });
     window.location.replace("/login");
   };
