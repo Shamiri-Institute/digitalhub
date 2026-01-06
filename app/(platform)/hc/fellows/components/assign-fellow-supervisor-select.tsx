@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { Supervisor } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
@@ -23,7 +23,7 @@ export default function AssignFellowSupervisorSelect({
 }: {
   fellowId: string;
   supervisorId: string | null;
-  supervisors: Prisma.SupervisorGetPayload<{}>[];
+  supervisors: Supervisor[];
   disabled?: boolean;
 }) {
   const pathname = usePathname();

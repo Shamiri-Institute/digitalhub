@@ -35,7 +35,7 @@ export function DayView({
   supervisorId?: string;
   fellowId?: string;
 }) {
-  const headerRowRef: any = useRef(null);
+  const headerRowRef = useRef<HTMLTableElement>(null);
   const dayFormatter = useDateFormatter({ weekday: "long" });
 
   const currentDate = state.visibleRange.start;

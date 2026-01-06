@@ -1,6 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
+import type { Fellow } from "@prisma/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -48,7 +48,7 @@ export default function ApproveRejectFellowComplaint({
 }: {
   children: React.ReactNode;
   complaint: ComplaintData;
-  fellows: Prisma.FellowGetPayload<{}>[];
+  fellows: Fellow[];
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false);

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
+import type { Supervisor } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -39,7 +39,7 @@ export default function AssignPointSupervisor({
   setOpen,
   school,
 }: {
-  supervisors: Prisma.SupervisorGetPayload<{}>[];
+  supervisors: Supervisor[];
   open: boolean;
   setOpen: (open: boolean) => void;
   school: SchoolsTableData | null;

@@ -1,5 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
+import type {
+  MonthlySupervisorEvaluation as MonthlySupervisorEvaluationType,
+  Project,
+} from "@prisma/client";
 import { addDays, differenceInSeconds, eachMonthOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -63,12 +66,12 @@ export default function MonthlySupervisorEvaluation({
   children: React.ReactNode;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  project: Prisma.ProjectGetPayload<{}> | null;
-  evaluations: Prisma.MonthlySupervisorEvaluationGetPayload<{}>[];
+  project: Project | null;
+  evaluations: MonthlySupervisorEvaluationType[];
   mode?: "view" | "edit";
 }) {
   const [existingEvaluation, setExistingEvaluation] = useState<
-    Prisma.MonthlySupervisorEvaluationGetPayload<{}> | undefined
+    MonthlySupervisorEvaluationType | undefined
   >();
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
   const pathname = usePathname();

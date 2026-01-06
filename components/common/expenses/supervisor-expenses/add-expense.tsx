@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
+import type { Supervisor } from "@prisma/client";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useS3Upload } from "next-s3-upload";
@@ -72,7 +72,7 @@ export default function AddSupervisorExpensesForm({
   supervisorsInHub,
 }: {
   children: React.ReactNode;
-  supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
+  supervisorsInHub: Supervisor[];
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
