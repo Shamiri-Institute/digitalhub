@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
+import type { Fellow, Prisma, Student, Supervisor } from "@prisma/client";
 import { format } from "date-fns";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -76,8 +76,8 @@ export function AddNewClinicalCaseForm({
       };
     };
   }>[];
-  fellowsInProject: Prisma.FellowGetPayload<{}>[];
-  supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
+  fellowsInProject: Fellow[];
+  supervisorsInHub: Supervisor[];
   creatorId: string;
   userRole: "CLINICAL_LEAD" | "SUPERVISOR";
   hubs: Prisma.HubGetPayload<{
@@ -92,11 +92,11 @@ export function AddNewClinicalCaseForm({
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [selectedHubId, setSelectedHubId] = useState<string>("");
-  const [students, setStudents] = useState<Prisma.StudentGetPayload<{}>[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [availableSessions, setAvailableSessions] = useState<
     Array<{ id: string; sessionLabel: string }>
   >([]);
-  const [fellowsInHub, setFellowsInHub] = useState<Prisma.FellowGetPayload<{}>[]>([]);
+  const [fellowsInHub, setFellowsInHub] = useState<Fellow[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -139,7 +139,10 @@ export function AddNewClinicalCaseForm({
       if (selectedStudent.yearOfBirth) {
         form.setValue("yearOfBirth", new Date(selectedStudent.yearOfBirth, 0, 1));
       }
-      form.setValue("gender", (selectedStudent.gender?.toLowerCase() as any) || "");
+      const genderValue = selectedStudent.gender as (typeof GENDER_OPTIONS)[number] | null;
+      if (genderValue) {
+        form.setValue("gender", genderValue);
+      }
       form.setValue("classForm", selectedStudent.form?.toString() || "");
       form.setValue("stream", selectedStudent.stream || "");
     }

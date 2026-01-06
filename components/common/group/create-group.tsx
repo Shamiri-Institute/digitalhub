@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, School } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -47,7 +47,7 @@ export default function CreateGroup({
       fellows: true;
     };
   }>[];
-  school: Prisma.SchoolGetPayload<{}>;
+  school: School;
   groupCount: number;
   disabled?: boolean;
 }) {

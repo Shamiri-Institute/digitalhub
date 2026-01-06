@@ -1,4 +1,9 @@
-import { ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
+import {
+  type HubCoordinator,
+  ImplementerRole,
+  SessionStatus,
+  type Supervisor,
+} from "@prisma/client";
 import { addDays, addHours, setHours, setMinutes } from "date-fns";
 
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
@@ -908,7 +913,7 @@ async function seedDatabase() {
             await db.interventionSession.create({
               data: {
                 id: session.id,
-                status: (session as any).status,
+                status: (session as { status?: SessionStatus }).status,
                 sessionType: session.sessionType,
                 sessionName: session.sessionName,
                 sessionDate: session.sessionDate,
@@ -980,8 +985,7 @@ async function seedDatabase() {
     }
 
     for (const user of Object.values(implementer.users)) {
-      let personnel: Prisma.SupervisorGetPayload<{}> | Prisma.HubCoordinatorGetPayload<{}> | null =
-        null;
+      let personnel: Supervisor | HubCoordinator | null = null;
 
       if (user.role === ImplementerRole.SUPERVISOR) {
         personnel = await db.supervisor.findUniqueOrThrow({
@@ -996,7 +1000,7 @@ async function seedDatabase() {
           },
         });
       } else {
-        throw new Error(`Unhandled role: ${(user as any).role}`);
+        throw new Error(`Unhandled role: ${(user as { role?: ImplementerRole }).role}`);
       }
 
       await db.user.create({

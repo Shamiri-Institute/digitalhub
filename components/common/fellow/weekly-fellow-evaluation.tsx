@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
+import type { Project, WeeklyFellowRatings } from "@prisma/client";
 import { addDays, differenceInSeconds, eachWeekOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -54,15 +54,15 @@ export default function WeeklyFellowEvaluation({
   fellowId: string;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  evaluations: Prisma.WeeklyFellowRatingsGetPayload<{}>[];
-  project?: Prisma.ProjectGetPayload<{}>;
+  evaluations: WeeklyFellowRatings[];
+  project?: Project;
   mode: "view" | "add";
   children: React.ReactNode;
 }) {
   const _evaluation = evaluations.sort((a, b) => b.week.getTime() - a.week.getTime())[0];
-  const [existingEvaluation, setExistingEvaluation] = useState<
-    Prisma.WeeklyFellowRatingsGetPayload<{}> | undefined
-  >(_evaluation);
+  const [existingEvaluation, setExistingEvaluation] = useState<WeeklyFellowRatings | undefined>(
+    _evaluation,
+  );
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
   const pathname = usePathname();
 

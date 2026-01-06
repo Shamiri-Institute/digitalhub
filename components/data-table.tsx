@@ -42,6 +42,7 @@ import {
 } from "#/components/ui/table";
 import { cn } from "#/lib/utils";
 
+// biome-ignore lint/suspicious/noExplicitAny: FilterFn generic requires any for universal compatibility with all table data types
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   // Rank the item
   const itemRank = rankItem(row.getValue(columnId), value);

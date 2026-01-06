@@ -1,5 +1,5 @@
 "use client";
-import type { Prisma } from "@prisma/client";
+import type { Supervisor } from "@prisma/client";
 
 import type { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import SupervisorsFilterTab from "#/app/(platform)/hc/reporting/expenses/supervisors/components/supervisor-filter";
@@ -11,7 +11,7 @@ export default function HCSupervisorsDataTable({
   supervisorsInHub,
 }: {
   supervisorExpenses: HubSupervisorExpensesType[];
-  supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
+  supervisorsInHub: Supervisor[];
 }) {
   return (
     <div className="container w-full grow space-y-3">

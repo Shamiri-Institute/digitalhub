@@ -1,12 +1,12 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { SchoolDocuments } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Dispatch, SetStateAction } from "react";
 import SchoolFilesDataTableMenu from "#/components/common/files/files-datatable-menu";
 import { Checkbox } from "#/components/ui/checkbox";
 
-export type SchoolFilesTableData = Prisma.SchoolDocumentsGetPayload<{}>;
+export type SchoolFilesTableData = SchoolDocuments;
 
 export const fileColumns = (state: {
   setRenameDialog: Dispatch<SetStateAction<boolean>>;

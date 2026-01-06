@@ -10,7 +10,7 @@ import * as path from "path";
  **/
 export async function parseCsvFile(
   fileName: string,
-  callback: (row: any) => Promise<void>,
+  callback: (row: Record<string, string | null>) => Promise<void>,
 ): Promise<void> {
   const duplicatesDetectorHash = new Set();
   const filePath = path.resolve(`./prisma/scripts/data/${fileName}.csv`);
@@ -45,12 +45,12 @@ export async function parseCsvFile(
         console.warn(
           `Warning: Supervisor_ID contains multiple values (${dataRow["Supervisor_ID"]}). Check if this is correct. Truncating to one for now.`,
         );
-        dataRow["Supervisor_ID"] = dataRow["Supervisor_ID"].split(",")[0];
+        dataRow["Supervisor_ID"] = dataRow["Supervisor_ID"].split(",")[0] ?? null;
       }
     }
 
     if (fileName === "fellow_attendance_temp") {
-      if (dataRow["Year_of _imp"] !== null) {
+      if (dataRow["Year_of _imp"] !== null && dataRow["Year_of _imp"] !== undefined) {
         dataRow["Year_of_imp"] = dataRow["Year_of _imp"];
         delete dataRow["Year_of _imp"];
       }
@@ -59,7 +59,7 @@ export async function parseCsvFile(
         console.warn(
           `Warning: Supervisor_ID contains multiple values (${dataRow["Supervisor_ID"]}). Check if this is correct. Truncating to one for now.`,
         );
-        dataRow["Supervisor_ID"] = dataRow["Supervisor_ID"].split(",")[0];
+        dataRow["Supervisor_ID"] = dataRow["Supervisor_ID"].split(",")[0] ?? null;
       }
 
       if (duplicatesDetectorHash.has(dataRow["Attendance_ID"])) {
@@ -79,7 +79,7 @@ export async function parseCsvFile(
         console.warn(
           `Warning: Hub_ID contains multiple values (${dataRow["Hub_ID"]}). Check if this is correct. Truncating to one for now.`,
         );
-        dataRow["Hub_ID"] = dataRow["Hub_ID"].split(",")[0];
+        dataRow["Hub_ID"] = dataRow["Hub_ID"].split(",")[0] ?? null;
       }
     }
 
@@ -89,8 +89,9 @@ export async function parseCsvFile(
         return;
       }
 
-      if (dataRow["Gender"] !== null) {
-        dataRow["Gender"] = dataRow["Gender"].trim();
+      const gender = dataRow["Gender"];
+      if (gender !== null && gender !== undefined) {
+        dataRow["Gender"] = gender.trim();
       }
 
       duplicatesDetectorHash.add(dataRow["Shamiri_ID"]);
@@ -100,17 +101,13 @@ export async function parseCsvFile(
   }
 }
 
-interface GenericObject {
-  [key: string]: any;
-}
+// CSV row type - values are strings or null after parsing
+type CsvRow = Record<string, string | null>;
 
-function replaceEmptyStringsWithNull(obj: GenericObject): GenericObject {
-  return Object.entries(obj).reduce((newObj: GenericObject, [key, value]) => {
+function replaceEmptyStringsWithNull(obj: Record<string, string>): CsvRow {
+  return Object.entries(obj).reduce((newObj: CsvRow, [key, value]) => {
     if (value === "") {
       newObj[key.trim()] = null;
-    } else if (typeof value === "object" && value !== null) {
-      // If value is an object or an array
-      newObj[key.trim()] = replaceEmptyStringsWithNull(value);
     } else {
       newObj[key.trim()] = value;
     }

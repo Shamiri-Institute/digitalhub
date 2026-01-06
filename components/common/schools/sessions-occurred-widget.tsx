@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma, SessionName } from "@prisma/client";
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
@@ -13,7 +13,7 @@ export default function SessionsOccurredWidget({
       session: true;
     };
   }>[];
-  types?: Prisma.SessionNameGetPayload<{}>[];
+  types?: SessionName[];
 }) {
   return (
     <div className="flex flex-wrap justify-center gap-2">

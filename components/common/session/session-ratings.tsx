@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, InterventionSessionRating, Prisma } from "@prisma/client";
 import { addDays, addHours, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -88,9 +88,9 @@ export default function SessionRatings({
       : role === "HUB_COORDINATOR"
         ? sessionRatings[0]
         : undefined;
-  const [existingRating, setExistingRating] = useState<
-    Prisma.InterventionSessionRatingGetPayload<{}> | undefined
-  >(rating);
+  const [existingRating, setExistingRating] = useState<InterventionSessionRating | undefined>(
+    rating,
+  );
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
   const pathname = usePathname();
 

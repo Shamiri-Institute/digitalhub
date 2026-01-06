@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, School, SessionName } from "@prisma/client";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
@@ -43,8 +43,8 @@ export function ScheduleNewSession({
   role,
 }: {
   toggleDialog: Dispatch<SetStateAction<boolean>>;
-  schools: Prisma.SchoolGetPayload<{}>[];
-  hubSessionTypes: Prisma.SessionNameGetPayload<{}>[];
+  schools: School[];
+  hubSessionTypes: SessionName[];
   role: ImplementerRole;
 }) {
   const { toast } = useToast();
