@@ -314,35 +314,33 @@ export function TableView({
     });
     const _fellowAttendances: FellowAttendancesTableData[] = [];
 
-    const attendances = activeSessions.map((session) => {
+    const attendances = activeSessions.flatMap((session) => {
       // filter by sessionType
       if (filters.sessionTypes) {
         if (
           session.session?.sessionName !== undefined &&
           !Object.keys(filters.sessionTypes).includes(session.session?.sessionName)
         ) {
-          return;
+          return [];
         }
       }
       // filter by session status
       if (filters.statusTypes) {
         if (session.status !== null && !Object.keys(filters.statusTypes).includes(session.status)) {
-          return;
+          return [];
         }
       }
-      return supervisors?.map((supervisor) => {
+      return (supervisors ?? []).map((supervisor) => {
         const totalAttendedFellows = supervisor.fellows.filter((fellow) => {
           const attended = fellow.fellowAttendances.find(
             (attendance) => attendance.sessionId === session?.id,
           );
-          if (attended) {
-            return fellow;
-          }
+          return !!attended;
         });
         const attendance = supervisor.supervisorAttendances.find(
           (_attendance) => _attendance.sessionId === session?.id,
         );
-        supervisor.fellows.filter((fellow) => {
+        supervisor.fellows.forEach((fellow) => {
           const group = fellow.groups.find((group) => group.schoolId === session.schoolId);
           if (group) {
             const fellow_attendance = fellow.fellowAttendances.find(
@@ -389,7 +387,7 @@ export function TableView({
         };
       });
     });
-    setSupervisorAttendances(attendances.filter((x) => x !== undefined).flat());
+    setSupervisorAttendances(attendances);
     setFellowAttendances(_fellowAttendances);
   }, [selectedDay, roleToggle, filters, sessions, supervisors, state]);
 
@@ -438,6 +436,7 @@ export function TableView({
                 </ToggleGroupItem>
               );
             }
+            return null;
           })}
         </ToggleGroup>
       </div>

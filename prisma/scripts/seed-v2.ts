@@ -458,7 +458,9 @@ async function createAdminUsers(implementers: Implementer[], emails: Set<string>
   });
 
   // Add admin emails to set
-  createdUsers.forEach((user) => emails.add(user.email ?? ""));
+  createdUsers.forEach((user) => {
+    emails.add(user.email ?? "");
+  });
 
   return createdAdminUsers;
 }
@@ -547,7 +549,9 @@ async function createHubCoordinators(
   });
 
   // Add static coordinator emails to set
-  staticCoordinators.forEach((coord) => emails.add(coord.coordinatorEmail));
+  staticCoordinators.forEach((coord) => {
+    emails.add(coord.coordinatorEmail);
+  });
 
   // Continue with dynamic coordinators
   const hubsWithoutStatic = hubs.slice(1);
@@ -685,7 +689,9 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
   ];
 
   supervisors.push(...staticSupervisors);
-  staticSupervisors.forEach((sup) => emails.add(sup.supervisorEmail));
+  staticSupervisors.forEach((sup) => {
+    emails.add(sup.supervisorEmail);
+  });
 
   // Continue with dynamic supervisors
   const hubsWithoutStatic = hubs.slice(1);
@@ -1005,7 +1011,9 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
     },
   ];
   fellows.push(...staticFellows);
-  staticFellows.forEach((fellow) => emails.add(fellow.fellowEmail));
+  staticFellows.forEach((fellow) => {
+    emails.add(fellow.fellowEmail);
+  });
 
   // Continue with dynamic fellows
   const counties = KENYAN_COUNTIES.map((county) => {

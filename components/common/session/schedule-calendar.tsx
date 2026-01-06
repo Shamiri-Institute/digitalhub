@@ -95,7 +95,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const sessionTypes: { [key: string]: boolean } = {};
 
-  props.hubSessionTypes?.map((sessionType) => {
+  props.hubSessionTypes?.forEach((sessionType) => {
     sessionTypes[sessionType.sessionName] = true;
   });
   const [filters, setFilters] = useState<Filters>({
@@ -631,7 +631,7 @@ function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[
   const { filters, setFilters } = useContext(FiltersContext);
   const { mode } = useMode();
   const _sessionTypes: { [key: string]: boolean } = {};
-  Object.keys(filters.sessionTypes).map((sessionType) => {
+  Object.keys(filters.sessionTypes).forEach((sessionType) => {
     _sessionTypes[sessionType] = true;
   });
   const defaultFilterSettings = {
