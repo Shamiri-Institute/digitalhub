@@ -102,7 +102,6 @@ export async function getClinicalCasesStats() {
     completedCases: number;
     followUpCases: number;
     activeCases: number;
-    other: number;
   }>(
     (acc, stat) => {
       const key =
@@ -112,8 +111,10 @@ export async function getClinicalCasesStats() {
             ? "followUpCases"
             : stat.caseStatus === "Active"
               ? "activeCases"
-              : "other";
-      acc[key] = stat._count.id;
+              : null;
+      if (key) {
+        acc[key] = stat._count.id;
+      }
       return acc;
     },
     {
@@ -121,11 +122,10 @@ export async function getClinicalCasesStats() {
       completedCases: 0,
       followUpCases: 0,
       activeCases: 0,
-      other: 0,
     },
   );
 
-  stats.totalCases = stats.completedCases + stats.followUpCases + stats.activeCases + stats.other;
+  stats.totalCases = stats.completedCases + stats.followUpCases + stats.activeCases;
 
   const activeCasesPercentage = (stats.activeCases / stats.totalCases) * 100;
   const followUpCasesPercentage = (stats.followUpCases / stats.totalCases) * 100;
