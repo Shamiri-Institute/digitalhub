@@ -56,7 +56,7 @@ export default function RecordingsDataTableMenu({
     }
   };
 
-  const canViewFeedback = recording.status === "COMPLETED" && recording.fidelityFeedback;
+  const canViewFeedback = recording.status === "COMPLETED" && Boolean(recording.fidelityFeedback);
   const canRetry = recording.status === "FAILED";
 
   return (
