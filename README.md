@@ -20,7 +20,8 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/shamiri_db_dev"
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-nextauth-secret" # Generate a secure random string
 
-# Google OAuth (for NextAuth)
+# Google OAuth (for NextAuth) - OPTIONAL for local development
+# Not required if using email/password login (NEXT_PUBLIC_ENV=development)
 GOOGLE_ID="your-google-client-id"
 GOOGLE_SECRET="your-google-client-secret"
 
@@ -86,10 +87,14 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 First, set up your `.env.development` environment: Copy `.env.example` over and check with the team
 on what to supply for the various Digital Hub-related credentials.
 
-- for [NextAuth.js login via Google](https://next-auth.js.org/providers/google), you may wish to create your own Client ID for local dev. (If you used another dev's creds, and they regenerated the client later, you'd get an `Error 401: deleted_client`.) Do so in your GCloud project's [credentials page](https://console.developers.google.com/apis/credentials), configuring:
-  - authorized origins: http://localhost:3000
-  - authorized redirect URI: http://localhost:3000/api/auth/callback/google
-    Then copy the `Client ID` & `Client secret` to the GOOGLE\* env vars.
+- **Authentication Options:**
+  - **Option 1 (Recommended for local dev):** Use email/password login with test credentials. No OAuth setup needed.
+    - Use any email from the seed data (e.g., `martin.odegaard@test.com`) with password `TestPassword123!`
+    - This works when `NEXT_PUBLIC_ENV=development` (default for local dev)
+  - **Option 2:** For [NextAuth.js login via Google](https://next-auth.js.org/providers/google), create your own Client ID. (If you used another dev's creds, and they regenerated the client later, you'd get an `Error 401: deleted_client`.) Do so in your GCloud project's [credentials page](https://console.developers.google.com/apis/credentials), configuring:
+    - authorized origins: http://localhost:3000
+    - authorized redirect URI: http://localhost:3000/api/auth/callback/google
+    - Then copy the `Client ID` & `Client secret` to the GOOGLE\* env vars.
 
 Then setup the db (needs docker compose installed):
 
