@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.10.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.3...v1.10.0) (2026-01-08)
+
+
+### Features
+
+* **auth:** add email+password login for non-production environments ([#569](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/569)) ([0ec09cc](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/0ec09cced94ff7c7ca2fcc59e5d06d6c85560792))
+
+
+### Bug Fixes
+
+* **lint:** enforce noFloatingPromises biome rule ([#571](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/571)) ([917349e](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/917349e2b4b556d1881e8c2b140853c81532d9aa))
+
 ## [1.9.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.2...v1.9.3) (2026-01-08)
 
 
