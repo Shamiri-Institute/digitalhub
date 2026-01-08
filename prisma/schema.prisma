@@ -1672,41 +1672,41 @@ enum RecordingProcessingStatus {
 /// SessionRecording stores metadata for audio recordings of fellow intervention sessions
 /// These recordings are uploaded by supervisors and processed by the fidelity-inference AI service
 model SessionRecording {
-  id               String                    @id @db.VarChar(255) // rec_xxxxx format
-  createdAt        DateTime                  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt        DateTime                  @updatedAt @map("updated_at") @db.Timestamptz()
-  archivedAt       DateTime?                 @map("archived_at") @db.Timestamptz()
+  id         String    @id @db.VarChar(255) // rec_xxxxx format
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz()
 
   // File metadata
-  fileName         String                    @map("file_name") @db.VarChar(255)
-  originalFileName String                    @map("original_file_name") @db.VarChar(255)
-  s3Key            String                    @map("s3_key") @db.VarChar(500)
-  contentType      String                    @map("content_type") @db.VarChar(100)
-  fileSize         Int                       @map("file_size")
+  fileName         String @map("file_name") @db.VarChar(255)
+  originalFileName String @map("original_file_name") @db.VarChar(255)
+  s3Key            String @map("s3_key") @db.VarChar(500)
+  contentType      String @map("content_type") @db.VarChar(100)
+  fileSize         Int    @map("file_size")
 
   // Relationships
-  fellowId         String                    @map("fellow_id") @db.VarChar(255)
-  fellow           Fellow                    @relation(fields: [fellowId], references: [id])
-  schoolId         String                    @map("school_id") @db.VarChar(255)
-  school           School                    @relation(fields: [schoolId], references: [id])
-  groupId          String                    @map("group_id") @db.VarChar(255)
-  group            InterventionGroup         @relation(fields: [groupId], references: [id])
-  sessionId        String                    @map("intervention_session_id") @db.VarChar(255)
-  session          InterventionSession       @relation(fields: [sessionId], references: [id])
-  uploadedBy       String                    @map("uploaded_by")
-  uploader         User                      @relation(fields: [uploadedBy], references: [id])
-  supervisorId     String                    @map("supervisor_id") @db.VarChar(255)
-  supervisor       Supervisor                @relation(fields: [supervisorId], references: [id])
+  fellowId     String              @map("fellow_id") @db.VarChar(255)
+  fellow       Fellow              @relation(fields: [fellowId], references: [id])
+  schoolId     String              @map("school_id") @db.VarChar(255)
+  school       School              @relation(fields: [schoolId], references: [id])
+  groupId      String              @map("group_id") @db.VarChar(255)
+  group        InterventionGroup   @relation(fields: [groupId], references: [id])
+  sessionId    String              @map("intervention_session_id") @db.VarChar(255)
+  session      InterventionSession @relation(fields: [sessionId], references: [id])
+  uploadedBy   String              @map("uploaded_by")
+  uploader     User                @relation(fields: [uploadedBy], references: [id])
+  supervisorId String              @map("supervisor_id") @db.VarChar(255)
+  supervisor   Supervisor          @relation(fields: [supervisorId], references: [id])
 
   // Processing status
-  status           RecordingProcessingStatus @default(PENDING)
-  processedAt      DateTime?                 @map("processed_at") @db.Timestamptz()
-  errorMessage     String?                   @map("error_message") @db.Text
-  retryCount       Int                       @default(0) @map("retry_count")
+  status       RecordingProcessingStatus @default(PENDING)
+  processedAt  DateTime?                 @map("processed_at") @db.Timestamptz()
+  errorMessage String?                   @map("error_message") @db.Text
+  retryCount   Int                       @default(0) @map("retry_count")
 
   // AI Feedback (hybrid storage: key fields + JSON blob)
-  fidelityFeedback Json?                     @map("fidelity_feedback")
-  overallScore     String?                   @map("overall_score") @db.VarChar(50)
+  fidelityFeedback Json?   @map("fidelity_feedback")
+  overallScore     String? @map("overall_score") @db.VarChar(50)
 
   @@unique([fellowId, schoolId, groupId, sessionId], name: "unique_recording_per_session")
   @@index([supervisorId])
