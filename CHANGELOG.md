@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.9.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.2...v1.9.3) (2026-01-08)
+
+
+### Bug Fixes
+
+* **api:** resolve race condition in students CSV upload route ([#562](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/562)) ([4a82396](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/4a8239638235ecf098e352a15594d7bc044fbdbc))
+* **lint:** add explicit radix parameter to parseInt calls ([#567](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/567)) ([b12a6c3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/b12a6c3b055eab7fa4380427b8c88d2d7f796f40))
+* **lint:** enforce noAccumulatingSpread biome rule ([#555](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/555)) ([d44846b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d44846baec2605dafa8fef8789c65d86ef83866e))
+* **lint:** enforce noUnusedFunctionParameters biome rule ([#553](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/553)) ([3530692](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/35306926e74224610da2b20b84f9798dea083204))
+* **lint:** enforce noUselessFragments biome rule ([#561](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/561)) ([33b4878](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/33b48780ea5f28a206efbdbee505b82a3e3967c2))
+* **lint:** enforce noUselessTernary biome rule ([#554](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/554)) ([bcff6fb](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/bcff6fb48e19d146482f399030026b9ac0c63ca5))
+* **lint:** enforce useDateNow biome rule ([#559](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/559)) ([45521f3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/45521f31d71be016b7777fe57696d9c5d7dd5ce2))
+* **lint:** enforce useIterableCallbackReturn biome rule ([#553](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/553)) ([#564](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/564)) ([bb1db44](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/bb1db4451ce9377bb7f2e7274b86b2e46ec06398))
+* **lint:** enforce useOptionalChain biome rule ([#557](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/557)) ([0d3b3cf](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/0d3b3cfb62179e8250a00237c31f1c516c862c2a))
+* **lint:** enforce useTemplate biome rule ([#560](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/560)) ([83062b2](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/83062b2326255b4bb509857961ae6774e7447939))
+* **lint:** remove redundant cookie clearing, rely on NextAuth signOut ([#556](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/556)) ([7f708f2](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7f708f2110bc1e361540172e1558086b68a27b6f))
+* **lint:** replace findIndex with indexOf for simple equality check ([#568](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/568)) ([14282be](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/14282bee34b6e35399b39dcf463f7d0fca25e41d))
+
 ## [1.9.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.1...v1.9.2) (2026-01-06)
 
 
