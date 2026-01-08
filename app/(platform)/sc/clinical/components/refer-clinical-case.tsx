@@ -87,7 +87,7 @@ export default function ReferClinicalCase({
       setSupervisorsInHub(data?.allSupervisors ?? []);
       setCurrentSupervisor(data?.currentSupervisor ?? null);
     };
-    fetchSupervisorsInHub();
+    void fetchSupervisorsInHub();
   }, []);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function ReferClinicalCase({
         setClinicalLeads(data ?? []);
       }
     };
-    fetchClinicalLeads();
+    void fetchClinicalLeads();
   }, [selectedReferTo]);
 
   const form = useForm<ComplaintFormValues>({

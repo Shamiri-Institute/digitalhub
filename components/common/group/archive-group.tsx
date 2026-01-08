@@ -37,10 +37,9 @@ export default function ArchiveGroup({
       description: response.message,
     });
 
-    await revalidatePageAction(pathname).then(() => {
-      setLoading(false);
-      onOpenChange(false);
-    });
+    await revalidatePageAction(pathname);
+    setLoading(false);
+    onOpenChange(false);
   };
 
   return (
@@ -79,7 +78,7 @@ export default function ArchiveGroup({
               disabled={loading}
               loading={loading}
               onClick={() => {
-                onSubmit();
+                void onSubmit();
               }}
             >
               Confirm

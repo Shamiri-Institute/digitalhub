@@ -38,7 +38,7 @@ export function ProfileSwitcher() {
 
   React.useEffect(() => {
     if (implementerId) {
-      fetch(`/api/implementers/${implementerId}`)
+      void fetch(`/api/implementers/${implementerId}`)
         .then((response) => response.json())
         .then((data) => setImplementerInfo(data));
     }
@@ -113,7 +113,7 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
                 type="button"
                 className="flex-start flex rounded-md p-2 hover:bg-foreground/3"
                 onClick={() => {
-                  signOut({
+                  void signOut({
                     callbackUrl: "/login",
                   });
                 }}

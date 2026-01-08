@@ -35,7 +35,7 @@ export default function SchoolFilesUploader({
       return;
     }
 
-    handleFileChange(selectedFile);
+    await handleFileChange(selectedFile);
   };
 
   const handleFileChange = useCallback(

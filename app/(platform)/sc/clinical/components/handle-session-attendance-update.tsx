@@ -139,7 +139,7 @@ export default function HandleSessionAttendanceUpdate({
                       : selectedStatus === "missed"
                         ? false
                         : null;
-                  handleAttendanceUpdate(status);
+                  void handleAttendanceUpdate(status);
                 }}
               >
                 Save changes

@@ -1535,4 +1535,4 @@ async function main() {
   // create payouts
 }
 
-main();
+void main();

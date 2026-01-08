@@ -83,14 +83,13 @@ export default function StudentDropoutForm({
     });
     form.reset();
 
-    await revalidatePageAction(pathname).then(() => {
-      if (form.getValues("mode") === "dropout") {
-        setConfirmDialog(false);
-      } else {
-        setIsOpen(false);
-      }
-      setLoading(false);
-    });
+    await revalidatePageAction(pathname);
+    if (form.getValues("mode") === "dropout") {
+      setConfirmDialog(false);
+    } else {
+      setIsOpen(false);
+    }
+    setLoading(false);
   }
 
   const onSubmit = () => {
@@ -98,7 +97,7 @@ export default function StudentDropoutForm({
       setIsOpen(false);
       setConfirmDialog(true);
     } else {
-      confirmSubmit();
+      void confirmSubmit();
     }
   };
 
@@ -203,7 +202,7 @@ export default function StudentDropoutForm({
               disabled={loading}
               loading={loading}
               onClick={() => {
-                confirmSubmit();
+                void confirmSubmit();
               }}
             >
               Confirm
