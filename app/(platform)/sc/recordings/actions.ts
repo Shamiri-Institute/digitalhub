@@ -22,21 +22,10 @@ export async function loadSupervisorFellows() {
     throw new Error("Unauthorized user");
   }
 
-  const fellows = await db.fellow.findMany({
-    where: {
-      supervisorId: supervisor.profile.id,
-      droppedOut: false,
-    },
-    select: {
-      id: true,
-      fellowName: true,
-    },
-    orderBy: {
-      fellowName: "asc",
-    },
-  });
-
-  return fellows;
+  return supervisor.profile.fellows
+    .filter((f) => !f.droppedOut)
+    .map((f) => ({ id: f.id, fellowName: f.fellowName }))
+    .sort((a, b) => (a.fellowName ?? "").localeCompare(b.fellowName ?? ""));
 }
 
 /**
@@ -49,19 +38,12 @@ export async function loadFellowGroups(fellowId: string) {
     throw new Error("Unauthorized user");
   }
 
-  // Verify fellow belongs to this supervisor
-  const fellow = await db.fellow.findFirst({
-    where: {
-      id: fellowId,
-      supervisorId: supervisor.profile.id,
-    },
-  });
-
+  const fellow = supervisor.profile.fellows.find((f) => f.id === fellowId);
   if (!fellow) {
     throw new Error("Fellow not found or unauthorized");
   }
 
-  const groups = await db.interventionGroup.findMany({
+  return db.interventionGroup.findMany({
     where: {
       leaderId: fellowId,
     },
@@ -80,8 +62,6 @@ export async function loadFellowGroups(fellowId: string) {
       groupName: "asc",
     },
   });
-
-  return groups;
 }
 
 /**
@@ -155,7 +135,7 @@ export async function checkRecordingExists(params: {
     throw new Error("Unauthorized user");
   }
 
-  const existing = await db.sessionRecording.findUnique({
+  return db.sessionRecording.findUnique({
     where: {
       unique_recording_per_session: {
         fellowId: params.fellowId,
@@ -169,8 +149,6 @@ export async function checkRecordingExists(params: {
       status: true,
     },
   });
-
-  return existing;
 }
 
 /**
@@ -196,14 +174,7 @@ export async function createSessionRecording(input: {
     };
   }
 
-  // Verify the fellow belongs to this supervisor
-  const fellow = await db.fellow.findFirst({
-    where: {
-      id: input.fellowId,
-      supervisorId: supervisor.profile.id,
-    },
-  });
-
+  const fellow = supervisor.profile.fellows.find((f) => f.id === input.fellowId);
   if (!fellow) {
     return {
       success: false,
@@ -211,15 +182,19 @@ export async function createSessionRecording(input: {
     };
   }
 
-  // Check for existing recording
-  const existing = await checkRecordingExists({
-    fellowId: input.fellowId,
-    schoolId: input.schoolId,
-    groupId: input.groupId,
-    sessionId: input.sessionId,
+  const existingRecording = await db.sessionRecording.findUnique({
+    where: {
+      unique_recording_per_session: {
+        fellowId: input.fellowId,
+        schoolId: input.schoolId,
+        groupId: input.groupId,
+        sessionId: input.sessionId,
+      },
+    },
+    select: { id: true, status: true },
   });
 
-  if (existing) {
+  if (existingRecording) {
     return {
       success: false,
       message: "A recording already exists for this session",
