@@ -71,7 +71,7 @@ export default function HCApproveSupervisorExpense({
       return;
     }
 
-    revalidatePageAction("/hc/reporting/supervisors");
+    void revalidatePageAction("/hc/reporting/supervisors");
     toast({
       variant: "default",
       title: "Success",

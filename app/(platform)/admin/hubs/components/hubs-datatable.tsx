@@ -36,7 +36,7 @@ export default function HubsDataTable() {
       }
     };
 
-    fetchHubs();
+    void fetchHubs();
   }, [activeMembership]);
 
   if (loading || !implementerIds || !role) {

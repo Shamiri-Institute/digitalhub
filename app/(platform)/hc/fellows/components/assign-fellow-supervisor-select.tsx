@@ -42,7 +42,7 @@ export default function AssignFellowSupervisorSelect({
 
           if (result.success) {
             toast({ description: result.message });
-            revalidatePageAction(pathname);
+            void revalidatePageAction(pathname);
           } else {
             toast({ description: result.error });
           }
@@ -51,7 +51,7 @@ export default function AssignFellowSupervisorSelect({
           }, 1500);
         }
       };
-      assignSupervisor();
+      void assignSupervisor();
     } catch (error: unknown) {
       console.log(error);
     }

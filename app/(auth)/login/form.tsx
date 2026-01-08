@@ -24,7 +24,7 @@ export function LoginForm() {
       disabled={clickedGoogle}
       onClick={() => {
         setClickedGoogle(true);
-        signIn("google", { callbackUrl: "/?login=1" });
+        void signIn("google", { callbackUrl: "/?login=1" });
       }}
       className="flex gap-2"
       data-testid="google-login"
