@@ -8,7 +8,7 @@ export const CREDENTIAL_AUTH_ALLOWED_ENVS = ["development", "testing", "training
  * Only enabled for development, testing, and training environments.
  * Production always uses Google OAuth only.
  */
-export function isCredentialAuthAllowed(): boolean {
+export function isCredentialAuthAllowed() {
   return CREDENTIAL_AUTH_ALLOWED_ENVS.includes(constants.NEXT_PUBLIC_ENV);
 }
 
@@ -22,14 +22,11 @@ export function isCredentialAuthAllowed(): boolean {
 export const TEST_CREDENTIALS: Record<string, string> = {
   // Core development users
   "shadrack.lilan@shamiri.institute": "TestPassword123!",
-  "abdulghani.noor@shamiri.institute": "TestPassword123!",
   "wambugu.davis@shamiri.institute": "TestPassword123!",
   "stanley.george@shamiri.institute": "TestPassword123!",
   "benny@shamiri.institute": "TestPassword123!",
   "mmbone@shamiri.institute": "TestPassword123!",
-  "kahuria@shamiri.institute": "TestPassword123!",
   "nickson.mugambi@shamiri.institute": "TestPassword123!",
-  "okoth@shamiri.institute": "TestPassword123!",
   "marie.odhiambo@shamiri.institute": "TestPassword123!",
   // Static test users from seed script
   "martin.odegaard@test.com": "TestPassword123!",
