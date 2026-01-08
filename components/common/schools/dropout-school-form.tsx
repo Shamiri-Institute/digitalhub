@@ -195,7 +195,7 @@ export function DropoutSchool({
               disabled={loading}
               loading={loading}
               onClick={() => {
-                confirmSubmit();
+                void confirmSubmit();
               }}
             >
               Confirm

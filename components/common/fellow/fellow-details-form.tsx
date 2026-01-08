@@ -112,12 +112,11 @@ export default function FellowDetailsForm({
       return;
     }
 
-    revalidatePageAction(pathname).then(() => {
-      toast({
-        description: response.message,
-      });
-      onOpenChange(false);
+    await revalidatePageAction(pathname);
+    toast({
+      description: response.message,
     });
+    onOpenChange(false);
   };
 
   return (

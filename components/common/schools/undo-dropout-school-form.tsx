@@ -65,7 +65,7 @@ export function UndoDropoutSchool({
             disabled={loading}
             loading={loading}
             onClick={() => {
-              undoDropout();
+              void undoDropout();
             }}
           >
             Undo

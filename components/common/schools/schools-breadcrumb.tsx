@@ -67,7 +67,7 @@ export default function SchoolsBreadcrumb() {
       }
       setLoading(false);
     };
-    fetchSchools();
+    void fetchSchools();
   }, [implementerId, role]);
 
   const handleSchoolSelect = (schoolVisibleId: string) => {
@@ -77,7 +77,7 @@ export default function SchoolsBreadcrumb() {
   };
 
   useEffect(() => {
-    revalidatePageAction(pathname);
+    void revalidatePageAction(pathname);
   }, [pathname]);
 
   const schoolIndex = schools.findIndex((school) => school.visibleId === schoolVisibleId);

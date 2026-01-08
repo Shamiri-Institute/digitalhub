@@ -75,7 +75,7 @@ export default function AddNewSupervisor() {
       return;
     }
 
-    revalidatePageAction(pathname);
+    void revalidatePageAction(pathname);
     toast({
       description: response.message,
     });
@@ -89,7 +89,7 @@ export default function AddNewSupervisor() {
         message: `${value} is not a valid kenyan number`,
       });
     } else {
-      form.trigger(field);
+      void form.trigger(field);
     }
   };
 

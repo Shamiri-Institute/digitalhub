@@ -36,7 +36,7 @@ export default function FellowFilesUploader({
       return;
     }
 
-    handleFileChange(selectedFile);
+    await handleFileChange(selectedFile);
   };
 
   const handleFileChange = useCallback(

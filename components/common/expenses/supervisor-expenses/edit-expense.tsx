@@ -101,7 +101,7 @@ export default function HCEditSupervisorExpense({
       return;
     }
 
-    revalidatePageAction("/hc/reporting/supervisors");
+    await revalidatePageAction("/hc/reporting/supervisors");
     toast({
       variant: "default",
       title: "Success",

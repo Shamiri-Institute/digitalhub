@@ -93,13 +93,12 @@ export function MarkSessionOccurrence({
       setLoading(false);
       return;
     }
-    await Promise.all([await refresh(), await revalidatePageAction(pathname)]).then(() => {
-      setLoading(false);
-      setConfirmDialogOpen(false);
-      setIsOpen(false);
-      toast({
-        description: response.message,
-      });
+    await Promise.all([refresh(), revalidatePageAction(pathname)]);
+    setLoading(false);
+    setConfirmDialogOpen(false);
+    setIsOpen(false);
+    toast({
+      description: response.message,
     });
   };
 
@@ -241,7 +240,7 @@ export function MarkSessionOccurrence({
               disabled={loading}
               loading={loading}
               onClick={() => {
-                onConfirmSubmit();
+                void onConfirmSubmit();
               }}
             >
               Confirm
