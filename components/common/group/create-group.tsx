@@ -78,12 +78,11 @@ export default function CreateGroup({
       return;
     }
 
-    await revalidatePageAction(pathname).then(() => {
-      toast({
-        description: response.message,
-      });
-      setOpen(false);
+    await revalidatePageAction(pathname);
+    toast({
+      description: response.message,
     });
+    setOpen(false);
   };
 
   return (

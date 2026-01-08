@@ -156,14 +156,13 @@ export default function StudentDetailsForm({
         return;
       }
 
-      await revalidatePageAction(pathname).then(() => {
-        toast({
-          description: response.message,
-        });
-        form.reset();
-        setTransferDialog(false);
-        onOpenChange(false);
+      await revalidatePageAction(pathname);
+      toast({
+        description: response.message,
       });
+      form.reset();
+      setTransferDialog(false);
+      onOpenChange(false);
     }
     setLoading(false);
     return;

@@ -58,13 +58,12 @@ export default function RenameUploadedFile({
         return;
       }
 
-      await revalidatePageAction(pathname).then(() => {
-        toast({
-          description: response.message,
-        });
-        form.reset();
-        onOpenChange(false);
+      await revalidatePageAction(pathname);
+      toast({
+        description: response.message,
       });
+      form.reset();
+      onOpenChange(false);
     } catch (error) {
       console.error(error);
       toast({

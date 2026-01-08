@@ -66,13 +66,12 @@ export default function AssignFellowSupervisorDialog({
         return;
       }
 
-      await revalidatePageAction(pathname).then(() => {
-        toast({
-          description: response.message,
-        });
-        form.reset();
-        onOpenChange(false);
+      await revalidatePageAction(pathname);
+      toast({
+        description: response.message,
       });
+      form.reset();
+      onOpenChange(false);
     } else {
       toast({
         variant: "destructive",

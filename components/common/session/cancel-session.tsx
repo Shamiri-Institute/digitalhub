@@ -42,13 +42,12 @@ export default function CancelSession({
       return;
     }
 
-    await Promise.all([await revalidatePageAction(pathname), await refresh()]).then(() => {
-      toast({
-        description: response.message,
-      });
-      setLoading(false);
-      onOpenChange(false);
+    await Promise.all([revalidatePageAction(pathname), refresh()]);
+    toast({
+      description: response.message,
     });
+    setLoading(false);
+    onOpenChange(false);
   }
 
   return (

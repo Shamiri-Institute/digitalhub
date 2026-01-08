@@ -203,13 +203,12 @@ export default function StudentGroupEvaluation({
       return;
     }
 
-    await revalidatePageAction(pathname).then(() => {
-      toast({
-        description: response.message,
-      });
-      form.reset();
-      onOpenChange(false);
+    await revalidatePageAction(pathname);
+    toast({
+      description: response.message,
     });
+    form.reset();
+    onOpenChange(false);
   };
 
   return (

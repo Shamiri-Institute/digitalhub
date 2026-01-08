@@ -77,12 +77,11 @@ export default function ReplaceFellow({
       return;
     }
 
-    await revalidatePageAction(pathname).then(() => {
-      toast({
-        description: response.message,
-      });
-      onOpenChange(false);
+    await revalidatePageAction(pathname);
+    toast({
+      description: response.message,
     });
+    onOpenChange(false);
   };
 
   return (
