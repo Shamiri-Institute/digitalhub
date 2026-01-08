@@ -82,7 +82,7 @@ export default function SubmitComplaint({
     toast({
       description: response.message,
     });
-    revalidatePageAction(pathname).then(() => {
+    await revalidatePageAction(pathname).then(() => {
       form.reset();
       onOpenChange(false);
     });

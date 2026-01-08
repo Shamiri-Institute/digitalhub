@@ -79,7 +79,7 @@ export default function ArchiveGroup({
               disabled={loading}
               loading={loading}
               onClick={() => {
-                onSubmit();
+                void onSubmit();
               }}
             >
               Confirm

@@ -42,7 +42,7 @@ export function AdminScheduleHeader({ adminUser }: { adminUser: CurrentAdminUser
       }
     };
 
-    loadStats();
+    void loadStats();
   }, [adminUser]);
 
   return (

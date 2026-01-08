@@ -66,7 +66,7 @@ export default function AssignFellowSupervisorDialog({
         return;
       }
 
-      revalidatePageAction(pathname).then(() => {
+      await revalidatePageAction(pathname).then(() => {
         toast({
           description: response.message,
         });

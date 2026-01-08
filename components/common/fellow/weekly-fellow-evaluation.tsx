@@ -138,7 +138,7 @@ export default function WeeklyFellowEvaluation({
     toast({
       description: response.message,
     });
-    revalidatePageAction(pathname).then(() => {
+    await revalidatePageAction(pathname).then(() => {
       onOpenChange(false);
     });
   };

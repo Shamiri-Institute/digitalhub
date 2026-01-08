@@ -91,7 +91,7 @@ export default function FileUploader({
       if (resp.ok) {
         toast({ title: "File uploaded successfully", variant: "default" });
         setDialogOpen(false);
-        revalidatePageAction(metadata?.urlPath ?? "");
+        await revalidatePageAction(metadata?.urlPath ?? "");
       } else {
         setError(true);
         toast({ title: data.error, variant: "destructive" });

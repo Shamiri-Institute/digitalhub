@@ -203,7 +203,7 @@ export default function StudentGroupEvaluation({
       return;
     }
 
-    revalidatePageAction(pathname).then(() => {
+    await revalidatePageAction(pathname).then(() => {
       toast({
         description: response.message,
       });

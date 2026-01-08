@@ -241,7 +241,7 @@ export function MarkSessionOccurrence({
               disabled={loading}
               loading={loading}
               onClick={() => {
-                onConfirmSubmit();
+                void onConfirmSubmit();
               }}
             >
               Confirm

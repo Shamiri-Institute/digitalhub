@@ -78,7 +78,7 @@ export default function CreateGroup({
       return;
     }
 
-    revalidatePageAction(pathname).then(() => {
+    await revalidatePageAction(pathname).then(() => {
       toast({
         description: response.message,
       });

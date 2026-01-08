@@ -98,7 +98,7 @@ export default function StudentDropoutForm({
       setIsOpen(false);
       setConfirmDialog(true);
     } else {
-      confirmSubmit();
+      void confirmSubmit();
     }
   };
 
@@ -203,7 +203,7 @@ export default function StudentDropoutForm({
               disabled={loading}
               loading={loading}
               onClick={() => {
-                confirmSubmit();
+                void confirmSubmit();
               }}
             >
               Confirm

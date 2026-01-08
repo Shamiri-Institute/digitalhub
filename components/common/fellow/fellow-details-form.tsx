@@ -112,7 +112,7 @@ export default function FellowDetailsForm({
       return;
     }
 
-    revalidatePageAction(pathname).then(() => {
+    await revalidatePageAction(pathname).then(() => {
       toast({
         description: response.message,
       });

@@ -121,7 +121,7 @@ export default function FellowDropoutForm({
       setIsOpen(false);
       setConfirmDialog(true);
     } else {
-      confirmSubmit();
+      void confirmSubmit();
     }
   };
 
@@ -244,7 +244,7 @@ export default function FellowDropoutForm({
               disabled={loading}
               loading={loading}
               onClick={() => {
-                confirmSubmit();
+                void confirmSubmit();
               }}
             >
               Confirm

@@ -58,7 +58,7 @@ export default function RenameUploadedFile({
         return;
       }
 
-      revalidatePageAction(pathname).then(() => {
+      await revalidatePageAction(pathname).then(() => {
         toast({
           description: response.message,
         });
