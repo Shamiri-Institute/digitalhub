@@ -44,6 +44,9 @@
         "noExplicitAny": "error",
         "noGlobalIsNan": "error"
       },
+      "nursery": {
+        "noFloatingPromises": "error"
+      },
       "style": {
         "noInferrableTypes": "error",
         "noNonNullAssertion": "error",

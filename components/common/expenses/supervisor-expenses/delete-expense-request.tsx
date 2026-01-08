@@ -63,7 +63,7 @@ export default function HCDeleteExpenseRequest({
       return;
     }
 
-    revalidatePageAction("/hc/reporting/supervisors");
+    await revalidatePageAction("/hc/reporting/supervisors");
 
     toast({
       variant: "default",

@@ -173,7 +173,7 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
         message: `${value} is not a valid kenyan number`,
       });
     } else {
-      form.trigger(field);
+      void form.trigger(field);
     }
   };
 

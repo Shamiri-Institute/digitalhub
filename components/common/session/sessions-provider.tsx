@@ -83,7 +83,7 @@ export function SessionsProvider({
   };
 
   useEffect(() => {
-    fetchSessions();
+    void fetchSessions();
   }, [hubId, filters, implementerId, role]);
 
   const refresh = () => {

@@ -76,12 +76,11 @@ export default function RescheduleSession({
       return;
     }
 
-    await Promise.all([await revalidatePageAction(pathname), await refresh()]).then(() => {
-      toast({
-        description: response.message,
-      });
-      onOpenChange(false);
+    await Promise.all([revalidatePageAction(pathname), refresh()]);
+    toast({
+      description: response.message,
     });
+    onOpenChange(false);
   };
 
   return (

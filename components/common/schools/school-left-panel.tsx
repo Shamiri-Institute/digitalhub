@@ -52,7 +52,7 @@ export default function SchoolLeftPanel({
       }
       setLoading(false);
     };
-    fetchSchoolData();
+    void fetchSchoolData();
   }, [visibleId]);
 
   useGSAP(

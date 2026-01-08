@@ -192,7 +192,7 @@ export default function DropoutSupervisor({
               disabled={loading}
               loading={loading}
               onClick={() => {
-                confirmSubmit();
+                void confirmSubmit();
               }}
             >
               Confirm

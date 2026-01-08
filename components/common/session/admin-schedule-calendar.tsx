@@ -33,7 +33,7 @@ export function AdminScheduleCalendar({ adminUser }: { adminUser: CurrentAdminUs
       setFellowRatings(response[2].data || []);
     };
 
-    fetchSessionTypes();
+    void fetchSessionTypes();
   }, [implementerId, role, adminUser]);
 
   return (
