@@ -335,22 +335,12 @@ async function createCoreUsers(
     },
     {
       id: objectId("user"),
-      email: "abdulghani.noor@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      id: objectId("user"),
-      email: "kahuria@shamiri.institute",
+      email: "brandon.mochama@shamiri.institute",
       role: ImplementerRole.HUB_COORDINATOR,
     },
     {
       id: objectId("user"),
       email: "nickson.mugambi@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      id: objectId("user"),
-      email: "okoth@shamiri.institute",
       role: ImplementerRole.HUB_COORDINATOR,
     },
     {

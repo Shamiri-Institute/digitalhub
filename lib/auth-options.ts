@@ -2,17 +2,25 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import type { ImplementerRole, Prisma } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
 import type { AuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
 
+import { isCredentialAuthAllowed, TEST_CREDENTIALS } from "#/lib/auth/credential-auth";
 import { db } from "#/lib/db";
 
-const config = z
-  .object({
-    GOOGLE_ID: z.string(),
-    GOOGLE_SECRET: z.string(),
-  })
-  .parse(process.env);
+// Google OAuth credentials are optional when credential auth is allowed (dev/test environments)
+const googleConfigSchema = z.object({
+  GOOGLE_ID: z.string(),
+  GOOGLE_SECRET: z.string(),
+});
+
+// In production, Google OAuth is required. In dev/test environments, it's optional.
+const googleConfig = googleConfigSchema.safeParse(process.env);
+if (!googleConfig.success && !isCredentialAuthAllowed()) {
+  // Only throw if we're in production and Google config is missing
+  throw new Error("Google OAuth credentials are required in production");
+}
 
 export interface JWTMembership {
   id: number;
@@ -57,24 +65,109 @@ function parseMembershipsForJWT(
   }));
 }
 
+// Build providers array based on environment and available credentials
+function buildProviders(): AuthOptions["providers"] {
+  const providers: AuthOptions["providers"] = [];
+
+  // Add Google OAuth provider if credentials are available
+  if (googleConfig.success) {
+    providers.push(
+      GoogleProvider({
+        clientId: googleConfig.data.GOOGLE_ID,
+        clientSecret: googleConfig.data.GOOGLE_SECRET,
+        allowDangerousEmailAccountLinking: true,
+      }),
+    );
+  }
+
+  // Add Credentials provider only in allowed environments (development, testing, training)
+  if (isCredentialAuthAllowed()) {
+    providers.push(
+      CredentialsProvider({
+        id: "credentials",
+        name: "Email",
+        credentials: {
+          email: { label: "Email", type: "email" },
+          password: { label: "Password", type: "password" },
+        },
+        async authorize(credentials) {
+          // Double-check environment at runtime for safety
+          if (!isCredentialAuthAllowed()) {
+            console.error("Credential auth attempted in disallowed environment");
+            return null;
+          }
+
+          if (!credentials?.email || !credentials?.password) {
+            return null;
+          }
+
+          // Check if email exists in test credentials map
+          const expectedPassword = TEST_CREDENTIALS[credentials.email];
+          if (!expectedPassword) {
+            return null;
+          }
+
+          // Validate password
+          if (credentials.password !== expectedPassword) {
+            return null;
+          }
+
+          // Look up user in database
+          const user = await db.user.findUnique({
+            where: { email: credentials.email },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              image: true,
+            },
+          });
+
+          if (!user) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          };
+        },
+      }),
+    );
+  }
+
+  return providers;
+}
+
 export const authOptions: AuthOptions = {
   debug: process.env.DEBUG === "1",
   session: {
     strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60, // 7 days
   },
-  providers: [
-    GoogleProvider({
-      clientId: config.GOOGLE_ID,
-      clientSecret: config.GOOGLE_SECRET,
-      allowDangerousEmailAccountLinking: true,
-    }),
-  ],
+  providers: buildProviders(),
   adapter: PrismaAdapter(db),
   callbacks: {
     signIn: async ({ user, account, profile }) => {
       if (!user.email) {
         return false;
+      }
+
+      // Handle credentials provider
+      if (account?.provider === "credentials") {
+        // Double-check environment for safety
+        if (!isCredentialAuthAllowed()) {
+          console.error("Credential sign-in attempted in disallowed environment");
+          return false;
+        }
+        // User validation already done in authorize function
+        const userExists = await db.user.findUnique({
+          where: { email: user.email },
+          select: { id: true },
+        });
+        return !!userExists;
       }
 
       if (account?.provider === "google") {
