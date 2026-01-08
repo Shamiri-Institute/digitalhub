@@ -296,12 +296,13 @@ export async function loadSupervisorRecordings() {
     retryCount: recording.retryCount,
     overallScore: recording.overallScore,
     fidelityFeedback: recording.fidelityFeedback,
-    fellowName: recording.fellow.fellowName,
+    fellowName: recording.fellow.fellowName ?? "Unknown Fellow",
     schoolName: recording.school.schoolName,
     groupName: recording.group.groupName,
-    sessionType: recording.session.sessionType,
+    sessionType: recording.session.sessionType ?? "Unknown",
     sessionDate: recording.session.sessionDate,
-    sessionName: recording.session.session?.sessionName ?? recording.session.sessionType,
+    sessionName:
+      recording.session.session?.sessionName ?? recording.session.sessionType ?? "Unknown Session",
   }));
 }
 
