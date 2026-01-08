@@ -56,6 +56,9 @@ SEND_EMAILS="0" # Set to 1 to enable email sending
 
 # Debug Mode
 DEBUG="0" # Set to 1 to enable debug mode
+
+# Recordings API (for fidelity-inference service)
+RECORDINGS_API_KEY="your-recordings-api-key" # API key for authenticating recording processing requests
 ```
 
 ## Database
@@ -73,6 +76,72 @@ Note the use of [Object IDs] for public facing resources used throughout SDH are
 [format of Stripe ids]: https://gist.github.com/fnky/76f533366f75cf75802c8052b577e2a5
 [Object IDs]: https://dev.to/stripe/designing-apis-for-humans-object-ids-3o5a
 [polymorphic relationships in the database]: https://clerk.com/blog/generating-sortable-stripe-like-ids-with-segment-ksuids?utm_source=www.google.com&utm_medium=referral&utm_campaign=none
+
+## Recordings API
+
+The platform includes API endpoints for processing session recordings with the fidelity-inference AI service.
+
+### Endpoints
+
+#### GET /api/recordings/pending
+
+Returns recordings with PENDING status for processing.
+
+**Headers:**
+- `x-api-key`: API key (must match `RECORDINGS_API_KEY` env var)
+
+**Query Parameters:**
+- `limit` (optional): Maximum recordings to return (default: 50, max: 100)
+
+**Response:**
+```json
+{
+  "recordings": [
+    {
+      "id": "rec_xxxxx",
+      "s3Key": "recordings/2025/01/school/fellow/group/session_rec_xxxxx.mp3",
+      "fileName": "session_rec_xxxxx.mp3",
+      "originalFileName": "recording.mp3",
+      "fellowName": "John Doe",
+      "schoolName": "Example School",
+      "groupName": "Group A",
+      "sessionName": "Session 1",
+      "sessionDate": "2025-01-08T00:00:00.000Z",
+      "createdAt": "2025-01-08T10:00:00.000Z",
+      "retryCount": 0
+    }
+  ],
+  "count": 1
+}
+```
+
+#### PATCH /api/recordings/[id]/status
+
+Updates the status and feedback for a recording after AI processing.
+
+**Headers:**
+- `x-api-key`: API key (must match `RECORDINGS_API_KEY` env var)
+- `Content-Type`: application/json
+
+**Body:**
+```json
+{
+  "status": "COMPLETED",
+  "overallScore": "85",
+  "fidelityFeedback": {
+    "categories": [
+      { "name": "Engagement", "score": 90, "feedback": "Excellent engagement" }
+    ]
+  },
+  "errorMessage": null
+}
+```
+
+**Status Values:**
+- `PENDING` - Awaiting processing
+- `PROCESSING` - Currently being processed
+- `COMPLETED` - Successfully processed
+- `FAILED` - Processing failed (can be retried)
 
 ## Notes
 
