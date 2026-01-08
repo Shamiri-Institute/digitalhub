@@ -116,7 +116,7 @@ export default function ApproveRejectFellowComplaint({
         });
         return;
       }
-      revalidatePageAction("/hc/reporting/complaints");
+      void revalidatePageAction("/hc/reporting/complaints");
 
       toast({
         title: "Success",
@@ -156,7 +156,7 @@ export default function ApproveRejectFellowComplaint({
           return;
         }
 
-        revalidatePageAction("/hc/reporting/complaints");
+        void revalidatePageAction("/hc/reporting/complaints");
 
         toast({
           title: "Success",
@@ -452,7 +452,7 @@ export default function ApproveRejectFellowComplaint({
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
-                          form.trigger("reasonForComplaint");
+                          void form.trigger("reasonForComplaint");
                         }}
                         value={field.value}
                       >

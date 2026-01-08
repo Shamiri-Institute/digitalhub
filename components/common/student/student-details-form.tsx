@@ -156,14 +156,13 @@ export default function StudentDetailsForm({
         return;
       }
 
-      revalidatePageAction(pathname).then(() => {
-        toast({
-          description: response.message,
-        });
-        form.reset();
-        setTransferDialog(false);
-        onOpenChange(false);
+      await revalidatePageAction(pathname);
+      toast({
+        description: response.message,
       });
+      form.reset();
+      setTransferDialog(false);
+      onOpenChange(false);
     }
     setLoading(false);
     return;
@@ -180,7 +179,7 @@ export default function StudentDetailsForm({
       return;
     }
 
-    revalidatePageAction(pathname).then(() => {
+    void revalidatePageAction(pathname).then(() => {
       toast({
         description: response.message,
       });
@@ -489,7 +488,7 @@ export default function StudentDetailsForm({
               }
               type="button"
               onClick={() => {
-                submitTransferOption();
+                void submitTransferOption();
               }}
               disabled={loading || transferOption === undefined}
               loading={loading}

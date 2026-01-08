@@ -105,7 +105,7 @@ export default function SupervisorDetailsForm({
         return;
       }
 
-      revalidatePageAction(pathname);
+      void revalidatePageAction(pathname);
       toast({
         description: response.message,
       });
@@ -119,7 +119,7 @@ export default function SupervisorDetailsForm({
         message: `${value} is not a valid kenyan number`,
       });
     } else {
-      form.trigger(field);
+      void form.trigger(field);
     }
   };
 

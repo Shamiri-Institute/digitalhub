@@ -53,7 +53,7 @@ export function RoleSwitcher({
       const implementerMembers = await fetchImplementerPersonnel(activeMembership);
       setImplementerMembers(implementerMembers);
     };
-    fetchImplementerMembers();
+    void fetchImplementerMembers();
   }, [activeMembership]);
 
   // Only display in development environments
@@ -182,7 +182,7 @@ export function RoleSwitcher({
                 key={member.id}
                 value={`${member.role.replace("_", " ")} ${member.label} ${member.hub}`}
                 onSelect={() => {
-                  handleRoleChange(member);
+                  void handleRoleChange(member);
                   setOpen(false);
                 }}
                 className="flex items-center justify-between gap-3 rounded-none border-b px-3 last:border-b-0"

@@ -48,7 +48,7 @@ export function MembershipSwitcher({
         setIsAdminUser(true);
       }
     };
-    checkIsAdminUser();
+    void checkIsAdminUser();
     console.log(session);
   }, [session]);
 
@@ -105,7 +105,7 @@ export function MembershipSwitcher({
                 key={membership.id}
                 value={`${membership.implementerName} - ${membership.role}`}
                 onSelect={() => {
-                  handleMembershipChange(membership);
+                  void handleMembershipChange(membership);
                   setOpen(false);
                 }}
                 className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"

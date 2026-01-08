@@ -253,7 +253,7 @@ export default function MonthlySupervisorEvaluation({
     toast({
       description: response.message,
     });
-    revalidatePageAction(pathname).then(() => {
+    void revalidatePageAction(pathname).then(() => {
       setIsOpen(false);
     });
   };

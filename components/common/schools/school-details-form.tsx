@@ -556,7 +556,7 @@ export default function SchoolDetailsForm({
                               <Input
                                 onChange={(e) => {
                                   setPointPersonPhone(e.target.value);
-                                  form.trigger("pointPersonPhone");
+                                  void form.trigger("pointPersonPhone");
                                 }}
                                 onBlur={(e) => {
                                   validatePhoneNumber(

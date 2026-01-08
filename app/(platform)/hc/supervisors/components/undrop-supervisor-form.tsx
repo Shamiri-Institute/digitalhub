@@ -70,7 +70,7 @@ export default function UndropSupervisor({
               disabled={loading}
               loading={loading}
               onClick={() => {
-                onSubmit();
+                void onSubmit();
               }}
             >
               Undo
