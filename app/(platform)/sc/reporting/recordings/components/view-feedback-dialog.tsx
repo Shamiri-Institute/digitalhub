@@ -1,6 +1,5 @@
 "use client";
 
-import type { SupervisorRecording } from "../actions";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import {
@@ -11,6 +10,7 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { cn } from "#/lib/utils";
+import type { SupervisorRecording } from "../actions";
 
 interface ViewFeedbackDialogProps {
   recording: SupervisorRecording;

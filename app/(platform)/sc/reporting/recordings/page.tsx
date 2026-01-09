@@ -1,6 +1,6 @@
 import { signOut } from "next-auth/react";
-import { loadSupervisorRecordings } from "./actions";
 import { currentSupervisor } from "#/app/auth";
+import { loadSupervisorRecordings } from "./actions";
 import RecordingsDatatable from "./components/recordings-datatable";
 
 export default async function RecordingsPage() {
