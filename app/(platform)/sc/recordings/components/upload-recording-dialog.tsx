@@ -8,20 +8,20 @@ import { useForm } from "react-hook-form";
 import {
   checkRecordingExists,
   createSessionRecording,
+  type FellowGroup,
+  type GroupSession,
   loadFellowGroups,
   loadGroupSessions,
   loadSupervisorFellows,
-  type FellowGroup,
-  type GroupSession,
   type SupervisorFellow,
 } from "#/app/(platform)/sc/recordings/actions";
 import {
   ALLOWED_EXTENSIONS,
-  RecordingUploadSchema,
+  getFileExtension,
   type RecordingUploadFormData,
+  RecordingUploadSchema,
   validateAudioFile,
   validateAudioMagicBytes,
-  getFileExtension,
 } from "#/app/(platform)/sc/recordings/schemas";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -49,9 +49,9 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
 import { objectId } from "#/lib/crypto";
 import { cn, formatBytes } from "#/lib/utils";
+import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
 
 interface UploadRecordingDialogProps {
   open: boolean;
