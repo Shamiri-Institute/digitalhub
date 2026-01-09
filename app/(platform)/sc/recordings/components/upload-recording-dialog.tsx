@@ -312,11 +312,11 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         extension,
       });
 
-      // Upload to S3
+      // Upload to S3 (dedicated recordings bucket)
       const { key } = await uploadToS3(selectedFile, {
         endpoint: {
           request: {
-            url: "/api/files/upload",
+            url: "/api/recordings/upload",
             body: {
               key: s3Key,
             },
