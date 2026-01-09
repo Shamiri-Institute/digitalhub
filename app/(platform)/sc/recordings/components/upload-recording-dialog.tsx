@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { useS3Upload } from "next-s3-upload";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -50,6 +49,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { objectId } from "#/lib/crypto";
+import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { cn, formatBytes } from "#/lib/utils";
 import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
 
@@ -92,7 +92,18 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
   // Upload state
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { uploadToS3 } = useS3Upload();
+  const { uploadToS3, files } = useS3Upload();
+
+  // Track real upload progress from the hook
+  useEffect(() => {
+    if (files.length > 0 && uploading) {
+      const lastFile = files[files.length - 1];
+      if (lastFile) {
+        // Cap at 80% during upload, reserve 20% for DB record creation
+        setUploadProgress(Math.min(Math.round(lastFile.progress * 0.8), 80));
+      }
+    }
+  }, [files, uploading]);
 
   // Watch form values for cascading selects
   const fellowId = form.watch("fellowId");
@@ -316,11 +327,10 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
       const { key } = await uploadToS3(selectedFile, {
         endpoint: {
           request: {
-            url: "/api/recordings/upload",
             body: {
               key: s3Key,
+              bucket: "recordings",
             },
-            headers: {},
           },
         },
       });
@@ -328,9 +338,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
       if (!key) {
         throw new Error("Upload failed - no key returned");
       }
-
-      // Simulate progress since next-s3-upload doesn't provide real progress
-      setUploadProgress(80);
 
       // Create database record
       const result = await createSessionRecording({

@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { Supervisor } from "@prisma/client";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";
-import { useS3Upload } from "next-s3-upload";
 import { useCallback, useEffect, useState } from "react";
 import { type UseFormReturn, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -37,6 +36,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { formatBytes, stringValidation } from "#/lib/utils";
 
 export const AddAddSupervisorExpenseSchema = z.object({
@@ -377,15 +377,7 @@ export function ReceiptFileUpload({
     async (file: File) => {
       try {
         setUploading(true);
-        const { key } = await uploadToS3(file, {
-          endpoint: {
-            request: {
-              url: "/api/files/upload",
-              body: {},
-              headers: {},
-            },
-          },
-        });
+        const { key } = await uploadToS3(file);
         if (key) {
           form.setValue("receiptFileKey", key);
           setFile(file);
