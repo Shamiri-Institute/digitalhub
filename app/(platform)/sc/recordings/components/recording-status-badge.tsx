@@ -1,7 +1,7 @@
 "use client";
 
 import type { RecordingProcessingStatus } from "@prisma/client";
-import { Badge } from "#/components/ui/badge";
+import { Badge, type BadgeProps } from "#/components/ui/badge";
 
 interface RecordingStatusBadgeProps {
   status: RecordingProcessingStatus;
@@ -9,7 +9,7 @@ interface RecordingStatusBadgeProps {
 
 const statusConfig: Record<
   RecordingProcessingStatus,
-  { label: string; variant: "warning" | "default" | "shamiri-green" | "destructive" }
+  { label: string; variant: BadgeProps["variant"] }
 > = {
   PENDING: { label: "Pending", variant: "warning" },
   PROCESSING: { label: "Processing", variant: "default" },
