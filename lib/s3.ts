@@ -10,28 +10,86 @@ import {
 
 import { env } from "#/env";
 
-const client = new S3Client({ region: env.AWS_REGION });
+/**
+ * Available S3 buckets in the application
+ */
+export type S3Bucket = "uploads" | "recordings";
 
-export function getObject(input: Pick<GetObjectCommandInput, "Key">) {
+/**
+ * Get the bucket name for the specified bucket type
+ */
+function getBucketName(bucket: S3Bucket): string {
+  switch (bucket) {
+    case "recordings":
+      return env.S3_RECORDINGS_BUCKET;
+    default:
+      return env.S3_UPLOAD_BUCKET;
+  }
+}
+
+/**
+ * Get the region for the specified bucket type
+ */
+function getBucketRegion(bucket: S3Bucket): string {
+  switch (bucket) {
+    case "recordings":
+      return env.S3_RECORDINGS_REGION;
+    default:
+      return env.S3_UPLOAD_REGION;
+  }
+}
+
+/**
+ * Create an S3 client for the specified bucket
+ */
+function createClient(bucket: S3Bucket): S3Client {
+  return new S3Client({ region: getBucketRegion(bucket) });
+}
+
+/**
+ * Get an object from S3
+ * @param input - Object key
+ * @param bucket - Target bucket (defaults to 'uploads')
+ */
+export function getObject(input: Pick<GetObjectCommandInput, "Key">, bucket: S3Bucket = "uploads") {
+  const s3Client = createClient(bucket);
   const command = new GetObjectCommand({
     ...input,
-    Bucket: env.S3_UPLOAD_BUCKET,
+    Bucket: getBucketName(bucket),
   });
-  return client.send(command);
+  return s3Client.send(command);
 }
 
-export function putObject(input: Pick<PutObjectCommandInput, "Body" | "Key">) {
+/**
+ * Put an object to S3
+ * @param input - Object body and key
+ * @param bucket - Target bucket (defaults to 'uploads')
+ */
+export function putObject(
+  input: Pick<PutObjectCommandInput, "Body" | "Key" | "ContentType">,
+  bucket: S3Bucket = "uploads",
+) {
+  const s3Client = createClient(bucket);
   const command = new PutObjectCommand({
     ...input,
-    Bucket: env.S3_UPLOAD_BUCKET,
+    Bucket: getBucketName(bucket),
   });
-  return client.send(command);
+  return s3Client.send(command);
 }
 
-export function deleteObject(input: Pick<DeleteObjectCommandInput, "Key">) {
+/**
+ * Delete an object from S3
+ * @param input - Object key
+ * @param bucket - Target bucket (defaults to 'uploads')
+ */
+export function deleteObject(
+  input: Pick<DeleteObjectCommandInput, "Key">,
+  bucket: S3Bucket = "uploads",
+) {
+  const s3Client = createClient(bucket);
   const command = new DeleteObjectCommand({
     ...input,
-    Bucket: env.S3_UPLOAD_BUCKET,
+    Bucket: getBucketName(bucket),
   });
-  return client.send(command);
+  return s3Client.send(command);
 }
