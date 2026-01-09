@@ -1,4 +1,6 @@
 import {
+  DeleteObjectCommand,
+  type DeleteObjectCommandInput,
   GetObjectCommand,
   type GetObjectCommandInput,
   PutObjectCommand,
@@ -21,6 +23,14 @@ export async function getObject(input: Pick<GetObjectCommandInput, "Key">) {
 
 export async function putObject(input: Pick<PutObjectCommandInput, "Body" | "Key">) {
   const command = new PutObjectCommand({
+    ...input,
+    Bucket: env.S3_UPLOAD_BUCKET,
+  });
+  return await client.send(command);
+}
+
+export async function deleteObject(input: Pick<DeleteObjectCommandInput, "Key">) {
+  const command = new DeleteObjectCommand({
     ...input,
     Bucket: env.S3_UPLOAD_BUCKET,
   });
