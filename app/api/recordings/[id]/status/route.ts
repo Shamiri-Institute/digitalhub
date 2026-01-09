@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { updateRecordingStatus } from "#/app/(platform)/sc/recordings/actions";
+import { updateRecordingStatus } from "#/app/(platform)/sc/reporting/recordings/actions";
 
 export const dynamic = "force-dynamic";
 
