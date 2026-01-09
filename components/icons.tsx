@@ -1,4 +1,5 @@
 import {
+  AlertCircle,
   ArrowDown,
   ArrowLeft,
   ArrowUp,
@@ -83,6 +84,7 @@ export const Icons = {
   starOutline: Star,
   heartPulse: HeartPulse,
   helpCircle: HelpCircle,
+  alertCircle: AlertCircle,
   uploadCloudIcon: UploadCloudIcon,
   PencilLine: PencilLineIcon,
   hourglass: Hourglass,

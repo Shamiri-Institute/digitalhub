@@ -1,10 +1,11 @@
 "use server";
 
-import type { Prisma, RecordingProcessingStatus } from "@prisma/client";
+import { Prisma, type RecordingProcessingStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { deleteObject } from "#/lib/s3";
 
 // Types for server action responses
 export type SupervisorFellow = Awaited<ReturnType<typeof loadSupervisorFellows>>[number];
@@ -182,25 +183,6 @@ export async function createSessionRecording(input: {
     };
   }
 
-  const existingRecording = await db.sessionRecording.findUnique({
-    where: {
-      unique_recording_per_session: {
-        fellowId: input.fellowId,
-        schoolId: input.schoolId,
-        groupId: input.groupId,
-        sessionId: input.sessionId,
-      },
-    },
-    select: { id: true, status: true },
-  });
-
-  if (existingRecording) {
-    return {
-      success: false,
-      message: "A recording already exists for this session",
-    };
-  }
-
   try {
     const recording = await db.sessionRecording.create({
       data: {
@@ -228,6 +210,21 @@ export async function createSessionRecording(input: {
       data: recording,
     };
   } catch (error) {
+    // Handle unique constraint violation (race condition from multiple tabs)
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      // Clean up orphaned S3 file
+      try {
+        await deleteObject({ Key: input.s3Key });
+      } catch (cleanupError) {
+        console.error("Failed to clean up orphaned S3 file:", input.s3Key, cleanupError);
+      }
+
+      return {
+        success: false,
+        message: "A recording already exists for this session",
+      };
+    }
+
     console.error("Error creating session recording:", error);
     return {
       success: false,
