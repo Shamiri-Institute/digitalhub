@@ -4,24 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import {
-  checkRecordingExists,
-  createSessionRecording,
-  type FellowGroup,
-  type GroupSession,
-  loadFellowGroups,
-  loadGroupSessions,
-  loadSupervisorFellows,
-  type SupervisorFellow,
-} from "#/app/(platform)/sc/recordings/actions";
-import {
-  ALLOWED_EXTENSIONS,
-  getFileExtension,
-  type RecordingUploadFormData,
-  RecordingUploadSchema,
-  validateAudioFile,
-  validateAudioMagicBytes,
-} from "#/app/(platform)/sc/recordings/schemas";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -52,6 +34,24 @@ import { objectId } from "#/lib/crypto";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { cn, formatBytes } from "#/lib/utils";
 import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
+import {
+  checkRecordingExists,
+  createSessionRecording,
+  type FellowGroup,
+  type GroupSession,
+  loadFellowGroups,
+  loadGroupSessions,
+  loadSupervisorFellows,
+  type SupervisorFellow,
+} from "../actions";
+import {
+  ALLOWED_EXTENSIONS,
+  getFileExtension,
+  type RecordingUploadFormData,
+  RecordingUploadSchema,
+  validateAudioFile,
+  validateAudioMagicBytes,
+} from "../schemas";
 
 interface UploadRecordingDialogProps {
   open: boolean;
