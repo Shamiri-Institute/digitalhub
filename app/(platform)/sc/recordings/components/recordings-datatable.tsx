@@ -5,6 +5,8 @@ import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { type RecordingTableData, recordingColumns } from "./columns";
+import UploadRecordingDialog from "./upload-recording-dialog";
+import ViewFeedbackDialog from "./view-feedback-dialog";
 
 interface RecordingsDatatableProps {
   data: RecordingTableData[];
@@ -39,24 +41,14 @@ export default function RecordingsDatatable({ data }: RecordingsDatatableProps) 
         rowSelectionDescription="recordings"
       />
 
-      {/* Upload dialog will be added in ENG-1215 */}
-      {uploadDialog && (
-        <div className="hidden">
-          {/* Placeholder for UploadRecordingDialog */}
-          <button type="button" onClick={() => setUploadDialog(false)}>
-            Close
-          </button>
-        </div>
-      )}
+      <UploadRecordingDialog open={uploadDialog} onOpenChange={setUploadDialog} />
 
-      {/* View feedback dialog will be added in ENG-1216 */}
-      {viewFeedbackDialog && selectedRecording && (
-        <div className="hidden">
-          {/* Placeholder for ViewFeedbackDialog */}
-          <button type="button" onClick={() => setViewFeedbackDialog(false)}>
-            Close
-          </button>
-        </div>
+      {selectedRecording && (
+        <ViewFeedbackDialog
+          recording={selectedRecording}
+          open={viewFeedbackDialog}
+          onOpenChange={setViewFeedbackDialog}
+        />
       )}
     </div>
   );
