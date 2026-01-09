@@ -212,9 +212,9 @@ export async function createSessionRecording(input: {
   } catch (error) {
     // Handle unique constraint violation (race condition from multiple tabs)
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      // Clean up orphaned S3 file
+      // Clean up orphaned S3 file from recordings bucket
       try {
-        await deleteObject({ Key: input.s3Key });
+        await deleteObject({ Key: input.s3Key }, "recordings");
       } catch (cleanupError) {
         console.error("Failed to clean up orphaned S3 file:", input.s3Key, cleanupError);
       }
