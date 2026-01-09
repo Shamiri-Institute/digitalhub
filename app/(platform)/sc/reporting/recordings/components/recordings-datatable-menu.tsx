@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { retryRecordingProcessing } from "#/app/(platform)/sc/recordings/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -11,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/use-toast";
+import { retryRecordingProcessing } from "../actions";
 import type { ColumnState, RecordingTableData } from "./columns";
 
 interface RecordingsDataTableMenuProps {

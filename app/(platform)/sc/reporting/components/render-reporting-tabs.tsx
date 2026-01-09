@@ -8,6 +8,7 @@ export default function RenderSCReportingTabs() {
   const isFellowReports = pathname.includes("reporting/fellow-reports");
   const isSchoolReports = pathname.includes("reporting/school-reports");
   const isMonitoringEvaluation = pathname.includes("reporting/monitoring-and-evaluation");
+  const isRecordings = pathname.includes("reporting/recordings");
 
   const fellowReportOptions: TabType[] = [
     {
@@ -35,6 +36,11 @@ export default function RenderSCReportingTabs() {
     { name: "Payout history", href: "/sc/reporting/expenses/payout-history" },
     { name: "Complaints", href: "/sc/reporting/expenses/complaints" },
   ];
+
+  // Session recordings page is standalone - no tab navigation needed
+  if (isRecordings) {
+    return null;
+  }
 
   return (
     <>
