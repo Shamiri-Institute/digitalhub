@@ -43,6 +43,10 @@ S3_UPLOAD_SECRET="your-s3-upload-secret"
 S3_UPLOAD_BUCKET="your-s3-bucket-name"
 S3_UPLOAD_REGION="your-s3-region"
 
+# S3 Recordings Bucket (dedicated bucket for session recordings)
+S3_RECORDINGS_BUCKET="shamiri-recordings-dev"
+S3_RECORDINGS_REGION="af-south-1"
+
 # Metabase Configuration
 METABASE_SECRET_KEY="your-metabase-secret-key" # Secret key for signing Metabase JWT tokens
 
@@ -142,6 +146,64 @@ Updates the status and feedback for a recording after AI processing.
 - `PROCESSING` - Currently being processed
 - `COMPLETED` - Successfully processed
 - `FAILED` - Processing failed (can be retried)
+
+### S3 Recordings Bucket Setup
+
+Session recordings are stored in a dedicated S3 bucket separate from general uploads. This provides better organization, security isolation, and cost tracking.
+
+#### Creating the S3 Bucket
+
+1. **Create bucket** in AWS Console with these settings:
+   - **Bucket name**: `shamiri-recordings-dev` (dev) / `shamiri-recordings-prod` (production)
+   - **Region**: `af-south-1`
+   - **Block Public Access**: Enable ALL
+   - **Default encryption**: SSE-S3 (AES-256)
+
+2. **Create IAM Policy** named `ShamiriRecordingsBucketPolicy`:
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Sid": "RecordingsBucketAccess",
+         "Effect": "Allow",
+         "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:ListBucket"],
+         "Resource": [
+           "arn:aws:s3:::shamiri-recordings-dev",
+           "arn:aws:s3:::shamiri-recordings-dev/*",
+           "arn:aws:s3:::shamiri-recordings-prod",
+           "arn:aws:s3:::shamiri-recordings-prod/*"
+         ]
+       }
+     ]
+   }
+   ```
+
+3. **Configure CORS** (Permissions → CORS):
+   ```json
+   [
+     {
+       "AllowedHeaders": ["*"],
+       "AllowedMethods": ["PUT", "POST", "GET"],
+       "AllowedOrigins": ["http://localhost:3000", "https://digitalhub.shamiri.institute", "https://*.vercel.app"],
+       "ExposeHeaders": ["ETag"],
+       "MaxAgeSeconds": 3600
+     }
+   ]
+   ```
+
+4. **Set Lifecycle Rules** (optional, for cost optimization):
+   - Archive recordings to S3 Glacier after 90 days
+   - Abort incomplete multipart uploads after 7 days
+
+#### S3 Key Structure
+
+Recordings are stored with the following path structure:
+```
+recordings/{year}/{month}/{school_name}/{fellow_name}/{group_name}/{session_type}_{recording_id}.{ext}
+```
+
+Example: `recordings/2025/01/nairobi_academy/john_doe/group_a/session_1_rec_abc123.mp3`
 
 ## Notes
 
