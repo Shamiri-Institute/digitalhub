@@ -1,6 +1,7 @@
 "use client";
 
 import type { RecordingProcessingStatus } from "@prisma/client";
+import type { JsonValue } from "@prisma/client/runtime/library";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Dispatch, SetStateAction } from "react";
 import RecordingStatusBadge from "./recording-status-badge";
@@ -17,7 +18,7 @@ export interface RecordingTableData {
   errorMessage: string | null;
   retryCount: number;
   overallScore: string | null;
-  fidelityFeedback: unknown;
+  fidelityFeedback: JsonValue;
   fellowName: string;
   schoolName: string;
   groupName: string;
