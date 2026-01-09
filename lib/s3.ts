@@ -12,27 +12,26 @@ import { env } from "#/env";
 
 const client = new S3Client({ region: env.AWS_REGION });
 
-export async function getObject(input: Pick<GetObjectCommandInput, "Key">) {
+export function getObject(input: Pick<GetObjectCommandInput, "Key">) {
   const command = new GetObjectCommand({
     ...input,
     Bucket: env.S3_UPLOAD_BUCKET,
   });
-  const response = await client.send(command);
-  return response;
+  return client.send(command);
 }
 
-export async function putObject(input: Pick<PutObjectCommandInput, "Body" | "Key">) {
+export function putObject(input: Pick<PutObjectCommandInput, "Body" | "Key">) {
   const command = new PutObjectCommand({
     ...input,
     Bucket: env.S3_UPLOAD_BUCKET,
   });
-  return await client.send(command);
+  return client.send(command);
 }
 
-export async function deleteObject(input: Pick<DeleteObjectCommandInput, "Key">) {
+export function deleteObject(input: Pick<DeleteObjectCommandInput, "Key">) {
   const command = new DeleteObjectCommand({
     ...input,
     Bucket: env.S3_UPLOAD_BUCKET,
   });
-  return await client.send(command);
+  return client.send(command);
 }
