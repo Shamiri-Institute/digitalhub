@@ -135,8 +135,7 @@ export function useS3Upload() {
       addFile(file);
 
       // Upload to S3 using presigned URL with progress tracking
-      const fileBuffer = await file.arrayBuffer();
-
+      // Send File directly (not ArrayBuffer) to allow streaming without loading into memory
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
 
@@ -164,7 +163,7 @@ export function useS3Upload() {
         xhr.open("PUT", url, true);
         xhr.setRequestHeader("Content-Type", contentType);
         xhr.setRequestHeader("Cache-Control", "max-age=630720000");
-        xhr.send(fileBuffer);
+        xhr.send(file);
       });
 
       return {
