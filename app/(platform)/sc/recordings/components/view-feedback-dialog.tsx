@@ -1,23 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import type { SupervisorRecording } from "#/app/(platform)/sc/recordings/actions";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
-import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "#/components/ui/dialog";
 import { cn } from "#/lib/utils";
 
 interface ViewFeedbackDialogProps {
   recording: SupervisorRecording;
-  children?: React.ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 interface FidelityFeedbackItem {
@@ -56,9 +54,11 @@ function FeedbackSection({ title, children }: { title: string; children: React.R
   );
 }
 
-export default function ViewFeedbackDialog({ recording, children }: ViewFeedbackDialogProps) {
-  const [open, setOpen] = useState(false);
-
+export default function ViewFeedbackDialog({
+  recording,
+  open,
+  onOpenChange,
+}: ViewFeedbackDialogProps) {
   const feedback = recording.fidelityFeedback as
     | FidelityFeedbackItem[]
     | FidelityFeedbackItem
@@ -67,15 +67,7 @@ export default function ViewFeedbackDialog({ recording, children }: ViewFeedback
   const hasObjectFeedback = feedback && typeof feedback === "object" && !Array.isArray(feedback);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children ?? (
-          <Button variant="outline" size="sm" className="gap-2">
-            <Icons.info className="h-4 w-4" />
-            View Feedback
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Fidelity Feedback</DialogTitle>
