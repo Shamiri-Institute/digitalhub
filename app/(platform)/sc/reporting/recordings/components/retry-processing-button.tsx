@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { retryRecordingProcessing } from "#/app/(platform)/sc/recordings/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
+import { retryRecordingProcessing } from "../actions";
 
 interface RetryProcessingButtonProps {
   recordingId: string;

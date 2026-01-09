@@ -202,7 +202,7 @@ export async function createSessionRecording(input: {
       },
     });
 
-    revalidatePath("/sc/recordings");
+    revalidatePath("/sc/reporting/recordings");
 
     return {
       success: true,
@@ -341,7 +341,7 @@ export async function retryRecordingProcessing(recordingId: string) {
       },
     });
 
-    revalidatePath("/sc/recordings");
+    revalidatePath("/sc/reporting/recordings");
 
     return {
       success: true,
@@ -393,7 +393,7 @@ export async function updateRecordingStatus(
     });
 
     // Revalidate for any supervisor viewing recordings
-    revalidatePath("/sc/recordings");
+    revalidatePath("/sc/reporting/recordings");
 
     return {
       success: true,
@@ -443,7 +443,7 @@ export async function archiveRecording(recordingId: string) {
       },
     });
 
-    revalidatePath("/sc/recordings");
+    revalidatePath("/sc/reporting/recordings");
 
     return {
       success: true,
