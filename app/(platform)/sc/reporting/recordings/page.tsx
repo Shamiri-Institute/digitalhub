@@ -1,5 +1,5 @@
 import { signOut } from "next-auth/react";
-import { loadSupervisorRecordings } from "#/app/(platform)/sc/recordings/actions";
+import { loadSupervisorRecordings } from "./actions";
 import { currentSupervisor } from "#/app/auth";
 import RecordingsDatatable from "./components/recordings-datatable";
 

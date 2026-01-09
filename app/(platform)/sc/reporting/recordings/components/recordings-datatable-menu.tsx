@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { retryRecordingProcessing } from "#/app/(platform)/sc/recordings/actions";
+import { retryRecordingProcessing } from "../actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {

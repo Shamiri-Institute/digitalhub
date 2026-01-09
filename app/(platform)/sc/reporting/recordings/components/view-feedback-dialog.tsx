@@ -1,6 +1,6 @@
 "use client";
 
-import type { SupervisorRecording } from "#/app/(platform)/sc/recordings/actions";
+import type { SupervisorRecording } from "../actions";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import {

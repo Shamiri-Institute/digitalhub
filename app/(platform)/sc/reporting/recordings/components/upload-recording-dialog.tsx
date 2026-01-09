@@ -13,7 +13,7 @@ import {
   loadGroupSessions,
   loadSupervisorFellows,
   type SupervisorFellow,
-} from "#/app/(platform)/sc/recordings/actions";
+} from "../actions";
 import {
   ALLOWED_EXTENSIONS,
   getFileExtension,
@@ -21,7 +21,7 @@ import {
   RecordingUploadSchema,
   validateAudioFile,
   validateAudioMagicBytes,
-} from "#/app/(platform)/sc/recordings/schemas";
+} from "../schemas";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
