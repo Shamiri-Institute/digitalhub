@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { SupervisorRecording } from "#/app/(platform)/sc/recordings/actions";
+import { Icons } from "#/components/icons";
+import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -11,8 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { Badge } from "#/components/ui/badge";
-import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
 
 interface ViewFeedbackDialogProps {
