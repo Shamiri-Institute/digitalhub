@@ -51,7 +51,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.663.0",
     "@aws-sdk/client-ses": "^3.750.0",
-    "@aws-sdk/lib-storage": "^3.421.0",
+    "@aws-sdk/s3-request-presigner": "^3.965.0",
     "@gsap/react": "^2.1.1",
     "@hookform/resolvers": "^3.9.1",
     "@internationalized/date": "^3.10.1",
@@ -97,7 +97,6 @@
     "mime-types": "^2.1.35",
     "next": "16.0.10",
     "next-auth": "^4.24.13",
-    "next-s3-upload": "^0.3.4",
     "next-themes": "^0.2.1",
     "react": "19.2.1",
     "react-aria-components": "^1.10.1",
