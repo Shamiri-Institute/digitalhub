@@ -2,7 +2,6 @@
 
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
-import { useS3Upload } from "next-s3-upload";
 import { useCallback, useState } from "react";
 import { addUploadedFellowDocs } from "#/app/(platform)/hc/fellows/actions";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
@@ -11,6 +10,7 @@ import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
+import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 
 export default function FellowFilesUploader({
   fellow,
@@ -43,15 +43,7 @@ export default function FellowFilesUploader({
     async (file: File) => {
       try {
         setUploading(true);
-        const { key } = await uploadToS3(file, {
-          endpoint: {
-            request: {
-              url: "/api/files/upload",
-              body: {},
-              headers: {},
-            },
-          },
-        });
+        const { key } = await uploadToS3(file);
 
         if (key) {
           const response = await addUploadedFellowDocs({
