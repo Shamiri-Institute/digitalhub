@@ -1,3 +1,5 @@
+import { ImplementerRole } from "@prisma/client";
+import { redirect } from "next/navigation";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { currentSupervisor } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
@@ -5,8 +7,6 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
-import { redirect } from "next/navigation";
 import { fetchHubSupervisors, fetchSchoolData } from "./actions";
 
 export default async function SchoolsPage() {
@@ -84,10 +84,7 @@ export default async function SchoolsPage() {
         {/*  </div>*/}
         {/*</div>*/}
         <SchoolsDatatable
-          role={
-            supervisor?.session?.user.activeMembership?.role ??
-            ImplementerRole.SUPERVISOR
-          }
+          role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
           schools={data}
           supervisors={supervisors}
         />
