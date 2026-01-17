@@ -1,5 +1,3 @@
-import { ImplementerRole } from "@prisma/client";
-import { redirect } from "next/navigation";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { currentSupervisor } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
@@ -7,6 +5,8 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
+import { redirect } from "next/navigation";
 import { fetchHubSupervisors, fetchSchoolData } from "./actions";
 
 export default async function SchoolsPage() {
@@ -21,13 +21,13 @@ export default async function SchoolsPage() {
   }
 
   const [data, supervisors, schoolsStats] = await Promise.all([
-    await fetchSchoolData(hubId),
-    await fetchHubSupervisors({
+    fetchSchoolData(hubId),
+    fetchHubSupervisors({
       where: {
         hubId: supervisor?.profile?.hubId,
       },
     }),
-    await db.$queryRaw<
+    db.$queryRaw<
       {
         session_count: number;
         clinical_case_count: number;
@@ -49,7 +49,7 @@ export default async function SchoolsPage() {
     LEFT JOIN 
         fellows f ON h.id = f.hub_id
         WHERE h.id=${supervisor?.profile?.hubId}
-    GROUP BY 
+    GROUP BY
         h.id, h.hub_name`,
   ]);
 
@@ -84,7 +84,10 @@ export default async function SchoolsPage() {
         {/*  </div>*/}
         {/*</div>*/}
         <SchoolsDatatable
-          role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
+          role={
+            supervisor?.session?.user.activeMembership?.role ??
+            ImplementerRole.SUPERVISOR
+          }
           schools={data}
           supervisors={supervisors}
         />
