@@ -15,73 +15,69 @@ export async function loadFellowsData() {
     throw new Error("Unauthorised user");
   }
 
-  const fellows = await db.fellow.findMany({
-    where: {
-      supervisorId: supervisor.profile?.id,
-    },
-    include: {
-      fellowAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-              school: true,
-            },
-          },
-          group: true,
-          PayoutStatements: {
-            orderBy: {
-              createdAt: "desc",
-            },
-          },
-        },
+  const [fellows, fellowAverageRatings, supervisors] = await Promise.all([
+    db.fellow.findMany({
+      where: {
+        supervisorId: supervisor.profile?.id,
       },
-      weeklyFellowRatings: true,
-      groups: {
-        include: {
-          interventionGroupReports: {
-            include: {
-              session: true,
-            },
-          },
-          students: {
-            include: {
-              clinicalCases: true,
-              _count: {
-                select: {
-                  clinicalCases: true,
-                },
+      include: {
+        fellowAttendances: {
+          include: {
+            session: {
+              include: {
+                session: true,
+                school: true, // Used in AttendanceHistory for school name
               },
             },
-          },
-          school: {
-            include: {
-              interventionSessions: {
-                orderBy: {
-                  sessionDate: "asc",
-                },
-                include: {
-                  session: true,
-                },
+            group: true,
+            PayoutStatements: {
+              // Used in AttendanceHistory for MPESA number and payment status
+              orderBy: {
+                createdAt: "desc",
               },
             },
           },
         },
-      },
-      fellowComplaints: {
-        include: {
-          user: true,
+        weeklyFellowRatings: true,
+        groups: {
+          include: {
+            interventionGroupReports: {
+              include: {
+                session: true,
+              },
+            },
+            students: {
+              include: {
+                _count: {
+                  select: {
+                    clinicalCases: true,
+                  },
+                },
+              },
+            },
+            school: {
+              include: {
+                interventionSessions: {
+                  orderBy: {
+                    sessionDate: "asc",
+                  },
+                  include: {
+                    session: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        fellowComplaints: {
+          include: {
+            user: true,
+          },
         },
       },
-    },
-  });
+    }),
 
-  const fellowAverageRatings = await db.$queryRaw<
-    {
-      id: string;
-      averageRating: number;
-    }[]
-  >`
+    db.$queryRaw<{ id: string; averageRating: number }[]>`
       SELECT
         f.id,
         (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
@@ -91,16 +87,17 @@ export async function loadFellowsData() {
       WHERE f.hub_id =${supervisor.profile?.hubId}
       GROUP BY
         f.id
-  `;
+    `,
 
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      hubId: supervisor.profile?.hubId,
-    },
-    include: {
-      fellows: { select: { id: true, fellowName: true } },
-    },
-  });
+    db.supervisor.findMany({
+      where: {
+        hubId: supervisor.profile?.hubId,
+      },
+      include: {
+        fellows: { select: { id: true, fellowName: true } },
+      },
+    }),
+  ]);
 
   return fellows.map((fellow) => ({
     county: fellow.county,
@@ -134,7 +131,7 @@ export async function loadFellowsData() {
       numberOfStudents: group.students.length,
       students: group.students.map((student) => ({
         ...student,
-        numClinicalCases: student.clinicalCases.length,
+        numClinicalCases: student._count.clinicalCases,
       })),
     })),
     attendances: fellow.fellowAttendances,
