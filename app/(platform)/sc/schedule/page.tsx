@@ -14,8 +14,8 @@ export default async function SupervisorSchedulePage() {
   }
 
   const [schools, schoolStats, supervisors, fellowRatings, hubSessionTypes] = await Promise.all([
-    await fetchSchoolData(supervisor?.profile.hubId as string),
-    await db.$queryRaw<
+    fetchSchoolData(supervisor?.profile.hubId as string),
+    db.$queryRaw<
       {
         session_count: number;
         clinical_case_count: number;
@@ -37,9 +37,9 @@ export default async function SupervisorSchedulePage() {
     LEFT JOIN 
         fellows f ON h.id = f.hub_id
         WHERE h.id=${supervisor?.profile.hubId}
-    GROUP BY 
+    GROUP BY
         h.id, h.hub_name`,
-    await db.supervisor.findMany({
+    db.supervisor.findMany({
       where: {
         hubId: supervisor?.profile.hubId as string,
       },
@@ -58,7 +58,7 @@ export default async function SupervisorSchedulePage() {
         assignedSchools: true,
       },
     }),
-    await db.$queryRaw<
+    db.$queryRaw<
       {
         id: string;
         averageRating: number;
@@ -71,7 +71,7 @@ export default async function SupervisorSchedulePage() {
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
     WHERE fel.hub_id=${supervisor?.profile.hubId}
     GROUP BY fel.id`,
-    await db.sessionName.findMany({
+    db.sessionName.findMany({
       where: {
         hubId: supervisor?.profile.hubId as string,
       },
