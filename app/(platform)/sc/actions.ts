@@ -15,9 +15,7 @@ export async function loadFellowsData() {
     throw new Error("Unauthorised user");
   }
 
-  // Run all independent queries in parallel (async-parallel pattern)
   const [fellows, fellowAverageRatings, supervisors] = await Promise.all([
-    // Main fellows query - optimized to remove unused data
     db.fellow.findMany({
       where: {
         supervisorId: supervisor.profile?.id,
@@ -50,7 +48,6 @@ export async function loadFellowsData() {
             },
             students: {
               include: {
-                // Removed: clinicalCases: true (only count needed, use _count instead)
                 _count: {
                   select: {
                     clinicalCases: true,
@@ -80,7 +77,6 @@ export async function loadFellowsData() {
       },
     }),
 
-    // Average ratings query
     db.$queryRaw<{ id: string; averageRating: number }[]>`
       SELECT
         f.id,
@@ -93,7 +89,6 @@ export async function loadFellowsData() {
         f.id
     `,
 
-    // Supervisors query
     db.supervisor.findMany({
       where: {
         hubId: supervisor.profile?.hubId,
