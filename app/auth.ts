@@ -1,5 +1,6 @@
 import { ImplementerRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
+import { cache } from "react";
 import { authOptions } from "#/lib/auth-options";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
@@ -41,7 +42,7 @@ export async function currentHubCoordinator() {
 
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
 
-export async function currentSupervisor() {
+export const currentSupervisor = cache(async () => {
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -143,7 +144,7 @@ export async function currentSupervisor() {
   });
 
   return { profile: supervisor, session, fellows: newFellowsData };
-}
+});
 
 export type CurrentFellow = Awaited<ReturnType<typeof currentFellow>>;
 
