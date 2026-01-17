@@ -9,12 +9,14 @@ import { DropoutFellowSchema, SupervisorSchema, WeeklyFellowRatingSchema } from 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
 export async function loadFellowsData() {
+  const functionStart = performance.now();
   const supervisor = await currentSupervisor();
 
   if (!supervisor) {
     throw new Error("Unauthorised user");
   }
 
+  const queryStart = performance.now();
   const fellows = await db.fellow.findMany({
     where: {
       supervisorId: supervisor.profile?.id,
@@ -102,7 +104,9 @@ export async function loadFellowsData() {
     },
   });
 
-  return fellows.map((fellow) => ({
+  const queryDuration = performance.now() - queryStart;
+
+  const result = fellows.map((fellow) => ({
     county: fellow.county,
     subCounty: fellow.subCounty,
     fellowName: fellow.fellowName,
@@ -150,6 +154,26 @@ export async function loadFellowsData() {
     averageRating:
       Number(fellowAverageRatings.find((rating) => rating.id === fellow.id)?.averageRating) ?? 0,
   }));
+
+  // [ENG-1229] Baseline performance measurement - REMOVE AFTER OPTIMIZATION
+  const payloadSize = JSON.stringify(result).length;
+  const totalDuration = performance.now() - functionStart;
+  const totalGroups = fellows.reduce((acc, f) => acc + f.groups.length, 0);
+  const totalStudents = fellows.reduce(
+    (acc, f) => acc + f.groups.reduce((g, group) => g + group.students.length, 0),
+    0,
+  );
+
+  console.log(`[ENG-1229 BASELINE] loadFellowsData metrics:
+    - Query time: ${queryDuration.toFixed(2)}ms
+    - Payload size: ${(payloadSize / 1024).toFixed(2)} KB
+    - Total time: ${totalDuration.toFixed(2)}ms
+    - Fellows count: ${fellows.length}
+    - Total groups: ${totalGroups}
+    - Total students: ${totalStudents}
+  `);
+
+  return result;
 }
 
 export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
