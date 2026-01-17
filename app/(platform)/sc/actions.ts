@@ -9,81 +9,79 @@ import { DropoutFellowSchema, SupervisorSchema, WeeklyFellowRatingSchema } from 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
 export async function loadFellowsData() {
-  const functionStart = performance.now();
   const supervisor = await currentSupervisor();
 
   if (!supervisor) {
     throw new Error("Unauthorised user");
   }
 
-  const queryStart = performance.now();
-  const fellows = await db.fellow.findMany({
-    where: {
-      supervisorId: supervisor.profile?.id,
-    },
-    include: {
-      fellowAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-              school: true,
-            },
-          },
-          group: true,
-          PayoutStatements: {
-            orderBy: {
-              createdAt: "desc",
-            },
-          },
-        },
+  // Run all independent queries in parallel (async-parallel pattern)
+  const [fellows, fellowAverageRatings, supervisors] = await Promise.all([
+    // Main fellows query - optimized to remove unused data
+    db.fellow.findMany({
+      where: {
+        supervisorId: supervisor.profile?.id,
       },
-      weeklyFellowRatings: true,
-      groups: {
-        include: {
-          interventionGroupReports: {
-            include: {
-              session: true,
-            },
-          },
-          students: {
-            include: {
-              clinicalCases: true,
-              _count: {
-                select: {
-                  clinicalCases: true,
-                },
+      include: {
+        fellowAttendances: {
+          include: {
+            session: {
+              include: {
+                session: true,
+                school: true, // Used in AttendanceHistory for school name
               },
             },
-          },
-          school: {
-            include: {
-              interventionSessions: {
-                orderBy: {
-                  sessionDate: "asc",
-                },
-                include: {
-                  session: true,
-                },
+            group: true,
+            PayoutStatements: {
+              // Used in AttendanceHistory for MPESA number and payment status
+              orderBy: {
+                createdAt: "desc",
               },
             },
           },
         },
-      },
-      fellowComplaints: {
-        include: {
-          user: true,
+        weeklyFellowRatings: true,
+        groups: {
+          include: {
+            interventionGroupReports: {
+              include: {
+                session: true,
+              },
+            },
+            students: {
+              include: {
+                // Removed: clinicalCases: true (only count needed, use _count instead)
+                _count: {
+                  select: {
+                    clinicalCases: true,
+                  },
+                },
+              },
+            },
+            school: {
+              include: {
+                interventionSessions: {
+                  orderBy: {
+                    sessionDate: "asc",
+                  },
+                  include: {
+                    session: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        fellowComplaints: {
+          include: {
+            user: true,
+          },
         },
       },
-    },
-  });
+    }),
 
-  const fellowAverageRatings = await db.$queryRaw<
-    {
-      id: string;
-      averageRating: number;
-    }[]
-  >`
+    // Average ratings query
+    db.$queryRaw<{ id: string; averageRating: number }[]>`
       SELECT
         f.id,
         (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
@@ -93,20 +91,20 @@ export async function loadFellowsData() {
       WHERE f.hub_id =${supervisor.profile?.hubId}
       GROUP BY
         f.id
-  `;
+    `,
 
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      hubId: supervisor.profile?.hubId,
-    },
-    include: {
-      fellows: { select: { id: true, fellowName: true } },
-    },
-  });
+    // Supervisors query
+    db.supervisor.findMany({
+      where: {
+        hubId: supervisor.profile?.hubId,
+      },
+      include: {
+        fellows: { select: { id: true, fellowName: true } },
+      },
+    }),
+  ]);
 
-  const queryDuration = performance.now() - queryStart;
-
-  const result = fellows.map((fellow) => ({
+  return fellows.map((fellow) => ({
     county: fellow.county,
     subCounty: fellow.subCounty,
     fellowName: fellow.fellowName,
@@ -138,7 +136,7 @@ export async function loadFellowsData() {
       numberOfStudents: group.students.length,
       students: group.students.map((student) => ({
         ...student,
-        numClinicalCases: student.clinicalCases.length,
+        numClinicalCases: student._count.clinicalCases,
       })),
     })),
     attendances: fellow.fellowAttendances,
@@ -154,26 +152,6 @@ export async function loadFellowsData() {
     averageRating:
       Number(fellowAverageRatings.find((rating) => rating.id === fellow.id)?.averageRating) ?? 0,
   }));
-
-  // [ENG-1229] Baseline performance measurement - REMOVE AFTER OPTIMIZATION
-  const payloadSize = JSON.stringify(result).length;
-  const totalDuration = performance.now() - functionStart;
-  const totalGroups = fellows.reduce((acc, f) => acc + f.groups.length, 0);
-  const totalStudents = fellows.reduce(
-    (acc, f) => acc + f.groups.reduce((g, group) => g + group.students.length, 0),
-    0,
-  );
-
-  console.log(`[ENG-1229 BASELINE] loadFellowsData metrics:
-    - Query time: ${queryDuration.toFixed(2)}ms
-    - Payload size: ${(payloadSize / 1024).toFixed(2)} KB
-    - Total time: ${totalDuration.toFixed(2)}ms
-    - Fellows count: ${fellows.length}
-    - Total groups: ${totalGroups}
-    - Total students: ${totalStudents}
-  `);
-
-  return result;
 }
 
 export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
