@@ -21,13 +21,13 @@ export default async function SchoolsPage() {
   }
 
   const [data, supervisors, schoolsStats] = await Promise.all([
-    await fetchSchoolData(hubId),
-    await fetchHubSupervisors({
+    fetchSchoolData(hubId),
+    fetchHubSupervisors({
       where: {
         hubId: supervisor?.profile?.hubId,
       },
     }),
-    await db.$queryRaw<
+    db.$queryRaw<
       {
         session_count: number;
         clinical_case_count: number;
@@ -49,7 +49,7 @@ export default async function SchoolsPage() {
     LEFT JOIN 
         fellows f ON h.id = f.hub_id
         WHERE h.id=${supervisor?.profile?.hubId}
-    GROUP BY 
+    GROUP BY
         h.id, h.hub_name`,
   ]);
 
