@@ -46,7 +46,6 @@ export default async function FellowsPage() {
           },
           students: {
             include: {
-              clinicalCases: true,
               _count: {
                 select: {
                   clinicalCases: true,
@@ -101,7 +100,7 @@ export default async function FellowsPage() {
                   numberOfStudents: group.students.length,
                   students: group.students.map((student) => ({
                     ...student,
-                    numClinicalCases: student.clinicalCases.length,
+                    numClinicalCases: student._count.clinicalCases,
                   })),
                 })) ?? [],
               attendances: fellowData?.fellowAttendances ?? [],
