@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.11.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.10.0...v1.11.0) (2026-01-19)
+
+
+### Features
+
+* **api:** add recordings API routes for cron job integration ([#578](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/578)) ([80643a6](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/80643a6611de3bf77255bf97734a41d6a7be3e63))
+* **database:** add SessionRecording model for fidelity recordings ([#572](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/572)) ([094b204](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/094b2047ec42cd1fe0d03476f40808fd82e73562))
+* **recordings:** add dedicated S3 bucket for session recordings ([#581](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/581)) ([d59eee5](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d59eee53bbf8d73e7fd815cdb9a57536aee22d24))
+* **recordings:** add retry and feedback components ([#577](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/577)) ([4a275ec](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/4a275ec4bd24d7232388d4baf0a928eb091a25cc))
+* **recordings:** add upload recording dialog with cascading selects ([#576](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/576)) ([e72d049](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/e72d049d4cc345c6764fe873f06ffaecbf901008))
+* **recordings:** add validation schemas and S3 utilities ([#574](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/574)) ([7b2b657](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7b2b657639c2088cf5ef2b67e43e484cf97abf77))
+* **recordings:** build recordings page and DataTable ([#575](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/575)) ([5d1b233](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/5d1b233096eab636c5b9e525b6f4090833468b64))
+* **recordings:** implement server actions for session recordings ([#573](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/573)) ([9f39a2b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/9f39a2be70e3bf4369e15515e7cdfc5a7f67b10f))
+
+
+### Bug Fixes
+
+* **s3:** replace next-s3-upload with custom presigned URL implementation ([#582](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/582)) ([3a6c1a5](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/3a6c1a5fbbad6dfc29dae46c55cf4c07cbd1e230))
+* **upload:** add missing imports to the upload record button and view feedback button ([b7e438c](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/b7e438cd1a42efe137d53b1f9cfc1e3756901055))
+
 ## [1.10.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.3...v1.10.0) (2026-01-08)
 
 
