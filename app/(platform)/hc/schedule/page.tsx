@@ -1,11 +1,11 @@
 import { signOut } from "next-auth/react";
 import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import { currentHubCoordinator } from "#/app/auth";
+import { ScheduleCalendarClient } from "#/components/common/session/schedule-calendar-client";
+import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { ScheduleCalendar } from "../../../../components/common/session/schedule-calendar";
-import { ScheduleHeader } from "../../../../components/common/session/schedule-header";
 
 export default async function HubCoordinatorSchedulePage() {
   const coordinator = await currentHubCoordinator();
@@ -106,7 +106,7 @@ export default async function HubCoordinatorSchedulePage() {
           ]}
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
-        <ScheduleCalendar
+        <ScheduleCalendarClient
           hubId={coordinator?.profile?.assignedHubId ?? ""}
           aria-label="Session schedule"
           schools={schools}

@@ -1,7 +1,6 @@
 import { signOut } from "next-auth/react";
 import { currentFellow } from "#/app/auth";
-
-import { ScheduleCalendar } from "#/components/common/session/schedule-calendar";
+import { ScheduleCalendarClient } from "#/components/common/session/schedule-calendar-client";
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
@@ -33,7 +32,7 @@ export default async function FellowSchedulePage() {
           ]}
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
-        <ScheduleCalendar
+        <ScheduleCalendarClient
           hubId={fellow?.profile.hubId ?? ""}
           aria-label="Session schedule"
           schools={fellow?.profile.hub?.schools ?? []}

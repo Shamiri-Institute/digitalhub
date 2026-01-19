@@ -1,7 +1,7 @@
 import { signOut } from "next-auth/react";
 import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import { currentSupervisor } from "#/app/auth";
-import { ScheduleCalendar } from "#/components/common/session/schedule-calendar";
+import { ScheduleCalendarClient } from "#/components/common/session/schedule-calendar-client";
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
@@ -98,7 +98,7 @@ export default async function SupervisorSchedulePage() {
           ]}
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
-        <ScheduleCalendar
+        <ScheduleCalendarClient
           hubId={supervisor?.profile.hubId ?? ""}
           aria-label="Session schedule"
           schools={schools}
