@@ -29,21 +29,13 @@ export async function fetchInterventionSessions({
     }
   }
 
-  const sessions = await db.interventionSession.findMany({
+  // First, fetch the sessions to get their IDs
+  const sessionIds = await db.interventionSession.findMany({
     where: {
       sessionDate: {
         gte: start,
         lte: end,
       },
-      // session: {
-      //   sessionName: {
-      //     in:
-      //       filters &&
-      //       Object.keys(filters.sessionTypes).filter((sessionType) => {
-      //         return filters.sessionTypes[sessionType];
-      //       }),
-      //   },
-      // },
       hub: {
         id: hubId,
         implementerId,
@@ -54,6 +46,20 @@ export async function fetchInterventionSessions({
           (Object.keys(filters.statusTypes).filter((status) => {
             return filters.statusTypes[status];
           }) as SessionStatus[]),
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  const sessionIdList = sessionIds.map((s) => s.id);
+
+  // Then fetch the full sessions with filtered studentAttendances
+  const sessions = await db.interventionSession.findMany({
+    where: {
+      id: {
+        in: sessionIdList,
       },
     },
     include: {
@@ -68,7 +74,13 @@ export async function fetchInterventionSessions({
                       clinicalCases: true,
                     },
                   },
-                  studentAttendances: true,
+                  studentAttendances: {
+                    where: {
+                      sessionId: {
+                        in: sessionIdList,
+                      },
+                    },
+                  },
                 },
               },
             },
