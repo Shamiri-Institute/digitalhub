@@ -15,8 +15,8 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
     await signOut({ callbackUrl: "/login" });
   }
 
-  const data = await Promise.all([
-    await db.$queryRaw<Omit<SchoolGroupDataTableData, "students">[]>`
+  const [rawGroups, students, reports, supervisors, school] = await Promise.all([
+    db.$queryRaw<Omit<SchoolGroupDataTableData, "students">[]>`
   SELECT
 	intg.id,
 	intg.group_name AS "groupName",
@@ -68,41 +68,33 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
         session: true,
       },
     }),
-  ]).then((values) => {
-    return values[0].map((group) => {
-      return {
-        ...group,
-        students: values[1].filter((student) => {
-          return student.assignedGroupId === group.id;
-        }),
-        reports: values[2].filter((report) => {
-          return report.groupId === group.id;
-        }),
-      };
-    });
-  });
-
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      hubId: supervisor?.profile?.hubId,
-    },
-    include: {
-      fellows: true,
-    },
-  });
-
-  const school = await db.school.findFirstOrThrow({
-    where: {
-      visibleId,
-    },
-    include: {
-      interventionSessions: {
-        include: {
-          session: true,
+    db.supervisor.findMany({
+      where: {
+        hubId: supervisor?.profile?.hubId,
+      },
+      include: {
+        fellows: true,
+      },
+    }),
+    db.school.findFirstOrThrow({
+      where: {
+        visibleId,
+      },
+      include: {
+        interventionSessions: {
+          include: {
+            session: true,
+          },
         },
       },
-    },
-  });
+    }),
+  ]);
+
+  const data = rawGroups.map((group) => ({
+    ...group,
+    students: students.filter((student) => student.assignedGroupId === group.id),
+    reports: reports.filter((report) => report.groupId === group.id),
+  }));
 
   return (
     <GroupsDataTable
