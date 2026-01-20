@@ -263,3 +263,7 @@ To make a release to production follow the steps below:
 This project is hosted on vercel.
 
 _TODO_: ADD MORE DETAILS ABOUT THE DIFFERENT ENVIRONMENTS THAT WE HAVE IN OUR VERCEL INSTANCE.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
