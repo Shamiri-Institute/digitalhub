@@ -55,7 +55,7 @@ This platform can support your research by providing:
 **Citation**: If you use this software in your research, please cite:
 
 ```
-Shamiri Institute. (2025). Shamiri Digital Hub [Computer software].
+Shamiri Institute. (2026). Shamiri Digital Hub [Computer software].
 https://github.com/Shamiri-Institute/digitalhub-frontend
 ```
 
@@ -168,7 +168,7 @@ S3_UPLOAD_BUCKET="your-s3-bucket-name"
 S3_UPLOAD_REGION="your-aws-region"
 
 # S3 Recordings Bucket (Session Recordings)
-S3_RECORDINGS_BUCKET="shamiri-recordings-dev"
+S3_RECORDINGS_BUCKET="your-recordings-bucket"
 S3_RECORDINGS_REGION="your-aws-region"
 
 # ====================================
@@ -418,11 +418,11 @@ Configure these in your Vercel project settings:
 
 #### Deployment Environments
 
-| Environment | Branch | Database | URL |
-|-------------|--------|----------|-----|
-| Production | `main` | Production DB | `digitalhub.shamiri.institute` |
-| Preview | `dev` / PRs | Preview DB | `*.vercel.app` |
-| Development | local | Local DB | `localhost:3000` |
+| Environment | Branch | Database |
+|-------------|--------|----------|
+| Production | `main` | Production DB |
+| Preview | `dev` / PRs | Preview DB |
+| Development | local | Local DB |
 
 #### Build Configuration
 
@@ -577,7 +577,7 @@ We welcome contributions from the community!
 #### Creating the S3 Bucket
 
 1. **Create bucket** in AWS Console:
-   - **Bucket name**: `shamiri-recordings-dev` (dev) / `shamiri-recordings-prod` (production)
+   - **Bucket name**: Choose a descriptive name for your environment (e.g., `myorg-recordings-dev`)
    - **Region**: Choose based on your target users' location
    - **Block Public Access**: Enable ALL
    - **Default encryption**: SSE-S3 (AES-256)
@@ -592,10 +592,10 @@ We welcome contributions from the community!
          "Effect": "Allow",
          "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:ListBucket"],
          "Resource": [
-           "arn:aws:s3:::shamiri-recordings-dev",
-           "arn:aws:s3:::shamiri-recordings-dev/*",
-           "arn:aws:s3:::shamiri-recordings-prod",
-           "arn:aws:s3:::shamiri-recordings-prod/*"
+           "arn:aws:s3:::your-recordings-bucket-dev",
+           "arn:aws:s3:::your-recordings-bucket-dev/*",
+           "arn:aws:s3:::your-recordings-bucket-prod",
+           "arn:aws:s3:::your-recordings-bucket-prod/*"
          ]
        }
      ]
@@ -608,7 +608,7 @@ We welcome contributions from the community!
      {
        "AllowedHeaders": ["*"],
        "AllowedMethods": ["PUT", "POST", "GET"],
-       "AllowedOrigins": ["http://localhost:3000", "https://digitalhub.shamiri.institute", "https://*.vercel.app"],
+       "AllowedOrigins": ["http://localhost:3000", "https://your-production-domain.com", "https://*.vercel.app"],
        "ExposeHeaders": ["ETag"],
        "MaxAgeSeconds": 3600
      }
@@ -631,6 +631,6 @@ Example: `recordings/2025/01/example_school/facilitator_name/group_a/session_1.m
 
 ## License
 
-MIT License - Copyright (c) 2025 Shamiri Institute
+MIT License - Copyright (c) 2026 Shamiri Institute
 
 See [LICENSE](LICENSE) for the full license text.
