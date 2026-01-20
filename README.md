@@ -309,17 +309,7 @@ Clinical Case
 
 ### Object IDs
 
-The platform uses prefixed Object IDs for improved security and readability:
-
-| Entity | Prefix | Example |
-|--------|--------|---------|
-| Supervisor | `sup_` | `sup_2YFN4K8B7M9P` |
-| Hub Coordinator | `hc_` | `hc_3XGM5L9C8N0Q` |
-| Fellow | `fel_` | `fel_4ZHN6M0D9O1R` |
-| Student | `stu_` | `stu_5AIQ7N1E0P2S` |
-| Recording | `rec_` | `rec_6BJR8O2F1Q3T` |
-
-This pattern prevents enumeration attacks and encodes entity types directly in IDs.
+The platform uses prefixed Object IDs rather than sequential integers or plain UUIDs. This approach improves security by preventing enumeration attacks and enhances debugging by making entity types identifiable in logs.
 
 ---
 
@@ -477,9 +467,9 @@ curl -H "x-api-key: your-api-key" \
 {
   "recordings": [
     {
-      "id": "rec_xxxxx",
-      "s3Key": "recordings/2025/01/school/fellow/group/session_rec_xxxxx.mp3",
-      "fileName": "session_rec_xxxxx.mp3",
+      "id": "<recording-id>",
+      "s3Key": "recordings/2025/01/school/fellow/group/session.mp3",
+      "fileName": "session.mp3",
       "fellowName": "John Doe",
       "schoolName": "Example School",
       "sessionDate": "2025-01-08T00:00:00.000Z"
@@ -498,7 +488,7 @@ curl -X PATCH \
   -H "x-api-key: your-api-key" \
   -H "Content-Type: application/json" \
   -d '{"status": "COMPLETED", "overallScore": "85"}' \
-  "https://your-domain/api/recordings/rec_xxxxx/status"
+  "https://your-domain/api/recordings/<recording-id>/status"
 ```
 
 **Status Values:** `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`
@@ -635,7 +625,7 @@ We welcome contributions from the community!
 recordings/{year}/{month}/{school_name}/{fellow_name}/{group_name}/{session_type}_{recording_id}.{ext}
 ```
 
-Example: `recordings/2025/01/nairobi_academy/john_doe/group_a/session_1_rec_abc123.mp3`
+Example: `recordings/2025/01/example_school/facilitator_name/group_a/session_1.mp3`
 
 ---
 
