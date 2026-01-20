@@ -264,6 +264,17 @@ This project is hosted on vercel.
 
 _TODO_: ADD MORE DETAILS ABOUT THE DIFFERENT ENVIRONMENTS THAT WE HAVE IN OUR VERCEL INSTANCE.
 
-## License
+## Open Science & Licensing
+
+This project is developed in alignment with [Open Science Framework (OSF)](https://osf.io/) principles, promoting transparency, reproducibility, and accessibility in youth mental health research and intervention delivery.
+
+### Open Science Commitment
+
+- **Transparency**: Open source codebase enabling full inspection of intervention delivery mechanisms
+- **Reproducibility**: Documented setup and deployment processes for replication studies
+- **Accessibility**: MIT License enabling adaptation by researchers, NGOs, and institutions globally
+- **Collaboration**: Open to contributions from the research and development community
+
+### License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
