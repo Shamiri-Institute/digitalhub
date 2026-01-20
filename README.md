@@ -193,7 +193,7 @@ RECORDINGS_API_KEY="your-recordings-api-key"
 
 #### Minimal Setup (Development Only)
 
-For quick local development, you only need:
+For quick local development without file upload or email features:
 
 ```bash
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/shamiri_db_dev"
@@ -201,6 +201,8 @@ NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="any-random-string-for-dev"
 NEXT_PUBLIC_ENV="development"
 ```
+
+> **Note:** File uploads and email sending require AWS credentials. If you need these features, add the AWS S3 variables from the full configuration above.
 
 ### Database Setup
 
