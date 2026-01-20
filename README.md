@@ -159,17 +159,17 @@ CASEREPORTS_FILEID="google-drive-folder-id-for-case-reports"
 # ====================================
 # AWS S3 (File Uploads)
 # ====================================
-AWS_REGION="af-south-1"
+AWS_REGION="your-aws-region"
 AWS_ACCESS_KEY_ID="your-aws-access-key-id"
 AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
 S3_UPLOAD_KEY="your-s3-upload-key"
 S3_UPLOAD_SECRET="your-s3-upload-secret"
 S3_UPLOAD_BUCKET="your-s3-bucket-name"
-S3_UPLOAD_REGION="af-south-1"
+S3_UPLOAD_REGION="your-aws-region"
 
 # S3 Recordings Bucket (Session Recordings)
 S3_RECORDINGS_BUCKET="shamiri-recordings-dev"
-S3_RECORDINGS_REGION="af-south-1"
+S3_RECORDINGS_REGION="your-aws-region"
 
 # ====================================
 # METABASE (Analytics)
@@ -588,7 +588,7 @@ We welcome contributions from the community!
 
 1. **Create bucket** in AWS Console:
    - **Bucket name**: `shamiri-recordings-dev` (dev) / `shamiri-recordings-prod` (production)
-   - **Region**: `af-south-1`
+   - **Region**: Choose based on your target users' location
    - **Block Public Access**: Enable ALL
    - **Default encryption**: SSE-S3 (AES-256)
 
