@@ -1,5 +1,7 @@
 "use client";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import {
@@ -54,6 +56,66 @@ function FeedbackSection({ title, children }: { title: string; children: React.R
   );
 }
 
+function isMarkdownString(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  // Check for common markdown patterns
+  return (
+    value.includes("##") ||
+    value.includes("**") ||
+    value.includes("| ") ||
+    value.includes("---") ||
+    value.startsWith("#")
+  );
+}
+
+function MarkdownContent({ content }: { content: string }) {
+  return (
+    <div className="prose prose-sm max-w-none">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h1: ({ children }) => <h1 className="mb-3 mt-6 text-2xl font-bold">{children}</h1>,
+          h2: ({ children }) => <h2 className="mb-3 mt-6 text-xl font-bold">{children}</h2>,
+          h3: ({ children }) => <h3 className="mb-2 mt-4 text-lg font-semibold">{children}</h3>,
+          p: ({ children }) => <p className="mb-2">{children}</p>,
+          ul: ({ children }) => <ul className="mb-4 list-disc pl-6">{children}</ul>,
+          ol: ({ children }) => <ol className="mb-4 list-decimal pl-6">{children}</ol>,
+          li: ({ children }) => <li className="mb-1">{children}</li>,
+          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+          hr: () => <hr className="my-4 border-shamiri-light-grey" />,
+          table: ({ children }) => (
+            <div className="my-4 overflow-x-auto">
+              <table className="min-w-full divide-y divide-shamiri-light-grey border border-shamiri-light-grey">
+                {children}
+              </table>
+            </div>
+          ),
+          thead: ({ children }) => <thead className="bg-blue-bg">{children}</thead>,
+          tbody: ({ children }) => (
+            <tbody className="divide-y divide-shamiri-light-grey bg-white">{children}</tbody>
+          ),
+          tr: ({ children }) => <tr className="hover:bg-gray-50">{children}</tr>,
+          th: ({ children }) => (
+            <th className="border-r border-shamiri-light-grey px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-shamiri-text-grey last:border-r-0">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="border-r border-shamiri-light-grey px-4 py-3 text-sm last:border-r-0">
+              {children}
+            </td>
+          ),
+          code: ({ children }) => (
+            <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm">{children}</code>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+}
+
 export default function ViewFeedbackDialog({
   recording,
   open,
@@ -62,13 +124,21 @@ export default function ViewFeedbackDialog({
   const feedback = recording.fidelityFeedback as
     | FidelityFeedbackItem[]
     | FidelityFeedbackItem
+    | string
     | null;
-  const hasArrayFeedback = Array.isArray(feedback);
-  const hasObjectFeedback = feedback && typeof feedback === "object" && !Array.isArray(feedback);
+  const hasMarkdownFeedback = isMarkdownString(feedback);
+  const hasArrayFeedback = !hasMarkdownFeedback && Array.isArray(feedback);
+  const hasObjectFeedback =
+    !hasMarkdownFeedback && feedback && typeof feedback === "object" && !Array.isArray(feedback);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent
+        className={cn(
+          "max-h-[85vh] overflow-y-auto",
+          hasMarkdownFeedback ? "max-w-4xl" : "max-w-2xl",
+        )}
+      >
         <DialogHeader>
           <DialogTitle>Fidelity Feedback</DialogTitle>
           <DialogDescription>
@@ -137,6 +207,13 @@ export default function ViewFeedbackDialog({
               </div>
             </div>
           </FeedbackSection>
+
+          {/* Markdown Feedback Section */}
+          {hasMarkdownFeedback && (
+            <FeedbackSection title="AI Analysis Report">
+              <MarkdownContent content={feedback} />
+            </FeedbackSection>
+          )}
 
           {/* Detailed Feedback Section */}
           {hasArrayFeedback && feedback.length > 0 && (
