@@ -56,16 +56,8 @@ function FeedbackSection({ title, children }: { title: string; children: React.R
   );
 }
 
-function isMarkdownString(value: unknown): value is string {
-  if (typeof value !== "string") return false;
-  // Check for common markdown patterns
-  return (
-    value.includes("##") ||
-    value.includes("**") ||
-    value.includes("| ") ||
-    value.includes("---") ||
-    value.startsWith("#")
-  );
+function isStringFeedback(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 function MarkdownContent({ content }: { content: string }) {
@@ -126,17 +118,17 @@ export default function ViewFeedbackDialog({
     | FidelityFeedbackItem
     | string
     | null;
-  const hasMarkdownFeedback = isMarkdownString(feedback);
-  const hasArrayFeedback = !hasMarkdownFeedback && Array.isArray(feedback);
+  const hasStringFeedback = isStringFeedback(feedback);
+  const hasArrayFeedback = !hasStringFeedback && Array.isArray(feedback);
   const hasObjectFeedback =
-    !hasMarkdownFeedback && feedback && typeof feedback === "object" && !Array.isArray(feedback);
+    !hasStringFeedback && feedback && typeof feedback === "object" && !Array.isArray(feedback);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
           "max-h-[85vh] overflow-y-auto",
-          hasMarkdownFeedback ? "max-w-4xl" : "max-w-2xl",
+          hasStringFeedback ? "max-w-4xl" : "max-w-2xl",
         )}
       >
         <DialogHeader>
@@ -208,8 +200,8 @@ export default function ViewFeedbackDialog({
             </div>
           </FeedbackSection>
 
-          {/* Markdown Feedback Section */}
-          {hasMarkdownFeedback && (
+          {/* String/Markdown Feedback Section */}
+          {hasStringFeedback && (
             <FeedbackSection title="AI Analysis Report">
               <MarkdownContent content={feedback} />
             </FeedbackSection>
