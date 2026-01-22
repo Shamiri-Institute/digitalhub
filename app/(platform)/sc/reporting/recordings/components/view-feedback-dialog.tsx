@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
+import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +15,7 @@ import {
 } from "#/components/ui/dialog";
 import { cn } from "#/lib/utils";
 import type { SupervisorRecording } from "../actions";
+import { SAMPLE_MARKDOWN_FEEDBACK } from "./sample-response";
 
 interface ViewFeedbackDialogProps {
   recording: SupervisorRecording;
@@ -113,6 +116,8 @@ export default function ViewFeedbackDialog({
   open,
   onOpenChange,
 }: ViewFeedbackDialogProps) {
+  const [showSamplePreview, setShowSamplePreview] = useState(false);
+
   const feedback = recording.fidelityFeedback as
     | FidelityFeedbackItem[]
     | FidelityFeedbackItem
@@ -122,13 +127,14 @@ export default function ViewFeedbackDialog({
   const hasArrayFeedback = !hasStringFeedback && Array.isArray(feedback);
   const hasObjectFeedback =
     !hasStringFeedback && feedback && typeof feedback === "object" && !Array.isArray(feedback);
+  const hasFeedback = hasStringFeedback || hasArrayFeedback || hasObjectFeedback;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
           "max-h-[85vh] overflow-y-auto",
-          hasStringFeedback ? "max-w-4xl" : "max-w-2xl",
+          hasStringFeedback || showSamplePreview ? "max-w-4xl" : "max-w-2xl",
         )}
       >
         <DialogHeader>
@@ -275,11 +281,38 @@ export default function ViewFeedbackDialog({
           )}
 
           {/* No Feedback Available */}
-          {!feedback && (
+          {!hasFeedback && !showSamplePreview && (
             <div className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
               <Icons.info className="mx-auto mb-2 h-8 w-8 opacity-50" />
               <p>No detailed feedback available for this recording.</p>
+              {process.env.NODE_ENV === "development" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => setShowSamplePreview(true)}
+                >
+                  Preview Sample Response
+                </Button>
+              )}
             </div>
+          )}
+
+          {/* Sample Preview (Development Only) */}
+          {showSamplePreview && (
+            <>
+              <div className="flex items-center justify-between rounded-lg bg-yellow-bg p-3">
+                <span className="text-sm font-medium text-yellow-700">
+                  Showing sample preview (development only)
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => setShowSamplePreview(false)}>
+                  Hide Preview
+                </Button>
+              </div>
+              <FeedbackSection title="AI Analysis Report">
+                <MarkdownContent content={SAMPLE_MARKDOWN_FEEDBACK} />
+              </FeedbackSection>
+            </>
           )}
         </div>
       </DialogContent>
