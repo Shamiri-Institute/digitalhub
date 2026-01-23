@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import {
   Bar,
   BarChart,
@@ -28,7 +29,7 @@ import type {
   SessionRatingAverages,
 } from "../actions";
 
-export default function ChartArea({
+const ChartArea = memo(function ChartArea({
   dropoutData,
   schoolDataCompletenessData,
   sessionRatingsData,
@@ -149,4 +150,6 @@ export default function ChartArea({
       </ChartCard>
     </div>
   );
-}
+});
+
+export default ChartArea;
