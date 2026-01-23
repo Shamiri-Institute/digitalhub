@@ -16,4 +16,6 @@ const schema = z.object({
   S3_RECORDINGS_REGION: z.string().default("af-south-1"),
 });
 
-export const env = schema.parse(process.env);
+export const env = process.env.CI
+  ? (process.env as unknown as z.infer<typeof schema>)
+  : schema.parse(process.env);
