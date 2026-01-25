@@ -464,7 +464,7 @@ export async function updateRecordingsStatusBatch(
       statuses.push(update.status);
       overallScores.push(update.overallScore ?? NULL_SENTINEL);
       fidelityFeedbacks.push(
-        update.fidelityFeedback ? JSON.stringify(update.fidelityFeedback) : NULL_SENTINEL,
+        update.fidelityFeedback != null ? JSON.stringify(update.fidelityFeedback) : NULL_SENTINEL,
       );
       errorMessages.push(update.errorMessage ?? NULL_SENTINEL);
     }
