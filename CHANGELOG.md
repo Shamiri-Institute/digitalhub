@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.12.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.11.3...v1.12.0) (2026-01-25)
+
+
+### Features
+
+* **api:** add batch PATCH endpoint for session recordings ([#598](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/598)) ([1e23eeb](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1e23eeb73ee6b64e13517e926ca7082faffb1577))
+
+
+### Bug Fixes
+
+* adding reactmemo to chartarea component ([#595](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/595)) ([1989696](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/19896960f3c37ccb35f3a76de854c6a05db7513f))
+* **ci:** skip AWS env validation in CI environment ([#597](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/597)) ([ab1c020](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ab1c0200eb1871ee4ee70f5c9ba8b4935da3690b))
+
 ## [1.11.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.11.2...v1.11.3) (2026-01-20)
 
 ## [1.11.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.11.1...v1.11.2) (2026-01-20)
