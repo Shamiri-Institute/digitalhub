@@ -420,8 +420,12 @@ export async function updateRecordingStatus(
 }
 
 /**
- * Update multiple recording statuses in a single transaction (called by API for external service)
+ * Update multiple recording statuses in a single SQL query (called by API for external service)
  * All updates succeed or all fail (atomic operation)
+ *
+ * Uses PostgreSQL UPDATE FROM VALUES pattern for optimal performance:
+ * - Single query instead of N queries
+ * - Atomic by default (single statement)
  */
 export async function updateRecordingsStatusBatch(
   updates: BatchRecordingUpdate[],
@@ -445,36 +449,61 @@ export async function updateRecordingsStatusBatch(
       };
     }
 
-    // Perform all updates in a single transaction (atomic)
-    await db.$transaction(
-      updates.map((update) =>
-        db.sessionRecording.update({
-          where: { id: update.id },
-          data: {
-            status: update.status,
-            processedAt:
-              update.status === "COMPLETED" || update.status === "FAILED" ? new Date() : undefined,
-            overallScore: update.overallScore,
-            fidelityFeedback: update.fidelityFeedback,
-            errorMessage: update.errorMessage,
-            retryCount:
-              update.status === "FAILED"
-                ? { increment: 1 }
-                : update.status === "PENDING"
-                  ? 0
-                  : undefined,
-          },
-        }),
-      ),
-    );
+    // Build arrays for the UPDATE FROM unnest() pattern
+    const ids: string[] = [];
+    const statuses: string[] = [];
+    const overallScores: (string | null)[] = [];
+    const fidelityFeedbacks: (string | null)[] = [];
+    const errorMessages: (string | null)[] = [];
+
+    for (const update of updates) {
+      ids.push(update.id);
+      statuses.push(update.status);
+      overallScores.push(update.overallScore ?? null);
+      fidelityFeedbacks.push(
+        update.fidelityFeedback ? JSON.stringify(update.fidelityFeedback) : null,
+      );
+      errorMessages.push(update.errorMessage ?? null);
+    }
+
+    // Single UPDATE query using PostgreSQL unnest() for bulk updates with different values
+    // This is significantly more efficient than N separate UPDATE queries
+    const updatedCount = await db.$executeRaw`
+      UPDATE "SessionRecording" AS sr
+      SET
+        status = data.status::"RecordingProcessingStatus",
+        "overallScore" = data.overall_score,
+        "fidelityFeedback" = data.fidelity_feedback::jsonb,
+        "errorMessage" = data.error_message,
+        "processedAt" = CASE
+          WHEN data.status IN ('COMPLETED', 'FAILED') THEN NOW()
+          ELSE sr."processedAt"
+        END,
+        "retryCount" = CASE
+          WHEN data.status = 'FAILED' THEN sr."retryCount" + 1
+          WHEN data.status = 'PENDING' THEN 0
+          ELSE sr."retryCount"
+        END,
+        "updatedAt" = NOW()
+      FROM (
+        SELECT * FROM unnest(
+          ${ids}::text[],
+          ${statuses}::text[],
+          ${overallScores}::text[],
+          ${fidelityFeedbacks}::text[],
+          ${errorMessages}::text[]
+        ) AS t(id, status, overall_score, fidelity_feedback, error_message)
+      ) AS data
+      WHERE sr.id = data.id
+    `;
 
     // Revalidate for any supervisor viewing recordings
     revalidatePath("/sc/reporting/recordings");
 
     return {
       success: true,
-      message: `Successfully updated ${updates.length} recording(s)`,
-      updatedCount: updates.length,
+      message: `Successfully updated ${updatedCount} recording(s)`,
+      updatedCount: Number(updatedCount),
     };
   } catch (error) {
     console.error("Error updating recording statuses in batch:", error);
