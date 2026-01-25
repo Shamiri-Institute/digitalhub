@@ -233,9 +233,6 @@ export async function createSessionRecording(input: {
   }
 }
 
-/**
- * Load all recordings for the current supervisor's DataTable
- */
 export async function loadSupervisorRecordings() {
   const supervisor = await currentSupervisor();
 
@@ -303,9 +300,6 @@ export async function loadSupervisorRecordings() {
   }));
 }
 
-/**
- * Retry processing for a failed recording
- */
 export async function retryRecordingProcessing(recordingId: string) {
   const supervisor = await currentSupervisor();
 
@@ -419,14 +413,6 @@ export async function updateRecordingStatus(
   }
 }
 
-/**
- * Update multiple recording statuses in a single SQL query (called by API for external service)
- * All updates succeed or all fail (atomic operation)
- *
- * Uses PostgreSQL UPDATE FROM VALUES pattern for optimal performance:
- * - Single query instead of N queries
- * - Atomic by default (single statement)
- */
 export async function updateRecordingsStatusBatch(
   updates: BatchRecordingUpdate[],
 ): Promise<{ success: boolean; message: string; updatedCount: number }> {
@@ -478,8 +464,6 @@ export async function updateRecordingsStatusBatch(
       errorMessages.push(update.errorMessage ?? null);
     }
 
-    // Single UPDATE query using PostgreSQL unnest() for bulk updates with different values
-    // This is significantly more efficient than N separate UPDATE queries
     const updatedCount = await db.$executeRaw`
       UPDATE "SessionRecording" AS sr
       SET
@@ -509,7 +493,6 @@ export async function updateRecordingsStatusBatch(
       WHERE sr.id = data.id
     `;
 
-    // Revalidate for any supervisor viewing recordings
     revalidatePath("/sc/reporting/recordings");
 
     return {
@@ -527,9 +510,6 @@ export async function updateRecordingsStatusBatch(
   }
 }
 
-/**
- * Archive a recording (soft delete - internal use only)
- */
 export async function archiveRecording(recordingId: string) {
   const supervisor = await currentSupervisor();
 
