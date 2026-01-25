@@ -448,29 +448,34 @@ export async function updateRecordingsStatusBatch(
     }
 
     // Build arrays for the UPDATE FROM unnest() pattern
+    // Use empty string as sentinel for NULL values since Prisma cannot serialize
+    // arrays containing null values in raw queries. See:
+    // - https://github.com/prisma/prisma/issues/26545
+    // - https://github.com/prisma/prisma/issues/26335
+    const NULL_SENTINEL = "";
     const ids: string[] = [];
     const statuses: string[] = [];
-    const overallScores: (string | null)[] = [];
-    const fidelityFeedbacks: (string | null)[] = [];
-    const errorMessages: (string | null)[] = [];
+    const overallScores: string[] = [];
+    const fidelityFeedbacks: string[] = [];
+    const errorMessages: string[] = [];
 
     for (const update of updates) {
       ids.push(update.id);
       statuses.push(update.status);
-      overallScores.push(update.overallScore ?? null);
+      overallScores.push(update.overallScore ?? NULL_SENTINEL);
       fidelityFeedbacks.push(
-        update.fidelityFeedback ? JSON.stringify(update.fidelityFeedback) : null,
+        update.fidelityFeedback ? JSON.stringify(update.fidelityFeedback) : NULL_SENTINEL,
       );
-      errorMessages.push(update.errorMessage ?? null);
+      errorMessages.push(update.errorMessage ?? NULL_SENTINEL);
     }
 
     const updatedCount = await db.$executeRaw`
       UPDATE "SessionRecording" AS sr
       SET
         status = data.status::"RecordingProcessingStatus",
-        "overallScore" = data.overall_score,
-        "fidelityFeedback" = data.fidelity_feedback::jsonb,
-        "errorMessage" = data.error_message,
+        "overallScore" = NULLIF(data.overall_score, ''),
+        "fidelityFeedback" = NULLIF(data.fidelity_feedback, '')::jsonb,
+        "errorMessage" = NULLIF(data.error_message, ''),
         "processedAt" = CASE
           WHEN data.status IN ('COMPLETED', 'FAILED') THEN NOW()
           ELSE sr."processedAt"
