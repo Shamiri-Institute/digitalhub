@@ -431,8 +431,20 @@ export async function updateRecordingsStatusBatch(
   updates: BatchRecordingUpdate[],
 ): Promise<{ success: boolean; message: string; updatedCount: number }> {
   try {
-    // Validate all recording IDs exist before updating
+    // Validate no duplicate IDs in input (would cause non-deterministic updates)
     const recordingIds = updates.map((u) => u.id);
+    const uniqueIds = new Set(recordingIds);
+    if (uniqueIds.size !== recordingIds.length) {
+      const duplicates = recordingIds.filter((id, index) => recordingIds.indexOf(id) !== index);
+      const uniqueDuplicates = Array.from(new Set(duplicates));
+      return {
+        success: false,
+        message: `Duplicate recording IDs not allowed: ${uniqueDuplicates.join(", ")}`,
+        updatedCount: 0,
+      };
+    }
+
+    // Validate all recording IDs exist before updating
     const existingRecordings = await db.sessionRecording.findMany({
       where: { id: { in: recordingIds } },
       select: { id: true },
