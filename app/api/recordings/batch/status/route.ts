@@ -1,41 +1,9 @@
 import type { Prisma } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { updateRecordingsStatusBatch } from "#/app/(platform)/sc/reporting/recordings/actions";
+import { BatchRecordingStatusUpdateSchema, verifyRecordingsApiKey } from "#/lib/recordings-api";
 
 export const dynamic = "force-dynamic";
-
-/**
- * Verify the API key from the request headers
- */
-function verifyApiKey(request: NextRequest): boolean {
-  const apiKey = request.headers.get("x-api-key");
-  const expectedKey = process.env.RECORDINGS_API_KEY;
-
-  if (!expectedKey) {
-    console.error("RECORDINGS_API_KEY environment variable not set");
-    return false;
-  }
-
-  return apiKey === expectedKey;
-}
-
-// Schema for validating individual recording updates
-const RecordingUpdateSchema = z.object({
-  id: z.string().min(1, "Recording ID is required"),
-  status: z.enum(["PENDING", "PROCESSING", "COMPLETED", "FAILED"]),
-  overallScore: z.string().optional(),
-  fidelityFeedback: z.unknown().optional(),
-  errorMessage: z.string().optional(),
-});
-
-// Schema for validating the batch request body
-const BatchUpdateSchema = z.object({
-  recordings: z
-    .array(RecordingUpdateSchema)
-    .min(1, "At least one recording is required")
-    .max(100, "Maximum 100 recordings per batch"),
-});
 
 /**
  * PATCH /api/recordings/batch/status
@@ -70,14 +38,14 @@ const BatchUpdateSchema = z.object({
  */
 export async function PATCH(request: NextRequest) {
   // Verify API key
-  if (!verifyApiKey(request)) {
+  if (!verifyRecordingsApiKey(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     // Parse and validate request body
     const body = await request.json();
-    const validationResult = BatchUpdateSchema.safeParse(body);
+    const validationResult = BatchRecordingStatusUpdateSchema.safeParse(body);
 
     if (!validationResult.success) {
       return NextResponse.json(
