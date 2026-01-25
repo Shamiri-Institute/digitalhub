@@ -14,36 +14,13 @@ export const dynamic = "force-dynamic";
  *
  * All updates succeed or all fail - if any recording ID is not found,
  * the entire batch is rolled back.
- *
- * Headers:
- *   x-api-key: API key for authentication
- *   Content-Type: application/json
- *
- * Body:
- *   {
- *     recordings: [
- *       {
- *         id: string,
- *         status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED",
- *         overallScore?: string,
- *         fidelityFeedback?: object,
- *         errorMessage?: string
- *       },
- *       ...
- *     ]
- *   }
- *
- * Response:
- *   { success: boolean, message: string, updatedCount: number }
  */
 export async function PATCH(request: NextRequest) {
-  // Verify API key
   if (!verifyRecordingsApiKey(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    // Parse and validate request body
     const body = await request.json();
     const validationResult = BatchRecordingStatusUpdateSchema.safeParse(body);
 
@@ -59,7 +36,6 @@ export async function PATCH(request: NextRequest) {
 
     const { recordings } = validationResult.data;
 
-    // Transform to the expected type with proper Prisma JSON handling
     const updates = recordings.map((recording) => ({
       id: recording.id,
       status: recording.status,
@@ -68,11 +44,9 @@ export async function PATCH(request: NextRequest) {
       errorMessage: recording.errorMessage,
     }));
 
-    // Update all recordings in a single transaction
     const result = await updateRecordingsStatusBatch(updates);
 
     if (!result.success) {
-      // Check if it's a "not found" error
       if (result.message.startsWith("Recordings not found:")) {
         return NextResponse.json(
           { success: false, message: result.message, updatedCount: 0 },
