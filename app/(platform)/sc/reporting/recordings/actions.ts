@@ -357,6 +357,17 @@ export async function retryRecordingProcessing(recordingId: string) {
 }
 
 /**
+ * Type for batch recording updates
+ */
+export type BatchRecordingUpdate = {
+  id: string;
+  status: RecordingProcessingStatus;
+  overallScore?: string;
+  fidelityFeedback?: Prisma.InputJsonValue;
+  errorMessage?: string;
+};
+
+/**
  * Update recording status (called by API for external service)
  */
 export async function updateRecordingStatus(
@@ -404,6 +415,73 @@ export async function updateRecordingStatus(
     return {
       success: false,
       message: "Failed to update recording status",
+    };
+  }
+}
+
+/**
+ * Update multiple recording statuses in a single transaction (called by API for external service)
+ * All updates succeed or all fail (atomic operation)
+ */
+export async function updateRecordingsStatusBatch(
+  updates: BatchRecordingUpdate[],
+): Promise<{ success: boolean; message: string; updatedCount: number }> {
+  try {
+    // Validate all recording IDs exist before updating
+    const recordingIds = updates.map((u) => u.id);
+    const existingRecordings = await db.sessionRecording.findMany({
+      where: { id: { in: recordingIds } },
+      select: { id: true },
+    });
+
+    const existingIds = new Set(existingRecordings.map((r) => r.id));
+    const missingIds = recordingIds.filter((id) => !existingIds.has(id));
+
+    if (missingIds.length > 0) {
+      return {
+        success: false,
+        message: `Recordings not found: ${missingIds.join(", ")}`,
+        updatedCount: 0,
+      };
+    }
+
+    // Perform all updates in a single transaction (atomic)
+    await db.$transaction(
+      updates.map((update) =>
+        db.sessionRecording.update({
+          where: { id: update.id },
+          data: {
+            status: update.status,
+            processedAt:
+              update.status === "COMPLETED" || update.status === "FAILED" ? new Date() : undefined,
+            overallScore: update.overallScore,
+            fidelityFeedback: update.fidelityFeedback,
+            errorMessage: update.errorMessage,
+            retryCount:
+              update.status === "FAILED"
+                ? { increment: 1 }
+                : update.status === "PENDING"
+                  ? 0
+                  : undefined,
+          },
+        }),
+      ),
+    );
+
+    // Revalidate for any supervisor viewing recordings
+    revalidatePath("/sc/reporting/recordings");
+
+    return {
+      success: true,
+      message: `Successfully updated ${updates.length} recording(s)`,
+      updatedCount: updates.length,
+    };
+  } catch (error) {
+    console.error("Error updating recording statuses in batch:", error);
+    return {
+      success: false,
+      message: "Failed to update recording statuses",
+      updatedCount: 0,
     };
   }
 }
