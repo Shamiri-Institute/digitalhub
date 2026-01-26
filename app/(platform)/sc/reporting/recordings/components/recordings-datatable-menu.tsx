@@ -56,7 +56,6 @@ export default function RecordingsDataTableMenu({
     }
   };
 
-  const canViewFeedback = recording.status === "COMPLETED" && Boolean(recording.fidelityFeedback);
   const canRetry = recording.status === "FAILED";
 
   return (
@@ -68,22 +67,14 @@ export default function RecordingsDataTableMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {canViewFeedback && (
-          <DropdownMenuItem onClick={handleViewFeedback}>
-            <Icons.eye className="mr-2 h-4 w-4" />
-            View Feedback
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem onClick={handleViewFeedback}>
+          <Icons.eye className="mr-2 h-4 w-4" />
+          View Feedback
+        </DropdownMenuItem>
         {canRetry && (
           <DropdownMenuItem onClick={handleRetry} disabled={isRetrying}>
             <Icons.refreshCw className="mr-2 h-4 w-4" />
             {isRetrying ? "Retrying..." : "Retry Processing"}
-          </DropdownMenuItem>
-        )}
-        {!canViewFeedback && !canRetry && (
-          <DropdownMenuItem disabled>
-            <Icons.clock className="mr-2 h-4 w-4" />
-            {recording.status === "PENDING" ? "Awaiting processing" : "Processing..."}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
