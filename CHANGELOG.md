@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.13.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.12.0...v1.13.0) (2026-01-27)
+
+
+### Features
+
+* **ai:** add feedback page ([#596](https://github.com/Shamiri-Institute/digitalhub/issues/596)) ([70f62a3](https://github.com/Shamiri-Institute/digitalhub/commit/70f62a3219da7e07222ce4df7871c7001f6b7992))
+
+
+### Bug Fixes
+
+* **constants:** update CURRENT_PROJECT_ID ([#599](https://github.com/Shamiri-Institute/digitalhub/issues/599)) ([fba3e65](https://github.com/Shamiri-Institute/digitalhub/commit/fba3e650b56d6f573579d4d69a4e1c1d669ce745))
+
 ## [1.12.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.11.3...v1.12.0) (2026-01-25)
 
 
