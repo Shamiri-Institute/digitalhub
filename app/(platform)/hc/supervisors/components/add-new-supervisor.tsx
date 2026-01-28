@@ -252,6 +252,7 @@ export default function AddNewSupervisor() {
                               selected={field.value}
                               onSelect={field.onChange}
                               initialFocus
+                              captionLayout="dropdown"
                             />
                           </PopoverContent>
                         </Popover>
