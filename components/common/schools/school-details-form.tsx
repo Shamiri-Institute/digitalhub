@@ -408,6 +408,7 @@ export default function SchoolDetailsForm({
                               <Calendar
                                 mode="single"
                                 selected={field.value || undefined}
+                                captionLayout="dropdown"
                                 onSelect={field.onChange}
                                 initialFocus
                               />

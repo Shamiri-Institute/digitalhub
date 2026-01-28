@@ -255,6 +255,7 @@ export function ScheduleNewSession({
                       <Calendar
                         mode="single"
                         selected={field.value}
+                        captionLayout="dropdown"
                         onSelect={field.onChange}
                         initialFocus
                       />

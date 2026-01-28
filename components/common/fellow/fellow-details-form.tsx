@@ -291,6 +291,7 @@ export default function FellowDetailsForm({
                               <Calendar
                                 mode="single"
                                 selected={field.value}
+                                captionLayout="dropdown"
                                 onSelect={field.onChange}
                                 initialFocus
                               />

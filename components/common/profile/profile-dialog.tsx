@@ -371,6 +371,7 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
                             <Calendar
                               mode="single"
                               selected={field.value}
+                              captionLayout="dropdown"
                               onSelect={field.onChange}
                               initialFocus
                             />
