@@ -340,6 +340,7 @@ export function AddNewClinicalCaseForm({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
+                          captionLayout="dropdown"
                           initialFocus
                         />
                       </PopoverContent>

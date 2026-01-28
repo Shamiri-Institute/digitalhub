@@ -124,6 +124,7 @@ export default function RescheduleSession({
                             <Calendar
                               mode="single"
                               selected={field.value}
+                              captionLayout="dropdown"
                               onSelect={field.onChange}
                               initialFocus
                             />
