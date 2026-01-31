@@ -1,6 +1,12 @@
+import { QuestionnaireType } from "@prisma/client";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 import { stringValidation } from "#/lib/utils";
+
+export const QUESTIONNAIRE_TYPE_OPTIONS = Object.values(QuestionnaireType) as [
+  QuestionnaireType,
+  ...QuestionnaireType[],
+];
 
 export const StudentDetailsSchema = z
   .object({
@@ -17,6 +23,7 @@ export const StudentDetailsSchema = z
     ),
     stream: stringValidation("Please enter the student's stream"),
     gender: stringValidation("Please select the student's gender"),
+    questionnaireType: z.enum(QUESTIONNAIRE_TYPE_OPTIONS).optional(),
     schoolId: z.string().optional(),
     assignedGroupId: z.string().optional(),
     admissionNumber: z.string().optional(),

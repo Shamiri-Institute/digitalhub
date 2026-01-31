@@ -136,6 +136,11 @@ export const columns = (state: {
     accessorKey: "admissionNumber",
   },
   {
+    header: "Questionnaire",
+    id: "Questionnaire",
+    accessorFn: (row) => row.questionnaireType ?? "",
+  },
+  {
     header: "Stream",
     id: "Stream",
     accessorKey: "stream",
