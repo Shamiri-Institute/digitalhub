@@ -39,6 +39,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
       yearOfBirth,
       admissionNumber,
       phoneNumber,
+      questionnaireType,
       mode,
       assignedGroupId,
       schoolId,
@@ -57,6 +58,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
           stream,
           phoneNumber,
           admissionNumber,
+          questionnaireType,
         },
       });
       return {
@@ -94,6 +96,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
         gender,
         form: Number(form),
         stream,
+        questionnaireType,
         assignedGroupId,
         implementerId: auth.session.user.activeMembership?.implementerId,
         fellowId: group.leader.id,
