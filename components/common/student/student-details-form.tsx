@@ -9,7 +9,10 @@ import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
-import { QUESTIONNAIRE_TYPE_OPTIONS, StudentDetailsSchema } from "#/components/common/student/schemas";
+import {
+  QUESTIONNAIRE_TYPE_OPTIONS,
+  StudentDetailsSchema,
+} from "#/components/common/student/schemas";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
