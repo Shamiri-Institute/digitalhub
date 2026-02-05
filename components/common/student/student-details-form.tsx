@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma, QuestionnaireType } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -9,7 +9,10 @@ import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
-import { StudentDetailsSchema } from "#/components/common/student/schemas";
+import {
+  QUESTIONNAIRE_TYPE_OPTIONS,
+  StudentDetailsSchema,
+} from "#/components/common/student/schemas";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -97,6 +100,7 @@ export default function StudentDetailsForm({
       studentName: student?.studentName ?? "",
       admissionNumber: student?.admissionNumber ?? "",
       gender: student?.gender ?? "",
+      questionnaireType: student?.questionnaireType ?? undefined,
       yearOfBirth: student?.yearOfBirth?.toString() ?? "",
       form: student?.form?.toString() ?? "",
       stream: student?.stream ?? "",
@@ -302,6 +306,35 @@ export default function StudentDetailsForm({
                           <FormControl>
                             <Input {...field} disabled={mode === "view"} />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="questionnaireType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Type of questionnaire</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            defaultValue={field.value}
+                            disabled={mode === "view"}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select questionnaire type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="max-h-[200px]">
+                              {QUESTIONNAIRE_TYPE_OPTIONS.map((type) => (
+                                <SelectItem key={type} value={type}>
+                                  {type === QuestionnaireType.JSS ? "JSS" : type}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
