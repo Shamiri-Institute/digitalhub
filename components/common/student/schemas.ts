@@ -1,11 +1,11 @@
-import { QuestionnaireType } from "@prisma/client";
+import type { QuestionnaireType } from "@prisma/client";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 import { stringValidation } from "#/lib/utils";
 
-export const QUESTIONNAIRE_TYPE_OPTIONS = Object.values(QuestionnaireType) as [
-  QuestionnaireType,
-  ...QuestionnaireType[],
+export const QUESTIONNAIRE_TYPE_OPTIONS: [QuestionnaireType, ...QuestionnaireType[]] = [
+  "QA",
+  "JSS",
 ];
 
 export const StudentDetailsSchema = z
