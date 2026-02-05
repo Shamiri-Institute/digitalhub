@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.14.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.13.0...v1.14.0) (2026-02-05)
+
+
+### Features
+
+* **calendar:** add captionLayout prop to Calendar component ([#601](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/601)) ([44f609b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/44f609b5ceba535ac44c57cbed537f37068bc870))
+* **student:** add questionnaire type field to student table and add student form ([#603](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/603)) ([1a38ed0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1a38ed04b346750ca081993dfc8e98aa6fa28fd3))
+
 ## [1.13.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.12.0...v1.13.0) (2026-01-27)
 
 
