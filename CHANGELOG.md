@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.15.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.14.0...v1.15.0) (2026-02-10)
+
+
+### Features
+
+* **migrations:** seed session names for 2026_Project_1 across all hubs and update session amounts ([#607](https://github.com/Shamiri-Institute/digitalhub/issues/607)) ([969a131](https://github.com/Shamiri-Institute/digitalhub/commit/969a1313f150b0e1ae6cfee2f1c6044acb9db9ed))
+
+
+### Bug Fixes
+
+* **bug:**  forms not having validations and resolve infinite loading on submit ([#608](https://github.com/Shamiri-Institute/digitalhub/issues/608)) ([d1f4ac8](https://github.com/Shamiri-Institute/digitalhub/commit/d1f4ac860bb663321c58f7e57699cf371357fc82))
+
 ## [1.14.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.13.0...v1.14.0) (2026-02-05)
 
 
