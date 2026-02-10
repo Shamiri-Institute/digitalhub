@@ -10,13 +10,10 @@ import type { z } from "zod";
  * Fixes resolver being typed with schema input (e.g. unknown for z.coerce
  * fields) so useForm<z.infer<Schema>> receives Resolver<output>.
  */
-type ResolverOutput<T extends z.ZodType> = z.infer<T> extends FieldValues
-  ? z.infer<T>
-  : FieldValues;
+type ResolverOutput<T extends z.ZodType> =
+  z.infer<T> extends FieldValues ? z.infer<T> : FieldValues;
 
-export function zodResolver<T extends z.ZodType>(
-  schema: T,
-): Resolver<ResolverOutput<T>> {
+export function zodResolver<T extends z.ZodType>(schema: T): Resolver<ResolverOutput<T>> {
   // Schema cast needed: Zod v4 types don't match resolver's Zod3Type expectations (issue #813)
   return baseZodResolver(schema as never) as unknown as Resolver<ResolverOutput<T>>;
 }
