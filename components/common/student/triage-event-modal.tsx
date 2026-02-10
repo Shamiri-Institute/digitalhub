@@ -4,10 +4,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import {
-  TriageEventSchema,
-  type TriageEventFormData,
-} from "#/app/(platform)/hc/schemas";
+import { TriageEventSchema, type TriageEventFormData } from "#/app/(platform)/hc/schemas";
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
 import {
   createTriageEvent,
@@ -16,7 +13,13 @@ import {
   updateTriageEvent,
 } from "#/lib/actions/triage";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -114,8 +117,7 @@ export default function TriageEventModal({
   const showNotCompletedReason = riskScreenOutcome === "NOT_COMPLETED";
   const showHandoff =
     actionTaken === "REFERRED" || actionTaken === "ESCALATED" || actionTaken === "REFUSED";
-  const showSupervisorSelect =
-    actionTaken === "REFERRED" || actionTaken === "ESCALATED";
+  const showSupervisorSelect = actionTaken === "REFERRED" || actionTaken === "ESCALATED";
   const forceEscalated = riskScreenOutcome === "ANY_YES";
 
   const loadSupervisors = useCallback(() => {
@@ -168,7 +170,7 @@ export default function TriageEventModal({
     // so we don't overwrite the user's risk screen outcome when they select "Any YES".
     // Intentionally omit form from deps so we don't re-run when form state changes (e.g. user
     // selecting risk outcome), which would reset and wipe their selection and disable dropdowns.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset when modal/session/student/event identity changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset when modal/session/student/event identity changes
   }, [isOpen, existingEvent, studentId, sessionId]);
 
   const onSubmit = async (data: z.infer<typeof TriageEventSchema>) => {
@@ -218,10 +220,7 @@ export default function TriageEventModal({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel className="text-sm">Risk screen outcome (required)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value ?? ""}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select outcome" />
@@ -245,7 +244,12 @@ export default function TriageEventModal({
                 name="riskNotCompletedReason"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-sm">Reason risk screen not completed</FormLabel>
+                    <FormLabel className="text-sm">
+                      Reason risk screen not completed (required)
+                    </FormLabel>
+                    <p className="text-xs text-shamiri-text-grey">
+                      Shown when Risk screen outcome is Not completed.
+                    </p>
                     <Select onValueChange={field.onChange} value={field.value ?? ""}>
                       <FormControl>
                         <SelectTrigger>
@@ -271,10 +275,7 @@ export default function TriageEventModal({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel className="text-sm">Action taken (required)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value ?? ""}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select action" />
@@ -329,7 +330,10 @@ export default function TriageEventModal({
                 name="supervisorHandoffStatus"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-sm">Supervisor handoff status</FormLabel>
+                    <FormLabel className="text-sm">Supervisor handoff status (required)</FormLabel>
+                    <p className="text-xs text-shamiri-text-grey">
+                      Shown when Action taken is Referred, Escalated, or Student refused.
+                    </p>
                     <Select onValueChange={field.onChange} value={field.value ?? ""}>
                       <FormControl>
                         <SelectTrigger>
@@ -354,7 +358,9 @@ export default function TriageEventModal({
               name="note"
               render={({ field }) => (
                 <FormItem className="space-y-2">
-                  <FormLabel className="text-sm">Short note (optional, max 200 characters)</FormLabel>
+                  <FormLabel className="text-sm">
+                    Short note (optional, max 200 characters)
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Add context if needed"
@@ -364,9 +370,7 @@ export default function TriageEventModal({
                       {...field}
                     />
                   </FormControl>
-                  <p className="text-xs text-shamiri-text-grey">
-                    {field.value?.length ?? 0}/200
-                  </p>
+                  <p className="text-xs text-shamiri-text-grey">{field.value?.length ?? 0}/200</p>
                   <FormMessage />
                 </FormItem>
               )}
