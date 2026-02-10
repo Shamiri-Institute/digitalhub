@@ -44,7 +44,7 @@ import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
-import { AddNewSupervisorSchema } from "../../schemas";
+import { AddNewSupervisorSchema } from "../../../../../components/common/clinical/schemas";
 
 export default function AddNewSupervisor() {
   const counties = KENYAN_COUNTIES.map((county) => county.name);

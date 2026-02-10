@@ -6,7 +6,7 @@ import {
   DropoutStudentSchema,
   MarkAttendanceSchema,
   StudentReportingNotesSchema,
-} from "#/app/(platform)/hc/schemas";
+} from "#/components/common/clinical/schemas";
 import { getCurrentPersonnel } from "#/app/auth";
 import { StudentDetailsSchema } from "#/components/common/student/schemas";
 import { objectId } from "#/lib/crypto";

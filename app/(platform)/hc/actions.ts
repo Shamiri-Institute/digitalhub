@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
-import { HubCoordinatorSchema } from "./schemas";
+import { HubCoordinatorSchema } from "../../../components/common/clinical/schemas";
 
 export async function updateHubCoordinatorProfile(formData: z.infer<typeof HubCoordinatorSchema>) {
   try {

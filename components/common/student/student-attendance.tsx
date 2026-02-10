@@ -5,7 +5,7 @@ import { type Dispatch, type SetStateAction, useContext, useEffect, useState } f
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
-import type { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
+import type { MarkAttendanceSchema } from "#/components/common/clinical/schemas";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
@@ -32,8 +32,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import { getTriageEventByStudentAndSession } from "#/lib/actions/triage";
 import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
 import { sessionDisplayName } from "#/lib/utils";
+import TriageEventModal from "#/components/common/student/triage-event-modal";
 
 export default function StudentAttendance({
   isOpen,
@@ -78,6 +80,11 @@ export default function StudentAttendance({
   const { sessions, setSessions, refresh } = useContext(SessionsContext);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<StudentAttendanceData>[]>([]);
+  const [triageModalOpen, setTriageModalOpen] = useState(false);
+  const [triageStudent, setTriageStudent] = useState<StudentAttendanceData | undefined>();
+  const [triageExistingEvent, setTriageExistingEvent] = useState<Awaited<
+    ReturnType<typeof getTriageEventByStudentAndSession>
+  > | null>(null);
 
   const form = useForm<{ fellow: string }>({
     defaultValues: {
@@ -96,7 +103,15 @@ export default function StudentAttendance({
 
     setGroups(groups);
     setSessions(sessions);
-  }, [fellows, session]);
+  }, [fellows, session, sessions]);
+
+  useEffect(() => {
+    if (!triageModalOpen || !triageStudent?.id || !session?.id) {
+      setTriageExistingEvent(null);
+      return;
+    }
+    getTriageEventByStudentAndSession(triageStudent.id, session.id).then(setTriageExistingEvent);
+  }, [triageModalOpen, triageStudent?.id, session?.id]);
 
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     const [res] = await Promise.all([
@@ -197,6 +212,8 @@ export default function StudentAttendance({
           columns={columns({
             setAttendance,
             setAttendanceDialog: setMarkAttendanceDialog,
+            setTriageStudent,
+            setTriageModalOpen,
             session,
           })}
           editColumns={true}
@@ -262,6 +279,19 @@ export default function StudentAttendance({
             </p>
           </DialogAlertWidget>
         </MarkAttendance>
+        {session && triageStudent && (
+          <TriageEventModal
+            isOpen={triageModalOpen}
+            setIsOpen={setTriageModalOpen}
+            studentId={triageStudent.id}
+            studentName={triageStudent.studentName}
+            sessionId={session.id}
+            sessionName={sessionDisplayName(session.session?.sessionName ?? "")}
+            hubId={session.hubId ?? undefined}
+            existingEvent={triageExistingEvent ?? undefined}
+            onSuccess={refresh}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -281,6 +311,8 @@ export type StudentAttendanceData = Prisma.StudentGetPayload<{
 const columns = (state: {
   setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setTriageStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
+  setTriageModalOpen: Dispatch<SetStateAction<boolean>>;
   session: Session | null;
 }): ColumnDef<StudentAttendanceData>[] => [
   {

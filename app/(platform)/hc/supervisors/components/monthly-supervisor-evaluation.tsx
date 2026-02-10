@@ -9,7 +9,7 @@ import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
-import { MonthlySupervisorEvaluationSchema } from "#/app/(platform)/hc/schemas";
+import { MonthlySupervisorEvaluationSchema } from "#/components/common/clinical/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { submitMonthlySupervisorEvaluation } from "#/app/(platform)/hc/supervisors/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";

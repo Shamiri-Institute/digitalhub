@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
-import type { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
+import type { MarkAttendanceSchema } from "#/components/common/clinical/schemas";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { AddReportingNote } from "#/components/common/student/add-reporting-note";

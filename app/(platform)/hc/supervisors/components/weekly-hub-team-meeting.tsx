@@ -35,7 +35,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "#/lib/zod-resolver";
-import { WeeklyHubTeamMeetingSchema } from "../../schemas";
+import { WeeklyHubTeamMeetingSchema } from "../../../../../components/common/clinical/schemas";
 
 function generateWeekFieldValues() {
   const numWeeks = 4;
