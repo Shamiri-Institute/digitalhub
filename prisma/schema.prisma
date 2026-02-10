@@ -270,6 +270,7 @@ model Student {
   studentAttendances        StudentAttendance[]
   studentGroupTransferTrail StudentGroupTransferTrail[]
 
+  @@index([assignedGroupId])
   @@map("students")
 }
 
@@ -964,6 +965,7 @@ model InterventionGroup {
   sessionRecordings         SessionRecording[]
 
   @@unique([leaderId, schoolId], name: "interventionGroupByLeaderIdAndSchoolId")
+  @@index([leaderId])
   @@map("intervention_groups")
 }
 
