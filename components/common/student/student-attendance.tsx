@@ -12,6 +12,7 @@ import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
 import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
 import StudentAttendanceMenu from "#/components/common/student/student-attendance-menu";
+import TriageEventModal from "#/components/common/student/triage-event-modal";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -32,10 +33,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { getTriageEventByStudentAndSession } from "#/lib/actions/triage";
 import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
+import { getTriageEventByStudentAndSession } from "#/lib/actions/triage";
 import { sessionDisplayName } from "#/lib/utils";
-import TriageEventModal from "#/components/common/student/triage-event-modal";
 
 export default function StudentAttendance({
   isOpen,
