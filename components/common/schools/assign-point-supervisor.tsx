@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { AssignPointSupervisorSchema } from "#/components/common/clinical/schemas";
+import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import {
   assignSchoolPointSupervisor,
   revalidatePageAction,

@@ -10,7 +10,7 @@ import {
   DropoutSchoolSchema,
   SchoolInformationSchema,
   WeeklyHubReportSchema,
-} from "../../../../components/common/clinical/schemas";
+} from "../../hc/schemas";
 
 /**
  * TODO: the functions here should also be cognizant of the project

@@ -3,7 +3,7 @@
 import type { Prisma } from "@prisma/client";
 import { randomBytes } from "crypto";
 import type { z } from "zod";
-import { TriageEventSchema, type TriageEventFormData } from "#/components/common/clinical/schemas";
+import { TriageEventSchema, type TriageEventFormData } from "#/app/(platform)/hc/schemas";
 import { currentFellow, getCurrentPersonnel } from "#/app/auth";
 import { db } from "#/lib/db";
 

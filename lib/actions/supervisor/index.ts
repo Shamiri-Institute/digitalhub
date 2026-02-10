@@ -1,7 +1,7 @@
 "use server";
 
 import type { z } from "zod";
-import { MarkAttendanceSchema } from "#/components/common/clinical/schemas";
+import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";

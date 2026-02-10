@@ -3,7 +3,7 @@
 import { ImplementerRole, Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import type { z } from "zod";
-import { FellowDetailsSchema, MarkAttendanceSchema } from "#/components/common/clinical/schemas";
+import { FellowDetailsSchema, MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import {
   type CurrentHubCoordinator,
   type CurrentSupervisor,

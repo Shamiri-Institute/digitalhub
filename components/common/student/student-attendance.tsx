@@ -5,7 +5,7 @@ import { type Dispatch, type SetStateAction, useContext, useEffect, useState } f
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
-import type { MarkAttendanceSchema } from "#/components/common/clinical/schemas";
+import type { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";

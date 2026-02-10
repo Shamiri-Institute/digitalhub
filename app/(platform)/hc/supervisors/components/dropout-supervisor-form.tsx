@@ -3,7 +3,7 @@ import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { DropoutSupervisorSchema } from "#/components/common/clinical/schemas";
+import { DropoutSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { dropoutSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Alert, AlertTitle } from "#/components/ui/alert";

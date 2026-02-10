@@ -15,7 +15,7 @@ import {
   DropoutSchoolSchema,
   EditSchoolSchema,
   WeeklyHubReportSchema,
-} from "../../../../components/common/clinical/schemas";
+} from "../schemas";
 
 /**
  * TODO: the functions here should also be cognizant of the project

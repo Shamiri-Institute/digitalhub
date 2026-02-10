@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { StudentReportingNotesSchema } from "#/components/common/clinical/schemas";
+import { StudentReportingNotesSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Button } from "#/components/ui/button";

@@ -7,7 +7,7 @@ import type { z } from "zod";
 import {
   TriageEventSchema,
   type TriageEventFormData,
-} from "#/components/common/clinical/schemas";
+} from "#/app/(platform)/hc/schemas";
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
 import {
   createTriageEvent,
