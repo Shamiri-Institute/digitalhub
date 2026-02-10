@@ -9,7 +9,7 @@ import {
   MonthlySupervisorEvaluationSchema,
   SubmitComplaintSchema,
   WeeklyHubTeamMeetingSchema,
-} from "#/components/common/clinical/schemas";
+} from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator } from "#/app/auth";
 
 import { CURRENT_PROJECT_ID } from "#/lib/constants";

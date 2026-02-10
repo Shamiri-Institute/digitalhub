@@ -44,7 +44,7 @@ import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
-import { EditSupervisorSchema } from "../../../../../components/common/clinical/schemas";
+import { EditSupervisorSchema } from "../../schemas";
 
 export default function SupervisorDetailsForm({
   supervisor,

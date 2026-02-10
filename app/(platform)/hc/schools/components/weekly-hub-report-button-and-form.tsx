@@ -37,7 +37,7 @@ import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import AddCircleOutlined from "#/public/icons/add-circle-outline.svg";
-import { WeeklyHubReportSchema } from "../../../../../components/common/clinical/schemas";
+import { WeeklyHubReportSchema } from "../../schemas";
 import { submitWeeklyHubReport } from "../actions";
 
 function generateWeekFieldValues() {
