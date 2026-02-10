@@ -1,10 +1,10 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { Resolver } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -45,6 +45,7 @@ import {
   SCHOOL_TYPES,
 } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 import { AddSchoolSchema, EditSchoolSchema } from "../../../app/(platform)/hc/schemas";
 import {
   addSchool,
@@ -82,7 +83,7 @@ export default function SchoolDetailsForm({
   };
 
   const form = useForm<FormData>({
-    resolver: zodResolver(isEditing ? EditSchoolSchema : AddSchoolSchema),
+    resolver: zodResolver(isEditing ? EditSchoolSchema : AddSchoolSchema) as Resolver<FormData>,
   });
 
   const pointPersonPhoneWatcher = form.watch("pointPersonPhone");

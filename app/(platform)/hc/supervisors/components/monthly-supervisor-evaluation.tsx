@@ -1,4 +1,3 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import type {
   MonthlySupervisorEvaluation as MonthlySupervisorEvaluationType,
   Project,
@@ -43,6 +42,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 type FormInput = {
   section: string;

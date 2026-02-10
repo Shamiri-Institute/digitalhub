@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -19,6 +18,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { useToast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 const FormSchema = z.object({
   reason: stringValidation("Please enter the reason for flagging the case"),

@@ -1,4 +1,3 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
@@ -36,6 +35,7 @@ import { toast } from "#/components/ui/use-toast";
 import { dropoutStudent } from "#/lib/actions/student";
 import { STUDENT_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function StudentDropoutForm({
   student,

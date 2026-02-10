@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { usePathname } from "next/navigation";
 import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
@@ -22,6 +21,7 @@ import { Input } from "#/components/ui/input";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { updateUploadedSchoolFile } from "#/lib/actions/file";
+import { zodResolver } from "#/lib/zod-resolver";
 
 const FormSchema = z.object({
   fileName: z.string({

@@ -1,4 +1,3 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import type { ImplementerRole } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
@@ -28,6 +27,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { rescheduleSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 import type { Session } from "./sessions-provider";
 
 export default function RescheduleSession({
