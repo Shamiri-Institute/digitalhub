@@ -1,4 +1,4 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import { format } from "date-fns";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { usePathname } from "next/navigation";

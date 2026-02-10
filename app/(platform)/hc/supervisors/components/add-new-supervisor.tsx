@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";

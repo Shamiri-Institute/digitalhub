@@ -1,5 +1,5 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import type { Fellow } from "@prisma/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

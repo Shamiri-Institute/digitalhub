@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import { ImplementerRole, type Prisma, QuestionnaireType } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";

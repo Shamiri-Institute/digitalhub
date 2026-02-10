@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";

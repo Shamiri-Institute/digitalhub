@@ -1,4 +1,4 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import type { ImplementerRole, User } from "@prisma/client";
 import { format } from "date-fns";
 import { usePathname } from "next/navigation";

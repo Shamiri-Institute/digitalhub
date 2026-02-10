@@ -1,5 +1,5 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";

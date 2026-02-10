@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import type { Fellow, Prisma, Student, Supervisor } from "@prisma/client";
 import { format } from "date-fns";
 import { useState } from "react";

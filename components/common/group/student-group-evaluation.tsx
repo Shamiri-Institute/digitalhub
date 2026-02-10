@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import type { Prisma } from "@prisma/client";
 import { addDays, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";

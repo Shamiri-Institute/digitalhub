@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import type { Supervisor } from "@prisma/client";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";

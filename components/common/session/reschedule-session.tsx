@@ -1,4 +1,4 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import type { ImplementerRole } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";

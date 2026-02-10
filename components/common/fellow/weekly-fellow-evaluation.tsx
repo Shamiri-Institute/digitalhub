@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import type { Project, WeeklyFellowRatings } from "@prisma/client";
 import { addDays, differenceInSeconds, eachWeekOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
