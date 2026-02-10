@@ -46,7 +46,7 @@ import {
 } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
-import { AddSchoolSchema, EditSchoolSchema } from "../../../app/(platform)/hc/schemas";
+import { AddSchoolSchema, EditSchoolSchema } from "../clinical/schemas";
 import {
   addSchool,
   editSchoolInformation,

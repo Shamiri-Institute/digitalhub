@@ -373,6 +373,72 @@ export const MarkAttendanceSchema = z
     }
   });
 
+const RISK_SCREEN_OUTCOMES = ["ALL_NO", "ANY_YES", "NOT_COMPLETED"] as const;
+const RISK_NOT_COMPLETED_REASONS = [
+  "STUDENT_LEFT",
+  "NO_PRIVACY",
+  "TIME_CONSTRAINTS",
+  "OTHER",
+] as const;
+const TRIAGE_ACTION_TAKEN = ["SUPPORTED", "REFERRED", "ESCALATED", "REFUSED"] as const;
+const SUPERVISOR_HANDOFF_STATUSES = [
+  "WARM_HANDOFF",
+  "SUPERVISOR_NOTIFIED",
+  "COULD_NOT_REACH",
+  "STUDENT_REFUSED_NOTIFIED",
+] as const;
+
+export const TriageEventSchema = z
+  .object({
+    id: z.string().optional(),
+    studentId: stringValidation("Student ID is required"),
+    sessionId: stringValidation("Session ID is required"),
+    riskScreenOutcome: z.enum(RISK_SCREEN_OUTCOMES, {
+      message: "Risk screen outcome is required when triage occurred",
+    }),
+    riskNotCompletedReason: z.enum(RISK_NOT_COMPLETED_REASONS).optional(),
+    actionTaken: z.enum(TRIAGE_ACTION_TAKEN, {
+      message: "Action taken is required",
+    }),
+    referredSupervisorId: z.string().optional(),
+    supervisorHandoffStatus: z.enum(SUPERVISOR_HANDOFF_STATUSES).optional(),
+    note: z.string().max(200).optional(),
+  })
+  .transform((val) => {
+    // Enforce safety rule: risk positive always implies escalated action
+    if (val.riskScreenOutcome === "ANY_YES") {
+      return { ...val, actionTaken: "ESCALATED" as const };
+    }
+    return val;
+  })
+  .superRefine((val, ctx) => {
+    if (val.riskScreenOutcome === "NOT_COMPLETED" && !val.riskNotCompletedReason) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Reason is required when risk screen was not completed",
+        path: ["riskNotCompletedReason"],
+      });
+    }
+    const needsHandoff = ["REFERRED", "ESCALATED", "REFUSED"].includes(val.actionTaken ?? "");
+    if (needsHandoff && !val.supervisorHandoffStatus) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Supervisor handoff status is required for this action",
+        path: ["supervisorHandoffStatus"],
+      });
+    }
+    const needsSupervisor = ["REFERRED", "ESCALATED"].includes(val.actionTaken ?? "");
+    if (needsSupervisor && !val.referredSupervisorId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Please select the supervisor you referred or escalated to",
+        path: ["referredSupervisorId"],
+      });
+    }
+  });
+
+export type TriageEventFormData = z.infer<typeof TriageEventSchema>;
+
 export const StudentReportingNotesSchema = z.object({
   studentId: stringValidation("Student ID is required"),
   notes: stringValidation("Please add your note"),

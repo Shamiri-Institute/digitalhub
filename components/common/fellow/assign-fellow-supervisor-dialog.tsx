@@ -6,7 +6,7 @@ import type React from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
+import { AssignPointSupervisorSchema } from "#/components/common/clinical/schemas";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";

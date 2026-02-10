@@ -1,7 +1,7 @@
 import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { SubmitComplaintSchema } from "#/app/(platform)/hc/schemas";
+import { SubmitComplaintSchema } from "#/components/common/clinical/schemas";
 import { submitSupervisorComplaint } from "#/app/(platform)/hc/supervisors/actions";
 import { Button } from "#/components/ui/button";
 import {

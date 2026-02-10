@@ -7,7 +7,7 @@ import type React from "react";
 import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
+import { MarkAttendanceSchema } from "#/components/common/clinical/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";

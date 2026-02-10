@@ -35,7 +35,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { zodResolver } from "#/lib/zod-resolver";
-import { DropoutSchoolSchema } from "../../../app/(platform)/hc/schemas";
+import { DropoutSchoolSchema } from "../clinical/schemas";
 import type { SchoolsTableData } from "./columns";
 
 export function DropoutSchool({

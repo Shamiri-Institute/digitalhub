@@ -12,15 +12,19 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 
+export type StudentAttendanceMenuState = {
+  setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
+  setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setTriageStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
+  setTriageModalOpen: Dispatch<SetStateAction<boolean>>;
+};
+
 export default function StudentAttendanceMenu({
   state,
   attendance,
   disabled,
 }: {
-  state: {
-    setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
-    setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  state: StudentAttendanceMenuState;
   attendance: StudentAttendanceData;
   disabled: boolean;
 }) {
@@ -46,6 +50,14 @@ export default function StudentAttendanceMenu({
           }}
         >
           Mark attendance
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            state.setTriageStudent(attendance);
+            state.setTriageModalOpen(true);
+          }}
+        >
+          Triage occurred
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
