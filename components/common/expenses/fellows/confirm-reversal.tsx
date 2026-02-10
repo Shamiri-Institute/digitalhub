@@ -1,5 +1,4 @@
 "use client";
-import { zodResolver } from "#/lib/zod-resolver";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -25,6 +24,7 @@ import {
 import { Input } from "#/components/ui/input";
 import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export const ConfirmReversalSchema = z.object({
   name: stringValidation("Please enter your name"),

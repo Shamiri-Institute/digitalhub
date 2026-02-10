@@ -1,4 +1,3 @@
-import { zodResolver } from "#/lib/zod-resolver";
 import type { Prisma, School } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
@@ -35,6 +34,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { createInterventionGroup } from "#/lib/actions/group";
 import { getSchoolInitials } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function CreateGroup({
   supervisors,

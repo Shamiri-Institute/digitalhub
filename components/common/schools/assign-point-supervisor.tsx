@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "#/lib/zod-resolver";
 import type { Supervisor } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -31,6 +30,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { zodResolver } from "#/lib/zod-resolver";
 import type { SchoolsTableData } from "./columns";
 
 export default function AssignPointSupervisor({

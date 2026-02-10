@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "#/lib/zod-resolver";
 import type { Prisma } from "@prisma/client";
 import { addHours, format } from "date-fns";
 import { usePathname } from "next/navigation";
@@ -33,6 +32,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { cn, sessionDisplayName } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 type Attendance = {
   id: string;

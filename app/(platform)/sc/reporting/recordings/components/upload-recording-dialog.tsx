@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "#/lib/zod-resolver";
 import { format } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -34,6 +33,7 @@ import { objectId } from "#/lib/crypto";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { cn, formatBytes } from "#/lib/utils";
 import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
+import { zodResolver } from "#/lib/zod-resolver";
 import {
   checkRecordingExists,
   createSessionRecording,

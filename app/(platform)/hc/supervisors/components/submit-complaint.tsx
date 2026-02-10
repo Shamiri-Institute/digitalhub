@@ -1,4 +1,3 @@
-import { zodResolver } from "#/lib/zod-resolver";
 import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -32,6 +31,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function SubmitComplaint({
   supervisorId,

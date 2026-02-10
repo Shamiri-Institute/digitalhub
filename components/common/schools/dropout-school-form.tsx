@@ -1,5 +1,4 @@
 "use client";
-import { zodResolver } from "#/lib/zod-resolver";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -35,6 +34,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
+import { zodResolver } from "#/lib/zod-resolver";
 import { DropoutSchoolSchema } from "../../../app/(platform)/hc/schemas";
 import type { SchoolsTableData } from "./columns";
 

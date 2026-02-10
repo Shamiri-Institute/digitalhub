@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "#/lib/zod-resolver";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -23,6 +22,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitStudentReportingNotes } from "#/lib/actions/student";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export function AddReportingNote({
   isOpen,

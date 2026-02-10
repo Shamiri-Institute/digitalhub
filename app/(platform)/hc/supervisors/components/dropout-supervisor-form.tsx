@@ -1,4 +1,3 @@
-import { zodResolver } from "#/lib/zod-resolver";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
@@ -35,6 +34,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { SUPERVISOR_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function DropoutSupervisor({
   supervisorId,
