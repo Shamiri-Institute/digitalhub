@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import type { ImplementerRole, InterventionSessionRating, Prisma } from "@prisma/client";
 import { addDays, addHours, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
@@ -43,6 +42,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitSessionRatings } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function SessionRatings({
   selectedSession,

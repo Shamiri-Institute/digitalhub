@@ -1,4 +1,3 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import type { ImplementerRole, User } from "@prisma/client";
 import { format } from "date-fns";
 import { usePathname } from "next/navigation";
@@ -38,6 +37,7 @@ import { toast } from "#/components/ui/use-toast";
 import { submitFellowComplaint } from "#/lib/actions/fellow";
 import { COMPLAINT_TYPES } from "#/lib/app-constants/constants";
 import { getInitials } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function SubmitComplaint({
   id,

@@ -1,5 +1,4 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -33,6 +32,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function ViewFellowComplaint({
   children,

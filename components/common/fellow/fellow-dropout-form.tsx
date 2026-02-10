@@ -1,4 +1,3 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import type { Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
@@ -34,6 +33,7 @@ import { toast } from "#/components/ui/use-toast";
 import { dropoutFellow } from "#/lib/actions/fellow";
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 type Group = Prisma.InterventionGroupGetPayload<{
   include: { school: true };

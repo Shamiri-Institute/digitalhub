@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import type { Project, WeeklyFellowRatings } from "@prisma/client";
 import { addDays, differenceInSeconds, eachWeekOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
@@ -41,6 +40,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitWeeklyFellowEvaluation } from "#/lib/actions/fellow";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function WeeklyFellowEvaluation({
   fellowId,

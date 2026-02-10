@@ -1,5 +1,4 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -34,6 +33,7 @@ import {
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
+import { zodResolver } from "#/lib/zod-resolver";
 
 const StudentGroupEvaluationSchema = z.object({
   engagementComment: z.string().min(1, "Engagement comment is required"),

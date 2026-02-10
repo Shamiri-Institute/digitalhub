@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import type { Supervisor } from "@prisma/client";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";
@@ -38,6 +37,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { formatBytes, stringValidation } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export const AddAddSupervisorExpenseSchema = z.object({
   week: z.string(),

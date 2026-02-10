@@ -1,4 +1,3 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { usePathname } from "next/navigation";
@@ -43,6 +42,7 @@ import { submitFellowDetails } from "#/lib/actions/fellow";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function FellowDetailsForm({
   fellow,

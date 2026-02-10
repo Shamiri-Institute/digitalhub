@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
@@ -36,6 +35,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 import AddCircleOutlined from "#/public/icons/add-circle-outline.svg";
 import { WeeklyHubReportSchema } from "../../schemas";
 import { submitWeeklyHubReport } from "../actions";

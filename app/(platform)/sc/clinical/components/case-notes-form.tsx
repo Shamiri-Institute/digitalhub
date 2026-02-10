@@ -1,11 +1,9 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
 import { type ClinicalCases, createClinicalCaseNotes } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
@@ -30,6 +28,7 @@ import {
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 const treatmentInterventions = [
   "Cognitive Behavioural Therapy",

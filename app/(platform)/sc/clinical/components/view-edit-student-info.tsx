@@ -1,5 +1,4 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -33,6 +32,7 @@ import {
 import { toast } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { stringValidation } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 const EditStudentSchema = z.object({
   studentName: stringValidation("Student name is required"),

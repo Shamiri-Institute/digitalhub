@@ -1,5 +1,4 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -36,6 +35,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 function generateWeekFieldValues() {
   const numWeeks = 4;

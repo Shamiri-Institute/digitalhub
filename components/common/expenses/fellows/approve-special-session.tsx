@@ -1,5 +1,4 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -24,6 +23,7 @@ import {
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { stringValidation } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export const RequestSpecialSessionSchema = z.object({
   comments: stringValidation("Please enter your comments"),

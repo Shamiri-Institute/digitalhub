@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { ImplementerRole, type Prisma, QuestionnaireType } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
@@ -48,6 +47,7 @@ import {
 } from "#/lib/actions/student";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function StudentDetailsForm({
   open,

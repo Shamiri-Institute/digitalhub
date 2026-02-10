@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import parsePhoneNumberFromString, { isValidPhoneNumber } from "libphonenumber-js";
@@ -44,6 +43,7 @@ import { toast } from "#/components/ui/use-toast";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 import { EditSupervisorSchema } from "../../schemas";
 
 export default function SupervisorDetailsForm({

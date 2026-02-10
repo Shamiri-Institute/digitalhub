@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import type { Fellow, Prisma, Student, Supervisor } from "@prisma/client";
 import { format } from "date-fns";
 import { useState } from "react";
@@ -32,6 +31,7 @@ import {
 import { toast } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn, stringValidation } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 const formSchema = z.object({
   school: stringValidation("School"),
