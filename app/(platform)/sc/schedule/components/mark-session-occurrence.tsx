@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "#/lib/zod-resolver";
 import { format, isBefore } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
