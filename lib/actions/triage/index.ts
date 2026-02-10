@@ -159,16 +159,6 @@ export async function createTriageEvent(
       const shouldCreateClinicalCase =
         parsed.actionTaken === "REFERRED" || parsed.actionTaken === "ESCALATED";
       if (shouldCreateClinicalCase) {
-        const student = await tx.student.findUniqueOrThrow({
-          where: { id: parsed.studentId },
-          select: { schoolId: true },
-        });
-        const schoolId = student.schoolId;
-        if (!schoolId) {
-          throw new Error("Student has no school assigned; cannot create clinical case.");
-        }
-        const pseudonym = generateRandomPseudonym();
-
         let currentSupervisorId: string | null = null;
         let clinicalLeadId: string | null = null;
 
@@ -184,21 +174,52 @@ export async function createTriageEvent(
           }
         }
 
-        await tx.clinicalScreeningInfo.create({
-          data: {
-            studentId: parsed.studentId,
-            schoolId,
-            currentSupervisorId,
-            clinicalLeadId,
-            initialReferredFrom: fellowId,
-            initialReferredFromSpecified: "fellow",
-            sessionWhenCaseIsFlaggedId: parsed.sessionId,
-            pseudonym,
-            flagged: false,
-            riskStatus: parsed.riskScreenOutcome === "ANY_YES" ? "High" : "No",
-            caseStatus: "Active",
-          },
-        });
+        const assigneeSupervisorId = currentSupervisorId ?? null;
+        const assigneeClinicalLeadId = clinicalLeadId ?? null;
+        const hasAssignee = assigneeSupervisorId !== null || assigneeClinicalLeadId !== null;
+
+        const existingCase = hasAssignee
+          ? await tx.clinicalScreeningInfo.findFirst({
+              where:
+                assigneeSupervisorId !== null
+                  ? {
+                      studentId: parsed.studentId,
+                      currentSupervisorId: assigneeSupervisorId,
+                    }
+                  : {
+                      studentId: parsed.studentId,
+                      clinicalLeadId: assigneeClinicalLeadId ?? undefined,
+                    },
+            })
+          : null;
+
+        if (!existingCase) {
+          const student = await tx.student.findUniqueOrThrow({
+            where: { id: parsed.studentId },
+            select: { schoolId: true },
+          });
+          const schoolId = student.schoolId;
+          if (!schoolId) {
+            throw new Error("Student has no school assigned; cannot create clinical case.");
+          }
+          const pseudonym = generateRandomPseudonym();
+
+          await tx.clinicalScreeningInfo.create({
+            data: {
+              studentId: parsed.studentId,
+              schoolId,
+              currentSupervisorId,
+              clinicalLeadId,
+              initialReferredFrom: fellowId,
+              initialReferredFromSpecified: "fellow",
+              sessionWhenCaseIsFlaggedId: parsed.sessionId,
+              pseudonym,
+              flagged: false,
+              riskStatus: parsed.riskScreenOutcome === "ANY_YES" ? "High" : "No",
+              caseStatus: "Active",
+            },
+          });
+        }
       }
 
       return triageEvent;
