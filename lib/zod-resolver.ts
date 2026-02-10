@@ -1,6 +1,5 @@
 import { zodResolver as baseZodResolver } from "@hookform/resolvers/zod";
-import type { Resolver } from "react-hook-form";
-import type { FieldValues } from "react-hook-form";
+import type { FieldValues, Resolver } from "react-hook-form";
 import type { z } from "zod";
 
 /**

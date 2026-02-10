@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "#/lib/zod-resolver";
 import { format, isBefore } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -19,6 +18,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { markSessionOccurrence } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export function MarkSessionOccurrence({
   children,

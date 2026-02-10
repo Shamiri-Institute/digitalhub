@@ -1,4 +1,3 @@
-import { zodResolver } from "#/lib/zod-resolver";
 import type { Prisma } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -27,6 +26,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { replaceGroupLeader } from "#/lib/actions/fellow";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export default function ReplaceFellow({
   fellowId,

@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "#/lib/zod-resolver";
 import { ImplementerRole } from "@prisma/client";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -50,6 +49,7 @@ import {
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 interface ProfileDialogProps {
   isOpen: boolean;

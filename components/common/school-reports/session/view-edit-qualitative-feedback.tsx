@@ -1,5 +1,4 @@
 "use client";
-import { zodResolver } from "#/lib/zod-resolver";
 import { format } from "date-fns";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -28,6 +27,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitQualitativeFeedback } from "#/lib/actions/session/session";
 import { stringValidation } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 export const QualitativeFeedbackSchema = z.object({
   notes: stringValidation("Please enter your notes"),

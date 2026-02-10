@@ -1,5 +1,4 @@
 "use client";
-import { zodResolver } from "#/lib/zod-resolver";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -35,6 +34,7 @@ import {
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
+import { zodResolver } from "#/lib/zod-resolver";
 
 const ComplaintSchema = z.object({
   referral: z.string().min(1, "Referral is required"),

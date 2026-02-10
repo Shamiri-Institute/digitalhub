@@ -1,4 +1,3 @@
-import { zodResolver } from "#/lib/zod-resolver";
 import type { ImplementerRole, School, SessionName } from "@prisma/client";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
@@ -34,6 +33,7 @@ import { ToastAction } from "#/components/ui/toast";
 import { useToast } from "#/components/ui/use-toast";
 import { createNewSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 import type { Session } from "./sessions-provider";
 
 export function ScheduleNewSession({
