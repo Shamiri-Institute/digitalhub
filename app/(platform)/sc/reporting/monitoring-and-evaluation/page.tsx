@@ -29,9 +29,7 @@ export default async function MonitoringAndEvaluationPage() {
 
   const dashboardId = getMetabaseDashboardId();
   if (dashboardId === null) {
-    return (
-      <div>Configuration error: Metabase monitoring dashboard ID not found or invalid</div>
-    );
+    return <div>Configuration error: Metabase monitoring dashboard ID not found or invalid</div>;
   }
 
   const payload = {
