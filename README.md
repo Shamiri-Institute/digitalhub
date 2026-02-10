@@ -175,6 +175,7 @@ S3_RECORDINGS_REGION="your-aws-region"
 # METABASE (Analytics)
 # ====================================
 METABASE_SECRET_KEY="your-metabase-secret-key"
+METABASE_MONITORING_DASHBOARD_ID="your-metabase-dashboard-id"  # Dashboard ID for Monitoring and Evaluation embed
 
 # ====================================
 # APPLICATION SETTINGS
@@ -417,6 +418,7 @@ Configure these in your Vercel project settings:
 | `AWS_SECRET_ACCESS_KEY` | Yes | AWS credentials for S3 |
 | `S3_UPLOAD_BUCKET` | Yes | S3 bucket for uploads |
 | `METABASE_SECRET_KEY` | For analytics | Metabase JWT signing key |
+| `METABASE_MONITORING_DASHBOARD_ID` | For analytics | Metabase Monitoring and Evaluation dashboard ID (numeric) |
 
 #### Deployment Environments
 
@@ -520,7 +522,7 @@ This platform can be adapted for similar intervention programs:
 | Debug Mode | `DEBUG=1` | Enable verbose logging |
 | OAuth | `GOOGLE_ID/SECRET` | Google authentication |
 | File Storage | `S3_*` variables | AWS S3 configuration |
-| Analytics | `METABASE_SECRET_KEY` | Embedded Metabase dashboards |
+| Analytics | `METABASE_SECRET_KEY`, `METABASE_MONITORING_DASHBOARD_ID` | Embedded Metabase dashboards |
 
 ### Scaling Considerations
 
