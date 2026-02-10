@@ -83,9 +83,7 @@ export default function SchoolDetailsForm({
   };
 
   const form = useForm<FormData>({
-    resolver: zodResolver(
-      isEditing ? EditSchoolSchema : AddSchoolSchema,
-    ) as Resolver<FormData>,
+    resolver: zodResolver(isEditing ? EditSchoolSchema : AddSchoolSchema) as Resolver<FormData>,
   });
 
   const pointPersonPhoneWatcher = form.watch("pointPersonPhone");
