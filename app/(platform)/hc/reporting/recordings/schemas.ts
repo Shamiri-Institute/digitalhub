@@ -8,4 +8,4 @@ export {
   RecordingUploadSchema,
   validateAudioFile,
   validateAudioMagicBytes,
-} from "#/app/(platform)/sc/reporting/recordings/schemas";
+} from "#/lib/schemas/recording-upload";

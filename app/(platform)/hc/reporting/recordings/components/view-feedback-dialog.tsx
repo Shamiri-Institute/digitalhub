@@ -3,7 +3,6 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { SAMPLE_MARKDOWN_FEEDBACK } from "#/app/(platform)/sc/reporting/recordings/components/sample-response";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -14,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
+import { SAMPLE_MARKDOWN_FEEDBACK } from "#/lib/constants/sample-recording-feedback";
 import { cn } from "#/lib/utils";
 import type { HubRecording } from "../actions";
 
