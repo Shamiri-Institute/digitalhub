@@ -10,13 +10,9 @@ import {
 } from "./recording-types";
 import RecordingsDataTableMenu from "./recordings-datatable-menu";
 
-interface RecordingColumnsConfig {
-  includeSupervisor?: boolean;
-}
-
 export function createRecordingColumns(
   state: ColumnState,
-  config: RecordingColumnsConfig = {},
+  config: { includeSupervisor?: boolean } = {},
 ): ColumnDef<RecordingTableData>[] {
   const columns: ColumnDef<RecordingTableData>[] = [
     {

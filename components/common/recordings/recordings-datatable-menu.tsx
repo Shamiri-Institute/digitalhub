@@ -12,15 +12,13 @@ import {
 import { toast } from "#/components/ui/use-toast";
 import type { ColumnState, RecordingTableData } from "./recording-types";
 
-interface RecordingsDataTableMenuProps {
-  recording: RecordingTableData;
-  state: ColumnState;
-}
-
 export default function RecordingsDataTableMenu({
   recording,
   state,
-}: RecordingsDataTableMenuProps) {
+}: {
+  recording: RecordingTableData;
+  state: ColumnState;
+}) {
   const [isRetrying, setIsRetrying] = useState(false);
 
   const handleViewFeedback = () => {

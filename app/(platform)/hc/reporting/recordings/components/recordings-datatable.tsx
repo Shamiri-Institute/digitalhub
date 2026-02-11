@@ -5,11 +5,7 @@ import RecordingsDatatable from "#/components/common/recordings/recordings-datat
 import { retryRecordingProcessing } from "../actions";
 import UploadRecordingDialog from "./upload-recording-dialog";
 
-interface HCRecordingsDatatableProps {
-  data: RecordingTableData[];
-}
-
-export default function HCRecordingsDatatable({ data }: HCRecordingsDatatableProps) {
+export default function HCRecordingsDatatable({ data }: { data: RecordingTableData[] }) {
   return (
     <RecordingsDatatable
       data={data}
