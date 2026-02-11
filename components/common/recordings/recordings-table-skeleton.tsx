@@ -5,13 +5,11 @@ import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 
-interface RecordingsTableSkeletonProps {
-  includeSupervisor?: boolean;
-}
-
 export default function RecordingsTableSkeleton({
   includeSupervisor = false,
-}: RecordingsTableSkeletonProps) {
+}: {
+  includeSupervisor?: boolean;
+}) {
   const headers = [
     { header: "Date Uploaded", id: "dateUploaded" },
     { header: "Fellow", id: "fellow" },

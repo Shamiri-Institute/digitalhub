@@ -17,12 +17,6 @@ import { SAMPLE_MARKDOWN_FEEDBACK } from "#/lib/constants/sample-recording-feedb
 import { cn } from "#/lib/utils";
 import type { RecordingTableData } from "./recording-types";
 
-interface ViewFeedbackDialogProps {
-  recording: RecordingTableData;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
 interface FidelityFeedbackItem {
   category?: string;
   score?: number | string;
@@ -115,7 +109,11 @@ export default function ViewFeedbackDialog({
   recording,
   open,
   onOpenChange,
-}: ViewFeedbackDialogProps) {
+}: {
+  recording: RecordingTableData;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const [showSamplePreview, setShowSamplePreview] = useState(false);
 
   const feedback = recording.fidelityFeedback as

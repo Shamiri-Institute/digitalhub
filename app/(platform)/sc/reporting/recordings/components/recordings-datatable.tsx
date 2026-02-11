@@ -5,11 +5,7 @@ import RecordingsDatatable from "#/components/common/recordings/recordings-datat
 import { retryRecordingProcessing } from "../actions";
 import UploadRecordingDialog from "./upload-recording-dialog";
 
-interface SCRecordingsDatatableProps {
-  data: RecordingTableData[];
-}
-
-export default function SCRecordingsDatatable({ data }: SCRecordingsDatatableProps) {
+export default function SCRecordingsDatatable({ data }: { data: RecordingTableData[] }) {
   return (
     <RecordingsDatatable
       data={data}
