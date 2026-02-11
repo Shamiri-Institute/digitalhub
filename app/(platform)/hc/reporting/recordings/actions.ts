@@ -343,6 +343,7 @@ export async function retryRecordingProcessing(recordingId: string) {
     });
 
     revalidatePath("/hc/reporting/recordings");
+    revalidatePath("/sc/reporting/recordings");
 
     return {
       success: true,
@@ -395,6 +396,7 @@ export async function archiveRecording(recordingId: string) {
     });
 
     revalidatePath("/hc/reporting/recordings");
+    revalidatePath("/sc/reporting/recordings");
 
     return {
       success: true,
