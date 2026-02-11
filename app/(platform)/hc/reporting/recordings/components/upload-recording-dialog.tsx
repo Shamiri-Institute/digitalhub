@@ -31,6 +31,14 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { objectId } from "#/lib/crypto";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
+import {
+  ALLOWED_EXTENSIONS,
+  getFileExtension,
+  type RecordingUploadFormData,
+  RecordingUploadSchema,
+  validateAudioFile,
+  validateAudioMagicBytes,
+} from "#/lib/schemas/recording-upload";
 import { cn, formatBytes } from "#/lib/utils";
 import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -44,14 +52,6 @@ import {
   loadGroupSessions,
   loadHubFellows,
 } from "../actions";
-import {
-  ALLOWED_EXTENSIONS,
-  getFileExtension,
-  type RecordingUploadFormData,
-  RecordingUploadSchema,
-  validateAudioFile,
-  validateAudioMagicBytes,
-} from "../schemas";
 
 interface UploadRecordingDialogProps {
   open: boolean;
