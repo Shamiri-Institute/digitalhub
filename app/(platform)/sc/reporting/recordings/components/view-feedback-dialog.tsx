@@ -13,9 +13,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
+import { SAMPLE_MARKDOWN_FEEDBACK } from "#/lib/constants/sample-recording-feedback";
 import { cn } from "#/lib/utils";
 import type { SupervisorRecording } from "../actions";
-import { SAMPLE_MARKDOWN_FEEDBACK } from "./sample-response";
 
 interface ViewFeedbackDialogProps {
   recording: SupervisorRecording;
