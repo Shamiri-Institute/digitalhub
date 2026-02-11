@@ -4,7 +4,7 @@ import type { RecordingProcessingStatus } from "@prisma/client";
 import type { JsonValue } from "@prisma/client/runtime/library";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Dispatch, SetStateAction } from "react";
-import RecordingStatusBadge from "./recording-status-badge";
+import RecordingStatusBadge from "#/components/common/recordings/recording-status-badge";
 import RecordingsDataTableMenu from "./recordings-datatable-menu";
 
 export interface RecordingTableData {
