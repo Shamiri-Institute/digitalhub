@@ -399,7 +399,6 @@ export async function updateRecordingStatus(
       },
     });
 
-    // Revalidate for any supervisor or hub coordinator viewing recordings
     revalidatePath("/sc/reporting/recordings");
     revalidatePath("/hc/reporting/recordings");
 
