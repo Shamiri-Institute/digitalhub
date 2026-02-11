@@ -9,6 +9,10 @@ export default function RenderReportingTabs() {
   const isSchoolReports = pathname.includes("reporting/school-reports");
   const isRecordings = pathname.includes("reporting/recordings");
 
+  if (isRecordings) {
+    return null;
+  }
+
   const fellowReportOptions: TabType[] = [
     {
       name: "Weekly fellow evaluation",
@@ -36,16 +40,11 @@ export default function RenderReportingTabs() {
     { name: "Complaints", href: "/hc/reporting/expenses/complaints" },
   ];
 
-  const recordingsOptions: TabType[] = [
-    { name: "Session Recordings", href: "/hc/reporting/recordings" },
-  ];
-
   return (
     <>
       {isFellowReports && <TabToggleNavigation options={fellowReportOptions} />}
       {isSchoolReports && <TabToggleNavigation options={schoolReportOptions} />}
-      {isRecordings && <TabToggleNavigation options={recordingsOptions} />}
-      {!isFellowReports && !isSchoolReports && !isRecordings && (
+      {!isFellowReports && !isSchoolReports && (
         <TabToggleNavigation options={expensesReportOptions} />
       )}
     </>
