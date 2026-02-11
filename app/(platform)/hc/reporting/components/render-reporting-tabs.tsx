@@ -5,6 +5,11 @@ import TabToggleNavigation, { type TabType } from "#/components/common/tabs/tab-
 export default function RenderReportingTabs() {
   const pathname = usePathname();
 
+  const isRecordings = pathname.includes("reporting/recordings");
+  if (isRecordings) {
+    return null;
+  }
+
   const isFellowReports = pathname.includes("reporting/fellow-reports");
   const isSchoolReports = pathname.includes("reporting/school-reports");
 
