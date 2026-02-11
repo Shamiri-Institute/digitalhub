@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.15.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.15.1...v1.15.2) (2026-02-11)
+
+
+### Bug Fixes
+
+* **perf:** remove unnecessary studentAttendances include from currentFellow() ([#613](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/613)) ([500c79d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/500c79d08e06db8cf4ad511519d40153bc3615df))
+
 ## [1.15.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.15.0...v1.15.1) (2026-02-10)
 
 ## [1.15.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.14.0...v1.15.0) (2026-02-10)
