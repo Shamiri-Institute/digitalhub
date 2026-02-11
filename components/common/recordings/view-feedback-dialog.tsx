@@ -15,10 +15,10 @@ import {
 } from "#/components/ui/dialog";
 import { SAMPLE_MARKDOWN_FEEDBACK } from "#/lib/constants/sample-recording-feedback";
 import { cn } from "#/lib/utils";
-import type { SupervisorRecording } from "../actions";
+import type { RecordingTableData } from "./recording-types";
 
 interface ViewFeedbackDialogProps {
-  recording: SupervisorRecording;
+  recording: RecordingTableData;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -179,6 +179,12 @@ export default function ViewFeedbackDialog({
                 <span className="text-muted-foreground">Fellow:</span>
                 <span className="ml-2 font-medium">{recording.fellowName}</span>
               </div>
+              {recording.supervisorName && (
+                <div>
+                  <span className="text-muted-foreground">Supervisor:</span>
+                  <span className="ml-2 font-medium">{recording.supervisorName}</span>
+                </div>
+              )}
               <div>
                 <span className="text-muted-foreground">School:</span>
                 <span className="ml-2 font-medium">{recording.schoolName}</span>

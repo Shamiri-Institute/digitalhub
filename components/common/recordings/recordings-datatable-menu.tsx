@@ -10,8 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/use-toast";
-import { retryRecordingProcessing } from "../actions";
-import type { ColumnState, RecordingTableData } from "./columns";
+import type { ColumnState, RecordingTableData } from "./recording-types";
 
 interface RecordingsDataTableMenuProps {
   recording: RecordingTableData;
@@ -32,7 +31,7 @@ export default function RecordingsDataTableMenu({
   const handleRetry = async () => {
     setIsRetrying(true);
     try {
-      const result = await retryRecordingProcessing(recording.id);
+      const result = await state.onRetry(recording.id);
       if (result.success) {
         toast({
           title: "Success",

@@ -5,6 +5,11 @@ import { revalidatePath } from "next/cache";
 import { currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import {
+  findExistingRecording,
+  findFellowGroups,
+  findSchoolSessions,
+} from "#/lib/queries/recording-queries";
 import { deleteObject } from "#/lib/s3";
 
 // Types for server action responses
@@ -44,25 +49,7 @@ export async function loadFellowGroups(fellowId: string) {
     throw new Error("Fellow not found or unauthorized");
   }
 
-  return db.interventionGroup.findMany({
-    where: {
-      leaderId: fellowId,
-    },
-    select: {
-      id: true,
-      groupName: true,
-      schoolId: true,
-      school: {
-        select: {
-          id: true,
-          schoolName: true,
-        },
-      },
-    },
-    orderBy: {
-      groupName: "asc",
-    },
-  });
+  return findFellowGroups(fellowId);
 }
 
 /**
@@ -92,33 +79,7 @@ export async function loadGroupSessions(groupId: string) {
     throw new Error("Group not found or unauthorized");
   }
 
-  // Get sessions that have already occurred for this school
-  const sessions = await db.interventionSession.findMany({
-    where: {
-      schoolId: group.schoolId,
-      occurred: true,
-    },
-    select: {
-      id: true,
-      sessionType: true,
-      sessionDate: true,
-      session: {
-        select: {
-          sessionName: true,
-        },
-      },
-    },
-    orderBy: {
-      sessionDate: "desc",
-    },
-  });
-
-  return sessions.map((session) => ({
-    id: session.id,
-    sessionType: session.sessionType,
-    sessionDate: session.sessionDate,
-    sessionName: session.session?.sessionName ?? session.sessionType,
-  }));
+  return findSchoolSessions(group.schoolId);
 }
 
 /**
@@ -136,20 +97,7 @@ export async function checkRecordingExists(params: {
     throw new Error("Unauthorized user");
   }
 
-  return db.sessionRecording.findUnique({
-    where: {
-      unique_recording_per_session: {
-        fellowId: params.fellowId,
-        schoolId: params.schoolId,
-        groupId: params.groupId,
-        sessionId: params.sessionId,
-      },
-    },
-    select: {
-      id: true,
-      status: true,
-    },
-  });
+  return findExistingRecording(params);
 }
 
 /**
