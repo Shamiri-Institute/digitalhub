@@ -31,7 +31,6 @@ export async function loadHubFellows() {
   const fellows = await db.fellow.findMany({
     where: {
       hubId: hc.profile.assignedHubId,
-      droppedOut: { not: true },
     },
     select: {
       id: true,
