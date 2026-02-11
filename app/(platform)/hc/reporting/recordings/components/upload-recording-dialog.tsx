@@ -442,7 +442,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                         />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="max-h-[200px]">
                       {fellows.map((fellow) => (
                         <SelectItem key={fellow.id} value={fellow.id}>
                           {fellow.fellowName ?? "Unknown"}
@@ -492,7 +492,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                         />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="max-h-[200px]">
                       {groups.map((group) => (
                         <SelectItem key={group.id} value={group.id}>
                           {group.groupName} ({group.school.schoolName})
@@ -532,7 +532,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                         />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="max-h-[200px]">
                       {sessions.map((session) => (
                         <SelectItem key={session.id} value={session.id}>
                           {session.sessionName ?? session.sessionType} -{" "}
