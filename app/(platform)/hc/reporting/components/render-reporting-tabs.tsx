@@ -5,13 +5,9 @@ import TabToggleNavigation, { type TabType } from "#/components/common/tabs/tab-
 export default function RenderReportingTabs() {
   const pathname = usePathname();
 
-  const isRecordings = pathname.includes("reporting/recordings");
-  if (isRecordings) {
-    return null;
-  }
-
   const isFellowReports = pathname.includes("reporting/fellow-reports");
   const isSchoolReports = pathname.includes("reporting/school-reports");
+  const isRecordings = pathname.includes("reporting/recordings");
 
   const fellowReportOptions: TabType[] = [
     {
@@ -39,11 +35,17 @@ export default function RenderReportingTabs() {
     { name: "Payout history", href: "/hc/reporting/expenses/payout-history" },
     { name: "Complaints", href: "/hc/reporting/expenses/complaints" },
   ];
+
+  const recordingsOptions: TabType[] = [
+    { name: "Session Recordings", href: "/hc/reporting/recordings" },
+  ];
+
   return (
     <>
       {isFellowReports && <TabToggleNavigation options={fellowReportOptions} />}
       {isSchoolReports && <TabToggleNavigation options={schoolReportOptions} />}
-      {!isFellowReports && !isSchoolReports && (
+      {isRecordings && <TabToggleNavigation options={recordingsOptions} />}
+      {!isFellowReports && !isSchoolReports && !isRecordings && (
         <TabToggleNavigation options={expensesReportOptions} />
       )}
     </>
