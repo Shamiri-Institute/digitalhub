@@ -257,18 +257,18 @@ function ReportingDropdown({
         <DropdownMenuItem asChild>
           <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
         </DropdownMenuItem>
-        {mainRoute === "sc" ? (
-          <>
-            <DropdownMenuItem asChild>
-              <Link href={`/${mainRoute}/reporting/monitoring-and-evaluation`}>
-                Monitoring and Evaluation
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href={`/${mainRoute}/reporting/recordings`}>Session Recordings</Link>
-            </DropdownMenuItem>
-          </>
-        ) : null}
+        {(mainRoute === "sc" || mainRoute === "hc") && (
+          <DropdownMenuItem asChild>
+            <Link href={`/${mainRoute}/reporting/monitoring-and-evaluation`}>
+              Monitoring and Evaluation
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {mainRoute === "sc" && (
+          <DropdownMenuItem asChild>
+            <Link href={`/${mainRoute}/reporting/recordings`}>Session Recordings</Link>
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
