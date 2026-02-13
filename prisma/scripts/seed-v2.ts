@@ -18,6 +18,7 @@ import {
 import { isBefore, startOfMonth } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { hubSessionTypes } from "#/prisma/scripts/generate-session-names";
@@ -230,8 +231,8 @@ function createProjects() {
 
   for (let i = 0; i < 4; i++) {
     projects.push({
-      id: objectId("proj"),
-      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+      id: i === 0 ? CURRENT_PROJECT_ID : objectId("proj"),
+      visibleId: i === 0 ? CURRENT_PROJECT_ID : faker.string.alpha({ casing: "upper", length: 6 }),
       name: faker.company.name(),
       actualStartDate: startOfMonth(new Date()),
       actualEndDate: startOfMonth(new Date()),
