@@ -7,6 +7,7 @@ export default function RenderReportingTabs() {
 
   const isFellowReports = pathname.includes("reporting/fellow-reports");
   const isSchoolReports = pathname.includes("reporting/school-reports");
+  const isExpenses = pathname.includes("reporting/expenses");
 
   const fellowReportOptions: TabType[] = [
     {
@@ -38,9 +39,7 @@ export default function RenderReportingTabs() {
     <>
       {isFellowReports && <TabToggleNavigation options={fellowReportOptions} />}
       {isSchoolReports && <TabToggleNavigation options={schoolReportOptions} />}
-      {!isFellowReports && !isSchoolReports && (
-        <TabToggleNavigation options={expensesReportOptions} />
-      )}
+      {isExpenses && <TabToggleNavigation options={expensesReportOptions} />}
     </>
   );
 }
