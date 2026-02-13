@@ -1,10 +1,6 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-// handles inbound authn, verifying that webhook requests from the fidelity
-// ratings API to SDH carry a valid `x-api-key`. It also has the Zod validation
-// schemas for the webhook payloads.
-
 /**
  * Verify the API key from the request headers for recordings API endpoints
  */

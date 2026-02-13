@@ -154,7 +154,7 @@ export function useS3Upload() {
               console.error("Upload failed:", {
                 status: xhr.status,
                 statusText: xhr.statusText,
-                response: xhr.responseText
+                response: xhr.responseText,
               });
               reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
             }

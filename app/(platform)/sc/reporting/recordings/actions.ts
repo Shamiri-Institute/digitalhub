@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { getFidelityClient } from "#/lib/fidelity-ratings-api-client";
+import { createJob } from "#/lib/fidelity-ratings-api";
 import { deleteObject } from "#/lib/s3";
 
 // Types for server action responses
@@ -210,9 +210,7 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
       completionWebhookUrl,
     });
 
-    // Submit job to Fidelity API (returns immediately with job_id)
-    const client = getFidelityClient();
-    const jobResponse = await client.createJob({
+    const jobResponse = await createJob({
       recordings: [
         {
           id: recordingId,
