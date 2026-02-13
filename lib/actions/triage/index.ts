@@ -2,13 +2,90 @@
 
 import type { Prisma } from "@prisma/client";
 import { randomBytes } from "crypto";
-import type { z } from "zod";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
 import { currentFellow, getCurrentPersonnel } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db, type TransactionCursor } from "#/lib/db";
 
 function generateRandomPseudonym(): string {
   return `TRG-${randomBytes(4).toString("hex")}`;
+}
+
+async function ensureClinicalCaseForReferralOrEscalation(
+  tx: TransactionCursor,
+  params: {
+    studentId: string;
+    sessionId: string;
+    fellowId: string;
+    hubId: string | null;
+    actionTaken: string;
+    referredSupervisorId: string | null;
+    riskScreenOutcome: string | null;
+  },
+): Promise<void> {
+  const shouldCreate = params.actionTaken === "REFERRED" || params.actionTaken === "ESCALATED";
+  if (!shouldCreate) return;
+
+  let currentSupervisorId: string | null = null;
+  let clinicalLeadId: string | null = null;
+
+  if (params.referredSupervisorId) {
+    currentSupervisorId = params.referredSupervisorId;
+  } else if (params.hubId) {
+    const clinicalLead = await tx.clinicalLead.findFirst({
+      where: { assignedHubId: params.hubId },
+      select: { id: true },
+    });
+    if (clinicalLead) {
+      clinicalLeadId = clinicalLead.id;
+    }
+  }
+
+  const assigneeSupervisorId = currentSupervisorId ?? null;
+  const assigneeClinicalLeadId = clinicalLeadId ?? null;
+  const hasAssignee = assigneeSupervisorId !== null || assigneeClinicalLeadId !== null;
+
+  const existingCase = hasAssignee
+    ? await tx.clinicalScreeningInfo.findFirst({
+        where:
+          assigneeSupervisorId !== null
+            ? {
+                studentId: params.studentId,
+                currentSupervisorId: assigneeSupervisorId,
+              }
+            : {
+                studentId: params.studentId,
+                clinicalLeadId: assigneeClinicalLeadId ?? undefined,
+              },
+      })
+    : null;
+
+  if (!existingCase) {
+    const student = await tx.student.findUniqueOrThrow({
+      where: { id: params.studentId },
+      select: { schoolId: true },
+    });
+    const schoolId = student.schoolId;
+    if (!schoolId) {
+      throw new Error("Student has no school assigned; cannot create clinical case.");
+    }
+    const pseudonym = generateRandomPseudonym();
+
+    await tx.clinicalScreeningInfo.create({
+      data: {
+        studentId: params.studentId,
+        schoolId,
+        currentSupervisorId: assigneeSupervisorId,
+        clinicalLeadId: assigneeClinicalLeadId,
+        initialReferredFrom: params.fellowId,
+        initialReferredFromSpecified: "fellow",
+        sessionWhenCaseIsFlaggedId: params.sessionId,
+        pseudonym,
+        flagged: false,
+        riskStatus: params.riskScreenOutcome === "ANY_YES" ? "High" : "No",
+        caseStatus: "Active",
+      },
+    });
+  }
 }
 
 export type TriageEventWithRelations = Prisma.TriageEventGetPayload<{
@@ -40,11 +117,6 @@ async function getFellowContext() {
   };
 }
 
-/**
- * Returns supervisors in a hub for the triage supervisor dropdown.
- * When hubId is provided (e.g. from session), uses it directly (caller must be authenticated).
- * Otherwise uses fellow context and optionally session's hub when fellow.hubId is null.
- */
 export async function getSupervisorsInFellowHub(
   sessionIdOrHubId?: string,
   options?: { useAsHubId?: boolean },
@@ -156,71 +228,15 @@ export async function createTriageEvent(
         },
       });
 
-      const shouldCreateClinicalCase =
-        parsed.actionTaken === "REFERRED" || parsed.actionTaken === "ESCALATED";
-      if (shouldCreateClinicalCase) {
-        let currentSupervisorId: string | null = null;
-        let clinicalLeadId: string | null = null;
-
-        if (parsed.referredSupervisorId) {
-          currentSupervisorId = parsed.referredSupervisorId;
-        } else if (effectiveHubId) {
-          const clinicalLead = await tx.clinicalLead.findFirst({
-            where: { assignedHubId: effectiveHubId },
-            select: { id: true },
-          });
-          if (clinicalLead) {
-            clinicalLeadId = clinicalLead.id;
-          }
-        }
-
-        const assigneeSupervisorId = currentSupervisorId ?? null;
-        const assigneeClinicalLeadId = clinicalLeadId ?? null;
-        const hasAssignee = assigneeSupervisorId !== null || assigneeClinicalLeadId !== null;
-
-        const existingCase = hasAssignee
-          ? await tx.clinicalScreeningInfo.findFirst({
-              where:
-                assigneeSupervisorId !== null
-                  ? {
-                      studentId: parsed.studentId,
-                      currentSupervisorId: assigneeSupervisorId,
-                    }
-                  : {
-                      studentId: parsed.studentId,
-                      clinicalLeadId: assigneeClinicalLeadId ?? undefined,
-                    },
-            })
-          : null;
-
-        if (!existingCase) {
-          const student = await tx.student.findUniqueOrThrow({
-            where: { id: parsed.studentId },
-            select: { schoolId: true },
-          });
-          const schoolId = student.schoolId;
-          if (!schoolId) {
-            throw new Error("Student has no school assigned; cannot create clinical case.");
-          }
-          const pseudonym = generateRandomPseudonym();
-
-          await tx.clinicalScreeningInfo.create({
-            data: {
-              studentId: parsed.studentId,
-              schoolId,
-              currentSupervisorId,
-              clinicalLeadId,
-              initialReferredFrom: fellowId,
-              initialReferredFromSpecified: "fellow",
-              sessionWhenCaseIsFlaggedId: parsed.sessionId,
-              pseudonym,
-              flagged: false,
-              riskStatus: parsed.riskScreenOutcome === "ANY_YES" ? "High" : "No",
-              caseStatus: "Active",
-            },
-          });
-        }
-      }
+      await ensureClinicalCaseForReferralOrEscalation(tx, {
+        studentId: parsed.studentId,
+        sessionId: parsed.sessionId,
+        fellowId,
+        hubId: effectiveHubId ?? null,
+        actionTaken: parsed.actionTaken,
+        referredSupervisorId: parsed.referredSupervisorId ?? null,
+        riskScreenOutcome: parsed.riskScreenOutcome ?? null,
+      });
 
       return triageEvent;
     });
@@ -237,7 +253,7 @@ export async function updateTriageEvent(
   studentAttendanceId?: number,
 ): Promise<{ success: boolean; message: string; data?: TriageEventWithRelations }> {
   try {
-    const { userId } = await getFellowContext();
+    const { fellowId, userId } = await getFellowContext();
     const parsed = TriageEventSchema.parse(data);
     if (!data.id) {
       return { success: false, message: "Triage event ID is required for update." };
@@ -296,6 +312,16 @@ export async function updateTriageEvent(
             note: updated.note ?? undefined,
           } as Prisma.JsonObject,
         },
+      });
+
+      await ensureClinicalCaseForReferralOrEscalation(tx, {
+        studentId: updated.studentId,
+        sessionId: updated.sessionId,
+        fellowId,
+        hubId: updated.hubId ?? null,
+        actionTaken: updated.actionTaken ?? "",
+        referredSupervisorId: updated.referredSupervisorId ?? null,
+        riskScreenOutcome: updated.riskScreenOutcome ?? null,
       });
 
       return updated;
