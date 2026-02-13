@@ -3,9 +3,9 @@
 import { ImplementerRole, type SessionStatus } from "@prisma/client";
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { db } from "#/lib/db";
-import { getDefaultSessionDateRange } from "#/lib/date-utils";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
+import { getDefaultSessionDateRange } from "#/lib/date-utils";
+import { db } from "#/lib/db";
 
 export async function fetchInterventionSessions({
   hubId,
