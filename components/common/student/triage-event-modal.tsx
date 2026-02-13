@@ -167,10 +167,6 @@ export default function TriageEventModal({
         note: undefined,
       });
     }
-    // Only reset when modal opens or identity of session/student changes — do not depend on forceEscalated
-    // so we don't overwrite the user's risk screen outcome when they select "Any YES".
-    // Intentionally omit form from deps so we don't re-run when form state changes (e.g. user
-    // selecting risk outcome), which would reset and wipe their selection and disable dropdowns.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset when modal/session/student/event identity changes
   }, [isOpen, existingEvent, studentId, sessionId]);
 
