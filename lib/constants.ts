@@ -48,8 +48,7 @@ export const constants = (() => {
 })();
 
 export const NEXT_PUBLIC_ENV = validate(constants.NEXT_PUBLIC_ENV, "NEXT_PUBLIC_ENV");
-export const CURRENT_PROJECT_ID =
-  process.env.NEXT_PUBLIC_CURRENT_PROJECT_ID ?? "2026_Project_1";
+export const CURRENT_PROJECT_ID = process.env.NEXT_PUBLIC_CURRENT_PROJECT_ID ?? "2026_Project_1";
 export const APP_ENV = process.env.APP_ENV || "production";
 
 export const SHOW_DUPLICATE_ID_CHECKBOX = "show-duplicate-id-checkbox";
