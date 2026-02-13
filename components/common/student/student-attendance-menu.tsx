@@ -2,7 +2,6 @@
 
 import type { Dispatch, SetStateAction } from "react";
 import type { StudentAttendanceData } from "#/components/common/student/student-attendance";
-import { TRIAGE_ENABLED_HUB_VISIBLE_ID } from "#/lib/constants";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -12,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { TRIAGE_ENABLED_HUB_VISIBLE_ID } from "#/lib/constants";
 
 export type StudentAttendanceMenuState = {
   setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
