@@ -12,7 +12,7 @@ import {
 
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
-import { getCalendarDate } from "#/lib/date-utils";
+import { getCalendarDate, getDefaultSessionDateRange } from "#/lib/date-utils";
 
 type SessionsContextType = {
   sessions: Session[];
@@ -71,10 +71,13 @@ export function SessionsProvider({
   const fetchSessions = async () => {
     if ((role === ImplementerRole.ADMIN && implementerId) || role !== ImplementerRole.ADMIN) {
       setLoading(true);
+      const { start, end } = filters.dateRange ?? getDefaultSessionDateRange();
       const fetchedSessions = await fetchInterventionSessions({
         hubId,
         implementerId,
         role,
+        start,
+        end,
         filters,
       });
       setSessions(fetchedSessions);
@@ -82,13 +85,15 @@ export function SessionsProvider({
     }
   };
 
-  useEffect(() => {
-    void fetchSessions();
-  }, [hubId, filters, implementerId, role]);
+  const dateRangeKey = filters.dateRange
+    ? `${filters.dateRange.start.toISOString()}-${filters.dateRange.end.toISOString()}`
+    : null;
 
-  const refresh = () => {
-    return fetchSessions();
-  };
+  useEffect(() => {
+    queueMicrotask(() => void fetchSessions());
+  }, [hubId, implementerId, role, filters.statusTypes, filters.dates, dateRangeKey]);
+
+  const refresh = () => fetchSessions();
 
   return (
     <SessionsContext.Provider value={{ sessions, loading, setSessions, refresh }}>
