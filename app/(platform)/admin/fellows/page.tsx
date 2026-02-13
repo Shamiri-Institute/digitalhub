@@ -40,10 +40,10 @@ export default async function FellowPage() {
         (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
       FROM
         fellows f
-          INNER JOIN hubs h ON f.hub_id = h.id
+          LEFT JOIN hubs h ON f.hub_id = h.id
           LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
           LEFT JOIN intervention_groups ig ON f.id = ig.leader_id
-      WHERE h.project_id = ${projectId}
+      WHERE (h.project_id = ${projectId} OR f.hub_id IS NULL)
         AND f.implementer_id = ${implementerId}
       GROUP BY
         f.id
