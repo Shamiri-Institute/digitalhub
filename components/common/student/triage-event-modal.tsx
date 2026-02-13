@@ -121,17 +121,20 @@ export default function TriageEventModal({
   const showSupervisorSelect = actionTaken === "REFERRED" || actionTaken === "ESCALATED";
   const forceEscalated = riskScreenOutcome === "ANY_YES";
 
-  const loadSupervisors = useCallback(() => {
-    if (hubId) {
-      getSupervisorsInFellowHub(hubId, { useAsHubId: true }).then(setSupervisorsInHub);
-    } else {
-      getSupervisorsInFellowHub(sessionId).then(setSupervisorsInHub);
+  const loadSupervisors = useCallback(async () => {
+    try {
+      const supervisors = hubId
+        ? await getSupervisorsInFellowHub(hubId, { useAsHubId: true })
+        : await getSupervisorsInFellowHub(sessionId);
+      setSupervisorsInHub(supervisors);
+    } catch {
+      setSupervisorsInHub([]);
     }
   }, [sessionId, hubId]);
 
   useEffect(() => {
     if (isOpen) {
-      loadSupervisors();
+      void loadSupervisors();
     }
   }, [isOpen, loadSupervisors]);
 
