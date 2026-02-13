@@ -4,7 +4,7 @@ import {
   type BatchRecordingUpdate,
   updateRecordingsStatusBatch,
 } from "#/app/(platform)/sc/reporting/recordings/actions";
-import type { RecordingResult } from "#/lib/fidelity-api-client";
+import type { RecordingResult } from "#/lib/fidelity-ratings-api";
 import { verifyRecordingsApiKey } from "#/lib/recordings-api";
 
 export const dynamic = "force-dynamic";

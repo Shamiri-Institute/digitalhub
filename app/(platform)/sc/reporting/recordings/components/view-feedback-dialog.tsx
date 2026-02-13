@@ -22,10 +22,15 @@ interface ViewFeedbackDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface QuestionScore {
+  score: number;
+  justification: string;
+}
+
 interface FidelityScores {
   overall_score: string;
   overall_assessment: string;
-  [key: string]: unknown;
+  [key: string]: string | QuestionScore | unknown;
 }
 
 interface QualitativeFeedback {
@@ -98,14 +103,15 @@ export default function ViewFeedbackDialog({
   let feedback: FeedbackData | null = null;
   try {
     const raw = recording.fidelityFeedback;
-    feedback = typeof raw === "string" ? JSON.parse(raw) : (raw as FeedbackData);
+    feedback = typeof raw === "string" ? JSON.parse(raw) : (raw as unknown as FeedbackData);
   } catch (error) {
     console.error("Failed to parse feedback:", error);
   }
 
   // Use sample data if preview is enabled
   const displayFeedback = showSamplePreview ? SAMPLE_FEEDBACK : feedback;
-  const overallScore = displayFeedback?.fidelity_scores?.overall_score ?? recording.overallScore;
+  const overallScore =
+    displayFeedback?.fidelity_scores?.overall_score ?? recording.overallScore ?? undefined;
 
   // Sort question entries by question number
   const sortedQuestions = displayFeedback?.fidelity_scores
@@ -210,28 +216,31 @@ export default function ViewFeedbackDialog({
                 <FeedbackSection title="Fidelity Scores">
                   <div className="space-y-4">
                     {/* Individual question scores - sorted */}
-                    {sortedQuestions.map(([key, value]: [string, unknown]) => (
-                      <div key={key} className="rounded-md border p-4">
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="font-medium capitalize">
-                            {key.replace(/_/g, " ").replace("question ", "Question ")}
-                          </span>
-                          {value?.score !== undefined && (
-                            <Badge
-                              variant="outline"
-                              className={cn("text-sm", getScoreColor(value.score))}
-                            >
-                              Score: {value.score}
-                            </Badge>
+                    {sortedQuestions.map(([key, value]) => {
+                      const questionScore = value as QuestionScore;
+                      return (
+                        <div key={key} className="rounded-md border p-4">
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="font-medium capitalize">
+                              {key.replace(/_/g, " ").replace("question ", "Question ")}
+                            </span>
+                            {questionScore?.score !== undefined && (
+                              <Badge
+                                variant="outline"
+                                className={cn("text-sm", getScoreColor(questionScore.score))}
+                              >
+                                Score: {questionScore.score}
+                              </Badge>
+                            )}
+                          </div>
+                          {questionScore?.justification && (
+                            <p className="text-sm text-muted-foreground mt-2">
+                              <MarkdownText>{questionScore.justification}</MarkdownText>
+                            </p>
                           )}
                         </div>
-                        {value?.justification && (
-                          <p className="text-sm text-muted-foreground mt-2">
-                            <MarkdownText>{value.justification}</MarkdownText>
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {/* Overall Assessment */}
                     {displayFeedback.fidelity_scores.overall_assessment && (
