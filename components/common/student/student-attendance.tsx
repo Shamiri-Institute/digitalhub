@@ -110,7 +110,15 @@ export default function StudentAttendance({
       setTriageExistingEvent(null);
       return;
     }
-    getTriageEventByStudentAndSession(triageStudent.id, session.id).then(setTriageExistingEvent);
+    const load = async () => {
+      try {
+        const event = await getTriageEventByStudentAndSession(triageStudent.id, session.id);
+        setTriageExistingEvent(event);
+      } catch {
+        setTriageExistingEvent(null);
+      }
+    };
+    void load();
   }, [triageModalOpen, triageStudent?.id, session?.id]);
 
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
