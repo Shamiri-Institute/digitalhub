@@ -1,8 +1,8 @@
 import { ImplementerRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { cache } from "react";
-import { authOptions } from "#/lib/auth-options";
 import { getActiveProjectId } from "#/lib/active-project-id";
+import { authOptions } from "#/lib/auth-options";
 import { db } from "#/lib/db";
 
 export type CurrentHubCoordinator = Awaited<ReturnType<typeof currentHubCoordinator>>;

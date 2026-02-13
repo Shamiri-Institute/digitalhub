@@ -13,9 +13,9 @@ import {
   CommandSeparator,
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
-import { setActiveProjectIdAndReload } from "#/lib/active-project-id-client";
-import { fetchProjects, type ProjectOption } from "#/lib/actions/project";
 import { isAdminUserByEmail } from "#/lib/actions/fetch-personnel";
+import { fetchProjects, type ProjectOption } from "#/lib/actions/project";
+import { setActiveProjectIdAndReload } from "#/lib/active-project-id-client";
 import { cn } from "#/lib/utils";
 
 export function ProjectSwitcher({
