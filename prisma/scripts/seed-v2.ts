@@ -306,8 +306,31 @@ async function createCoreUsers(
   operations: OpsUser[],
   clinicalTeam: ClinicalTeam,
   admins: AdminUser[],
+  hubs: Hub[],
 ) {
   console.log("creating core users");
+
+  const currentProjectHubIds = new Set(
+    hubs.filter((h) => h.projectId === CURRENT_PROJECT_ID).map((h) => h.id),
+  );
+  const currentProjectImplementerIds = new Set(
+    hubs.filter((h) => h.projectId === CURRENT_PROJECT_ID).map((h) => h.implementerId),
+  );
+
+  const projectHubCoordinators = hubCoordinators.filter((hc) =>
+    currentProjectHubIds.has(hc.assignedHubId ?? ""),
+  );
+  const projectSupervisors = supervisors.filter((s) =>
+    currentProjectHubIds.has(s.hubId ?? ""),
+  );
+  const projectFellows = fellows.filter((f) => currentProjectHubIds.has(f.hubId ?? ""));
+  const projectClinicalLeads = clinicalLeads.filter((cl) =>
+    currentProjectHubIds.has(cl.assignedHubId ?? ""),
+  );
+  const projectOperations = operations.filter((o) =>
+    currentProjectImplementerIds.has(o.implementerId),
+  );
+
   const userData = [
     {
       id: objectId("user"),
@@ -368,24 +391,27 @@ async function createCoreUsers(
         identifier: admins.find((admin) => admin.email === "admin@shamiri.institute")?.id,
       }));
     }
+    const personnel =
+      role === "HUB_COORDINATOR"
+        ? faker.helpers.arrayElement(projectHubCoordinators)
+        : role === "SUPERVISOR"
+          ? faker.helpers.arrayElement(projectSupervisors)
+          : role === "FELLOW"
+            ? faker.helpers.arrayElement(projectFellows)
+            : role === "CLINICAL_LEAD"
+              ? faker.helpers.arrayElement(projectClinicalLeads)
+              : role === "OPERATIONS"
+                ? faker.helpers.arrayElement(projectOperations)
+                : role === "CLINICAL_TEAM"
+                  ? clinicalTeam
+                : null;
+    const identifier = personnel?.id ?? undefined;
+    const implementerId = personnel?.implementerId ?? implementers[0]?.id ?? "";
     return {
       userId: user.id,
-      implementerId: faker.helpers.arrayElement(implementers).id,
+      implementerId,
       role,
-      identifier:
-        role === "HUB_COORDINATOR"
-          ? faker.helpers.arrayElement(hubCoordinators).id
-          : role === "SUPERVISOR"
-            ? faker.helpers.arrayElement(supervisors).id
-            : role === "FELLOW"
-              ? faker.helpers.arrayElement(fellows).id
-              : role === "CLINICAL_LEAD"
-                ? faker.helpers.arrayElement(clinicalLeads).id
-                : role === "OPERATIONS"
-                  ? faker.helpers.arrayElement(operations).id
-                  : role === "CLINICAL_TEAM"
-                    ? clinicalTeam.id
-                    : null,
+      identifier,
     };
   });
 
@@ -1495,6 +1521,7 @@ async function main() {
     operations,
     clinicalTeam,
     admins,
+    hubs,
   );
 
   const schools = await createSchools(hubs, supervisors);
