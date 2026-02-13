@@ -320,9 +320,7 @@ async function createCoreUsers(
   const projectHubCoordinators = hubCoordinators.filter((hc) =>
     currentProjectHubIds.has(hc.assignedHubId ?? ""),
   );
-  const projectSupervisors = supervisors.filter((s) =>
-    currentProjectHubIds.has(s.hubId ?? ""),
-  );
+  const projectSupervisors = supervisors.filter((s) => currentProjectHubIds.has(s.hubId ?? ""));
   const projectFellows = fellows.filter((f) => currentProjectHubIds.has(f.hubId ?? ""));
   const projectClinicalLeads = clinicalLeads.filter((cl) =>
     currentProjectHubIds.has(cl.assignedHubId ?? ""),
@@ -404,7 +402,7 @@ async function createCoreUsers(
                 ? faker.helpers.arrayElement(projectOperations)
                 : role === "CLINICAL_TEAM"
                   ? clinicalTeam
-                : null;
+                  : null;
     const identifier = personnel?.id ?? undefined;
     const implementerId = personnel?.implementerId ?? implementers[0]?.id ?? "";
     return {
