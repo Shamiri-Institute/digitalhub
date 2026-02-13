@@ -153,7 +153,7 @@ export class FidelityAPIClient {
             "X-API-Key": this.apiKey,
           },
           body: JSON.stringify(request),
-          signal: AbortSignal.timeout(30_000), // 30s timeout for submission
+          signal: AbortSignal.timeout(30_000),
         }),
       );
 
@@ -221,12 +221,11 @@ let _client: FidelityAPIClient | null = null;
 export function getFidelityClient(): FidelityAPIClient {
   if (!_client) {
     const baseUrl = process.env.FIDELITY_API_URL;
-    const apiKey = process.env.FIDELITY_API_KEY;
-
+    const apiKey = process.env.RECORDINGS_API_KEY;
     if (!baseUrl || !apiKey) {
       throw new Error(
         "Missing Fidelity API configuration. Ensure FIDELITY_API_URL and " +
-          "FIDELITY_API_KEY environment variables are set.",
+          "RECORDINGS_API_KEY environment variables are set.",
       );
     }
 
