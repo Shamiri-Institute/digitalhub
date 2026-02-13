@@ -7,6 +7,7 @@ import StudentsStats from "#/components/students-stats";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { db } from "#/lib/db";
 
 export default async function StudentsPage() {
@@ -15,6 +16,7 @@ export default async function StudentsPage() {
     await signOut({ callbackUrl: "/login" });
   }
   const implementerId = admin?.session?.user.activeMembership?.implementerId;
+  const projectId = await getActiveProjectId();
 
   const [
     totalNumberOfStudentsInHub,
@@ -32,6 +34,9 @@ export default async function StudentsPage() {
       where: {
         school: {
           implementerId,
+          hub: {
+            projectId,
+          },
         },
       },
     }),
@@ -39,22 +44,55 @@ export default async function StudentsPage() {
       where: {
         school: {
           implementerId,
+          hub: {
+            projectId,
+          },
         },
       },
     }),
     db.clinicalScreeningInfo.findMany({
       where: {
-        currentSupervisor: {
-          implementerId,
-        },
+        OR: [
+          {
+            currentSupervisor: {
+              implementerId,
+              hub: {
+                projectId,
+              },
+            },
+          },
+          {
+            clinicalLead: {
+              assignedHub: {
+                implementerId,
+                projectId,
+              },
+            },
+          },
+        ],
       },
     }),
     db.clinicalSessionAttendance.findMany({
       where: {
         case: {
-          currentSupervisor: {
-            implementerId,
-          },
+          OR: [
+            {
+              currentSupervisor: {
+                implementerId,
+                hub: {
+                  projectId,
+                },
+              },
+            },
+            {
+              clinicalLead: {
+                assignedHub: {
+                  implementerId,
+                  projectId,
+                },
+              },
+            },
+          ],
         },
       },
     }),
@@ -62,9 +100,24 @@ export default async function StudentsPage() {
       by: ["session"],
       where: {
         case: {
-          currentSupervisor: {
-            implementerId,
-          },
+          OR: [
+            {
+              currentSupervisor: {
+                implementerId,
+                hub: {
+                  projectId,
+                },
+              },
+            },
+            {
+              clinicalLead: {
+                assignedHub: {
+                  implementerId,
+                  projectId,
+                },
+              },
+            },
+          ],
         },
       },
       _count: {
@@ -76,6 +129,9 @@ export default async function StudentsPage() {
       where: {
         currentSupervisor: {
           implementerId,
+          hub: {
+            projectId,
+          },
         },
       },
       _count: {
@@ -89,10 +145,18 @@ export default async function StudentsPage() {
           {
             currentSupervisor: {
               implementerId,
+              hub: {
+                projectId,
+              },
             },
           },
           {
-            clinicalLeadId: implementerId,
+            clinicalLead: {
+              assignedHub: {
+                implementerId,
+                projectId,
+              },
+            },
           },
         ],
       },
@@ -105,6 +169,9 @@ export default async function StudentsPage() {
       where: {
         school: {
           implementerId,
+          hub: {
+            projectId,
+          },
         },
       },
       _count: {
@@ -116,6 +183,9 @@ export default async function StudentsPage() {
       where: {
         school: {
           implementerId,
+          hub: {
+            projectId,
+          },
         },
       },
       _count: {
@@ -127,6 +197,9 @@ export default async function StudentsPage() {
       where: {
         school: {
           implementerId,
+          hub: {
+            projectId,
+          },
         },
         droppedOut: true,
       },

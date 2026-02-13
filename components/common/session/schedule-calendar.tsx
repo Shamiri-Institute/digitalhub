@@ -46,6 +46,7 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
+import { getDateRangeForCalendar } from "#/lib/date-utils";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
@@ -98,19 +99,24 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   props.hubSessionTypes?.forEach((sessionType) => {
     sessionTypes[sessionType.sessionName] = true;
   });
+  const datesFromMode = ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week";
   const [filters, setFilters] = useState<Filters>({
     sessionTypes,
     statusTypes: statusFilterOptions,
-    dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
+    dates: datesFromMode,
+    dateRange: getDateRangeForCalendar(today(getLocalTimeZone()), datesFromMode),
   });
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
   useEffect(() => {
-    setFilters({
-      sessionTypes,
-      statusTypes: statusFilterOptions,
-      dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
-    });
+    queueMicrotask(() =>
+      setFilters((prev) => ({
+        ...prev,
+        sessionTypes,
+        statusTypes: statusFilterOptions,
+        dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
+      })),
+    );
   }, [props.hubSessionTypes]);
 
   const monthState = useCalendarState({
@@ -152,6 +158,23 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     locale,
     createCalendar,
   });
+
+  const activeValue =
+    mode === "month"
+      ? monthState.value
+      : mode === "week"
+        ? weekState.value
+        : mode === "day"
+          ? dayState.value
+          : mode === "list"
+            ? listState.value
+            : tableState.value;
+  const rangeType = ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week";
+  useEffect(() => {
+    if (!activeValue) return;
+    const dateRange = getDateRangeForCalendar(activeValue, rangeType);
+    queueMicrotask(() => setFilters((prev) => ({ ...prev, dateRange })));
+  }, [activeValue?.toString(), rangeType, mode]);
 
   const month = useCalendar(calendarStateProps, monthState);
 
@@ -651,7 +674,9 @@ function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[
   ];
   const [dates, setDates] = useState(filters.dates);
   useEffect(() => {
-    setDates(["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week");
+    queueMicrotask(() =>
+      setDates(["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week"),
+    );
   }, [mode]);
 
   useEffect(() => {
@@ -660,13 +685,15 @@ function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[
     );
     const statusTypes = Object.keys(filters.statusTypes).filter((key) => !filters.statusTypes[key]);
 
-    if (sessionTypes.length > 0 || statusTypes.length > 0) {
-      setFilterIsActive(true);
-    } else {
-      setFilterIsActive(false);
-      setSessionTypes(defaultFilterSettings.sessionTypes);
-      setStatusTypes(defaultFilterSettings.statusTypes);
-    }
+    queueMicrotask(() => {
+      if (sessionTypes.length > 0 || statusTypes.length > 0) {
+        setFilterIsActive(true);
+      } else {
+        setFilterIsActive(false);
+        setSessionTypes(defaultFilterSettings.sessionTypes);
+        setStatusTypes(defaultFilterSettings.statusTypes);
+      }
+    });
   }, [filters]);
 
   return (

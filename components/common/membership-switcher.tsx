@@ -49,7 +49,6 @@ export function MembershipSwitcher({
       }
     };
     void checkIsAdminUser();
-    console.log(session);
   }, [session]);
 
   if (!isAdminUser) {

@@ -182,6 +182,7 @@ METABASE_MONITORING_DASHBOARD_ID="your-metabase-dashboard-id"  # Dashboard ID fo
 # ====================================
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NEXT_PUBLIC_ENV="development"
+NEXT_PUBLIC_CURRENT_PROJECT_ID="your-active-project-id"  # Active project ID from database
 APP_ENV="development"
 SEND_EMAILS="0"  # Set to 1 to enable email sending
 DEBUG="0"        # Set to 1 to enable debug mode
