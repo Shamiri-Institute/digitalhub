@@ -34,7 +34,6 @@ import type { TriageEventWithRelations } from "#/lib/actions/triage";
 import {
   createTriageEvent,
   getSupervisorsInFellowHub,
-  getTriageEventByStudentAndSession,
   updateTriageEvent,
 } from "#/lib/actions/triage";
 import { zodResolver } from "#/lib/zod-resolver";
