@@ -5,7 +5,7 @@ CREATE TYPE "risk_screen_outcomes" AS ENUM ('ALL_NO', 'ANY_YES', 'NOT_COMPLETED'
 CREATE TYPE "risk_not_completed_reasons" AS ENUM ('STUDENT_LEFT', 'NO_PRIVACY', 'TIME_CONSTRAINTS', 'OTHER');
 
 -- CreateEnum
-CREATE TYPE "triage_action_taken" AS ENUM ('SUPPORTED', 'REFERRED', 'ESCALATED', 'REFUSED');
+CREATE TYPE "triage_action_taken" AS ENUM ('SUPPORTED', 'REFERRED', 'ESCALATED', 'REFUSED', 'INTERRUPTED');
 
 -- CreateEnum
 CREATE TYPE "supervisor_handoff_statuses" AS ENUM ('WARM_HANDOFF', 'SUPERVISOR_NOTIFIED', 'COULD_NOT_REACH', 'STUDENT_REFUSED_NOTIFIED');

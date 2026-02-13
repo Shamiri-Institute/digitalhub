@@ -2,6 +2,7 @@
 
 import type { Dispatch, SetStateAction } from "react";
 import type { StudentAttendanceData } from "#/components/common/student/student-attendance";
+import { TRIAGE_ENABLED_HUB_VISIBLE_ID } from "#/lib/constants";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -23,11 +24,15 @@ export default function StudentAttendanceMenu({
   state,
   attendance,
   disabled,
+  hubVisibleId,
 }: {
   state: StudentAttendanceMenuState;
   attendance: StudentAttendanceData;
   disabled: boolean;
+  hubVisibleId?: string | null;
 }) {
+  const showTriageOccurred = hubVisibleId === TRIAGE_ENABLED_HUB_VISIBLE_ID;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -51,14 +56,16 @@ export default function StudentAttendanceMenu({
         >
           Mark attendance
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            state.setTriageStudent(attendance);
-            state.setTriageModalOpen(true);
-          }}
-        >
-          Triage occurred
-        </DropdownMenuItem>
+        {showTriageOccurred && (
+          <DropdownMenuItem
+            onClick={() => {
+              state.setTriageStudent(attendance);
+              state.setTriageModalOpen(true);
+            }}
+          >
+            Triage occurred
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

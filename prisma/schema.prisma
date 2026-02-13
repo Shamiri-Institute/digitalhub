@@ -325,6 +325,7 @@ enum TriageActionTaken {
   REFERRED
   ESCALATED
   REFUSED
+  INTERRUPTED
 
   @@map("triage_action_taken")
 }

@@ -50,6 +50,7 @@ const ACTION_OPTIONS: { value: TriageEventFormData["actionTaken"]; label: string
   { value: "REFERRED", label: "Referred to supervisor (risk-negative)" },
   { value: "ESCALATED", label: "Escalated immediately to supervisor (risk-positive)" },
   { value: "REFUSED", label: "Student refused supervisor referral" },
+  { value: "INTERRUPTED", label: "Student interaction ended abruptly" },
 ];
 
 const HANDOFF_OPTIONS: {
