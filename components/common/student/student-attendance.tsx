@@ -215,6 +215,7 @@ export default function StudentAttendance({
             setTriageStudent,
             setTriageModalOpen,
             session,
+            hubVisibleId: session?.hub?.visibleId,
           })}
           editColumns={true}
           data={
@@ -314,6 +315,7 @@ const columns = (state: {
   setTriageStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setTriageModalOpen: Dispatch<SetStateAction<boolean>>;
   session: Session | null;
+  hubVisibleId?: string | null;
 }): ColumnDef<StudentAttendanceData>[] => [
   {
     id: "checkbox",
@@ -399,6 +401,7 @@ const columns = (state: {
         state={state}
         attendance={row.original}
         disabled={!row.getCanSelect()}
+        hubVisibleId={state.hubVisibleId}
       />
     ),
     enableHiding: false,
