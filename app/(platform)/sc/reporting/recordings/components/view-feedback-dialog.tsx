@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -15,7 +14,7 @@ import {
 } from "#/components/ui/dialog";
 import { cn } from "#/lib/utils";
 import type { SupervisorRecording } from "../actions";
-import { SAMPLE_MARKDOWN_FEEDBACK } from "./sample-response";
+import { SAMPLE_FEEDBACK } from "./sample-response";
 
 interface ViewFeedbackDialogProps {
   recording: SupervisorRecording;
@@ -23,31 +22,46 @@ interface ViewFeedbackDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface FidelityFeedbackItem {
-  category?: string;
-  score?: number | string;
-  feedback?: string;
-  comments?: string;
+interface FidelityScores {
+  overall_score: string;
+  overall_assessment: string;
   [key: string]: unknown;
+}
+
+interface QualitativeFeedback {
+  strengths?: string[];
+  session_summary?: string;
+  areas_for_improvement?: string[];
+  session_flow_and_engagement?: string;
+}
+
+interface SafetyFlag {
+  type: string;
+  description: string;
+  timestamp_reference?: string;
+  severity?: string;
+  immediate_action_needed?: boolean;
+  context_analysis?: string;
+  current_vs_past?: string;
+  confidence_level?: string;
+  requires_follow_up?: boolean;
+}
+
+interface FeedbackData {
+  safety_flags: SafetyFlag[];
+  fidelity_scores: FidelityScores;
+  recommendations: string[];
+  qualitative_feedback: QualitativeFeedback;
 }
 
 function getScoreColor(score: string | number | undefined): string {
   if (!score) return "bg-gray-100 text-gray-800";
-
   const numScore = typeof score === "string" ? Number.parseFloat(score) : score;
-
   if (Number.isNaN(numScore)) return "bg-gray-100 text-gray-800";
 
-  if (numScore >= 80) return "bg-green-bg text-green-base border-green-border";
-  if (numScore >= 60) return "bg-yellow-bg text-yellow-700 border-yellow-border";
+  if (numScore >= 6) return "bg-green-bg text-green-base border-green-border";
+  if (numScore >= 3) return "bg-yellow-bg text-yellow-700 border-yellow-border";
   return "bg-red-bg text-red-base border-red-border";
-}
-
-function formatValue(value: unknown): string {
-  if (value === null || value === undefined) return "N/A";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (typeof value === "object") return JSON.stringify(value, null, 2);
-  return String(value);
 }
 
 function FeedbackSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -59,55 +73,17 @@ function FeedbackSection({ title, children }: { title: string; children: React.R
   );
 }
 
-function isStringFeedback(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0;
-}
-
-function MarkdownContent({ content }: { content: string }) {
+// Component for rendering markdown text inline
+function MarkdownText({ children }: { children: string }) {
   return (
-    <div className="prose prose-sm max-w-none">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          h1: ({ children }) => <h1 className="mb-3 mt-6 text-2xl font-bold">{children}</h1>,
-          h2: ({ children }) => <h2 className="mb-3 mt-6 text-xl font-bold">{children}</h2>,
-          h3: ({ children }) => <h3 className="mb-2 mt-4 text-lg font-semibold">{children}</h3>,
-          p: ({ children }) => <p className="mb-2">{children}</p>,
-          ul: ({ children }) => <ul className="mb-4 list-disc pl-6">{children}</ul>,
-          ol: ({ children }) => <ol className="mb-4 list-decimal pl-6">{children}</ol>,
-          li: ({ children }) => <li className="mb-1">{children}</li>,
-          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-          hr: () => <hr className="my-4 border-shamiri-light-grey" />,
-          table: ({ children }) => (
-            <div className="my-4 overflow-x-auto">
-              <table className="min-w-full divide-y divide-shamiri-light-grey border border-shamiri-light-grey">
-                {children}
-              </table>
-            </div>
-          ),
-          thead: ({ children }) => <thead className="bg-blue-bg">{children}</thead>,
-          tbody: ({ children }) => (
-            <tbody className="divide-y divide-shamiri-light-grey bg-white">{children}</tbody>
-          ),
-          tr: ({ children }) => <tr className="hover:bg-gray-50">{children}</tr>,
-          th: ({ children }) => (
-            <th className="border-r border-shamiri-light-grey px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-shamiri-text-grey last:border-r-0">
-              {children}
-            </th>
-          ),
-          td: ({ children }) => (
-            <td className="border-r border-shamiri-light-grey px-4 py-3 text-sm last:border-r-0">
-              {children}
-            </td>
-          ),
-          code: ({ children }) => (
-            <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm">{children}</code>
-          ),
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-    </div>
+    <ReactMarkdown
+      components={{
+        p: ({ children }) => <>{children}</>, // Remove wrapper <p> tags for inline rendering
+        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+      }}
+    >
+      {children}
+    </ReactMarkdown>
   );
 }
 
@@ -118,25 +94,33 @@ export default function ViewFeedbackDialog({
 }: ViewFeedbackDialogProps) {
   const [showSamplePreview, setShowSamplePreview] = useState(false);
 
-  const feedback = recording.fidelityFeedback as
-    | FidelityFeedbackItem[]
-    | FidelityFeedbackItem
-    | string
-    | null;
-  const hasStringFeedback = isStringFeedback(feedback);
-  const hasArrayFeedback = !hasStringFeedback && Array.isArray(feedback);
-  const hasObjectFeedback =
-    !hasStringFeedback && feedback && typeof feedback === "object" && !Array.isArray(feedback);
-  const hasFeedback = hasStringFeedback || hasArrayFeedback || hasObjectFeedback;
+  // Parse feedback - it's either already an object or a JSON string
+  let feedback: FeedbackData | null = null;
+  try {
+    const raw = recording.fidelityFeedback;
+    feedback = typeof raw === "string" ? JSON.parse(raw) : (raw as FeedbackData);
+  } catch (error) {
+    console.error("Failed to parse feedback:", error);
+  }
+
+  // Use sample data if preview is enabled
+  const displayFeedback = showSamplePreview ? SAMPLE_FEEDBACK : feedback;
+  const overallScore = displayFeedback?.fidelity_scores?.overall_score ?? recording.overallScore;
+
+  // Sort question entries by question number
+  const sortedQuestions = displayFeedback?.fidelity_scores
+    ? Object.entries(displayFeedback.fidelity_scores)
+        .filter(([key]) => key.startsWith("question_"))
+        .sort(([keyA], [keyB]) => {
+          const numA = Number.parseInt(keyA.match(/question_(\d+)/)?.[1] || "0", 10);
+          const numB = Number.parseInt(keyB.match(/question_(\d+)/)?.[1] || "0", 10);
+          return numA - numB;
+        })
+    : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn(
-          "max-h-[85vh] overflow-y-auto",
-          hasStringFeedback || showSamplePreview ? "max-w-4xl" : "max-w-2xl",
-        )}
-      >
+      <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Fidelity Feedback</DialogTitle>
           <DialogDescription>
@@ -145,17 +129,30 @@ export default function ViewFeedbackDialog({
         </DialogHeader>
 
         <div className="mt-4 space-y-6">
-          {/* Overall Score Section */}
+          {/* Sample Preview Toggle (Development Only) */}
+          {process.env.NODE_ENV === "development" && !feedback && (
+            <div className="flex items-center justify-between rounded-lg bg-blue-50 p-3">
+              <span className="text-sm font-medium text-blue-700">
+                {showSamplePreview ? "Showing sample preview" : "No feedback data available"}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSamplePreview(!showSamplePreview)}
+              >
+                {showSamplePreview ? "Hide Preview" : "Show Sample"}
+              </Button>
+            </div>
+          )}
+
+          {/* Overall Score */}
           <FeedbackSection title="Overall Score">
             <div className="flex items-center gap-3">
               <Badge
                 variant="outline"
-                className={cn(
-                  "px-4 py-2 text-lg font-semibold",
-                  getScoreColor(recording.overallScore ?? undefined),
-                )}
+                className={cn("px-4 py-2 text-lg font-semibold", getScoreColor(overallScore))}
               >
-                {recording.overallScore ?? "N/A"}
+                {overallScore ?? "N/A"}
               </Badge>
               {recording.processedAt && (
                 <span className="text-sm text-muted-foreground">
@@ -172,7 +169,7 @@ export default function ViewFeedbackDialog({
             </div>
           </FeedbackSection>
 
-          {/* Recording Details Section */}
+          {/* Recording Details */}
           <FeedbackSection title="Recording Details">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
@@ -206,113 +203,169 @@ export default function ViewFeedbackDialog({
             </div>
           </FeedbackSection>
 
-          {/* String/Markdown Feedback Section */}
-          {hasStringFeedback && (
-            <FeedbackSection title="AI Analysis Report">
-              <MarkdownContent content={feedback} />
-            </FeedbackSection>
-          )}
-
-          {/* Detailed Feedback Section */}
-          {hasArrayFeedback && feedback.length > 0 && (
-            <FeedbackSection title="Detailed Feedback">
-              <div className="space-y-4">
-                {feedback.map((item, index) => (
-                  <div key={index} className="rounded-md border p-3">
-                    {item.category && (
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="font-medium">{item.category}</span>
-                        {item.score !== undefined && (
-                          <Badge
-                            variant="outline"
-                            className={cn("text-sm", getScoreColor(item.score))}
-                          >
-                            {item.score}
-                          </Badge>
+          {displayFeedback ? (
+            <>
+              {/* Fidelity Scores */}
+              {displayFeedback.fidelity_scores && (
+                <FeedbackSection title="Fidelity Scores">
+                  <div className="space-y-4">
+                    {/* Individual question scores - sorted */}
+                    {sortedQuestions.map(([key, value]: [string, unknown]) => (
+                      <div key={key} className="rounded-md border p-4">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="font-medium capitalize">
+                            {key.replace(/_/g, " ").replace("question ", "Question ")}
+                          </span>
+                          {value?.score !== undefined && (
+                            <Badge
+                              variant="outline"
+                              className={cn("text-sm", getScoreColor(value.score))}
+                            >
+                              Score: {value.score}
+                            </Badge>
+                          )}
+                        </div>
+                        {value?.justification && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            <MarkdownText>{value.justification}</MarkdownText>
+                          </p>
                         )}
                       </div>
+                    ))}
+
+                    {/* Overall Assessment */}
+                    {displayFeedback.fidelity_scores.overall_assessment && (
+                      <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
+                        <h5 className="font-medium mb-2">Overall Assessment</h5>
+                        <p className="text-sm">
+                          <MarkdownText>
+                            {displayFeedback.fidelity_scores.overall_assessment}
+                          </MarkdownText>
+                        </p>
+                      </div>
                     )}
-                    {(item.feedback || item.comments) && (
-                      <p className="text-sm text-muted-foreground">
-                        {item.feedback ?? item.comments}
-                      </p>
+                  </div>
+                </FeedbackSection>
+              )}
+
+              {/* Recommendations */}
+              {displayFeedback.recommendations && displayFeedback.recommendations.length > 0 && (
+                <FeedbackSection title="Recommendations">
+                  <ul className="space-y-2">
+                    {displayFeedback.recommendations.map((rec, idx) => (
+                      <li key={idx} className="flex gap-2 text-sm">
+                        <span className="font-semibold text-blue-600 mt-0.5">{idx + 1}.</span>
+                        <span>
+                          <MarkdownText>{rec}</MarkdownText>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </FeedbackSection>
+              )}
+
+              {/* Qualitative Feedback */}
+              {displayFeedback.qualitative_feedback && (
+                <FeedbackSection title="Qualitative Feedback">
+                  <div className="space-y-4">
+                    {displayFeedback.qualitative_feedback.strengths && (
+                      <div>
+                        <h5 className="font-medium text-green-700 mb-2">Strengths</h5>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {displayFeedback.qualitative_feedback.strengths.map((strength, idx) => (
+                            <li key={idx} className="text-sm">
+                              <MarkdownText>{strength}</MarkdownText>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
-                    {/* Render any other properties */}
-                    {Object.entries(item)
-                      .filter(
-                        ([key]) => !["category", "score", "feedback", "comments"].includes(key),
-                      )
-                      .map(([key, value]) => (
-                        <div key={key} className="mt-2 text-sm">
-                          <span className="text-muted-foreground capitalize">
-                            {key.replace(/([A-Z])/g, " $1").trim()}:
+
+                    {displayFeedback.qualitative_feedback.session_summary && (
+                      <div>
+                        <h5 className="font-medium mb-2">Session Summary</h5>
+                        <p className="text-sm text-muted-foreground">
+                          <MarkdownText>
+                            {displayFeedback.qualitative_feedback.session_summary}
+                          </MarkdownText>
+                        </p>
+                      </div>
+                    )}
+
+                    {displayFeedback.qualitative_feedback.areas_for_improvement && (
+                      <div>
+                        <h5 className="font-medium text-amber-700 mb-2">Areas for Improvement</h5>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {displayFeedback.qualitative_feedback.areas_for_improvement.map(
+                            (area, idx) => (
+                              <li key={idx} className="text-sm">
+                                <MarkdownText>{area}</MarkdownText>
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
+                    )}
+
+                    {displayFeedback.qualitative_feedback.session_flow_and_engagement && (
+                      <div>
+                        <h5 className="font-medium mb-2">Session Flow and Engagement</h5>
+                        <p className="text-sm text-muted-foreground">
+                          <MarkdownText>
+                            {displayFeedback.qualitative_feedback.session_flow_and_engagement}
+                          </MarkdownText>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </FeedbackSection>
+              )}
+
+              {/* Safety Flags */}
+              {displayFeedback.safety_flags && displayFeedback.safety_flags.length > 0 && (
+                <FeedbackSection title="Safety Flags">
+                  <div className="space-y-3">
+                    {displayFeedback.safety_flags.map((flag, idx) => (
+                      <div key={idx} className="rounded-md border border-red-200 bg-red-50 p-4">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="font-semibold text-red-700 capitalize">
+                            {flag.type} {flag.severity && `- ${flag.severity} severity`}
                           </span>
-                          <span className="ml-2">{formatValue(value)}</span>
+                          {flag.requires_follow_up && (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-50 text-amber-700 border-amber-300"
+                            >
+                              Follow-up Required
+                            </Badge>
+                          )}
                         </div>
-                      ))}
+                        <p className="text-sm mb-2">
+                          <MarkdownText>{flag.description}</MarkdownText>
+                        </p>
+                        {flag.timestamp_reference && (
+                          <p className="text-xs text-muted-foreground">
+                            Timestamp: {flag.timestamp_reference}
+                          </p>
+                        )}
+                        {flag.context_analysis && (
+                          <div className="mt-2 pt-2 border-t border-red-200">
+                            <p className="text-xs text-muted-foreground">
+                              <MarkdownText>{flag.context_analysis}</MarkdownText>
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </FeedbackSection>
-          )}
-
-          {/* Object Feedback (non-array) */}
-          {hasObjectFeedback && (
-            <FeedbackSection title="Detailed Feedback">
-              <div className="space-y-2 text-sm">
-                {Object.entries(feedback).map(([key, value]) => (
-                  <div key={key} className="flex justify-between border-b pb-2 last:border-0">
-                    <span className="text-muted-foreground capitalize">
-                      {key.replace(/([A-Z])/g, " $1").trim()}
-                    </span>
-                    <span className="max-w-[60%] text-right font-medium">
-                      {typeof value === "object" ? (
-                        <pre className="whitespace-pre-wrap text-left text-xs">
-                          {JSON.stringify(value, null, 2)}
-                        </pre>
-                      ) : (
-                        formatValue(value)
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </FeedbackSection>
-          )}
-
-          {/* No Feedback Available */}
-          {!hasFeedback && !showSamplePreview && (
+                </FeedbackSection>
+              )}
+            </>
+          ) : (
             <div className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
               <Icons.info className="mx-auto mb-2 h-8 w-8 opacity-50" />
-              <p>No detailed feedback available for this recording.</p>
-              {process.env.NODE_ENV === "development" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={() => setShowSamplePreview(true)}
-                >
-                  Preview Sample Response
-                </Button>
-              )}
+              <p>No feedback available for this recording.</p>
             </div>
-          )}
-
-          {/* Sample Preview (Development Only) */}
-          {showSamplePreview && (
-            <>
-              <div className="flex items-center justify-between rounded-lg bg-yellow-bg p-3">
-                <span className="text-sm font-medium text-yellow-700">
-                  Showing sample preview (development only)
-                </span>
-                <Button variant="ghost" size="sm" onClick={() => setShowSamplePreview(false)}>
-                  Hide Preview
-                </Button>
-              </div>
-              <FeedbackSection title="AI Analysis Report">
-                <MarkdownContent content={SAMPLE_MARKDOWN_FEEDBACK} />
-              </FeedbackSection>
-            </>
           )}
         </div>
       </DialogContent>
