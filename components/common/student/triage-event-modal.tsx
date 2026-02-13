@@ -391,7 +391,3 @@ export default function TriageEventModal({
     </Dialog>
   );
 }
-
-export async function fetchTriageForStudentSession(studentId: string, sessionId: string) {
-  return getTriageEventByStudentAndSession(studentId, sessionId);
-}
