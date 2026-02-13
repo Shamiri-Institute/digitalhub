@@ -410,13 +410,6 @@ export const TriageEventSchema = z
     supervisorHandoffStatus: z.enum(SUPERVISOR_HANDOFF_STATUSES).optional(),
     note: z.string().max(200).optional(),
   })
-  .transform((val) => {
-    // Enforce safety rule: risk positive always implies escalated action
-    if (val.riskScreenOutcome === "ANY_YES") {
-      return { ...val, actionTaken: "ESCALATED" as const };
-    }
-    return val;
-  })
   .superRefine((val, ctx) => {
     if (val.riskScreenOutcome === "NOT_COMPLETED" && !val.riskNotCompletedReason) {
       ctx.addIssue({
