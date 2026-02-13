@@ -1,12 +1,12 @@
-import { currentSupervisor } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import MetabaseDashboardEmbed from "#/components/common/metabase-dashboard-embed";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { buildMetabaseDashboardEmbedUrl, getMetabaseEmbedConfig } from "#/lib/metabase-embed";
 
 export default async function MonitoringAndEvaluationPage() {
-  const supervisor = await currentSupervisor();
+  const hubCoordinator = await currentHubCoordinator();
 
-  if (!supervisor) {
+  if (!hubCoordinator) {
     return (
       <Alert variant="destructive" className="mx-4 mt-4">
         <AlertTitle>Access denied</AlertTitle>
@@ -14,11 +14,12 @@ export default async function MonitoringAndEvaluationPage() {
     );
   }
 
-  const profile = supervisor.profile;
-  if (!profile?.hub) {
+  const profile = hubCoordinator.profile;
+  const assignedHub = profile.assignedHub;
+  if (!assignedHub) {
     return (
       <Alert variant="destructive" className="mx-4 mt-4">
-        <AlertTitle>Configuration error: Supervisor hub not found</AlertTitle>
+        <AlertTitle>Configuration error: Hub coordinator hub assignment not found</AlertTitle>
       </Alert>
     );
   }
@@ -42,9 +43,8 @@ export default async function MonitoringAndEvaluationPage() {
   }
 
   const params = {
-    hub: [profile.hub.hubName],
+    hub: [assignedHub.hubName],
   };
-
   const iframeUrl = buildMetabaseDashboardEmbedUrl(params, dashboardId, secretKey);
 
   return <MetabaseDashboardEmbed iframeUrl={iframeUrl} title="Monitoring and Evaluation" />;
