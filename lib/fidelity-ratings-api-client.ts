@@ -12,6 +12,11 @@
  */
 
 import https from "node:https";
+import {
+  Agent as UndiciAgent,
+  fetch as undiciFetch,
+  RequestInit as UndiciRequestInit,
+} from "undici";
 
 // ---------------------------------------------------------------------------
 // Types — mirror the Fidelity API's Pydantic models
@@ -81,12 +86,11 @@ export type JobResponse = {
  * which works for local development against a Fidelity API running
  * on localhost without Caddy.
  */
-function createMTLSAgent(): https.Agent | null {
+function createMTLSAgent(): UndiciAgent | null {
   const caCertB64 = process.env.FIDELITY_CA_CERT;
   const clientCertB64 = process.env.FIDELITY_CLIENT_CERT;
   const clientKeyB64 = process.env.FIDELITY_CLIENT_KEY;
 
-  // Dev mode: no certificates → skip mTLS, use plain fetch
   if (!caCertB64 || !clientCertB64 || !clientKeyB64) {
     console.warn(
       "mTLS certificates not configured — running without mTLS. " +
@@ -99,13 +103,13 @@ function createMTLSAgent(): https.Agent | null {
   const clientCert = Buffer.from(clientCertB64, "base64").toString("utf-8");
   const clientKey = Buffer.from(clientKeyB64, "base64").toString("utf-8");
 
-  return new https.Agent({
-    ca: caCert,
-    cert: clientCert,
-    key: clientKey,
-    rejectUnauthorized: true,
-    // Keep connections alive for reuse across requests
-    keepAlive: true,
+  return new UndiciAgent({
+    connect: {
+      ca: caCert,
+      cert: clientCert,
+      key: clientKey,
+      rejectUnauthorized: true,
+    },
   });
 }
 
@@ -116,7 +120,7 @@ function createMTLSAgent(): https.Agent | null {
 export class FidelityAPIClient {
   private baseUrl: string;
   private apiKey: string;
-  private agent: https.Agent | null;
+  private agent: UndiciAgent | null;
 
   constructor(baseUrl: string, apiKey: string) {
     this.baseUrl = baseUrl.replace(/\/$/, "");
@@ -128,10 +132,10 @@ export class FidelityAPIClient {
    * Build fetch options, attaching the mTLS agent only when configured.
    * In dev mode (no certs), plain fetch is used — works with http://localhost.
    */
-  private fetchOptions(options: RequestInit & { signal?: AbortSignal }): RequestInit {
+  private fetchOptions(options: UndiciRequestInit & { signal?: AbortSignal }): UndiciRequestInit {
     if (this.agent) {
       // @ts-expect-error — Node.js fetch supports `agent` but it's not in the DOM types
-      return { ...options, agent: this.agent };
+      return { ...options, dispatcher: this.agent };
     }
     return options;
   }
@@ -144,7 +148,7 @@ export class FidelityAPIClient {
    */
   async createJob(request: CreateJobRequest): Promise<JobResponse> {
     try {
-      const response = await fetch(
+      const response = await undiciFetch(
         `${this.baseUrl}/jobs`,
         this.fetchOptions({
           method: "POST",
@@ -178,7 +182,7 @@ export class FidelityAPIClient {
    */
   async getJobStatus(jobId: string): Promise<JobResponse> {
     try {
-      const response = await fetch(
+      const response = await undiciFetch(
         `${this.baseUrl}/jobs/${jobId}`,
         this.fetchOptions({
           method: "GET",
