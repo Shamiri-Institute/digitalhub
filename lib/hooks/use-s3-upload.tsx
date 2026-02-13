@@ -151,13 +151,19 @@ export function useS3Upload() {
               updateFileProgress(file, file.size);
               resolve();
             } else {
-              reject(new Error(`Upload failed with status ${xhr.status}`));
+              console.error("Upload failed:", {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                response: xhr.responseText
+              });
+              reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
             }
           }
         };
 
         xhr.onerror = () => {
-          reject(new Error("Network error during upload"));
+          console.error("XHR Error:", xhr.status, xhr.statusText);
+          reject(new Error(`Network error: ${xhr.status} ${xhr.statusText}`));
         };
 
         xhr.open("PUT", url, true);

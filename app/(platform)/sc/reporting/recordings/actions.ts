@@ -203,7 +203,7 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
 
     // Construct webhook URLs for Fidelity API callbacks
     const completionWebhookUrl = `${appUrl}/api/recordings/batch/status`;
-    const progressWebhookUrl = null; // TODO
+    const progressWebhookUrl = undefined; // TODO
 
     console.log(`Submitting recording ${recordingId} to Fidelity API`, {
       s3Key,
@@ -233,9 +233,7 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
       },
     });
 
-    console.log(
-      `✓ Submitted recording ${recordingId} to Fidelity API as job ${jobResponse.job_id}`,
-    );
+    console.log(`Submitted recording ${recordingId} to Fidelity API as job ${jobResponse.job_id}`);
   } catch (error) {
     console.error(`✗ Failed to submit recording ${recordingId} to Fidelity API:`, error);
 
