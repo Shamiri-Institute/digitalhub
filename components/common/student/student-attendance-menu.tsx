@@ -29,7 +29,7 @@ export default function StudentAttendanceMenu({
   disabled: boolean;
   hubVisibleId?: string | null;
 }) {
-  const triageEnabledHubVisibleId = process.env.NEXT_PUBLIC_TRIAGE_ENABLED_HUB_VISIBLE_ID ?? "";
+  const triageEnabledHubVisibleId = process.env.TRIAGE_ENABLED_HUB_VISIBLE_ID ?? "";
   const showTriageOccurred =
     !!triageEnabledHubVisibleId && hubVisibleId === triageEnabledHubVisibleId;
 
