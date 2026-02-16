@@ -2,8 +2,8 @@
 
 import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import type { Session } from "next-auth";
 import { useRouter } from "next/navigation";
+import type { Session } from "next-auth";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";
 import {
@@ -16,7 +16,7 @@ import {
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { isAdminUserByEmail } from "#/lib/actions/fetch-personnel";
-import { fetchProjects, setActiveProject, type ProjectOption } from "#/lib/actions/project";
+import { fetchProjects, type ProjectOption, setActiveProject } from "#/lib/actions/project";
 import { cn } from "#/lib/utils";
 
 export function ProjectSwitcher({
