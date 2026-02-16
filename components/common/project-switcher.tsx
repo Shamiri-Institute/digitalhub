@@ -1,8 +1,10 @@
 "use client";
 
+import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 import type { Session } from "next-auth";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -14,8 +16,7 @@ import {
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { isAdminUserByEmail } from "#/lib/actions/fetch-personnel";
-import { fetchProjects, type ProjectOption } from "#/lib/actions/project";
-import { setActiveProjectIdAndReload } from "#/lib/active-project-id-client";
+import { fetchProjects, setActiveProject, type ProjectOption } from "#/lib/actions/project";
 import { cn } from "#/lib/utils";
 
 export function ProjectSwitcher({
@@ -29,22 +30,39 @@ export function ProjectSwitcher({
   session: Session | null;
   className?: string;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
-  const [isAdminUser, setIsAdminUser] = useState(false);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const activeMembership = session?.user?.activeMembership ?? null;
+  const [isAdminUser, setIsAdminUser] = useState(activeMembership?.role === ImplementerRole.ADMIN);
   const activeProjectId = session?.user?.activeProjectId ?? null;
 
   useEffect(() => {
     const checkIsAdminUser = async () => {
       const isAdmin = await isAdminUserByEmail(session?.user?.email ?? "");
-      if (isAdmin && activeProjectId) {
+      if (isAdmin) {
         setIsAdminUser(true);
-        const projectList = await fetchProjects();
-        setProjects(projectList);
       }
     };
     void checkIsAdminUser();
-  }, [activeProjectId, session?.user?.email]);
+  }, [session?.user?.email]);
+
+  const loadProjects = useCallback(async () => {
+    if (!session?.user?.email) return;
+    setProjectsLoading(true);
+    try {
+      const list = await fetchProjects();
+      setProjects(list);
+    } finally {
+      setProjectsLoading(false);
+    }
+  }, [session?.user?.email]);
+
+  useEffect(() => {
+    if (!isAdminUser) return;
+    void loadProjects();
+  }, [isAdminUser, loadProjects]);
 
   if (!isAdminUser) {
     return null;
@@ -52,15 +70,25 @@ export function ProjectSwitcher({
 
   const activeProject = projects.find((p) => p.id === activeProjectId);
 
-  const handleProjectChange = (project: ProjectOption) => {
+  const handleProjectChange = async (project: ProjectOption) => {
     if (activeProjectId === project.id) return;
     setLoading(true);
-    setActiveProjectIdAndReload(project.id);
+    const result = await setActiveProject(project.id);
+    if (result.success) {
+      router.refresh();
+    }
+    setLoading(false);
   };
 
   return (
     <div className={className}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (isOpen) void loadProjects();
+        }}
+      >
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -83,14 +111,16 @@ export function ProjectSwitcher({
             </span>
             <CommandSeparator />
             <CommandInput placeholder="Search projects..." className="h-9" />
-            <CommandEmpty>No projects found.</CommandEmpty>
+            <CommandEmpty>
+              {projectsLoading ? "Loading projects..." : "No projects found."}
+            </CommandEmpty>
             <CommandGroup className="max-h-[300px] overflow-y-scroll">
               {projects.map((project) => (
                 <CommandItem
                   key={project.id}
                   value={`${project.name} - ${project.visibleId}`}
                   onSelect={() => {
-                    handleProjectChange(project);
+                    void handleProjectChange(project);
                     setOpen(false);
                   }}
                   className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"

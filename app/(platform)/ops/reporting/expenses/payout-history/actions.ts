@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { currentOpsUser } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { db } from "#/lib/db";
 
 export type FellowPayoutDetail = {
@@ -29,6 +29,8 @@ export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryTy
     throw new Error("Unauthorised user");
   }
 
+  const projectId = await getActiveProjectId();
+
   const payoutDates = await db.$queryRaw<
     Array<{
       dateAdded: Date;
@@ -47,7 +49,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryTy
       WHERE fellow_id IN (
         SELECT f.id FROM fellows f
         INNER JOIN hubs h ON h.id = f.hub_id
-        WHERE h.project_id =  ${CURRENT_PROJECT_ID}
+        WHERE h.project_id =  ${projectId}
       )
       AND executed_at IS NOT NULL
       GROUP BY executed_at
@@ -85,7 +87,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryTy
         INNER JOIN hubs h ON h.id = f.hub_id
         INNER JOIN supervisors s ON s.id = f.supervisor_id
         WHERE ps.executed_at = ${payout.dateAdded}
-        AND h.project_id = ${CURRENT_PROJECT_ID}
+        AND h.project_id = ${projectId}
         GROUP BY f.id, f.fellow_name, h.hub_name, s.supervisor_name, ps.mpesa_number
         ORDER BY f.fellow_name ASC;
       `;
@@ -107,6 +109,8 @@ export async function triggerPayoutAction() {
     throw new Error("Unauthorised user");
   }
 
+  const projectId = await getActiveProjectId();
+
   const currentTime = new Date();
 
   try {
@@ -121,7 +125,7 @@ export async function triggerPayoutAction() {
           fellow: {
             OR: [{ droppedOut: false }, { droppedOut: null }],
             hub: {
-              projectId: CURRENT_PROJECT_ID,
+              projectId,
             },
           },
         },

@@ -756,6 +756,8 @@ const ids = {
 async function seedDatabase() {
   await truncateTables();
 
+  let defaultProjectId: string | null = null;
+
   for (const implementer of Object.values(ids.implementers)) {
     await db.implementer.create({
       data: {
@@ -771,14 +773,20 @@ async function seedDatabase() {
       },
     });
 
+    let projectCount = 0;
     for (const project of Object.values(implementer.projects)) {
       const createdProject = await db.project.create({
         data: {
           id: project.id,
           visibleId: project.visibleId,
           name: project.projectName,
+          isDefault: projectCount === 0,
         },
       });
+      if (projectCount === 0) {
+        defaultProjectId = createdProject.id;
+      }
+      projectCount++;
 
       await db.projectImplementer.create({
         data: {
@@ -1007,6 +1015,7 @@ async function seedDatabase() {
         data: {
           id: user.id,
           email: user.email,
+          activeProjectId: defaultProjectId,
           memberships: {
             create: {
               implementerId: implementer.id,
