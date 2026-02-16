@@ -4,6 +4,7 @@ import {
   type BatchRecordingUpdate,
   updateRecordingsStatusBatch,
 } from "#/app/(platform)/sc/reporting/recordings/actions";
+import { db } from "#/lib/db";
 import type { RecordingResult } from "#/lib/fidelity-ratings-api";
 import { verifyRecordingsApiKey } from "#/lib/recordings-api";
 
@@ -77,6 +78,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // If some updates didn't apply, check if it's because they're already in
+    // final state (fail/success)
+    if (updateResult.updatedCount !== updates.length) {
+      const recordingIds = updates.map((u) => u.id);
+
+      const currentRecordings = await db.sessionRecording.findMany({
+        where: { id: { in: recordingIds } },
+        select: { id: true, status: true },
+      });
+
+      const statusMap = new Map(currentRecordings.map((r) => [r.id, r.status]));
+
+      // Check which recordings are NOT in a final state
+      const stuckRecordings = updates.filter((u) => {
+        const currentStatus = statusMap.get(u.id);
+        return currentStatus && !["COMPLETED", "FAILED"].includes(currentStatus);
+      });
+
+      if (stuckRecordings.length > 0) {
+        console.error(
+          `critical: ${stuckRecordings.length} recording(s) failed to update and are not in final state`,
+          {
+            stuckIds: stuckRecordings.map((r) => r.id),
+            expectedUpdates: updates.length,
+            actualUpdates: updateResult.updatedCount,
+          },
+        );
+        return NextResponse.json(
+          // Return 500 so Fidelity API retries
+          {
+            success: false,
+            message: `${stuckRecordings.length} recordings stuck in non-final state`,
+            updatedCount: updateResult.updatedCount,
+          },
+          { status: 500 },
+        );
+      }
+
+      // All recordings that didn't update are already in final state - this is
+      // OK (idempotent retry by Fidelity API)
+      console.log(
+        `Webhook processed: ${updateResult.updatedCount} updated, ` +
+          `${updates.length - updateResult.updatedCount} already in final state (idempotent retry)`,
+      );
+    }
     console.log(`Successfully updated ${updateResult.updatedCount} recording(s)`);
 
     return NextResponse.json({
