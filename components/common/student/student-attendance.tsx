@@ -12,6 +12,7 @@ import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
 import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
 import StudentAttendanceMenu from "#/components/common/student/student-attendance-menu";
+import TriageEventModal from "#/components/common/student/triage-event-modal";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -33,6 +34,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
+import { getTriageEventByStudentAndSession } from "#/lib/actions/triage";
 import { sessionDisplayName } from "#/lib/utils";
 
 export default function StudentAttendance({
@@ -78,6 +80,11 @@ export default function StudentAttendance({
   const { sessions, setSessions, refresh } = useContext(SessionsContext);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<StudentAttendanceData>[]>([]);
+  const [triageModalOpen, setTriageModalOpen] = useState(false);
+  const [triageStudent, setTriageStudent] = useState<StudentAttendanceData | undefined>();
+  const [triageExistingEvent, setTriageExistingEvent] = useState<Awaited<
+    ReturnType<typeof getTriageEventByStudentAndSession>
+  > | null>(null);
 
   const form = useForm<{ fellow: string }>({
     defaultValues: {
@@ -96,7 +103,23 @@ export default function StudentAttendance({
 
     setGroups(groups);
     setSessions(sessions);
-  }, [fellows, session]);
+  }, [fellows, session, sessions]);
+
+  useEffect(() => {
+    if (!triageModalOpen || !triageStudent?.id || !session?.id) {
+      setTriageExistingEvent(null);
+      return;
+    }
+    const load = async () => {
+      try {
+        const event = await getTriageEventByStudentAndSession(triageStudent.id, session.id);
+        setTriageExistingEvent(event);
+      } catch {
+        setTriageExistingEvent(null);
+      }
+    };
+    void load();
+  }, [triageModalOpen, triageStudent?.id, session?.id]);
 
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     const [res] = await Promise.all([
@@ -197,7 +220,10 @@ export default function StudentAttendance({
           columns={columns({
             setAttendance,
             setAttendanceDialog: setMarkAttendanceDialog,
+            setTriageStudent,
+            setTriageModalOpen,
             session,
+            hubVisibleId: session?.hub?.visibleId,
           })}
           editColumns={true}
           data={
@@ -262,6 +288,19 @@ export default function StudentAttendance({
             </p>
           </DialogAlertWidget>
         </MarkAttendance>
+        {session && triageStudent && (
+          <TriageEventModal
+            isOpen={triageModalOpen}
+            setIsOpen={setTriageModalOpen}
+            studentId={triageStudent.id}
+            studentName={triageStudent.studentName}
+            sessionId={session.id}
+            sessionName={sessionDisplayName(session.session?.sessionName ?? "")}
+            hubId={session.hubId ?? undefined}
+            existingEvent={triageExistingEvent ?? undefined}
+            onSuccess={refresh}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -281,7 +320,10 @@ export type StudentAttendanceData = Prisma.StudentGetPayload<{
 const columns = (state: {
   setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setTriageStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
+  setTriageModalOpen: Dispatch<SetStateAction<boolean>>;
   session: Session | null;
+  hubVisibleId?: string | null;
 }): ColumnDef<StudentAttendanceData>[] => [
   {
     id: "checkbox",
@@ -367,6 +409,7 @@ const columns = (state: {
         state={state}
         attendance={row.original}
         disabled={!row.getCanSelect()}
+        hubVisibleId={state.hubVisibleId}
       />
     ),
     enableHiding: false,
