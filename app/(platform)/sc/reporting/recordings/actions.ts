@@ -468,6 +468,13 @@ export async function retryRecordingProcessing(recordingId: string) {
         message: "Recording not found or cannot be retried",
       };
     }
+    // Only allow retry if in FINAL state (COMPLETED/FAILED)
+    if (recording.status === "PENDING" || recording.status === "PROCESSING") {
+      return {
+        success: false,
+        message: `Recording is currently ${recording.status.toLowerCase()}. Please wait for it to complete before retrying.`,
+      };
+    }
 
     // Reset to PENDING and clear previous job tracking
     await db.sessionRecording.update({
