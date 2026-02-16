@@ -41,8 +41,6 @@ export async function loadSessionReport() {
     },
   });
 
-  console.log({ schools });
-
   const reportData = schools.map((school) => {
     const allRatings = school.interventionSessions.flatMap((session) =>
       session.sessionRatings.map((rating) => ({

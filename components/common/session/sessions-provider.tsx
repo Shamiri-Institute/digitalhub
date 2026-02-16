@@ -30,6 +30,9 @@ export const SessionsContext = createContext<SessionsContextType>({
 
 export type Session = Prisma.InterventionSessionGetPayload<{
   include: {
+    hub: {
+      select: { visibleId: true };
+    };
     school: {
       include: {
         interventionGroups: {

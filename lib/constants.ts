@@ -21,7 +21,6 @@ function validate(value: string | undefined, name: string): string {
   }
   return value;
 }
-
 export const constants = (() => {
   try {
     return z
@@ -49,6 +48,9 @@ export const constants = (() => {
 
 export const NEXT_PUBLIC_ENV = validate(constants.NEXT_PUBLIC_ENV, "NEXT_PUBLIC_ENV");
 export const APP_ENV = process.env.APP_ENV || "production";
+
+/** Hub where pilot feature for triage "Triage occurred" is enabled in the student attendance menu. */
+export const TRIAGE_ENABLED_HUB_VISIBLE_ID = "26P1_Hub_04";
 
 export const SHOW_DUPLICATE_ID_CHECKBOX = "show-duplicate-id-checkbox";
 export const GENDER_OPTIONS = ["Male", "Female", "Other"] as const;

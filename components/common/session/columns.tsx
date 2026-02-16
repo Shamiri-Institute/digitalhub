@@ -11,6 +11,9 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 
 export type SessionData = Prisma.InterventionSessionGetPayload<{
   include: {
+    hub: {
+      select: { visibleId: true };
+    };
     school: {
       include: {
         assignedSupervisor: true;
