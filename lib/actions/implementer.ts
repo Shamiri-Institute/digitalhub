@@ -2,7 +2,6 @@
 
 import { currentAdminUser } from "#/app/auth";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import type { JWTMembership } from "#/lib/auth-options";
 import { db } from "#/lib/db";
 
 export async function fetchImplementerStats(implementerId: string) {
@@ -65,68 +64,6 @@ export async function fetchImplementerSessionTypes(implementerId: string) {
       success: false,
       message: "Error fetching implementer session types",
     };
-  }
-}
-
-export async function fetchImplementerHubs(activeMembership: JWTMembership) {
-  const admin = await currentAdminUser();
-  if (admin === null) {
-    throw new Error("Unauthorized");
-  }
-
-  const projectId = await getActiveProjectId();
-
-  try {
-    const hubs = await db.hub.findMany({
-      where: {
-        implementerId: activeMembership.implementerId,
-        projectId,
-      },
-      include: {
-        schools: {
-          include: {
-            assignedSupervisor: true,
-            interventionSessions: {
-              include: {
-                sessionRatings: true,
-                session: true,
-              },
-            },
-            students: {
-              include: {
-                assignedGroup: true,
-                _count: {
-                  select: {
-                    clinicalCases: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        implementer: true,
-        coordinators: true,
-        _count: {
-          select: {
-            fellows: {
-              where: {
-                droppedOut: false || null,
-              },
-            },
-            supervisors: {
-              where: {
-                droppedOut: false || null,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return { success: true, data: hubs };
-  } catch (error) {
-    console.error("Error fetching implementer hubs:", error);
-    return { success: false, message: "Error fetching implementer hubs" };
   }
 }
 

@@ -3,7 +3,6 @@
 import { ImplementerRole, type SessionStatus } from "@prisma/client";
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { getDefaultSessionDateRange } from "#/lib/date-utils";
 import { db } from "#/lib/db";
 
@@ -22,7 +21,7 @@ export async function fetchInterventionSessions({
   end?: Date;
   filters?: Filters;
 }) {
-  let projectId = CURRENT_PROJECT_ID;
+  let projectId: string;
   if (role === ImplementerRole.ADMIN) {
     if (!implementerId) {
       throw new Error("No implementer ID provided for admin");
@@ -32,6 +31,14 @@ export async function fetchInterventionSessions({
     if (!hubId) {
       throw new Error("No assigned hub ID provided");
     }
+    const hub = await db.hub.findUnique({
+      where: { id: hubId },
+      select: { projectId: true },
+    });
+    if (!hub?.projectId) {
+      throw new Error("Hub has no project");
+    }
+    projectId = hub.projectId;
   }
 
   const { start: rangeStart, end: rangeEnd } =

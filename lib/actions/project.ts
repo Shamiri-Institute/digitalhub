@@ -1,7 +1,7 @@
 "use server";
 
+import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
-import { isAdminUserByEmail } from "#/lib/actions/fetch-personnel";
 import { db } from "#/lib/db";
 
 export type ProjectOption = {
@@ -14,8 +14,7 @@ export async function fetchProjects(): Promise<ProjectOption[]> {
   const session = await getCurrentUserSession();
   if (!session) return [];
 
-  const isAdmin = await isAdminUserByEmail(session.user.email ?? "");
-  if (!isAdmin) return [];
+  if (session.user.activeMembership?.role !== ImplementerRole.ADMIN) return [];
 
   const projects = await db.project.findMany({
     orderBy: { createdAt: "desc" },
@@ -23,4 +22,32 @@ export async function fetchProjects(): Promise<ProjectOption[]> {
   });
 
   return projects;
+}
+
+export async function setActiveProject(
+  projectId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await getCurrentUserSession();
+  if (!session?.user?.id) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  if (session.user.activeMembership?.role !== ImplementerRole.ADMIN) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const project = await db.project.findUnique({
+    where: { id: projectId },
+    select: { id: true },
+  });
+  if (!project) {
+    return { success: false, error: "Project not found" };
+  }
+
+  await db.user.update({
+    where: { id: session.user.id },
+    data: { activeProjectId: projectId },
+  });
+
+  return { success: true };
 }

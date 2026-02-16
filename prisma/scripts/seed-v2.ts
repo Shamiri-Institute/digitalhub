@@ -18,10 +18,9 @@ import {
 import { isBefore, startOfMonth } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { hubSessionTypes } from "#/prisma/scripts/generate-session-names";
+import { hubSessionTypes } from "#/prisma/scripts/hub-session-types";
 
 // GETTING STARTED WITH SEEDING
 // ===========================
@@ -231,11 +230,12 @@ function createProjects() {
 
   for (let i = 0; i < 4; i++) {
     projects.push({
-      id: i === 0 ? CURRENT_PROJECT_ID : objectId("proj"),
-      visibleId: i === 0 ? CURRENT_PROJECT_ID : faker.string.alpha({ casing: "upper", length: 6 }),
+      id: objectId("proj"),
+      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
       name: faker.company.name(),
       actualStartDate: startOfMonth(new Date()),
       actualEndDate: startOfMonth(new Date()),
+      isDefault: i === 0,
     });
   }
 
@@ -307,14 +307,15 @@ async function createCoreUsers(
   clinicalTeam: ClinicalTeam,
   admins: AdminUser[],
   hubs: Hub[],
+  defaultProjectId: string,
 ) {
   console.log("creating core users");
 
   const currentProjectHubIds = new Set(
-    hubs.filter((h) => h.projectId === CURRENT_PROJECT_ID).map((h) => h.id),
+    hubs.filter((h) => h.projectId === defaultProjectId).map((h) => h.id),
   );
   const currentProjectImplementerIds = new Set(
-    hubs.filter((h) => h.projectId === CURRENT_PROJECT_ID).map((h) => h.implementerId),
+    hubs.filter((h) => h.projectId === defaultProjectId).map((h) => h.implementerId),
   );
 
   const projectHubCoordinators = hubCoordinators.filter((hc) =>
@@ -376,6 +377,7 @@ async function createCoreUsers(
     data: userData.map(({ id, email }) => ({
       id,
       email,
+      activeProjectId: defaultProjectId,
     })),
   });
 
@@ -418,7 +420,11 @@ async function createCoreUsers(
   });
 }
 
-async function createAdminUsers(implementers: Implementer[], emails: Set<string>) {
+async function createAdminUsers(
+  implementers: Implementer[],
+  emails: Set<string>,
+  defaultProjectId: string,
+) {
   console.log("creating admin users");
 
   // create admin user for all implementers
@@ -455,6 +461,7 @@ async function createAdminUsers(implementers: Implementer[], emails: Set<string>
       id: user.id,
       email: user.email,
       name: user.adminName,
+      activeProjectId: defaultProjectId,
     })),
   });
 
@@ -1501,7 +1508,8 @@ async function main() {
 
   const userEmailSet = new Set<string>();
 
-  const admins = await createAdminUsers(implementers, userEmailSet);
+  const defaultProjectId = projects[0]?.id ?? "";
+  const admins = await createAdminUsers(implementers, userEmailSet, defaultProjectId);
   const hubs = await createHubs(projects, implementers);
   const hubCoordinators = await createHubCoordinators(hubs, implementers, userEmailSet);
   const supervisors = await createSupervisors(hubs, userEmailSet, 6);
@@ -1520,6 +1528,7 @@ async function main() {
     clinicalTeam,
     admins,
     hubs,
+    defaultProjectId,
   );
 
   const schools = await createSchools(hubs, supervisors);

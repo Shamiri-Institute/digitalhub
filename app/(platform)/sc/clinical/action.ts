@@ -4,7 +4,6 @@ import { ImplementerRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentPersonnel } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
@@ -291,6 +290,10 @@ export async function getSupervisorsInHub() {
 
 export async function getSchoolsInHub() {
   const supervisor = await currentSupervisor();
+  const projectId = supervisor?.profile?.hub?.projectId;
+  if (!projectId) {
+    throw new Error("Assigned hub has no project");
+  }
 
   const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all([
     db.school.findMany({
@@ -320,7 +323,7 @@ export async function getSchoolsInHub() {
     db.fellow.findMany({
       where: {
         hub: {
-          projectId: CURRENT_PROJECT_ID,
+          projectId,
         },
       },
       include: {
@@ -333,7 +336,7 @@ export async function getSchoolsInHub() {
     }),
     db.hub.findMany({
       where: {
-        projectId: CURRENT_PROJECT_ID,
+        projectId,
       },
       select: {
         id: true,

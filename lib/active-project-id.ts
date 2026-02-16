@@ -1,8 +1,28 @@
-import { cookies } from "next/headers";
-import { ACTIVE_PROJECT_ID_COOKIE, CURRENT_PROJECT_ID } from "#/lib/constants";
+import { getServerSession } from "next-auth";
+
+import { authOptions } from "#/lib/auth-options";
+import { db } from "#/lib/db";
+
+export async function getDefaultProjectId(): Promise<string> {
+  const defaultProject = await db.project.findFirst({
+    where: { isDefault: true },
+    select: { id: true },
+  });
+  if (defaultProject) return defaultProject.id;
+
+  const fallback = await db.project.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  if (!fallback) {
+    throw new Error("No projects exist in the database");
+  }
+  return fallback.id;
+}
 
 export async function getActiveProjectId(): Promise<string> {
-  const cookieStore = await cookies();
-  const value = cookieStore.get(ACTIVE_PROJECT_ID_COOKIE)?.value;
-  return value ?? CURRENT_PROJECT_ID;
+  const session = await getServerSession(authOptions);
+  const projectId = session?.user?.activeProjectId;
+  if (projectId) return projectId;
+  return getDefaultProjectId();
 }

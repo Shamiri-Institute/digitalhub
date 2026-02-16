@@ -6,7 +6,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
 
-import { getActiveProjectId } from "#/lib/active-project-id";
+import { getDefaultProjectId } from "#/lib/active-project-id";
 import { isCredentialAuthAllowed, TEST_CREDENTIALS } from "#/lib/auth/credential-auth";
 import { db } from "#/lib/db";
 
@@ -230,37 +230,10 @@ export const authOptions: AuthOptions = {
       return false;
     },
     session: async ({ session, token }) => {
-      const activeProjectId = await getActiveProjectId();
-
       const user = await db.user.findUnique({
-        where: {
-          id: token.sub,
-        },
+        where: { id: token.sub ?? "" },
         include: {
-          avatar: {
-            select: { file: true },
-          },
-          memberships: {
-            where: {
-              implementer: {
-                hubs: {
-                  some: {
-                    projectId: activeProjectId,
-                  },
-                },
-              },
-            },
-            select: {
-              id: true,
-              implementer: true,
-              role: true,
-              identifier: true,
-              updatedAt: true,
-            },
-            orderBy: {
-              updatedAt: "desc",
-            },
-          },
+          avatar: { select: { file: true } },
         },
       });
 
@@ -272,9 +245,37 @@ export const authOptions: AuthOptions = {
         return session;
       }
 
-      let memberships: JWTMembership[] = parseMembershipsForJWT(user);
+      const defaultProjectId = await getDefaultProjectId();
+      const activeProjectId = user.activeProjectId ?? defaultProjectId;
 
-      // Admins need unfiltered memberships to use the project switcher.
+      const membershipsResult = await db.user.findUnique({
+        where: { id: user.id },
+        select: {
+          memberships: {
+            where: {
+              implementer: {
+                hubs: {
+                  some: { projectId: activeProjectId },
+                },
+              },
+            },
+            select: {
+              id: true,
+              implementer: true,
+              role: true,
+              identifier: true,
+              updatedAt: true,
+            },
+            orderBy: { updatedAt: "desc" },
+          },
+        },
+      });
+      let memberships: JWTMembership[] = membershipsResult
+        ? parseMembershipsForJWT({ ...user, memberships: membershipsResult.memberships })
+        : [];
+
+      // Fall back to ADMIN memberships only when project-filtered memberships are empty.
+      // Non-admins must have hubs in the active project to access the app.
       if (memberships.length === 0 && user.email) {
         const adminMemberships = await db.user.findUnique({
           where: { id: user.id },
@@ -350,7 +351,17 @@ export const authOptions: AuthOptions = {
 
         token.sub = currentUser.id;
 
-        const projectId = await getActiveProjectId();
+        const userWithProject = await db.user.findUnique({
+          where: { id: currentUser.id },
+          select: { activeProjectId: true },
+        });
+        let projectId: string;
+        if (userWithProject?.activeProjectId) {
+          projectId = userWithProject.activeProjectId;
+        } else {
+          projectId = await getDefaultProjectId();
+        }
+
         let memberships = await db.implementerMember.findMany({
           where: {
             userId: currentUser.id,

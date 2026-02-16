@@ -1,7 +1,6 @@
 "use server";
 
 import { currentClinicalLead } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export type CaseNotesResult = Array<{
@@ -327,6 +326,10 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
 
 export async function getSchoolsInClinicalLeadHub() {
   const clinicalLead = await currentClinicalLead();
+  const projectId = clinicalLead?.profile.assignedHub?.projectId;
+  if (!projectId) {
+    throw new Error("Hub has no project");
+  }
 
   const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all([
     db.school.findMany({
@@ -356,7 +359,7 @@ export async function getSchoolsInClinicalLeadHub() {
     db.fellow.findMany({
       where: {
         hub: {
-          projectId: CURRENT_PROJECT_ID,
+          projectId,
         },
       },
       include: {
@@ -369,7 +372,7 @@ export async function getSchoolsInClinicalLeadHub() {
     }),
     db.hub.findMany({
       where: {
-        projectId: CURRENT_PROJECT_ID,
+        projectId,
       },
       select: {
         id: true,
