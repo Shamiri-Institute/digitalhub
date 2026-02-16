@@ -1,6 +1,7 @@
 "use server";
 
 import { ImplementerRole } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
 
@@ -48,6 +49,8 @@ export async function setActiveProject(
     where: { id: session.user.id },
     data: { activeProjectId: projectId },
   });
+
+  revalidatePath("/", "layout");
 
   return { success: true };
 }
