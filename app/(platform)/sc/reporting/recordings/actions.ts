@@ -679,7 +679,7 @@ export async function updateRecordingsStatusBatch(
         ) AS t(id, status, overall_score, fidelity_feedback, transcript, error_message)
       ) AS data
       WHERE sr.id = data.id
-        AND sr.status = 'PROCESSING'
+        AND sr.status IN ('PENDING', 'PROCESSING')
         AND sr."fidelity_job_id" IS NOT NULL
     `;
 
