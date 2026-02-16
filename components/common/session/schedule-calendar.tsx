@@ -109,14 +109,12 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
   useEffect(() => {
-    queueMicrotask(() =>
-      setFilters((prev) => ({
-        ...prev,
-        sessionTypes,
-        statusTypes: statusFilterOptions,
-        dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
-      })),
-    );
+    setFilters((prev) => ({
+      ...prev,
+      sessionTypes,
+      statusTypes: statusFilterOptions,
+      dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
+    }));
   }, [props.hubSessionTypes]);
 
   const monthState = useCalendarState({
@@ -173,7 +171,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   useEffect(() => {
     if (!activeValue) return;
     const dateRange = getDateRangeForCalendar(activeValue, rangeType);
-    queueMicrotask(() => setFilters((prev) => ({ ...prev, dateRange })));
+    setFilters((prev) => ({ ...prev, dateRange }));
   }, [activeValue?.toString(), rangeType, mode]);
 
   const month = useCalendar(calendarStateProps, monthState);
@@ -674,9 +672,7 @@ function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[
   ];
   const [dates, setDates] = useState(filters.dates);
   useEffect(() => {
-    queueMicrotask(() =>
-      setDates(["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week"),
-    );
+    setDates(["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week");
   }, [mode]);
 
   useEffect(() => {
@@ -685,15 +681,13 @@ function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[
     );
     const statusTypes = Object.keys(filters.statusTypes).filter((key) => !filters.statusTypes[key]);
 
-    queueMicrotask(() => {
-      if (sessionTypes.length > 0 || statusTypes.length > 0) {
-        setFilterIsActive(true);
-      } else {
-        setFilterIsActive(false);
-        setSessionTypes(defaultFilterSettings.sessionTypes);
-        setStatusTypes(defaultFilterSettings.statusTypes);
-      }
-    });
+    if (sessionTypes.length > 0 || statusTypes.length > 0) {
+      setFilterIsActive(true);
+    } else {
+      setFilterIsActive(false);
+      setSessionTypes(defaultFilterSettings.sessionTypes);
+      setStatusTypes(defaultFilterSettings.statusTypes);
+    }
   }, [filters]);
 
   return (

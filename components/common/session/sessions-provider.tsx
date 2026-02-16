@@ -93,7 +93,7 @@ export function SessionsProvider({
     : null;
 
   useEffect(() => {
-    queueMicrotask(() => void fetchSessions());
+    void fetchSessions();
   }, [hubId, implementerId, role, filters.statusTypes, filters.dates, dateRangeKey]);
 
   const refresh = () => fetchSessions();
