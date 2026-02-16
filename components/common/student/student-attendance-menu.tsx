@@ -11,19 +11,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { TRIAGE_ENABLED_HUB_VISIBLE_ID } from "#/lib/constants";
+
+export type StudentAttendanceMenuState = {
+  setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
+  setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setTriageStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
+  setTriageModalOpen: Dispatch<SetStateAction<boolean>>;
+};
 
 export default function StudentAttendanceMenu({
   state,
   attendance,
   disabled,
+  hubVisibleId,
 }: {
-  state: {
-    setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
-    setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  state: StudentAttendanceMenuState;
   attendance: StudentAttendanceData;
   disabled: boolean;
+  hubVisibleId?: string | null;
 }) {
+  const showTriageOccurred = hubVisibleId === TRIAGE_ENABLED_HUB_VISIBLE_ID;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -47,6 +56,16 @@ export default function StudentAttendanceMenu({
         >
           Mark attendance
         </DropdownMenuItem>
+        {showTriageOccurred && (
+          <DropdownMenuItem
+            onClick={() => {
+              state.setTriageStudent(attendance);
+              state.setTriageModalOpen(true);
+            }}
+          >
+            Triage occurred
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

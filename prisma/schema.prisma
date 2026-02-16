@@ -40,6 +40,7 @@ model User {
   clinicalCaseTermination                 ClinicalCaseTermination[]
   confirmedPayouts                        PayoutStatements[]                        @relation("payout_statements_confirmed_by")
   sessionRecordings                       SessionRecording[]
+  triageEventAudits                       TriageEventAudit[]
 
   @@map("users")
 }
@@ -271,6 +272,7 @@ model Student {
   clinicalCases             ClinicalScreeningInfo[]
   studentAttendances        StudentAttendance[]
   studentGroupTransferTrail StudentGroupTransferTrail[]
+  triageEvents              TriageEvent[]
 
   @@map("students")
 }
@@ -297,9 +299,89 @@ model StudentAttendance {
   // TODO: Set to required after cleaning data
   markedBy      String?             @map("marked_by")
   user          User?               @relation(fields: [markedBy], references: [id])
+  triageEvents  TriageEvent[]
 
   @@unique([studentId, sessionId])
   @@map("student_attendances")
+}
+
+enum RiskScreenOutcome {
+  ALL_NO
+  ANY_YES
+  NOT_COMPLETED
+
+  @@map("risk_screen_outcomes")
+}
+
+enum RiskNotCompletedReason {
+  STUDENT_LEFT
+  NO_PRIVACY
+  TIME_CONSTRAINTS
+  OTHER
+
+  @@map("risk_not_completed_reasons")
+}
+
+enum TriageActionTaken {
+  SUPPORTED
+  REFERRED
+  ESCALATED
+  REFUSED
+  INTERRUPTED
+
+  @@map("triage_action_taken")
+}
+
+enum SupervisorHandoffStatus {
+  WARM_HANDOFF
+  SUPERVISOR_NOTIFIED
+  COULD_NOT_REACH
+  STUDENT_REFUSED_NOTIFIED
+
+  @@map("supervisor_handoff_statuses")
+}
+
+/// Triage events document risk-screen outcome and follow-up when triage occurred during a session.
+model TriageEvent {
+  id                      String                   @id @default(cuid())
+  createdAt               DateTime                 @default(now()) @map("created_at")
+  updatedAt               DateTime                 @updatedAt @map("updated_at")
+  studentAttendanceId     Int?                     @unique @map("student_attendance_id")
+  studentAttendance       StudentAttendance?       @relation(fields: [studentAttendanceId], references: [id], onDelete: SetNull)
+  sessionId               String                   @map("session_id") @db.VarChar(255)
+  session                 InterventionSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId               String                   @map("student_id") @db.VarChar(255)
+  student                 Student                  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  fellowId                String                   @map("fellow_id") @db.VarChar(255)
+  fellow                  Fellow                   @relation(fields: [fellowId], references: [id], onDelete: Cascade)
+  hubId                   String?                  @map("hub_id") @db.VarChar(255)
+  hub                     Hub?                     @relation(fields: [hubId], references: [id], onDelete: SetNull)
+  triageOccurred          Boolean                  @map("triage_occurred")
+  riskScreenOutcome       RiskScreenOutcome?       @map("risk_screen_outcome")
+  riskNotCompletedReason  RiskNotCompletedReason?  @map("risk_not_completed_reason")
+  actionTaken             TriageActionTaken?       @map("action_taken")
+  referredSupervisorId    String?                  @map("referred_supervisor_id") @db.VarChar(255)
+  referredSupervisor      Supervisor?               @relation(fields: [referredSupervisorId], references: [id], onDelete: SetNull)
+  supervisorHandoffStatus SupervisorHandoffStatus?  @map("supervisor_handoff_status")
+  note                    String?                  @db.VarChar(500)
+  metadata                Json?                    @map("metadata")
+  auditTrail              TriageEventAudit[]
+
+  @@unique([studentId, sessionId])
+  @@map("triage_events")
+}
+
+model TriageEventAudit {
+  id           String     @id @default(cuid())
+  createdAt    DateTime   @default(now()) @map("created_at")
+  triageEventId String    @map("triage_event_id") @db.VarChar(255)
+  triageEvent  TriageEvent @relation(fields: [triageEventId], references: [id], onDelete: Cascade)
+  editedById   String     @map("edited_by_id") @db.VarChar(255)
+  editedBy     User       @relation(fields: [editedById], references: [id], onDelete: Cascade)
+  beforeData   Json?      @map("before_data")
+  afterData    Json?      @map("after_data")
+
+  @@map("triage_event_audits")
 }
 
 model StudentOutcome {
@@ -526,6 +608,7 @@ model Fellow {
   studentAttendances      StudentAttendance[]
   fellowDocuments         FellowDocuments[]
   sessionRecordings       SessionRecording[]
+  triageEvents            TriageEvent[]
 
   @@map("fellows")
 }
@@ -621,6 +704,7 @@ model Supervisor {
   dropOutReason               String?                       @map("drop_out_reason")
   SpecialApprovalRequests     SpecialApprovalRequests[]
   sessionRecordings           SessionRecording[]
+  triageEventsReferred        TriageEvent[]
 
   @@map("supervisors")
 }
@@ -816,6 +900,7 @@ model Hub {
   opsUser                 OpsUser[]
   hubSessions             InterventionSession[]
   clinicalTeam            ClinicalTeam[]
+  triageEvents            TriageEvent[]
 
   @@map("hubs")
 }
@@ -899,6 +984,7 @@ model InterventionSession {
   sessionComments         SessionComment[]
   clinicalCases           ClinicalScreeningInfo[]
   sessionRecordings       SessionRecording[]
+  triageEvents            TriageEvent[]
 
   @@map("intervention_sessions")
 }
