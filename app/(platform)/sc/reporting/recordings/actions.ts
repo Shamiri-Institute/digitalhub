@@ -222,14 +222,32 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
     });
 
     // Update recording with job tracking info and PROCESSING status
-    await db.sessionRecording.update({
-      where: { id: recordingId },
+    // Only set to PROCESSING if not already in a final state
+    const updateResult = await db.sessionRecording.updateMany({
+      where: {
+        id: recordingId,
+        fidelityJobId: null,
+        status: {
+          notIn: ["COMPLETED", "FAILED"],
+        },
+      },
       data: {
         fidelityJobId: jobResponse.job_id,
         fidelityJobSubmittedAt: new Date(),
         status: "PROCESSING",
       },
     });
+
+    // Check if the update actually happened
+    if (updateResult.count === 0) {
+      const current = await db.sessionRecording.findUnique({
+        where: { id: recordingId },
+        select: { status: true },
+      });
+      console.warn(
+        `Recording ${recordingId} already in final state (${current?.status}), skipping PROCESSING update`,
+      );
+    }
 
     console.log(`Submitted recording ${recordingId} to Fidelity API as job ${jobResponse.job_id}`);
   } catch (error) {
@@ -313,21 +331,12 @@ export async function createSessionRecording(input: {
     });
 
     // 2. IMMEDIATELY submit job to Fidelity API (non-blocking)
-    //    The .catch() ensures upload succeeds even if Fidelity submission fails.
-    //    The submitToFidelityAPI function handles marking the recording as FAILED
-    //    if submission doesn't succeed.
-    submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
+    await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
       console.error(
         `Non-blocking Fidelity submission failed for recording ${recording.id}:`,
         error,
       );
       // TODO: Implement retry mechanism for failed submissions.
-      // Options to consider:
-      //   - A Vercel cron job that periodically checks for FAILED recordings
-      //     without a fidelityJobId and resubmits them
-      //   - A "SUBMISSION_FAILED" status to distinguish API submission failures
-      //     from processing failures
-      //   - An exponential backoff queue for retries
     });
 
     revalidatePath("/sc/reporting/recordings");
@@ -473,7 +482,7 @@ export async function retryRecordingProcessing(recordingId: string) {
     });
 
     // Immediately resubmit to Fidelity API (non-blocking)
-    submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
+    await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
       console.error(
         `Non-blocking Fidelity resubmission failed for recording ${recording.id}:`,
         error,
@@ -670,6 +679,8 @@ export async function updateRecordingsStatusBatch(
         ) AS t(id, status, overall_score, fidelity_feedback, transcript, error_message)
       ) AS data
       WHERE sr.id = data.id
+        AND sr.status = 'PROCESSING'
+        AND sr."fidelity_job_id" IS NOT NULL
     `;
 
     revalidatePath("/sc/reporting/recordings");
