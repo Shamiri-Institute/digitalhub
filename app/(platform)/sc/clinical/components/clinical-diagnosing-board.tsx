@@ -175,7 +175,6 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
         {} as Record<string, string>,
       );
 
-      console.log(emergencyData, generalData, otherIssues);
       await Promise.all([
         updateClinicalCaseEmergencyPresentingIssue({
           caseId: currentcase.id,

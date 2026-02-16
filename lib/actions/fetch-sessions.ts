@@ -57,6 +57,9 @@ export async function fetchInterventionSessions({
       },
     },
     include: {
+      hub: {
+        select: { visibleId: true },
+      },
       school: {
         include: {
           interventionGroups: {
