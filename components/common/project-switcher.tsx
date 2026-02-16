@@ -4,6 +4,7 @@ import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
 import type { Session } from "next-auth";
+import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";
 import {
@@ -31,6 +32,7 @@ export function ProjectSwitcher({
   className?: string;
 }) {
   const router = useRouter();
+  const { update } = useSession();
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
@@ -75,6 +77,7 @@ export function ProjectSwitcher({
     setLoading(true);
     const result = await setActiveProject(project.id);
     if (result.success) {
+      await update();
       router.refresh();
     }
     setLoading(false);
