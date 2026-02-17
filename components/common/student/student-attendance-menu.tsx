@@ -11,8 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { TRIAGE_ENABLED_HUB_VISIBLE_ID } from "#/lib/constants";
-
 export type StudentAttendanceMenuState = {
   setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
@@ -31,7 +29,9 @@ export default function StudentAttendanceMenu({
   disabled: boolean;
   hubVisibleId?: string | null;
 }) {
-  const showTriageOccurred = hubVisibleId === TRIAGE_ENABLED_HUB_VISIBLE_ID;
+  const triageEnabledHubVisibleId = process.env.NEXT_PUBLIC_TRIAGE_ENABLED_HUB_VISIBLE_ID ?? "";
+  const showTriageOccurred =
+    !!triageEnabledHubVisibleId && hubVisibleId === triageEnabledHubVisibleId;
 
   return (
     <DropdownMenu>
