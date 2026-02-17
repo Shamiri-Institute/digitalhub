@@ -8,14 +8,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  archivedAt    DateTime? @map("archived_at")
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime? @map("email_verified")
-  image         String?
+  id              String    @id @default(cuid())
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  archivedAt      DateTime? @map("archived_at")
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime? @map("email_verified")
+  image           String?
+  activeProjectId String?   @map("active_project_id") @db.VarChar(255)
+  activeProject   Project?  @relation("UserActiveProject", fields: [activeProjectId], references: [id], onDelete: Restrict)
 
   accounts                                Account[]
   sessions                                Session[]
@@ -1395,6 +1397,7 @@ model Project {
   updatedAt                   DateTime                      @updatedAt @map("updated_at")
   visibleId                   String                        @unique @map("visible_id") @db.VarChar(255)
   name                        String                        @db.VarChar(100)
+  isDefault                   Boolean                       @default(false) @map("is_default")
   projectLead                 String?                       @map("project_lead") @db.VarChar(255) // consider if this is necessary
   funder                      String?                       @db.VarChar(255) // additional info required on what we need to do with this field
   budget                      Int?
@@ -1404,6 +1407,7 @@ model Project {
   actualStartDate             DateTime?                     @map("actual_start_date") @db.Date
   actualEndDate               DateTime?                     @map("actual_end_date") @db.Date
   hubs                        Hub[]
+  usersWithActiveProject      User[]                        @relation("UserActiveProject")
   studentAttendances          StudentAttendance[]
   fellowAttendances           FellowAttendance[]
   supervisorAttendances       SupervisorAttendance[]

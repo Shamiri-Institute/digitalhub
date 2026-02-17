@@ -1,7 +1,6 @@
 "use server";
 
 import { currentClinicalTeam } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export type FellowClinicalCasesData = {
@@ -18,6 +17,11 @@ export type FellowClinicalCasesData = {
 export async function getFellowClinicalCasesData() {
   const clinicalTeam = await currentClinicalTeam();
   if (!clinicalTeam) throw new Error("Unauthorized");
+
+  const projectId = clinicalTeam?.profile.assignedHub?.projectId;
+  if (!projectId) {
+    throw new Error("Hub has no project");
+  }
 
   const fellowsData = await db.$queryRaw<FellowClinicalCasesData[]>`
     WITH fellow_stats AS (
@@ -40,7 +44,7 @@ export async function getFellowClinicalCasesData() {
       LEFT JOIN
         "intervention_groups" ig ON f.id = ig."leader_id"
       WHERE 
-        h."project_id" = ${CURRENT_PROJECT_ID}
+        h."project_id" = ${projectId}
         AND f."archived_at" IS NULL
       GROUP BY 
         f.id, f."fellow_name", f."cell_number", s."supervisor_name"
