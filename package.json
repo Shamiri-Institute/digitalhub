@@ -28,11 +28,9 @@
     "next-auth:session": "dotenv -c development -- tsx scripts/auth/get-next-session.ts",
     "db:dev:up": "docker-compose down && docker-compose up db",
     "db:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
-    "db:studio": "dotenv -c development -- npx prisma studio",
     "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
     "db:dev:migrate:reset": "dotenv -c development -- npx prisma migrate reset --force",
     "db:dev:generate": "dotenv -c development -- npx prisma generate",
-    "db:dev:types": "dotenv -c development -- npx prisma generate",
     "db:prod:shell": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBPORT} -U ${PROD_DBUSER} -d ${PROD_DBNAME}'",
     "db:prod:kill-sessions": "dotenv -c development -- bash -c 'DATABASE_NAME=${PROD_DBNAME} ./scripts/db/kill-sessions.sh'",
     "db:preview:kill-sessions": "dotenv -c development -- bash -c 'DATABASE_NAME=${PROD_PREVIEWDBNAME} ./scripts/db/kill-sessions.sh'",
@@ -40,7 +38,6 @@
     "db:preview:create": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBPORT} -U ${PROD_DBUSER} -d ${PROD_DBNAME} -c \"CREATE DATABASE ${PROD_PREVIEWDBNAME} WITH TEMPLATE ${PROD_DBNAME} OWNER ${PROD_DBUSER};\"'",
     "db:preview:reset": "npm run db:preview:kill-sessions && npm run db:preview:drop && npm run db:prod:kill-sessions && npm run db:preview:create",
     "db:dump:local": "dotenv -c development -- ./scripts/db/dump-db.sh",
-    "email:dev": "email dev -p 4444",
     "release": "commit-and-tag-version"
   },
   "commit-and-tag-version": {
