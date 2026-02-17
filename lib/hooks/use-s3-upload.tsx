@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { forwardRef, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export interface UploadOptions {
   endpoint?: {
@@ -29,22 +29,19 @@ export interface FileProgress {
 
 interface FileInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> {
   onChange?: (file: File) => void;
+  ref?: React.Ref<HTMLInputElement>;
 }
 
-const FileInputComponent = forwardRef<HTMLInputElement, FileInputProps>(
-  ({ onChange, ...props }, ref) => {
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file && onChange) {
-        onChange(file);
-      }
-    };
+function FileInputComponent({ onChange, ...props }: FileInputProps) {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onChange) {
+      onChange(file);
+    }
+  };
 
-    return <input {...props} ref={ref} type="file" onChange={handleInputChange} />;
-  },
-);
-
-FileInputComponent.displayName = "FileInput";
+  return <input {...props} type="file" onChange={handleInputChange} />;
+}
 
 /**
  * S3 upload hook using presigned URLs with progress tracking.
