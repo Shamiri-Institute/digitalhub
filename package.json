@@ -1,6 +1,6 @@
 {
   "name": "digitalhub-frontend",
-  "version": "1.15.2",
+  "version": "1.17.0",
   "license": "MIT",
   "private": true,
   "engines": {
@@ -27,8 +27,7 @@
     "test:unit": "dotenv -c development -- vitest",
     "next-auth:session": "dotenv -c development -- tsx scripts/auth/get-next-session.ts",
     "db:dev:up": "docker-compose down && docker-compose up db",
-    "db:dev:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
-    "db:seed": "dotenv -c development -- tsx prisma/scripts/seed-v2.ts",
+    "db:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
     "db:studio": "dotenv -c development -- npx prisma studio",
     "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
     "db:dev:migrate:reset": "dotenv -c development -- npx prisma migrate reset --force",
@@ -50,9 +49,9 @@
     }
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.663.0",
-    "@aws-sdk/client-ses": "^3.750.0",
-    "@aws-sdk/s3-request-presigner": "^3.965.0",
+    "@aws-sdk/client-s3": "^3.987.0",
+    "@aws-sdk/client-ses": "^3.987.0",
+    "@aws-sdk/s3-request-presigner": "^3.987.0",
     "@gsap/react": "^2.1.1",
     "@hookform/resolvers": "^5.2.2",
     "@internationalized/date": "^3.10.1",
@@ -113,6 +112,7 @@
     "tailwind-merge": "^1.14.0",
     "tsx": "^4.7.0",
     "typeid-js": "^1.2.0",
+    "undici": "^7.21.0",
     "zod": "^4.3.5",
     "zustand": "^4.4.1"
   },

@@ -14,7 +14,6 @@ import {
   WeeklyFellowEvaluationSchema,
 } from "#/components/common/fellow/schema";
 import { SubmitComplaintSchema } from "#/components/common/schemas";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
@@ -616,12 +615,19 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
       const attendanceStatus =
         attended === "attended" ? true : attended === "missed" ? false : null;
 
+      const projectId = session.projectId;
+      if (!projectId) {
+        throw new Error(
+          "Session has no project. Ensure the session is linked to a hub with a project.",
+        );
+      }
+
       await tx.fellowAttendance.create({
         data: {
           fellowId: fellow.id,
           groupId,
           schoolId: session.schoolId,
-          projectId: session.projectId ?? CURRENT_PROJECT_ID,
+          projectId,
           sessionId,
           absenceReason,
           absenceComments: comments,
@@ -850,13 +856,20 @@ export async function markManyFellowAttendance(
         }));
       }
 
+      const projectId = session.projectId;
+      if (!projectId) {
+        throw new Error(
+          "Session has no project. Ensure the session is linked to a hub with a project.",
+        );
+      }
+
       const data2 = validFellows.map(({ fellow, groupId }) => {
         return {
           attendanceData: {
             fellowId: fellow.id,
             schoolId: session.schoolId,
             groupId,
-            projectId: session.projectId ?? CURRENT_PROJECT_ID,
+            projectId,
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
             sessionId,

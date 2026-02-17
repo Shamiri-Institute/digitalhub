@@ -6,6 +6,7 @@ import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { db } from "#/lib/db";
 
 export default async function FellowPage() {
@@ -14,8 +15,11 @@ export default async function FellowPage() {
     await signOut({ callbackUrl: "/login" });
   }
   const activeMembership = admin?.session?.user.activeMembership;
+  const implementerId = activeMembership?.implementerId;
+  const projectId = await getActiveProjectId();
+
   const data = await Promise.all([
-    await db.$queryRaw<Omit<MainFellowTableData, "complaints">[]>`
+    db.$queryRaw<Omit<MainFellowTableData, "complaints">[]>`
       SELECT
         f.id,
         f.fellow_name AS "fellowName",
@@ -36,26 +40,34 @@ export default async function FellowPage() {
         (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
       FROM
         fellows f
+          LEFT JOIN hubs h ON f.hub_id = h.id
           LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
           LEFT JOIN intervention_groups ig ON f.id = ig.leader_id
-      WHERE f.implementer_id =${activeMembership?.implementerId}
+      WHERE (h.project_id = ${projectId} OR f.hub_id IS NULL)
+        AND f.implementer_id = ${implementerId}
       GROUP BY
         f.id
-  `,
-    await db.fellowComplaints.findMany({
+    `,
+    db.fellowComplaints.findMany({
       where: {
         fellow: {
-          implementerId: activeMembership?.implementerId,
+          implementerId,
+          hub: {
+            projectId,
+          },
         },
       },
       include: {
         user: true,
       },
     }),
-    await db.interventionGroup.findMany({
+    db.interventionGroup.findMany({
       where: {
         leader: {
-          implementerId: activeMembership?.implementerId,
+          implementerId,
+          hub: {
+            projectId,
+          },
         },
       },
       include: {
@@ -78,7 +90,10 @@ export default async function FellowPage() {
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      implementerId: activeMembership?.implementerId,
+      implementerId,
+      hub: {
+        projectId,
+      },
     },
     include: {
       fellows: true,
@@ -88,7 +103,10 @@ export default async function FellowPage() {
   const weeklyFellowEvaluations = await db.weeklyFellowRatings.findMany({
     where: {
       fellow: {
-        implementerId: activeMembership?.implementerId,
+        implementerId,
+        hub: {
+          projectId,
+        },
       },
     },
   });

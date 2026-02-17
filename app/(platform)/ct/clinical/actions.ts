@@ -1,12 +1,14 @@
 "use server";
 
 import { currentClinicalTeam } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { db } from "#/lib/db";
 
 export async function getAllClinicalCasesData() {
   const clinicalTeam = await currentClinicalTeam();
   if (!clinicalTeam) throw new Error("Unauthorized");
+
+  const projectId = await getActiveProjectId();
 
   type StatusResult = { name: string; value: bigint };
   type SupervisorResult = { id: string; value: bigint };
@@ -28,7 +30,7 @@ export async function getAllClinicalCasesData() {
       JOIN "students" st ON csi."student_id" = st.id
       JOIN "schools" sch ON st."school_id" = sch.id
       JOIN "hubs" h ON sch."hub_id" = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY "case_status"
     `,
 
@@ -48,7 +50,7 @@ export async function getAllClinicalCasesData() {
       JOIN "students" st ON csi."student_id" = st.id
       JOIN "schools" sch ON st."school_id" = sch.id
       JOIN "hubs" h ON sch."hub_id" = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY COALESCE(
         (SELECT ccn.risk_level 
          FROM "clinical_case_notes" ccn 
@@ -69,7 +71,7 @@ export async function getAllClinicalCasesData() {
       JOIN "students" st ON csi."student_id" = st.id
       JOIN "schools" sch ON st."school_id" = sch.id
       JOIN "hubs" h ON sch."hub_id" = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY session
     `,
 
@@ -82,7 +84,7 @@ export async function getAllClinicalCasesData() {
       JOIN "students" st ON csi."student_id" = st.id
       JOIN "schools" sch ON st."school_id" = sch.id
       JOIN "hubs" h ON sch."hub_id" = h.id
-      WHERE  h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE  h."project_id" = ${projectId}
       GROUP BY COALESCE(csi."current_supervisor_id", 'CLINICAL_LEAD')
     `,
 
@@ -92,7 +94,7 @@ export async function getAllClinicalCasesData() {
         "supervisor_name"
       FROM "supervisors"
       JOIN "hubs" h ON "supervisors"."hub_id" = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       UNION ALL
       SELECT 
         'CLINICAL_LEAD' as id,
@@ -204,6 +206,8 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
   try {
     const clinicalTeam = await currentClinicalTeam();
     if (!clinicalTeam) throw new Error("Unauthorized");
+
+    const projectId = await getActiveProjectId();
 
     const cases = await db.$queryRaw`
       WITH case_notes AS (
@@ -321,7 +325,7 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
         case_termination ct ON csi.id = ct.case_id
       LEFT JOIN
         treatment_plan tp ON csi.id = tp.case_id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       ORDER BY 
         csi.id DESC
     `;

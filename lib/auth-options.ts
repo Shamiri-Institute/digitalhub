@@ -6,6 +6,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
 
+import { getDefaultProjectId } from "#/lib/active-project-id";
 import { isCredentialAuthAllowed, TEST_CREDENTIALS } from "#/lib/auth/credential-auth";
 import { db } from "#/lib/db";
 
@@ -38,6 +39,7 @@ export type SessionUser = {
   image: string | null;
   activeMembership?: JWTMembership;
   memberships?: JWTMembership[];
+  activeProjectId?: string | null;
 };
 
 function parseMembershipsForJWT(
@@ -229,25 +231,9 @@ export const authOptions: AuthOptions = {
     },
     session: async ({ session, token }) => {
       const user = await db.user.findUnique({
-        where: {
-          id: token.sub,
-        },
+        where: { id: token.sub ?? "" },
         include: {
-          avatar: {
-            select: { file: true },
-          },
-          memberships: {
-            select: {
-              id: true,
-              implementer: true,
-              role: true,
-              identifier: true,
-              updatedAt: true,
-            },
-            orderBy: {
-              updatedAt: "desc",
-            },
-          },
+          avatar: { select: { file: true } },
         },
       });
 
@@ -259,20 +245,78 @@ export const authOptions: AuthOptions = {
         return session;
       }
 
-      if (user.memberships.length === 0) {
+      const defaultProjectId = await getDefaultProjectId();
+      const activeProjectId = user.activeProjectId ?? defaultProjectId;
+
+      const membershipsResult = await db.user.findUnique({
+        where: { id: user.id },
+        select: {
+          memberships: {
+            where: {
+              implementer: {
+                hubs: {
+                  some: { projectId: activeProjectId },
+                },
+              },
+            },
+            select: {
+              id: true,
+              implementer: true,
+              role: true,
+              identifier: true,
+              updatedAt: true,
+            },
+            orderBy: { updatedAt: "desc" },
+          },
+        },
+      });
+      let memberships: JWTMembership[] = membershipsResult
+        ? parseMembershipsForJWT({ ...user, memberships: membershipsResult.memberships })
+        : [];
+
+      // Fall back to ADMIN memberships only when project-filtered memberships are empty.
+      // Non-admins must have hubs in the active project to access the app.
+      if (memberships.length === 0 && user.email) {
+        const adminMemberships = await db.user.findUnique({
+          where: { id: user.id },
+          select: {
+            memberships: {
+              where: { role: "ADMIN" },
+              select: {
+                id: true,
+                implementer: true,
+                role: true,
+                identifier: true,
+                updatedAt: true,
+              },
+              orderBy: { updatedAt: "desc" },
+            },
+          },
+        });
+        if (adminMemberships?.memberships?.length) {
+          memberships = adminMemberships.memberships.map((m) => ({
+            id: m.id,
+            implementerId: m.implementer.id,
+            implementerName: m.implementer.implementerName,
+            role: m.role,
+            identifier: m.identifier,
+            updatedAt: m.updatedAt ?? undefined,
+          }));
+        }
+        if (memberships.length === 0) {
+          console.warn(`User ${user.email} has no memberships`);
+        }
+      } else if (memberships.length === 0) {
         console.warn(`User ${user.email} has no memberships`);
       }
 
-      // Use token data if available (for updates), otherwise use database data
-      const memberships: JWTMembership[] = token.memberships || parseMembershipsForJWT(user);
-      // Select the most recently updated membership if no active membership is set
+      const sortedMemberships = [...memberships].sort(
+        (a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0),
+      );
       const activeMembership: JWTMembership | undefined =
-        token.activeMembership ||
-        (memberships.length > 0
-          ? memberships.sort(
-              (a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0),
-            )[0]
-          : undefined);
+        token.activeMembership && memberships.some((m) => m.id === token.activeMembership?.id)
+          ? token.activeMembership
+          : sortedMemberships[0];
 
       const sessionUser: SessionUser = {
         id: token.sub || null,
@@ -281,6 +325,7 @@ export const authOptions: AuthOptions = {
         image: user.image,
         activeMembership,
         memberships,
+        activeProjectId,
       };
 
       session.user = sessionUser;
@@ -304,13 +349,29 @@ export const authOptions: AuthOptions = {
           return token;
         }
 
-        // Update token.sub to match the found user's ID
         token.sub = currentUser.id;
 
-        // Now get the memberships using the user's ID, ordered by most recently updated
-        const memberships = await db.implementerMember.findMany({
+        const userWithProject = await db.user.findUnique({
+          where: { id: currentUser.id },
+          select: { activeProjectId: true },
+        });
+        let projectId: string;
+        if (userWithProject?.activeProjectId) {
+          projectId = userWithProject.activeProjectId;
+        } else {
+          projectId = await getDefaultProjectId();
+        }
+
+        let memberships = await db.implementerMember.findMany({
           where: {
             userId: currentUser.id,
+            implementer: {
+              hubs: {
+                some: {
+                  projectId,
+                },
+              },
+            },
           },
           include: {
             implementer: {
@@ -325,7 +386,25 @@ export const authOptions: AuthOptions = {
           },
         });
 
-        console.log("memberships", memberships, currentUser);
+        if (memberships.length === 0 && currentUser.email) {
+          memberships = await db.implementerMember.findMany({
+            where: {
+              userId: currentUser.id,
+              role: "ADMIN",
+            },
+            include: {
+              implementer: {
+                select: {
+                  id: true,
+                  implementerName: true,
+                },
+              },
+            },
+            orderBy: {
+              updatedAt: "desc",
+            },
+          });
+        }
 
         if (memberships.length > 0) {
           const processedMemberships = memberships.map((m) => ({
