@@ -5,7 +5,7 @@ import type { ImplementerRole } from "@prisma/client";
 import { format } from "date-fns";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { parsePhoneNumber } from "libphonenumber-js";
+import { parsePhoneNumberWithError } from "libphonenumber-js";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -82,7 +82,7 @@ export default function SchoolLeftPanel({
 
   function renderPhoneNumbers(phone: string) {
     try {
-      const phoneNumber = parsePhoneNumber(phone, "KE");
+      const phoneNumber = parsePhoneNumberWithError(phone, "KE");
       return (
         <a href={phoneNumber.getURI()} key={phone} className="flex">
           <div className="rounded-full border px-1.5 py-0.5 text-shamiri-new-blue">

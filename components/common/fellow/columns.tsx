@@ -2,10 +2,10 @@
 
 import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
-import { parsePhoneNumber } from "libphonenumber-js";
+import { parsePhoneNumberWithError } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { FellowsDatatableMenu } from "#/components/common/fellow/fellows-datatable";
+import { FellowsDatatableMenu } from "#/components/common/fellow/fellows-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 
@@ -125,7 +125,11 @@ export const columns = ({
     {
       header: "Phone Number",
       accessorFn: (row) => {
-        return row.cellNumber && parsePhoneNumber(row.cellNumber, "KE").formatNational();
+        try {
+          return row.cellNumber && parsePhoneNumberWithError(row.cellNumber, "KE").formatNational();
+        } catch {
+          return row.cellNumber;
+        }
       },
     },
     {

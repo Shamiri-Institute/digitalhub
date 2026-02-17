@@ -60,32 +60,32 @@ export default function StudentsInGroup({
             }}
             className="data-table lg:mt-4"
           />
-          {role === ImplementerRole.HUB_COORDINATOR ||
+          {(role === ImplementerRole.HUB_COORDINATOR ||
             role === ImplementerRole.SUPERVISOR ||
-            (role === ImplementerRole.FELLOW && (
-              <DialogFooter className="flex justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  type="button"
-                  className="text-shamiri-new-blue hover:text-shamiri-new-blue"
-                  onClick={() => {
-                    onOpenChange(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="brand"
-                  onClick={() => {
-                    setAddStudentDialog(true);
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <Icons.plusCircle className="h-4 w-4" />
-                  Add Student
-                </Button>
-              </DialogFooter>
-            ))}
+            role === ImplementerRole.FELLOW) && (
+            <DialogFooter className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-shamiri-new-blue hover:text-shamiri-new-blue"
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="brand"
+                onClick={() => {
+                  setAddStudentDialog(true);
+                }}
+                className="flex items-center gap-2"
+              >
+                <Icons.plusCircle className="h-4 w-4" />
+                Add Student
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
       <StudentDetailsForm

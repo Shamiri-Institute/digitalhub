@@ -4,7 +4,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { createContext, Suspense, useContext, useEffect, useRef } from "react";
 import { create } from "zustand";
 
-import { Header } from "#/components/header";
+import { Icons } from "#/components/icons";
 import { Navigation } from "#/components/navigation";
 import { Sheet, SheetContent } from "#/components/ui/sheet";
 import { cn } from "#/lib/utils";
@@ -70,7 +70,24 @@ function MobileNavigationDialog({
             "fixed bottom-0 left-0 top-14 w-full overflow-y-auto px-4 pb-4 pt-6 min-[416px]:max-w-sm sm:px-6 sm:pb-10",
           )}
         >
-          <Header className="pointer-events-auto z-100" />
+          <div
+            className={cn(
+              "pointer-events-auto fixed inset-x-0 top-0 z-100 flex h-14 items-center justify-between gap-12 bg-background px-4 transition sm:px-6 lg:left-72 lg:z-30 lg:hidden lg:px-8 xl:left-80",
+            )}
+          >
+            <div className="absolute inset-x-0 top-full h-px bg-border/50 transition" />
+            <div className="flex items-center gap-5 lg:hidden">
+              <button
+                type="button"
+                className="flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-zinc-900/5"
+                aria-label="Toggle navigation"
+                onClick={close}
+              >
+                <MenuIcon className="w-2.5 stroke-zinc-900" />
+              </button>
+              <Icons.logo className="h-6" />
+            </div>
+          </div>
           <Navigation />
         </div>
       </SheetContent>

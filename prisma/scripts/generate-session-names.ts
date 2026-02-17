@@ -3,8 +3,8 @@
  * session names in a database (e.g. after adding new hubs without re-seeding).
  */
 
-import { getDefaultProjectId } from "#/lib/active-project-id";
 import { db } from "#/lib/db";
+import { getDefaultProjectId } from "#/lib/default-project-id";
 import { hubSessionTypes } from "#/prisma/scripts/hub-session-types";
 
 async function main() {

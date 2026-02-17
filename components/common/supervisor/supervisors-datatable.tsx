@@ -3,7 +3,7 @@
 import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -12,14 +12,6 @@ import { columns, type SupervisorsData } from "#/components/common/supervisor/co
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
 import { markManySupervisorAttendance, markSupervisorAttendance } from "#/lib/actions/supervisor";
 
 export default function SupervisorsDataTable({
@@ -192,65 +184,5 @@ export default function SupervisorsDataTable({
         </DialogAlertWidget>
       </MarkAttendance>
     </div>
-  );
-}
-
-export function SupervisorsDataTableMenu({
-  supervisor,
-  state,
-}: {
-  supervisor: SupervisorsData;
-  state: {
-    setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setSupervisor: Dispatch<SetStateAction<SupervisorsData | null>>;
-    role: ImplementerRole;
-  };
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-          </div>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-          onClick={() => {
-            state.setSupervisor(supervisor);
-            state.setMarkAttendanceDialog(true);
-          }}
-        >
-          Mark attendance
-        </DropdownMenuItem>
-        {/* TODO: Remove drop out option and refactor context*/}
-        {state.role === ImplementerRole.HUB_COORDINATOR &&
-          (supervisor.droppedOut === null || !supervisor.droppedOut ? (
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSupervisor(supervisor);
-                // state.setDropoutDialog(true);
-              }}
-            >
-              <div className="text-shamiri-red">Drop out supervisor</div>
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSupervisor(supervisor);
-                // state.setUndropDialog(true);
-              }}
-            >
-              <div>Undo drop out</div>
-            </DropdownMenuItem>
-          ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
