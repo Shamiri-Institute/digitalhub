@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.11/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.2/schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": { "ignoreUnknown": false },
   "formatter": {
@@ -33,6 +33,7 @@
         "noBannedTypes": "error",
         "noUselessFragments": "error",
         "noUselessTernary": "error",
+        "noUselessUndefined": "error",
         "useDateNow": "error",
         "useOptionalChain": "error",
         "useLiteralKeys": "off"
@@ -42,7 +43,10 @@
       },
       "suspicious": {
         "noExplicitAny": "error",
-        "noGlobalIsNan": "error"
+        "noGlobalIsNan": "error",
+        "noImportCycles": "error",
+        "noReactForwardRef": "warn",
+        "noDeprecatedImports": "warn"
       },
       "nursery": {
         "noFloatingPromises": "error"
@@ -81,10 +85,25 @@
     "parser": {
       "cssModules": true,
       "tailwindDirectives": true
+    },
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 100,
+      "quoteStyle": "double"
+    },
+    "linter": {
+      "enabled": true
     }
   },
   "assist": {
     "enabled": true,
-    "actions": { "source": { "organizeImports": "on" } }
+    "actions": {
+      "source": {
+        "organizeImports": "on",
+        "noDuplicateClasses": "on"
+      }
+    }
   }
 }

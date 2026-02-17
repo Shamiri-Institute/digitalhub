@@ -2,7 +2,7 @@
 
 import type { ImplementerRole, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
-import { parsePhoneNumber } from "libphonenumber-js";
+import { parsePhoneNumberWithError } from "libphonenumber-js";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { AllSupervisorsDataTableMenu } from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
 import { Badge } from "#/components/ui/badge";
@@ -186,7 +186,7 @@ export const columns = ({
     header: "Phone Number",
     id: "Phone number",
     accessorFn: (row) => {
-      return row.cellNumber && parsePhoneNumber(row.cellNumber, "KE").formatNational();
+      return row.cellNumber && parsePhoneNumberWithError(row.cellNumber, "KE").formatNational();
     },
   },
   {
