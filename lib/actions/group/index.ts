@@ -4,7 +4,6 @@ import { ImplementerRole, Prisma } from "@prisma/client";
 import type { z } from "zod";
 import { getCurrentPersonnel } from "#/app/auth";
 import { CreateGroupSchema, StudentGroupEvaluationSchema } from "#/components/common/group/schema";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
@@ -67,12 +66,17 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
       where: { schoolId },
     });
 
+    const projectId = school.hub?.projectId;
+    if (!projectId) {
+      throw new Error("School not linked to a project. Cannot create group.");
+    }
+
     const result = await db.interventionGroup.create({
       data: {
         id: objectId("group"),
         leaderId: fellowId,
         schoolId,
-        projectId: school.hub?.projectId ?? CURRENT_PROJECT_ID,
+        projectId,
         groupName: `${getSchoolInitials(school.schoolName)}_${groupCount + 1}`,
       },
     });

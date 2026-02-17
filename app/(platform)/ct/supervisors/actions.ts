@@ -1,7 +1,6 @@
 "use server";
 
 import { currentClinicalTeam } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export type SupervisorClinicalCasesData = {
@@ -16,6 +15,11 @@ export type SupervisorClinicalCasesData = {
 export async function getSupervisorClinicalCasesData() {
   const clinicalTeam = await currentClinicalTeam();
   if (!clinicalTeam) throw new Error("Unauthorized");
+
+  const projectId = clinicalTeam?.profile.assignedHub?.projectId;
+  if (!projectId) {
+    throw new Error("Assigned hub has no project");
+  }
 
   const supervisorsData = await db.$queryRaw<SupervisorClinicalCasesData[]>`
     WITH supervisor_stats AS (
@@ -40,7 +44,7 @@ export async function getSupervisorClinicalCasesData() {
       INNER JOIN 
         "hubs" h ON s."hub_id" = h.id
       WHERE 
-        h."project_id" = ${CURRENT_PROJECT_ID}
+        h."project_id" = ${projectId}
         AND s."archived_at" IS NULL
       GROUP BY 
         s.id, s."supervisor_name"

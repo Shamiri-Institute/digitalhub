@@ -1,12 +1,16 @@
 "use server";
 
 import { currentClinicalTeam } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export async function getOverallStudentsDataBreakdown() {
   const clinicalTeam = await currentClinicalTeam();
   if (!clinicalTeam) throw new Error("Unauthorized");
+
+  const projectId = clinicalTeam?.profile.assignedHub?.projectId;
+  if (!projectId) {
+    throw new Error("Assigned hub has no project");
+  }
 
   const [totalStudentsResult, groupSessionsResult, clinicalCasesResult, clinicalSessionsResult] =
     await Promise.all([
@@ -15,14 +19,14 @@ export async function getOverallStudentsDataBreakdown() {
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       JOIN hubs h ON sc.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
     `,
       db.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*) as count 
       FROM intervention_sessions ins
       JOIN session_names sn ON ins.session_id = sn.id
       JOIN hubs h ON sn.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
     `,
       db.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*) as count 
@@ -30,7 +34,7 @@ export async function getOverallStudentsDataBreakdown() {
       JOIN students sts ON sts.id = csi.student_id
       JOIN schools sc ON sts.school_id = sc.id
       JOIN hubs h ON sc.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
     `,
       db.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*) as count 
@@ -39,7 +43,7 @@ export async function getOverallStudentsDataBreakdown() {
       JOIN students sts ON sts.id = csi.student_id
       JOIN schools sc ON sts.school_id = sc.id
       JOIN hubs h ON sc.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
     `,
     ]);
 
@@ -55,6 +59,11 @@ export async function getStudentsDataBreakdown() {
   const clinicalTeam = await currentClinicalTeam();
   if (!clinicalTeam) throw new Error("Unauthorized");
 
+  const projectId = clinicalTeam?.profile.assignedHub?.projectId;
+  if (!projectId) {
+    throw new Error("Assigned hub has no project");
+  }
+
   const [attendanceData, dropoutData, completionData, ratingsData] = await Promise.all([
     db.$queryRaw<{ sessionName: string | null; count: bigint }[]>`
       SELECT 
@@ -66,7 +75,7 @@ export async function getStudentsDataBreakdown() {
       JOIN intervention_sessions ins ON ins.id = sa.session_id
       JOIN session_names sn ON sn.id = ins.session_id
       JOIN hubs h ON sn.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       AND sa.attended = true
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC
@@ -77,7 +86,7 @@ export async function getStudentsDataBreakdown() {
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       JOIN hubs h ON sc.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       AND drop_out_reason IS NOT NULL
       GROUP BY drop_out_reason
       ORDER BY count DESC
@@ -89,14 +98,14 @@ export async function getStudentsDataBreakdown() {
         FROM students s
         JOIN schools sc ON s.school_id = sc.id
         JOIN hubs h ON sc.hub_id = h.id
-        WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+        WHERE h."project_id" = ${projectId}
       ),
       incomplete_students_data AS (
         SELECT COUNT(*) as incomplete
         FROM students s
         JOIN schools sc ON s.school_id = sc.id
         JOIN hubs h ON sc.hub_id = h.id
-        WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+        WHERE h."project_id" = ${projectId}
         AND (
           s.student_name IS NULL
           OR s.gender IS NULL
@@ -128,7 +137,7 @@ export async function getStudentsDataBreakdown() {
       JOIN intervention_sessions ins ON ins.id = isr.session_id
       JOIN session_names sn ON sn.id = ins.session_id
       JOIN hubs h ON sn.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC
     `,
@@ -155,6 +164,11 @@ export async function clinicalSessionsDataBreakdown() {
   const clinicalTeam = await currentClinicalTeam();
   if (!clinicalTeam) throw new Error("Unauthorized");
 
+  const projectId = clinicalTeam?.profile.assignedHub?.projectId;
+  if (!projectId) {
+    throw new Error("Assigned hub has no project");
+  }
+
   const [casesByStatus, casesBySession, casesBySupervisor, casesByInitialContact] =
     await Promise.all([
       db.$queryRaw<{ caseStatus: string | null; count: bigint }[]>`
@@ -163,7 +177,7 @@ export async function clinicalSessionsDataBreakdown() {
       JOIN students s ON s.id = csi.student_id
       JOIN schools sc ON s.school_id = sc.id
       JOIN hubs h ON sc.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY case_status
       ORDER BY count DESC
     `,
@@ -175,7 +189,7 @@ export async function clinicalSessionsDataBreakdown() {
       JOIN students s ON s.id = csi.student_id
       JOIN schools sc ON s.school_id = sc.id
       JOIN hubs h ON sc.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY session
       ORDER BY count DESC
     `,
@@ -186,7 +200,7 @@ export async function clinicalSessionsDataBreakdown() {
       JOIN students s ON s.id = csi.student_id
       JOIN supervisors sp ON sp.id = csi.current_supervisor_id
       JOIN hubs h ON sp.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY sp.supervisor_name
       ORDER BY count DESC
     `,
@@ -197,7 +211,7 @@ export async function clinicalSessionsDataBreakdown() {
       JOIN students s ON s.id = csi.student_id
       JOIN schools sc ON s.school_id = sc.id
       JOIN hubs h ON sc.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY initial_referred_from_specified
       ORDER BY count DESC
     `,
@@ -227,13 +241,18 @@ export async function getStudentsStatsBreakdown() {
   const clinicalTeam = await currentClinicalTeam();
   if (!clinicalTeam) throw new Error("Unauthorized");
 
+  const projectId = clinicalTeam?.profile.assignedHub?.projectId;
+  if (!projectId) {
+    throw new Error("Assigned hub has no project");
+  }
+
   const [formStats, ageStats, genderStats] = await Promise.all([
     db.$queryRaw<{ form: number | null; count: bigint }[]>`
       SELECT form, COUNT(*) as count 
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       JOIN hubs h ON sc.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY form
       ORDER BY form ASC
     `,
@@ -248,7 +267,7 @@ export async function getStudentsStatsBreakdown() {
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       JOIN hubs h ON sc.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY 
         CASE 
           WHEN year_of_birth IS NULL THEN NULL
@@ -262,7 +281,7 @@ export async function getStudentsStatsBreakdown() {
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       JOIN hubs h ON sc.hub_id = h.id
-      WHERE h."project_id" = ${CURRENT_PROJECT_ID}
+      WHERE h."project_id" = ${projectId}
       GROUP BY gender
       ORDER BY gender ASC
     `,

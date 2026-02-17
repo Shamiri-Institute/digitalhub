@@ -17,7 +17,7 @@ env:
   DATABASE_URL: postgres://youth:thriving@localhost:5432/shamiri_db?pool_timeout=30
   NEXT_PUBLIC_APP_URL: http://localhost:3000
   NEXT_PUBLIC_ENV: development
-
+  
 jobs:
   e2e-tests:
     runs-on: ubuntu-latest

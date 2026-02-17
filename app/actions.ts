@@ -12,7 +12,6 @@ import { z } from "zod";
 
 import { getCurrentUserSession } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getHighestValue } from "#/lib/utils";
@@ -149,10 +148,17 @@ export async function markStudentAttendance({
       });
     } else {
       const session = await getCurrentUserSession();
+      const projectId = interventionSession.projectId;
+      if (!projectId) {
+        throw new Error(
+          "Session has no project. Ensure the session is linked to a hub with a project.",
+        );
+      }
+
       if (session !== null) {
         attendance = await db.studentAttendance.create({
           data: {
-            projectId: CURRENT_PROJECT_ID,
+            projectId,
             studentId: student.id,
             schoolId: school.id,
             sessionId: interventionSession.id,
@@ -496,7 +502,6 @@ export async function selectPersonnel({
   identifier: string;
   role: ImplementerRole;
 }) {
-  console.log("updating personnel role", { identifier, role });
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -505,11 +510,10 @@ export async function selectPersonnel({
   if (!activeMembership) {
     return null;
   }
-  const data = await db.implementerMember.update({
+  await db.implementerMember.update({
     where: { id: activeMembership.id, implementerId: activeMembership.implementerId },
     data: { identifier, role },
   });
-  console.log("updated personnel role", data);
   return { success: true };
 }
 
