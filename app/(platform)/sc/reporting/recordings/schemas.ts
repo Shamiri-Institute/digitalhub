@@ -44,10 +44,12 @@ const MAGIC_BYTES: Record<string, readonly (readonly number[])[]> = {
   // MP3 files start with ID3 tag or sync word
   mp3: [
     [0x49, 0x44, 0x33], // ID3 tag header
-    [0xff, 0xfb], // MP3 sync word (MPEG Audio Layer 3)
-    [0xff, 0xfa], // MP3 sync word variant
-    [0xff, 0xf3], // MP3 sync word variant
-    [0xff, 0xf2], // MP3 sync word variant
+    [0xff, 0xfb], // MPEG-1 Layer 3 (No CRC)
+    [0xff, 0xfa], // MPEG-1 Layer 3 (CRC)
+    [0xff, 0xfd], // MPEG-2 Layer 3 (No CRC)
+    [0xff, 0xfc], // MPEG-2 Layer 3 (CRC)
+    [0xff, 0xf3], // MPEG-2.5 Layer 3 (No CRC)
+    [0xff, 0xf2], // MPEG-2.5 Layer 3 (CRC)
   ],
   // WAV files start with RIFF header
   wav: [[0x52, 0x49, 0x46, 0x46]], // "RIFF"
