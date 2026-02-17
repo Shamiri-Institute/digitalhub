@@ -1,9 +1,11 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
 import type { AuthOptions } from "next-auth";
+import { getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import { cache } from "react";
 import { z } from "zod";
 import { isCredentialAuthAllowed, TEST_CREDENTIALS } from "#/lib/auth/credential-auth";
 import { db } from "#/lib/db";
@@ -41,21 +43,15 @@ export type SessionUser = {
   activeProjectId?: string | null;
 };
 
-function parseMembershipsForJWT(
-  userWithMemberships: Prisma.UserGetPayload<{
-    select: {
-      memberships: {
-        select: {
-          id: true;
-          implementer: true;
-          role: true;
-          identifier: true;
-          updatedAt: true;
-        };
-      };
-    };
-  }>,
-): JWTMembership[] {
+function parseMembershipsForJWT(userWithMemberships: {
+  memberships: Array<{
+    id: number;
+    role: ImplementerRole;
+    identifier: string | null;
+    updatedAt: Date | null;
+    implementer: { id: string; implementerName: string };
+  }>;
+}): JWTMembership[] {
   return userWithMemberships.memberships.map((m) => ({
     id: m.id,
     implementerId: m.implementer.id,
@@ -229,10 +225,32 @@ export const authOptions: AuthOptions = {
       return false;
     },
     session: async ({ session, token }) => {
+      const defaultProjectId = await getDefaultProjectId();
       const user = await db.user.findUnique({
         where: { id: token.sub ?? "" },
-        include: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          image: true,
+          activeProjectId: true,
           avatar: { select: { file: true } },
+          memberships: {
+            select: {
+              id: true,
+              role: true,
+              identifier: true,
+              updatedAt: true,
+              implementer: {
+                select: {
+                  id: true,
+                  implementerName: true,
+                  hubs: { select: { projectId: true } },
+                },
+              },
+            },
+            orderBy: { updatedAt: "desc" },
+          },
         },
       });
 
@@ -244,68 +262,20 @@ export const authOptions: AuthOptions = {
         return session;
       }
 
-      const defaultProjectId = await getDefaultProjectId();
       const activeProjectId = user.activeProjectId ?? defaultProjectId;
 
-      const membershipsResult = await db.user.findUnique({
-        where: { id: user.id },
-        select: {
-          memberships: {
-            where: {
-              implementer: {
-                hubs: {
-                  some: { projectId: activeProjectId },
-                },
-              },
-            },
-            select: {
-              id: true,
-              implementer: true,
-              role: true,
-              identifier: true,
-              updatedAt: true,
-            },
-            orderBy: { updatedAt: "desc" },
-          },
-        },
+      let filtered = user.memberships.filter((m) =>
+        m.implementer.hubs.some((h) => h.projectId === activeProjectId),
+      );
+      if (filtered.length === 0 && user.email) {
+        filtered = user.memberships.filter((m) => m.role === "ADMIN");
+      }
+      const memberships: JWTMembership[] = parseMembershipsForJWT({
+        ...user,
+        memberships: filtered,
       });
-      let memberships: JWTMembership[] = membershipsResult
-        ? parseMembershipsForJWT({ ...user, memberships: membershipsResult.memberships })
-        : [];
 
-      // Fall back to ADMIN memberships only when project-filtered memberships are empty.
-      // Non-admins must have hubs in the active project to access the app.
-      if (memberships.length === 0 && user.email) {
-        const adminMemberships = await db.user.findUnique({
-          where: { id: user.id },
-          select: {
-            memberships: {
-              where: { role: "ADMIN" },
-              select: {
-                id: true,
-                implementer: true,
-                role: true,
-                identifier: true,
-                updatedAt: true,
-              },
-              orderBy: { updatedAt: "desc" },
-            },
-          },
-        });
-        if (adminMemberships?.memberships?.length) {
-          memberships = adminMemberships.memberships.map((m) => ({
-            id: m.id,
-            implementerId: m.implementer.id,
-            implementerName: m.implementer.implementerName,
-            role: m.role,
-            identifier: m.identifier,
-            updatedAt: m.updatedAt ?? undefined,
-          }));
-        }
-        if (memberships.length === 0) {
-          console.warn(`User ${user.email} has no memberships`);
-        }
-      } else if (memberships.length === 0) {
+      if (memberships.length === 0) {
         console.warn(`User ${user.email} has no memberships`);
       }
 
@@ -332,16 +302,19 @@ export const authOptions: AuthOptions = {
     },
     jwt: async ({ token, user, account: _account, trigger, session }) => {
       if (trigger === "signIn" && user?.email) {
-        // First get the user by email
-        const currentUser = await db.user.findUnique({
-          where: { email: user.email },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            image: true,
-          },
-        });
+        const [defaultProjectId, currentUser] = await Promise.all([
+          getDefaultProjectId(),
+          db.user.findUnique({
+            where: { email: user.email },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              image: true,
+              activeProjectId: true,
+            },
+          }),
+        ]);
 
         if (!currentUser) {
           console.error("User not found in database");
@@ -350,16 +323,7 @@ export const authOptions: AuthOptions = {
 
         token.sub = currentUser.id;
 
-        const userWithProject = await db.user.findUnique({
-          where: { id: currentUser.id },
-          select: { activeProjectId: true },
-        });
-        let projectId: string;
-        if (userWithProject?.activeProjectId) {
-          projectId = userWithProject.activeProjectId;
-        } else {
-          projectId = await getDefaultProjectId();
-        }
+        const projectId = currentUser.activeProjectId ?? defaultProjectId;
 
         let memberships = await db.implementerMember.findMany({
           where: {
@@ -428,3 +392,5 @@ export const authOptions: AuthOptions = {
     },
   },
 };
+
+export const getCachedSession = cache(async () => getServerSession(authOptions));
