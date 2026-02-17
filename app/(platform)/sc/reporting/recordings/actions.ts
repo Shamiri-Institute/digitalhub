@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { createJob } from "#/lib/fidelity-ratings-api";
 import { deleteObject } from "#/lib/s3";
 
 // Types for server action responses
@@ -152,8 +153,134 @@ export async function checkRecordingExists(params: {
   });
 }
 
+// ---------------------------------------------------------------------------
+// App URL resolution
+// ---------------------------------------------------------------------------
+
 /**
- * Create a new session recording record after S3 upload
+ * Resolve the base URL for this SDH instance.
+ *
+ * Resolution order:
+ * 1. NEXT_PUBLIC_APP_URL — explicitly set (production)
+ * 2. VERCEL_URL — auto-set by Vercel deployments (needs https:// prefix)
+ * 3. Fallback to http://localhost:{PORT} for local development
+ *    PORT defaults to 3000 (Next.js default) if not set
+ */
+function getAppBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  // Local development fallback
+  const port = process.env.PORT || "3000";
+  return `http://localhost:${port}`;
+}
+
+// ---------------------------------------------------------------------------
+// Fidelity API submission helper (non-exported, used internally)
+// ---------------------------------------------------------------------------
+
+/**
+ * Submit a recording to the Fidelity API for async processing.
+ *
+ * This function:
+ * 1. Constructs webhook URLs for the Fidelity API to call back
+ * 2. Submits the job via the mTLS-authenticated client
+ * 3. Updates the DB record with the job_id and PROCESSING status
+ *
+ * On failure, marks the recording as FAILED with the error message.
+ *
+ * @param recordingId - The SDH recording ID (e.g. "rec_xxxxx")
+ * @param s3Key - The S3 key where the audio file is stored
+ */
+async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<void> {
+  try {
+    const appUrl = getAppBaseUrl();
+
+    // Construct webhook URLs for Fidelity API callbacks
+    const completionWebhookUrl = `${appUrl}/api/recordings/batch/status`;
+    const progressWebhookUrl = undefined; // TODO
+
+    console.log(`Submitting recording ${recordingId} to Fidelity API`, {
+      s3Key,
+      completionWebhookUrl,
+    });
+
+    const jobResponse = await createJob({
+      recordings: [
+        {
+          id: recordingId,
+          s3_key: s3Key,
+        },
+      ],
+      completion_webhook_url: completionWebhookUrl,
+      progress_webhook_url: progressWebhookUrl,
+    });
+
+    // Update recording with job tracking info and PROCESSING status
+    // Only set to PROCESSING if not already in a final state
+    const updateResult = await db.sessionRecording.updateMany({
+      where: {
+        id: recordingId,
+        fidelityJobId: null,
+        status: {
+          notIn: ["COMPLETED", "FAILED"],
+        },
+      },
+      data: {
+        fidelityJobId: jobResponse.job_id,
+        fidelityJobSubmittedAt: new Date(),
+        status: "PROCESSING",
+      },
+    });
+
+    // Check if the update actually happened
+    if (updateResult.count === 0) {
+      const current = await db.sessionRecording.findUnique({
+        where: { id: recordingId },
+        select: { status: true },
+      });
+      console.warn(
+        `Recording ${recordingId} already in final state (${current?.status}), skipping PROCESSING update`,
+      );
+    }
+
+    console.log(`Submitted recording ${recordingId} to Fidelity API as job ${jobResponse.job_id}`);
+  } catch (error) {
+    console.error(`✗ Failed to submit recording ${recordingId} to Fidelity API:`, error);
+
+    // Mark recording as FAILED so supervisors can see the error and retry
+    try {
+      await db.sessionRecording.update({
+        where: { id: recordingId },
+        data: {
+          status: "FAILED",
+          errorMessage: error instanceof Error ? error.message : "Failed to submit to Fidelity API",
+        },
+      });
+    } catch (dbError) {
+      // If even the DB update fails, log it but don't mask the original error
+      console.error(`Failed to mark recording ${recordingId} as FAILED:`, dbError);
+    }
+
+    throw error;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Server Actions
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a new session recording record after S3 upload, then immediately
+ * submit it to the Fidelity API for processing.
+ *
+ * The Fidelity API submission is non-blocking — the upload succeeds even if
+ * the Fidelity submission fails. Failed submissions can be retried.
  */
 export async function createSessionRecording(input: {
   fellowId: string;
@@ -184,6 +311,7 @@ export async function createSessionRecording(input: {
   }
 
   try {
+    // 1. Create database record with PENDING status (existing behavior)
     const recording = await db.sessionRecording.create({
       data: {
         id: objectId("rec"),
@@ -200,6 +328,15 @@ export async function createSessionRecording(input: {
         supervisorId: supervisor.profile.id,
         status: "PENDING",
       },
+    });
+
+    // 2. IMMEDIATELY submit job to Fidelity API (non-blocking)
+    await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
+      console.error(
+        `Non-blocking Fidelity submission failed for recording ${recording.id}:`,
+        error,
+      );
+      // TODO: Implement retry mechanism for failed submissions.
     });
 
     revalidatePath("/sc/reporting/recordings");
@@ -300,6 +437,12 @@ export async function loadSupervisorRecordings() {
   }));
 }
 
+/**
+ * Retry processing for a failed recording.
+ *
+ * Resets the recording to PENDING, clears previous job tracking data,
+ * and immediately resubmits to the Fidelity API.
+ */
 export async function retryRecordingProcessing(recordingId: string) {
   const supervisor = await currentSupervisor();
 
@@ -325,14 +468,33 @@ export async function retryRecordingProcessing(recordingId: string) {
         message: "Recording not found or cannot be retried",
       };
     }
+    // Only allow retry if in FINAL state (COMPLETED/FAILED)
+    if (recording.status === "PENDING" || recording.status === "PROCESSING") {
+      return {
+        success: false,
+        message: `Recording is currently ${recording.status.toLowerCase()}. Please wait for it to complete before retrying.`,
+      };
+    }
 
+    // Reset to PENDING and clear previous job tracking
     await db.sessionRecording.update({
       where: { id: recordingId },
       data: {
         status: "PENDING",
         errorMessage: null,
         processedAt: null,
+        fidelityJobId: null,
+        fidelityJobSubmittedAt: null,
       },
+    });
+
+    // Immediately resubmit to Fidelity API (non-blocking)
+    await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
+      console.error(
+        `Non-blocking Fidelity resubmission failed for recording ${recording.id}:`,
+        error,
+      );
+      // TODO: Same retry mechanism as in createSessionRecording
     });
 
     revalidatePath("/sc/reporting/recordings");
@@ -350,19 +512,26 @@ export async function retryRecordingProcessing(recordingId: string) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Batch update types and function (used by webhook endpoints)
+// ---------------------------------------------------------------------------
+
 /**
- * Type for batch recording updates
+ * Type for batch recording updates from Fidelity API webhook.
+ * CRITICAL: includes both transcript AND fidelityFeedback — no data loss.
  */
 export type BatchRecordingUpdate = {
   id: string;
   status: RecordingProcessingStatus;
   overallScore?: string;
   fidelityFeedback?: Prisma.InputJsonValue;
+  /** Full transcript JSON with speaker labels, timestamps, and prosody annotations */
+  transcript?: Prisma.InputJsonValue;
   errorMessage?: string;
 };
 
 /**
- * Update recording status (called by API for external service)
+ * Update recording status (called by API for external service — single recording)
  */
 export async function updateRecordingStatus(
   recordingId: string,
@@ -370,6 +539,7 @@ export async function updateRecordingStatus(
   feedback?: {
     overallScore?: string;
     fidelityFeedback?: Prisma.InputJsonValue;
+    transcript?: Prisma.InputJsonValue;
     errorMessage?: string;
   },
 ) {
@@ -392,6 +562,7 @@ export async function updateRecordingStatus(
         processedAt: status === "COMPLETED" || status === "FAILED" ? new Date() : undefined,
         overallScore: feedback?.overallScore,
         fidelityFeedback: feedback?.fidelityFeedback,
+        transcript: feedback?.transcript,
         errorMessage: feedback?.errorMessage,
         retryCount: status === "FAILED" ? { increment: 1 } : status === "PENDING" ? 0 : undefined,
       },
@@ -413,6 +584,16 @@ export async function updateRecordingStatus(
   }
 }
 
+/**
+ * Batch update recording statuses using PostgreSQL unnest() pattern.
+ *
+ * This function performs an atomic batch update — all recordings are updated
+ * in a single SQL statement. If any recording ID is not found, the entire
+ * batch fails (validated before the update).
+ *
+ * CRITICAL: This function stores BOTH transcript AND fidelityFeedback.
+ * The unnest() arrays must all have matching lengths.
+ */
 export async function updateRecordingsStatusBatch(
   updates: BatchRecordingUpdate[],
 ): Promise<{ success: boolean; message: string; updatedCount: number }> {
@@ -447,7 +628,7 @@ export async function updateRecordingsStatusBatch(
       };
     }
 
-    // Build arrays for the UPDATE FROM unnest() pattern
+    // Build arrays for the UPDATE FROM unnest() pattern.
     // Use empty string as sentinel for NULL values since Prisma cannot serialize
     // arrays containing null values in raw queries. See:
     // - https://github.com/prisma/prisma/issues/26545
@@ -457,6 +638,7 @@ export async function updateRecordingsStatusBatch(
     const statuses: string[] = [];
     const overallScores: string[] = [];
     const fidelityFeedbacks: string[] = [];
+    const transcripts: string[] = []; // NEW — stores full transcript JSON
     const errorMessages: string[] = [];
 
     for (const update of updates) {
@@ -466,36 +648,46 @@ export async function updateRecordingsStatusBatch(
       fidelityFeedbacks.push(
         update.fidelityFeedback != null ? JSON.stringify(update.fidelityFeedback) : NULL_SENTINEL,
       );
+      // CRITICAL: transcript must be included — this is the full processed transcript
+      transcripts.push(
+        update.transcript != null ? JSON.stringify(update.transcript) : NULL_SENTINEL,
+      );
       errorMessages.push(update.errorMessage ?? NULL_SENTINEL);
     }
 
+    // Atomic batch update using PostgreSQL unnest()
+    // CRITICAL: The unnest() parameter count and the AS t(...) column list must match exactly
     const updatedCount = await db.$executeRaw`
-      UPDATE "SessionRecording" AS sr
+      UPDATE "session_recordings" AS sr
       SET
-        status = data.status::"RecordingProcessingStatus",
-        "overallScore" = NULLIF(data.overall_score, ''),
-        "fidelityFeedback" = NULLIF(data.fidelity_feedback, '')::jsonb,
-        "errorMessage" = NULLIF(data.error_message, ''),
-        "processedAt" = CASE
+        status = data.status::"recording_processing_status",
+        "overall_score" = NULLIF(data.overall_score, ''),
+        "fidelity_feedback" = NULLIF(data.fidelity_feedback, '')::jsonb,
+        "transcript" = NULLIF(data.transcript, '')::jsonb,
+        "error_message" = NULLIF(data.error_message, ''),
+        "processed_at" = CASE
           WHEN data.status IN ('COMPLETED', 'FAILED') THEN NOW()
-          ELSE sr."processedAt"
+          ELSE sr."processed_at"
         END,
-        "retryCount" = CASE
-          WHEN data.status = 'FAILED' THEN sr."retryCount" + 1
+        "retry_count" = CASE
+          WHEN data.status = 'FAILED' THEN sr."retry_count" + 1
           WHEN data.status = 'PENDING' THEN 0
-          ELSE sr."retryCount"
+          ELSE sr."retry_count"
         END,
-        "updatedAt" = NOW()
+        "updated_at" = NOW()
       FROM (
         SELECT * FROM unnest(
           ${ids}::text[],
           ${statuses}::text[],
           ${overallScores}::text[],
           ${fidelityFeedbacks}::text[],
+          ${transcripts}::text[],
           ${errorMessages}::text[]
-        ) AS t(id, status, overall_score, fidelity_feedback, error_message)
+        ) AS t(id, status, overall_score, fidelity_feedback, transcript, error_message)
       ) AS data
       WHERE sr.id = data.id
+        AND sr.status IN ('PENDING', 'PROCESSING')
+        AND sr."fidelity_job_id" IS NOT NULL
     `;
 
     revalidatePath("/sc/reporting/recordings");

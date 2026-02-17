@@ -11,8 +11,6 @@ import {
   WeeklyHubTeamMeetingSchema,
 } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator } from "#/app/auth";
-
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
@@ -110,6 +108,11 @@ export async function submitSupervisorComplaint(data: z.infer<typeof SubmitCompl
   try {
     const hubCoordinator = await checkAuth();
 
+    const projectId = hubCoordinator.profile?.assignedHub?.projectId;
+    if (!projectId) {
+      throw new Error("Assigned hub has no project");
+    }
+
     const parsedData = SubmitComplaintSchema.parse(data);
     const result = await db.supervisorComplaints.create({
       data: {
@@ -117,7 +120,7 @@ export async function submitSupervisorComplaint(data: z.infer<typeof SubmitCompl
         complaint: parsedData.complaint,
         comments: parsedData.comments,
         hubCoordinatorId: hubCoordinator.profile?.id ?? "",
-        projectId: CURRENT_PROJECT_ID,
+        projectId,
       },
     });
 
@@ -454,11 +457,16 @@ export async function submitMonthlySupervisorEvaluation(
       month,
     } = MonthlySupervisorEvaluationSchema.parse(data);
 
+    const projectId = hc.profile?.assignedHub?.projectId;
+    if (!projectId) {
+      throw new Error("Assigned hub has no project");
+    }
+
     const match = await db.monthlySupervisorEvaluation.findFirst({
       where: {
         month,
         supervisorId,
-        projectId: CURRENT_PROJECT_ID,
+        projectId,
       },
     });
     if (match === null) {
@@ -466,7 +474,7 @@ export async function submitMonthlySupervisorEvaluation(
         data: {
           supervisorId,
           hubCoordinatorId: hc.profile?.id ?? "",
-          projectId: CURRENT_PROJECT_ID,
+          projectId,
           month,
           respectfulness,
           attitude,

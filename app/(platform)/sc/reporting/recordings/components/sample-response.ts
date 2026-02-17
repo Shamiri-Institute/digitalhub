@@ -1,57 +1,75 @@
-export const SAMPLE_MARKDOWN_FEEDBACK = `## 1. Fidelity Grade
-
-Based on the provided rubric and my analysis, here are the scores for the session:
-
-| Question # | Statement | Rating (1-7) | Justification |
-| :--------- | :-------- | :----------: | :------------ |
-| **1** | The group leader followed the study protocol and delivered the required content. | **1** | There was a complete departure from the protocol. The session was not a therapeutic group intervention but a high-level panel discussion with adult professionals about scaling mental health programs. None of the 11 core protocol elements (e.g., confidentiality explanation, validation, rephrasing) were present or applicable. |
-| **2** | The group leader adhered to the specifications around the content delivered. | **1** | The content specifications of the Shamiri Intervention were not met. The discussion focused on policy, funding, and sustainability of interventions at a systems level, rather than the psychoeducational content (like gratitude or growth mindset) designed for adolescents. |
-| **3** | The group leader delivered the required content thoroughly. | **1** | The required therapeutic content was not delivered at all, therefore it could not be delivered thoroughly. The session's content was entirely unrelated to the intervention's curriculum. |
-| **4** | The group leader delivered the required content skillfully. | **1** | While the facilitator was a skillful panel moderator, they did not deliver any of the required therapeutic content. The score reflects the complete absence of skillful delivery of the intervention protocol's techniques (e.g., connecting students, using therapeutic silence, juxtaposition). |
-| **5** | The group leader delivered the required content clearly and accessibly. | **1** | The language used was appropriate for a professional panel but was not the clear, accessible, and youth-focused content required by the protocol. The concepts discussed were abstract and policy-oriented, not the relatable therapeutic concepts for high school students. |
-| **6** | The group leader did not add content from outside the protocol. | **1** | The entire session consisted of content from outside the protocol. The facilitator moderated a discussion on a topic completely different from the Shamiri intervention curriculum. This represents a 100% deviation from the prescribed content. |
-| | **Overall Score** | **1.0/7** | Extremely low fidelity. This was not a Shamiri peer counseling session. It was a panel discussion with professionals on scaling mental health interventions. The recording does not align with the therapeutic protocol being evaluated, and therefore, fidelity could not be assessed. |
-
----
-
-## 2. Qualitative Feedback
-
-### Overall Summary
-
-This session was a structured panel discussion, not a therapeutic group for adolescents. The facilitator acted as a moderator, guiding a conversation with several distinguished guests from government ministries and foundations. The topic was the strategic challenges and success factors for scaling evidence-based mental health interventions in Kenya. The conversation revolved around policy, funding, sustainability, and community co-design at a macro level. There was no interaction with youth participants and no delivery of the Shamiri intervention's psychoeducational content.
-
-### Strengths
-
-1. The facilitator demonstrated strong skills in moderating a professional panel discussion.
-
-2. The facilitator asked relevant, open-ended questions to guide the panelists' contributions.
-
-3. The facilitator managed the time and flow of the conversation effectively, ensuring all panelists had an opportunity to speak.
-
-### Weaknesses & Areas for Improvement
-
-1. The fundamental issue is the mismatch between the session type and the evaluation criteria. This recording is not a Shamiri group therapy session and cannot be used to evaluate fidelity to the intervention protocol.
-
-2. No therapeutic skills from the protocol were demonstrated because the context was inappropriate for their use.
-
-3. The session did not create a peer-counseling environment for adolescents as required by the protocol.
-
-### Session Flow and Engagement
-
-The session's flow was typical of a structured panel discussion, with the moderator posing questions and panelists providing detailed answers. The audio features, such as a low average speech gap and a high quick exchange ratio, reflect a fast-paced, professional dialogue rather than a reflective therapeutic session. Engagement was high among the adult panelists, but this was not the peer-to-peer engagement the Shamiri protocol aims to foster among adolescents.
-
----
-
-## 3. Flags for Behavior
-
-* No safety flags identified in this session.
-
----
-
-## 4. Recommendations
-
-1. Ensure that the recordings submitted for fidelity evaluation are actual Shamiri peer counseling sessions conducted with adolescents, not conference panels or other events.
-
-2. This recording should not be used to assess the facilitator's competency in delivering the therapeutic intervention.
-
-3. A new recording that aligns with the Shamiri Intervention Protocol is required to perform a meaningful fidelity assessment.`;
+export const SAMPLE_FEEDBACK = {
+  fidelity_scores: {
+    question_1_protocol_adherence: {
+      score: 2,
+      justification:
+        "Adherence was low due to the omission of several mandatory protocol elements. Most critically, the 'Explaining Confidentiality' component was not performed at the beginning of the session; it was only vaguely mentioned at the very end without the required jovial tone or specific example of when it would be broken. Additionally, the mandatory techniques of 'Rephrasing' and the 3-step 'Reflecting' process at the end of the session were completely absent.",
+    },
+    question_2_content_specifications: {
+      score: 4,
+      justification:
+        "The facilitator covered the main content topics for the session (values, role models, goal setting) and guided students through the corresponding workbook activities. However, the delivery lacked adherence to specifications around *how* the content should be facilitated. The absence of techniques like rephrasing and structured reflection means that while the 'what' was covered, the 'how' was not, leading to a neutral score.",
+    },
+    question_3_thoroughness: {
+      score: 4,
+      justification:
+        "The session's thoroughness was mixed. The facilitator allocated significant time for individual workbook activities, evidenced by long periods of silence, which allowed for personal reflection. However, the group discussions felt superficial at times, moving from one student to the next without deeper exploration. The session conclusion was particularly rushed and chaotic, lacking a thorough summary or reflection on the day's topic.",
+    },
+    question_4_skillful_delivery: {
+      score: 5,
+      justification:
+        "The facilitator demonstrated skill in several key areas. They effectively used open-ended questions, verbal nodding (frequent 'Mhm'), and connecting themes between students (e.g., identifying that many role models were 'hard working'). The response to a student's disclosure of a bereavement was empathetic and appropriate. However, the lack of other critical skills (rephrasing, structured reflection) and the disorganized session ending prevent a higher score.",
+    },
+    question_5_clarity_accessibility: {
+      score: 6,
+      justification:
+        "The facilitator excelled at making the core concepts clear and accessible. They broke down the abstract idea of 'values' into simple, relatable terms using everyday examples (e.g., 'good characteristics that a person lives by... like if you value kindness'). Instructions for the workbook activities were also clear and repeated for understanding. The language used was age-appropriate and culturally relevant.",
+    },
+    question_6_protocol_boundaries: {
+      score: 7,
+      justification:
+        "The facilitator maintained excellent protocol boundaries. They did not add any content from outside the specified curriculum. The use of a personal example of a role model was appropriate as it served to model the activity for the students and was not an over-disclosure. The session remained focused on the intended material.",
+    },
+    overall_score: "4.7",
+    overall_assessment:
+      "Moderate fidelity with critical gaps. The facilitator demonstrated foundational skills in creating a safe space and explaining concepts but failed to adhere to several mandatory protocol techniques, most notably the initial confidentiality agreement and the structured session wrap-up. This significantly impacts overall protocol fidelity.",
+  },
+  qualitative_feedback: {
+    session_summary:
+      "This session focused on the topic of 'Values'. The facilitator began with a general check-in, during which a student disclosed a recent bereavement. The facilitator and a co-facilitator handled this with empathy and offered follow-up support. The core of the session involved introducing the concept of values, having students identify their own from a workbook, and facilitating a discussion about role models. The session concluded with an individual goal-setting activity. While the main content points were covered, the session suffered from a lack of adherence to specific procedural elements of the protocol, such as rephrasing and a structured reflection, and concluded in a disorganized manner.",
+    strengths: [
+      "Effective use of open-ended questions to elicit student experiences (e.g., 'How have you guys been?', 'Who else would like to share their role model?').",
+      "Consistent use of verbal nodding ('Mhm', 'Yeah') to demonstrate active listening and encourage students to continue speaking.",
+      "Successfully connected themes between students to build a sense of shared experience, such as noting the common value of 'hard working' role models and that many chose family members.",
+      "Handled a sensitive student disclosure about a bereavement with appropriate empathy and a clear, supportive offer of follow-up with a supervisor.",
+      "Good use of silence as a therapeutic tool, allowing students ample quiet time for individual reflection and writing in their workbooks.",
+    ],
+    areas_for_improvement: [
+      "**Confidentiality Explanation**: This is a non-negotiable, mandatory element that must be delivered at the start of every session. The facilitator must explain the rules of confidentiality, including the specific safety exception, using a jovial tone and an example as prescribed.",
+      "**Rephrasing Technique**: The facilitator did not use rephrasing to summarize student contributions. They should practice listening for key phrases and repeating them back to the student and group to confirm understanding and highlight important points (e.g., 'So it sounds like you admire your sister because she is focused and hardworking.').",
+      "**Structured Reflection**: The session ended abruptly and chaotically. The facilitator must practice the mandatory 3-step reflection process: 1) Summarize the lesson (values and goals), 2) Mention specific student contributions (e.g., 'Student A shared about their parent's kindness, and Student B talked about their sibling's hard work'), and 3) Make a clear transition to the end of the session.",
+    ],
+    session_flow_and_engagement:
+      "The session's flow was inconsistent. The facilitator effectively guided the group through the structured activities, but the transitions between discussion and individual work were sometimes abrupt. Engagement was moderate; while most students participated when called upon, there were long silences that suggested hesitation, requiring frequent prompting from the facilitator. The flow completely broke down in the final five minutes, becoming a series of fragmented and overlapping conversations.",
+  },
+  safety_flags: [
+    {
+      type: "other",
+      description:
+        "A student disclosed a recent death of someone close to them, indicating they were struggling to cope. A co-facilitator followed up, asking if it was affecting them at school, and the student's response indicated ongoing distress.",
+      timestamp_reference: "early in session, around the 9-minute mark",
+      severity: "medium",
+      immediate_action_needed: false,
+      context_analysis:
+        "This was a disclosure of a current issue causing ongoing emotional distress. The student shared this during the initial check-in. The co-facilitator's response was appropriate: they validated the student's feelings and immediately offered a follow-up with a supervisor. This action correctly addresses the need for support while allowing the group session to continue. The action was handled correctly in the moment, so no further immediate action is needed beyond ensuring the promised follow-up occurs.",
+      current_vs_past: "current",
+      confidence_level: "high",
+      requires_follow_up: true,
+    },
+  ],
+  recommendations: [
+    "**Mandatory Protocol Review**: The facilitator must review and role-play the mandatory protocol elements, especially the 'Explaining Confidentiality' script, to ensure it is delivered correctly at the start of the next session.",
+    "**Practice Rephrasing**: In supervision, the facilitator should practice rephrasing statements. A supervisor could provide sample student statements, and the facilitator can practice summarizing them using the student's exact key words.",
+    "**Create a Closing 'Cheat Sheet'**: The facilitator should write down the 3 steps of the reflection process on a notecard to use at the end of the session. This will help them structure the closing and ensure they remember to summarize the topic and incorporate specific student examples before concluding.",
+  ],
+};

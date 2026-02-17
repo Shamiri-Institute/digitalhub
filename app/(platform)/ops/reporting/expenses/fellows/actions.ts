@@ -2,7 +2,7 @@
 
 import type { Prisma } from "@prisma/client";
 import { currentOpsUser } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { db } from "#/lib/db";
 
 export type HubFellowsAttendancesType = Awaited<
@@ -16,10 +16,13 @@ export async function loadHubsFellowAttendance() {
     throw new Error("Unauthorised user");
   }
 
+  // TODO: Implement project switch for ops users -- for now default to default project
+  const projectId = await getActiveProjectId();
+
   const fellows = await db.fellow.findMany({
     where: {
       hub: {
-        projectId: CURRENT_PROJECT_ID,
+        projectId,
       },
     },
     include: {

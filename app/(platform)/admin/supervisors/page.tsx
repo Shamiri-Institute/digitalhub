@@ -5,6 +5,7 @@ import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { db } from "#/lib/db";
 
 export default async function SupervisorsPage() {
@@ -12,7 +13,16 @@ export default async function SupervisorsPage() {
   if (admin === null) {
     await signOut({ callbackUrl: "/login" });
   }
+  const implementerId = admin?.session?.user.activeMembership?.implementerId;
+  const projectId = await getActiveProjectId();
+
   const supervisors = await db.supervisor.findMany({
+    where: {
+      implementerId,
+      hub: {
+        projectId,
+      },
+    },
     include: {
       assignedSchools: true,
       fellows: true,

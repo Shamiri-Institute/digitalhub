@@ -20,6 +20,7 @@ export type Filters = {
     [p: string]: boolean;
   };
   dates: DateRangeType;
+  dateRange?: { start: Date; end: Date };
 };
 
 export const FiltersContext = createContext<{

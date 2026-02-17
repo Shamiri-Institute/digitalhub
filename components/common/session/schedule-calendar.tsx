@@ -46,6 +46,7 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
+import { getDateRangeForCalendar } from "#/lib/date-utils";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
@@ -98,19 +99,22 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   props.hubSessionTypes?.forEach((sessionType) => {
     sessionTypes[sessionType.sessionName] = true;
   });
+  const datesFromMode = ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week";
   const [filters, setFilters] = useState<Filters>({
     sessionTypes,
     statusTypes: statusFilterOptions,
-    dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
+    dates: datesFromMode,
+    dateRange: getDateRangeForCalendar(today(getLocalTimeZone()), datesFromMode),
   });
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
   useEffect(() => {
-    setFilters({
+    setFilters((prev) => ({
+      ...prev,
       sessionTypes,
       statusTypes: statusFilterOptions,
       dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
-    });
+    }));
   }, [props.hubSessionTypes]);
 
   const monthState = useCalendarState({
@@ -152,6 +156,24 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     locale,
     createCalendar,
   });
+
+  const visibleStart =
+    mode === "month"
+      ? monthState.visibleRange.start
+      : mode === "week"
+        ? weekState.visibleRange.start
+        : mode === "day"
+          ? dayState.visibleRange.start
+          : mode === "list"
+            ? listState.visibleRange.start
+            : tableState.visibleRange.start;
+
+  const rangeType = ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week";
+  useEffect(() => {
+    if (!visibleStart) return;
+    const dateRange = getDateRangeForCalendar(visibleStart, rangeType);
+    setFilters((prev) => ({ ...prev, dateRange }));
+  }, [visibleStart?.toString(), rangeType, mode]);
 
   const month = useCalendar(calendarStateProps, monthState);
 
