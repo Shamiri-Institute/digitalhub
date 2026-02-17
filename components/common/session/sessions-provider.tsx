@@ -97,7 +97,15 @@ export function SessionsProvider({
 
   useEffect(() => {
     void fetchSessions();
-  }, [activeProjectId, hubId, implementerId, role, filters.statusTypes, filters.dates, dateRangeKey]);
+  }, [
+    activeProjectId,
+    hubId,
+    implementerId,
+    role,
+    filters.statusTypes,
+    filters.dates,
+    dateRangeKey,
+  ]);
 
   const refresh = () => fetchSessions();
 
