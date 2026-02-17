@@ -1,7 +1,7 @@
 "use server";
 
 import { currentAdminUser } from "#/app/auth";
-import type { JWTMembership } from "#/lib/auth-options";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { db } from "#/lib/db";
 
 export async function fetchImplementerStats(implementerId: string) {
@@ -9,6 +9,8 @@ export async function fetchImplementerStats(implementerId: string) {
   if (admin === null) {
     throw new Error("Unauthorized");
   }
+
+  const projectId = await getActiveProjectId();
 
   try {
     const stats = await db.$queryRaw<
@@ -26,7 +28,8 @@ export async function fetchImplementerStats(implementerId: string) {
       LEFT JOIN schools sch ON h.id = sch.hub_id
       LEFT JOIN students stu ON sch.id = stu.school_id
     WHERE
-      h.implementer_id = ${implementerId}`;
+      h.implementer_id = ${implementerId}
+      AND h.project_id = ${projectId}`;
 
     return { success: true, data: stats[0] };
   } catch (error) {
@@ -41,11 +44,14 @@ export async function fetchImplementerSessionTypes(implementerId: string) {
     throw new Error("Unauthorized");
   }
 
+  const projectId = await getActiveProjectId();
+
   try {
     const sessionTypes = await db.sessionName.findMany({
       where: {
         hub: {
           implementerId: implementerId,
+          projectId,
         },
       },
       distinct: ["sessionName"],
@@ -61,76 +67,20 @@ export async function fetchImplementerSessionTypes(implementerId: string) {
   }
 }
 
-export async function fetchImplementerHubs(activeMembership: JWTMembership) {
-  const admin = await currentAdminUser();
-  if (admin === null) {
-    throw new Error("Unauthorized");
-  }
-
-  try {
-    const hubs = await db.hub.findMany({
-      where: {
-        implementerId: activeMembership.implementerId,
-      },
-      include: {
-        schools: {
-          include: {
-            assignedSupervisor: true,
-            interventionSessions: {
-              include: {
-                sessionRatings: true,
-                session: true,
-              },
-            },
-            students: {
-              include: {
-                assignedGroup: true,
-                _count: {
-                  select: {
-                    clinicalCases: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        implementer: true,
-        coordinators: true,
-        _count: {
-          select: {
-            fellows: {
-              where: {
-                droppedOut: false || null,
-              },
-            },
-            supervisors: {
-              where: {
-                droppedOut: false || null,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return { success: true, data: hubs };
-  } catch (error) {
-    console.error("Error fetching implementer hubs:", error);
-    return { success: false, message: "Error fetching implementer hubs" };
-  }
-}
-
 export async function fetchImplementerSchools(implementerId: string) {
   const admin = await currentAdminUser();
   if (admin === null) {
     throw new Error("Unauthorized");
   }
 
+  const projectId = await getActiveProjectId();
+
   try {
     const schools = await db.school.findMany({
       where: {
         hub: {
           implementerId: implementerId,
+          projectId,
         },
       },
       select: {
@@ -157,11 +107,14 @@ export async function fetchImplementerSupervisors(implementerId: string) {
     throw new Error("Unauthorized");
   }
 
+  const projectId = await getActiveProjectId();
+
   try {
     const supervisors = await db.supervisor.findMany({
       where: {
         hub: {
           implementerId: implementerId,
+          projectId,
         },
       },
       include: {
@@ -199,6 +152,8 @@ export async function fetchImplementerFellowRatings(implementerId: string) {
     throw new Error("Unauthorized");
   }
 
+  const projectId = await getActiveProjectId();
+
   try {
     const fellowRatings = await db.$queryRaw<
       {
@@ -213,6 +168,7 @@ export async function fetchImplementerFellowRatings(implementerId: string) {
   LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
   LEFT JOIN hubs h ON h.id = fel.hub_id
   WHERE h.implementer_id=${implementerId}
+  AND h.project_id = ${projectId}
   GROUP BY fel.id`;
     return { success: true, data: fellowRatings };
   } catch (error) {

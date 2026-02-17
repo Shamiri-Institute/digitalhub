@@ -1,6 +1,6 @@
 import "next-auth";
 
-import { JWTMembership, SessionUser } from "#/lib/auth-options";
+import type { JWTMembership, SessionUser } from "#/lib/auth-options";
 
 declare module "next-auth" {
   /**

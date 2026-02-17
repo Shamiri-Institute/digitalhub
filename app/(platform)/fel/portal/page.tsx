@@ -6,7 +6,6 @@ import FellowSchoolsDatatable from "#/components/common/fellow/fellow-schools-da
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export default async function FellowsPage() {
@@ -20,6 +19,11 @@ export default async function FellowsPage() {
       id: fellow?.profile.id,
     },
     include: {
+      hub: {
+        include: {
+          project: true,
+        },
+      },
       fellowAttendances: {
         include: {
           session: {
@@ -71,12 +75,6 @@ export default async function FellowsPage() {
     },
   });
 
-  const project = await db.project.findUnique({
-    where: {
-      id: CURRENT_PROJECT_ID,
-    },
-  });
-
   return (
     <div className="flex h-full flex-col">
       <div className="container w-full grow space-y-3 py-10">
@@ -117,7 +115,7 @@ export default async function FellowsPage() {
               averageRating: 0,
             } as FellowsData,
           ]}
-          project={project ?? undefined}
+          project={fellowData?.hub?.project ?? undefined}
           role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
         />
       </div>

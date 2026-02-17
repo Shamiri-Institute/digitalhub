@@ -22,6 +22,9 @@ export default async function SchoolSessionsPage({
     include: {
       interventionSessions: {
         include: {
+          hub: {
+            select: { visibleId: true },
+          },
           school: {
             include: {
               assignedSupervisor: true,
