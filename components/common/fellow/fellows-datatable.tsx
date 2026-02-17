@@ -1,7 +1,7 @@
 "use client";
 
 import { ImplementerRole, Prisma } from "@prisma/client";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
@@ -11,15 +11,6 @@ import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import { BatchUploadDownloadFellow } from "#/components/common/fellow/upload-csv";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
-import { Icons } from "#/components/icons";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
 
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
@@ -169,93 +160,5 @@ export default function FellowsDatatable({
         </>
       )}
     </>
-  );
-}
-
-export function FellowsDatatableMenu({
-  fellow,
-  state,
-  role,
-}: {
-  fellow: SchoolFellowTableData;
-  state: {
-    setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
-    setDetailsDialog: Dispatch<SetStateAction<boolean>>;
-    setReplaceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
-    setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-    setAssignSupervisorDialog: Dispatch<SetStateAction<boolean>>;
-  };
-  role: ImplementerRole;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-          </div>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            state.setFellow(fellow);
-            state.setDetailsDialog(true);
-          }}
-        >
-          {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
-            ? "View fellow information"
-            : role === ImplementerRole.SUPERVISOR
-              ? "Edit fellow information"
-              : null}
-        </DropdownMenuItem>
-        {role === ImplementerRole.HUB_COORDINATOR && (
-          <DropdownMenuItem
-            disabled={fellow.droppedOut ?? undefined}
-            onClick={() => {
-              state.setFellow(fellow);
-              state.setAssignSupervisorDialog(true);
-            }}
-          >
-            Assign supervisor
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem
-          disabled={fellow.groupId === null}
-          onClick={() => {
-            state.setFellow(fellow);
-            state.setStudentsDialog(true);
-          }}
-        >
-          View students in group
-        </DropdownMenuItem>
-        {role === ImplementerRole.HUB_COORDINATOR ||
-          (role === ImplementerRole.SUPERVISOR && (
-            <DropdownMenuItem
-              disabled={fellow.groupId === null}
-              onClick={() => {
-                state.setFellow(fellow);
-                state.setReplaceDialog(true);
-              }}
-            >
-              Replace fellow
-            </DropdownMenuItem>
-          ))}
-        <DropdownMenuItem
-          onClick={() => {
-            state.setFellow(fellow);
-            state.setAttendanceHistoryDialog(true);
-          }}
-        >
-          Session attendance history
-        </DropdownMenuItem>
-        <DropdownMenuItem>View complaints</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

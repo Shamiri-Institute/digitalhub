@@ -4,7 +4,7 @@ import type { ImplementerRole, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { AllSupervisorsDataTableMenu } from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
+import { AllSupervisorsDataTableMenu } from "#/app/(platform)/hc/supervisors/components/all-supervisors-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
