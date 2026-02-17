@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.16.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.15.2...v1.16.0) (2026-02-17)
+
+
+### Features
+
+* **admin:** track current project on database + ENG-1175 ([#619](https://github.com/Shamiri-Institute/digitalhub/issues/619)) ([add2def](https://github.com/Shamiri-Institute/digitalhub/commit/add2def8f856d6f773a4c531a7cbe2e721e8060e))
+* **ai:** implement job submissions to fidelity API and asynchronous results handling ([#617](https://github.com/Shamiri-Institute/digitalhub/issues/617)) ([4c78a4c](https://github.com/Shamiri-Institute/digitalhub/commit/4c78a4c846eca21142af06bf7cbfc3e149d036d2))
+* fellow triage documentation workflow ([#610](https://github.com/Shamiri-Institute/digitalhub/issues/610)) ([59d1d33](https://github.com/Shamiri-Institute/digitalhub/commit/59d1d33e5ed1d75fc35820232ba69188fd180479))
+* **reporting:** add monitoring and evaluation page on hc view ([#615](https://github.com/Shamiri-Institute/digitalhub/issues/615)) ([1195529](https://github.com/Shamiri-Institute/digitalhub/commit/11955296a078a437fb96c0c333658a6bc47c83b0))
+
 ## [1.15.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.15.1...v1.15.2) (2026-02-11)
 
 
