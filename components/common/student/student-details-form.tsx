@@ -317,9 +317,10 @@ export default function StudentDetailsForm({
                         <FormItem>
                           <FormLabel>Type of questionnaire</FormLabel>
                           <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            defaultValue={field.value}
+                            onValueChange={(value) =>
+                              field.onChange(value === "none" ? undefined : value)
+                            }
+                            value={field.value ?? "none"}
                             disabled={mode === "view"}
                           >
                             <FormControl>
@@ -328,9 +329,12 @@ export default function StudentDetailsForm({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="max-h-[200px]">
-                              {QUESTIONNAIRE_TYPE_OPTIONS.map((type) => (
+                              <SelectItem value="none">None</SelectItem>
+                              {QUESTIONNAIRE_TYPE_OPTIONS.filter(
+                                (type) => type !== QuestionnaireType.JSS,
+                              ).map((type) => (
                                 <SelectItem key={type} value={type}>
-                                  {type === QuestionnaireType.JSS ? "JSS" : type}
+                                  {type}
                                 </SelectItem>
                               ))}
                             </SelectContent>

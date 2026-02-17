@@ -138,7 +138,7 @@ export const columns = (state: {
   {
     header: "Questionnaire",
     id: "Questionnaire",
-    accessorFn: (row) => row.questionnaireType ?? "",
+    accessorFn: (row) => row.questionnaireType ?? "None",
   },
   {
     header: "Stream",
