@@ -1,5 +1,5 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
 import type { AuthOptions } from "next-auth";
 import { getServerSession } from "next-auth";
@@ -43,17 +43,15 @@ export type SessionUser = {
   activeProjectId?: string | null;
 };
 
-function parseMembershipsForJWT(
-  userWithMemberships: {
-    memberships: Array<{
-      id: number;
-      role: ImplementerRole;
-      identifier: string | null;
-      updatedAt: Date | null;
-      implementer: { id: string; implementerName: string };
-    }>;
-  },
-): JWTMembership[] {
+function parseMembershipsForJWT(userWithMemberships: {
+  memberships: Array<{
+    id: number;
+    role: ImplementerRole;
+    identifier: string | null;
+    updatedAt: Date | null;
+    implementer: { id: string; implementerName: string };
+  }>;
+}): JWTMembership[] {
   return userWithMemberships.memberships.map((m) => ({
     id: m.id,
     implementerId: m.implementer.id,
