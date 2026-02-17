@@ -100,10 +100,7 @@ export default function StudentDetailsForm({
       studentName: student?.studentName ?? "",
       admissionNumber: student?.admissionNumber ?? "",
       gender: student?.gender ?? "",
-      questionnaireType: (student?.questionnaireType ?? "none") as
-        | "none"
-        | "QA"
-        | "JSS",
+      questionnaireType: (student?.questionnaireType ?? "none") as "none" | "QA" | "JSS",
       yearOfBirth: student?.yearOfBirth?.toString() ?? "",
       form: student?.form?.toString() ?? "",
       stream: student?.stream ?? "",
