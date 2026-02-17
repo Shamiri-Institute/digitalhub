@@ -12,6 +12,7 @@ import { AddReportingNote } from "#/components/common/student/add-reporting-note
 import AttendanceHistory from "#/components/common/student/attendance-history";
 import { columns, type SchoolStudentTableData } from "#/components/common/student/columns";
 import GroupTransferHistory from "#/components/common/student/group-transfer-history";
+import StudentArchiveForm from "#/components/common/student/student-archive-form";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import StudentDropoutForm from "#/components/common/student/student-dropout-form";
 import DataTable from "#/components/data-table";
@@ -31,6 +32,7 @@ export default function StudentsDatatable({
   const [reportingNotesDialog, setReportingNotesDialog] = useState<boolean>(false);
   const [groupTransferHistory, setGroupTransferHistory] = useState<boolean>(false);
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
+  const [archiveDialog, setArchiveDialog] = useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
   const [selectedSession, setSelectedSession] = useState<string>();
 
@@ -68,6 +70,7 @@ export default function StudentsDatatable({
           setReportingNotesDialog,
           setGroupTransferHistory,
           setDropoutDialog,
+          setArchiveDialog,
           role,
         })}
         emptyStateMessage="No students found"
@@ -149,6 +152,9 @@ export default function StudentsDatatable({
           <StudentDropoutForm student={student} isOpen={dropoutDialog} setIsOpen={setDropoutDialog}>
             {renderDialogAlert()}
           </StudentDropoutForm>
+          <StudentArchiveForm student={student} isOpen={archiveDialog} setIsOpen={setArchiveDialog}>
+            {renderDialogAlert()}
+          </StudentArchiveForm>
         </div>
       )}
     </div>

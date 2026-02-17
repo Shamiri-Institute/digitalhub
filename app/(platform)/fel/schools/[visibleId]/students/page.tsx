@@ -13,6 +13,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
 
   const students = await db.student.findMany({
     where: {
+      archivedAt: null,
       school: {
         visibleId,
       },

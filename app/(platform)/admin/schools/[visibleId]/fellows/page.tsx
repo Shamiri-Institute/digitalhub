@@ -68,6 +68,7 @@ export default async function FellowsPage({ params }: { params: Promise<{ visibl
   `,
     db.student.findMany({
       where: {
+        archivedAt: null,
         school: {
           visibleId,
         },

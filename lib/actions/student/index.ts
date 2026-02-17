@@ -3,6 +3,7 @@
 import type { Prisma } from "@prisma/client";
 import type { z } from "zod";
 import {
+  ArchiveStudentSchema,
   DropoutStudentSchema,
   MarkAttendanceSchema,
   StudentReportingNotesSchema,
@@ -346,6 +347,33 @@ export async function dropoutStudent(data: z.infer<typeof DropoutStudentSchema>)
     return {
       success: false,
       message: `Something went wrong while trying to ${data.mode === "dropout" ? "drop out student" : "undo drop out"}`,
+    };
+  }
+}
+
+export async function archiveStudent(data: z.infer<typeof ArchiveStudentSchema>) {
+  try {
+    await checkAuth();
+
+    const { studentId } = ArchiveStudentSchema.parse(data);
+    const result = await db.student.update({
+      data: {
+        archivedAt: new Date(),
+      },
+      where: {
+        id: studentId,
+      },
+    });
+
+    return {
+      success: true,
+      message: `${result.studentName} has been archived.`,
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      success: false,
+      message: "Something went wrong while trying to archive student.",
     };
   }
 }

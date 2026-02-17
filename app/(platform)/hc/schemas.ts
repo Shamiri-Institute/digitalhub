@@ -50,6 +50,10 @@ export const DropoutStudentSchema = z
     }
   });
 
+export const ArchiveStudentSchema = z.object({
+  studentId: stringValidation("Missing student ID"),
+});
+
 // TODO: Depreciate
 export const SubmitComplaintSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
