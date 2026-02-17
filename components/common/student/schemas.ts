@@ -23,7 +23,9 @@ export const StudentDetailsSchema = z
     ),
     stream: stringValidation("Please enter the student's stream"),
     gender: stringValidation("Please select the student's gender"),
-    questionnaireType: z.enum(QUESTIONNAIRE_TYPE_OPTIONS).optional(),
+    questionnaireType: z
+      .union([z.enum(QUESTIONNAIRE_TYPE_OPTIONS), z.literal("none")])
+      .optional(),
     schoolId: z.string().optional(),
     assignedGroupId: z.string().optional(),
     admissionNumber: z.string().optional(),

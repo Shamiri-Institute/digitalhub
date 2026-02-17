@@ -58,7 +58,10 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
           stream,
           phoneNumber,
           admissionNumber,
-          questionnaireType: questionnaireType ?? null,
+          questionnaireType:
+            questionnaireType === "none" || questionnaireType == null
+              ? null
+              : questionnaireType,
         },
       });
       return {
@@ -96,7 +99,10 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
         gender,
         form: Number(form),
         stream,
-        questionnaireType: questionnaireType ?? null,
+        questionnaireType:
+          questionnaireType === "none" || questionnaireType == null
+            ? null
+            : questionnaireType,
         assignedGroupId,
         implementerId: auth.session.user.activeMembership?.implementerId,
         fellowId: group.leader.id,

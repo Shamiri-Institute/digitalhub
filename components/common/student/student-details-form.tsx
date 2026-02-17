@@ -100,7 +100,10 @@ export default function StudentDetailsForm({
       studentName: student?.studentName ?? "",
       admissionNumber: student?.admissionNumber ?? "",
       gender: student?.gender ?? "",
-      questionnaireType: student?.questionnaireType ?? undefined,
+      questionnaireType: (student?.questionnaireType ?? "none") as
+        | "none"
+        | "QA"
+        | "JSS",
       yearOfBirth: student?.yearOfBirth?.toString() ?? "",
       form: student?.form?.toString() ?? "",
       stream: student?.stream ?? "",
@@ -317,9 +320,7 @@ export default function StudentDetailsForm({
                         <FormItem>
                           <FormLabel>Type of questionnaire</FormLabel>
                           <Select
-                            onValueChange={(value) =>
-                              field.onChange(value === "none" ? undefined : value)
-                            }
+                            onValueChange={field.onChange}
                             value={field.value ?? "none"}
                             disabled={mode === "view"}
                           >
