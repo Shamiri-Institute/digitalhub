@@ -1,15 +1,17 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { forwardRef } from "react";
 
 import { Icons } from "#/components/icons";
 import { MobileNavigation } from "#/components/mobile-navigation";
 import { cn } from "#/lib/utils";
 
-export const Header = forwardRef<HTMLDivElement, { className?: string }>(function Header(
-  { className },
+export function Header({
+  className,
   ref,
-) {
+}: {
+  className?: string;
+  ref?: React.Ref<HTMLDivElement>;
+}) {
   return (
     <motion.div
       ref={ref}
@@ -32,4 +34,4 @@ export const Header = forwardRef<HTMLDivElement, { className?: string }>(functio
       </div>
     </motion.div>
   );
-});
+}
