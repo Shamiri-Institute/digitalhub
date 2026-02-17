@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Figtree, Inter } from "next/font/google";
-import { getServerSession } from "next-auth";
 import { Providers } from "#/components/providers";
-import { authOptions } from "#/lib/auth-options";
+import { getCachedSession } from "#/lib/auth-options";
 import { cn } from "#/lib/utils";
 
 import "./globals.css";
@@ -20,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
+  const session = await getCachedSession();
 
   return (
     <html lang="en" className="h-full">
