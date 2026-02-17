@@ -157,22 +157,23 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
-  const activeValue =
+  const visibleStart =
     mode === "month"
-      ? monthState.value
+      ? monthState.visibleRange.start
       : mode === "week"
-        ? weekState.value
+        ? weekState.visibleRange.start
         : mode === "day"
-          ? dayState.value
+          ? dayState.visibleRange.start
           : mode === "list"
-            ? listState.value
-            : tableState.value;
+            ? listState.visibleRange.start
+            : tableState.visibleRange.start;
+
   const rangeType = ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week";
   useEffect(() => {
-    if (!activeValue) return;
-    const dateRange = getDateRangeForCalendar(activeValue, rangeType);
+    if (!visibleStart) return;
+    const dateRange = getDateRangeForCalendar(visibleStart, rangeType);
     setFilters((prev) => ({ ...prev, dateRange }));
-  }, [activeValue?.toString(), rangeType, mode]);
+  }, [visibleStart?.toString(), rangeType, mode]);
 
   const month = useCalendar(calendarStateProps, monthState);
 
