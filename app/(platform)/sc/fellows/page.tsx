@@ -2,7 +2,6 @@ import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { loadFellowsData } from "#/app/(platform)/sc/actions";
 import { currentSupervisor } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import FellowSchoolsDatatable from "../../../../components/common/fellow/fellow-schools-datatable";
 
@@ -18,9 +17,14 @@ export default async function FellowsPage() {
 
   const fellows = await loadFellowsData();
 
+  const projectId = supervisor?.profile?.hub?.projectId;
+  if (!projectId) {
+    return <div>Supervisor&apos;s hub has no assigned project</div>;
+  }
+
   const project = await db.project.findUnique({
     where: {
-      id: CURRENT_PROJECT_ID,
+      id: projectId,
     },
   });
 

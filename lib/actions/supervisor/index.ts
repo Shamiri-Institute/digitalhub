@@ -3,7 +3,6 @@
 import type { z } from "zod";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 async function checkAuth() {
@@ -64,11 +63,19 @@ export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendan
           id: sessionId,
         },
       });
+
+      const projectId = session.projectId;
+      if (!projectId) {
+        throw new Error(
+          "Session has no project. Ensure the session is linked to a hub with a project.",
+        );
+      }
+
       await db.supervisorAttendance.create({
         data: {
           supervisorId: id ?? "",
           schoolId: session.schoolId ?? undefined,
-          projectId: session.projectId ?? CURRENT_PROJECT_ID,
+          projectId,
           sessionId,
           absenceReason,
           absenceComments: comments,
@@ -112,6 +119,13 @@ export async function markManySupervisorAttendance(
     },
   });
 
+  const projectId = session.projectId;
+  if (!projectId) {
+    throw new Error(
+      "Session has no project. Ensure the session is linked to a hub with a project.",
+    );
+  }
+
   return await Promise.all(
     ids.map(async (supervisorId) => {
       const attendance = await db.supervisorAttendance.findFirst({
@@ -141,7 +155,7 @@ export async function markManySupervisorAttendance(
           data: {
             supervisorId,
             schoolId: session.schoolId,
-            projectId: session.projectId ?? CURRENT_PROJECT_ID,
+            projectId,
             absenceReason,
             absenceComments: comments,
             sessionId,

@@ -1,8 +1,8 @@
 import { ImplementerRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { cache } from "react";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { authOptions } from "#/lib/auth-options";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export type CurrentHubCoordinator = Awaited<ReturnType<typeof currentHubCoordinator>>;
@@ -57,6 +57,8 @@ export const currentSupervisor = cache(async () => {
     return null;
   }
 
+  const projectId = await getActiveProjectId();
+
   const supervisor = await db.supervisor.findFirst({
     where: { id: identifier },
     include: {
@@ -71,7 +73,7 @@ export const currentSupervisor = cache(async () => {
       },
       assignedSchools: {
         where: {
-          hub: { projectId: CURRENT_PROJECT_ID },
+          hub: { projectId },
         },
         include: {
           interventionSessions: true,

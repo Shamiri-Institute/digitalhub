@@ -12,7 +12,7 @@ import {
 
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
-import { getCalendarDate } from "#/lib/date-utils";
+import { getCalendarDate, getDefaultSessionDateRange } from "#/lib/date-utils";
 
 type SessionsContextType = {
   sessions: Session[];
@@ -30,6 +30,9 @@ export const SessionsContext = createContext<SessionsContextType>({
 
 export type Session = Prisma.InterventionSessionGetPayload<{
   include: {
+    hub: {
+      select: { visibleId: true };
+    };
     school: {
       include: {
         interventionGroups: {
@@ -71,10 +74,13 @@ export function SessionsProvider({
   const fetchSessions = async () => {
     if ((role === ImplementerRole.ADMIN && implementerId) || role !== ImplementerRole.ADMIN) {
       setLoading(true);
+      const { start, end } = filters.dateRange ?? getDefaultSessionDateRange();
       const fetchedSessions = await fetchInterventionSessions({
         hubId,
         implementerId,
         role,
+        start,
+        end,
         filters,
       });
       setSessions(fetchedSessions);
@@ -82,13 +88,15 @@ export function SessionsProvider({
     }
   };
 
+  const dateRangeKey = filters.dateRange
+    ? `${filters.dateRange.start.toISOString()}-${filters.dateRange.end.toISOString()}`
+    : null;
+
   useEffect(() => {
     void fetchSessions();
-  }, [hubId, filters, implementerId, role]);
+  }, [hubId, implementerId, role, filters.statusTypes, filters.dates, dateRangeKey]);
 
-  const refresh = () => {
-    return fetchSessions();
-  };
+  const refresh = () => fetchSessions();
 
   return (
     <SessionsContext.Provider value={{ sessions, loading, setSessions, refresh }}>

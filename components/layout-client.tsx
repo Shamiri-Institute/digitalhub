@@ -16,10 +16,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { CurrentPersonnel } from "#/app/auth";
 import { MembershipSwitcher } from "#/components/common/membership-switcher";
 import { ProfileDialog } from "#/components/common/profile/profile-dialog";
+import { ProjectSwitcher } from "#/components/common/project-switcher";
 import { RoleSwitcher } from "#/components/common/role-switcher";
 import { Button } from "#/components/ui/button";
 import {
@@ -74,13 +75,15 @@ export function LayoutClient({
   const userName = session?.user?.name ?? "N/A";
   const avatarUrl = session?.user?.image ?? null;
 
-  useEffect(() => {
-    setPopoverOpen(false);
-  }, [pathname]);
-
   const renderNavigationLinks = (className?: string) => {
     return (
       <div className={className}>
+        <ProjectSwitcher
+          loading={loading}
+          setLoading={setLoading}
+          session={session}
+          className="nav-link"
+        />
         <div className="nav-link">
           <RoleSwitcher loading={loading} setLoading={setLoading} session={session} />
         </div>

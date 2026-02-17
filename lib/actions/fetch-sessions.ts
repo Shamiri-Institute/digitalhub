@@ -2,6 +2,8 @@
 
 import { ImplementerRole, type SessionStatus } from "@prisma/client";
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
+import { getActiveProjectId } from "#/lib/active-project-id";
+import { getDefaultSessionDateRange } from "#/lib/date-utils";
 import { db } from "#/lib/db";
 
 export async function fetchInterventionSessions({
@@ -19,21 +21,34 @@ export async function fetchInterventionSessions({
   end?: Date;
   filters?: Filters;
 }) {
+  let projectId: string;
   if (role === ImplementerRole.ADMIN) {
     if (!implementerId) {
       throw new Error("No implementer ID provided for admin");
     }
+    projectId = await getActiveProjectId();
   } else {
     if (!hubId) {
       throw new Error("No assigned hub ID provided");
     }
+    const hub = await db.hub.findUnique({
+      where: { id: hubId },
+      select: { projectId: true },
+    });
+    if (!hub?.projectId) {
+      throw new Error("Hub has no project");
+    }
+    projectId = hub.projectId;
   }
+
+  const { start: rangeStart, end: rangeEnd } =
+    start && end ? { start, end } : getDefaultSessionDateRange();
 
   const sessions = await db.interventionSession.findMany({
     where: {
       sessionDate: {
-        gte: start,
-        lte: end,
+        gte: rangeStart,
+        lte: rangeEnd,
       },
       // session: {
       //   sessionName: {
@@ -47,6 +62,7 @@ export async function fetchInterventionSessions({
       hub: {
         id: hubId,
         implementerId,
+        projectId,
       },
       status: {
         in:
@@ -57,6 +73,9 @@ export async function fetchInterventionSessions({
       },
     },
     include: {
+      hub: {
+        select: { visibleId: true },
+      },
       school: {
         include: {
           interventionGroups: {

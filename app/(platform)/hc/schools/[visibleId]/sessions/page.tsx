@@ -25,6 +25,9 @@ export default async function SchoolSessionsPage(props: {
         },
       },
       include: {
+        hub: {
+          select: { visibleId: true },
+        },
         school: {
           include: {
             assignedSupervisor: true,
