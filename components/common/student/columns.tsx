@@ -3,7 +3,7 @@
 import type { ImplementerRole, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { parsePhoneNumber } from "libphonenumber-js";
+import { parsePhoneNumberWithError } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
 import StudentsDataTableMenu from "#/components/common/student/students-datatable-menu";
 import { Badge } from "#/components/ui/badge";
@@ -127,8 +127,13 @@ export const columns = (state: {
   {
     header: "Contact no.",
     id: "Contact no.",
-    accessorFn: (row) =>
-      row.phoneNumber && parsePhoneNumber(row.phoneNumber, "KE").formatNational(),
+    accessorFn: (row) => {
+      try {
+        return row.phoneNumber && parsePhoneNumberWithError(row.phoneNumber, "KE").formatNational();
+      } catch {
+        return row.phoneNumber;
+      }
+    },
   },
   {
     header: "Admission number",

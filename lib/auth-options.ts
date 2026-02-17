@@ -5,10 +5,9 @@ import type { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
-
-import { getDefaultProjectId } from "#/lib/active-project-id";
 import { isCredentialAuthAllowed, TEST_CREDENTIALS } from "#/lib/auth/credential-auth";
 import { db } from "#/lib/db";
+import { getDefaultProjectId } from "#/lib/default-project-id";
 
 // Google OAuth credentials are optional when credential auth is allowed (dev/test environments)
 const googleConfigSchema = z.object({
