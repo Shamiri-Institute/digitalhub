@@ -148,12 +148,7 @@ export const EditSchoolSchema = BaseSchoolSchema.extend({
   preSessionDate: z
     .date({ error: "Please select a date" })
     .optional()
-    .transform((val) => {
-      if (val) {
-        return val;
-      }
-      return undefined;
-    }),
+    .transform((val) => val || undefined),
   numbersExpected: z.number().min(1, "Number of students is required").optional(),
 });
 
