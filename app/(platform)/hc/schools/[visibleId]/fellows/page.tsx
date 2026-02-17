@@ -73,6 +73,7 @@ export default async function FellowsPage(props: { params: Promise<{ visibleId: 
   `,
     db.student.findMany({
       where: {
+        archivedAt: null,
         school: {
           visibleId,
         },
