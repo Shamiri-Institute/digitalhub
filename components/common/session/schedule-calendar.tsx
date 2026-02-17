@@ -59,6 +59,7 @@ import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
+  activeProjectId?: string | null;
   hubId?: string;
   implementerId?: string;
   schools: School[];
@@ -89,7 +90,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
-  const { hubId, implementerId, schools, ...calendarStateProps } = props;
+  const { activeProjectId, hubId, implementerId, schools, ...calendarStateProps } = props;
   const { locale } = useLocale();
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? "month";
@@ -220,6 +221,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   return (
     <SessionsProvider
+      activeProjectId={activeProjectId}
       hubId={hubId}
       implementerId={implementerId}
       filters={filters}
