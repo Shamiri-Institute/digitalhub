@@ -58,11 +58,13 @@ export type Session = Prisma.InterventionSessionGetPayload<{
 
 export function SessionsProvider({
   children,
+  activeProjectId,
   hubId,
   implementerId,
   filters,
   role,
 }: PropsWithChildren<{
+  activeProjectId?: string | null;
   hubId?: string;
   implementerId?: string;
   filters: Filters;
@@ -76,6 +78,7 @@ export function SessionsProvider({
       setLoading(true);
       const { start, end } = filters.dateRange ?? getDefaultSessionDateRange();
       const fetchedSessions = await fetchInterventionSessions({
+        activeProjectId,
         hubId,
         implementerId,
         role,
@@ -94,7 +97,15 @@ export function SessionsProvider({
 
   useEffect(() => {
     void fetchSessions();
-  }, [hubId, implementerId, role, filters.statusTypes, filters.dates, dateRangeKey]);
+  }, [
+    activeProjectId,
+    hubId,
+    implementerId,
+    role,
+    filters.statusTypes,
+    filters.dates,
+    dateRangeKey,
+  ]);
 
   const refresh = () => fetchSessions();
 

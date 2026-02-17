@@ -7,6 +7,7 @@ import { getDefaultSessionDateRange } from "#/lib/date-utils";
 import { db } from "#/lib/db";
 
 export async function fetchInterventionSessions({
+  activeProjectId: clientActiveProjectId,
   hubId,
   implementerId,
   role,
@@ -14,6 +15,7 @@ export async function fetchInterventionSessions({
   end,
   filters,
 }: {
+  activeProjectId?: string | null;
   hubId?: string;
   implementerId?: string;
   role: ImplementerRole;
@@ -26,7 +28,7 @@ export async function fetchInterventionSessions({
     if (!implementerId) {
       throw new Error("No implementer ID provided for admin");
     }
-    projectId = await getActiveProjectId();
+    projectId = clientActiveProjectId ?? (await getActiveProjectId());
   } else {
     if (!hubId) {
       throw new Error("No assigned hub ID provided");
