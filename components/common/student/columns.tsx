@@ -127,8 +127,13 @@ export const columns = (state: {
   {
     header: "Contact no.",
     id: "Contact no.",
-    accessorFn: (row) =>
-      row.phoneNumber && parsePhoneNumberWithError(row.phoneNumber, "KE").formatNational(),
+    accessorFn: (row) => {
+      try {
+        return row.phoneNumber && parsePhoneNumberWithError(row.phoneNumber, "KE").formatNational();
+      } catch {
+        return row.phoneNumber;
+      }
+    },
   },
   {
     header: "Admission number",

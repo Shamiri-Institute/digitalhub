@@ -186,7 +186,11 @@ export const columns = ({
     header: "Phone Number",
     id: "Phone number",
     accessorFn: (row) => {
-      return row.cellNumber && parsePhoneNumberWithError(row.cellNumber, "KE").formatNational();
+      try {
+        return row.cellNumber && parsePhoneNumberWithError(row.cellNumber, "KE").formatNational();
+      } catch {
+        return row.cellNumber;
+      }
     },
   },
   {
