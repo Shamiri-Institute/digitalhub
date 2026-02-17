@@ -47,49 +47,55 @@ export interface ButtonProps
   loading?: boolean;
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading, children, asChild = false, ...props }, ref) => {
-    // biome-ignore lint/correctness/noUnusedVariables: shadcn library code - keeping original structure
-    const Comp = asChild ? Slot : "button";
+function Button({
+  className,
+  variant,
+  size,
+  loading,
+  children,
+  asChild = false,
+  ref,
+  ...props
+}: ButtonProps & { ref?: React.Ref<HTMLButtonElement> }) {
+  // biome-ignore lint/correctness/noUnusedVariables: shadcn library code - keeping original structure
+  const Comp = asChild ? Slot : "button";
 
-    if (asChild) {
-      return (
-        <Slot ref={ref} {...props}>
-          {React.Children.map(
-            // biome-ignore lint/suspicious/noExplicitAny: React.Children.map requires ReactElement<any> for proper child iteration
-            children as React.ReactElement<any>,
-            // biome-ignore lint/suspicious/noExplicitAny: cloneElement requires any for props access
-            (child: React.ReactElement<any>) => {
-              return React.cloneElement(child, {
-                className: cn(buttonVariants({ variant, size }), className),
-                children: (
-                  <>
-                    {loading && (
-                      <Loader2 className={cn("h-4 w-4 animate-spin", children && "mr-2")} />
-                    )}
-                    {child.props.children}
-                  </>
-                ),
-              });
-            },
-          )}
-        </Slot>
-      );
-    }
-
+  if (asChild) {
     return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
-        disabled={loading}
-        ref={ref}
-        {...props}
-      >
-        {loading && <Loader2 className={cn("h-4 w-4 animate-spin", children && "mr-2")} />}
-        {children}
-      </button>
+      <Slot ref={ref} {...props}>
+        {React.Children.map(
+          // biome-ignore lint/suspicious/noExplicitAny: React.Children.map requires ReactElement<any> for proper child iteration
+          children as React.ReactElement<any>,
+          // biome-ignore lint/suspicious/noExplicitAny: cloneElement requires any for props access
+          (child: React.ReactElement<any>) => {
+            return React.cloneElement(child, {
+              className: cn(buttonVariants({ variant, size }), className),
+              children: (
+                <>
+                  {loading && (
+                    <Loader2 className={cn("h-4 w-4 animate-spin", children && "mr-2")} />
+                  )}
+                  {child.props.children}
+                </>
+              ),
+            });
+          },
+        )}
+      </Slot>
     );
-  },
-);
-Button.displayName = "Button";
+  }
+
+  return (
+    <button
+      className={cn(buttonVariants({ variant, size, className }))}
+      disabled={loading}
+      ref={ref}
+      {...props}
+    >
+      {loading && <Loader2 className={cn("h-4 w-4 animate-spin", children && "mr-2")} />}
+      {children}
+    </button>
+  );
+}
 
 export { Button, buttonVariants };
