@@ -1802,9 +1802,14 @@ model SessionRecording {
   errorMessage String?                   @map("error_message") @db.Text
   retryCount   Int                       @default(0) @map("retry_count")
 
+  // Job tracking
+  fidelityJobId          String?   @map("fidelity_job_id") @db.VarChar(255)
+  fidelityJobSubmittedAt DateTime? @map("fidelity_job_submitted_at") @db.Timestamptz()
+
   // AI Feedback (hybrid storage: key fields + JSON blob)
   fidelityFeedback Json?   @map("fidelity_feedback")
   overallScore     String? @map("overall_score") @db.VarChar(50)
+  transcript Json? @map("transcript")
 
   @@unique([fellowId, schoolId, groupId, sessionId], name: "unique_recording_per_session")
   @@index([supervisorId])
