@@ -1,13 +1,12 @@
 import { ImplementerRole } from "@prisma/client";
-import { getServerSession } from "next-auth";
 import { cache } from "react";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { authOptions } from "#/lib/auth-options";
+import { getCachedSession } from "#/lib/auth-options";
 import { db } from "#/lib/db";
 
 export type CurrentHubCoordinator = Awaited<ReturnType<typeof currentHubCoordinator>>;
 
-export async function currentHubCoordinator() {
+export const currentHubCoordinator = cache(async () => {
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -38,7 +37,7 @@ export async function currentHubCoordinator() {
   }
 
   return { profile: hubCoordinator, session };
-}
+});
 
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
 
@@ -150,7 +149,7 @@ export const currentSupervisor = cache(async () => {
 
 export type CurrentFellow = Awaited<ReturnType<typeof currentFellow>>;
 
-export async function currentFellow() {
+export const currentFellow = cache(async () => {
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -241,11 +240,11 @@ export async function currentFellow() {
   }
 
   return { profile: fellow, session };
-}
+});
 
 export type CurrentClinicalLead = Awaited<ReturnType<typeof currentClinicalLead>>;
 
-export async function currentClinicalLead() {
+export const currentClinicalLead = cache(async () => {
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -273,11 +272,11 @@ export async function currentClinicalLead() {
   }
 
   return { profile: clinicalLead, session };
-}
+});
 
 export type CurrentClinicalTeam = Awaited<ReturnType<typeof currentClinicalTeam>>;
 
-export async function currentClinicalTeam() {
+export const currentClinicalTeam = cache(async () => {
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -309,11 +308,11 @@ export async function currentClinicalTeam() {
     profile: clinicalTeam,
     session,
   };
-}
+});
 
 export type CurrentOpsUser = Awaited<ReturnType<typeof currentOpsUser>>;
 
-export async function currentOpsUser() {
+export const currentOpsUser = cache(async () => {
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -342,11 +341,11 @@ export async function currentOpsUser() {
   }
 
   return { profile: opsUser, session };
-}
+});
 
 export type CurrentAdminUser = Awaited<ReturnType<typeof currentAdminUser>>;
 
-export async function currentAdminUser() {
+export const currentAdminUser = cache(async () => {
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -371,10 +370,10 @@ export async function currentAdminUser() {
   }
 
   return { profile: adminUser, session };
-}
+});
 
 export async function getCurrentUserSession() {
-  const session = await getServerSession(authOptions);
+  const session = await getCachedSession();
   if (!session) {
     return null;
   }
