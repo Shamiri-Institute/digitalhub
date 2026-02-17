@@ -78,6 +78,7 @@ export function SessionsProvider({
       setLoading(true);
       const { start, end } = filters.dateRange ?? getDefaultSessionDateRange();
       const fetchedSessions = await fetchInterventionSessions({
+        activeProjectId,
         hubId,
         implementerId,
         role,
