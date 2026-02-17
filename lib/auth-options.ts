@@ -1,5 +1,5 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
 import type { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -40,31 +40,6 @@ export type SessionUser = {
   memberships?: JWTMembership[];
   activeProjectId?: string | null;
 };
-
-function parseMembershipsForJWT(
-  userWithMemberships: Prisma.UserGetPayload<{
-    select: {
-      memberships: {
-        select: {
-          id: true;
-          implementer: true;
-          role: true;
-          identifier: true;
-          updatedAt: true;
-        };
-      };
-    };
-  }>,
-): JWTMembership[] {
-  return userWithMemberships.memberships.map((m) => ({
-    id: m.id,
-    implementerId: m.implementer.id,
-    implementerName: m.implementer.implementerName,
-    role: m.role,
-    identifier: m.identifier,
-    updatedAt: m.updatedAt ?? undefined,
-  }));
-}
 
 // Build providers array based on environment and available credentials
 function buildProviders(): AuthOptions["providers"] {
@@ -229,10 +204,29 @@ export const authOptions: AuthOptions = {
       return false;
     },
     session: async ({ session, token }) => {
+      // Single query: fetch user, avatar, and ALL memberships in one round-trip.
+      // We fetch all memberships upfront and filter in-memory to avoid
+      // 2-3 separate db.user.findUnique calls (N+1) on every request.
       const user = await db.user.findUnique({
         where: { id: token.sub ?? "" },
         include: {
           avatar: { select: { file: true } },
+          memberships: {
+            select: {
+              id: true,
+              role: true,
+              identifier: true,
+              updatedAt: true,
+              implementer: {
+                select: {
+                  id: true,
+                  implementerName: true,
+                  hubs: { select: { projectId: true } },
+                },
+              },
+            },
+            orderBy: { updatedAt: "desc" },
+          },
         },
       });
 
@@ -247,53 +241,26 @@ export const authOptions: AuthOptions = {
       const defaultProjectId = await getDefaultProjectId();
       const activeProjectId = user.activeProjectId ?? defaultProjectId;
 
-      const membershipsResult = await db.user.findUnique({
-        where: { id: user.id },
-        select: {
-          memberships: {
-            where: {
-              implementer: {
-                hubs: {
-                  some: { projectId: activeProjectId },
-                },
-              },
-            },
-            select: {
-              id: true,
-              implementer: true,
-              role: true,
-              identifier: true,
-              updatedAt: true,
-            },
-            orderBy: { updatedAt: "desc" },
-          },
-        },
-      });
-      let memberships: JWTMembership[] = membershipsResult
-        ? parseMembershipsForJWT({ ...user, memberships: membershipsResult.memberships })
-        : [];
+      // Filter memberships by active project in-memory (replaces 2nd DB call)
+      const projectMemberships = user.memberships.filter((m) =>
+        m.implementer.hubs.some((h) => h.projectId === activeProjectId),
+      );
+
+      let memberships: JWTMembership[] = projectMemberships.map((m) => ({
+        id: m.id,
+        implementerId: m.implementer.id,
+        implementerName: m.implementer.implementerName,
+        role: m.role,
+        identifier: m.identifier,
+        updatedAt: m.updatedAt ?? undefined,
+      }));
 
       // Fall back to ADMIN memberships only when project-filtered memberships are empty.
       // Non-admins must have hubs in the active project to access the app.
       if (memberships.length === 0 && user.email) {
-        const adminMemberships = await db.user.findUnique({
-          where: { id: user.id },
-          select: {
-            memberships: {
-              where: { role: "ADMIN" },
-              select: {
-                id: true,
-                implementer: true,
-                role: true,
-                identifier: true,
-                updatedAt: true,
-              },
-              orderBy: { updatedAt: "desc" },
-            },
-          },
-        });
-        if (adminMemberships?.memberships?.length) {
-          memberships = adminMemberships.memberships.map((m) => ({
+        const adminMemberships = user.memberships.filter((m) => m.role === "ADMIN");
+        if (adminMemberships.length > 0) {
+          memberships = adminMemberships.map((m) => ({
             id: m.id,
             implementerId: m.implementer.id,
             implementerName: m.implementer.implementerName,
@@ -332,7 +299,7 @@ export const authOptions: AuthOptions = {
     },
     jwt: async ({ token, user, account: _account, trigger, session }) => {
       if (trigger === "signIn" && user?.email) {
-        // First get the user by email
+        // Single query: fetch user identity and activeProjectId together
         const currentUser = await db.user.findUnique({
           where: { email: user.email },
           select: {
@@ -340,6 +307,7 @@ export const authOptions: AuthOptions = {
             email: true,
             name: true,
             image: true,
+            activeProjectId: true,
           },
         });
 
@@ -350,16 +318,7 @@ export const authOptions: AuthOptions = {
 
         token.sub = currentUser.id;
 
-        const userWithProject = await db.user.findUnique({
-          where: { id: currentUser.id },
-          select: { activeProjectId: true },
-        });
-        let projectId: string;
-        if (userWithProject?.activeProjectId) {
-          projectId = userWithProject.activeProjectId;
-        } else {
-          projectId = await getDefaultProjectId();
-        }
+        const projectId = currentUser.activeProjectId ?? (await getDefaultProjectId());
 
         let memberships = await db.implementerMember.findMany({
           where: {
