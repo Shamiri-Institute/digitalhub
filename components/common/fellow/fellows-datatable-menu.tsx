@@ -75,18 +75,17 @@ export function FellowsDatatableMenu({
         >
           View students in group
         </DropdownMenuItem>
-        {role === ImplementerRole.HUB_COORDINATOR ||
-          (role === ImplementerRole.SUPERVISOR && (
-            <DropdownMenuItem
-              disabled={fellow.groupId === null}
-              onClick={() => {
-                state.setFellow(fellow);
-                state.setReplaceDialog(true);
-              }}
-            >
-              Replace fellow
-            </DropdownMenuItem>
-          ))}
+        {(role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR) && (
+          <DropdownMenuItem
+            disabled={fellow.groupId === null}
+            onClick={() => {
+              state.setFellow(fellow);
+              state.setReplaceDialog(true);
+            }}
+          >
+            Replace fellow
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={() => {
             state.setFellow(fellow);
