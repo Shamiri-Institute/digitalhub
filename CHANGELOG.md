@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.17.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.17.2...v1.17.3) (2026-02-17)
+
+
+### Bug Fixes
+
+* **auth:** resolve N+1 queries for session and default project ([#627](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/627)) ([222c39b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/222c39b0fee2eca264b26768f9e2d6ee6831a019))
+* **sessions:** refresh sessions when switching projects (ENG-1380) ([#629](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/629)) ([01670c8](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/01670c82a21c62a07488754234cfdce5f13e4179))
+* **student:** handle questionnaireType default value ([#623](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/623)) ([cb196d9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/cb196d94c564be41e846a4ebd44dd856f454ef7a))
+
 ## [1.17.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.17.1...v1.17.2) (2026-02-17)
 
 ## [1.17.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.17.0...v1.17.1) (2026-02-17)
