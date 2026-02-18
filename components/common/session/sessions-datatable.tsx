@@ -2,7 +2,7 @@
 
 import { ImplementerRole, type Prisma } from "@prisma/client";
 import * as React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
@@ -57,6 +57,21 @@ export default function SessionsDatatable({
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
 
+  const leaderIds = new Set(
+    session?.school?.interventionGroups?.map((g) => g.leaderId) ?? [],
+  );
+  const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
+  const fellowsForStudentAttendance =
+    role === ImplementerRole.SUPERVISOR && supervisorId
+      ? supervisors?.find((s) => s.id === supervisorId)?.fellows ?? []
+      : allFellows.filter((f) => leaderIds.has(f.id));
+
+  useEffect(() => {
+    if (sessions.length > 0) {
+      setSession(sessions.find((s) => s.id === session?.id) ?? null);
+    }
+  }, [sessions, session?.id]);
+
   return (
     <>
       <DataTable
@@ -96,10 +111,8 @@ export default function SessionsDatatable({
             isOpen={studentAttendanceDialog}
             setIsOpen={setStudentAttendanceDialog}
             role={role}
-            session={sessions.find((x) => x.id === session.id) ?? session}
-            fellows={
-              supervisors?.find((supervisor) => supervisor.id === supervisorId)?.fellows ?? []
-            }
+            session={session}
+            fellows={fellowsForStudentAttendance}
             fellowId={fellowId}
           />
           {session.schoolId !== null && session.school && (
