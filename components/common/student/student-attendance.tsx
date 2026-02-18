@@ -1,4 +1,4 @@
-import type { Fellow, ImplementerRole, Prisma } from "@prisma/client";
+import { Fellow, ImplementerRole, Prisma } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
@@ -94,7 +94,7 @@ export default function StudentAttendance({
 
   useEffect(() => {
     const groups = fellows.map((fellow) => {
-      const _session = sessions.find((x) => x.id === session?.id);
+      const _session = sessions.length > 0 ? sessions.find((x) => x.id === session?.id) : session;
       const group = _session?.school?.interventionGroups.find(
         (group) => group.leaderId === fellow.id,
       );
@@ -140,7 +140,7 @@ export default function StudentAttendance({
   };
 
   const renderTableActions = () => {
-    return (
+    return role !== ImplementerRole.ADMIN ? (
       <div className="flex gap-3">
         <Button
           variant="outline"
@@ -155,7 +155,7 @@ export default function StudentAttendance({
           <span>Mark student attendance</span>
         </Button>
       </div>
-    );
+    ) : null;
   };
 
   return (
@@ -163,9 +163,9 @@ export default function StudentAttendance({
       <DialogContent className="lg:w-3/4 lg:max-w-none">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {role === "HUB_COORDINATOR"
+            {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
               ? "View student attendance"
-              : role === "SUPERVISOR" || role === "FELLOW"
+              : role === ImplementerRole.SUPERVISOR || role === ImplementerRole.FELLOW
                 ? "Mark student attendance"
                 : null}
           </DialogTitle>
@@ -175,14 +175,14 @@ export default function StudentAttendance({
         )}
 
         {role !== "FELLOW" ? (
-          <div className="mb-4">
+          <div className="my-4">
             <Form {...form}>
               <FormField
                 control={form.control}
                 name="fellow"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className={"text-sm"}>Select a fellow</FormLabel>
+                    <FormLabel className="pt-2">Select group leader</FormLabel>
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
@@ -191,7 +191,7 @@ export default function StudentAttendance({
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Select a fellow" />
                         </SelectTrigger>
                       </FormControl>
@@ -224,6 +224,7 @@ export default function StudentAttendance({
             setTriageModalOpen,
             session,
             hubVisibleId: session?.hub?.visibleId,
+            role,
           })}
           editColumns={true}
           data={
@@ -239,6 +240,8 @@ export default function StudentAttendance({
             "Clinical cases": false,
             "Shamiri ID": false,
             Age: false,
+            checkbox: role !== ImplementerRole.ADMIN,
+            button: role !== ImplementerRole.ADMIN,
           }}
           emptyStateMessage={"No students associated to this group"}
           className="data-table data-table-action lg:mt-4"
@@ -324,6 +327,7 @@ const columns = (state: {
   setTriageModalOpen: Dispatch<SetStateAction<boolean>>;
   session: Session | null;
   hubVisibleId?: string | null;
+  role: ImplementerRole;
 }): ColumnDef<StudentAttendanceData>[] => [
   {
     id: "checkbox",
@@ -399,7 +403,7 @@ const columns = (state: {
       );
     },
     header: "Attendance",
-    id: "attendance",
+    id: "Attendance",
     accessorKey: "attended",
   },
   {

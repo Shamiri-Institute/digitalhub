@@ -307,7 +307,7 @@ export function SessionDropDown({
         <DropdownMenuSeparator />
         {role === ImplementerRole.ADMIN && (
           <>
-            {isSchedulePage && (
+            {isSchedulePage && session.session?.sessionType === "INTERVENTION" && (
               <Link href={`/admin/schools/${session.school?.visibleId}/sessions`}>
                 <DropdownMenuItem>View school</DropdownMenuItem>
               </Link>
@@ -331,6 +331,15 @@ export function SessionDropDown({
               View fellow attendance
             </DropdownMenuItem>
             <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setStudentAttendanceDialog?.(true);
+              }}
+              disabled={session.status === "Cancelled" || !session.occurred}
+            >
+              View student attendance
+            </DropdownMenuItem>
+            <DropdownMenuItem
               disabled={
                 session.status === "Cancelled" ||
                 !session.occurred ||
@@ -346,30 +355,15 @@ export function SessionDropDown({
           </>
         )}
         {role === ImplementerRole.HUB_COORDINATOR && (
-          <>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setSupervisorAttendanceDialog?.(true);
-              }}
-              disabled={session.status === "Cancelled" || !session.occurred}
-            >
-              Mark supervisor attendance
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setStudentAttendanceDialog?.(true);
-              }}
-              disabled={
-                session.status === "Cancelled" ||
-                session.session?.sessionType === "DATA_COLLECTION" ||
-                !session.occurred
-              }
-            >
-              Mark student attendance
-            </DropdownMenuItem>
-          </>
+          <DropdownMenuItem
+            onClick={() => {
+              state.setSession?.(session);
+              state.setSupervisorAttendanceDialog?.(true);
+            }}
+            disabled={session.status === "Cancelled" || !session.occurred}
+          >
+            Mark supervisor attendance
+          </DropdownMenuItem>
         )}
         {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
           <>
@@ -384,43 +378,39 @@ export function SessionDropDown({
                 !session.occurred
               }
             >
-              Mark fellow attendance
+              {role === ImplementerRole.HUB_COORDINATOR
+                ? "View fellow attendance"
+                : "Mark fellow attendance"}
             </DropdownMenuItem>
             {session.session?.sessionType === "INTERVENTION" && (
-              <DropdownMenuItem
-                disabled={
-                  session.status === "Cancelled" ||
-                  !session.occurred ||
-                  (role === ImplementerRole.HUB_COORDINATOR &&
-                    session.sessionRatings.length === 0) ||
-                  (role === ImplementerRole.SUPERVISOR &&
-                    session.school?.assignedSupervisorId !== supervisorId)
-                }
-                onClick={() => {
-                  state.setSession?.(session);
-                  state.setRatingsDialog?.(true);
-                }}
-              >
-                Weekly session report
-              </DropdownMenuItem>
+              <>
+                <DropdownMenuItem
+                  onClick={() => {
+                    state.setSession?.(session);
+                    state.setStudentAttendanceDialog?.(true);
+                  }}
+                  disabled={session.status === "Cancelled" || !session.occurred}
+                >
+                  View student attendance
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={
+                    session.status === "Cancelled" ||
+                    !session.occurred ||
+                    (role === ImplementerRole.HUB_COORDINATOR &&
+                      session.sessionRatings.length === 0) ||
+                    (role === ImplementerRole.SUPERVISOR &&
+                      session.school?.assignedSupervisorId !== supervisorId)
+                  }
+                  onClick={() => {
+                    state.setSession?.(session);
+                    state.setRatingsDialog?.(true);
+                  }}
+                >
+                  Weekly session report
+                </DropdownMenuItem>
+              </>
             )}
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setFellowAttendanceDialog?.(true);
-              }}
-              disabled={
-                session.status === "Cancelled" ||
-                session.session?.sessionType === "CLINICAL" ||
-                !session.occurred
-              }
-            >
-              Mark fellow attendance
-            </DropdownMenuItem>
-          </>
-        ) : null}
-        {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
-          <>
             <DropdownMenuItem
               onClick={() => {
                 state.setSession?.(session);
@@ -463,6 +453,7 @@ export function SessionDropDown({
             </DropdownMenuItem>
           </>
         ) : null}
+
         {role === ImplementerRole.FELLOW ? (
           <DropdownMenuItem
             onClick={() => {
