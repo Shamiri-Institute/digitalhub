@@ -86,7 +86,9 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
       },
     });
 
-    const studentCount = await db.student.count();
+    const studentCount = await db.student.count({
+      where: { archivedAt: null },
+    });
     const student = await db.student.create({
       data: {
         id: objectId("stu"),
@@ -255,6 +257,7 @@ export async function markManyStudentsAttendance(
 
       const students = await tx.student.findMany({
         where: {
+          archivedAt: null,
           id: {
             in: studentIds,
           },
@@ -414,6 +417,7 @@ export async function checkExistingStudents(admissionNumber: string, schoolId: s
   await checkAuth();
   return await db.student.findMany({
     where: {
+      archivedAt: null,
       admissionNumber: admissionNumber,
       school: {
         id: schoolId,
