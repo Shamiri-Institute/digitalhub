@@ -1206,7 +1206,9 @@ export async function addNonShamiriStudentViaClinicalScreening(
       };
     }
 
-    const studentCount = await db.student.count();
+    const studentCount = await db.student.count({
+      where: { archivedAt: null },
+    });
     const studentVisibleId = generateStudentVisibleID("CLN", studentCount);
 
     const student = await db.student.create({

@@ -38,6 +38,7 @@ export default async function SupervisorStudentsPage({
     }),
     db.student.count({
       where: {
+        archivedAt: null,
         school: {
           hubId: supervisor.profile?.hubId,
         },
@@ -111,6 +112,7 @@ export default async function SupervisorStudentsPage({
     db.student.groupBy({
       by: ["age", "gender", "form"],
       where: {
+        archivedAt: null,
         school: {
           hubId: supervisor.profile?.hubId,
         },
@@ -133,6 +135,7 @@ export default async function SupervisorStudentsPage({
     db.student.groupBy({
       by: ["dropOutReason"],
       where: {
+        archivedAt: null,
         school: {
           hubId: supervisor.profile?.hubId,
         },
