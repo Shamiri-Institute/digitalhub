@@ -422,6 +422,13 @@ function CalendarView({
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
   const [session, setSession] = React.useState<Session | null>(null);
 
+  const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
+  const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
+  const fellowsForStudentAttendance =
+    role === ImplementerRole.SUPERVISOR && supervisorId
+      ? (supervisors?.find((s) => s.id === supervisorId)?.fellows ?? [])
+      : allFellows.filter((f) => leaderIds.has(f.id));
+
   const activeMode = () => {
     switch (mode) {
       case "month":
@@ -575,7 +582,7 @@ function CalendarView({
         setIsOpen={setStudentAttendanceDialog}
         role={role}
         session={session}
-        fellows={supervisors?.find((supervisor) => supervisor.id === supervisorId)?.fellows ?? []}
+        fellows={fellowsForStudentAttendance}
         fellowId={fellow?.profile.id}
       />
       {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (

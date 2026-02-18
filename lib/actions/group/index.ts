@@ -117,7 +117,15 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
 
 export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEvaluationSchema>) {
   try {
-    await checkAuth();
+    const user = await getCurrentPersonnel();
+    if (user === null) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    if (user.session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
+      throw new Error("User not authorised to perform this action");
+    }
+
     const {
       sessionId,
       groupId,
