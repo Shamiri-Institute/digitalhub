@@ -44,6 +44,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
   `,
     db.student.findMany({
       where: {
+        archivedAt: null,
         school: {
           visibleId,
         },

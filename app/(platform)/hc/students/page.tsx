@@ -34,6 +34,7 @@ export default async function StudentsPage() {
   ] = await Promise.all([
     db.student.count({
       where: {
+        archivedAt: null,
         school: {
           hubId: hubCoordinator.profile?.assignedHubId,
         },
@@ -107,6 +108,7 @@ export default async function StudentsPage() {
     db.student.groupBy({
       by: ["age", "gender", "form"],
       where: {
+        archivedAt: null,
         school: {
           hubId: hubCoordinator.profile?.assignedHubId,
         },
@@ -129,6 +131,7 @@ export default async function StudentsPage() {
     db.student.groupBy({
       by: ["dropOutReason"],
       where: {
+        archivedAt: null,
         school: {
           hubId: hubCoordinator.profile?.assignedHubId,
         },

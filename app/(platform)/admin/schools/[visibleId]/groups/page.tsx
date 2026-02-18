@@ -53,6 +53,7 @@ export default async function GroupsPage({ params }: { params: Promise<{ visible
   `,
     db.student.findMany({
       where: {
+        archivedAt: null,
         school: {
           id: school.id,
         },

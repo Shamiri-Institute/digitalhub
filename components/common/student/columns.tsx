@@ -57,6 +57,7 @@ export const columns = (state: {
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
   setDropoutDialog: Dispatch<SetStateAction<boolean>>;
+  setArchiveDialog: Dispatch<SetStateAction<boolean>>;
   setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
   setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
   setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;

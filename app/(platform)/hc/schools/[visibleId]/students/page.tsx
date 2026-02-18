@@ -16,6 +16,7 @@ export default async function StudentsPage(props: { params: Promise<{ visibleId:
 
   const students = await db.student.findMany({
     where: {
+      archivedAt: null,
       school: {
         visibleId,
       },
