@@ -121,7 +121,7 @@ export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEva
     if (user === null) {
       throw new Error("The session has not been authenticated");
     }
-    
+
     if (user.session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
       throw new Error("User not authorised to perform this action");
     }

@@ -57,13 +57,11 @@ export default function SessionsDatatable({
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
 
-  const leaderIds = new Set(
-    session?.school?.interventionGroups?.map((g) => g.leaderId) ?? [],
-  );
+  const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
   const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
   const fellowsForStudentAttendance =
     role === ImplementerRole.SUPERVISOR && supervisorId
-      ? supervisors?.find((s) => s.id === supervisorId)?.fellows ?? []
+      ? (supervisors?.find((s) => s.id === supervisorId)?.fellows ?? [])
       : allFellows.filter((f) => leaderIds.has(f.id));
 
   useEffect(() => {
