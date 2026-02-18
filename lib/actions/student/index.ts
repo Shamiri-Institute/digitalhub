@@ -86,9 +86,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
       },
     });
 
-    const studentCount = await db.student.count({
-      where: { archivedAt: null },
-    });
+    const studentCount = await db.student.count();
     const student = await db.student.create({
       data: {
         id: objectId("stu"),
