@@ -15,6 +15,7 @@ export default function StudentsDatatableSkeleton({ role }: { role: ImplementerR
     setReportingNotesDialog: () => {},
     setGroupTransferHistory: () => {},
     setDropoutDialog: () => {},
+    setArchiveDialog: () => {},
     role,
   })
     .map((column) => column.id ?? column.header)

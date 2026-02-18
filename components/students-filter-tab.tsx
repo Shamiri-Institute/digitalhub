@@ -8,6 +8,7 @@ export default async function StudentsFilterTab({
 }) {
   const _studentsInHub = await db.student.findMany({
     where: {
+      archivedAt: null,
       school: {
         hubId: hubCoordinatorId,
       },
