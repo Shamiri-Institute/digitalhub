@@ -25,7 +25,7 @@ export default function RecordingsTableSkeleton() {
     return (
       <Button disabled className="gap-1">
         <Icons.plusCircle className="h-4 w-4" />
-        <span>Upload Recording</span>
+        <span>Upload recording</span>
       </Button>
     );
   }
