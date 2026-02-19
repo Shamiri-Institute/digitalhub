@@ -18,6 +18,9 @@ interface HubDatatableMenuProps {
 
 export default function HubDatatableMenu({ row }: HubDatatableMenuProps) {
   const [showProfile, setShowProfile] = useState(false);
+  const firstCoordinator = [...row.coordinators].sort(
+    (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+  )[0];
 
   return (
     <>
@@ -36,11 +39,11 @@ export default function HubDatatableMenu({ row }: HubDatatableMenuProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {row.coordinators[0] && (
+      {firstCoordinator && (
         <HubCoordinatorProfileDialog
           open={showProfile}
           onOpenChange={setShowProfile}
-          coordinator={row.coordinators[0]}
+          coordinator={firstCoordinator}
         >
           <DialogAlertWidget separator={false}>
             <div className="flex items-center gap-2">
