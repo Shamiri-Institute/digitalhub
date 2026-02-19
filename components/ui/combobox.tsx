@@ -10,6 +10,7 @@ import {
   CommandItem,
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { cn } from "#/lib/utils";
 
 type ComboboxProps = {
   items: { id: string; label: string }[];
@@ -17,6 +18,8 @@ type ComboboxProps = {
   onSelectItem: (itemId: string) => void;
   placeholder?: string;
   inputPlaceholder?: string;
+  disabled?: boolean;
+  className?: string;
 };
 
 export function Combobox({
@@ -25,23 +28,30 @@ export function Combobox({
   onSelectItem,
   placeholder,
   inputPlaceholder,
+  disabled,
+  className,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <div className="rounded-md border border-zinc-200/60 bg-white px-1.5 py-2">
-      <Popover open={open} onOpenChange={setOpen}>
+    <div className={cn("rounded-md border border-input bg-white px-1.5 py-0", className)}>
+      <Popover open={open} onOpenChange={(o) => !disabled && setOpen(o)}>
         <PopoverTrigger asChild>
-          <Button variant="base" aria-expanded={open} className="w-full justify-between px-2">
-            <span className="text-left text-base">
+          <Button
+            variant="base"
+            aria-expanded={open}
+            className="w-full justify-between px-1.5"
+            disabled={disabled}
+          >
+            <span className="text-left text-sm">
               {activeItemId
                 ? items.find((item) => item.id === activeItemId)?.label
                 : placeholder || "Select item..."}
             </span>
-            <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <CaretSortIcon className="ml-1.5 size-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[360px] p-0 md:w-64">
+        <PopoverContent className="w-[360px] p-0" align="start">
           <Command
             filter={(value: string, search: string) => {
               const item = items.find((item) => item.id.toLowerCase() === value.toLowerCase());

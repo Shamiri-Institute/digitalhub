@@ -5,9 +5,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import { Combobox } from "#/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -31,7 +33,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { objectId } from "#/lib/crypto";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
-import { cn, formatBytes } from "#/lib/utils";
+import { cn, formatBytes, sessionDisplayName } from "#/lib/utils";
 import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
 import { zodResolver } from "#/lib/zod-resolver";
 import {
@@ -59,7 +61,6 @@ interface UploadRecordingDialogProps {
 }
 
 export default function UploadRecordingDialog({ open, onOpenChange }: UploadRecordingDialogProps) {
-  // Form state
   const form = useForm<RecordingUploadFormData>({
     resolver: zodResolver(RecordingUploadSchema),
     defaultValues: {
@@ -70,48 +71,39 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     },
   });
 
-  // Dropdown data state
   const [fellows, setFellows] = useState<SupervisorFellow[]>([]);
   const [groups, setGroups] = useState<FellowGroup[]>([]);
   const [sessions, setSessions] = useState<GroupSession[]>([]);
 
-  // Loading states
   const [loadingFellows, setLoadingFellows] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
 
-  // Duplicate check state
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [checkingDuplicate, setCheckingDuplicate] = useState(false);
 
-  // File state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [validatingFile, setValidatingFile] = useState(false);
 
-  // Upload state
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const { uploadToS3, files } = useS3Upload();
 
-  // Track real upload progress from the hook
   useEffect(() => {
     if (files.length > 0 && uploading) {
       const lastFile = files[files.length - 1];
       if (lastFile) {
-        // Cap at 80% during upload, reserve 20% for DB record creation
         setUploadProgress(Math.min(Math.round(lastFile.progress * 0.8), 80));
       }
     }
   }, [files, uploading]);
 
-  // Watch form values for cascading selects
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
   const sessionId = form.watch("sessionId");
   const schoolId = form.watch("schoolId");
 
-  // Load fellows on mount
   useEffect(() => {
     if (open) {
       setLoadingFellows(true);
@@ -129,7 +121,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [open]);
 
-  // Load groups when fellow changes
   useEffect(() => {
     if (fellowId) {
       setLoadingGroups(true);
@@ -156,7 +147,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [fellowId, form]);
 
-  // Load sessions when group changes
   useEffect(() => {
     if (groupId) {
       setLoadingSessions(true);
@@ -166,7 +156,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
       setSelectedFile(null);
       setFileError(null);
 
-      // Set school ID from selected group
       const selectedGroup = groups.find((g) => g.id === groupId);
       if (selectedGroup) {
         form.setValue("schoolId", selectedGroup.schoolId);
@@ -186,7 +175,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [groupId, groups, form]);
 
-  // Check for duplicate when session is selected
   useEffect(() => {
     if (fellowId && groupId && sessionId && schoolId) {
       setCheckingDuplicate(true);
@@ -211,13 +199,11 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [fellowId, groupId, sessionId, schoolId]);
 
-  // Handle file selection
   const handleFileSelect = useCallback(async (file: File) => {
     setFileError(null);
     setValidatingFile(true);
 
     try {
-      // Basic validation (type and size)
       const basicValidation = validateAudioFile(file);
       if (!basicValidation.valid) {
         setFileError(basicValidation.error ?? "Invalid file");
@@ -225,7 +211,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         return;
       }
 
-      // Magic bytes validation
       const magicValidation = await validateAudioMagicBytes(file);
       if (!magicValidation.valid) {
         setFileError(magicValidation.error ?? "Invalid file content");
@@ -243,7 +228,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, []);
 
-  // Handle file drop
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLLabelElement>) => {
       e.preventDefault();
@@ -264,7 +248,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     [handleFileSelect],
   );
 
-  // Handle file input change
   const handleFileInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -275,7 +258,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     [handleFileSelect],
   );
 
-  // Handle form submission
   const onSubmit = async (data: RecordingUploadFormData) => {
     if (!selectedFile) {
       setFileError("Please select a file");
@@ -295,7 +277,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     setUploadProgress(0);
 
     try {
-      // Get context data for S3 key
       const selectedGroup = groups.find((g) => g.id === data.groupId);
       const selectedSession = sessions.find((s) => s.id === data.sessionId);
       const selectedFellow = fellows.find((f) => f.id === data.fellowId);
@@ -304,7 +285,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         throw new Error("Missing selection data");
       }
 
-      // Generate recording ID and filename
       const recordingId = objectId("rec");
       const extension = getFileExtension(selectedFile.name);
       const fileName = generateRecordingFilename(
@@ -313,7 +293,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         extension,
       );
 
-      // Build S3 key
       const s3Key = buildS3Key({
         schoolName: selectedGroup.school.schoolName,
         fellowName: selectedFellow.fellowName ?? "unknown",
@@ -323,7 +302,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         extension,
       });
 
-      // Upload to S3 (dedicated recordings bucket)
       const { key } = await uploadToS3(selectedFile, {
         endpoint: {
           request: {
@@ -339,7 +317,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         throw new Error("Upload failed - no key returned");
       }
 
-      // Create database record
       const result = await createSessionRecording({
         fellowId: data.fellowId,
         schoolId: data.schoolId,
@@ -376,7 +353,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   };
 
-  // Handle dialog close
   const handleClose = () => {
     form.reset();
     setFellows([]);
@@ -389,20 +365,19 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     onOpenChange(false);
   };
 
-  // Check if file upload is allowed
   const canUploadFile = fellowId && groupId && sessionId && !duplicateExists && !checkingDuplicate;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Upload Recording</DialogTitle>
+          <DialogTitle>Upload recording</DialogTitle>
+          <DialogDescription>Enter session details and upload the audio file.</DialogDescription>
+          <Separator />
         </DialogHeader>
-        <Separator />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Fellow Select */}
             <FormField
               control={form.control}
               name="fellowId"
@@ -411,39 +386,32 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                   <FormLabel>
                     Fellow <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={loadingFellows || uploading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={loadingFellows ? "Loading..." : "Select fellow"}
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {fellows.map((fellow) => (
-                        <SelectItem key={fellow.id} value={fellow.id}>
-                          {fellow.fellowName ?? "Unknown"}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Combobox
+                      items={fellows.map((fellow) => ({
+                        id: fellow.id,
+                        label: fellow.fellowName ?? "Unknown",
+                      }))}
+                      activeItemId={field.value}
+                      onSelectItem={field.onChange}
+                      placeholder={loadingFellows ? "Loading..." : "Select a fellow"}
+                      inputPlaceholder="Search fellows..."
+                      disabled={loadingFellows || uploading}
+                      className="w-full"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Group Select */}
             <FormField
               control={form.control}
               name="groupId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Intervention Group <span className="text-shamiri-light-red">*</span>
+                    Group <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -476,7 +444,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
               )}
             />
 
-            {/* Session Select */}
             <FormField
               control={form.control}
               name="sessionId"
@@ -498,7 +465,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                               ? "Select group first"
                               : loadingSessions
                                 ? "Loading..."
-                                : "Select session"
+                                : "Select a session"
                           }
                         />
                       </SelectTrigger>
@@ -506,7 +473,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                     <SelectContent>
                       {sessions.map((session) => (
                         <SelectItem key={session.id} value={session.id}>
-                          {session.sessionName ?? session.sessionType} -{" "}
+                          {sessionDisplayName(session.sessionName ?? undefined)} -{" "}
                           {format(new Date(session.sessionDate), "dd MMM yyyy")}
                         </SelectItem>
                       ))}
@@ -517,10 +484,8 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
               )}
             />
 
-            {/* Hidden school ID field */}
             <input type="hidden" {...form.register("schoolId")} />
 
-            {/* Duplicate warning */}
             {duplicateExists && (
               <div className="rounded-lg border border-red-border bg-red-bg p-3 text-sm text-red-base">
                 <div className="flex items-center gap-2">
@@ -530,7 +495,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
               </div>
             )}
 
-            {/* File Upload Area */}
             {canUploadFile && (
               <>
                 <Separator />
@@ -581,7 +545,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
               </>
             )}
 
-            {/* Upload Progress */}
             {uploading && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
