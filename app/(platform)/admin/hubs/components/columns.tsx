@@ -80,9 +80,10 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
     header: "Hub coordinator",
     id: "Hub coordinator",
     cell: ({ row }) => {
-      return row.original.coordinators.length > 0
-        ? row.original.coordinators[0]?.coordinatorName
-        : "";
+      const coordinators = row.original.coordinators.sort(
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+      );
+      return coordinators.length > 0 ? coordinators[0]?.coordinatorName : "";
     },
   },
   {
