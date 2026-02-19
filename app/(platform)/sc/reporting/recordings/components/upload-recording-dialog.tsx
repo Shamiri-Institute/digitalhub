@@ -61,7 +61,6 @@ interface UploadRecordingDialogProps {
 }
 
 export default function UploadRecordingDialog({ open, onOpenChange }: UploadRecordingDialogProps) {
-  // Form state
   const form = useForm<RecordingUploadFormData>({
     resolver: zodResolver(RecordingUploadSchema),
     defaultValues: {
@@ -72,48 +71,39 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     },
   });
 
-  // Dropdown data state
   const [fellows, setFellows] = useState<SupervisorFellow[]>([]);
   const [groups, setGroups] = useState<FellowGroup[]>([]);
   const [sessions, setSessions] = useState<GroupSession[]>([]);
 
-  // Loading states
   const [loadingFellows, setLoadingFellows] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
 
-  // Duplicate check state
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [checkingDuplicate, setCheckingDuplicate] = useState(false);
 
-  // File state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [validatingFile, setValidatingFile] = useState(false);
 
-  // Upload state
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const { uploadToS3, files } = useS3Upload();
 
-  // Track real upload progress from the hook
   useEffect(() => {
     if (files.length > 0 && uploading) {
       const lastFile = files[files.length - 1];
       if (lastFile) {
-        // Cap at 80% during upload, reserve 20% for DB record creation
         setUploadProgress(Math.min(Math.round(lastFile.progress * 0.8), 80));
       }
     }
   }, [files, uploading]);
 
-  // Watch form values for cascading selects
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
   const sessionId = form.watch("sessionId");
   const schoolId = form.watch("schoolId");
 
-  // Load fellows on mount
   useEffect(() => {
     if (open) {
       setLoadingFellows(true);
@@ -131,7 +121,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [open]);
 
-  // Load groups when fellow changes
   useEffect(() => {
     if (fellowId) {
       setLoadingGroups(true);
@@ -158,7 +147,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [fellowId, form]);
 
-  // Load sessions when group changes
   useEffect(() => {
     if (groupId) {
       setLoadingSessions(true);
@@ -168,7 +156,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
       setSelectedFile(null);
       setFileError(null);
 
-      // Set school ID from selected group
       const selectedGroup = groups.find((g) => g.id === groupId);
       if (selectedGroup) {
         form.setValue("schoolId", selectedGroup.schoolId);
@@ -188,7 +175,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [groupId, groups, form]);
 
-  // Check for duplicate when session is selected
   useEffect(() => {
     if (fellowId && groupId && sessionId && schoolId) {
       setCheckingDuplicate(true);
@@ -213,13 +199,11 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [fellowId, groupId, sessionId, schoolId]);
 
-  // Handle file selection
   const handleFileSelect = useCallback(async (file: File) => {
     setFileError(null);
     setValidatingFile(true);
 
     try {
-      // Basic validation (type and size)
       const basicValidation = validateAudioFile(file);
       if (!basicValidation.valid) {
         setFileError(basicValidation.error ?? "Invalid file");
@@ -227,7 +211,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         return;
       }
 
-      // Magic bytes validation
       const magicValidation = await validateAudioMagicBytes(file);
       if (!magicValidation.valid) {
         setFileError(magicValidation.error ?? "Invalid file content");
@@ -245,7 +228,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, []);
 
-  // Handle file drop
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLLabelElement>) => {
       e.preventDefault();
@@ -266,7 +248,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     [handleFileSelect],
   );
 
-  // Handle file input change
   const handleFileInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -277,7 +258,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     [handleFileSelect],
   );
 
-  // Handle form submission
   const onSubmit = async (data: RecordingUploadFormData) => {
     if (!selectedFile) {
       setFileError("Please select a file");
@@ -297,7 +277,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     setUploadProgress(0);
 
     try {
-      // Get context data for S3 key
       const selectedGroup = groups.find((g) => g.id === data.groupId);
       const selectedSession = sessions.find((s) => s.id === data.sessionId);
       const selectedFellow = fellows.find((f) => f.id === data.fellowId);
@@ -306,7 +285,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         throw new Error("Missing selection data");
       }
 
-      // Generate recording ID and filename
       const recordingId = objectId("rec");
       const extension = getFileExtension(selectedFile.name);
       const fileName = generateRecordingFilename(
@@ -315,7 +293,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         extension,
       );
 
-      // Build S3 key
       const s3Key = buildS3Key({
         schoolName: selectedGroup.school.schoolName,
         fellowName: selectedFellow.fellowName ?? "unknown",
@@ -325,7 +302,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         extension,
       });
 
-      // Upload to S3 (dedicated recordings bucket)
       const { key } = await uploadToS3(selectedFile, {
         endpoint: {
           request: {
@@ -341,7 +317,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         throw new Error("Upload failed - no key returned");
       }
 
-      // Create database record
       const result = await createSessionRecording({
         fellowId: data.fellowId,
         schoolId: data.schoolId,
@@ -378,7 +353,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   };
 
-  // Handle dialog close
   const handleClose = () => {
     form.reset();
     setFellows([]);
@@ -391,7 +365,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     onOpenChange(false);
   };
 
-  // Check if file upload is allowed
   const canUploadFile = fellowId && groupId && sessionId && !duplicateExists && !checkingDuplicate;
 
   return (
