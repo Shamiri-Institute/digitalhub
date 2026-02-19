@@ -91,8 +91,11 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
     header: "Hub coordinator phone number",
     id: "Hub coordinator phone number",
     cell: ({ row }) => {
-      return row.original.coordinators.length > 0
-        ? RenderParsedPhoneNumber(row.original.coordinators[0]?.cellNumber ?? undefined)
+      const coordinators = row.original.coordinators.sort(
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+      );
+      return coordinators.length > 0
+        ? RenderParsedPhoneNumber(coordinators[0]?.cellNumber ?? undefined)
         : "";
     },
   },
