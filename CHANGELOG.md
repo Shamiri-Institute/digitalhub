@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.18.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.17.3...v1.18.0) (2026-02-19)
+
+
+### Features
+
+* **student:** implement student archiving functionality and update queries to exclude archived students ([#628](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/628)) ([a16b44c](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/a16b44c273bd3e4a0597e60afd92e3fcb25c231c))
+
+
+### Bug Fixes
+
+* **admin:** exclude data leads from hub managers list (ENG-1401) ([#631](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/631)) ([75b1384](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/75b1384a7d82f52b01daf644377b34e3486a5325))
+* **recordings:** fellow select input height on upload recording form (ENG-1402) ([#632](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/632)) ([c9f94a1](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c9f94a1ed5e9acbd377f3dde7e96477d2718d512))
+* **sc:** restore missing session actions for supervisors (ENG-1386 + ENG-1390) ([#630](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/630)) ([555a7d0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/555a7d0b13b50289fa5b1ef1e2e882b7680f2f56))
+
 ## [1.17.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.17.2...v1.17.3) (2026-02-17)
 
 
