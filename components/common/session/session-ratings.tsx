@@ -85,7 +85,7 @@ export default function SessionRatings({
       ? sessionRatings.find((_rating) => {
           return _rating.supervisorId === supervisorId;
         })
-      : role === "HUB_COORDINATOR"
+      : role === "HUB_COORDINATOR" || role === "ADMIN"
         ? sessionRatings[0]
         : undefined;
   const [existingRating, setExistingRating] = useState<InterventionSessionRating | undefined>(
@@ -182,7 +182,7 @@ export default function SessionRatings({
                   control={form.control}
                   name="ratingId"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
+                    <FormItem className="space-y-2 mt-4">
                       <FormLabel>
                         Select session {mode === "view" && " report"}
                         <span className="ml-1 text-shamiri-light-red">*</span>
@@ -198,7 +198,7 @@ export default function SessionRatings({
                         }}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="mt-2">
                             <SelectValue placeholder="Select a session" />
                           </SelectTrigger>
                         </FormControl>
@@ -228,7 +228,7 @@ export default function SessionRatings({
                                       "h:mm a",
                                     )}
                                 </span>
-                                {role === "HUB_COORDINATOR" ? (
+                                {role === "HUB_COORDINATOR" || role === "ADMIN" ? (
                                   <span>
                                     {" "}
                                     -{" "}
@@ -249,8 +249,10 @@ export default function SessionRatings({
                   )}
                 />
               )}
-              <div className="flex flex-col gap-4 divide-y">
-                <div className="flex flex-col space-y-3 pt-4 text-sm">
+
+              <Separator className="my-2" />
+              <div className="flex flex-col">
+                <div className="flex flex-col space-y-3 py-2 text-sm">
                   <FormField
                     control={form.control}
                     name="headcount"
@@ -273,7 +275,7 @@ export default function SessionRatings({
                     )}
                   />
                 </div>
-                <div className="flex flex-col space-y-3 pt-4 text-sm">
+                <div className="flex flex-col space-y-3 py-2 text-sm">
                   <FormField
                     control={form.control}
                     name="studentBehaviorRating"
@@ -326,7 +328,7 @@ export default function SessionRatings({
                     )}
                   />
                 </div>
-                <div className="flex flex-col space-y-3 pt-4 text-sm">
+                <div className="flex flex-col space-y-3 py-2 text-sm">
                   <FormField
                     control={form.control}
                     name="positiveHighlights"
