@@ -592,7 +592,13 @@ function CalendarView({
           supervisors={supervisors}
           open={ratingsDialog}
           onOpenChange={setRatingsDialog}
-          mode={role === "HUB_COORDINATOR" ? "view" : role === "SUPERVISOR" ? "add" : undefined}
+          mode={
+            role === "HUB_COORDINATOR" || role === "ADMIN"
+              ? "view"
+              : role === "SUPERVISOR"
+                ? "add"
+                : undefined
+          }
           role={role}
         >
           {session && (
