@@ -1,13 +1,17 @@
 "use client";
 
 import type { ImplementerRole } from "@prisma/client";
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useContext, useState } from "react";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogPortal,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { cancelSession } from "#/lib/actions/session/session";
@@ -25,7 +29,6 @@ export default function CancelSession({
   role: ImplementerRole;
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
   const { refresh } = useContext(SessionsContext);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -42,7 +45,7 @@ export default function CancelSession({
       return;
     }
 
-    await Promise.all([revalidatePageAction(pathname), refresh()]);
+    await refresh();
     toast({
       description: response.message,
     });
@@ -56,11 +59,10 @@ export default function CancelSession({
         <DialogPortal>
           <DialogContent className="lg:w-1/3 lg:max-w-none">
             <DialogHeader>
-              <span className="text-xl font-bold">Cancel session</span>
+              <DialogTitle className="text-xl font-bold">Cancel session</DialogTitle>
             </DialogHeader>
             {children}
-            <div className="flex flex-col gap-y-4">
-              <Separator />
+            <div className="flex flex-col gap-y-4 pt-4">
               <span>Are you sure?</span>
               <div className="flex items-start gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
                 <Icons.info className="h-4 w-4 shrink-0 stroke-2" />

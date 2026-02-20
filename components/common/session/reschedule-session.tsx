@@ -2,17 +2,21 @@ import type { ImplementerRole } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { RescheduleSessionSchema } from "#/components/common/session/schema";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogPortal,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { Form, FormControl, FormField, FormLabel, FormMessage } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { Popover, PopoverContent } from "#/components/ui/popover";
@@ -44,7 +48,6 @@ export default function RescheduleSession({
   children: React.ReactNode;
 }) {
   const { refresh } = useContext(SessionsContext);
-  const pathname = usePathname();
 
   const [hour, setHour] = useState(format(session.sessionDate, "h"));
   const [minutes, setMinutes] = useState(format(session.sessionDate, "mm"));
@@ -76,7 +79,7 @@ export default function RescheduleSession({
       return;
     }
 
-    await Promise.all([revalidatePageAction(pathname), refresh()]);
+    await refresh();
     toast({
       description: response.message,
     });
@@ -89,7 +92,7 @@ export default function RescheduleSession({
         <DialogPortal>
           <DialogContent className="flex w-1/3 max-w-none flex-col gap-4">
             <DialogHeader>
-              <span className="text-xl font-bold">Reschedule session</span>
+              <DialogTitle className="text-xl font-bold">Reschedule session</DialogTitle>
             </DialogHeader>
             {children}
             <Form {...form}>
