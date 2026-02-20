@@ -12,7 +12,13 @@ import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogPortal,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { Form, FormControl, FormField, FormLabel, FormMessage } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { Popover, PopoverContent } from "#/components/ui/popover";
@@ -76,11 +82,12 @@ export default function RescheduleSession({
       return;
     }
 
-    await Promise.all([revalidatePageAction(pathname), refresh()]);
-    toast({
-      description: response.message,
+    await Promise.all([revalidatePageAction(pathname), refresh()]).then(() => {
+      toast({
+        description: response.message,
+      });
+      onOpenChange(false);
     });
-    onOpenChange(false);
   };
 
   return (
@@ -89,7 +96,7 @@ export default function RescheduleSession({
         <DialogPortal>
           <DialogContent className="flex w-1/3 max-w-none flex-col gap-4">
             <DialogHeader>
-              <span className="text-xl font-bold">Reschedule session</span>
+              <DialogTitle className="text-xl font-bold">Reschedule session</DialogTitle>
             </DialogHeader>
             {children}
             <Form {...form}>
