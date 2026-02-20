@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.18.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.18.0...v1.18.1) (2026-02-20)
+
+
+### Bug Fixes
+
+* **admin:** display weekly session report; set view mode; minor styling changes ([#635](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/635)) ([26b7658](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/26b7658bd603711f8b460dc788f561a49cb46c02))
+* refresh sessions after canceling and rescheduling ([#634](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/634)) ([8639cf9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/8639cf9bbd1563a2350ce053f6be3f9d106b0a68))
+
 ## [1.18.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.17.3...v1.18.0) (2026-02-19)
 
 
