@@ -2,11 +2,9 @@ import type { ImplementerRole } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { RescheduleSessionSchema } from "#/components/common/session/schema";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
@@ -50,7 +48,6 @@ export default function RescheduleSession({
   children: React.ReactNode;
 }) {
   const { refresh } = useContext(SessionsContext);
-  const pathname = usePathname();
 
   const [hour, setHour] = useState(format(session.sessionDate, "h"));
   const [minutes, setMinutes] = useState(format(session.sessionDate, "mm"));
@@ -82,12 +79,11 @@ export default function RescheduleSession({
       return;
     }
 
-    await Promise.all([revalidatePageAction(pathname), refresh()]).then(() => {
-      toast({
-        description: response.message,
-      });
-      onOpenChange(false);
+    await refresh();
+    toast({
+      description: response.message,
     });
+    onOpenChange(false);
   };
 
   return (

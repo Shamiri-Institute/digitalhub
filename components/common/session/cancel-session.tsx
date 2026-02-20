@@ -1,9 +1,7 @@
 "use client";
 
 import type { ImplementerRole } from "@prisma/client";
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useContext, useState } from "react";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -31,7 +29,6 @@ export default function CancelSession({
   role: ImplementerRole;
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
   const { refresh } = useContext(SessionsContext);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -42,19 +39,18 @@ export default function CancelSession({
       onOpenChange(false);
       toast({
         variant: "destructive",
-        description: response.message ?? "Something went wrong while trying to cancel the session.",
+        description: response.message ?? "Something went wrong while trying to reschedule session.",
       });
       setLoading(false);
       return;
     }
 
-    await Promise.all([revalidatePageAction(pathname), refresh()]).then(() => {
-      toast({
-        description: response.message,
-      });
-      setLoading(false);
-      onOpenChange(false);
+    await refresh();
+    toast({
+      description: response.message,
     });
+    setLoading(false);
+    onOpenChange(false);
   }
 
   return (
