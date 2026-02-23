@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import { createJob } from "#/lib/fidelity-ratings-api";
 import { deleteObject } from "#/lib/s3";
 
@@ -330,7 +331,16 @@ export async function createSessionRecording(input: {
       },
     });
 
-    // 2. IMMEDIATELY submit job to Fidelity API (non-blocking)
+    if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
+      revalidatePath("/sc/reporting/recordings");
+      return {
+        success: true,
+        message: "Recording uploaded successfully",
+        data: recording,
+      };
+    }
+
+    // 2. IMMEDIATELY submit job to Fidelity API for treatment group (non-blocking)
     await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
       console.error(
         `Non-blocking Fidelity submission failed for recording ${recording.id}:`,
@@ -415,26 +425,35 @@ export async function loadSupervisorRecordings() {
     },
   });
 
-  return recordings.map((recording) => ({
-    id: recording.id,
-    createdAt: recording.createdAt,
-    fileName: recording.fileName,
-    originalFileName: recording.originalFileName,
-    fileSize: recording.fileSize,
-    status: recording.status,
-    processedAt: recording.processedAt,
-    errorMessage: recording.errorMessage,
-    retryCount: recording.retryCount,
-    overallScore: recording.overallScore,
-    fidelityFeedback: recording.fidelityFeedback,
-    fellowName: recording.fellow.fellowName ?? "Unknown Fellow",
-    schoolName: recording.school.schoolName,
-    groupName: recording.group.groupName,
-    sessionType: recording.session.sessionType ?? "Unknown",
-    sessionDate: recording.session.sessionDate,
-    sessionName:
-      recording.session.session?.sessionName ?? recording.session.sessionType ?? "Unknown Session",
+  const mappedRecordings = recordings.map((r) => ({
+    id: r.id,
+    createdAt: r.createdAt,
+    fileName: r.fileName,
+    originalFileName: r.originalFileName,
+    fileSize: r.fileSize,
+    status: r.status,
+    processedAt: r.processedAt,
+    errorMessage: r.errorMessage,
+    retryCount: r.retryCount,
+    overallScore: r.overallScore,
+    fidelityFeedback: r.fidelityFeedback,
+    fellowName: r.fellow.fellowName ?? "Unknown Fellow",
+    schoolName: r.school.schoolName,
+    groupName: r.group.groupName,
+    sessionType: r.session.sessionType ?? "Unknown",
+    sessionDate: r.session.sessionDate,
+    sessionName: r.session.session?.sessionName ?? r.session.sessionType ?? "Unknown Session",
   }));
+
+  if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
+    return mappedRecordings.map((r) => ({
+      ...r,
+      fidelityFeedback: null,
+      overallScore: null,
+    }));
+  }
+
+  return mappedRecordings;
 }
 
 /**
@@ -450,6 +469,13 @@ export async function retryRecordingProcessing(recordingId: string) {
     return {
       success: false,
       message: "Unauthorized user",
+    };
+  }
+
+  if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
+    return {
+      success: false,
+      message: "Fidelity processing is not enabled for your account.",
     };
   }
 
