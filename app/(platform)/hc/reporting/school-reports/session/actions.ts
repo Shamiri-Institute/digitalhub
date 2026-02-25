@@ -71,7 +71,10 @@ export async function loadSessionReport() {
     const sessionGroups = school.interventionSessions.reduce(
       (acc, session) => {
         const sessionName =
-          session.session?.sessionName || session.sessionName || `Session ${session.sessionType}`;
+          session.session?.sessionLabel ||
+          session.session?.sessionName ||
+          session.sessionName ||
+          (session.sessionType ? `Session ${session.sessionType}` : "N/A");
 
         if (!acc[sessionName]) {
           acc[sessionName] = {

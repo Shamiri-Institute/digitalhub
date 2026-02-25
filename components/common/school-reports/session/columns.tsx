@@ -123,7 +123,7 @@ export const subColumns: ColumnDef<SessionReportType["session"][number]>[] = [
     id: "Student behaviour",
   },
   {
-    accessorKey: "adminSupport",
+    accessorKey: "avgAdminSupport",
     header: "Admin support",
     cell: ({ row }) => {
       const adminSupport = row.original.avgAdminSupport;
@@ -132,7 +132,7 @@ export const subColumns: ColumnDef<SessionReportType["session"][number]>[] = [
     id: "Avg. admin support",
   },
   {
-    accessorKey: "workload",
+    accessorKey: "avgWorkload",
     header: "Workload",
     cell: ({ row }) => {
       const workload = row.original.avgWorkload;
