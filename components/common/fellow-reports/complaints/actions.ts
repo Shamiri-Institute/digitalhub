@@ -20,9 +20,22 @@ type FellowComplaintsGroupedByFellow = {
   }[];
 };
 
-export async function loadFellowComplaints() {
+export type LoadFellowComplaintsOptions =
+  | { scope: "supervisor"; supervisorId: string }
+  | { scope: "hub"; hubId: string }
+  | { scope?: "all" };
+
+export async function loadFellowComplaints(options?: LoadFellowComplaintsOptions) {
   try {
+    const where =
+      options?.scope === "supervisor"
+        ? { fellow: { supervisorId: options.supervisorId } }
+        : options?.scope === "hub"
+          ? { fellow: { hubId: options.hubId } }
+          : undefined;
+
     const fellowComplaints = await db.fellowComplaints.findMany({
+      where,
       include: {
         supervisor: true,
         fellow: true,
