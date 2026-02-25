@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Icons } from "#/components/icons";
-import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,10 +60,13 @@ export default function RecordingsDataTableMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Icons.moreHorizontal className="h-4 w-4" />
+        <button
+          type="button"
+          className="absolute inset-0 flex cursor-pointer items-center justify-center border-l bg-white p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-shamiri-new-blue/60 focus-visible:ring-inset"
+        >
+          <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
           <span className="sr-only">Open menu</span>
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleViewFeedback}>
