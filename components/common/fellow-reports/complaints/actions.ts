@@ -38,7 +38,11 @@ export async function loadFellowComplaints(options?: LoadFellowComplaintsOptions
       where,
       include: {
         supervisor: true,
-        fellow: true,
+        fellow: {
+          include: {
+            supervisor: true,
+          },
+        },
       },
     });
 
@@ -46,12 +50,14 @@ export async function loadFellowComplaints(options?: LoadFellowComplaintsOptions
       Record<string, FellowComplaintsGroupedByFellow>
     >((acc, item) => {
       const fellowId = item.fellowId;
+      const supervisorName =
+        item.fellow.supervisor?.supervisorName ?? item.supervisor?.supervisorName ?? "";
 
       if (!acc[fellowId]) {
         acc[fellowId] = {
           id: fellowId,
           fellowName: item.fellow.fellowName ?? "",
-          supervisorName: item.supervisor?.supervisorName ?? "",
+          supervisorName,
           complaints: [],
         };
       }
