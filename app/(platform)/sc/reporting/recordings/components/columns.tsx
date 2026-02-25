@@ -92,7 +92,7 @@ export const recordingColumns = (state: ColumnState): ColumnDef<RecordingTableDa
     cell: ({ row }) => row.original.overallScore ?? "-",
   },
   {
-    id: "actions",
+    id: "button",
     cell: ({ row }) => <RecordingsDataTableMenu recording={row.original} state={state} />,
     enableHiding: false,
   },
