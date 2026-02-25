@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.18.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.18.1...v1.18.2) (2026-02-25)
+
+
+### Bug Fixes
+
+* **fellow-reports:** improve student group evaluation fetch ([#641](https://github.com/Shamiri-Institute/digitalhub/issues/641)) ([530189b](https://github.com/Shamiri-Institute/digitalhub/commit/530189b7c6d1e4d1b74deec33be727174d2a1ba1))
+
 ## [1.18.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.18.0...v1.18.1) (2026-02-20)
 
 
