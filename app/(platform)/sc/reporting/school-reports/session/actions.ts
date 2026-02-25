@@ -47,6 +47,7 @@ export async function loadSessionReport() {
         session: {
           include: {
             school: true,
+            session: true,
             sessionNotes: true,
             sessionComments: {
               include: {
@@ -79,8 +80,15 @@ export async function loadSessionReport() {
         acc.push(schoolGroup);
       }
 
+      const sessionLabel =
+        session.session?.session?.sessionLabel ||
+        session.session?.session?.sessionName ||
+        session.session?.sessionType ||
+        session.session?.sessionName ||
+        "N/A";
+
       schoolGroup.session.push({
-        session: session.session?.sessionName || "N/A",
+        session: sessionLabel,
         avgStudentBehaviour: session.studentBehaviorRating || 0,
         avgAdminSupport: session.adminSupportRating || 0,
         avgWorkload: session.workloadRating || 0,
