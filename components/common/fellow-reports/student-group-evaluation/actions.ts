@@ -79,9 +79,22 @@ const calculateAverage = (numbers: number[]): number => {
   return Number((sum / validNumbers.length).toFixed(1));
 };
 
-export async function loadStudentGroupEvaluations() {
+export type LoadStudentGroupEvaluationsOptions =
+  | { scope: "supervisor"; supervisorId: string }
+  | { scope: "hub"; hubId: string }
+  | { scope?: "all" };
+
+export async function loadStudentGroupEvaluations(options?: LoadStudentGroupEvaluationsOptions) {
   try {
+    const where =
+      options?.scope === "supervisor"
+        ? { group: { leader: { supervisorId: options.supervisorId } } }
+        : options?.scope === "hub"
+          ? { group: { leader: { hubId: options.hubId } } }
+          : undefined;
+
     const evaluations = await db.interventionGroupReport.findMany({
+      where,
       include: {
         group: {
           include: {
