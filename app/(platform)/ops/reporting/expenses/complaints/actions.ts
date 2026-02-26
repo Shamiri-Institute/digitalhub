@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { currentOpsUser } from "#/app/auth";
 import type { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
 import { db } from "#/lib/db";
+import { getActiveProjectId } from "#/lib/active-project-id";
 
 export type OpsHubsReportComplaintsType = Awaited<
   ReturnType<typeof loadOpsHubsPaymentComplaints>
@@ -12,6 +13,8 @@ export type OpsHubsReportComplaintsType = Awaited<
 export async function loadOpsHubsPaymentComplaints() {
   const opsUser = await currentOpsUser();
 
+  const projectId = await getActiveProjectId();
+
   if (!opsUser) {
     throw new Error("Unauthorised user");
   }
@@ -19,6 +22,9 @@ export async function loadOpsHubsPaymentComplaints() {
   const fellows = await db.fellow.findMany({
     where: {
       implementerId: opsUser.session.user.activeMembership?.implementerId,
+      hub: {
+        projectId,
+      },
     },
     include: {
       hub: {
