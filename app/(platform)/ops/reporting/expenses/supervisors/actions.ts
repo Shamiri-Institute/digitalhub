@@ -1,6 +1,7 @@
 "use server";
 
 import { currentOpsUser } from "#/app/auth";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
@@ -15,10 +16,15 @@ export async function loadHubsSupervisorExpenses() {
     throw new Error("Unauthorised user");
   }
 
+  const projectId = await getActiveProjectId();
+
   const supervisorsExpenses = await db.reimbursementRequest.findMany({
     where: {
       supervisor: {
         implementerId: opsUser.session.user.activeMembership?.implementerId,
+      },
+      hub: {
+        projectId,
       },
     },
     include: {
