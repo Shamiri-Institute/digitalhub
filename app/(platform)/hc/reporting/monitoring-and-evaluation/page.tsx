@@ -43,7 +43,7 @@ export default async function MonitoringAndEvaluationPage() {
   }
 
   const params = {
-    hub: [],
+    hub: [assignedHub.hubName],
     supervisor: [],
   };
   const iframeUrl = buildMetabaseDashboardEmbedUrl(params, dashboardId, secretKey);
