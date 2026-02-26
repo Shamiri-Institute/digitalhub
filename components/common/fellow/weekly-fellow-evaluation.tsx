@@ -102,6 +102,8 @@ export default function WeeklyFellowEvaluation({
   }, [fellowId, open]);
 
   useEffect(() => {
+    if (!open) return;
+
     const values = {
       fellowId,
       mode,
@@ -125,7 +127,7 @@ export default function WeeklyFellowEvaluation({
         differenceInSeconds(addDays(existingEvaluation.createdAt, 14), new Date()),
       );
     }
-  }, [existingEvaluation]);
+  }, [open, fellowId, existingEvaluation]);
 
   const onSubmit = async (data: z.infer<typeof WeeklyFellowEvaluationSchema>) => {
     const response = await submitWeeklyFellowEvaluation(data);
