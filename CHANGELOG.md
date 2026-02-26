@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.18.3](https://github.com/Shamiri-Institute/digitalhub/compare/v1.18.2...v1.18.3) (2026-02-26)
+
+
+### Bug Fixes
+
+* filter supervisor expenses by active project (ops) ([#642](https://github.com/Shamiri-Institute/digitalhub/issues/642)) ([152b4d4](https://github.com/Shamiri-Institute/digitalhub/commit/152b4d4b2d8266d40ffcedead2fb2e4a244452da))
+
 ## [1.18.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.18.1...v1.18.2) (2026-02-25)
 
 
