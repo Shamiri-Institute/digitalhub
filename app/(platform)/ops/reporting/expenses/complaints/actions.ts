@@ -3,8 +3,8 @@
 import type { Prisma } from "@prisma/client";
 import { currentOpsUser } from "#/app/auth";
 import type { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
-import { db } from "#/lib/db";
 import { getActiveProjectId } from "#/lib/active-project-id";
+import { db } from "#/lib/db";
 
 export type OpsHubsReportComplaintsType = Awaited<
   ReturnType<typeof loadOpsHubsPaymentComplaints>
