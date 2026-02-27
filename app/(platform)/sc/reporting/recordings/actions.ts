@@ -312,7 +312,6 @@ export async function createSessionRecording(input: {
   }
 
   try {
-    // 1. Create database record with PENDING status (existing behavior)
     const recording = await db.sessionRecording.create({
       data: {
         id: objectId("rec"),
@@ -340,7 +339,6 @@ export async function createSessionRecording(input: {
       };
     }
 
-    // 2. IMMEDIATELY submit job to Fidelity API for treatment group (non-blocking)
     await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
       console.error(
         `Non-blocking Fidelity submission failed for recording ${recording.id}:`,
