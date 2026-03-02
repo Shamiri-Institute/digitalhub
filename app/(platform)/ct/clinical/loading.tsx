@@ -31,14 +31,6 @@ export default function ClinicalTableSkeleton() {
     cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
   }));
 
-  function renderTableActions() {
-    return (
-      <Button variant="brand" disabled>
-        New Case
-      </Button>
-    );
-  }
-
   return (
     <div className="space-y-3 px-6">
       <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">{renderChartWidgets(4)}</div>
@@ -49,7 +41,6 @@ export default function ClinicalTableSkeleton() {
         data={Array.from(Array(10).keys()).map(() => ({}))}
         className="data-table data-table-action lg:mt-4"
         emptyStateMessage=""
-        renderTableActions={renderTableActions()}
       />
     </div>
   );

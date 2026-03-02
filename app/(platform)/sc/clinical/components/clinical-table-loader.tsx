@@ -28,12 +28,12 @@ export default function ClinicalTableLoader() {
 
   return (
     <DataTable
-        key="skeleton-clinical-cases-table"
-        columns={loadingColumns}
-        data={Array.from(Array(10).keys()).map(() => ({}))}
-        className="data-table data-table-action lg:mt-4"
-        emptyStateMessage=""
-        renderTableActions={renderTableActions()}
-      />
+      key="skeleton-clinical-cases-table"
+      columns={loadingColumns}
+      data={Array.from(Array(10).keys()).map(() => ({}))}
+      className="data-table data-table-action lg:mt-4"
+      emptyStateMessage=""
+      renderTableActions={renderTableActions()}
+    />
   );
 }
