@@ -1,11 +1,11 @@
 "use client";
 
+import type { ReactNode } from "react";
 import ChartSkeleton from "#/components/charts/chart-skeleton";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ReactNode } from "react";
 
 export default function ClinicalTableSkeleton() {
   function renderChartWidgets(num: number) {
