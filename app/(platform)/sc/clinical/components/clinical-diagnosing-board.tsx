@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   type ClinicalCases,
   updateClinicalCaseEmergencyPresentingIssue,
@@ -119,7 +119,7 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
 
   const [otherIssues, setOtherIssues] = useState(initialOtherIssues);
 
-  const hasChanges = () => {
+  const hasChanges = useMemo(() => {
     const currentEmergencyData = Object.entries(emergencyIssues).reduce(
       (acc, [id, severity]) => {
         const issueName = emergency_presenting_issues.find((i) => i.id.toString() === id)?.name;
@@ -149,7 +149,14 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
     const otherIssuesChanged = otherIssues !== initialOtherIssues;
 
     return emergencyChanged || generalChanged || otherIssuesChanged;
-  };
+  }, [
+    emergencyIssues,
+    generalIssues,
+    otherIssues,
+    initialEmergencyState,
+    initialGeneralState,
+    initialOtherIssues,
+  ]);
 
   const handleSaveAll = async () => {
     try {
@@ -271,10 +278,10 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleClearAll} disabled={!hasChanges()}>
+            <Button variant="outline" onClick={handleClearAll} disabled={!hasChanges}>
               Clear All
             </Button>
-            <Button variant="brand" onClick={handleSaveAll} disabled={!hasChanges()}>
+            <Button variant="brand" onClick={handleSaveAll} disabled={!hasChanges}>
               {isBaseline ? "Save Baseline" : "Save Endpoint"}
             </Button>
           </div>
