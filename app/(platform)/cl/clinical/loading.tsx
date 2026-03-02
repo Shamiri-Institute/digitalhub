@@ -1,9 +1,24 @@
 "use client";
+
+import ChartSkeleton from "#/components/charts/chart-skeleton";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
+import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
+import { ReactNode } from "react";
 
-export default function ClinicalTableLoader() {
+
+export default function ClinicalTableSkeleton() {
+
+  function renderChartWidgets(num: number) {
+    const out: ReactNode[] = [];
+    for (let i = 0; i < num; i++) {
+      out.push(<ChartSkeleton key={i} />);
+    }
+
+    return out;
+  }
+  
   const loadingColumns = [
     { header: "School", id: "school" },
     { header: "Pseudonym", id: "pseudonym" },
@@ -27,7 +42,10 @@ export default function ClinicalTableLoader() {
   }
 
   return (
-    <DataTable
+    <div className="space-y-3 px-6">
+         <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">{renderChartWidgets(4)}</div>
+      <Separator />
+      <DataTable
         key="skeleton-clinical-cases-table"
         columns={loadingColumns}
         data={Array.from(Array(10).keys()).map(() => ({}))}
@@ -35,5 +53,6 @@ export default function ClinicalTableLoader() {
         emptyStateMessage=""
         renderTableActions={renderTableActions()}
       />
+    </div>
   );
 }
