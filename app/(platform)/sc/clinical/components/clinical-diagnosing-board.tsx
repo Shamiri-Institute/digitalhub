@@ -118,6 +118,7 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
   });
 
   const [otherIssues, setOtherIssues] = useState(initialOtherIssues);
+  const [isSaving, setIsSaving] = useState(false);
 
   const hasChanges = useMemo(() => {
     const currentEmergencyData = Object.entries(emergencyIssues).reduce(
@@ -159,6 +160,7 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
   ]);
 
   const handleSaveAll = async () => {
+    setIsSaving(true);
     try {
       const emergencyData = Object.entries(emergencyIssues).reduce(
         (acc, [id, severity]) => {
@@ -207,6 +209,8 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
         description: "Failed to update presenting issues",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -281,7 +285,12 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
             <Button variant="outline" onClick={handleClearAll} disabled={!hasChanges}>
               Clear All
             </Button>
-            <Button variant="brand" onClick={handleSaveAll} disabled={!hasChanges}>
+            <Button
+              variant="brand"
+              onClick={handleSaveAll}
+              disabled={!hasChanges || isSaving}
+              loading={isSaving}
+            >
               {isBaseline ? "Save Baseline" : "Save Endpoint"}
             </Button>
           </div>
