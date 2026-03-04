@@ -1,29 +1,39 @@
-import { Card, CardContent, CardHeader } from "#/components/ui/card";
+"use client";
+import DataTable from "#/components/data-table";
+import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 
 export default function ClinicalTableLoader() {
+  const loadingColumns = [
+    { header: "School", id: "school" },
+    { header: "Pseudonym", id: "pseudonym" },
+    { header: "Date Added", id: "dateAdded" },
+    { header: "Case Status", id: "caseStatus" },
+    { header: "Risk", id: "risk" },
+    { header: "Age", id: "age" },
+    { header: "Referral From", id: "referralFrom" },
+  ].map((column) => ({
+    header: column.header,
+    id: column.id,
+    cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+  }));
+
+  function renderTableActions() {
+    return (
+      <Button variant="brand" disabled>
+        New Case
+      </Button>
+    );
+  }
+
   return (
-    <Card className="w-full lg:mt-4">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <Skeleton className="h-8 w-48 bg-gray-200" />
-        <Skeleton className="h-10 w-28 bg-gray-200" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div className="flex items-center gap-4 border-b pb-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-4 w-24 bg-gray-200" />
-            ))}
-          </div>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 py-2">
-              {[1, 2, 3, 4, 5, 6].map((j) => (
-                <Skeleton key={j} className="h-5 w-24 bg-gray-200" />
-              ))}
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <DataTable
+      key="skeleton-clinical-cases-table"
+      columns={loadingColumns}
+      data={Array.from(Array(10).keys()).map(() => ({}))}
+      className="data-table data-table-action lg:mt-4"
+      emptyStateMessage=""
+      renderTableActions={renderTableActions()}
+    />
   );
 }
