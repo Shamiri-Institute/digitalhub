@@ -82,7 +82,7 @@ export function GroupsDatatableMenu({
           )}
         {state.role === ImplementerRole.HUB_COORDINATOR && group.archivedAt && (
           <DropdownMenuItem
-            className="text-shamiri-green"
+            className="text-shamiri-red"
             onClick={() => {
               state.setGroup(group);
               state.setUnarchiveDialog(true);
