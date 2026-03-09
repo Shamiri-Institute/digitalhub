@@ -1,15 +1,16 @@
 "use client";
 
-import { ImplementerRole, type Prisma } from "@prisma/client";
-import { useEffect, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import ArchiveGroup from "#/components/common/group/archive-group";
 import { columns, type SchoolGroupDataTableData } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
 import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
+import UnarchiveGroup from "#/components/common/group/unarchive-group";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
+import { ImplementerRole, type Prisma } from "@prisma/client";
+import { useEffect, useState } from "react";
 
 export default function GroupsDataTable({
   data,
@@ -39,6 +40,7 @@ export default function GroupsDataTable({
   const [evaluationDialog, setEvaluationDialog] = useState(false);
   const [leaderDialog, setLeaderDialog] = useState(false);
   const [archiveDialog, setArchiveDialog] = useState(false);
+  const [unarchiveDialog, setUnarchiveDialog] = useState(false);
 
   useEffect(() => {
     if (group) {
@@ -67,6 +69,7 @@ export default function GroupsDataTable({
           setEvaluationDialog,
           setLeaderDialog,
           setArchiveDialog,
+          setUnarchiveDialog,
           role,
         })}
         data={data}
@@ -117,7 +120,7 @@ export default function GroupsDataTable({
               <DialogAlertWidget>
                 <div className="flex items-center gap-2">
                   <span>{group.fellowName}</span>
-                  <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+                  <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
                   <span>{group.groupName}</span>
                 </div>
               </DialogAlertWidget>
@@ -130,6 +133,17 @@ export default function GroupsDataTable({
               </div>
             </DialogAlertWidget>
           </ArchiveGroup>
+          <UnarchiveGroup
+            groupId={group.id}
+            open={unarchiveDialog}
+            onOpenChange={setUnarchiveDialog}
+          >
+            <DialogAlertWidget>
+              <div className="flex items-center gap-2">
+                <span>{group.groupName}</span>
+              </div>
+            </DialogAlertWidget>
+          </UnarchiveGroup>
         </>
       )}
     </>
