@@ -1,4 +1,5 @@
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
@@ -48,7 +49,12 @@ export default function UnarchiveGroup({
         </DialogHeader>
         {children}
         <div className="space-y-4">
-          <h3>Are you sure you want to restore this group? It will become active again.</h3>
+          <h3>Are you sure?</h3>
+          <DialogAlertWidget
+            label="This group will become active again and can be used for interventions."
+            variant="destructive"
+            separator={false}
+          />
         </div>
         <Separator />
         <div className="space-y-5">
