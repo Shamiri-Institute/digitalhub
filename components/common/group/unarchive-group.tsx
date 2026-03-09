@@ -1,3 +1,6 @@
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
@@ -5,9 +8,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { unarchiveInterventionGroup } from "#/lib/actions/group";
-import { usePathname } from "next/navigation";
-import type React from "react";
-import { type Dispatch, type SetStateAction, useState } from "react";
 
 export default function UnarchiveGroup({
   groupId,
