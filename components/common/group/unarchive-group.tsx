@@ -63,8 +63,8 @@ export default function UnarchiveGroup({
               Cancel
             </Button>
             <Button
-              type="button"
-              className="bg-shamiri-green hover:bg-shamiri-green/90"
+              variant="brand"
+              type="submit"
               disabled={loading}
               loading={loading}
               onClick={() => {
