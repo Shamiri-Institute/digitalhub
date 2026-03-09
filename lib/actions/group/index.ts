@@ -1,12 +1,12 @@
 "use server";
 
-import { ImplementerRole, Prisma } from "@prisma/client";
-import type { z } from "zod";
 import { getCurrentPersonnel } from "#/app/auth";
 import { CreateGroupSchema, StudentGroupEvaluationSchema } from "#/components/common/group/schema";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
+import { ImplementerRole, Prisma } from "@prisma/client";
+import type { z } from "zod";
 
 async function checkAuth() {
   const user = await getCurrentPersonnel();
@@ -42,6 +42,29 @@ export async function archiveInterventionGroup(groupId: string) {
     return {
       success: false,
       message: (err as Error)?.message ?? "Sorry, could not archive group.",
+    };
+  }
+}
+
+export async function unarchiveInterventionGroup(groupId: string) {
+  try {
+    const user = await getCurrentPersonnel();
+    if (!user || user.session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR) {
+      throw new Error("Only hub coordinators can unarchive groups.");
+    }
+    const result = await db.interventionGroup.update({
+      where: { id: groupId },
+      data: { archivedAt: null },
+    });
+    return {
+      success: true,
+      message: `Successfully unarchived group ${result.groupName}`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message: (err as Error)?.message ?? "Sorry, could not unarchive group.",
     };
   }
 }
