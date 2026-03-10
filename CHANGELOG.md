@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.19.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.18.3...v1.19.0) (2026-03-10)
+
+
+### Features
+
+* **ai:** add A/B test gating for supervisors in control group ([#637](https://github.com/Shamiri-Institute/digitalhub/issues/637)) ([832a208](https://github.com/Shamiri-Institute/digitalhub/commit/832a208a7ff4f1623bc2f06f82f9618fa05ec157))
+* **groups:** add unarchive functionality for intervention groups for HC ([#648](https://github.com/Shamiri-Institute/digitalhub/issues/648)) ([de1d872](https://github.com/Shamiri-Institute/digitalhub/commit/de1d8729e3ea2766d7946c71fd629f0c624a78f4))
+
+
+### Bug Fixes
+
+* **fellow-evaluation:** correct fellow ID on submit and reset form when dialog opens ([#645](https://github.com/Shamiri-Institute/digitalhub/issues/645)) ([61462b2](https://github.com/Shamiri-Institute/digitalhub/commit/61462b2eae9d1bb0fd44c54d9b31db42768dbaf0))
+
 ## [1.18.3](https://github.com/Shamiri-Institute/digitalhub/compare/v1.18.2...v1.18.3) (2026-02-26)
 
 
