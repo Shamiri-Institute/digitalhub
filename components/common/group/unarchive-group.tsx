@@ -1,6 +1,6 @@
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
@@ -66,11 +66,7 @@ export default function UnarchiveGroup({
             <Separator />
             <div className="space-y-6 pt-2">
               <DialogFooter className="flex justify-end">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onOpenChange(false)}
-                >
+                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
                 <Button
