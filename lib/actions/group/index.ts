@@ -46,6 +46,29 @@ export async function archiveInterventionGroup(groupId: string) {
   }
 }
 
+export async function unarchiveInterventionGroup(groupId: string) {
+  try {
+    const user = await getCurrentPersonnel();
+    if (!user || user.session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR) {
+      throw new Error("Only hub coordinators can unarchive groups.");
+    }
+    const result = await db.interventionGroup.update({
+      where: { id: groupId },
+      data: { archivedAt: null },
+    });
+    return {
+      success: true,
+      message: `Successfully unarchived group ${result.groupName}`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message: (err as Error)?.message ?? "Sorry, could not unarchive group.",
+    };
+  }
+}
+
 export async function createInterventionGroup(data: z.infer<typeof CreateGroupSchema>) {
   try {
     await checkAuth();

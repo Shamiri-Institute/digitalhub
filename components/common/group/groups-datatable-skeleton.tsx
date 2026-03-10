@@ -20,6 +20,7 @@ export default function GroupsDatatableSkeleton({
     setEvaluationDialog: () => {},
     setLeaderDialog: () => {},
     setArchiveDialog: () => {},
+    setUnarchiveDialog: () => {},
     role,
   })
     .map((column) => column.id ?? column.header)
