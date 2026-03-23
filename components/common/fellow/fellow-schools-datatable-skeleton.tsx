@@ -33,7 +33,6 @@ export default function FellowSchoolsDatatableSkeleton({ role }: { role: Impleme
       };
     });
 
-
   return (
     <DataTable
       columns={loadingColumns as ColumnDef<FellowsData>[]}
