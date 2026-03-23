@@ -18,7 +18,6 @@ export default function FellowsDatatable({
   supervisors,
   schoolId,
   role,
-  hideActions = false,
   attendances,
 }: {
   fellows: SchoolFellowTableData[];
