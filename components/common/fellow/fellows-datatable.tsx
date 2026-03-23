@@ -8,7 +8,6 @@ import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import { columns, type SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
-import { BatchUploadDownloadFellow } from "#/components/common/fellow/upload-csv";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
 
@@ -51,10 +50,6 @@ export default function FellowsDatatable({
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
   const [assignSupervisorDialog, setAssignSupervisorDialog] = useState(false);
 
-  const renderTableActions = () => {
-    return <BatchUploadDownloadFellow role={role} />;
-  };
-
   useEffect(() => {
     if (fellow) {
       const updatedFellow = fellows.find((_fellow) => {
@@ -81,7 +76,6 @@ export default function FellowsDatatable({
         data={fellows}
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No fellows associated with this school"
-        renderTableActions={!hideActions && renderTableActions()}
         columnVisibilityState={{
           checkbox: role === ImplementerRole.HUB_COORDINATOR,
           Supervisor: false,
