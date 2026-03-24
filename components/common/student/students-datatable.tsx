@@ -72,6 +72,7 @@ export default function StudentsDatatable({
           setDropoutDialog,
           setArchiveDialog,
           role,
+          sessions: students[0]?.school?.interventionSessions ?? [],
         })}
         emptyStateMessage="No students found"
         className="data-table data-table-action lg:mt-4"
