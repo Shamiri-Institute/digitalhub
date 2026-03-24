@@ -4,7 +4,6 @@ import type { ImplementerRole } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
 import { fellowSchoolsColumns } from "#/components/common/fellow/fellow-schools-columns";
-import { BatchUploadDownloadFellow } from "#/components/common/fellow/upload-csv";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 
@@ -34,10 +33,6 @@ export default function FellowSchoolsDatatableSkeleton({ role }: { role: Impleme
       };
     });
 
-  const renderTableActions = () => {
-    return <BatchUploadDownloadFellow disabled={true} role={role} />;
-  };
-
   return (
     <DataTable
       columns={loadingColumns as ColumnDef<FellowsData>[]}
@@ -48,7 +43,6 @@ export default function FellowSchoolsDatatableSkeleton({ role }: { role: Impleme
       }
       className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
-      renderTableActions={renderTableActions()}
       columnVisibilityState={{
         "MPESA Name": false,
         "Average Rating": false,
