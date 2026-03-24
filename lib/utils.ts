@@ -1,6 +1,7 @@
 import type { riskStatusOptions } from "@prisma/client";
 import { type ClassValue, clsx } from "clsx";
 import type { Metadata } from "next";
+import { createElement } from "react";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
@@ -120,4 +121,8 @@ export function handleMinutesChange(value: string): string {
   if (numericValue < 0) return "00";
   if (numericValue > 59) return "59";
   return numericValue.toString().padStart(2, "0");
+}
+
+export function wrapColumnHeader(label: string) {
+  return createElement("div", { className: "whitespace-normal wrap-break-words leading-5" }, label);
 }
