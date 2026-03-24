@@ -1,11 +1,12 @@
 "use client";
 
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, InterventionSession, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
 import StudentsDataTableMenu from "#/components/common/student/students-datatable-menu";
+import SessionHistoryWidget from "#/components/common/supervisor/sessions-history-widget";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 
@@ -62,6 +63,7 @@ export const columns = (state: {
   setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
   setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
+  sessions: InterventionSession[];
 }): ColumnDef<SchoolStudentTableData>[] => [
   {
     id: "checkbox",
@@ -104,6 +106,26 @@ export const columns = (state: {
     accessorKey: "assignedGroup.groupName",
     header: "Group Name",
     id: "Group Name",
+  },
+  {
+    header: "Attendance history",
+    id: "Attendance history",
+    cell: ({ row }) => {
+      const attendances = state.sessions.map((session) => {
+        const attendance = row.original.studentAttendances.find((x) => x.sessionId === session?.id);
+        return {
+          id: attendance?.id,
+          attended: attendance?.attended ?? null,
+          sessionId: attendance?.sessionId,
+          absenceReason: attendance?.absenceReason ?? "",
+          absenceComments: attendance?.comments ?? "",
+          sessionType: session.sessionType ?? null,
+          sessionOccurred: session.occurred,
+          sessionDate: session.sessionDate,
+        };
+      });
+      return <SessionHistoryWidget attendedSessions={attendances} />;
+    },
   },
   {
     header: "Shamiri ID",

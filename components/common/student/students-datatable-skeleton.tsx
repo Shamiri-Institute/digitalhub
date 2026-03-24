@@ -17,6 +17,7 @@ export default function StudentsDatatableSkeleton({ role }: { role: ImplementerR
     setDropoutDialog: () => {},
     setArchiveDialog: () => {},
     role,
+    sessions: [],
   })
     .map((column) => column.id ?? column.header)
     .map((column) => {
