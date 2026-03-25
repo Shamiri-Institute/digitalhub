@@ -72,6 +72,7 @@ export default function StudentsDatatable({
           setDropoutDialog,
           setArchiveDialog,
           role,
+          sessions: students[0]?.school?.interventionSessions ?? [],
         })}
         emptyStateMessage="No students found"
         className="data-table data-table-action lg:mt-4"
@@ -80,9 +81,11 @@ export default function StudentsDatatable({
           "Contact no.": false,
           "Shamiri ID": false,
           "Admission number": false,
+          "Clinical Sessions": false,
           Stream: false,
           "Class/Form": false,
           "Date added": false,
+          Age: false,
           checkbox: false,
         }}
         rowSelectionDescription={"students"}

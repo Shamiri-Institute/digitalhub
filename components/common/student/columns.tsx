@@ -1,13 +1,15 @@
 "use client";
 
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, InterventionSession, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
 import StudentsDataTableMenu from "#/components/common/student/students-datatable-menu";
+import SessionHistoryWidget from "#/components/common/supervisor/sessions-history-widget";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
+import { wrapColumnHeader } from "#/lib/utils";
 
 export type SchoolStudentTableData = Prisma.StudentGetPayload<{
   include: {
@@ -62,6 +64,7 @@ export const columns = (state: {
   setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
   setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
+  sessions: InterventionSession[];
 }): ColumnDef<SchoolStudentTableData>[] => [
   {
     id: "checkbox",
@@ -96,17 +99,37 @@ export const columns = (state: {
   },
   {
     accessorKey: "studentName",
-    header: "Student Name",
+    header: () => wrapColumnHeader("Student Name"),
     id: "Student Name",
   },
   {
     // TODO: this computation should be done during the fetch and possible user an accessor Function
     accessorKey: "assignedGroup.groupName",
-    header: "Group Name",
+    header: () => wrapColumnHeader("Group Name"),
     id: "Group Name",
   },
   {
-    header: "Shamiri ID",
+    header: () => wrapColumnHeader("Attendance history"),
+    id: "Attendance history",
+    cell: ({ row }) => {
+      const attendances = state.sessions.map((session) => {
+        const attendance = row.original.studentAttendances.find((x) => x.sessionId === session?.id);
+        return {
+          id: attendance?.id,
+          attended: attendance?.attended ?? null,
+          sessionId: attendance?.sessionId,
+          absenceReason: attendance?.absenceReason ?? "",
+          absenceComments: attendance?.comments ?? "",
+          sessionType: session.sessionType ?? null,
+          sessionOccurred: session.occurred,
+          sessionDate: session.sessionDate,
+        };
+      });
+      return <SessionHistoryWidget attendedSessions={attendances} />;
+    },
+  },
+  {
+    header: () => wrapColumnHeader("Shamiri ID"),
     id: "Shamiri ID",
     accessorKey: "visibleId",
   },
@@ -116,7 +139,7 @@ export const columns = (state: {
     id: "Age",
   },
   {
-    header: "Clinical Sessions",
+    header: () => wrapColumnHeader("Clinical Sessions"),
     id: "Clinical Sessions",
     accessorFn: (row) => row.clinicalCases?.reduce((acc, val) => acc + val.sessions.length, 0),
   },
@@ -126,7 +149,7 @@ export const columns = (state: {
     accessorKey: "gender",
   },
   {
-    header: "Contact no.",
+    header: () => wrapColumnHeader("Contact no."),
     id: "Contact no.",
     accessorFn: (row) => {
       try {
@@ -137,7 +160,7 @@ export const columns = (state: {
     },
   },
   {
-    header: "Admission number",
+    header: () => wrapColumnHeader("Admission number"),
     id: "Admission number",
     accessorKey: "admissionNumber",
   },
@@ -167,7 +190,7 @@ export const columns = (state: {
       ),
   },
   {
-    header: "Date added",
+    header: () => wrapColumnHeader("Date added"),
     id: "Date added",
     accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
   },
