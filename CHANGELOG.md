@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.20.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.19.0...v1.20.0) (2026-03-25)
+
+
+### Features
+
+* **security:** add security headers ([#655](https://github.com/Shamiri-Institute/digitalhub/issues/655)) ([c25a3ef](https://github.com/Shamiri-Institute/digitalhub/commit/c25a3ef84384189bfdb27e2232f891e0f320604d))
+* **student:** add attendance history column and integrate session history widget in student datatable ([#659](https://github.com/Shamiri-Institute/digitalhub/issues/659)) ([7016e06](https://github.com/Shamiri-Institute/digitalhub/commit/7016e066bed10aa1be8f8bb41decb79041ca6087))
+
 ## [1.19.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.18.3...v1.19.0) (2026-03-10)
 
 
