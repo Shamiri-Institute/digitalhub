@@ -17,6 +17,7 @@ export default function StudentsDatatableSkeleton({ role }: { role: ImplementerR
     setDropoutDialog: () => {},
     setArchiveDialog: () => {},
     role,
+    sessions: [],
   })
     .map((column) => column.id ?? column.header)
     .map((column) => {
@@ -48,6 +49,8 @@ export default function StudentsDatatableSkeleton({ role }: { role: ImplementerR
         Stream: false,
         "Class/Form": false,
         "Date added": false,
+        Age: false,
+        "Clinical Sessions": false,
         checkbox: false,
       }}
     />
