@@ -81,9 +81,11 @@ export default function StudentsDatatable({
           "Contact no.": false,
           "Shamiri ID": false,
           "Admission number": false,
+          "Clinical Sessions": false,
           Stream: false,
           "Class/Form": false,
           "Date added": false,
+          Age: false,
           checkbox: false,
         }}
         rowSelectionDescription={"students"}
