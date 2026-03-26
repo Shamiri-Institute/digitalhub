@@ -12,6 +12,7 @@ import {
 } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
+import { Combobox } from "#/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -111,16 +112,6 @@ export default function ReferClinicalCase({
     },
   });
 
-  useEffect(() => {
-    if (selectedReferTo !== "Supervisor") {
-      form.setValue("supervisorId", "");
-    }
-    if (selectedReferTo !== "Clinical Lead") {
-      form.setValue("clinicalLeadId", "");
-      setSelectedClinicalLead(null);
-    }
-  }, [selectedReferTo, form]);
-
   const onSubmit = async (data: ComplaintFormValues) => {
     try {
       let response: { success: boolean; message?: string };
@@ -202,6 +193,13 @@ export default function ReferClinicalCase({
                         field.onChange(value);
                         setSelectedReferTo(value);
                         form.setValue("referralReason", "");
+                        if (value !== "Supervisor") {
+                          form.setValue("supervisorId", "");
+                        }
+                        if (value !== "Clinical Lead") {
+                          form.setValue("clinicalLeadId", "");
+                          setSelectedClinicalLead(null);
+                        }
                       }}
                       value={field.value}
                     >
@@ -233,20 +231,18 @@ export default function ReferClinicalCase({
                         Select Supervisor
                         <span className="ml-1 text-red-500">*</span>
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select supervisor..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {supervisorsInHub.map((supervisor) => (
-                            <SelectItem key={supervisor.id} value={supervisor.id}>
-                              {supervisor.name || "Unknown"}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Combobox
+                          items={supervisorsInHub.map((supervisor) => ({
+                            id: supervisor.id,
+                            label: supervisor.name || "Unknown",
+                          }))}
+                          activeItemId={field.value || ""}
+                          onSelectItem={field.onChange}
+                          placeholder="Select a supervisor..."
+                          inputPlaceholder="Search supervisors..."
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -263,32 +259,29 @@ export default function ReferClinicalCase({
                         Select Clinical Lead
                         <span className="ml-1 text-red-500">*</span>
                       </FormLabel>
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          const selectedLead = clinicalLeads.find((lead) => lead.id === value);
-                          if (selectedLead) {
+                      <FormControl>
+                        <Combobox
+                          items={clinicalLeads.map((lead) => ({
+                            id: lead.id,
+                            label: lead.name || "Unknown",
+                          }))}
+                          activeItemId={field.value || ""}
+                          onSelectItem={(value) => {
+                            field.onChange(value);
+                            const selectedLead = clinicalLeads.find((lead) => lead.id === value);
+                            if (!selectedLead) {
+                              setSelectedClinicalLead(null);
+                              return;
+                            }
                             setSelectedClinicalLead({
                               id: selectedLead.id,
                               name: selectedLead.name,
                             });
-                          }
-                        }}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select clinical lead..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {clinicalLeads.map((lead) => (
-                            <SelectItem key={lead.id} value={lead.id}>
-                              {lead.name || "Unknown"}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                          }}
+                          placeholder="Select a clinical lead..."
+                          inputPlaceholder="Search clinical leads..."
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
