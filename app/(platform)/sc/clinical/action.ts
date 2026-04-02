@@ -765,7 +765,18 @@ export async function getClinicalLeads() {
     if (!supervisor) {
       throw new Error("Supervisor not found");
     }
-    const clinicalLeads = await db.clinicalLead.findMany();
+    const projectId = supervisor.profile?.hub?.projectId;
+    if (!projectId) {
+      throw new Error("Assigned hub has no project");
+    }
+
+    const clinicalLeads = await db.clinicalLead.findMany({
+      where: {
+        assignedHub: {
+          projectId,
+        },
+      },
+    });
     const clinicalLeadsWithSupervisor = clinicalLeads.map((lead) => ({
       name: lead.clinicalLeadName,
       id: lead.id,
