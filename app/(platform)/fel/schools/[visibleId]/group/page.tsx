@@ -1,6 +1,6 @@
 import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
-import { currentFellow } from "#/app/auth";
+import { currentFellowAuth } from "#/app/auth";
 import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
 import { db } from "#/lib/db";
@@ -10,7 +10,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
 
   const { visibleId } = params;
 
-  const fellow = await currentFellow();
+  const fellow = await currentFellowAuth();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }

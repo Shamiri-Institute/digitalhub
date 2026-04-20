@@ -242,6 +242,29 @@ export const currentFellow = cache(async () => {
   return { profile: fellow, session };
 });
 
+export type CurrentFellowAuth = Awaited<ReturnType<typeof currentFellowAuth>>;
+
+export const currentFellowAuth = cache(async () => {
+  const session = await getCurrentUserSession();
+  if (!session) {
+    return null;
+  }
+  const membership = session.user.activeMembership;
+  if (!membership?.identifier) {
+    return null;
+  }
+
+  const fellow = await db.fellow.findFirst({
+    where: { id: membership.identifier },
+  });
+
+  if (!fellow) {
+    return null;
+  }
+
+  return { profile: fellow, session };
+});
+
 export type CurrentClinicalLead = Awaited<ReturnType<typeof currentClinicalLead>>;
 
 export const currentClinicalLead = cache(async () => {
@@ -391,7 +414,7 @@ export type CurrentPersonnel = Awaited<ReturnType<typeof getCurrentPersonnel>>;
 export async function getCurrentPersonnel(): Promise<
   | CurrentSupervisor
   | CurrentHubCoordinator
-  | CurrentFellow
+  | CurrentFellowAuth
   | CurrentClinicalLead
   | CurrentOpsUser
   | CurrentClinicalTeam
@@ -416,7 +439,7 @@ export async function getCurrentPersonnel(): Promise<
   }
 
   if (role === ImplementerRole.FELLOW) {
-    return await currentFellow();
+    return await currentFellowAuth();
   }
 
   if (role === ImplementerRole.CLINICAL_LEAD) {
