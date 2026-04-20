@@ -26,7 +26,6 @@ import {
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
-import type { CurrentFellow } from "#/app/auth";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
 import RescheduleSession from "#/components/common/session/reschedule-session";
@@ -85,7 +84,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
   }[];
   role: ImplementerRole;
   supervisorId?: string;
-  fellow?: CurrentFellow;
+  fellowId?: string;
   hubSessionTypes?: SessionName[];
 };
 
@@ -269,7 +268,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 fellowRatings={props.fellowRatings}
                 role={props.role}
                 supervisorId={props.supervisorId}
-                fellow={props.fellow}
+                fellowId={props.fellowId}
               />
             </FiltersContext.Provider>
           </div>
@@ -369,7 +368,7 @@ function CalendarView({
   fellowRatings,
   role,
   supervisorId,
-  fellow,
+  fellowId,
 }: {
   monthProps: {
     state: CalendarState;
@@ -409,7 +408,7 @@ function CalendarView({
   }[];
   role: ImplementerRole;
   supervisorId?: string;
-  fellow?: CurrentFellow;
+  fellowId?: string;
 }) {
   const { mode } = useMode();
   const { loading } = useContext(SessionsContext);
@@ -447,7 +446,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.profile.id}
+            fellowId={fellowId}
           />
         );
       case "week":
@@ -466,7 +465,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.profile.id}
+            fellowId={fellowId}
           />
         ) : (
           <div>Loading...</div>
@@ -487,7 +486,7 @@ function CalendarView({
               setCancelSessionDialog,
             }}
             supervisorId={supervisorId}
-            fellowId={fellow?.profile.id}
+            fellowId={fellowId}
           />
         ) : (
           <div>Loading...</div>
@@ -508,7 +507,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.profile.id}
+            fellowId={fellowId}
           />
         );
       case "table":
@@ -583,7 +582,7 @@ function CalendarView({
         role={role}
         session={session}
         fellows={fellowsForStudentAttendance}
-        fellowId={fellow?.profile.id}
+        fellowId={fellowId}
       />
       {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
         <SessionRatings

@@ -1,7 +1,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
-import { currentFellow } from "#/app/auth";
+import { currentFellowAuth } from "#/app/auth";
 import FellowSchoolsDatatable from "#/components/common/fellow/fellow-schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -9,7 +9,7 @@ import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 
 export default async function FellowsPage() {
-  const fellow = await currentFellow();
+  const fellow = await currentFellowAuth();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
