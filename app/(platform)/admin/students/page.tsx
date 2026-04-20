@@ -213,8 +213,7 @@ export default async function StudentsPage() {
     const computedAge = yearOfBirth ? currentYear - yearOfBirth : age;
     if (computedAge)
       studentsGroupedByAge[computedAge] = (studentsGroupedByAge[computedAge] || 0) + 1;
-    if (gender)
-      studentsGroupedByGender[gender] = (studentsGroupedByGender[gender] || 0) + 1;
+    if (gender) studentsGroupedByGender[gender] = (studentsGroupedByGender[gender] || 0) + 1;
     if (form) studentsGroupedByForm[form] = (studentsGroupedByForm[form] || 0) + 1;
   });
 
