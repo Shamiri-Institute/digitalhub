@@ -53,47 +53,29 @@ export default async function StudentsPage() {
     }),
     db.clinicalScreeningInfo.findMany({
       where: {
-        OR: [
-          {
-            currentSupervisor: {
+        student: {
+          archivedAt: null,
+          school: {
+            implementerId,
+            hub: {
+              projectId,
+            },
+          },
+        },
+      },
+    }),
+    db.clinicalSessionAttendance.findMany({
+      where: {
+        case: {
+          student: {
+            archivedAt: null,
+            school: {
               implementerId,
               hub: {
                 projectId,
               },
             },
           },
-          {
-            clinicalLead: {
-              assignedHub: {
-                implementerId,
-                projectId,
-              },
-            },
-          },
-        ],
-      },
-    }),
-    db.clinicalSessionAttendance.findMany({
-      where: {
-        case: {
-          OR: [
-            {
-              currentSupervisor: {
-                implementerId,
-                hub: {
-                  projectId,
-                },
-              },
-            },
-            {
-              clinicalLead: {
-                assignedHub: {
-                  implementerId,
-                  projectId,
-                },
-              },
-            },
-          ],
         },
       },
     }),
@@ -101,24 +83,15 @@ export default async function StudentsPage() {
       by: ["session"],
       where: {
         case: {
-          OR: [
-            {
-              currentSupervisor: {
-                implementerId,
-                hub: {
-                  projectId,
-                },
+          student: {
+            archivedAt: null,
+            school: {
+              implementerId,
+              hub: {
+                projectId,
               },
             },
-            {
-              clinicalLead: {
-                assignedHub: {
-                  implementerId,
-                  projectId,
-                },
-              },
-            },
-          ],
+          },
         },
       },
       _count: {
@@ -128,12 +101,16 @@ export default async function StudentsPage() {
     db.clinicalScreeningInfo.groupBy({
       by: ["currentSupervisorId"],
       where: {
-        currentSupervisor: {
-          implementerId,
-          hub: {
-            projectId,
+        student: {
+          archivedAt: null,
+          school: {
+            implementerId,
+            hub: {
+              projectId,
+            },
           },
         },
+        currentSupervisorId: { not: null },
       },
       _count: {
         currentSupervisorId: true,
@@ -142,31 +119,21 @@ export default async function StudentsPage() {
     db.clinicalScreeningInfo.groupBy({
       by: ["initialReferredFromSpecified"],
       where: {
-        OR: [
-          {
-            currentSupervisor: {
-              implementerId,
-              hub: {
-                projectId,
-              },
+        student: {
+          archivedAt: null,
+          school: {
+            implementerId,
+            hub: {
+              projectId,
             },
           },
-          {
-            clinicalLead: {
-              assignedHub: {
-                implementerId,
-                projectId,
-              },
-            },
-          },
-        ],
+        },
       },
       _count: {
         initialReferredFrom: true,
       },
     }),
-    db.student.groupBy({
-      by: ["age", "gender", "form"],
+    db.student.findMany({
       where: {
         archivedAt: null,
         school: {
@@ -176,8 +143,11 @@ export default async function StudentsPage() {
           },
         },
       },
-      _count: {
-        id: true,
+      select: {
+        yearOfBirth: true,
+        age: true,
+        gender: true,
+        form: true,
       },
     }),
     db.interventionSession.groupBy({
@@ -238,11 +208,14 @@ export default async function StudentsPage() {
   const studentsGroupedByGender: Record<string, number> = {};
   const studentsGroupedByForm: Record<string, number> = {};
 
-  studentAggregations.forEach(({ age, gender, form, _count }) => {
-    if (age) studentsGroupedByAge[age] = (_count.id || 0) + (studentsGroupedByAge[age] || 0);
+  const currentYear = new Date().getFullYear();
+  studentAggregations.forEach(({ yearOfBirth, age, gender, form }) => {
+    const computedAge = yearOfBirth ? currentYear - yearOfBirth : age;
+    if (computedAge)
+      studentsGroupedByAge[computedAge] = (studentsGroupedByAge[computedAge] || 0) + 1;
     if (gender)
-      studentsGroupedByGender[gender] = (_count.id || 0) + (studentsGroupedByGender[gender] || 0);
-    if (form) studentsGroupedByForm[form] = (_count.id || 0) + (studentsGroupedByForm[form] || 0);
+      studentsGroupedByGender[gender] = (studentsGroupedByGender[gender] || 0) + 1;
+    if (form) studentsGroupedByForm[form] = (studentsGroupedByForm[form] || 0) + 1;
   });
 
   /**
