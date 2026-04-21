@@ -3,7 +3,7 @@
 import type { Prisma } from "@prisma/client";
 import { randomBytes } from "crypto";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
-import { currentFellow, getCurrentPersonnel } from "#/app/auth";
+import { currentFellowAuth, getCurrentPersonnel } from "#/app/auth";
 import { db, type TransactionCursor } from "#/lib/db";
 
 function generateRandomPseudonym(): string {
@@ -102,7 +102,7 @@ async function getFellowContext() {
   if (!user) {
     throw new Error("Not authenticated");
   }
-  const fellow = await currentFellow();
+  const fellow = await currentFellowAuth();
   if (!fellow?.profile) {
     throw new Error("Only fellows can document triage events");
   }
