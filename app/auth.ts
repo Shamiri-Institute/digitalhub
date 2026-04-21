@@ -256,6 +256,7 @@ export const currentFellowAuth = cache(async () => {
 
   const fellow = await db.fellow.findFirst({
     where: { id: membership.identifier },
+    include: { hub: true },
   });
 
   if (!fellow) {
