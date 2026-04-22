@@ -155,101 +155,6 @@ export const currentFellow = cache(async () => {
     return null;
   }
   const membership = session.user.activeMembership;
-  if (!membership) {
-    return null;
-  }
-
-  const { identifier } = membership;
-  if (!identifier) {
-    return null;
-  }
-
-  const fellow = await db.fellow.findFirst({
-    where: { id: identifier },
-    include: {
-      hub: {
-        include: {
-          schools: {
-            include: {
-              assignedSupervisor: true,
-              interventionSessions: {
-                include: {
-                  sessionRatings: true,
-                  session: true,
-                },
-              },
-              interventionGroups: {
-                include: {
-                  leader: true,
-                  students: true,
-                },
-              },
-              students: {
-                include: {
-                  assignedGroup: true,
-                  _count: {
-                    select: {
-                      clinicalCases: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-          sessions: true,
-        },
-      },
-      fellowAttendances: {
-        include: {
-          repaymentRequests: true,
-        },
-      },
-      repaymentRequests: {
-        include: {
-          fellowAttendance: {
-            include: {
-              group: true,
-              school: true,
-            },
-          },
-        },
-      },
-      groups: {
-        include: {
-          _count: {
-            select: {
-              students: true,
-            },
-          },
-          school: {
-            include: {
-              _count: {
-                select: {
-                  interventionSessions: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!fellow) {
-    return null;
-  }
-
-  return { profile: fellow, session };
-});
-
-export type CurrentFellowAuth = Awaited<ReturnType<typeof currentFellowAuth>>;
-
-export const currentFellowAuth = cache(async () => {
-  const session = await getCurrentUserSession();
-  if (!session) {
-    return null;
-  }
-  const membership = session.user.activeMembership;
   if (!membership?.identifier) {
     return null;
   }
@@ -415,7 +320,7 @@ export type CurrentPersonnel = Awaited<ReturnType<typeof getCurrentPersonnel>>;
 export async function getCurrentPersonnel(): Promise<
   | CurrentSupervisor
   | CurrentHubCoordinator
-  | CurrentFellowAuth
+  | CurrentFellow
   | CurrentClinicalLead
   | CurrentOpsUser
   | CurrentClinicalTeam
@@ -440,7 +345,7 @@ export async function getCurrentPersonnel(): Promise<
   }
 
   if (role === ImplementerRole.FELLOW) {
-    return await currentFellowAuth();
+    return await currentFellow();
   }
 
   if (role === ImplementerRole.CLINICAL_LEAD) {

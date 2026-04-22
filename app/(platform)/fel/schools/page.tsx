@@ -1,15 +1,15 @@
 import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
-import { currentFellowAuth } from "#/app/auth";
+import { currentFellow } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { getFellowGroupsAndHubData } from "#/lib/data/fellow-data";
+import { getFellowGroupsAndHubData } from "#/lib/actions/fellow";
 
 export default async function SchoolsPage() {
-  const fellow = await currentFellowAuth();
+  const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }

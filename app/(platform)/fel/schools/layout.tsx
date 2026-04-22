@@ -1,9 +1,9 @@
 import { signOut } from "next-auth/react";
 import type { ReactNode } from "react";
-import { currentFellowAuth } from "#/app/auth";
+import { currentFellow } from "#/app/auth";
 
 export default async function FellowSchoolLayout({ children }: { children: ReactNode }) {
-  const fellow = await currentFellowAuth();
+  const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
