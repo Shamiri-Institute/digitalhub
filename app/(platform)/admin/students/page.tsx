@@ -15,7 +15,6 @@ export default async function StudentsPage() {
   if (!admin) {
     await signOut({ callbackUrl: "/login" });
   }
-  const implementerId = admin?.session?.user.activeMembership?.implementerId;
   const projectId = await getActiveProjectId();
 
   const [
@@ -36,7 +35,6 @@ export default async function StudentsPage() {
       where: {
         archivedAt: null,
         school: {
-          implementerId,
           hub: {
             projectId,
           },
@@ -45,19 +43,14 @@ export default async function StudentsPage() {
     }),
     db.interventionSession.count({
       where: {
-        school: {
-          implementerId,
-          hub: {
-            projectId,
-          },
-        },
+        projectId,
       },
     }),
     db.clinicalScreeningInfo.findMany({
       where: {
         OR: [
-          { currentSupervisor: { implementerId, hub: { projectId } } },
-          { clinicalLead: { assignedHub: { implementerId, projectId } } },
+          { currentSupervisor: { hub: { projectId } } },
+          { clinicalLead: { assignedHub: { projectId } } },
         ],
       },
     }),
@@ -65,8 +58,8 @@ export default async function StudentsPage() {
       where: {
         case: {
           OR: [
-            { currentSupervisor: { implementerId, hub: { projectId } } },
-            { clinicalLead: { assignedHub: { implementerId, projectId } } },
+            { currentSupervisor: { hub: { projectId } } },
+            { clinicalLead: { assignedHub: { projectId } } },
           ],
         },
       },
@@ -76,8 +69,8 @@ export default async function StudentsPage() {
       where: {
         case: {
           OR: [
-            { currentSupervisor: { implementerId, hub: { projectId } } },
-            { clinicalLead: { assignedHub: { implementerId, projectId } } },
+            { currentSupervisor: { hub: { projectId } } },
+            { clinicalLead: { assignedHub: { projectId } } },
           ],
         },
       },
@@ -89,8 +82,8 @@ export default async function StudentsPage() {
       by: ["currentSupervisorId"],
       where: {
         OR: [
-          { currentSupervisor: { implementerId, hub: { projectId } } },
-          { clinicalLead: { assignedHub: { implementerId, projectId } } },
+          { currentSupervisor: { hub: { projectId } } },
+          { clinicalLead: { assignedHub: { projectId } } },
         ],
         currentSupervisorId: { not: null },
       },
@@ -102,8 +95,8 @@ export default async function StudentsPage() {
       by: ["initialReferredFromSpecified"],
       where: {
         OR: [
-          { currentSupervisor: { implementerId, hub: { projectId } } },
-          { clinicalLead: { assignedHub: { implementerId, projectId } } },
+          { currentSupervisor: { hub: { projectId } } },
+          { clinicalLead: { assignedHub: { projectId } } },
         ],
       },
       _count: {
@@ -114,7 +107,6 @@ export default async function StudentsPage() {
       where: {
         archivedAt: null,
         school: {
-          implementerId,
           hub: {
             projectId,
           },
@@ -136,7 +128,6 @@ export default async function StudentsPage() {
       JOIN hubs h ON sc.hub_id = h.id
       WHERE sa.attended = true
         AND s.archived_at IS NULL
-        AND sc.implementer_id = ${implementerId}
         AND h.project_id = ${projectId}
       GROUP BY ins.session_type
     `,
@@ -145,7 +136,6 @@ export default async function StudentsPage() {
       where: {
         archivedAt: null,
         school: {
-          implementerId,
           hub: {
             projectId,
           },
@@ -159,7 +149,7 @@ export default async function StudentsPage() {
     db.student.count({
       where: {
         archivedAt: null,
-        school: { implementerId, hub: { projectId } },
+        school: { hub: { projectId } },
         OR: [{ studentName: null }, { gender: null }, { yearOfBirth: null }, { form: null }],
       },
     }),
@@ -170,8 +160,7 @@ export default async function StudentsPage() {
       JOIN intervention_sessions ins ON ins.id = isr.session_id
       JOIN session_names sn ON sn.id = ins.session_id
       JOIN hubs h ON sn.hub_id = h.id
-      WHERE h.implementer_id = ${implementerId}
-        AND h.project_id = ${projectId}
+      WHERE h.project_id = ${projectId}
         AND isr.student_behavior_rating IS NOT NULL
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC
