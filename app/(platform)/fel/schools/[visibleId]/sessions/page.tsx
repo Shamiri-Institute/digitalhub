@@ -1,6 +1,6 @@
 import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
-import { currentFellowAuth } from "#/app/auth";
+import { currentFellow } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
 
@@ -11,7 +11,7 @@ export default async function SchoolSessionsPage(props: {
 
   const { visibleId } = params;
 
-  const fellow = await currentFellowAuth();
+  const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }

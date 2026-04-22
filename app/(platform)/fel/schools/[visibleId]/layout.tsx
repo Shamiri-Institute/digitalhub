@@ -1,7 +1,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import type React from "react";
-import { currentFellowAuth } from "#/app/auth";
+import { currentFellow } from "#/app/auth";
 import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
 import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
 import PageFooter from "#/components/ui/page-footer";
@@ -9,7 +9,7 @@ import { Separator } from "#/components/ui/separator";
 import SchoolsNav from "../../../../../components/common/schools/schools-nav";
 
 export default async function SchoolViewLayout({ children }: { children: React.ReactNode }) {
-  const fellow = await currentFellowAuth();
+  const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }

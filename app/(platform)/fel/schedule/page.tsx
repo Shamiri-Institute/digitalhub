@@ -1,14 +1,14 @@
 import { signOut } from "next-auth/react";
-import { currentFellowAuth } from "#/app/auth";
+import { currentFellow } from "#/app/auth";
 
 import { ScheduleCalendar } from "#/components/common/session/schedule-calendar";
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import { getFellowGroupsAndHubData } from "#/lib/data/fellow-data";
+import { getFellowGroupsAndHubData } from "#/lib/actions/fellow";
 
 export default async function FellowSchedulePage() {
-  const fellow = await currentFellowAuth();
+  const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
