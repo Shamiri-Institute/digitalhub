@@ -29,7 +29,9 @@ export async function fetchSchool(visibleId: string) {
         _count: {
           select: {
             interventionSessions: true,
-            students: true,
+            students: {
+              where: { archivedAt: null },
+            },
             interventionGroups: true,
           },
         },
