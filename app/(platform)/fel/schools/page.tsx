@@ -6,12 +6,15 @@ import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { getFellowGroupsAndHubData } from "#/lib/actions/fellow";
 
 export default async function SchoolsPage() {
   const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
+
+  const fellowData = await getFellowGroupsAndHubData(fellow?.profile.id ?? "");
 
   return (
     <div className="flex h-full flex-col">
@@ -23,30 +26,23 @@ export default async function SchoolsPage() {
               {
                 title: "Sessions",
                 count:
-                  fellow?.profile.groups.reduce(
+                  fellowData?.groups.reduce(
                     (a, b) => a + b.school._count.interventionSessions,
                     0,
                   ) || 0,
               },
-              { title: "Groups", count: fellow?.profile.groups.length || 0 },
+              { title: "Groups", count: fellowData?.groups.length || 0 },
               {
                 title: "Students",
-                count: fellow?.profile.groups.reduce((a, b) => a + b._count.students, 0) || 0,
+                count: fellowData?.groups.reduce((a, b) => a + b._count.students, 0) || 0,
               },
             ]}
           />
         </div>
         <Separator />
-        {/*TODO: Add search and filter features*/}
-        {/*<div className="flex items-center justify-between">*/}
-        {/*  <div className="flex w-1/4 items-start gap-3">*/}
-        {/*    <SearchCommand data={data} />*/}
-        {/*    <SchoolsFilterToggle schools={data} />*/}
-        {/*  </div>*/}
-        {/*</div>*/}
         <SchoolsDatatable
           role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
-          schools={fellow?.profile.hub?.schools ?? []}
+          schools={fellowData?.hub?.schools ?? []}
         />
       </div>
       <PageFooter />

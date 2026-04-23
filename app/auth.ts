@@ -155,84 +155,13 @@ export const currentFellow = cache(async () => {
     return null;
   }
   const membership = session.user.activeMembership;
-  if (!membership) {
-    return null;
-  }
-
-  const { identifier } = membership;
-  if (!identifier) {
+  if (!membership?.identifier) {
     return null;
   }
 
   const fellow = await db.fellow.findFirst({
-    where: { id: identifier },
-    include: {
-      hub: {
-        include: {
-          schools: {
-            include: {
-              assignedSupervisor: true,
-              interventionSessions: {
-                include: {
-                  sessionRatings: true,
-                  session: true,
-                },
-              },
-              interventionGroups: {
-                include: {
-                  leader: true,
-                  students: true,
-                },
-              },
-              students: {
-                include: {
-                  assignedGroup: true,
-                  _count: {
-                    select: {
-                      clinicalCases: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-          sessions: true,
-        },
-      },
-      fellowAttendances: {
-        include: {
-          repaymentRequests: true,
-        },
-      },
-      repaymentRequests: {
-        include: {
-          fellowAttendance: {
-            include: {
-              group: true,
-              school: true,
-            },
-          },
-        },
-      },
-      groups: {
-        include: {
-          _count: {
-            select: {
-              students: true,
-            },
-          },
-          school: {
-            include: {
-              _count: {
-                select: {
-                  interventionSessions: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    where: { id: membership.identifier },
+    include: { hub: true },
   });
 
   if (!fellow) {
