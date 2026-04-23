@@ -15,7 +15,6 @@ export default async function StudentsPage() {
   if (!admin) {
     await signOut({ callbackUrl: "/login" });
   }
-  const implementerId = admin?.session?.user.activeMembership?.implementerId;
   const projectId = await getActiveProjectId();
 
   const [
@@ -27,14 +26,15 @@ export default async function StudentsPage() {
     hubClinicalSessionsBySupervisor,
     hubClinicalSessionsByInitialReferredFrom,
     studentAggregations,
-    studentsAttendanceGroupedBySession,
+    studentAttendanceBySessionType,
     studentsDropOutReasonsGroupedByReason,
+    incompleteStudentCount,
+    studentGroupRatingsRaw,
   ] = await Promise.all([
     db.student.count({
       where: {
         archivedAt: null,
         school: {
-          implementerId,
           hub: {
             projectId,
           },
@@ -43,33 +43,14 @@ export default async function StudentsPage() {
     }),
     db.interventionSession.count({
       where: {
-        school: {
-          implementerId,
-          hub: {
-            projectId,
-          },
-        },
+        projectId,
       },
     }),
     db.clinicalScreeningInfo.findMany({
       where: {
         OR: [
-          {
-            currentSupervisor: {
-              implementerId,
-              hub: {
-                projectId,
-              },
-            },
-          },
-          {
-            clinicalLead: {
-              assignedHub: {
-                implementerId,
-                projectId,
-              },
-            },
-          },
+          { currentSupervisor: { hub: { projectId } } },
+          { clinicalLead: { assignedHub: { projectId } } },
         ],
       },
     }),
@@ -77,22 +58,8 @@ export default async function StudentsPage() {
       where: {
         case: {
           OR: [
-            {
-              currentSupervisor: {
-                implementerId,
-                hub: {
-                  projectId,
-                },
-              },
-            },
-            {
-              clinicalLead: {
-                assignedHub: {
-                  implementerId,
-                  projectId,
-                },
-              },
-            },
+            { currentSupervisor: { hub: { projectId } } },
+            { clinicalLead: { assignedHub: { projectId } } },
           ],
         },
       },
@@ -102,22 +69,8 @@ export default async function StudentsPage() {
       where: {
         case: {
           OR: [
-            {
-              currentSupervisor: {
-                implementerId,
-                hub: {
-                  projectId,
-                },
-              },
-            },
-            {
-              clinicalLead: {
-                assignedHub: {
-                  implementerId,
-                  projectId,
-                },
-              },
-            },
+            { currentSupervisor: { hub: { projectId } } },
+            { clinicalLead: { assignedHub: { projectId } } },
           ],
         },
       },
@@ -128,12 +81,11 @@ export default async function StudentsPage() {
     db.clinicalScreeningInfo.groupBy({
       by: ["currentSupervisorId"],
       where: {
-        currentSupervisor: {
-          implementerId,
-          hub: {
-            projectId,
-          },
-        },
+        OR: [
+          { currentSupervisor: { hub: { projectId } } },
+          { clinicalLead: { assignedHub: { projectId } } },
+        ],
+        currentSupervisorId: { not: null },
       },
       _count: {
         currentSupervisorId: true,
@@ -143,63 +95,47 @@ export default async function StudentsPage() {
       by: ["initialReferredFromSpecified"],
       where: {
         OR: [
-          {
-            currentSupervisor: {
-              implementerId,
-              hub: {
-                projectId,
-              },
-            },
-          },
-          {
-            clinicalLead: {
-              assignedHub: {
-                implementerId,
-                projectId,
-              },
-            },
-          },
+          { currentSupervisor: { hub: { projectId } } },
+          { clinicalLead: { assignedHub: { projectId } } },
         ],
       },
       _count: {
         initialReferredFrom: true,
       },
     }),
-    db.student.groupBy({
-      by: ["age", "gender", "form"],
+    db.student.findMany({
       where: {
         archivedAt: null,
         school: {
-          implementerId,
           hub: {
             projectId,
           },
         },
       },
-      _count: {
-        id: true,
+      select: {
+        yearOfBirth: true,
+        age: true,
+        gender: true,
+        form: true,
       },
     }),
-    db.interventionSession.groupBy({
-      by: ["sessionType"],
-      where: {
-        school: {
-          implementerId,
-          hub: {
-            projectId,
-          },
-        },
-      },
-      _count: {
-        sessionType: true,
-      },
-    }),
+    db.$queryRaw<{ sessionType: string | null; count: bigint }[]>`
+      SELECT ins.session_type as "sessionType", COUNT(*)::bigint as count
+      FROM student_attendances sa
+      JOIN intervention_sessions ins ON ins.id = sa.session_id
+      JOIN students s ON s.id = sa.student_id
+      JOIN schools sc ON s.school_id = sc.id
+      JOIN hubs h ON sc.hub_id = h.id
+      WHERE sa.attended = true
+        AND s.archived_at IS NULL
+        AND h.project_id = ${projectId}
+      GROUP BY ins.session_type
+    `,
     db.student.groupBy({
       by: ["dropOutReason"],
       where: {
         archivedAt: null,
         school: {
-          implementerId,
           hub: {
             projectId,
           },
@@ -210,6 +146,25 @@ export default async function StudentsPage() {
         dropOutReason: true,
       },
     }),
+    db.student.count({
+      where: {
+        archivedAt: null,
+        school: { hub: { projectId } },
+        OR: [{ studentName: null }, { gender: null }, { yearOfBirth: null }, { form: null }],
+      },
+    }),
+    db.$queryRaw<{ sessionName: string; value: number }[]>`
+      SELECT sn.session_name as "sessionName",
+             COALESCE(AVG(isr.student_behavior_rating), 0)::float as value
+      FROM intervention_session_ratings isr
+      JOIN intervention_sessions ins ON ins.id = isr.session_id
+      JOIN session_names sn ON sn.id = ins.session_id
+      JOIN hubs h ON sn.hub_id = h.id
+      WHERE h.project_id = ${projectId}
+        AND isr.student_behavior_rating IS NOT NULL
+      GROUP BY sn.session_name
+      ORDER BY sn.session_name ASC
+    `,
   ]);
 
   const supervisorIds = hubClinicalSessionsBySupervisor.map((item) => item.currentSupervisorId);
@@ -238,16 +193,38 @@ export default async function StudentsPage() {
   const studentsGroupedByGender: Record<string, number> = {};
   const studentsGroupedByForm: Record<string, number> = {};
 
-  studentAggregations.forEach(({ age, gender, form, _count }) => {
-    if (age) studentsGroupedByAge[age] = (_count.id || 0) + (studentsGroupedByAge[age] || 0);
-    if (gender)
-      studentsGroupedByGender[gender] = (_count.id || 0) + (studentsGroupedByGender[gender] || 0);
-    if (form) studentsGroupedByForm[form] = (_count.id || 0) + (studentsGroupedByForm[form] || 0);
+  const currentYear = new Date().getFullYear();
+  studentAggregations.forEach(({ yearOfBirth, age, gender, form }) => {
+    const computedAge = yearOfBirth ? currentYear - yearOfBirth : age;
+    if (computedAge)
+      studentsGroupedByAge[computedAge] = (studentsGroupedByAge[computedAge] || 0) + 1;
+    if (gender) studentsGroupedByGender[gender] = (studentsGroupedByGender[gender] || 0) + 1;
+    if (form) studentsGroupedByForm[form] = (studentsGroupedByForm[form] || 0) + 1;
   });
 
-  /**
-   * Non-blocking - To sync with @WendyMbone on two graphs - student info completion and student group ratings.
-   */
+  const studentsAttendanceGroupedBySession = studentAttendanceBySessionType.map(
+    ({ sessionType, count }) => ({
+      sessionType,
+      _count: { sessionType: Number(count) },
+    }),
+  );
+
+  const completePct =
+    totalNumberOfStudentsInHub > 0
+      ? Math.round(
+          ((totalNumberOfStudentsInHub - incompleteStudentCount) / totalNumberOfStudentsInHub) *
+            100,
+        )
+      : 0;
+  const studentInfoCompletion = [
+    { name: "actual", value: completePct },
+    { name: "target", value: 100 - completePct },
+  ];
+
+  const studentGroupRatings = studentGroupRatingsRaw.map(({ sessionName, value }) => ({
+    session: sessionName,
+    value: Number(value),
+  }));
 
   return (
     <div className="container w-full grow space-y-3 py-10">
@@ -265,6 +242,8 @@ export default async function StudentsPage() {
       <HubStudentsDetailsCharts
         studentsAttendanceGroupedBySession={studentsAttendanceGroupedBySession}
         studentsDropOutReasonsGroupedByReason={studentsDropOutReasonsGroupedByReason}
+        studentInfoCompletion={studentInfoCompletion}
+        studentGroupRatings={studentGroupRatings}
       />
 
       <HubStudentClinicalDataCharts
