@@ -1,5 +1,5 @@
-import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import CaseUnterminateDialog from "#/app/(platform)/cl/clinical/components/case-unterminate-dialog";
+import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import CaseNotesForm from "#/app/(platform)/sc/clinical/components/case-notes-form";
 import CaseTerminationForm from "#/app/(platform)/sc/clinical/components/case-termination-form";
 import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/components/cases-sessions-attendance-history";
