@@ -1,4 +1,5 @@
 import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import CaseUnterminateDialog from "#/app/(platform)/cl/clinical/components/case-unterminate-dialog";
 import CaseNotesForm from "#/app/(platform)/sc/clinical/components/case-notes-form";
 import CaseTerminationForm from "#/app/(platform)/sc/clinical/components/case-termination-form";
 import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/components/cases-sessions-attendance-history";
@@ -110,6 +111,13 @@ export default function ClinicalCaseActionsDropdownMenu({
             Terminate case
           </div>
         </CaseTerminationForm>
+        {role === "CLINICAL_LEAD" && clinicalCase.caseStatus === "Terminated" && (
+          <CaseUnterminateDialog caseId={clinicalCase.id} pseudonym={clinicalCase.pseudonym}>
+            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+              Un-terminate case
+            </div>
+          </CaseUnterminateDialog>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
