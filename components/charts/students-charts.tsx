@@ -8,6 +8,7 @@ import {
   Cell,
   Label,
   Legend,
+  Line,
   LineChart,
   Pie,
   PieChart,
@@ -22,15 +23,13 @@ import ChartCard from "#/components/ui/chart-card";
 export default function HubStudentsDetailsCharts({
   studentsAttendanceGroupedBySession,
   studentsDropOutReasonsGroupedByReason,
+  studentInfoCompletion = [],
+  studentGroupRatings = [],
 }: {
-  studentsAttendanceGroupedBySession: (Prisma.PickEnumerable<
-    Prisma.InterventionSessionGroupByOutputType,
-    "sessionType"[]
-  > & {
-    _count: {
-      sessionType: number;
-    };
-  })[];
+  studentsAttendanceGroupedBySession: {
+    sessionType: string | null;
+    _count: { sessionType: number };
+  }[];
   studentsDropOutReasonsGroupedByReason: (Prisma.PickEnumerable<
     Prisma.StudentGroupByOutputType,
     "dropOutReason"[]
@@ -39,6 +38,8 @@ export default function HubStudentsDetailsCharts({
       dropOutReason: number;
     };
   })[];
+  studentInfoCompletion?: { name: string; value: number }[];
+  studentGroupRatings?: { session: string; value: number }[];
 }) {
   const filteredFormatedSessions = possibleInterventionSessions.map((session) => {
     const found = studentsAttendanceGroupedBySession.find((item) => item.sessionType === session);
@@ -116,11 +117,11 @@ export default function HubStudentsDetailsCharts({
         ) : null}
       </ChartCard>
       <ChartCard title="Student information completion" showCardFooter={false}>
-        {[].length ? (
+        {studentInfoCompletion.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250}>
               <Pie
-                data={[]}
+                data={studentInfoCompletion}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -130,28 +131,31 @@ export default function HubStudentsDetailsCharts({
               >
                 <Label
                   position="center"
-                  className="text text-2xl font-semibold leading-8"
-                  fill="#fffff"
+                  className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {0}
+                  {`${studentInfoCompletion.find((d) => d.name === "actual")?.value ?? 0}%`}
                 </Label>
-                {[].map(({ name }) => (
-                  <Cell key={name} />
+                {studentInfoCompletion.map((entry) => (
+                  <Cell key={entry.name} fill={entry.name === "actual" ? "#0085FF" : "#EFF6FF"} />
                 ))}
               </Pie>
+              <Tooltip formatter={(value) => `${value}%`} />
             </PieChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
       <ChartCard title="Student group ratings" showCardFooter={false}>
-        {[]?.length ? (
+        {studentGroupRatings.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart width={307} height={307} data={[]}>
+            <LineChart width={307} height={307} data={studentGroupRatings}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="" />
-              <YAxis />
-              <Tooltip />
+              <XAxis dataKey="session" />
+              <YAxis domain={[0, 5]} />
+              <Tooltip
+                formatter={(value) => (typeof value === "number" ? value.toFixed(2) : value)}
+              />
               <Legend />
+              <Line type="monotone" dataKey="value" name="Avg rating" stroke="#0085FF" />
             </LineChart>
           </ResponsiveContainer>
         ) : null}
