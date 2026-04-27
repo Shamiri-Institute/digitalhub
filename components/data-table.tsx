@@ -15,7 +15,7 @@ import {
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { Fragment, type ReactNode, useEffect, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -52,6 +52,20 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed;
 };
 
+interface ServerPagination {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+}
+
+interface ServerSearch {
+  value: string;
+  onChange: (value: string) => void;
+}
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -67,6 +81,8 @@ interface DataTableProps<TData, TValue> {
   renderTableActions?: ReactNode;
   getRowCanExpand?: (row: Row<TData>) => boolean;
   renderSubComponent?: (props: { row: Row<TData> }) => ReactNode;
+  serverPagination?: ServerPagination;
+  serverSearch?: ServerSearch;
 }
 
 export default function DataTable<TData, TValue>({
@@ -85,10 +101,14 @@ export default function DataTable<TData, TValue>({
   rowSelectionDescription = "rows",
   getRowCanExpand = () => true,
   renderSubComponent,
+  serverPagination,
+  serverSearch,
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(columnVisibilityState);
   const [rowSelection, setRowSelection] = useState({});
+  const [serverSearchInput, setServerSearchInput] = useState(serverSearch?.value ?? "");
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (state) => {
     setRowSelection(state);
@@ -98,6 +118,11 @@ export default function DataTable<TData, TValue>({
     pageIndex: 0,
     pageSize: 10,
   });
+
+  const serverSearchValue = serverSearch?.value;
+  useEffect(() => {
+    if (serverSearchValue !== undefined) setServerSearchInput(serverSearchValue);
+  }, [serverSearchValue]);
 
   const table = useReactTable({
     data,
@@ -109,10 +134,29 @@ export default function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: handleRowSelectionChange,
-    onPaginationChange: setPagination,
+    manualPagination: !!serverPagination,
+    ...(serverPagination ? { pageCount: serverPagination.totalPages } : {}),
+    onPaginationChange: serverPagination
+      ? (updater) => {
+          const prev = {
+            pageIndex: serverPagination.page - 1,
+            pageSize: serverPagination.pageSize,
+          };
+          const next = typeof updater === "function" ? updater(prev) : updater;
+          if (next.pageIndex !== prev.pageIndex) serverPagination.onPageChange(next.pageIndex + 1);
+          if (next.pageSize !== prev.pageSize) serverPagination.onPageSizeChange(next.pageSize);
+        }
+      : setPagination,
     enableRowSelection,
-    state: { sorting, columnVisibility, rowSelection, pagination },
-    autoResetPageIndex: true, //turns off auto reset of pageIndex
+    state: {
+      sorting,
+      columnVisibility,
+      rowSelection,
+      pagination: serverPagination
+        ? { pageIndex: serverPagination.page - 1, pageSize: serverPagination.pageSize }
+        : pagination,
+    },
+    autoResetPageIndex: !serverPagination,
     getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: fuzzyFilter,
   });
@@ -161,7 +205,17 @@ export default function DataTable<TData, TValue>({
                 strokeWidth={1.75}
               />
               <Input
-                onChange={(e) => table.setGlobalFilter(String(e.target.value))}
+                {...(serverSearch ? { value: serverSearchInput } : {})}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (serverSearch) {
+                    setServerSearchInput(val);
+                    clearTimeout(searchDebounceRef.current);
+                    searchDebounceRef.current = setTimeout(() => serverSearch.onChange(val), 400);
+                  } else {
+                    table.setGlobalFilter(val);
+                  }
+                }}
                 placeholder="Search..."
                 className="w-64 bg-white pl-10"
               />
@@ -359,6 +413,7 @@ export default function DataTable<TData, TValue>({
               <span className="flex items-center gap-1 pl-4 text-sm text-shamiri-text-dark-grey">
                 Go to page:
                 <input
+                  key={table.getState().pagination.pageIndex}
                   type="number"
                   min="1"
                   max={table.getPageCount()}

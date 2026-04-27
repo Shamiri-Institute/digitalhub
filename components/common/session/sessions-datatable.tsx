@@ -3,6 +3,7 @@
 import { ImplementerRole, type Prisma } from "@prisma/client";
 import * as React from "react";
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
@@ -14,6 +15,7 @@ import type { Session } from "#/components/common/session/sessions-provider";
 import StudentAttendance from "#/components/common/student/student-attendance";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import DataTable from "#/components/data-table";
+import type { PaginationMeta } from "#/lib/types/pagination";
 
 export default function SessionsDatatable({
   sessions,
@@ -22,6 +24,7 @@ export default function SessionsDatatable({
   role,
   fellowId,
   supervisorId,
+  pagination,
 }: {
   sessions: SessionData[];
   supervisors?: Prisma.SupervisorGetPayload<{
@@ -47,7 +50,24 @@ export default function SessionsDatatable({
   role: ImplementerRole;
   fellowId?: string;
   supervisorId?: string;
+  pagination?: PaginationMeta;
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", page.toString());
+    router.push(`?${params.toString()}`);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("pageSize", size.toString());
+    params.set("page", "1");
+    router.push(`?${params.toString()}`);
+  };
+
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
@@ -89,6 +109,15 @@ export default function SessionsDatatable({
         })}
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No sessions found for this school"
+        serverPagination={
+          pagination
+            ? {
+                ...pagination,
+                onPageChange: handlePageChange,
+                onPageSizeChange: handlePageSizeChange,
+              }
+            : undefined
+        }
       />
       {session && (
         <>
