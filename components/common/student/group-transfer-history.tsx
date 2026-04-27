@@ -38,15 +38,7 @@ export default function GroupTransferHistory({
           currentGroupId: "",
           fromGroupId: student.assignedGroupId,
           fromGroup: student.assignedGroup,
-        } as Prisma.StudentGroupTransferTrailGetPayload<{
-          include: {
-            fromGroup: {
-              include: {
-                leader: true;
-              };
-            };
-          };
-        }>,
+        } as SchoolStudentTableData["studentGroupTransferTrail"][number],
         ...student.studentGroupTransferTrail,
       ]
     : [];
@@ -100,17 +92,7 @@ const columns = (
       session: true;
     };
   }>[],
-): ColumnDef<
-  Prisma.StudentGroupTransferTrailGetPayload<{
-    include: {
-      fromGroup: {
-        include: {
-          leader: true;
-        };
-      };
-    };
-  }>
->[] => [
+): ColumnDef<SchoolStudentTableData["studentGroupTransferTrail"][number]>[] => [
   {
     id: "Date of transfer",
     header: "Date of transfer",
