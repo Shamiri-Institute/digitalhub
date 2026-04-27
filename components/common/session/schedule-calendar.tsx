@@ -26,7 +26,6 @@ import {
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
-import type { CurrentFellow } from "#/app/auth";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
 import RescheduleSession from "#/components/common/session/reschedule-session";
@@ -85,7 +84,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
   }[];
   role: ImplementerRole;
   supervisorId?: string;
-  fellow?: CurrentFellow;
+  fellowId?: string;
   hubSessionTypes?: SessionName[];
 };
 
@@ -169,12 +168,52 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             ? listState.visibleRange.start
             : tableState.visibleRange.start;
 
-  const rangeType = ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week";
+  const rangeType: DateRangeType =
+    mode === "list"
+      ? filters.dates
+      : ["day", "week", "month"].includes(mode)
+        ? (mode as DateRangeType)
+        : "week";
   useEffect(() => {
     if (!visibleStart) return;
     const dateRange = getDateRangeForCalendar(visibleStart, rangeType);
     setFilters((prev) => ({ ...prev, dateRange }));
   }, [visibleStart?.toString(), rangeType, mode]);
+
+  const prevModeRef = useRef<string>(mode);
+  useEffect(() => {
+    const prevMode = prevModeRef.current;
+    prevModeRef.current = mode;
+    if (mode !== "list" || prevMode === "list") return;
+
+    let syncStart: DateValue | null = null;
+    let syncDates: DateRangeType | null = null;
+    switch (prevMode) {
+      case "month":
+        syncStart = monthState.visibleRange.start;
+        syncDates = "month";
+        break;
+      case "week":
+        syncStart = weekState.visibleRange.start;
+        syncDates = "week";
+        break;
+      case "day":
+        syncStart = dayState.visibleRange.start;
+        syncDates = "day";
+        break;
+      case "table":
+        syncStart = tableState.visibleRange.start;
+        syncDates = "week";
+        break;
+    }
+    if (syncDates) {
+      const nextDates = syncDates;
+      setFilters((prev) => ({ ...prev, dates: nextDates }));
+    }
+    if (syncStart) {
+      listState.setFocusedDate(syncStart);
+    }
+  }, [mode]);
 
   const month = useCalendar(calendarStateProps, monthState);
 
@@ -269,7 +308,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 fellowRatings={props.fellowRatings}
                 role={props.role}
                 supervisorId={props.supervisorId}
-                fellow={props.fellow}
+                fellowId={props.fellowId}
               />
             </FiltersContext.Provider>
           </div>
@@ -369,7 +408,7 @@ function CalendarView({
   fellowRatings,
   role,
   supervisorId,
-  fellow,
+  fellowId,
 }: {
   monthProps: {
     state: CalendarState;
@@ -409,7 +448,7 @@ function CalendarView({
   }[];
   role: ImplementerRole;
   supervisorId?: string;
-  fellow?: CurrentFellow;
+  fellowId?: string;
 }) {
   const { mode } = useMode();
   const { loading } = useContext(SessionsContext);
@@ -447,7 +486,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.profile.id}
+            fellowId={fellowId}
           />
         );
       case "week":
@@ -466,7 +505,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.profile.id}
+            fellowId={fellowId}
           />
         ) : (
           <div>Loading...</div>
@@ -487,7 +526,7 @@ function CalendarView({
               setCancelSessionDialog,
             }}
             supervisorId={supervisorId}
-            fellowId={fellow?.profile.id}
+            fellowId={fellowId}
           />
         ) : (
           <div>Loading...</div>
@@ -508,7 +547,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.profile.id}
+            fellowId={fellowId}
           />
         );
       case "table":
@@ -583,7 +622,7 @@ function CalendarView({
         role={role}
         session={session}
         fellows={fellowsForStudentAttendance}
-        fellowId={fellow?.profile.id}
+        fellowId={fellowId}
       />
       {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
         <SessionRatings
