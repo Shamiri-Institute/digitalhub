@@ -2,6 +2,7 @@
 
 import { ImplementerRole, type Prisma } from "@prisma/client";
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import ArchiveGroup from "#/components/common/group/archive-group";
@@ -11,12 +12,14 @@ import StudentGroupEvaluation from "#/components/common/group/student-group-eval
 import UnarchiveGroup from "#/components/common/group/unarchive-group";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
+import type { PaginationMeta } from "#/lib/types/pagination";
 
 export default function GroupsDataTable({
   data,
   school,
   supervisors,
   role,
+  pagination,
 }: {
   data: SchoolGroupDataTableData[];
   school: Prisma.SchoolGetPayload<{
@@ -34,7 +37,10 @@ export default function GroupsDataTable({
     };
   }>[];
   role: ImplementerRole;
+  pagination?: PaginationMeta;
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [group, setGroup] = useState<SchoolGroupDataTableData>();
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
@@ -50,6 +56,19 @@ export default function GroupsDataTable({
       setGroup(updatedGroup);
     }
   }, [data, group]);
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", page.toString());
+    router.push(`?${params.toString()}`);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("pageSize", size.toString());
+    params.set("page", "1");
+    router.push(`?${params.toString()}`);
+  };
 
   const renderTableActions = () => {
     return (
@@ -77,6 +96,15 @@ export default function GroupsDataTable({
         columnVisibilityState={{ "Group Type": false }}
         emptyStateMessage="No groups associated with this school"
         renderTableActions={renderTableActions()}
+        serverPagination={
+          pagination
+            ? {
+                ...pagination,
+                onPageChange: handlePageChange,
+                onPageSizeChange: handlePageSizeChange,
+              }
+            : undefined
+        }
       />
       {group && (
         <>

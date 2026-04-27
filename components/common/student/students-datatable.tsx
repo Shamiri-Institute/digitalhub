@@ -1,7 +1,7 @@
 "use client";
 
 import { ImplementerRole } from "@prisma/client";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
@@ -17,15 +17,22 @@ import StudentDetailsForm from "#/components/common/student/student-details-form
 import StudentDropoutForm from "#/components/common/student/student-dropout-form";
 import DataTable from "#/components/data-table";
 import { markStudentAttendance } from "#/lib/actions/student";
+import type { PaginationMeta } from "#/lib/types/pagination";
 
 export default function StudentsDatatable({
   students,
   role,
+  pagination,
+  searchValue = "",
 }: {
   students: SchoolStudentTableData[];
   role: ImplementerRole;
+  pagination?: PaginationMeta;
+  searchValue?: string;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState<boolean>(false);
@@ -35,6 +42,27 @@ export default function StudentsDatatable({
   const [archiveDialog, setArchiveDialog] = useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
   const [selectedSession, setSelectedSession] = useState<string>();
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", page.toString());
+    router.push(`?${params.toString()}`);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("pageSize", size.toString());
+    params.set("page", "1");
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleSearchChange = (search: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (search) params.set("search", search);
+    else params.delete("search");
+    params.set("page", "1");
+    router.push(`?${params.toString()}`);
+  };
 
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     const [res] = await Promise.all([
@@ -89,6 +117,16 @@ export default function StudentsDatatable({
           checkbox: false,
         }}
         rowSelectionDescription={"students"}
+        serverPagination={
+          pagination
+            ? {
+                ...pagination,
+                onPageChange: handlePageChange,
+                onPageSizeChange: handlePageSizeChange,
+              }
+            : undefined
+        }
+        serverSearch={pagination ? { value: searchValue, onChange: handleSearchChange } : undefined}
       />
       {student && (
         <div>
