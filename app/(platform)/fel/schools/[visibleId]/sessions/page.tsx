@@ -38,13 +38,7 @@ export default async function SchoolSessionsPage(props: {
                       clinicalCases: true,
                     },
                   },
-                  studentAttendances: {
-                    where: {
-                      school: {
-                        visibleId,
-                      },
-                    },
-                  },
+                  studentAttendances: true,
                 },
               },
             },
