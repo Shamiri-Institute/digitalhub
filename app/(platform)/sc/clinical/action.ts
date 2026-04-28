@@ -660,6 +660,37 @@ export async function terminateClinicalCase(data: {
   }
 }
 
+export async function unterminateClinicalCase(data: { caseId: string }) {
+  try {
+    const user = await getCurrentPersonnel();
+    const userId = user?.session?.user.id;
+    if (!user || !userId) {
+      throw new Error("User not found");
+    }
+    const role = user.session.user.activeMembership?.role;
+    if (!role || role !== ImplementerRole.CLINICAL_LEAD) {
+      throw new Error("You are not authorized to un-terminate this case");
+    }
+
+    await db.$transaction(async (tx) => {
+      await tx.clinicalCaseTermination.deleteMany({
+        where: { caseId: data.caseId },
+      });
+
+      await tx.clinicalScreeningInfo.update({
+        where: { id: data.caseId },
+        data: { caseStatus: "Active" },
+      });
+    });
+
+    revalidatePath("/cl/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
 export async function createClinicalCaseNotes(data: {
   caseId: string;
   sessionId: string;
