@@ -14,8 +14,11 @@ import { wrapColumnHeader } from "#/lib/utils";
 export type SchoolStudentTableData = Prisma.StudentGetPayload<{
   include: {
     clinicalCases: {
-      include: {
-        sessions: true;
+      select: {
+        id: true;
+        _count: {
+          select: { sessions: true };
+        };
       };
     };
     studentAttendances: {
@@ -29,8 +32,15 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
       };
     };
     assignedGroup: {
-      include: {
-        leader: true;
+      select: {
+        id: true;
+        groupName: true;
+        leader: {
+          select: {
+            id: true;
+            fellowName: true;
+          };
+        };
       };
     };
     school: {
@@ -43,10 +53,23 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
       };
     };
     studentGroupTransferTrail: {
-      include: {
+      select: {
+        id: true;
+        createdAt: true;
+        updatedAt: true;
+        studentId: true;
+        currentGroupId: true;
+        fromGroupId: true;
         fromGroup: {
-          include: {
-            leader: true;
+          select: {
+            id: true;
+            groupName: true;
+            leader: {
+              select: {
+                id: true;
+                fellowName: true;
+              };
+            };
           };
         };
       };
@@ -141,7 +164,7 @@ export const columns = (state: {
   {
     header: () => wrapColumnHeader("Clinical Sessions"),
     id: "Clinical Sessions",
-    accessorFn: (row) => row.clinicalCases?.reduce((acc, val) => acc + val.sessions.length, 0),
+    accessorFn: (row) => row.clinicalCases?.reduce((acc, val) => acc + val._count.sessions, 0),
   },
   {
     header: "Gender",
