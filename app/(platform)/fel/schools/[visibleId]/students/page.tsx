@@ -26,8 +26,11 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
     },
     include: {
       clinicalCases: {
-        include: {
-          sessions: true,
+        select: {
+          id: true,
+          _count: {
+            select: { sessions: true },
+          },
         },
       },
       studentAttendances: {
@@ -41,8 +44,15 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
         },
       },
       assignedGroup: {
-        include: {
-          leader: true,
+        select: {
+          id: true,
+          groupName: true,
+          leader: {
+            select: {
+              id: true,
+              fellowName: true,
+            },
+          },
         },
       },
       school: {
@@ -55,10 +65,23 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
         },
       },
       studentGroupTransferTrail: {
-        include: {
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          studentId: true,
+          currentGroupId: true,
+          fromGroupId: true,
           fromGroup: {
-            include: {
-              leader: true,
+            select: {
+              id: true,
+              groupName: true,
+              leader: {
+                select: {
+                  id: true,
+                  fellowName: true,
+                },
+              },
             },
           },
         },
