@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.22.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.21.0...v1.22.0) (2026-04-28)
+
+
+### Features
+
+* **clinical:** allow clinical leads to un-terminate cases ([#675](https://github.com/Shamiri-Institute/digitalhub/issues/675)) ([a54edcc](https://github.com/Shamiri-Institute/digitalhub/commit/a54edcc07121886f84af3c27ff9c98095c27fc41))
+
 ## [1.21.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.20.0...v1.21.0) (2026-04-27)
 
 
