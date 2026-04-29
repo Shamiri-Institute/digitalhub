@@ -31,12 +31,19 @@ export default async function StudentsPage({ params, searchParams }: Props) {
       leaderId: fellow.profile?.id,
       school: { visibleId },
     },
-    include: {
-      clinicalCases: {
-        select: {
-          id: true,
-          _count: {
-            select: { sessions: true },
+    ...(search ? { studentName: { contains: search, mode: "insensitive" as const } } : {}),
+  };
+
+  const [students, totalCount] = await Promise.all([
+    db.student.findMany({
+      where,
+      include: {
+        clinicalCases: {
+          select: {
+            id: true,
+            _count: {
+              select: { sessions: true },
+            },
           },
         },
         studentAttendances: {
@@ -49,15 +56,15 @@ export default async function StudentsPage({ params, searchParams }: Props) {
             group: true,
           },
         },
-      },
-      assignedGroup: {
-        select: {
-          id: true,
-          groupName: true,
-          leader: {
-            select: {
-              id: true,
-              fellowName: true,
+        assignedGroup: {
+          select: {
+            id: true,
+            groupName: true,
+            leader: {
+              select: {
+                id: true,
+                fellowName: true,
+              },
             },
           },
         },
@@ -70,23 +77,23 @@ export default async function StudentsPage({ params, searchParams }: Props) {
             },
           },
         },
-      },
-      studentGroupTransferTrail: {
-        select: {
-          id: true,
-          createdAt: true,
-          updatedAt: true,
-          studentId: true,
-          currentGroupId: true,
-          fromGroupId: true,
-          fromGroup: {
-            select: {
-              id: true,
-              groupName: true,
-              leader: {
-                select: {
-                  id: true,
-                  fellowName: true,
+        studentGroupTransferTrail: {
+          select: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            studentId: true,
+            currentGroupId: true,
+            fromGroupId: true,
+            fromGroup: {
+              select: {
+                id: true,
+                groupName: true,
+                leader: {
+                  select: {
+                    id: true,
+                    fellowName: true,
+                  },
                 },
               },
             },
