@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.22.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.21.0...v1.22.0) (2026-04-28)
+
+
+### Features
+
+* **clinical:** allow clinical leads to un-terminate cases ([#675](https://github.com/Shamiri-Institute/digitalhub/issues/675)) ([a54edcc](https://github.com/Shamiri-Institute/digitalhub/commit/a54edcc07121886f84af3c27ff9c98095c27fc41))
+
+## [1.21.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.20.0...v1.21.0) (2026-04-27)
+
+
+### Features
+
+* **migrations:** add extra supervision session names for all hubs ([#663](https://github.com/Shamiri-Institute/digitalhub/issues/663)) ([7bdbbbf](https://github.com/Shamiri-Institute/digitalhub/commit/7bdbbbf4f85a50e0cff811e126aab68191faf973))
+
+
+### Bug Fixes
+
+* **admin-students:** show accurate student stats and charts ([#673](https://github.com/Shamiri-Institute/digitalhub/issues/673)) ([3dc6275](https://github.com/Shamiri-Institute/digitalhub/commit/3dc6275f2176a5e42ae9b50b35f74f46a1bd6a50))
+* **schedule:** sync list view date range with previous mode ([#676](https://github.com/Shamiri-Institute/digitalhub/issues/676)) ([b829126](https://github.com/Shamiri-Institute/digitalhub/commit/b82912655a9f24ff4784e88d40724201a31abf99))
+
 ## [1.20.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.19.0...v1.20.0) (2026-03-25)
 
 

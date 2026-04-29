@@ -31,16 +31,12 @@ export default async function StudentsPage({ params, searchParams }: Props) {
       leaderId: fellow.profile?.id,
       school: { visibleId },
     },
-    ...(search ? { studentName: { contains: search, mode: "insensitive" as const } } : {}),
-  };
-
-  const [students, totalCount] = await Promise.all([
-    db.student.findMany({
-      where,
-      include: {
-        clinicalCases: {
-          include: {
-            sessions: true,
+    include: {
+      clinicalCases: {
+        select: {
+          id: true,
+          _count: {
+            select: { sessions: true },
           },
         },
         studentAttendances: {
@@ -53,9 +49,16 @@ export default async function StudentsPage({ params, searchParams }: Props) {
             group: true,
           },
         },
-        assignedGroup: {
-          include: {
-            leader: true,
+      },
+      assignedGroup: {
+        select: {
+          id: true,
+          groupName: true,
+          leader: {
+            select: {
+              id: true,
+              fellowName: true,
+            },
           },
         },
         school: {
@@ -67,11 +70,24 @@ export default async function StudentsPage({ params, searchParams }: Props) {
             },
           },
         },
-        studentGroupTransferTrail: {
-          include: {
-            fromGroup: {
-              include: {
-                leader: true,
+      },
+      studentGroupTransferTrail: {
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          studentId: true,
+          currentGroupId: true,
+          fromGroupId: true,
+          fromGroup: {
+            select: {
+              id: true,
+              groupName: true,
+              leader: {
+                select: {
+                  id: true,
+                  fellowName: true,
+                },
               },
             },
           },

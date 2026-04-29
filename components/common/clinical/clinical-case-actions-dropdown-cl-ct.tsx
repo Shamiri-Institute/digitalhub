@@ -1,4 +1,5 @@
 import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
+import CaseUnterminateDialog from "#/app/(platform)/cl/clinical/components/case-unterminate-dialog";
 import { ViewTerminationReasons } from "#/app/(platform)/cl/clinical/components/view-termination-reasons";
 import { ViewCaseNotes } from "#/components/common/clinical/view-case-notes";
 import { ViewTreatmentPlan } from "#/components/common/clinical/view-treatment-plan";
@@ -82,6 +83,14 @@ export default function ClinicalLeadCaseActionsDropdownMenu({
             {isTerminated ? "View termination reasons" : "Case not terminated"}
           </div>
         </ViewTerminationReasons>
+
+        {isTerminated && (
+          <CaseUnterminateDialog caseId={clinicalCase.id} pseudonym={clinicalCase.pseudonym}>
+            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+              Un-terminate case
+            </div>
+          </CaseUnterminateDialog>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
