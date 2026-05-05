@@ -572,10 +572,6 @@ We welcome contributions from the community!
 
 ## Technical Notes
 
-### Known Issues
-
-- Installing `aws-crt` is required to work around a Next.js App Router [import issue](https://github.com/aws-amplify/amplify-js/issues/11030)
-
 ### S3 Recordings Bucket Setup
 
 #### Creating the S3 Bucket
