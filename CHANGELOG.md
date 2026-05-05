@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.23.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.22.0...v1.23.0) (2026-05-05)
+
+
+### Features
+
+* **migrations:** seed session names for 2026_Project_2 across all hubs ([#684](https://github.com/Shamiri-Institute/digitalhub/issues/684)) ([32b1348](https://github.com/Shamiri-Institute/digitalhub/commit/32b1348ed59adfa0d9ca0f12e2b394a2dd061f3d))
+
 ## [1.22.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.21.0...v1.22.0) (2026-04-28)
 
 
