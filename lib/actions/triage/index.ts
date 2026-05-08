@@ -175,6 +175,38 @@ export async function getTriageEventByStudentAndSession(studentId: string, sessi
   return event;
 }
 
+export async function getTriageEventsForSession(sessionId: string) {
+  await getFellowContext();
+  const events = await db.triageEvent.findMany({
+    where: { sessionId },
+    include: {
+      session: true,
+      student: true,
+      fellow: true,
+      referredSupervisor: true,
+    },
+  });
+  return events;
+}
+
+export async function getStudentTriageHistory(studentId: string) {
+  const { fellowId } = await getFellowContext();
+  return db.triageEvent.findMany({
+    where: { studentId, fellowId },
+    include: {
+      session: {
+        select: {
+          sessionDate: true,
+          sessionName: true,
+          sessionType: true,
+          session: { select: { sessionLabel: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function createTriageEvent(
   data: TriageEventFormData,
   studentAttendanceId?: number,
