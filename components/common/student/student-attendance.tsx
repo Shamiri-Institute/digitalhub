@@ -35,8 +35,8 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
-import { getTriageEventByStudentAndSession, getTriageEventsForSession } from "#/lib/actions/triage";
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
+import { getTriageEventByStudentAndSession, getTriageEventsForSession } from "#/lib/actions/triage";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
 export default function StudentAttendance({

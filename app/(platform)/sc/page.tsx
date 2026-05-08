@@ -1,5 +1,5 @@
-import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { Suspense } from "react";
 import { getTriageDashboardStats } from "#/app/(platform)/sc/triage/action";
 import { currentSupervisor } from "#/app/auth";
