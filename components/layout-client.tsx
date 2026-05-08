@@ -10,7 +10,7 @@ import {
   SchoolIcon,
   SignOutIcon,
 } from "components/icons";
-import { Building2, Menu } from "lucide-react";
+import { Building2, Menu, ShieldAlert } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -42,6 +42,7 @@ interface NavigationLinkProps {
   fellowsActive: boolean;
   studentsActive: boolean;
   clinicalActive: boolean;
+  triageActive: boolean;
   reportingActive: boolean;
   popoverOpen: boolean;
   setPopoverOpen: (open: boolean) => void;
@@ -66,6 +67,7 @@ export function LayoutClient({
   const studentsActive = subRoute?.includes("student");
   const reportingActive = subRoute?.includes("reporting");
   const clinicalActive = subRoute?.includes("clinical");
+  const triageActive = subRoute?.includes("triage");
   const hubsActive = subRoute?.includes("hubs") || subRoute?.includes("schools");
 
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -193,6 +195,7 @@ export function LayoutClient({
                 fellowsActive: fellowsActive ?? false,
                 studentsActive: studentsActive ?? false,
                 clinicalActive: clinicalActive ?? false,
+                triageActive: triageActive ?? false,
                 reportingActive: reportingActive ?? false,
                 popoverOpen: popoverOpen,
                 setPopoverOpen: setPopoverOpen,
@@ -286,6 +289,7 @@ function getCurrentUserNavigationLinks(
     fellowsActive,
     studentsActive,
     clinicalActive,
+    triageActive,
     reportingActive,
     popoverOpen,
     setPopoverOpen,
@@ -372,6 +376,10 @@ function getCurrentUserNavigationLinks(
         <PeopleIcon />
         <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
       </div>,
+      <div className={`tab-link ${cn(triageActive && "active")}`} key="sc-triage">
+        <ShieldAlert className="h-5 w-5" />
+        <Link href={`/${mainRoute}/triage`}>Triage</Link>
+      </div>,
     );
   }
 
@@ -411,6 +419,28 @@ function getCurrentUserNavigationLinks(
       <div key="cl-clinical" className={`tab-link ${cn(clinicalActive && "active")}`}>
         <PeopleIcon />
         <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
+      </div>,
+      <div key="cl-triage" className={`tab-link ${cn(triageActive && "active")}`}>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex cursor-pointer items-center space-x-1">
+            <ShieldAlert className="h-5 w-5" />
+            <p>Triage</p>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem asChild>
+              <Link href={`/${mainRoute}/triage/gaps`}>Escalation gaps</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/${mainRoute}/triage/fidelity`}>Fidelity</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/${mainRoute}/triage/handoffs`}>Handoff quality</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/${mainRoute}/triage/audits`}>Audit trail</Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>,
     );
   }
