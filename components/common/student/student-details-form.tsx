@@ -284,8 +284,8 @@ export default function StudentDetailsForm({
                             <Input
                               {...field}
                               type="number"
-                              min={1900}
-                              max={new Date().getFullYear()}
+                              min={new Date().getFullYear() - 35}
+                              max={new Date().getFullYear() - 9}
                               placeholder="Enter year of birth"
                               disabled={mode === "view"}
                             />
