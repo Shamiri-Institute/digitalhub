@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getStudentTriageHistory } from "#/lib/actions/triage";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
@@ -12,6 +11,7 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
+import { getStudentTriageHistory } from "#/lib/actions/triage";
 
 type HistoryEvent = Awaited<ReturnType<typeof getStudentTriageHistory>>[number];
 
