@@ -7,7 +7,7 @@ import { db } from "#/lib/db";
 export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluation[]> {
   try {
     const hubCoordinator = await currentHubCoordinator();
-    if (!hubCoordinator || !hubCoordinator.session?.user.id) {
+    if (!hubCoordinator?.session?.user.id) {
       throw new Error("Hub Coordinator not found");
     }
 
