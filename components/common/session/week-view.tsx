@@ -98,21 +98,20 @@ export function WeekView({
           <thead {...headerProps}>
             <tr className="border-b border-grey-border">
               <th className="time-cell" />
-              {state
-                .getDatesInWeek(0)
-                .map((date, i) =>
-                  date ? (
-                    <WeekCalendarHeaderCell
-                      key={date.toString()}
-                      colIdx={i}
-                      date={date}
-                      state={state}
-                      dayFormatter={dayFormatter}
-                    />
-                  ) : (
-                    <td key={`empty-header-${state.visibleRange.start.toString()}-${i}`} />
-                  ),
-                )}
+              {state.getDatesInWeek(0).map((date, i) =>
+                date ? (
+                  <WeekCalendarHeaderCell
+                    key={date.toString()}
+                    colIdx={i}
+                    date={date}
+                    state={state}
+                    dayFormatter={dayFormatter}
+                  />
+                ) : (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed 7-column calendar grid; column index is the stable position
+                  <td key={`empty-header-${state.visibleRange.start.toString()}-${i}`} />
+                ),
+              )}
             </tr>
           </thead>
         </table>
@@ -130,25 +129,24 @@ export function WeekView({
                 >
                   <div className="flex">{formatHour(hour)}</div>
                 </td>
-                {state
-                  .getDatesInWeek(0)
-                  .map((date, colIdx) =>
-                    date ? (
-                      <WeekCalendarCell
-                        key={`${date.toString()}-${hour}`}
-                        colIdx={colIdx}
-                        hour={hour}
-                        date={date}
-                        state={state}
-                        role={role}
-                        dialogState={dialogState}
-                        fellowId={fellowId}
-                        supervisorId={supervisorId}
-                      />
-                    ) : (
-                      <td key={`empty-${state.visibleRange.start.toString()}-${colIdx}-${hour}`} />
-                    ),
-                  )}
+                {state.getDatesInWeek(0).map((date, colIdx) =>
+                  date ? (
+                    <WeekCalendarCell
+                      key={`${date.toString()}-${hour}`}
+                      colIdx={colIdx}
+                      hour={hour}
+                      date={date}
+                      state={state}
+                      role={role}
+                      dialogState={dialogState}
+                      fellowId={fellowId}
+                      supervisorId={supervisorId}
+                    />
+                  ) : (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: fixed 7-column calendar grid; column index is the stable position
+                    <td key={`empty-${state.visibleRange.start.toString()}-${colIdx}-${hour}`} />
+                  ),
+                )}
               </tr>
             ))}
           </tbody>
