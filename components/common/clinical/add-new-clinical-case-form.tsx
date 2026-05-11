@@ -38,7 +38,15 @@ const formSchema = z.object({
   studentName: stringValidation("Student name is required"),
   pseudonym: stringValidation("Pseudonym is required"),
   admissionNumber: z.number().min(1, "Admission number is required"),
-  yearOfBirth: z.date("Year of birth is required"),
+  yearOfBirth: z.date("Year of birth is required").refine(
+    (date) => {
+      const today = new Date();
+      const minDate = new Date(today.getFullYear() - 35, today.getMonth(), today.getDate());
+      const maxDate = new Date(today.getFullYear() - 9, today.getMonth(), today.getDate());
+      return date >= minDate && date <= maxDate;
+    },
+    { error: "Student must be between 9 and 35 years old" },
+  ),
   gender: z.enum(GENDER_OPTIONS),
   classForm: stringValidation("Class/Form is required"),
   stream: z.string().optional(),
@@ -341,6 +349,8 @@ export function AddNewClinicalCaseForm({
                           selected={field.value}
                           onSelect={field.onChange}
                           captionLayout="dropdown"
+                          fromYear={new Date().getFullYear() - 35}
+                          toYear={new Date().getFullYear() - 9}
                           initialFocus
                         />
                       </PopoverContent>
