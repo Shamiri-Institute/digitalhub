@@ -266,7 +266,7 @@ export const KENYAN_COUNTIES = [
       "Nyakach",
       "Nyando",
       "Seme",
-      "Kadibo"
+      "Kadibo",
     ],
   },
   {
