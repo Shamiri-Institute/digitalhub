@@ -128,7 +128,7 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
   try {
     const hubCoordinator = await currentHubCoordinator();
 
-    if (!hubCoordinator || !hubCoordinator.session?.user.id) {
+    if (!hubCoordinator?.session?.user.id) {
       throw new Error("The session has not been authenticated");
     }
 
@@ -176,7 +176,7 @@ export async function undoDropoutSchool(schoolId: string) {
   try {
     const hubCoordinator = await currentHubCoordinator();
 
-    if (!hubCoordinator || !hubCoordinator.session?.user.id) {
+    if (!hubCoordinator?.session?.user.id) {
       throw new Error("The session has not been authenticated");
     }
 

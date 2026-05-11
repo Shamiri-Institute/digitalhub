@@ -193,7 +193,7 @@ export async function submitQualitativeFeedback({
 }) {
   try {
     const user = await checkAuth();
-    if (!user || !user.session.user.id) {
+    if (!user?.session.user.id) {
       return { success: false, message: "User not found" };
     }
 
@@ -219,7 +219,7 @@ export async function submitQualitativeFeedback({
 export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSchema>) {
   try {
     const user = await checkAuth();
-    if (!user || !user.session.user.id) {
+    if (!user?.session.user.id) {
       return { success: false, message: "User not found" };
     }
 
@@ -302,7 +302,7 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
 export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccurrenceSchema>) {
   try {
     const user = await checkAuth();
-    if (!user || !user.session.user.id) {
+    if (!user?.session.user.id) {
       return { success: false, message: "User not found" };
     }
 

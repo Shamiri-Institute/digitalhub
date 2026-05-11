@@ -9,8 +9,7 @@ export async function removeUploadedSchoolFile(documentId: string) {
     const session = await getCurrentUserSession();
 
     if (
-      !session ||
-      !session.user.id ||
+      !session?.user.id ||
       (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
         session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)
     ) {
@@ -37,8 +36,7 @@ export async function updateUploadedSchoolFile(documentId: string, fileName: str
     const session = await getCurrentUserSession();
 
     if (
-      !session ||
-      !session.user.id ||
+      !session?.user.id ||
       (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
         session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)
     ) {
@@ -73,8 +71,7 @@ export async function addUploadedSchoolDocs(data: {
     const session = await getCurrentUserSession();
 
     if (
-      !session ||
-      !session.user.id ||
+      !session?.user.id ||
       (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
         session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)
     ) {
