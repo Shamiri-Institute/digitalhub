@@ -24,6 +24,11 @@ export const hubSessionTypes: HubSessionType[] = [
   { name: "s2", label: "Session 2", type: "INTERVENTION", amount: 1500 },
   { name: "s3", label: "Session 3", type: "INTERVENTION", amount: 1500 },
   { name: "s4", label: "Session 4", type: "INTERVENTION", amount: 1500 },
+  // adding s5-s8 for Lifeskills Intervention
+  { name: "s5", label: "Session 5", type: "INTERVENTION", amount: 1500 },
+  { name: "s6", label: "Session 6", type: "INTERVENTION", amount: 1500 },
+  { name: "s7", label: "Session 7", type: "INTERVENTION", amount: 1500 },
+  { name: "s8", label: "Session 8", type: "INTERVENTION", amount: 1500 },
   { name: "sv1", label: "Supervision 1", type: "SUPERVISION", amount: 500 },
   { name: "sv2", label: "Supervision 2", type: "SUPERVISION", amount: 500 },
   { name: "sv3", label: "Supervision 3", type: "SUPERVISION", amount: 500 },
