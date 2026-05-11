@@ -262,7 +262,8 @@ export default function ViewFeedbackDialog({
                 <FeedbackSection title="Recommendations">
                   <ul className="space-y-2">
                     {displayFeedback.recommendations.map((rec, idx) => (
-                      <li key={idx} className="flex gap-2 text-sm">
+                      // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; composite key disambiguates potential duplicate text
+                      <li key={`${idx}-${rec.slice(0, 40)}`} className="flex gap-2 text-sm">
                         <span className="font-semibold text-blue-600 mt-0.5">{idx + 1}.</span>
                         <span>
                           <MarkdownText>{rec}</MarkdownText>
@@ -282,7 +283,8 @@ export default function ViewFeedbackDialog({
                         <h5 className="font-medium text-green-700 mb-2">Strengths</h5>
                         <ul className="list-disc pl-5 space-y-1">
                           {displayFeedback.qualitative_feedback.strengths.map((strength, idx) => (
-                            <li key={idx} className="text-sm">
+                            // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; composite key disambiguates potential duplicate text
+                            <li key={`${idx}-${strength.slice(0, 40)}`} className="text-sm">
                               <MarkdownText>{strength}</MarkdownText>
                             </li>
                           ))}
@@ -307,7 +309,8 @@ export default function ViewFeedbackDialog({
                         <ul className="list-disc pl-5 space-y-1">
                           {displayFeedback.qualitative_feedback.areas_for_improvement.map(
                             (area, idx) => (
-                              <li key={idx} className="text-sm">
+                              // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; composite key disambiguates potential duplicate text
+                              <li key={`${idx}-${area.slice(0, 40)}`} className="text-sm">
                                 <MarkdownText>{area}</MarkdownText>
                               </li>
                             ),
@@ -335,7 +338,11 @@ export default function ViewFeedbackDialog({
                 <FeedbackSection title="Safety Flags">
                   <div className="space-y-3">
                     {displayFeedback.safety_flags.map((flag, idx) => (
-                      <div key={idx} className="rounded-md border border-red-200 bg-red-50 p-4">
+                      <div
+                        // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; idx disambiguates duplicate type+severity combos
+                        key={`${flag.type}-${flag.severity ?? ""}-${idx}`}
+                        className="rounded-md border border-red-200 bg-red-50 p-4"
+                      >
                         <div className="mb-2 flex items-center justify-between">
                           <span className="font-semibold text-red-700 capitalize">
                             {flag.type} {flag.severity && `- ${flag.severity} severity`}

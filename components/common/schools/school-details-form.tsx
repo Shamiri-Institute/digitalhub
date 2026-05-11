@@ -492,6 +492,7 @@ export default function SchoolDetailsForm({
                           <div className="flex flex-col gap-3">
                             {field.value?.split("/").map((number: string, index: number) => {
                               return (
+                                // biome-ignore lint/suspicious/noArrayIndexKey: duplicate phone numbers would collide on number alone; index disambiguates
                                 <div key={`phone-${index}-${number}`}>
                                   <div
                                     className={cn(
