@@ -31,10 +31,12 @@ export const StudentDetailsSchema = z
       (val) => {
         const year = Number(val);
         const currentYear = new Date().getFullYear();
-        return !Number.isNaN(year) && val.trim() !== "" && year >= 1900 && year <= currentYear;
+        const minYear = currentYear - 35;
+        const maxYear = currentYear - 9;
+        return !Number.isNaN(year) && val.trim() !== "" && year >= minYear && year <= maxYear;
       },
       {
-        error: "Please enter a valid year between 1900 and current year",
+        error: "Student must be between 9 and 35 years old",
       },
     ),
     phoneNumber: z
