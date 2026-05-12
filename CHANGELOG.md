@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.24.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.23.1...v1.24.0) (2026-05-12)
+
+
+### Features
+
+* **migrations:** add session names for Lifeskills Intervention ([#693](https://github.com/Shamiri-Institute/digitalhub/issues/693)) ([c7ec49a](https://github.com/Shamiri-Institute/digitalhub/commit/c7ec49a671f38789a8ebc902d862ac874d645a33))
+* **students:** enforce age restrictions (9–35 years) on year of birth fields ([#690](https://github.com/Shamiri-Institute/digitalhub/issues/690)) ([a3d7b29](https://github.com/Shamiri-Institute/digitalhub/commit/a3d7b29b70c01082744fd9964529a625af0d0910))
+
+
+### Bug Fixes
+
+* **student:** restrict fellows to creating only new student questionnaire types ([#694](https://github.com/Shamiri-Institute/digitalhub/issues/694)) ([a8555b1](https://github.com/Shamiri-Institute/digitalhub/commit/a8555b14b7807e91e97bc66b6f6c19f4908aa072))
+
 ## [1.23.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.23.0...v1.23.1) (2026-05-08)
 
 ## [1.23.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.22.0...v1.23.0) (2026-05-05)
