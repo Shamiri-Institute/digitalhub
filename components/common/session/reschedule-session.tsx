@@ -129,7 +129,7 @@ export default function RescheduleSession({
                               selected={field.value}
                               captionLayout="dropdown"
                               onSelect={field.onChange}
-                              initialFocus
+                              autoFocus
                             />
                           </PopoverContent>
                         </Popover>

@@ -349,9 +349,9 @@ export function AddNewClinicalCaseForm({
                           selected={field.value}
                           onSelect={field.onChange}
                           captionLayout="dropdown"
-                          fromYear={new Date().getFullYear() - 35}
-                          toYear={new Date().getFullYear() - 9}
-                          initialFocus
+                          startMonth={new Date(new Date().getFullYear() - 35, 0)}
+                          endMonth={new Date(new Date().getFullYear() - 9, 11)}
+                          autoFocus
                         />
                       </PopoverContent>
                     </Popover>

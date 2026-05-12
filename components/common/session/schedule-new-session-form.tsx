@@ -257,7 +257,7 @@ export function ScheduleNewSession({
                         selected={field.value}
                         captionLayout="dropdown"
                         onSelect={field.onChange}
-                        initialFocus
+                        autoFocus
                       />
                     </PopoverContent>
                   </Popover>
