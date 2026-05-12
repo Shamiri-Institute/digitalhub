@@ -95,7 +95,7 @@
     "react-markdown": "^10.1.0",
     "react-stately": "^3.30.1",
     "recharts": "^3.6.0",
-    "tailwind-merge": "^1.14.0",
+    "tailwind-merge": "^3.6.0",
     "tsx": "^4.7.0",
     "typeid-js": "^1.2.0",
     "undici": "^7.24.0",
