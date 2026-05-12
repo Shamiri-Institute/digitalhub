@@ -321,7 +321,7 @@ export default function StudentDetailsForm({
                             value={field.value ?? "none"}
                             disabled={
                               mode === "view" ||
-                              (mode === "edit" && role !== ImplementerRole.FELLOW)
+                              (mode === "edit" && role === ImplementerRole.FELLOW)
                             }
                           >
                             <FormControl>
