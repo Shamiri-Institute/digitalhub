@@ -34,11 +34,6 @@ export default function StudentAttendanceMenu({
   hubVisibleId?: string | null;
   hasExistingTriageEvent: boolean;
 }) {
-  const enabledHubs = (process.env.NEXT_PUBLIC_TRIAGE_ENABLED_HUB_VISIBLE_IDS ?? "")
-    .split(",")
-    .filter(Boolean);
-  const showTriageMenu =
-    enabledHubs.length > 0 && !!hubVisibleId && enabledHubs.includes(hubVisibleId);
 
   const openTriageModal = (readOnly: boolean) => {
     state.setTriageReadOnly(readOnly);
@@ -69,12 +64,12 @@ export default function StudentAttendanceMenu({
         >
           Mark attendance
         </DropdownMenuItem>
-        {showTriageMenu && !hasExistingTriageEvent && (
+        {!hasExistingTriageEvent && (
           <DropdownMenuItem onClick={() => openTriageModal(false)}>
             Triage occurred
           </DropdownMenuItem>
         )}
-        {showTriageMenu && hasExistingTriageEvent && (
+        { hasExistingTriageEvent && (
           <>
             <DropdownMenuItem onClick={() => openTriageModal(false)}>Edit triage</DropdownMenuItem>
             <DropdownMenuItem onClick={() => openTriageModal(true)}>View triage</DropdownMenuItem>
@@ -84,7 +79,7 @@ export default function StudentAttendanceMenu({
                 state.setHistoryModalOpen(true);
               }}
             >
-              View student history
+              View student triage history
             </DropdownMenuItem>
           </>
         )}
