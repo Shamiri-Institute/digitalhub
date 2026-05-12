@@ -100,8 +100,7 @@
     "tsx": "^4.7.0",
     "typeid-js": "^1.2.0",
     "undici": "^7.24.0",
-    "zod": "^4.3.5",
-    "zustand": "^4.4.1"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.2",
