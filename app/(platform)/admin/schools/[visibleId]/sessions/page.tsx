@@ -68,7 +68,15 @@ export default async function SchoolSessionsPage({
         fellows: {
           include: {
             fellowAttendances: true,
-            groups: true,
+            groups: {
+              include: {
+                _count: {
+                  select: {
+                    students: true,
+                  },
+                },
+              },
+            },
           },
         },
         assignedSchools: true,

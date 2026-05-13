@@ -54,7 +54,15 @@ type SupervisorData = Prisma.SupervisorGetPayload<{
     fellows: {
       include: {
         fellowAttendances: true;
-        groups: true;
+        groups: {
+          include: {
+            _count: {
+              select: {
+                students: true;
+              };
+            };
+          };
+        };
       };
     };
     assignedSchools: true;
@@ -115,6 +123,7 @@ export default function FellowAttendance({
           groupName: group?.groupName ?? null,
           groupType: group?.groupType,
           groupId: group?.id,
+          groupStudentCount: group?._count?.students,
           averageRating:
             fellowRatings.find((rating) => rating.id === fellow.id)?.averageRating ?? null,
           sessionType: session?.session?.sessionType,
@@ -357,6 +366,17 @@ export function FellowAttendanceDataTable({
               </span>
             </AlertTitle>
           </Alert>
+          {!bulkMode && attendance?.groupId && attendance?.groupStudentCount === 0 && (
+            <Alert>
+              <AlertTitle className="flex gap-2">
+                <InfoIcon className="mt-1 h-4 w-4 shrink-0" />
+                <span className="text-base">
+                  This fellow does not have any students in the group associated with this
+                  attendance.
+                </span>
+              </AlertTitle>
+            </Alert>
+          )}
           <Separator />
         </div>
       </MarkAttendance>
@@ -389,6 +409,7 @@ export type FellowAttendancesTableData = {
   groupName: string | null;
   groupId?: string;
   groupType?: string;
+  groupStudentCount?: number;
   averageRating: number | null;
   sessionType?: string;
   sessionName?: string;
