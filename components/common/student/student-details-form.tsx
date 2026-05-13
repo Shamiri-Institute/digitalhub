@@ -297,14 +297,19 @@ export default function StudentDetailsForm({
                     <FormField
                       control={form.control}
                       name="admissionNumber"
-                      disabled={mode === "edit" && role !== ImplementerRole.HUB_COORDINATOR}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
                             Admission number <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input {...field} disabled={mode === "view"} />
+                            <Input
+                              {...field}
+                              disabled={
+                                mode === "view" ||
+                                (mode === "edit" && role === ImplementerRole.FELLOW)
+                              }
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
