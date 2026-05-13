@@ -371,8 +371,7 @@ export function FellowAttendanceDataTable({
               <AlertTitle className="flex gap-2">
                 <InfoIcon className="mt-1 h-4 w-4 shrink-0" />
                 <span className="text-base">
-                  This fellow does not have any students in the group associated with this
-                  attendance.
+                  This group has no students. Please contact the Fellow to add them.
                 </span>
               </AlertTitle>
             </Alert>
