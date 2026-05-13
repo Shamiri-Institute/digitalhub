@@ -52,7 +52,15 @@ export default async function SupervisorSchedulePage() {
         fellows: {
           include: {
             fellowAttendances: true,
-            groups: true,
+            groups: {
+              include: {
+                _count: {
+                  select: {
+                    students: true,
+                  },
+                },
+              },
+            },
           },
         },
         assignedSchools: true,
