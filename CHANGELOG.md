@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.24.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.24.0...v1.24.1) (2026-05-13)
+
+
+### Bug Fixes
+
+* **students:** restrict fellows from editing questionnaire type visibility in student info form ([#701](https://github.com/Shamiri-Institute/digitalhub/issues/701)) ([1c80a30](https://github.com/Shamiri-Institute/digitalhub/commit/1c80a307976aaadd00beb9c7d8c8443dbd7cceb9))
+* **students:** update admission number field to restrict editing for fellows in student details form ([#702](https://github.com/Shamiri-Institute/digitalhub/issues/702)) ([d4d3564](https://github.com/Shamiri-Institute/digitalhub/commit/d4d356467e348443f7edf1c4067d7033190e20bd))
+
 ## [1.24.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.23.1...v1.24.0) (2026-05-12)
 
 
