@@ -75,7 +75,15 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
       fellows: {
         include: {
           fellowAttendances: true;
-          groups: true;
+          groups: {
+            include: {
+              _count: {
+                select: {
+                  students: true;
+                };
+              };
+            };
+          };
         };
       };
       assignedSchools: true;
@@ -439,7 +447,15 @@ function CalendarView({
       fellows: {
         include: {
           fellowAttendances: true;
-          groups: true;
+          groups: {
+            include: {
+              _count: {
+                select: {
+                  students: true;
+                };
+              };
+            };
+          };
         };
       };
       assignedSchools: true;
