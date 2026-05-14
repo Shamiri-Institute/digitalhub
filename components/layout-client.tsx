@@ -204,7 +204,7 @@ export function LayoutClient({
           </div>
         </div>
       </header>
-      <main className="flex grow items-stretch overflow-x-hidden bg-background-secondary">
+      <main className="flex min-h-0 grow items-stretch overflow-x-hidden bg-background-secondary">
         {children}
       </main>
       <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />

@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { getTriageAuditTrail } from "#/app/(platform)/cl/triage/audits/action";
-import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -171,8 +170,8 @@ function TableSkeleton() {
 
 export default function TriageAuditTrailPage() {
   return (
-    <div className="flex h-full flex-col">
-      <div className="container w-full grow space-y-6 py-10">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="container flex min-h-0 w-full flex-1 flex-col space-y-6 py-10">
         <div>
           <PageHeading title="Triage audit trail" />
           <p className="mt-1 text-sm text-shamiri-text-grey">
@@ -185,7 +184,6 @@ export default function TriageAuditTrailPage() {
           <AuditTable />
         </Suspense>
       </div>
-      <PageFooter />
     </div>
   );
 }
