@@ -242,6 +242,16 @@ export default function FellowSchoolsDatatable({
                   </span>
                 </AlertTitle>
               </Alert>
+              {fellowGroup.students.length === 0 && role !== "FELLOW" && (
+                <Alert>
+                  <AlertTitle className="flex gap-2">
+                    <InfoIcon className="mt-1 h-4 w-4 shrink-0" />
+                    <span className="text-base">
+                      This group has no students. Please contact the Fellow to add them.
+                    </span>
+                  </AlertTitle>
+                </Alert>
+              )}
               <Separator />
             </div>
           </MarkAttendance>
