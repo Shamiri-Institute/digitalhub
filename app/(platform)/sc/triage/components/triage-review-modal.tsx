@@ -6,10 +6,10 @@ import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
+import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 
@@ -44,26 +44,31 @@ export default function TriageReviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-bold">Mark reviewed — no case needed</DialogTitle>
-          <p className="text-sm text-shamiri-text-grey">
+      <DialogContent className="gap-0 p-0 max-w-md">
+        <DialogHeader className="space-y-0 px-6 py-4">
+          <DialogTitle className="text-base font-medium">
+            Mark reviewed — no clinical case needed
+          </DialogTitle>
+          <p className="mt-1 text-sm text-shamiri-text-grey">
             Record your reason for closing this escalation without opening a clinical case. This
             note is visible to the Clinical Lead.
           </p>
         </DialogHeader>
-        <div className="space-y-2">
-          <Textarea
-            placeholder="e.g. Assessed student — risk screen was precautionary, no clinical concern identified."
-            className="resize-none"
-            rows={4}
-            maxLength={300}
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-          <p className="text-xs text-shamiri-text-grey">{note.length}/300</p>
+        <Separator />
+        <div className="my-6 space-y-6">
+          <div className="px-6 space-y-1">
+            <Textarea
+              placeholder="e.g. Assessed student — risk screen was precautionary, no clinical concern identified."
+              className="resize-none"
+              rows={4}
+              maxLength={300}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+            <p className="text-xs text-shamiri-text-grey">{note.length}/300</p>
+          </div>
         </div>
-        <DialogFooter className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-2 px-6 pb-6">
           <Button
             type="button"
             variant="ghost"
@@ -75,7 +80,7 @@ export default function TriageReviewModal({
           <Button type="button" disabled={!note.trim() || submitting} onClick={handleSubmit}>
             {submitting ? "Saving…" : "Confirm review"}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

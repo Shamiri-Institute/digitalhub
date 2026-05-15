@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { MoreHorizontal } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type {
@@ -10,12 +9,13 @@ import type {
 } from "#/app/(platform)/sc/triage/action";
 import CreateClinicalCaseModal from "#/app/(platform)/sc/triage/components/create-clinical-case-modal";
 import DataTable from "#/components/data-table";
+import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
-import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
@@ -147,21 +147,29 @@ function FellowEventSubTable({
           const e = row.original;
           if (e.referredSupervisorId === supervisorId && !e.clinicalCaseExists) {
             return (
-              <div className="px-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Actions</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onCreateCase(e.id)}>
-                      Create clinical case
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="absolute inset-0 border-l bg-white">
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+                    </div>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>
+                    <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                      Actions
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div
+                    className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black"
+                    onClick={() => onCreateCase(e.id)}
+                  >
+                    Create clinical case
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             );
           }
           return null;

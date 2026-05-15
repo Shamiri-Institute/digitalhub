@@ -55,8 +55,8 @@ export async function getTriageEventsForSupervisor() {
     orderBy: { createdAt: "desc" },
   });
 
-  // Batch-check clinical case existence to avoid N+1
   const studentIds = Array.from(new Set(events.map((e) => e.studentId)));
+  
   const cases = await db.clinicalScreeningInfo.findMany({
     where: { studentId: { in: studentIds } },
     select: { studentId: true, id: true },
