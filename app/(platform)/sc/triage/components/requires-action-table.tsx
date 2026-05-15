@@ -1,17 +1,18 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { TriageEventForSupervisor } from "#/app/(platform)/sc/triage/action";
+import CreateClinicalCaseModal from "#/app/(platform)/sc/triage/components/create-clinical-case-modal";
 import TriageReviewModal from "#/app/(platform)/sc/triage/components/triage-review-modal";
 import DataTable from "#/components/data-table";
+import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
-import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
@@ -27,6 +28,7 @@ const HANDOFF_LABELS: Record<string, string> = {
 
 export default function RequiresActionTable({ events }: { events: RequiresActionEvent[] }) {
   const [reviewTarget, setReviewTarget] = useState<RequiresActionEvent | null>(null);
+  const [caseTarget, setCaseTarget] = useState<string | null>(null);
 
   const columns = useMemo<ColumnDef<RequiresActionEvent>[]>(
     () => [
@@ -119,28 +121,35 @@ export default function RequiresActionTable({ events }: { events: RequiresAction
       {
         id: "button",
         cell: ({ row }) => (
-          <div className="px-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">Actions</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <a
-                    href={`/sc/clinical/cases/new?studentId=${row.original.studentId}&schoolId=${row.original.student.schoolId ?? ""}&fromTriageId=${row.original.id}`}
-                  >
-                    Open case
-                  </a>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setReviewTarget(row.original)}>
-                  Mark reviewed
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="absolute inset-0 border-l bg-white">
+                <div className="flex h-full w-full items-center justify-center">
+                  <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+                </div>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>
+                <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                  Actions
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div
+                className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black"
+                onClick={() => setCaseTarget(row.original.id)}
+              >
+                Create clinical case
+              </div>
+              <div
+                className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black"
+                onClick={() => setReviewTarget(row.original)}
+              >
+                Mark reviewed
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ),
         enableHiding: false,
       },
@@ -155,10 +164,16 @@ export default function RequiresActionTable({ events }: { events: RequiresAction
         columns={columns}
         className="data-table data-table-action bg-white"
         emptyStateMessage="No unactioned escalations — all referrals have been reviewed or have open cases."
-        disableSearch={true}
         disablePagination={true}
         columnVisibilityState={{ Session: false, Handoff: false }}
       />
+      {caseTarget && (
+        <CreateClinicalCaseModal
+          triageEventId={caseTarget}
+          isOpen={true}
+          onClose={() => setCaseTarget(null)}
+        />
+      )}
       {reviewTarget && (
         <TriageReviewModal
           triageEventId={reviewTarget.id}
