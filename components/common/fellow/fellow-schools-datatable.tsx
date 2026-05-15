@@ -2,7 +2,7 @@
 import type { ImplementerRole, Project } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
@@ -33,6 +33,8 @@ export default function FellowSchoolsDatatable({
   project?: Project;
   role: ImplementerRole;
 }) {
+  console.log(`[FellowSchoolsDatatable] RENDER - fellows count: ${fellows.length}, role: ${role}`);
+
   const [fellow, setFellow] = useState<FellowsData | null>(null);
   const [fellowGroup, setFellowGroup] = useState<FellowGroupData | undefined>();
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
@@ -46,6 +48,81 @@ export default function FellowSchoolsDatatable({
   const [attendanceDialog, setAttendanceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
+
+  const mainColumnState = useMemo(() => {
+    console.log("[FellowSchoolsDatatable] mainColumnState recomputed");
+    return {
+      setFellow,
+      setWeeklyEvaluationDialog,
+      setEditFellowDialog,
+      setAttendanceHistoryDialog,
+      setUploadContractDialog,
+      setUploadIdDialog,
+      setUploadQualificationDialog,
+      setComplaintsDialog,
+      role,
+    };
+  }, [role]);
+
+  const mainColumns = useMemo(() => {
+    console.log("[FellowSchoolsDatatable] mainColumns recomputed");
+    return fellowSchoolsColumns({ state: mainColumnState });
+  }, [mainColumnState]);
+
+  const subColumnState = useMemo(() => {
+    console.log("[FellowSchoolsDatatable] subColumnState recomputed");
+    return {
+      setFellowGroup,
+      setAttendanceDialog,
+      setStudentsDialog,
+      setEvaluationDialog,
+      role,
+    };
+  }, [role]);
+
+  const subColumnsMemo = useMemo(() => {
+    console.log("[FellowSchoolsDatatable] subColumns recomputed");
+    return subColumns({ state: subColumnState });
+  }, [subColumnState]);
+
+  useEffect(() => {
+    console.log(
+      "[FellowSchoolsDatatable] DIALOG STATE - edit:",
+      editFellowDialog,
+      "weeklyEval:",
+      weeklyEvaluationDialog,
+      "attendanceHist:",
+      attendanceHistoryDialog,
+      "contract:",
+      uploadContractDialog,
+      "id:",
+      uploadIdDialog,
+      "qual:",
+      uploadQualificationDialog,
+      "complaint:",
+      complaintsDialog,
+      "attendance:",
+      attendanceDialog,
+      "students:",
+      studentsDialog,
+      "eval:",
+      evaluationDialog,
+      "addFellow:",
+      addFellowDialog,
+    );
+  }, [
+    editFellowDialog,
+    weeklyEvaluationDialog,
+    attendanceHistoryDialog,
+    uploadContractDialog,
+    uploadIdDialog,
+    uploadQualificationDialog,
+    complaintsDialog,
+    attendanceDialog,
+    studentsDialog,
+    evaluationDialog,
+    addFellowDialog,
+  ]);
 
   function renderTableActions() {
     return role !== "FELLOW" ? (
@@ -87,33 +164,23 @@ export default function FellowSchoolsDatatable({
   }
 
   useEffect(() => {
-    setFellow(fellows.find((fellow) => fellow.id === fellowGroup?.leaderId) ?? null);
+    console.log("[FellowSchoolsDatatable] EFFECT[1] running - fellowGroup or fellows changed");
+    setFellow(fellows.find((f) => f.id === fellowGroup?.leaderId) ?? null);
   }, [fellowGroup, fellows]);
 
   useEffect(() => {
+    console.log("[FellowSchoolsDatatable] EFFECT[2] running - fellows data changed");
     const group = fellows
-      .find((fellow) => fellow.id === fellowGroup?.leaderId)
-      ?.groups.find((group) => group.id === fellowGroup?.id);
+      .find((f) => f.id === fellowGroup?.leaderId)
+      ?.groups.find((g) => g.id === fellowGroup?.id);
     setFellowGroup(group);
-  }, [fellows]);
+  }, [fellows, fellowGroup?.id, fellowGroup?.leaderId]);
 
   return (
     <>
       <DataTable
         data={fellows}
-        columns={fellowSchoolsColumns({
-          state: {
-            setFellow,
-            setWeeklyEvaluationDialog,
-            setEditFellowDialog,
-            setAttendanceHistoryDialog,
-            setUploadContractDialog,
-            setUploadIdDialog,
-            setUploadQualificationDialog,
-            setComplaintsDialog,
-            role,
-          },
-        })}
+        columns={mainColumns}
         className={"data-table data-table-action bg-white lg:mt-4"}
         renderTableActions={renderTableActions()}
         emptyStateMessage="No fellows assigned to you"
@@ -133,15 +200,7 @@ export default function FellowSchoolsDatatable({
           <DataTable
             data={row.original.groups}
             editColumns={false}
-            columns={subColumns({
-              state: {
-                setFellowGroup,
-                setAttendanceDialog,
-                setStudentsDialog,
-                setEvaluationDialog,
-                role,
-              },
-            })}
+            columns={subColumnsMemo}
             disableSearch={true}
             disablePagination={true}
             className={"data-table data-table-action mt-0 border-0 bg-white"}

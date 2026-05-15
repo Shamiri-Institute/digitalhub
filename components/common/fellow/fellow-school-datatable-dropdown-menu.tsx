@@ -1,5 +1,6 @@
 import type { ImplementerRole } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
+import { memo } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -13,7 +14,7 @@ import type { FellowsData } from "../../../app/(platform)/sc/actions";
 
 export type FellowGroupData = FellowsData["groups"][number];
 
-export default function FellowSchoolDatatableDropdownMenu({
+const FellowSchoolDatatableDropdownMenu = memo(function FellowSchoolDatatableDropdownMenu({
   group,
   state,
 }: {
@@ -26,6 +27,10 @@ export default function FellowSchoolDatatableDropdownMenu({
     role: ImplementerRole;
   };
 }) {
+  console.log(
+    `[FellowSchoolDatatableDropdownMenu] RENDER - groupId: ${group?.id ?? "none"}, groupName: ${group?.groupName ?? "none"}`,
+  );
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -43,8 +48,12 @@ export default function FellowSchoolDatatableDropdownMenu({
         {state.role === "SUPERVISOR" ? (
           <DropdownMenuItem
             onClick={() => {
+              console.log("[FellowSchoolDatatableDropdownMenu] CLICKED: Mark attendance");
               state.setFellowGroup(group);
               state.setAttendanceDialog(true);
+              console.log(
+                "[FellowSchoolDatatableDropdownMenu] STATE: attendanceDialog set to true",
+              );
             }}
           >
             Mark attendance
@@ -52,16 +61,20 @@ export default function FellowSchoolDatatableDropdownMenu({
         ) : null}
         <DropdownMenuItem
           onClick={() => {
+            console.log("[FellowSchoolDatatableDropdownMenu] CLICKED: View students in group");
             state.setFellowGroup(group);
             state.setStudentsDialog(true);
+            console.log("[FellowSchoolDatatableDropdownMenu] STATE: studentsDialog set to true");
           }}
         >
           View students in group
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
+            console.log("[FellowSchoolDatatableDropdownMenu] CLICKED: Weekly group evaluation");
             state.setFellowGroup(group);
             state.setEvaluationDialog(true);
+            console.log("[FellowSchoolDatatableDropdownMenu] STATE: evaluationDialog set to true");
           }}
         >
           Weekly group evaluation
@@ -69,4 +82,6 @@ export default function FellowSchoolDatatableDropdownMenu({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
+
+export default FellowSchoolDatatableDropdownMenu;

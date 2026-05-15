@@ -1,5 +1,6 @@
 import type { ImplementerRole } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
+import { memo } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -11,7 +12,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import type { FellowsData } from "../../../app/(platform)/sc/actions";
 
-export default function FellowSchoolsDatatableDropdownMenu({
+const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableDropdownMenu({
   fellowRow,
   state,
 }: {
@@ -28,6 +29,19 @@ export default function FellowSchoolsDatatableDropdownMenu({
     role: ImplementerRole;
   };
 }) {
+  console.log(
+    `[FellowSchoolsDatatableDropdownMenu] RENDER - fellowId: ${fellowRow.id}, role: ${state.role}`,
+  );
+
+  function handleSetFellow(action: string) {
+    console.log(
+      `[FellowSchoolsDatatableDropdownMenu] ACTION: ${action} - Setting fellow:`,
+      fellowRow.id,
+      fellowRow.fellowName,
+    );
+    state.setFellow(fellowRow);
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -45,8 +59,12 @@ export default function FellowSchoolsDatatableDropdownMenu({
         {state.role === "SUPERVISOR" ? (
           <DropdownMenuItem
             onClick={() => {
-              state.setFellow(fellowRow);
+              console.log("[FellowSchoolsDatatableDropdownMenu] CLICKED: Edit fellow information");
+              handleSetFellow("Edit fellow information");
               state.setEditFellowDialog(true);
+              console.log(
+                "[FellowSchoolsDatatableDropdownMenu] STATE: editFellowDialog set to true",
+              );
             }}
           >
             Edit fellow information
@@ -54,8 +72,12 @@ export default function FellowSchoolsDatatableDropdownMenu({
         ) : null}
         <DropdownMenuItem
           onClick={() => {
-            state.setFellow(fellowRow);
+            console.log("[FellowSchoolsDatatableDropdownMenu] CLICKED: Session attendance history");
+            handleSetFellow("Session attendance history");
             state.setAttendanceHistoryDialog(true);
+            console.log(
+              "[FellowSchoolsDatatableDropdownMenu] STATE: attendanceHistoryDialog set to true",
+            );
           }}
         >
           Session attendance history
@@ -64,25 +86,45 @@ export default function FellowSchoolsDatatableDropdownMenu({
           <>
             <DropdownMenuItem
               onClick={() => {
-                state.setFellow(fellowRow);
+                console.log(
+                  "[FellowSchoolsDatatableDropdownMenu] CLICKED: Submit weekly fellow evaluation",
+                );
+                handleSetFellow("Submit weekly fellow evaluation");
                 state.setWeeklyEvaluationDialog(true);
+                console.log(
+                  "[FellowSchoolsDatatableDropdownMenu] STATE: weeklyEvaluationDialog set to true",
+                );
               }}
             >
               Submit weekly fellow evaluation
             </DropdownMenuItem>
-            <DropdownMenuItem>Request repayment</DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setFellow(fellowRow);
+                console.log("[FellowSchoolsDatatableDropdownMenu] CLICKED: Request repayment");
+              }}
+            >
+              Request repayment
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                console.log("[FellowSchoolsDatatableDropdownMenu] CLICKED: Submit Complaint");
+                handleSetFellow("Submit Complaint");
                 state.setComplaintsDialog(true);
+                console.log(
+                  "[FellowSchoolsDatatableDropdownMenu] STATE: complaintsDialog set to true",
+                );
               }}
             >
               Submit Complaint
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setFellow(fellowRow);
+                console.log("[FellowSchoolsDatatableDropdownMenu] CLICKED: Upload Contract");
+                handleSetFellow("Upload Contract");
                 state.setUploadContractDialog(true);
+                console.log(
+                  "[FellowSchoolsDatatableDropdownMenu] STATE: uploadContractDialog set to true",
+                );
               }}
             >
               <div className="flex w-full items-center justify-between space-x-2">
@@ -92,8 +134,14 @@ export default function FellowSchoolsDatatableDropdownMenu({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setFellow(fellowRow);
+                console.log(
+                  "[FellowSchoolsDatatableDropdownMenu] CLICKED: Upload Identification document",
+                );
+                handleSetFellow("Upload Identification document");
                 state.setUploadIdDialog(true);
+                console.log(
+                  "[FellowSchoolsDatatableDropdownMenu] STATE: uploadIdDialog set to true",
+                );
               }}
             >
               <div className="flex w-full items-center justify-between space-x-2">
@@ -103,8 +151,14 @@ export default function FellowSchoolsDatatableDropdownMenu({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setFellow(fellowRow);
+                console.log(
+                  "[FellowSchoolsDatatableDropdownMenu] CLICKED: Upload qualification document",
+                );
+                handleSetFellow("Upload qualification document");
                 state.setUploadQualificationDialog(true);
+                console.log(
+                  "[FellowSchoolsDatatableDropdownMenu] STATE: uploadQualificationDialog set to true",
+                );
               }}
             >
               <div className="flex w-full items-center justify-between gap-x-6">
@@ -117,4 +171,6 @@ export default function FellowSchoolsDatatableDropdownMenu({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
+
+export default FellowSchoolsDatatableDropdownMenu;
