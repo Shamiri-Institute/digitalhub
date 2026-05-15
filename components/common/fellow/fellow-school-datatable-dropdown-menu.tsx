@@ -27,10 +27,6 @@ const FellowSchoolDatatableDropdownMenu = memo(function FellowSchoolDatatableDro
     role: ImplementerRole;
   };
 }) {
-  console.log(
-    `[FellowSchoolDatatableDropdownMenu] RENDER - groupId: ${group?.id ?? "none"}, groupName: ${group?.groupName ?? "none"}`,
-  );
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -48,12 +44,8 @@ const FellowSchoolDatatableDropdownMenu = memo(function FellowSchoolDatatableDro
         {state.role === "SUPERVISOR" ? (
           <DropdownMenuItem
             onClick={() => {
-              console.log("[FellowSchoolDatatableDropdownMenu] CLICKED: Mark attendance");
               state.setFellowGroup(group);
               state.setAttendanceDialog(true);
-              console.log(
-                "[FellowSchoolDatatableDropdownMenu] STATE: attendanceDialog set to true",
-              );
             }}
           >
             Mark attendance
@@ -61,20 +53,16 @@ const FellowSchoolDatatableDropdownMenu = memo(function FellowSchoolDatatableDro
         ) : null}
         <DropdownMenuItem
           onClick={() => {
-            console.log("[FellowSchoolDatatableDropdownMenu] CLICKED: View students in group");
             state.setFellowGroup(group);
             state.setStudentsDialog(true);
-            console.log("[FellowSchoolDatatableDropdownMenu] STATE: studentsDialog set to true");
           }}
         >
           View students in group
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
-            console.log("[FellowSchoolDatatableDropdownMenu] CLICKED: Weekly group evaluation");
             state.setFellowGroup(group);
             state.setEvaluationDialog(true);
-            console.log("[FellowSchoolDatatableDropdownMenu] STATE: evaluationDialog set to true");
           }}
         >
           Weekly group evaluation
