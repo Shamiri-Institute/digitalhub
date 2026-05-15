@@ -56,7 +56,7 @@ export async function getTriageEventsForSupervisor() {
   });
 
   const studentIds = Array.from(new Set(events.map((e) => e.studentId)));
-  
+
   const cases = await db.clinicalScreeningInfo.findMany({
     where: { studentId: { in: studentIds } },
     select: { studentId: true, id: true },

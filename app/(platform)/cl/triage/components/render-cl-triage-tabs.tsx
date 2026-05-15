@@ -1,7 +1,5 @@
 "use client";
-import TabToggleNavigation, {
-  type TabType,
-} from "#/components/common/tabs/tab-navigation";
+import TabToggleNavigation, { type TabType } from "#/components/common/tabs/tab-navigation";
 
 export default function RenderClTriageTabs() {
   const triageTabOptions: TabType[] = [
