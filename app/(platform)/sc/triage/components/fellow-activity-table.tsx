@@ -209,8 +209,9 @@ export default function FellowActivityTable({
   const eventsByFellow = useMemo(
     () =>
       events.reduce<Record<string, TriageEventForSupervisor[]>>((acc, e) => {
-        const list = (acc[e.fellowId] ??= []);
+        const list = acc[e.fellowId] ?? [];
         list.push(e);
+        acc[e.fellowId] = list;
         return acc;
       }, {}),
     [events],
