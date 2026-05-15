@@ -10,12 +10,10 @@ import { toast } from "#/components/ui/use-toast";
 
 export default function TriageReviewModal({
   triageEventId,
-  studentId,
   isOpen,
   onClose,
 }: {
   triageEventId: string;
-  studentId: string;
   isOpen: boolean;
   onClose: () => void;
 }) {
@@ -31,7 +29,10 @@ export default function TriageReviewModal({
       setNote("");
       onClose();
     } catch {
-      toast({ variant: "destructive", description: "Failed to save review. Please try again." });
+      toast({
+        variant: "destructive",
+        description: "Failed to save review. Please try again.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -39,19 +40,19 @@ export default function TriageReviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="gap-0 p-0 max-w-md">
+      <DialogContent className="max-w-md gap-0 p-0">
         <DialogHeader className="space-y-0 px-6 py-4">
           <DialogTitle className="text-base font-medium">
             Mark reviewed — no clinical case needed
           </DialogTitle>
-          <p className="mt-1 text-sm text-shamiri-text-grey">
+          <p className="text-shamiri-text-grey mt-1 text-sm">
             Record your reason for closing this escalation without opening a clinical case. This
             note is visible to the Clinical Lead.
           </p>
         </DialogHeader>
         <Separator />
         <div className="my-6 space-y-6">
-          <div className="px-6 space-y-1">
+          <div className="space-y-1 px-6">
             <Textarea
               placeholder="e.g. Assessed student — risk screen was precautionary, no clinical concern identified."
               className="resize-none"
@@ -60,7 +61,7 @@ export default function TriageReviewModal({
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
-            <p className="text-xs text-shamiri-text-grey">{note.length}/300</p>
+            <p className="text-shamiri-text-grey text-xs">{note.length}/300</p>
           </div>
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
