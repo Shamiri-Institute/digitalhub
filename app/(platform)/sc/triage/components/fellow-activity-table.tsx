@@ -1,8 +1,8 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
-import type { ColumnDef } from "@tanstack/react-table";
 import type {
   FellowForSupervisor,
   TriageEventForSupervisor,

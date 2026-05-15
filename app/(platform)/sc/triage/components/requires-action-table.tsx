@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useMemo, useState } from "react";
 import type { TriageEventForSupervisor } from "#/app/(platform)/sc/triage/action";
 import CreateClinicalCaseModal from "#/app/(platform)/sc/triage/components/create-clinical-case-modal";
 import TriageReviewModal from "#/app/(platform)/sc/triage/components/triage-review-modal";

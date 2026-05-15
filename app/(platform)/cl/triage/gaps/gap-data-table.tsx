@@ -1,10 +1,10 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import type { EscalationGap } from "#/app/(platform)/cl/triage/gaps/action";
 import DataTable from "#/components/data-table";
 import { Badge } from "#/components/ui/badge";
 import { cn } from "#/lib/utils";
-import type { ColumnDef } from "@tanstack/react-table";
 
 const HANDOFF_LABELS: Record<string, string> = {
   WARM_HANDOFF: "Warm handoff",
@@ -20,9 +20,7 @@ const columns: ColumnDef<EscalationGap>[] = [
     accessorFn: (e) => e.student.studentName ?? e.student.visibleId ?? "—",
     cell: ({ row }) => (
       <span className="font-medium">
-        {row.original.student.studentName ??
-          row.original.student.visibleId ??
-          "—"}
+        {row.original.student.studentName ?? row.original.student.visibleId ?? "—"}
       </span>
     ),
   },
@@ -30,9 +28,7 @@ const columns: ColumnDef<EscalationGap>[] = [
     id: "School",
     header: "School",
     accessorFn: (e) => e.student.school?.schoolName ?? "—",
-    cell: ({ row }) => (
-      <span>{row.original.student.school?.schoolName ?? "—"}</span>
-    ),
+    cell: ({ row }) => <span>{row.original.student.school?.schoolName ?? "—"}</span>,
   },
   {
     id: "Fellow",
@@ -90,14 +86,8 @@ const columns: ColumnDef<EscalationGap>[] = [
     cell: ({ row }) => {
       const status = row.original.supervisorHandoffStatus;
       const isRed = status === "COULD_NOT_REACH";
-      const label = status
-        ? (HANDOFF_LABELS[status] ?? status)
-        : "Not recorded";
-      return (
-        <span className={cn(isRed && "text-red-base font-medium")}>
-          {label}
-        </span>
-      );
+      const label = status ? (HANDOFF_LABELS[status] ?? status) : "Not recorded";
+      return <span className={cn(isRed && "text-red-base font-medium")}>{label}</span>;
     },
   },
 ];
