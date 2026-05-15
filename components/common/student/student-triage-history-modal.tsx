@@ -117,7 +117,7 @@ export default function StudentTriageHistoryModal({
 
         <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
           {loading && (
-            <>
+            <div>
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="rounded-lg border p-4 space-y-2">
                   <div className="flex justify-between">
@@ -127,7 +127,7 @@ export default function StudentTriageHistoryModal({
                   <Skeleton className="h-4 w-32" />
                 </div>
               ))}
-            </>
+            </div>
           )}
           {!loading && history.length === 0 && (
             <p className="py-6 text-center text-sm text-shamiri-text-grey">
