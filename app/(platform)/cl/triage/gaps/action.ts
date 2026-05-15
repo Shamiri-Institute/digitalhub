@@ -3,7 +3,9 @@
 import { currentClinicalLead } from "#/app/auth";
 import { db } from "#/lib/db";
 
-export type EscalationGap = Awaited<ReturnType<typeof getEscalationGaps>>[number];
+export type EscalationGap = Awaited<
+  ReturnType<typeof getEscalationGaps>
+>[number];
 
 export async function getEscalationGaps() {
   const clinicalLead = await currentClinicalLead();
@@ -21,6 +23,7 @@ export async function getEscalationGaps() {
       student: {
         select: {
           visibleId: true,
+          studentName: true,
           school: { select: { schoolName: true } },
         },
       },
@@ -67,7 +70,9 @@ export async function getGapReportStats() {
     criticalCount: gapsWithDays.filter((g) => g.daysSince > 7).length,
     conversionRate:
       totalEscalations > 0
-        ? Math.round(((totalEscalations - gaps.length) / totalEscalations) * 100)
+        ? Math.round(
+            ((totalEscalations - gaps.length) / totalEscalations) * 100,
+          )
         : 100,
   };
 }

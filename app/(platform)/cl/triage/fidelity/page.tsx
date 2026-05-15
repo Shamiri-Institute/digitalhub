@@ -1,87 +1,13 @@
 import { Suspense } from "react";
 import { getTriageFidelityData } from "#/app/(platform)/cl/triage/fidelity/action";
+import FidelityDataTable from "#/app/(platform)/cl/triage/fidelity/fidelity-data-table";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "#/components/ui/table";
-import { cn } from "#/lib/utils";
 
-function FlagCell({
-  value,
-  flag,
-  suffix = "%",
-}: {
-  value: number;
-  flag: boolean;
-  suffix?: string;
-}) {
-  return (
-    <span className={cn("text-sm", flag && "font-semibold text-shamiri-light-red")}>
-      {value}
-      {suffix}
-      {flag && " ⚠"}
-    </span>
-  );
-}
-
-async function FidelityTable() {
+async function FidelityContent() {
   const rows = await getTriageFidelityData();
-
-  if (rows.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-sm text-shamiri-text-grey">No fellows assigned to this hub yet.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-lg border overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Fellow</TableHead>
-            <TableHead>Supervisor</TableHead>
-            <TableHead>Schools</TableHead>
-            <TableHead className="text-right">Sessions</TableHead>
-            <TableHead className="text-right">Triage events</TableHead>
-            <TableHead className="text-right">Triage rate</TableHead>
-            <TableHead className="text-right">Risk positive</TableHead>
-            <TableHead className="text-right">Escalation compliance</TableHead>
-            <TableHead className="text-right">Screen completion</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.fellowId}>
-              <TableCell className="font-medium">{row.fellowName}</TableCell>
-              <TableCell className="text-shamiri-text-grey">{row.supervisorName}</TableCell>
-              <TableCell className="text-sm text-shamiri-text-grey max-w-[160px] truncate">
-                {row.schools}
-              </TableCell>
-              <TableCell className="text-right text-sm">{row.sessionsAttended}</TableCell>
-              <TableCell className="text-right text-sm">{row.triageEvents}</TableCell>
-              <TableCell className="text-right">
-                <FlagCell value={row.triageRate} flag={row.triageRateFlag} />
-              </TableCell>
-              <TableCell className="text-right text-sm">{row.riskPositive}</TableCell>
-              <TableCell className="text-right">
-                <FlagCell value={row.escalationCompliance} flag={row.complianceFlag} />
-              </TableCell>
-              <TableCell className="text-right text-sm">{row.screenCompletionRate}%</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  return <FidelityDataTable rows={rows} />;
 }
 
 function TableSkeleton() {
@@ -114,7 +40,7 @@ export default function TriageFidelityPage() {
         </div>
         <Separator />
         <Suspense fallback={<TableSkeleton />}>
-          <FidelityTable />
+          <FidelityContent />
         </Suspense>
       </div>
     </div>

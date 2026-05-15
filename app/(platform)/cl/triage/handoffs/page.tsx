@@ -1,87 +1,13 @@
 import { Suspense } from "react";
 import { getHandoffQualityData } from "#/app/(platform)/cl/triage/handoffs/action";
+import HandoffDataTable from "#/app/(platform)/cl/triage/handoffs/handoff-data-table";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "#/components/ui/table";
-import { cn } from "#/lib/utils";
 
-function CountPctCell({
-  count,
-  pct,
-  flag = false,
-}: {
-  count: number;
-  pct: number;
-  flag?: boolean;
-}) {
-  return (
-    <span className={cn("text-sm", flag && "font-semibold text-shamiri-light-red")}>
-      {count} ({pct}%){flag && " ⚠"}
-    </span>
-  );
-}
-
-async function HandoffTable() {
+async function HandoffContent() {
   const rows = await getHandoffQualityData();
-
-  if (rows.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-sm text-shamiri-text-grey">
-          No escalation or referral events recorded in this hub yet.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-lg border overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Supervisor</TableHead>
-            <TableHead className="text-right">Total escalations</TableHead>
-            <TableHead className="text-right">Warm handoff</TableHead>
-            <TableHead className="text-right">Supervisor notified</TableHead>
-            <TableHead className="text-right">Could not reach</TableHead>
-            <TableHead className="text-right">Student refused</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.supervisorId}>
-              <TableCell className="font-medium">{row.supervisorName}</TableCell>
-              <TableCell className="text-right text-sm">{row.total}</TableCell>
-              <TableCell className="text-right">
-                <CountPctCell count={row.warmHandoff} pct={row.warmHandoffPct} />
-              </TableCell>
-              <TableCell className="text-right">
-                <CountPctCell count={row.notified} pct={row.notifiedPct} />
-              </TableCell>
-              <TableCell className="text-right">
-                <CountPctCell
-                  count={row.couldNotReach}
-                  pct={row.couldNotReachPct}
-                  flag={row.couldNotReachFlag}
-                />
-              </TableCell>
-              <TableCell className="text-right">
-                <CountPctCell count={row.refused} pct={row.refusedPct} />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  return <HandoffDataTable rows={rows} />;
 }
 
 function TableSkeleton() {
@@ -113,7 +39,7 @@ export default function HandoffQualityPage() {
         </div>
         <Separator />
         <Suspense fallback={<TableSkeleton />}>
-          <HandoffTable />
+          <HandoffContent />
         </Suspense>
       </div>
     </div>

@@ -34,7 +34,6 @@ export default function StudentAttendanceMenu({
   hubVisibleId?: string | null;
   hasExistingTriageEvent: boolean;
 }) {
-
   const openTriageModal = (readOnly: boolean) => {
     state.setTriageReadOnly(readOnly);
     state.setTriageStudent(attendance);
@@ -69,7 +68,7 @@ export default function StudentAttendanceMenu({
             Triage occurred
           </DropdownMenuItem>
         )}
-        { hasExistingTriageEvent && (
+        {hasExistingTriageEvent && (
           <>
             <DropdownMenuItem onClick={() => openTriageModal(false)}>Edit triage</DropdownMenuItem>
             <DropdownMenuItem onClick={() => openTriageModal(true)}>View triage</DropdownMenuItem>
