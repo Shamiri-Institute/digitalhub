@@ -1,22 +1,5 @@
 "use client";
 
-import {
-  BarChartIcon,
-  CalendarIcon,
-  GraduationCapIcon,
-  NotificationIcon,
-  PeopleIcon,
-  PeopleIconAlternate,
-  SchoolIcon,
-  SignOutIcon,
-} from "components/icons";
-import { Building2, Menu, ShieldAlert } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { Session } from "next-auth";
-import { signOut } from "next-auth/react";
-import { useState } from "react";
 import type { CurrentPersonnel } from "#/app/auth";
 import { MembershipSwitcher } from "#/components/common/membership-switcher";
 import { ProfileDialog } from "#/components/common/profile/profile-dialog";
@@ -33,6 +16,23 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 import ArrowDropdown from "#/public/icons/arrow-drop-down.svg";
+import {
+  BarChartIcon,
+  CalendarIcon,
+  GraduationCapIcon,
+  NotificationIcon,
+  PeopleIcon,
+  PeopleIconAlternate,
+  SchoolIcon,
+  SignOutIcon,
+} from "components/icons";
+import { Building2, Menu, ShieldAlert } from "lucide-react";
+import type { Session } from "next-auth";
+import { signOut } from "next-auth/react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface NavigationLinkProps {
@@ -68,7 +68,8 @@ export function LayoutClient({
   const reportingActive = subRoute?.includes("reporting");
   const clinicalActive = subRoute?.includes("clinical");
   const triageActive = subRoute?.includes("triage");
-  const hubsActive = subRoute?.includes("hubs") || subRoute?.includes("schools");
+  const hubsActive =
+    subRoute?.includes("hubs") || subRoute?.includes("schools");
 
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -87,10 +88,18 @@ export function LayoutClient({
           className="nav-link"
         />
         <div className="nav-link">
-          <RoleSwitcher loading={loading} setLoading={setLoading} session={session} />
+          <RoleSwitcher
+            loading={loading}
+            setLoading={setLoading}
+            session={session}
+          />
         </div>
         <div className="nav-link">
-          <MembershipSwitcher loading={loading} setLoading={setLoading} session={session} />
+          <MembershipSwitcher
+            loading={loading}
+            setLoading={setLoading}
+            session={session}
+          />
         </div>
         <div className="nav-link hidden w-full lg:flex lg:w-auto">
           <DropdownMenu>
@@ -98,7 +107,9 @@ export function LayoutClient({
               <div className="flex w-full items-center justify-between space-x-2">
                 <div className="flex items-center space-x-2">
                   <Avatar className="h-8 w-8">
-                    {avatarUrl ? <AvatarImage src={avatarUrl} width={32} height={32} /> : null}
+                    {avatarUrl ? (
+                      <AvatarImage src={avatarUrl} width={32} height={32} />
+                    ) : null}
                     <AvatarFallback>{getInitials(userName)}</AvatarFallback>
                   </Avatar>
                   <p>{userName}</p>
@@ -140,11 +151,11 @@ export function LayoutClient({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b bg-background-secondary">
+      <header className="bg-background-secondary border-b">
         <div className="container space-y-4 px-4 pt-2 lg:px-8">
           <div className="flex flex-col items-center justify-between lg:flex-row">
             <div className="flex w-full flex-row items-center justify-between px-3 py-2 lg:py-0">
-              <Link href="#" className="text-2xl text-shamiri-new-blue">
+              <Link href="#" className="text-shamiri-new-blue text-2xl">
                 Shamiri Hub
               </Link>
               <div className="relative lg:hidden">
@@ -156,7 +167,7 @@ export function LayoutClient({
                       aria-label="Toggle navigation"
                       className="bg-white"
                     >
-                      <Menu className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <Menu className="text-muted-foreground h-4 w-4 shrink-0" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-[80vw]">
@@ -165,11 +176,19 @@ export function LayoutClient({
                         <div className="flex items-center gap-4">
                           <Avatar className="h-8 w-8">
                             {avatarUrl ? (
-                              <AvatarImage src={avatarUrl} width={32} height={32} />
+                              <AvatarImage
+                                src={avatarUrl}
+                                width={32}
+                                height={32}
+                              />
                             ) : null}
-                            <AvatarFallback>{getInitials(userName)}</AvatarFallback>
+                            <AvatarFallback>
+                              {getInitials(userName)}
+                            </AvatarFallback>
                           </Avatar>
-                          <p className="text-base text-muted-foreground">{userName}</p>
+                          <p className="text-muted-foreground text-base">
+                            {userName}
+                          </p>
                         </div>
                         <div className="nav-link">
                           <NotificationIcon />
@@ -204,10 +223,14 @@ export function LayoutClient({
           </div>
         </div>
       </header>
-      <main className="flex min-h-0 grow items-stretch overflow-x-hidden bg-background-secondary">
+      <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-hidden">
         {children}
       </main>
-      <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />
+      <ProfileDialog
+        isOpen={isProfileOpen}
+        onOpenChange={setIsProfileOpen}
+        profile={profile}
+      />
     </div>
   );
 }
@@ -255,13 +278,19 @@ function ReportingDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         <DropdownMenuItem asChild>
-          <Link href={`/${mainRoute}/reporting/expenses/fellows`}>Expenses</Link>
+          <Link href={`/${mainRoute}/reporting/expenses/fellows`}>
+            Expenses
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={`/${mainRoute}/reporting/school-reports`}>School Reports</Link>
+          <Link href={`/${mainRoute}/reporting/school-reports`}>
+            School Reports
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
+          <Link href={`/${mainRoute}/reporting/fellow-reports`}>
+            Fellow Reports
+          </Link>
         </DropdownMenuItem>
         {(mainRoute === "sc" || mainRoute === "hc") && (
           <DropdownMenuItem asChild>
@@ -272,7 +301,9 @@ function ReportingDropdown({
         )}
         {mainRoute === "sc" && (
           <DropdownMenuItem asChild>
-            <Link href={`/${mainRoute}/reporting/recordings`}>Session Recordings</Link>
+            <Link href={`/${mainRoute}/reporting/recordings`}>
+              Session Recordings
+            </Link>
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
@@ -301,7 +332,10 @@ function getCurrentUserNavigationLinks(
   // Admin links
   if (mainRoute === "admin") {
     links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`} key="admin-schedule">
+      <div
+        className={`tab-link ${cn(scheduleActive && "active")}`}
+        key="admin-schedule"
+      >
         <CalendarIcon />
         <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
       </div>,
@@ -312,15 +346,24 @@ function getCurrentUserNavigationLinks(
         <Building2 className="h-4 w-4" strokeWidth={3} />
         <Link href={`/${mainRoute}/hubs`}>Hubs</Link>
       </div>,
-      <div className={`tab-link ${cn(supervisorsActive && "active")}`} key="admin-supervisors">
+      <div
+        className={`tab-link ${cn(supervisorsActive && "active")}`}
+        key="admin-supervisors"
+      >
         <PeopleIcon />
         <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
       </div>,
-      <div className={`tab-link ${cn(fellowsActive && "active")}`} key="admin-fellows">
+      <div
+        className={`tab-link ${cn(fellowsActive && "active")}`}
+        key="admin-fellows"
+      >
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
       </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`} key="admin-students">
+      <div
+        className={`tab-link ${cn(studentsActive && "active")}`}
+        key="admin-students"
+      >
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,
@@ -330,23 +373,38 @@ function getCurrentUserNavigationLinks(
   // Hub Coordinator links
   if (mainRoute === "hc") {
     links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`} key="hc-schedule">
+      <div
+        className={`tab-link ${cn(scheduleActive && "active")}`}
+        key="hc-schedule"
+      >
         <CalendarIcon />
         <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
       </div>,
-      <div className={`tab-link ${cn(schoolsActive && "active")}`} key="hc-schools">
+      <div
+        className={`tab-link ${cn(schoolsActive && "active")}`}
+        key="hc-schools"
+      >
         <SchoolIcon />
         <Link href={`/${mainRoute}/schools`}>Schools</Link>
       </div>,
-      <div className={`tab-link ${cn(supervisorsActive && "active")}`} key="hc-supervisors">
+      <div
+        className={`tab-link ${cn(supervisorsActive && "active")}`}
+        key="hc-supervisors"
+      >
         <PeopleIcon />
         <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
       </div>,
-      <div className={`tab-link ${cn(fellowsActive && "active")}`} key="hc-fellows">
+      <div
+        className={`tab-link ${cn(fellowsActive && "active")}`}
+        key="hc-fellows"
+      >
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
       </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`} key="hc-students">
+      <div
+        className={`tab-link ${cn(studentsActive && "active")}`}
+        key="hc-students"
+      >
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,
@@ -356,27 +414,45 @@ function getCurrentUserNavigationLinks(
   // Supervisor links
   if (mainRoute === "sc") {
     links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`} key="sc-schedule">
+      <div
+        className={`tab-link ${cn(scheduleActive && "active")}`}
+        key="sc-schedule"
+      >
         <CalendarIcon />
         <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
       </div>,
-      <div className={`tab-link ${cn(schoolsActive && "active")}`} key="sc-schools">
+      <div
+        className={`tab-link ${cn(schoolsActive && "active")}`}
+        key="sc-schools"
+      >
         <SchoolIcon />
         <Link href={`/${mainRoute}/schools`}>Schools</Link>
       </div>,
-      <div className={`tab-link ${cn(fellowsActive && "active")}`} key="sc-fellows">
+      <div
+        className={`tab-link ${cn(fellowsActive && "active")}`}
+        key="sc-fellows"
+      >
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
       </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`} key="sc-students">
+      <div
+        className={`tab-link ${cn(studentsActive && "active")}`}
+        key="sc-students"
+      >
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,
-      <div className={`tab-link ${cn(clinicalActive && "active")}`} key="sc-clinical">
+      <div
+        className={`tab-link ${cn(clinicalActive && "active")}`}
+        key="sc-clinical"
+      >
         <PeopleIcon />
         <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
       </div>,
-      <div className={`tab-link ${cn(triageActive && "active")}`} key="sc-triage">
+      <div
+        className={`tab-link ${cn(triageActive && "active")}`}
+        key="sc-triage"
+      >
         <ShieldAlert className="h-5 w-5" />
         <Link href={`/${mainRoute}/triage`}>Triage</Link>
       </div>,
@@ -386,15 +462,24 @@ function getCurrentUserNavigationLinks(
   // Fellow links
   if (mainRoute === "fel") {
     links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`} key="fel-schedule">
+      <div
+        className={`tab-link ${cn(scheduleActive && "active")}`}
+        key="fel-schedule"
+      >
         <CalendarIcon />
         <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
       </div>,
-      <div className={`tab-link ${cn(schoolsActive && "active")}`} key="fel-schools">
+      <div
+        className={`tab-link ${cn(schoolsActive && "active")}`}
+        key="fel-schools"
+      >
         <SchoolIcon />
         <Link href={`/${mainRoute}/schools`}>Schools</Link>
       </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`} key="fel-portal">
+      <div
+        className={`tab-link ${cn(studentsActive && "active")}`}
+        key="fel-portal"
+      >
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/portal`}>Fellow portal</Link>
       </div>,
@@ -404,51 +489,56 @@ function getCurrentUserNavigationLinks(
   // Clinical Lead links
   if (mainRoute === "cl" || mainRoute === "ct") {
     links.push(
-      <div key="cl-supervisors" className={`tab-link ${cn(supervisorsActive && "active")}`}>
+      <div
+        key="cl-supervisors"
+        className={`tab-link ${cn(supervisorsActive && "active")}`}
+      >
         <PeopleIcon />
         <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
       </div>,
-      <div key="cl-fellows" className={`tab-link ${cn(fellowsActive && "active")}`}>
+      <div
+        key="cl-fellows"
+        className={`tab-link ${cn(fellowsActive && "active")}`}
+      >
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
       </div>,
-      <div key="cl-students" className={`tab-link ${cn(studentsActive && "active")}`}>
+      <div
+        key="cl-students"
+        className={`tab-link ${cn(studentsActive && "active")}`}
+      >
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,
-      <div key="cl-clinical" className={`tab-link ${cn(clinicalActive && "active")}`}>
+      <div
+        key="cl-clinical"
+        className={`tab-link ${cn(clinicalActive && "active")}`}
+      >
         <PeopleIcon />
         <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
       </div>,
-      <div key="cl-triage" className={`tab-link ${cn(triageActive && "active")}`}>
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex cursor-pointer items-center space-x-1">
-            <ShieldAlert className="h-5 w-5" />
-            <p>Triage</p>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem asChild>
-              <Link href={`/${mainRoute}/triage/gaps`}>Escalation gaps</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href={`/${mainRoute}/triage/fidelity`}>Fidelity</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href={`/${mainRoute}/triage/handoffs`}>Handoff quality</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href={`/${mainRoute}/triage/audits`}>Audit trail</Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div
+        key="cl-triage"
+        className={`tab-link ${cn(triageActive && "active")}`}
+      >
+        <ShieldAlert className="h-5 w-5" />
+        <Link href={`/${mainRoute}/triage`}>Triage</Link>
       </div>,
     );
   }
 
   // Add reporting to all roles except for fellows AND clinical leads
-  if (mainRoute !== "fel" && mainRoute !== "cl" && mainRoute !== "ct" && mainRoute !== "admin") {
+  if (
+    mainRoute !== "fel" &&
+    mainRoute !== "cl" &&
+    mainRoute !== "ct" &&
+    mainRoute !== "admin"
+  ) {
     links.push(
-      <div className={`tab-link ${reportingActive ? "active" : ""}`} key="report">
+      <div
+        className={`tab-link ${reportingActive ? "active" : ""}`}
+        key="report"
+      >
         <ReportingDropdown
           popoverOpen={popoverOpen}
           setPopoverOpen={setPopoverOpen}

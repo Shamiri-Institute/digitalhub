@@ -1,128 +1,164 @@
 "use client";
 
-import { useState } from "react";
+import { MoreHorizontal } from "lucide-react";
+import { useMemo, useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
 import type { TriageEventForSupervisor } from "#/app/(platform)/sc/triage/action";
 import TriageReviewModal from "#/app/(platform)/sc/triage/components/triage-review-modal";
+import DataTable from "#/components/data-table";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "#/components/ui/table";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 
 type RequiresActionEvent = TriageEventForSupervisor & { viewSection: "requires_action" };
 
-function RiskBadge({ outcome }: { outcome: string | null }) {
-  if (outcome === "ANY_YES")
-    return <Badge className="bg-red-bg text-red-base border-red-border">Risk positive</Badge>;
-  if (outcome === "ALL_NO")
-    return <Badge className="bg-green-bg text-green-base border-green-border">Risk negative</Badge>;
-  return (
-    <Badge variant="outline" className="text-shamiri-text-grey">
-      Not completed
-    </Badge>
-  );
-}
-
-function HandoffBadge({ status }: { status: string | null }) {
-  const labels: Record<string, string> = {
-    WARM_HANDOFF: "Warm handoff",
-    SUPERVISOR_NOTIFIED: "Notified",
-    COULD_NOT_REACH: "Could not reach",
-    STUDENT_REFUSED_NOTIFIED: "Student refused",
-  };
-  return <span className="text-sm">{status ? (labels[status] ?? status) : "—"}</span>;
-}
+const HANDOFF_LABELS: Record<string, string> = {
+  WARM_HANDOFF: "Warm handoff",
+  SUPERVISOR_NOTIFIED: "Notified",
+  COULD_NOT_REACH: "Could not reach",
+  STUDENT_REFUSED_NOTIFIED: "Student refused",
+};
 
 export default function RequiresActionTable({ events }: { events: RequiresActionEvent[] }) {
   const [reviewTarget, setReviewTarget] = useState<RequiresActionEvent | null>(null);
 
-  if (events.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-sm text-shamiri-text-grey">
-          No unactioned escalations — all referrals have been reviewed or have open cases.
-        </p>
-      </div>
-    );
-  }
+  const columns = useMemo<ColumnDef<RequiresActionEvent>[]>(
+    () => [
+      {
+        id: "Student",
+        header: "Student",
+        accessorFn: (e) => e.student.studentName ?? e.student.visibleId ?? "",
+        cell: ({ row }) => (
+          <span className="font-medium capitalize">
+            {row.original.student.studentName?.toLowerCase() ??
+              row.original.student.visibleId ??
+              "—"}
+          </span>
+        ),
+      },
+      {
+        id: "School",
+        header: "School",
+        accessorFn: (e) => e.student.school?.schoolName ?? "—",
+      },
+      {
+        id: "Fellow",
+        header: "Fellow",
+        accessorFn: (e) => e.fellow.fellowName ?? "—",
+      },
+      {
+        id: "Session",
+        header: "Session",
+        cell: ({ row }) => {
+          const e = row.original;
+          const label =
+            e.session.session?.sessionLabel ??
+            e.session.sessionName ??
+            e.session.sessionType ??
+            "—";
+          const date = e.session.sessionDate
+            ? new Date(e.session.sessionDate).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
+            : null;
+          return (
+            <span>
+              {label}
+              {date && <span className="ml-1 text-shamiri-text-grey">· {date}</span>}
+            </span>
+          );
+        },
+      },
+      {
+        id: "Risk outcome",
+        header: "Risk outcome",
+        cell: ({ row }) => {
+          const outcome = row.original.riskScreenOutcome;
+          if (outcome === "ANY_YES")
+            return (
+              <Badge className="bg-red-bg text-red-base border-red-border">Risk positive</Badge>
+            );
+          if (outcome === "ALL_NO")
+            return (
+              <Badge className="bg-green-bg text-green-base border-green-border">
+                Risk negative
+              </Badge>
+            );
+          return (
+            <Badge variant="outline" className="text-shamiri-text-grey">
+              Not completed
+            </Badge>
+          );
+        },
+      },
+      {
+        id: "Handoff",
+        header: "Handoff",
+        cell: ({ row }) => {
+          const status = row.original.supervisorHandoffStatus;
+          return <span>{status ? (HANDOFF_LABELS[status] ?? status) : "—"}</span>;
+        },
+      },
+      {
+        id: "Days waiting",
+        header: "Days waiting",
+        cell: ({ row }) => (
+          <span className={cn("font-medium", row.original.daysSince > 3 && "text-red-base")}>
+            {row.original.daysSince}d
+          </span>
+        ),
+      },
+      {
+        id: "button",
+        cell: ({ row }) => (
+          <div className="px-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <a
+                    href={`/sc/clinical/cases/new?studentId=${row.original.studentId}&schoolId=${row.original.student.schoolId ?? ""}&fromTriageId=${row.original.id}`}
+                  >
+                    Open case
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setReviewTarget(row.original)}>
+                  Mark reviewed
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+        enableHiding: false,
+      },
+    ],
+    [],
+  );
 
   return (
     <>
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Student</TableHead>
-              <TableHead>School</TableHead>
-              <TableHead>Fellow</TableHead>
-              <TableHead>Session</TableHead>
-              <TableHead>Risk outcome</TableHead>
-              <TableHead>Handoff</TableHead>
-              <TableHead>Days waiting</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {events.map((event) => (
-              <TableRow key={event.id}>
-                <TableCell className="font-medium">{event.student.visibleId ?? "—"}</TableCell>
-                <TableCell>{event.student.school?.schoolName ?? "—"}</TableCell>
-                <TableCell>{event.fellow.fellowName ?? "—"}</TableCell>
-                <TableCell className="text-sm">
-                  {event.session.session?.sessionLabel ??
-                    event.session.sessionName ??
-                    event.session.sessionType ??
-                    "—"}
-                  {event.session.sessionDate && (
-                    <span className="ml-1 text-shamiri-text-grey">
-                      ·{" "}
-                      {new Date(event.session.sessionDate).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <RiskBadge outcome={event.riskScreenOutcome} />
-                </TableCell>
-                <TableCell>
-                  <HandoffBadge status={event.supervisorHandoffStatus} />
-                </TableCell>
-                <TableCell>
-                  <span
-                    className={cn("text-sm font-medium", event.daysSince > 3 && "text-red-base")}
-                  >
-                    {event.daysSince}d
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="brand" asChild>
-                      <a
-                        href={`/sc/clinical/cases/new?studentId=${event.studentId}&schoolId=${event.student.schoolId ?? ""}&fromTriageId=${event.id}`}
-                      >
-                        Open case
-                      </a>
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setReviewTarget(event)}>
-                      Mark reviewed
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
+      <DataTable
+        data={events}
+        columns={columns}
+        className="data-table data-table-action bg-white"
+        emptyStateMessage="No unactioned escalations — all referrals have been reviewed or have open cases."
+        disableSearch={true}
+        disablePagination={true}
+        columnVisibilityState={{ Session: false, Handoff: false }}
+      />
       {reviewTarget && (
         <TriageReviewModal
           triageEventId={reviewTarget.id}

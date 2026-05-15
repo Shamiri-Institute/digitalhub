@@ -8,6 +8,19 @@ export type TriageEventForSupervisor = Awaited<
   ReturnType<typeof getTriageEventsForSupervisor>
 >[number];
 
+export type FellowForSupervisor = { id: string; fellowName: string | null };
+
+export async function getFellowsForSupervisor(): Promise<FellowForSupervisor[]> {
+  const supervisor = await currentSupervisor();
+  if (!supervisor?.profile) throw new Error("Unauthorised");
+
+  return db.fellow.findMany({
+    where: { supervisorId: supervisor.profile.id },
+    select: { id: true, fellowName: true },
+    orderBy: { fellowName: "asc" },
+  });
+}
+
 export async function getTriageEventsForSupervisor() {
   const supervisor = await currentSupervisor();
   if (!supervisor?.profile) throw new Error("Unauthorised");
@@ -22,6 +35,7 @@ export async function getTriageEventsForSupervisor() {
         select: {
           id: true,
           visibleId: true,
+          studentName: true,
           schoolId: true,
           school: { select: { schoolName: true } },
         },
@@ -106,6 +120,44 @@ export async function getTriageDashboardStats() {
       (e) => e.riskScreenOutcome === "ANY_YES" && e.createdAt >= weekStart,
     ).length,
   };
+}
+
+export async function createClinicalCaseFromTriage(triageEventId: string, pseudonym: string) {
+  const supervisor = await currentSupervisor();
+  if (!supervisor?.profile) throw new Error("Unauthorised");
+  const supervisorId = supervisor.profile.id;
+
+  const event = await db.triageEvent.findUniqueOrThrow({
+    where: { id: triageEventId },
+    include: { student: { select: { schoolId: true } } },
+  });
+
+  if (event.referredSupervisorId !== supervisorId) throw new Error("Forbidden");
+
+  const schoolId = event.student.schoolId;
+  if (!schoolId) throw new Error("Student has no school assigned.");
+
+  const existing = await db.clinicalScreeningInfo.findFirst({
+    where: { studentId: event.studentId },
+  });
+  if (existing) throw new Error("A clinical case already exists for this student.");
+
+  await db.clinicalScreeningInfo.create({
+    data: {
+      studentId: event.studentId,
+      schoolId,
+      currentSupervisorId: supervisorId,
+      initialReferredFrom: event.fellowId,
+      initialReferredFromSpecified: "fellow",
+      sessionWhenCaseIsFlaggedId: event.sessionId,
+      pseudonym: pseudonym.trim(),
+      flagged: false,
+      riskStatus: event.riskScreenOutcome === "ANY_YES" ? "High" : "No",
+      caseStatus: "Active",
+    },
+  });
+
+  revalidatePath("/sc/triage");
 }
 
 export async function markTriageReviewed(triageEventId: string, note: string) {

@@ -1,153 +1,13 @@
 import { Suspense } from "react";
 import { getTriageAuditTrail } from "#/app/(platform)/cl/triage/audits/action";
+import AuditDataTable from "#/app/(platform)/cl/triage/audits/audit-data-table";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "#/components/ui/table";
-import { cn } from "#/lib/utils";
 
-const FIELD_LABELS: Record<string, string> = {
-  riskScreenOutcome: "Risk screen outcome",
-  riskNotCompletedReason: "Not-completed reason",
-  actionTaken: "Action taken",
-  referredSupervisorId: "Referred supervisor",
-  supervisorHandoffStatus: "Handoff status",
-  note: "Note",
-};
-
-const VALUE_LABELS: Record<string, string> = {
-  ALL_NO: "All NO",
-  ANY_YES: "Any YES",
-  NOT_COMPLETED: "Not completed",
-  STUDENT_LEFT: "Student left",
-  NO_PRIVACY: "No privacy",
-  TIME_CONSTRAINTS: "Time constraints",
-  OTHER: "Other",
-  SUPPORTED: "Supported",
-  REFERRED: "Referred",
-  ESCALATED: "Escalated",
-  REFUSED: "Refused",
-  INTERRUPTED: "Interrupted",
-  WARM_HANDOFF: "Warm handoff",
-  SUPERVISOR_NOTIFIED: "Supervisor notified",
-  COULD_NOT_REACH: "Could not reach",
-  STUDENT_REFUSED_NOTIFIED: "Student refused (notified)",
-};
-
-function formatValue(val: unknown): string {
-  if (val === null || val === undefined) return "—";
-  const str = String(val);
-  return VALUE_LABELS[str] ?? str;
-}
-
-function DiffCell({
-  changedFields,
-  before,
-  after,
-}: {
-  changedFields: string[];
-  before: Record<string, unknown>;
-  after: Record<string, unknown>;
-}) {
-  if (changedFields.length === 0)
-    return <span className="text-shamiri-text-grey text-xs">No changes recorded</span>;
-  return (
-    <div className="space-y-1">
-      {changedFields.map((field) => (
-        <div key={field} className="text-xs">
-          <span className="font-medium">{FIELD_LABELS[field] ?? field}: </span>
-          <span className="text-shamiri-light-red line-through">{formatValue(before[field])}</span>
-          <span className="mx-1 text-shamiri-text-grey">→</span>
-          <span className="text-green-base">{formatValue(after[field])}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-async function AuditTable() {
+async function AuditContent() {
   const audits = await getTriageAuditTrail();
-
-  if (audits.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-sm text-shamiri-text-grey">No edited triage records in this hub yet.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-lg border overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Fellow</TableHead>
-            <TableHead>Session</TableHead>
-            <TableHead>Session date</TableHead>
-            <TableHead>Edit time</TableHead>
-            <TableHead>Hours after session</TableHead>
-            <TableHead>Edited by</TableHead>
-            <TableHead>What changed</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {audits.map((audit) => (
-            <TableRow key={audit.id}>
-              <TableCell className="font-medium">{audit.fellowName}</TableCell>
-              <TableCell className="text-sm text-shamiri-text-grey">{audit.sessionLabel}</TableCell>
-              <TableCell className="text-sm text-shamiri-text-grey">
-                {audit.sessionDate
-                  ? new Date(audit.sessionDate).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "—"}
-              </TableCell>
-              <TableCell className="text-sm text-shamiri-text-grey">
-                {audit.editedAt.toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </TableCell>
-              <TableCell>
-                {audit.hoursAfterSession !== null ? (
-                  <span
-                    className={cn(
-                      "text-sm",
-                      audit.hoursAfterSession > 24 && "font-medium text-yellow-600",
-                    )}
-                  >
-                    {audit.hoursAfterSession}h
-                  </span>
-                ) : (
-                  <span className="text-shamiri-text-grey text-sm">—</span>
-                )}
-              </TableCell>
-              <TableCell className="text-sm">{audit.editedByName}</TableCell>
-              <TableCell>
-                <DiffCell
-                  changedFields={audit.changedFields}
-                  before={audit.before}
-                  after={audit.after}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  return <AuditDataTable audits={audits} />;
 }
 
 function TableSkeleton() {
@@ -181,7 +41,7 @@ export default function TriageAuditTrailPage() {
         </div>
         <Separator />
         <Suspense fallback={<TableSkeleton />}>
-          <AuditTable />
+          <AuditContent />
         </Suspense>
       </div>
     </div>

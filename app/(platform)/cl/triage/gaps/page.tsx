@@ -1,49 +1,14 @@
 import { AlertTriangle } from "lucide-react";
 import { Suspense } from "react";
 import { getEscalationGaps, getGapReportStats } from "#/app/(platform)/cl/triage/gaps/action";
-import { Badge } from "#/components/ui/badge";
+import GapDataTable from "#/app/(platform)/cl/triage/gaps/gap-data-table";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "#/components/ui/table";
 import { cn } from "#/lib/utils";
-
-function DaysCell({ days }: { days: number }) {
-  return (
-    <span
-      className={cn(
-        "text-sm font-medium",
-        days > 7 && "text-red-700",
-        days > 3 && days <= 7 && "text-red-base",
-      )}
-    >
-      {days}d
-    </span>
-  );
-}
-
-function HandoffCell({ status }: { status: string | null }) {
-  const labels: Record<string, string> = {
-    WARM_HANDOFF: "Warm handoff",
-    SUPERVISOR_NOTIFIED: "Notified",
-    COULD_NOT_REACH: "Could not reach",
-    STUDENT_REFUSED_NOTIFIED: "Student refused",
-  };
-  const label = status ? (labels[status] ?? status) : "Not recorded";
-  const isRed = status === "COULD_NOT_REACH";
-  return <span className={cn("text-sm", isRed && "font-medium text-red-base")}>{label}</span>;
-}
 
 async function GapStats() {
   const stats = await getGapReportStats();
-
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       <div className="rounded-lg border p-4">
@@ -80,71 +45,9 @@ async function GapStats() {
   );
 }
 
-async function GapTable() {
+async function GapContent() {
   const gaps = await getEscalationGaps();
-
-  if (gaps.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-10 text-center">
-        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-green-bg">
-          <AlertTriangle className="h-5 w-5 text-green-base" />
-        </div>
-        <p className="mt-3 text-sm font-medium">All escalations have open cases</p>
-        <p className="mt-1 text-sm text-shamiri-text-grey">
-          Every risk-positive triage event in this hub has a corresponding clinical case.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Student</TableHead>
-            <TableHead>School</TableHead>
-            <TableHead>Fellow</TableHead>
-            <TableHead>Escalation date</TableHead>
-            <TableHead>Days elapsed</TableHead>
-            <TableHead>Referred supervisor</TableHead>
-            <TableHead>Handoff status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {gaps.map((gap) => (
-            <TableRow key={gap.id}>
-              <TableCell className="font-medium">{gap.student.visibleId ?? "—"}</TableCell>
-              <TableCell>{gap.student.school?.schoolName ?? "—"}</TableCell>
-              <TableCell>{gap.fellow.fellowName ?? "—"}</TableCell>
-              <TableCell className="text-sm text-shamiri-text-grey">
-                {gap.createdAt.toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </TableCell>
-              <TableCell>
-                <DaysCell days={gap.daysSince} />
-              </TableCell>
-              <TableCell>
-                {gap.referredSupervisor?.supervisorName ? (
-                  <span className="text-sm">{gap.referredSupervisor.supervisorName}</span>
-                ) : (
-                  <Badge variant="outline" className="text-shamiri-text-grey">
-                    Unassigned
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                <HandoffCell status={gap.supervisorHandoffStatus} />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  return <GapDataTable gaps={gaps} />;
 }
 
 function StatsSkeleton() {
@@ -204,7 +107,7 @@ export default function EscalationGapsPage() {
           </p>
         </div>
         <Suspense fallback={<TableSkeleton />}>
-          <GapTable />
+          <GapContent />
         </Suspense>
       </div>
     </div>
