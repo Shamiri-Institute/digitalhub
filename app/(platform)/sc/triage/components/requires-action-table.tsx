@@ -11,13 +11,16 @@ import { Badge } from "#/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 
-type RequiresActionEvent = TriageEventForSupervisor & { viewSection: "requires_action" };
+type RequiresActionEvent = TriageEventForSupervisor & {
+  viewSection: "requires_action";
+};
 
 const HANDOFF_LABELS: Record<string, string> = {
   WARM_HANDOFF: "Warm handoff",
@@ -74,7 +77,7 @@ export default function RequiresActionTable({ events }: { events: RequiresAction
           return (
             <span>
               {label}
-              {date && <span className="ml-1 text-shamiri-text-grey">· {date}</span>}
+              {date && <span className="text-shamiri-text-grey ml-1">· {date}</span>}
             </span>
           );
         },
@@ -125,29 +128,29 @@ export default function RequiresActionTable({ events }: { events: RequiresAction
             <DropdownMenuTrigger asChild>
               <div className="absolute inset-0 border-l bg-white">
                 <div className="flex h-full w-full items-center justify-center">
-                  <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+                  <Icons.moreHorizontal className="text-shamiri-text-grey h-5 w-5" />
                 </div>
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>
-                <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                <span className="text-shamiri-text-grey text-xs font-medium uppercase">
                   Actions
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <div
-                className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black"
+              <DropdownMenuItem
+                className="text-shamiri-black"
                 onClick={() => setCaseTarget(row.original.id)}
               >
                 Create clinical case
-              </div>
-              <div
-                className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black"
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-shamiri-black"
                 onClick={() => setReviewTarget(row.original)}
               >
                 Mark reviewed
-              </div>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ),
@@ -177,7 +180,6 @@ export default function RequiresActionTable({ events }: { events: RequiresAction
       {reviewTarget && (
         <TriageReviewModal
           triageEventId={reviewTarget.id}
-          studentId={reviewTarget.studentId}
           isOpen={true}
           onClose={() => setReviewTarget(null)}
         />

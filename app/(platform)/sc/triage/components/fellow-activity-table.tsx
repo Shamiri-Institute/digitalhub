@@ -14,6 +14,7 @@ import { Badge } from "#/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -99,7 +100,7 @@ function FellowEventSubTable({
           return (
             <span>
               {label}
-              {date && <span className="ml-1 text-shamiri-text-grey">· {date}</span>}
+              {date && <span className="text-shamiri-text-grey ml-1">· {date}</span>}
             </span>
           );
         },
@@ -151,23 +152,23 @@ function FellowEventSubTable({
                 <DropdownMenuTrigger asChild>
                   <div className="absolute inset-0 border-l bg-white">
                     <div className="flex h-full w-full items-center justify-center">
-                      <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+                      <Icons.moreHorizontal className="text-shamiri-text-grey h-5 w-5" />
                     </div>
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>
-                    <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                    <span className="text-shamiri-text-grey text-xs font-medium uppercase">
                       Actions
                     </span>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <div
-                    className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black"
+                  <DropdownMenuItem
+                    className="text-shamiri-black"
                     onClick={() => onCreateCase(e.id)}
                   >
                     Create clinical case
-                  </div>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             );
@@ -208,7 +209,8 @@ export default function FellowActivityTable({
   const eventsByFellow = useMemo(
     () =>
       events.reduce<Record<string, TriageEventForSupervisor[]>>((acc, e) => {
-        (acc[e.fellowId] ??= []).push(e);
+        const list = (acc[e.fellowId] ??= []);
+        list.push(e);
         return acc;
       }, {}),
     [events],
@@ -298,7 +300,7 @@ export default function FellowActivityTable({
         id: "Breakdown",
         header: "Breakdown",
         cell: ({ row }) => (
-          <span className="text-xs text-shamiri-text-grey">{row.original.breakdown || "—"}</span>
+          <span className="text-shamiri-text-grey text-xs">{row.original.breakdown || "—"}</span>
         ),
       },
       {
@@ -307,7 +309,7 @@ export default function FellowActivityTable({
         cell: ({ row }) => (
           <span
             className={cn(
-              row.original.referredToOthers > 0 && "font-medium text-shamiri-light-red",
+              row.original.referredToOthers > 0 && "text-shamiri-light-red font-medium",
             )}
           >
             {row.original.referredToOthers}
@@ -320,7 +322,7 @@ export default function FellowActivityTable({
         cell: ({ row }) => {
           const rate = row.original.completionRate;
           return rate !== null ? (
-            <span className={cn(rate < 80 && "font-medium text-shamiri-light-red")}>{rate}%</span>
+            <span className={cn(rate < 80 && "text-shamiri-light-red font-medium")}>{rate}%</span>
           ) : (
             <span className="text-shamiri-text-grey">—</span>
           );
@@ -339,7 +341,10 @@ export default function FellowActivityTable({
         columns={fellowColumns}
         className="data-table data-table-action bg-white"
         emptyStateMessage="No fellows assigned to you yet."
-        columnVisibilityState={{ Breakdown: false, "Referred to others": false }}
+        columnVisibilityState={{
+          Breakdown: false,
+          "Referred to others": false,
+        }}
         getRowCanExpand={(row) => row.original.totalEvents > 0}
         renderSubComponent={({ row }) => (
           <FellowEventSubTable

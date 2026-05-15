@@ -25,13 +25,11 @@ export default function StudentAttendanceMenu({
   state,
   attendance,
   disabled,
-  hubVisibleId,
   hasExistingTriageEvent,
 }: {
   state: StudentAttendanceMenuState;
   attendance: StudentAttendanceData;
   disabled: boolean;
-  hubVisibleId?: string | null;
   hasExistingTriageEvent: boolean;
 }) {
   const openTriageModal = (readOnly: boolean) => {

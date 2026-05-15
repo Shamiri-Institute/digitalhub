@@ -178,7 +178,7 @@ export default function StudentAttendance({
             setMarkAttendanceDialog(true);
           }}
         >
-          <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
+          <Icons.fileDown className="text-shamiri-text-grey h-4 w-4" />
           <span>Mark student attendance</span>
         </Button>
       </div>
@@ -257,7 +257,6 @@ export default function StudentAttendance({
             setHistoryModalOpen,
             triageEventsByStudent,
             session,
-            hubVisibleId: session?.hub?.visibleId,
             role,
           })}
           editColumns={true}
@@ -318,9 +317,9 @@ export default function StudentAttendance({
                   <span>{attendance?.studentName}</span>
                 )}
               </span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
               <span>{sessionDisplayName(session?.session?.sessionName ?? "")}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
               <span>{session?.school?.schoolName ?? session?.venue}</span>
             </p>
           </DialogAlertWidget>
@@ -370,9 +369,18 @@ export type StudentAttendanceData = Prisma.StudentGetPayload<{
 }>;
 
 const TRIAGE_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
-  SUPPORTED: { label: "Triaged", className: "bg-gray-100 text-gray-600 border-gray-200" },
-  REFERRED: { label: "Escalated", className: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  ESCALATED: { label: "Escalated", className: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+  SUPPORTED: {
+    label: "Triaged",
+    className: "bg-gray-100 text-gray-600 border-gray-200",
+  },
+  REFERRED: {
+    label: "Escalated",
+    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  },
+  ESCALATED: {
+    label: "Escalated",
+    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  },
   REFUSED: {
     label: "Refused referral",
     className: "bg-yellow-50 text-yellow-700 border-yellow-200",
@@ -389,7 +397,7 @@ function TriageBadge({ event }: { event: TriageEventWithRelations }) {
 
   if (isIncomplete) {
     return (
-      <span className="rounded border px-1.5 py-0.5 text-xs text-shamiri-text-grey">
+      <span className="text-shamiri-text-grey rounded border px-1.5 py-0.5 text-xs">
         Incomplete
       </span>
     );
@@ -426,8 +434,8 @@ function TriageSessionSummary({
   if (incomplete > 0) parts.push(`${incomplete} incomplete`);
 
   return (
-    <p className="text-sm text-shamiri-text-grey">
-      <span className="font-medium text-shamiri-text-dark-grey">
+    <p className="text-shamiri-text-grey text-sm">
+      <span className="text-shamiri-text-dark-grey font-medium">
         {total} student{total !== 1 ? "s" : ""} triaged
       </span>
       {parts.length > 0 && ` — ${parts.join(", ")}`}
@@ -445,7 +453,6 @@ const columns = (state: {
   setHistoryModalOpen: Dispatch<SetStateAction<boolean>>;
   triageEventsByStudent: Record<string, TriageEventWithRelations>;
   session: Session | null;
-  hubVisibleId?: string | null;
   role: ImplementerRole;
 }): ColumnDef<StudentAttendanceData>[] => [
   {
@@ -458,7 +465,7 @@ const columns = (state: {
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
         className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+          "border-shamiri-light-grey data-[state=checked]:bg-shamiri-new-blue h-5 w-5 bg-white"
         }
       />
     ),
@@ -470,7 +477,7 @@ const columns = (state: {
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             aria-label="Select row"
             className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+              "border-shamiri-light-grey data-[state=checked]:bg-shamiri-new-blue h-5 w-5 bg-white"
             }
           />
         </div>
@@ -538,7 +545,6 @@ const columns = (state: {
         }}
         attendance={row.original}
         disabled={!row.getCanSelect()}
-        hubVisibleId={state.hubVisibleId}
         hasExistingTriageEvent={!!state.triageEventsByStudent[row.original.id]}
       />
     ),
