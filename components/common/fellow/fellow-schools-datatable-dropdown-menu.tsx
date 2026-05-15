@@ -29,16 +29,7 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
     role: ImplementerRole;
   };
 }) {
-  console.log(
-    `[FellowSchoolsDatatableDropdownMenu] RENDER - fellowId: ${fellowRow.id}, role: ${state.role}`,
-  );
-
-  function handleSetFellow(action: string) {
-    console.log(
-      `[FellowSchoolsDatatableDropdownMenu] ACTION: ${action} - Setting fellow:`,
-      fellowRow.id,
-      fellowRow.fellowName,
-    );
+  function handleSetFellow() {
     state.setFellow(fellowRow);
   }
 
@@ -59,73 +50,51 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
         {state.role === "SUPERVISOR" ? (
           <DropdownMenuItem
             onClick={() => {
-              console.log("[FellowSchoolsDatatableDropdownMenu] CLICKED: Edit fellow information");
-              handleSetFellow("Edit fellow information");
+              handleSetFellow();
               state.setEditFellowDialog(true);
-              console.log(
-                "[FellowSchoolsDatatableDropdownMenu] STATE: editFellowDialog set to true",
-              );
             }}
           >
             Edit fellow information
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem
-          onClick={() => {
-            console.log("[FellowSchoolsDatatableDropdownMenu] CLICKED: Session attendance history");
-            handleSetFellow("Session attendance history");
-            state.setAttendanceHistoryDialog(true);
-            console.log(
-              "[FellowSchoolsDatatableDropdownMenu] STATE: attendanceHistoryDialog set to true",
-            );
-          }}
+            onClick={() => {
+              handleSetFellow();
+              state.setAttendanceHistoryDialog(true);
+            }}
         >
           Session attendance history
         </DropdownMenuItem>
         {state.role === "SUPERVISOR" ? (
           <>
             <DropdownMenuItem
-              onClick={() => {
-                console.log(
-                  "[FellowSchoolsDatatableDropdownMenu] CLICKED: Submit weekly fellow evaluation",
-                );
-                handleSetFellow("Submit weekly fellow evaluation");
-                state.setWeeklyEvaluationDialog(true);
-                console.log(
-                  "[FellowSchoolsDatatableDropdownMenu] STATE: weeklyEvaluationDialog set to true",
-                );
-              }}
+                onClick={() => {
+                  handleSetFellow();
+                  state.setWeeklyEvaluationDialog(true);
+                }}
             >
               Submit weekly fellow evaluation
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                console.log("[FellowSchoolsDatatableDropdownMenu] CLICKED: Request repayment");
+                handleSetFellow();
               }}
             >
               Request repayment
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
-                console.log("[FellowSchoolsDatatableDropdownMenu] CLICKED: Submit Complaint");
-                handleSetFellow("Submit Complaint");
-                state.setComplaintsDialog(true);
-                console.log(
-                  "[FellowSchoolsDatatableDropdownMenu] STATE: complaintsDialog set to true",
-                );
-              }}
+                onClick={() => {
+                  handleSetFellow();
+                  state.setComplaintsDialog(true);
+                }}
             >
               Submit Complaint
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
-                console.log("[FellowSchoolsDatatableDropdownMenu] CLICKED: Upload Contract");
-                handleSetFellow("Upload Contract");
-                state.setUploadContractDialog(true);
-                console.log(
-                  "[FellowSchoolsDatatableDropdownMenu] STATE: uploadContractDialog set to true",
-                );
-              }}
+                onClick={() => {
+                  handleSetFellow();
+                  state.setUploadContractDialog(true);
+                }}
             >
               <div className="flex w-full items-center justify-between space-x-2">
                 Upload Contract
@@ -133,16 +102,10 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
-                console.log(
-                  "[FellowSchoolsDatatableDropdownMenu] CLICKED: Upload Identification document",
-                );
-                handleSetFellow("Upload Identification document");
-                state.setUploadIdDialog(true);
-                console.log(
-                  "[FellowSchoolsDatatableDropdownMenu] STATE: uploadIdDialog set to true",
-                );
-              }}
+                onClick={() => {
+                  handleSetFellow();
+                  state.setUploadIdDialog(true);
+                }}
             >
               <div className="flex w-full items-center justify-between space-x-2">
                 Upload Identification document
@@ -150,16 +113,10 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
-                console.log(
-                  "[FellowSchoolsDatatableDropdownMenu] CLICKED: Upload qualification document",
-                );
-                handleSetFellow("Upload qualification document");
-                state.setUploadQualificationDialog(true);
-                console.log(
-                  "[FellowSchoolsDatatableDropdownMenu] STATE: uploadQualificationDialog set to true",
-                );
-              }}
+                onClick={() => {
+                  handleSetFellow();
+                  state.setUploadQualificationDialog(true);
+                }}
             >
               <div className="flex w-full items-center justify-between gap-x-6">
                 Upload qualification document
