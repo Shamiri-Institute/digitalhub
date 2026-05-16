@@ -48,20 +48,6 @@ export default function FellowSchoolsDatatable({
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
 
-  const mainColumnState = useMemo(() => {
-    return {
-      setFellow,
-      setWeeklyEvaluationDialog,
-      setEditFellowDialog,
-      setAttendanceHistoryDialog,
-      setUploadContractDialog,
-      setUploadIdDialog,
-      setUploadQualificationDialog,
-      setComplaintsDialog,
-      role,
-    };
-  }, [role]);
-
   const mainColumns = useMemo(() => {
     const columns = {
       setFellow,
@@ -76,16 +62,6 @@ export default function FellowSchoolsDatatable({
     };
 
     return fellowSchoolsColumns({ state: columns });
-  }, [role]);
-
-  const subColumnState = useMemo(() => {
-    return {
-      setFellowGroup,
-      setAttendanceDialog,
-      setStudentsDialog,
-      setEvaluationDialog,
-      role,
-    };
   }, [role]);
 
   const subColumnsMemo = useMemo(() => {
