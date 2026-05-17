@@ -276,8 +276,7 @@ export default function FellowSchoolsDatatable({
                   <AlertTitle className="flex gap-2">
                     <InfoIcon className="mt-1 h-4 w-4 shrink-0" />
                     <span className="text-base">
-                      This group has no students. Please contact the Fellow to
-                      add them.
+                      This group has no students. Please contact the Fellow to add them.
                     </span>
                   </AlertTitle>
                 </Alert>
