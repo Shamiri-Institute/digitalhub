@@ -275,6 +275,7 @@ model Student {
   studentGroupTransferTrail StudentGroupTransferTrail[]
   triageEvents              TriageEvent[]
 
+  @@index([assignedGroupId])
   @@map("students")
 }
 
@@ -991,6 +992,7 @@ model InterventionSession {
   sessionRecordings       SessionRecording[]
   triageEvents            TriageEvent[]
 
+  @@index([schoolId])
   @@map("intervention_sessions")
 }
 
