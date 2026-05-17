@@ -952,42 +952,72 @@ export async function submitFellowComplaint(data: z.infer<typeof SubmitComplaint
   }
 }
 
+type FellowGroupStats = {
+  group_count: number;
+  total_students: number;
+  total_sessions: number;
+};
+
 export async function getFellowGroupsAndHubData(fellowId: string) {
-  return db.fellow.findFirst({
+  if (!fellowId) return null;
+
+  const statsPromise = db.$queryRaw<FellowGroupStats[]>`
+    SELECT
+      COUNT(*)::int                 AS group_count,
+      COALESCE(SUM(sc.c), 0)::int   AS total_students,
+      COALESCE(SUM(ic.c), 0)::int   AS total_sessions
+    FROM intervention_groups ig
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*)::int AS c FROM students
+      WHERE assigned_group_id = ig.id
+    ) sc ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*)::int AS c FROM intervention_sessions
+      WHERE school_id = ig.school_id
+    ) ic ON TRUE
+    WHERE ig.leader_id = ${fellowId}
+  `;
+
+  const fellow = await db.fellow.findFirst({
     where: { id: fellowId },
-    include: {
-      groups: {
-        include: {
-          _count: { select: { students: true } },
-          school: {
-            include: {
-              _count: { select: { interventionSessions: true } },
-            },
-          },
-        },
-      },
-      hub: {
-        include: {
-          schools: {
-            include: {
-              assignedSupervisor: true,
-              interventionSessions: {
-                include: {
-                  sessionRatings: true,
-                  session: true,
-                },
-              },
-              students: {
-                include: {
-                  assignedGroup: true,
-                  _count: { select: { clinicalCases: true } },
-                },
-              },
-            },
-          },
-          sessions: true,
-        },
-      },
-    },
+    select: { hubId: true },
   });
+
+  if (!fellow) return null;
+
+  const [statsRows, hub] = await Promise.all([
+    statsPromise,
+    fellow.hubId
+      ? db.hub.findFirst({
+          where: { id: fellow.hubId },
+          include: {
+            schools: {
+              include: {
+                assignedSupervisor: true,
+                interventionSessions: {
+                  include: {
+                    sessionRatings: true,
+                    session: true,
+                  },
+                },
+                students: {
+                  include: {
+                    assignedGroup: true,
+                    _count: { select: { clinicalCases: true } },
+                  },
+                },
+              },
+            },
+            sessions: true,
+          },
+        })
+      : null,
+  ]);
+
+  const stats = statsRows[0] ?? {
+    group_count: 0,
+    total_students: 0,
+    total_sessions: 0,
+  };
+  return { stats, hub };
 }
