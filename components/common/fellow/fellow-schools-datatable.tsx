@@ -123,15 +123,17 @@ export default function FellowSchoolsDatatable({
   }
 
   useEffect(() => {
-    setFellow(fellows.find((f) => f.id === fellowGroup?.leaderId) ?? null);
+    setFellow(
+      fellows.find((fellow) => fellow.id === fellowGroup?.leaderId) ?? null,
+    );
   }, [fellowGroup, fellows]);
 
   useEffect(() => {
     const group = fellows
-      .find((f) => f.id === fellowGroup?.leaderId)
-      ?.groups.find((g) => g.id === fellowGroup?.id);
+      .find((fellow) => fellow.id === fellowGroup?.leaderId)
+      ?.groups.find((group) => group.id === fellowGroup?.id);
     setFellowGroup(group);
-  }, [fellows, fellowGroup?.id, fellowGroup?.leaderId]);
+  }, [fellows]);
 
   return (
     <>
