@@ -58,20 +58,20 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem
-            onClick={() => {
-              handleSetFellow();
-              state.setAttendanceHistoryDialog(true);
-            }}
+          onClick={() => {
+            handleSetFellow();
+            state.setAttendanceHistoryDialog(true);
+          }}
         >
           Session attendance history
         </DropdownMenuItem>
         {state.role === "SUPERVISOR" ? (
           <>
             <DropdownMenuItem
-                onClick={() => {
-                  handleSetFellow();
-                  state.setWeeklyEvaluationDialog(true);
-                }}
+              onClick={() => {
+                handleSetFellow();
+                state.setWeeklyEvaluationDialog(true);
+              }}
             >
               Submit weekly fellow evaluation
             </DropdownMenuItem>
@@ -83,18 +83,18 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
               Request repayment
             </DropdownMenuItem>
             <DropdownMenuItem
-                onClick={() => {
-                  handleSetFellow();
-                  state.setComplaintsDialog(true);
-                }}
+              onClick={() => {
+                handleSetFellow();
+                state.setComplaintsDialog(true);
+              }}
             >
               Submit Complaint
             </DropdownMenuItem>
             <DropdownMenuItem
-                onClick={() => {
-                  handleSetFellow();
-                  state.setUploadContractDialog(true);
-                }}
+              onClick={() => {
+                handleSetFellow();
+                state.setUploadContractDialog(true);
+              }}
             >
               <div className="flex w-full items-center justify-between space-x-2">
                 Upload Contract
@@ -102,10 +102,10 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem
-                onClick={() => {
-                  handleSetFellow();
-                  state.setUploadIdDialog(true);
-                }}
+              onClick={() => {
+                handleSetFellow();
+                state.setUploadIdDialog(true);
+              }}
             >
               <div className="flex w-full items-center justify-between space-x-2">
                 Upload Identification document
@@ -113,10 +113,10 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem
-                onClick={() => {
-                  handleSetFellow();
-                  state.setUploadQualificationDialog(true);
-                }}
+              onClick={() => {
+                handleSetFellow();
+                state.setUploadQualificationDialog(true);
+              }}
             >
               <div className="flex w-full items-center justify-between gap-x-6">
                 Upload qualification document
