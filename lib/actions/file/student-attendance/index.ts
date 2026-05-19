@@ -1,20 +1,18 @@
 "use server";
 
 import { ImplementerRole } from "@prisma/client";
-import { db } from "#/lib/db";
 import { getCurrentUserSession } from "#/app/auth";
+import { db } from "#/lib/db";
 
-export interface CreateStudentAttendanceDocPayload{
+export interface CreateStudentAttendanceDocPayload {
   fileName: string;
   groupId: string;
   sessionId: string;
-  uploadedBy: string;
   link: string;
 }
 
 export async function createStudentAttendanceDocument(payload: CreateStudentAttendanceDocPayload) {
   try {
-
     const session = await getCurrentUserSession();
 
     if (
@@ -25,14 +23,18 @@ export async function createStudentAttendanceDocument(payload: CreateStudentAtte
       throw new Error("The session has not been authenticated");
     }
 
-    await db.attendanceDocuments.create({ data: payload });
+    await db.attendanceDocuments.create({
+      data: {
+        ...payload,
+        uploadedBy: session.user.id,
+      },
+    });
 
     return {
       success: true,
       message: "Successfully uploaded the document.",
     };
   } catch (error) {
-
     console.error(error);
     return {
       error: "Something went wrong uploading the document",
