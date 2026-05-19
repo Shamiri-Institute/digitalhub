@@ -1,5 +1,6 @@
 import type { ImplementerRole } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
+import { memo } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -13,7 +14,7 @@ import type { FellowsData } from "../../../app/(platform)/sc/actions";
 
 export type FellowGroupData = FellowsData["groups"][number];
 
-export default function FellowSchoolDatatableDropdownMenu({
+const FellowSchoolDatatableDropdownMenu = memo(function FellowSchoolDatatableDropdownMenu({
   group,
   state,
 }: {
@@ -69,4 +70,6 @@ export default function FellowSchoolDatatableDropdownMenu({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
+
+export default FellowSchoolDatatableDropdownMenu;
