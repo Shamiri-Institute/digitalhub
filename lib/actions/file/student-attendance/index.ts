@@ -1,0 +1,42 @@
+"use server";
+
+import { ImplementerRole } from "@prisma/client";
+import { db } from "#/lib/db";
+import { getCurrentUserSession } from "#/app/auth";
+
+export interface CreateStudentAttendanceDocPayload{
+  fileName: string;
+  groupId: string;
+  sessionId: string;
+  uploadedBy: string;
+  link: string;
+}
+
+export async function createStudentAttendanceDocument(payload: CreateStudentAttendanceDocPayload) {
+  try {
+
+    const session = await getCurrentUserSession();
+
+    if (
+      !session?.user.id ||
+      (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
+        session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)
+    ) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    await db.attendanceDocuments.create({ data: payload });
+
+    return {
+      success: true,
+      message: "Successfully uploaded the document.",
+    };
+  } catch (error) {
+
+    console.error(error);
+    return {
+      error: "Something went wrong uploading the document",
+      success: false,
+    };
+  }
+}
