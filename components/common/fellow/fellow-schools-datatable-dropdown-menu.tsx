@@ -1,5 +1,6 @@
 import type { ImplementerRole } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
+import { memo } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -11,7 +12,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import type { FellowsData } from "../../../app/(platform)/sc/actions";
 
-export default function FellowSchoolsDatatableDropdownMenu({
+const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableDropdownMenu({
   fellowRow,
   state,
 }: {
@@ -28,6 +29,10 @@ export default function FellowSchoolsDatatableDropdownMenu({
     role: ImplementerRole;
   };
 }) {
+  function handleSetFellow() {
+    state.setFellow(fellowRow);
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -45,7 +50,7 @@ export default function FellowSchoolsDatatableDropdownMenu({
         {state.role === "SUPERVISOR" ? (
           <DropdownMenuItem
             onClick={() => {
-              state.setFellow(fellowRow);
+              handleSetFellow();
               state.setEditFellowDialog(true);
             }}
           >
@@ -54,7 +59,7 @@ export default function FellowSchoolsDatatableDropdownMenu({
         ) : null}
         <DropdownMenuItem
           onClick={() => {
-            state.setFellow(fellowRow);
+            handleSetFellow();
             state.setAttendanceHistoryDialog(true);
           }}
         >
@@ -64,16 +69,22 @@ export default function FellowSchoolsDatatableDropdownMenu({
           <>
             <DropdownMenuItem
               onClick={() => {
-                state.setFellow(fellowRow);
+                handleSetFellow();
                 state.setWeeklyEvaluationDialog(true);
               }}
             >
               Submit weekly fellow evaluation
             </DropdownMenuItem>
-            <DropdownMenuItem>Request repayment</DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setFellow(fellowRow);
+                handleSetFellow();
+              }}
+            >
+              Request repayment
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                handleSetFellow();
                 state.setComplaintsDialog(true);
               }}
             >
@@ -81,7 +92,7 @@ export default function FellowSchoolsDatatableDropdownMenu({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setFellow(fellowRow);
+                handleSetFellow();
                 state.setUploadContractDialog(true);
               }}
             >
@@ -92,7 +103,7 @@ export default function FellowSchoolsDatatableDropdownMenu({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setFellow(fellowRow);
+                handleSetFellow();
                 state.setUploadIdDialog(true);
               }}
             >
@@ -103,7 +114,7 @@ export default function FellowSchoolsDatatableDropdownMenu({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setFellow(fellowRow);
+                handleSetFellow();
                 state.setUploadQualificationDialog(true);
               }}
             >
@@ -117,4 +128,6 @@ export default function FellowSchoolsDatatableDropdownMenu({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
+
+export default FellowSchoolsDatatableDropdownMenu;

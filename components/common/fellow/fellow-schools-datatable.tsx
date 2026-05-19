@@ -2,7 +2,7 @@
 import type { ImplementerRole, Project } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
@@ -46,6 +46,34 @@ export default function FellowSchoolsDatatable({
   const [attendanceDialog, setAttendanceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
+
+  const mainColumns = useMemo(() => {
+    const columns = {
+      setFellow,
+      setWeeklyEvaluationDialog,
+      setEditFellowDialog,
+      setAttendanceHistoryDialog,
+      setUploadContractDialog,
+      setUploadIdDialog,
+      setUploadQualificationDialog,
+      setComplaintsDialog,
+      role,
+    };
+
+    return fellowSchoolsColumns({ state: columns });
+  }, [role]);
+
+  const subColumnsMemo = useMemo(() => {
+    const columns = {
+      setFellowGroup,
+      setAttendanceDialog,
+      setStudentsDialog,
+      setEvaluationDialog,
+      role,
+    };
+
+    return subColumns({ state: columns });
+  }, [role]);
 
   function renderTableActions() {
     return role !== "FELLOW" ? (
@@ -101,19 +129,7 @@ export default function FellowSchoolsDatatable({
     <>
       <DataTable
         data={fellows}
-        columns={fellowSchoolsColumns({
-          state: {
-            setFellow,
-            setWeeklyEvaluationDialog,
-            setEditFellowDialog,
-            setAttendanceHistoryDialog,
-            setUploadContractDialog,
-            setUploadIdDialog,
-            setUploadQualificationDialog,
-            setComplaintsDialog,
-            role,
-          },
-        })}
+        columns={mainColumns}
         className={"data-table data-table-action bg-white lg:mt-4"}
         renderTableActions={renderTableActions()}
         emptyStateMessage="No fellows assigned to you"
@@ -133,15 +149,7 @@ export default function FellowSchoolsDatatable({
           <DataTable
             data={row.original.groups}
             editColumns={false}
-            columns={subColumns({
-              state: {
-                setFellowGroup,
-                setAttendanceDialog,
-                setStudentsDialog,
-                setEvaluationDialog,
-                role,
-              },
-            })}
+            columns={subColumnsMemo}
             disableSearch={true}
             disablePagination={true}
             className={"data-table data-table-action mt-0 border-0 bg-white"}
