@@ -13,7 +13,7 @@ import SessionRatings from "#/components/common/session/session-ratings";
 import type { Session } from "#/components/common/session/sessions-provider";
 import StudentAttendance from "#/components/common/student/student-attendance";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
-import UploadStudentAttendanceDocument from "#/components/common/schools/upload-student-attendance";
+import UploadAttendanceDocumentDialog from "#/components/common/session/upload-attendance-dialog";
 import DataTable from "#/components/data-table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 
@@ -192,20 +192,13 @@ export default function SessionsDatatable({
           supervisorId={supervisorId}
         />
       ) : null}
-      <Dialog open={uploadAttendanceDialog} onOpenChange={setUploadAttendanceDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Upload Attendance Document</DialogTitle>
-          </DialogHeader>
-          {session && groupId && (
-            <UploadStudentAttendanceDocument
-              groupId={groupId}
-              sessionId={session.id}
-              onClose={setUploadAttendanceDialog}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <UploadAttendanceDocumentDialog
+        session={session}
+        groupId={groupId}
+        role={role}
+        open={uploadAttendanceDialog}
+        onOpenChange={setUploadAttendanceDialog}
+      />
       <Dialog open={viewFileDialog} onOpenChange={setViewFileDialog}>
         <DialogContent>
           <DialogHeader>
