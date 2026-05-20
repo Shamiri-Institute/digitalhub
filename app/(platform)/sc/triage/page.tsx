@@ -62,11 +62,13 @@ async function TriageStats() {
   );
 }
 
+const STAT_SKELETONS = ["s1", "s2", "s3", "s4"];
+
 function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="rounded-lg border p-4 space-y-2">
+      {STAT_SKELETONS.map((id) => (
+        <div key={id} className="rounded-lg border p-4 space-y-2">
           <Skeleton className="h-3 w-28" />
           <Skeleton className="h-7 w-12" />
         </div>
