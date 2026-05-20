@@ -10,11 +10,13 @@ async function FidelityContent() {
   return <FidelityDataTable rows={rows} />;
 }
 
+const FIDELITY_SKELETON_ROWS = ["r1", "r2", "r3", "r4", "r5", "r6"];
+
 function TableSkeleton() {
   return (
     <div className="rounded-lg border">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 border-b px-4 py-3 last:border-0">
+      {FIDELITY_SKELETON_ROWS.map((id) => (
+        <div key={id} className="flex items-center gap-4 border-b px-4 py-3 last:border-0">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-20" />
