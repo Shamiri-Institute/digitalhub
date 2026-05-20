@@ -10,11 +10,13 @@ async function AuditContent() {
   return <AuditDataTable audits={audits} />;
 }
 
+const AUDIT_SKELETON_ROWS = ["r1", "r2", "r3", "r4", "r5"];
+
 function TableSkeleton() {
   return (
     <div className="rounded-lg border">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex gap-4 border-b px-4 py-3 last:border-0">
+      {AUDIT_SKELETON_ROWS.map((id) => (
+        <div key={id} className="flex gap-4 border-b px-4 py-3 last:border-0">
           <Skeleton className="h-4 w-28" />
           <Skeleton className="h-4 w-16" />
           <Skeleton className="h-4 w-24" />
