@@ -12,6 +12,7 @@ import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
 import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
 import StudentAttendanceMenu from "#/components/common/student/student-attendance-menu";
+import StudentTriageHistoryModal from "#/components/common/student/student-triage-history-modal";
 import TriageEventModal from "#/components/common/student/triage-event-modal";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -34,8 +35,9 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
-import { getTriageEventByStudentAndSession } from "#/lib/actions/triage";
-import { sessionDisplayName } from "#/lib/utils";
+import type { TriageEventWithRelations } from "#/lib/actions/triage";
+import { getTriageEventByStudentAndSession, getTriageEventsForSession } from "#/lib/actions/triage";
+import { cn, sessionDisplayName } from "#/lib/utils";
 
 export default function StudentAttendance({
   isOpen,
@@ -81,10 +83,16 @@ export default function StudentAttendance({
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<StudentAttendanceData>[]>([]);
   const [triageModalOpen, setTriageModalOpen] = useState(false);
+  const [triageReadOnly, setTriageReadOnly] = useState(false);
   const [triageStudent, setTriageStudent] = useState<StudentAttendanceData | undefined>();
   const [triageExistingEvent, setTriageExistingEvent] = useState<Awaited<
     ReturnType<typeof getTriageEventByStudentAndSession>
   > | null>(null);
+  const [triageEventsByStudent, setTriageEventsByStudent] = useState<
+    Record<string, TriageEventWithRelations>
+  >({});
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [historyStudent, setHistoryStudent] = useState<StudentAttendanceData | undefined>();
 
   const form = useForm<{ fellow: string }>({
     defaultValues: {
@@ -121,6 +129,25 @@ export default function StudentAttendance({
     void load();
   }, [triageModalOpen, triageStudent?.id, session?.id]);
 
+  const loadTriageEventsForSession = async () => {
+    if (!session?.id) return;
+    try {
+      const events = await getTriageEventsForSession(session.id);
+      setTriageEventsByStudent(Object.fromEntries(events.map((e) => [e.studentId, e])));
+    } catch {
+      setTriageEventsByStudent({});
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setTriageEventsByStudent({});
+      return;
+    }
+    void loadTriageEventsForSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- session.id is the only changing dep
+  }, [isOpen, session?.id]);
+
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     const [res] = await Promise.all([
       await markStudentAttendance(data),
@@ -151,7 +178,7 @@ export default function StudentAttendance({
             setMarkAttendanceDialog(true);
           }}
         >
-          <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
+          <Icons.fileDown className="text-shamiri-text-grey h-4 w-4" />
           <span>Mark student attendance</span>
         </Button>
       </div>
@@ -216,14 +243,20 @@ export default function StudentAttendance({
           </div>
         ) : null}
 
+        {Object.keys(triageEventsByStudent).length > 0 && (
+          <TriageSessionSummary triageEventsByStudent={triageEventsByStudent} />
+        )}
         <DataTable
           columns={columns({
             setAttendance,
             setAttendanceDialog: setMarkAttendanceDialog,
             setTriageStudent,
             setTriageModalOpen,
+            setTriageReadOnly,
+            setHistoryStudent,
+            setHistoryModalOpen,
+            triageEventsByStudent,
             session,
-            hubVisibleId: session?.hub?.visibleId,
             role,
           })}
           editColumns={true}
@@ -284,9 +317,9 @@ export default function StudentAttendance({
                   <span>{attendance?.studentName}</span>
                 )}
               </span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
               <span>{sessionDisplayName(session?.session?.sessionName ?? "")}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
               <span>{session?.school?.schoolName ?? session?.venue}</span>
             </p>
           </DialogAlertWidget>
@@ -294,14 +327,29 @@ export default function StudentAttendance({
         {session && triageStudent && (
           <TriageEventModal
             isOpen={triageModalOpen}
-            setIsOpen={setTriageModalOpen}
+            setIsOpen={(open) => {
+              setTriageModalOpen(open);
+              if (!open) setTriageReadOnly(false);
+            }}
             studentId={triageStudent.id}
             studentName={triageStudent.studentName}
             sessionId={session.id}
             sessionName={sessionDisplayName(session.session?.sessionName ?? "")}
             hubId={session.hubId ?? undefined}
             existingEvent={triageExistingEvent ?? undefined}
-            onSuccess={refresh}
+            readOnly={triageReadOnly}
+            onSuccess={async () => {
+              await refresh();
+              await loadTriageEventsForSession();
+            }}
+          />
+        )}
+        {historyStudent && (
+          <StudentTriageHistoryModal
+            isOpen={historyModalOpen}
+            onClose={() => setHistoryModalOpen(false)}
+            studentId={historyStudent.id}
+            studentName={historyStudent.studentName}
           />
         )}
       </DialogContent>
@@ -320,13 +368,91 @@ export type StudentAttendanceData = Prisma.StudentGetPayload<{
   };
 }>;
 
+const TRIAGE_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
+  SUPPORTED: {
+    label: "Triaged",
+    className: "bg-gray-100 text-gray-600 border-gray-200",
+  },
+  REFERRED: {
+    label: "Escalated",
+    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  },
+  ESCALATED: {
+    label: "Escalated",
+    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  },
+  REFUSED: {
+    label: "Refused referral",
+    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  },
+  INTERRUPTED: {
+    label: "Interrupted",
+    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  },
+};
+
+function TriageBadge({ event }: { event: TriageEventWithRelations }) {
+  const action = event.actionTaken;
+  const isIncomplete = event.riskScreenOutcome === "NOT_COMPLETED" && !action;
+
+  if (isIncomplete) {
+    return (
+      <span className="text-shamiri-text-grey rounded border px-1.5 py-0.5 text-xs">
+        Incomplete
+      </span>
+    );
+  }
+
+  const config = action ? TRIAGE_BADGE_CONFIG[action] : null;
+  if (!config) return null;
+
+  return (
+    <span className={cn("rounded border px-1.5 py-0.5 text-xs", config.className)}>
+      {config.label}
+    </span>
+  );
+}
+
+function TriageSessionSummary({
+  triageEventsByStudent,
+}: {
+  triageEventsByStudent: Record<string, TriageEventWithRelations>;
+}) {
+  const events = Object.values(triageEventsByStudent);
+  const total = events.length;
+  if (total === 0) return null;
+
+  const escalated = events.filter(
+    (e) => e.actionTaken === "ESCALATED" || e.actionTaken === "REFERRED",
+  ).length;
+  const supported = events.filter((e) => e.actionTaken === "SUPPORTED").length;
+  const incomplete = events.filter((e) => e.riskScreenOutcome === "NOT_COMPLETED").length;
+
+  const parts: string[] = [];
+  if (escalated > 0) parts.push(`${escalated} escalated`);
+  if (supported > 0) parts.push(`${supported} supported`);
+  if (incomplete > 0) parts.push(`${incomplete} incomplete`);
+
+  return (
+    <p className="text-shamiri-text-grey text-sm">
+      <span className="text-shamiri-text-dark-grey font-medium">
+        {total} student{total !== 1 ? "s" : ""} triaged
+      </span>
+      {parts.length > 0 && ` — ${parts.join(", ")}`}
+    </p>
+  );
+}
+
 const columns = (state: {
   setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setTriageStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setTriageModalOpen: Dispatch<SetStateAction<boolean>>;
+  setTriageReadOnly: Dispatch<SetStateAction<boolean>>;
+  setHistoryStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
+  setHistoryModalOpen: Dispatch<SetStateAction<boolean>>;
+  triageEventsByStudent: Record<string, TriageEventWithRelations>;
   session: Session | null;
-  hubVisibleId?: string | null;
   role: ImplementerRole;
 }): ColumnDef<StudentAttendanceData>[] => [
   {
@@ -339,7 +465,7 @@ const columns = (state: {
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
         className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+          "border-shamiri-light-grey data-[state=checked]:bg-shamiri-new-blue h-5 w-5 bg-white"
         }
       />
     ),
@@ -351,7 +477,7 @@ const columns = (state: {
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             aria-label="Select row"
             className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+              "border-shamiri-light-grey data-[state=checked]:bg-shamiri-new-blue h-5 w-5 bg-white"
             }
           />
         </div>
@@ -396,9 +522,11 @@ const columns = (state: {
         row.original.studentAttendances.find((attendance) => {
           return attendance.sessionId === state.session?.id;
         })?.attended ?? null;
+      const triageEvent = state.triageEventsByStudent[row.original.id];
       return (
-        <div className="flex flex-row gap-1">
+        <div className="flex flex-row flex-wrap items-center gap-1">
           <AttendanceStatusWidget attended={attended} />
+          {triageEvent && <TriageBadge event={triageEvent} />}
         </div>
       );
     },
@@ -410,10 +538,14 @@ const columns = (state: {
     id: "button",
     cell: ({ row }) => (
       <StudentAttendanceMenu
-        state={state}
+        state={{
+          ...state,
+          setHistoryStudent: state.setHistoryStudent,
+          setHistoryModalOpen: state.setHistoryModalOpen,
+        }}
         attendance={row.original}
         disabled={!row.getCanSelect()}
-        hubVisibleId={state.hubVisibleId}
+        hasExistingTriageEvent={!!state.triageEventsByStudent[row.original.id]}
       />
     ),
     enableHiding: false,

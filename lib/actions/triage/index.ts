@@ -1,92 +1,9 @@
 "use server";
 
 import type { Prisma } from "@prisma/client";
-import { randomBytes } from "crypto";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
 import { currentFellow, getCurrentPersonnel } from "#/app/auth";
-import { db, type TransactionCursor } from "#/lib/db";
-
-function generateRandomPseudonym(): string {
-  return `TRG-${randomBytes(4).toString("hex")}`;
-}
-
-async function ensureClinicalCaseForReferralOrEscalation(
-  tx: TransactionCursor,
-  params: {
-    studentId: string;
-    sessionId: string;
-    fellowId: string;
-    hubId: string | null;
-    actionTaken: string;
-    referredSupervisorId: string | null;
-    riskScreenOutcome: string | null;
-  },
-): Promise<void> {
-  const shouldCreate = params.actionTaken === "REFERRED" || params.actionTaken === "ESCALATED";
-  if (!shouldCreate) return;
-
-  let currentSupervisorId: string | null = null;
-  let clinicalLeadId: string | null = null;
-
-  if (params.referredSupervisorId) {
-    currentSupervisorId = params.referredSupervisorId;
-  } else if (params.hubId) {
-    const clinicalLead = await tx.clinicalLead.findFirst({
-      where: { assignedHubId: params.hubId },
-      select: { id: true },
-    });
-    if (clinicalLead) {
-      clinicalLeadId = clinicalLead.id;
-    }
-  }
-
-  const assigneeSupervisorId = currentSupervisorId ?? null;
-  const assigneeClinicalLeadId = clinicalLeadId ?? null;
-  const hasAssignee = assigneeSupervisorId !== null || assigneeClinicalLeadId !== null;
-
-  const existingCase = hasAssignee
-    ? await tx.clinicalScreeningInfo.findFirst({
-        where:
-          assigneeSupervisorId !== null
-            ? {
-                studentId: params.studentId,
-                currentSupervisorId: assigneeSupervisorId,
-              }
-            : {
-                studentId: params.studentId,
-                clinicalLeadId: assigneeClinicalLeadId ?? undefined,
-              },
-      })
-    : null;
-
-  if (!existingCase) {
-    const student = await tx.student.findUniqueOrThrow({
-      where: { id: params.studentId },
-      select: { schoolId: true },
-    });
-    const schoolId = student.schoolId;
-    if (!schoolId) {
-      throw new Error("Student has no school assigned; cannot create clinical case.");
-    }
-    const pseudonym = generateRandomPseudonym();
-
-    await tx.clinicalScreeningInfo.create({
-      data: {
-        studentId: params.studentId,
-        schoolId,
-        currentSupervisorId: assigneeSupervisorId,
-        clinicalLeadId: assigneeClinicalLeadId,
-        initialReferredFrom: params.fellowId,
-        initialReferredFromSpecified: "fellow",
-        sessionWhenCaseIsFlaggedId: params.sessionId,
-        pseudonym,
-        flagged: false,
-        riskStatus: params.riskScreenOutcome === "ANY_YES" ? "High" : "No",
-        caseStatus: "Active",
-      },
-    });
-  }
-}
+import { db } from "#/lib/db";
 
 export type TriageEventWithRelations = Prisma.TriageEventGetPayload<{
   include: {
@@ -175,6 +92,38 @@ export async function getTriageEventByStudentAndSession(studentId: string, sessi
   return event;
 }
 
+export async function getTriageEventsForSession(sessionId: string) {
+  await getFellowContext();
+  const events = await db.triageEvent.findMany({
+    where: { sessionId },
+    include: {
+      session: true,
+      student: true,
+      fellow: true,
+      referredSupervisor: true,
+    },
+  });
+  return events;
+}
+
+export async function getStudentTriageHistory(studentId: string) {
+  const { fellowId } = await getFellowContext();
+  return db.triageEvent.findMany({
+    where: { studentId, fellowId },
+    include: {
+      session: {
+        select: {
+          sessionDate: true,
+          sessionName: true,
+          sessionType: true,
+          session: { select: { sessionLabel: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function createTriageEvent(
   data: TriageEventFormData,
   studentAttendanceId?: number,
@@ -203,42 +152,28 @@ export async function createTriageEvent(
 
     const effectiveHubId = hubId ?? session.hubId;
 
-    const event = await db.$transaction(async (tx) => {
-      const triageEvent = await tx.triageEvent.create({
-        data: {
-          studentId: parsed.studentId,
-          sessionId: parsed.sessionId,
-          fellowId,
-          hubId: effectiveHubId,
-          studentAttendanceId: studentAttendanceId ?? null,
-          triageOccurred: true,
-          riskScreenOutcome: parsed.riskScreenOutcome,
-          riskNotCompletedReason: parsed.riskNotCompletedReason ?? null,
-          actionTaken: parsed.actionTaken,
-          referredSupervisorId: parsed.referredSupervisorId ?? null,
-          supervisorHandoffStatus: parsed.supervisorHandoffStatus ?? null,
-          note: parsed.note ?? null,
-          metadata: { createdBy: userId } as Prisma.JsonObject,
-        },
-        include: {
-          session: true,
-          student: true,
-          fellow: true,
-          referredSupervisor: true,
-        },
-      });
-
-      await ensureClinicalCaseForReferralOrEscalation(tx, {
+    const event = await db.triageEvent.create({
+      data: {
         studentId: parsed.studentId,
         sessionId: parsed.sessionId,
         fellowId,
-        hubId: effectiveHubId ?? null,
+        hubId: effectiveHubId,
+        studentAttendanceId: studentAttendanceId ?? null,
+        triageOccurred: true,
+        riskScreenOutcome: parsed.riskScreenOutcome,
+        riskNotCompletedReason: parsed.riskNotCompletedReason ?? null,
         actionTaken: parsed.actionTaken,
         referredSupervisorId: parsed.referredSupervisorId ?? null,
-        riskScreenOutcome: parsed.riskScreenOutcome ?? null,
-      });
-
-      return triageEvent;
+        supervisorHandoffStatus: parsed.supervisorHandoffStatus ?? null,
+        note: parsed.note ?? null,
+        metadata: { createdBy: userId } as Prisma.JsonObject,
+      },
+      include: {
+        session: true,
+        student: true,
+        fellow: true,
+        referredSupervisor: true,
+      },
     });
 
     return { success: true, message: "Triage documented.", data: event };
@@ -253,7 +188,7 @@ export async function updateTriageEvent(
   studentAttendanceId?: number,
 ): Promise<{ success: boolean; message: string; data?: TriageEventWithRelations }> {
   try {
-    const { fellowId, userId } = await getFellowContext();
+    const { userId } = await getFellowContext();
     const parsed = TriageEventSchema.parse(data);
     if (!data.id) {
       return { success: false, message: "Triage event ID is required for update." };
@@ -312,16 +247,6 @@ export async function updateTriageEvent(
             note: updated.note ?? undefined,
           } as Prisma.JsonObject,
         },
-      });
-
-      await ensureClinicalCaseForReferralOrEscalation(tx, {
-        studentId: updated.studentId,
-        sessionId: updated.sessionId,
-        fellowId,
-        hubId: updated.hubId ?? null,
-        actionTaken: updated.actionTaken ?? "",
-        referredSupervisorId: updated.referredSupervisorId ?? null,
-        riskScreenOutcome: updated.riskScreenOutcome ?? null,
       });
 
       return updated;
