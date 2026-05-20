@@ -10,11 +10,13 @@ async function HandoffContent() {
   return <HandoffDataTable rows={rows} />;
 }
 
+const HANDOFF_SKELETON_ROWS = ["r1", "r2", "r3", "r4"];
+
 function TableSkeleton() {
   return (
     <div className="rounded-lg border">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="flex gap-4 border-b px-4 py-3 last:border-0">
+      {HANDOFF_SKELETON_ROWS.map((id) => (
+        <div key={id} className="flex gap-4 border-b px-4 py-3 last:border-0">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-16" />
           <Skeleton className="h-4 w-20" />
