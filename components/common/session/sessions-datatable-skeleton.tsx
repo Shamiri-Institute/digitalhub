@@ -17,7 +17,6 @@ export default function SessionsDatatableSkeleton({ role }: { role: ImplementerR
     setRescheduleSessionDialog: () => {},
     setCancelSessionDialog: () => {},
     setUploadAttendanceDialog: () => {},
-    setViewFileDialog: () => {},
     role,
   })
     .map((column) => column.id ?? column.header)

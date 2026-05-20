@@ -287,7 +287,6 @@ export function SessionDropDown({
     setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog?: Dispatch<SetStateAction<boolean>>;
     setUploadAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
-    setViewFileDialog?: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
   fellowId?: string;
@@ -354,15 +353,6 @@ export function SessionDropDown({
             >
               Weekly session report
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setViewFileDialog?.(true);
-              }}
-              disabled={session.status === "Cancelled" || !session.occurred}
-            >
-              View attendance uploads
-            </DropdownMenuItem>
           </>
         )}
         {role === ImplementerRole.HUB_COORDINATOR && (
@@ -422,15 +412,6 @@ export function SessionDropDown({
                 </DropdownMenuItem>
               </>
             )}
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setViewFileDialog?.(true);
-              }}
-              disabled={session.status === "Cancelled" || !session.occurred}
-            >
-              View attendance uploads
-            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
                 state.setSession?.(session);
@@ -506,15 +487,6 @@ export function SessionDropDown({
               }
             >
               Upload attendance document
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setViewFileDialog?.(true);
-              }}
-              disabled={session.status === "Cancelled" || !session.occurred}
-            >
-              View attendance uploads
             </DropdownMenuItem>
           </>
         ) : null}
