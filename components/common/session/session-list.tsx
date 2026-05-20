@@ -357,20 +357,11 @@ export function SessionDropDown({
             <DropdownMenuItem
               onClick={() => {
                 state.setSession?.(session);
-                state.setUploadAttendanceDialog?.(true);
-              }}
-              disabled={session.status === "Cancelled" || !session.occurred}
-            >
-              Upload attendance document
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
                 state.setViewFileDialog?.(true);
               }}
               disabled={session.status === "Cancelled" || !session.occurred}
             >
-              View file
+              View attendance uploads
             </DropdownMenuItem>
           </>
         )}
@@ -434,20 +425,11 @@ export function SessionDropDown({
             <DropdownMenuItem
               onClick={() => {
                 state.setSession?.(session);
-                state.setUploadAttendanceDialog?.(true);
-              }}
-              disabled={session.status === "Cancelled" || !session.occurred}
-            >
-              Upload attendance document
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
                 state.setViewFileDialog?.(true);
               }}
               disabled={session.status === "Cancelled" || !session.occurred}
             >
-              View file
+              View attendance uploads
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -532,7 +514,7 @@ export function SessionDropDown({
               }}
               disabled={session.status === "Cancelled" || !session.occurred}
             >
-              View file
+              View attendance uploads
             </DropdownMenuItem>
           </>
         ) : null}

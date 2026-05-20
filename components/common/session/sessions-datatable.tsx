@@ -69,9 +69,7 @@ export default function SessionsDatatable({
   const [uploadAttendanceDialog, setUploadAttendanceDialog] = React.useState(false);
   const [viewFileDialog, setViewFileDialog] = React.useState(false);
 
-  const groupId = session?.school?.interventionGroups?.find(
-    (g) => g.leaderId === fellowId,
-  )?.id;
+  const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
 
   const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
   const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
