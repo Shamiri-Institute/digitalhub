@@ -3,12 +3,18 @@
 import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
+import { success } from "zod";
 
 export interface CreateStudentAttendanceDocPayload {
   fileName: string;
   groupId: string;
   sessionId: string;
   link: string;
+};
+
+export interface StudentAttendanceDocsFilters {
+  groupId?: string;
+  sessionId?: string;
 }
 
 export async function createStudentAttendanceDocument(payload: CreateStudentAttendanceDocPayload) {
@@ -36,5 +42,30 @@ export async function createStudentAttendanceDocument(payload: CreateStudentAtte
       error: "Something went wrong uploading the document",
       success: false,
     };
+  }
+}
+
+export async function getStudentDocuments(filters:StudentAttendanceDocsFilters) {
+  try {
+
+    const session = await getCurrentUserSession();
+
+    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    const docs = await db.attendanceDocuments.findMany({
+       where: filters ,
+       orderBy:{createdAt:"desc"}
+    })
+
+    return docs;
+
+  } catch (error) {
+    console.error(error)
+    return {
+      success: false,
+      error:"error in fetching student documents"
+    }
   }
 }
