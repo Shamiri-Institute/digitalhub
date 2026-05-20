@@ -1,5 +1,8 @@
 import { Skeleton } from "#/components/ui/skeleton";
 
+const TOP_SKELETON_ROWS = ["t1", "t2", "t3"];
+const BOTTOM_SKELETON_ROWS = ["b1", "b2", "b3", "b4"];
+
 export default function TriagePageLoading() {
   return (
     <div className="space-y-8">
@@ -7,8 +10,8 @@ export default function TriagePageLoading() {
         <Skeleton className="h-5 w-40" />
         <Skeleton className="h-4 w-72" />
         <div className="rounded-lg border">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 border-b px-4 py-3 last:border-0">
+          {TOP_SKELETON_ROWS.map((id) => (
+            <div key={id} className="flex items-center gap-4 border-b px-4 py-3 last:border-0">
               <Skeleton className="h-4 w-16" />
               <Skeleton className="h-4 w-28" />
               <Skeleton className="h-4 w-24" />
@@ -28,8 +31,8 @@ export default function TriagePageLoading() {
         <Skeleton className="h-5 w-40" />
         <Skeleton className="h-4 w-80" />
         <div className="rounded-lg border">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 border-b px-4 py-3 last:border-0">
+          {BOTTOM_SKELETON_ROWS.map((id) => (
+            <div key={id} className="flex items-center gap-4 border-b px-4 py-3 last:border-0">
               <Skeleton className="h-4 w-4" />
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-4 w-10" />

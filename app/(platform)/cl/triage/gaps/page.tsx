@@ -50,11 +50,14 @@ async function GapContent() {
   return <GapDataTable gaps={gaps} />;
 }
 
+const GAPS_STAT_SKELETONS = ["s1", "s2", "s3", "s4"];
+const GAPS_SKELETON_ROWS = ["r1", "r2", "r3", "r4", "r5"];
+
 function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="rounded-lg border p-4 space-y-2">
+      {GAPS_STAT_SKELETONS.map((id) => (
+        <div key={id} className="rounded-lg border p-4 space-y-2">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="h-7 w-12" />
         </div>
@@ -66,8 +69,8 @@ function StatsSkeleton() {
 function TableSkeleton() {
   return (
     <div className="rounded-lg border">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex gap-4 border-b px-4 py-3 last:border-0">
+      {GAPS_SKELETON_ROWS.map((id) => (
+        <div key={id} className="flex gap-4 border-b px-4 py-3 last:border-0">
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-28" />

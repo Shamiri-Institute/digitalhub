@@ -29,6 +29,8 @@ const ACTION_LABELS: Record<string, string> = {
   INTERRUPTED: "Interaction interrupted",
 };
 
+const HISTORY_SKELETONS = ["h1", "h2", "h3"];
+
 const HANDOFF_LABELS: Record<string, string> = {
   WARM_HANDOFF: "Warm handoff",
   SUPERVISOR_NOTIFIED: "Supervisor notified",
@@ -118,8 +120,8 @@ export default function StudentTriageHistoryModal({
         <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
           {loading && (
             <div>
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="rounded-lg border p-4 space-y-2">
+              {HISTORY_SKELETONS.map((id) => (
+                <div key={id} className="rounded-lg border p-4 space-y-2">
                   <div className="flex justify-between">
                     <Skeleton className="h-4 w-20" />
                     <Skeleton className="h-4 w-24" />
