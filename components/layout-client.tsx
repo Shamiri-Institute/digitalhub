@@ -10,7 +10,7 @@ import {
   SchoolIcon,
   SignOutIcon,
 } from "components/icons";
-import { Building2, Menu } from "lucide-react";
+import { Building2, Menu, ShieldAlert } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -42,6 +42,7 @@ interface NavigationLinkProps {
   fellowsActive: boolean;
   studentsActive: boolean;
   clinicalActive: boolean;
+  triageActive: boolean;
   reportingActive: boolean;
   popoverOpen: boolean;
   setPopoverOpen: (open: boolean) => void;
@@ -66,6 +67,7 @@ export function LayoutClient({
   const studentsActive = subRoute?.includes("student");
   const reportingActive = subRoute?.includes("reporting");
   const clinicalActive = subRoute?.includes("clinical");
+  const triageActive = subRoute?.includes("triage");
   const hubsActive = subRoute?.includes("hubs") || subRoute?.includes("schools");
 
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -138,11 +140,11 @@ export function LayoutClient({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b bg-background-secondary">
+      <header className="bg-background-secondary border-b">
         <div className="container space-y-4 px-4 pt-2 lg:px-8">
           <div className="flex flex-col items-center justify-between lg:flex-row">
             <div className="flex w-full flex-row items-center justify-between px-3 py-2 lg:py-0">
-              <Link href="#" className="text-2xl text-shamiri-new-blue">
+              <Link href="#" className="text-shamiri-new-blue text-2xl">
                 Shamiri Hub
               </Link>
               <div className="relative lg:hidden">
@@ -154,7 +156,7 @@ export function LayoutClient({
                       aria-label="Toggle navigation"
                       className="bg-white"
                     >
-                      <Menu className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <Menu className="text-muted-foreground h-4 w-4 shrink-0" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-[80vw]">
@@ -167,7 +169,7 @@ export function LayoutClient({
                             ) : null}
                             <AvatarFallback>{getInitials(userName)}</AvatarFallback>
                           </Avatar>
-                          <p className="text-base text-muted-foreground">{userName}</p>
+                          <p className="text-muted-foreground text-base">{userName}</p>
                         </div>
                         <div className="nav-link">
                           <NotificationIcon />
@@ -193,6 +195,7 @@ export function LayoutClient({
                 fellowsActive: fellowsActive ?? false,
                 studentsActive: studentsActive ?? false,
                 clinicalActive: clinicalActive ?? false,
+                triageActive: triageActive ?? false,
                 reportingActive: reportingActive ?? false,
                 popoverOpen: popoverOpen,
                 setPopoverOpen: setPopoverOpen,
@@ -201,7 +204,7 @@ export function LayoutClient({
           </div>
         </div>
       </header>
-      <main className="flex grow items-stretch overflow-x-hidden bg-background-secondary">
+      <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-hidden">
         {children}
       </main>
       <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />
@@ -286,6 +289,7 @@ function getCurrentUserNavigationLinks(
     fellowsActive,
     studentsActive,
     clinicalActive,
+    triageActive,
     reportingActive,
     popoverOpen,
     setPopoverOpen,
@@ -372,6 +376,10 @@ function getCurrentUserNavigationLinks(
         <PeopleIcon />
         <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
       </div>,
+      <div className={`tab-link ${cn(triageActive && "active")}`} key="sc-triage">
+        <ShieldAlert className="h-5 w-5" />
+        <Link href={`/${mainRoute}/triage`}>Triage</Link>
+      </div>,
     );
   }
 
@@ -411,6 +419,10 @@ function getCurrentUserNavigationLinks(
       <div key="cl-clinical" className={`tab-link ${cn(clinicalActive && "active")}`}>
         <PeopleIcon />
         <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
+      </div>,
+      <div key="cl-triage" className={`tab-link ${cn(triageActive && "active")}`}>
+        <ShieldAlert className="h-5 w-5" />
+        <Link href={`/${mainRoute}/triage`}>Triage</Link>
       </div>,
     );
   }
