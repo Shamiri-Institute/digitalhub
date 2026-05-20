@@ -16,9 +16,7 @@ export async function createStudentAttendanceDocument(payload: CreateStudentAtte
     const session = await getCurrentUserSession();
 
     if (
-      !session?.user.id ||
-      (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
-        session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)
+      !session?.user.id
     ) {
       throw new Error("The session has not been authenticated");
     }

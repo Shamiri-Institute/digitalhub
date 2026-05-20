@@ -286,6 +286,8 @@ export function SessionDropDown({
     setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog?: Dispatch<SetStateAction<boolean>>;
+    setUploadAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
+    setViewFileDialog?: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
   fellowId?: string;
@@ -352,6 +354,24 @@ export function SessionDropDown({
             >
               Weekly session report
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setUploadAttendanceDialog?.(true);
+              }}
+              disabled={session.status === "Cancelled" || !session.occurred}
+            >
+              Upload attendance document
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setViewFileDialog?.(true);
+              }}
+              disabled={session.status === "Cancelled" || !session.occurred}
+            >
+              View file
+            </DropdownMenuItem>
           </>
         )}
         {role === ImplementerRole.HUB_COORDINATOR && (
@@ -414,6 +434,24 @@ export function SessionDropDown({
             <DropdownMenuItem
               onClick={() => {
                 state.setSession?.(session);
+                state.setUploadAttendanceDialog?.(true);
+              }}
+              disabled={session.status === "Cancelled" || !session.occurred}
+            >
+              Upload attendance document
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setViewFileDialog?.(true);
+              }}
+              disabled={session.status === "Cancelled" || !session.occurred}
+            >
+              View file
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
                 state.setSessionOccurrenceDialog?.(true);
               }}
               disabled={
@@ -455,22 +493,48 @@ export function SessionDropDown({
         ) : null}
 
         {role === ImplementerRole.FELLOW ? (
-          <DropdownMenuItem
-            onClick={() => {
-              state.setSession?.(session);
-              state.setStudentAttendanceDialog?.(true);
-            }}
-            disabled={
-              session.status === "Cancelled" ||
-              session.session?.sessionType === "DATA_COLLECTION" ||
-              !session.occurred ||
-              !session.school?.interventionGroups.find((group) => {
-                return group.leaderId === fellowId;
-              })
-            }
-          >
-            Mark student attendance
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setStudentAttendanceDialog?.(true);
+              }}
+              disabled={
+                session.status === "Cancelled" ||
+                session.session?.sessionType === "DATA_COLLECTION" ||
+                !session.occurred ||
+                !session.school?.interventionGroups.find((group) => {
+                  return group.leaderId === fellowId;
+                })
+              }
+            >
+              Mark student attendance
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setUploadAttendanceDialog?.(true);
+              }}
+              disabled={
+                session.status === "Cancelled" ||
+                !session.occurred ||
+                !session.school?.interventionGroups.find((group) => {
+                  return group.leaderId === fellowId;
+                })
+              }
+            >
+              Upload attendance document
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setViewFileDialog?.(true);
+              }}
+              disabled={session.status === "Cancelled" || !session.occurred}
+            >
+              View file
+            </DropdownMenuItem>
+          </>
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>

@@ -13,7 +13,9 @@ import SessionRatings from "#/components/common/session/session-ratings";
 import type { Session } from "#/components/common/session/sessions-provider";
 import StudentAttendance from "#/components/common/student/student-attendance";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
+import UploadStudentAttendanceDocument from "#/components/common/schools/upload-student-attendance";
 import DataTable from "#/components/data-table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 
 export default function SessionsDatatable({
   sessions,
@@ -64,6 +66,12 @@ export default function SessionsDatatable({
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
+  const [uploadAttendanceDialog, setUploadAttendanceDialog] = React.useState(false);
+  const [viewFileDialog, setViewFileDialog] = React.useState(false);
+
+  const groupId = session?.school?.interventionGroups?.find(
+    (g) => g.leaderId === fellowId,
+  )?.id;
 
   const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
   const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
@@ -91,6 +99,8 @@ export default function SessionsDatatable({
           setSessionOccurrenceDialog,
           setRescheduleSessionDialog,
           setCancelSessionDialog,
+          setUploadAttendanceDialog,
+          setViewFileDialog,
           role,
           fellowId,
           supervisorId,
@@ -184,6 +194,27 @@ export default function SessionsDatatable({
           supervisorId={supervisorId}
         />
       ) : null}
+      <Dialog open={uploadAttendanceDialog} onOpenChange={setUploadAttendanceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Attendance Document</DialogTitle>
+          </DialogHeader>
+          {session && groupId && (
+            <UploadStudentAttendanceDocument
+              groupId={groupId}
+              sessionId={session.id}
+              onClose={setUploadAttendanceDialog}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      <Dialog open={viewFileDialog} onOpenChange={setViewFileDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>View Attendance Files</DialogTitle>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
       <SupervisorAttendance
         supervisors={supervisors}
         role={role}
