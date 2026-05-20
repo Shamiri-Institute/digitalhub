@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.26.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.25.0...v1.26.0) (2026-05-20)
+
+
+### Features
+
+* **triage:** triage functionality for key users ([#687](https://github.com/Shamiri-Institute/digitalhub/issues/687)) ([c931e94](https://github.com/Shamiri-Institute/digitalhub/commit/c931e94e56abc1e582e54ca365a35968258ddb57))
+
+
+### Bug Fixes
+
+* **datatable:** memoize columns and action cells to prevent cascading re-renders  ([f29c0e6](https://github.com/Shamiri-Institute/digitalhub/commit/f29c0e6c296a94a96fe9ffd93e20f0290c28744c))
+
 ## [1.25.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.24.1...v1.25.0) (2026-05-14)
 
 
