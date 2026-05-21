@@ -22,6 +22,7 @@ export default function UploadStudentAttendanceDocument({
   sessionDate,
   sessionType,
   onClose,
+  onUploadSuccess,
 }: {
   groupId: string;
   sessionId: string;
@@ -31,6 +32,7 @@ export default function UploadStudentAttendanceDocument({
   sessionDate?: string;
   sessionType?: string;
   onClose: (val: boolean) => void;
+  onUploadSuccess?: () => void;
 }) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -177,6 +179,7 @@ export default function UploadStudentAttendanceDocument({
         });
 
         if (response.success) {
+          onUploadSuccess?.();
           onClose(false);
           toast({
             title: "File uploaded successfully",
@@ -191,7 +194,7 @@ export default function UploadStudentAttendanceDocument({
         });
       }
     },
-    [uploadToS3, groupId, sessionId, schoolName, fellowName, groupName, sessionDate, sessionType, onClose, toast],
+    [uploadToS3, groupId, sessionId, schoolName, fellowName, groupName, sessionDate, sessionType, onClose, onUploadSuccess, toast],
   );
 
   return (

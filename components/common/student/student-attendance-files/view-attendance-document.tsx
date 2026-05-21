@@ -14,9 +14,11 @@ import { Icons } from "#/components/icons";
 export default function ViewAttendanceDocument({
   sessionId,
   groupId,
+  onDeleteSuccess,
 }: {
   sessionId: string;
   groupId: string;
+  onDeleteSuccess?: () => void;
 }) {
   const { toast } = useToast();
   const [state, setState] = useState<{
@@ -50,6 +52,7 @@ export default function ViewAttendanceDocument({
     const result = await archiveAttendanceDocument(state.id);
     if (result.success) {
       setState({ loading: false, archived: true, archiving: false });
+      onDeleteSuccess?.();
       toast({ description: "Attendance document deleted successfully." });
     } else {
       setState((prev) => ({ ...prev, archiving: false }));

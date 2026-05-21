@@ -2,6 +2,7 @@
 
 import type { ImplementerRole } from "@prisma/client";
 import { format } from "date-fns";
+import { useCallback, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { SessionDetail } from "#/components/common/session/session-list";
 import type { Session } from "#/components/common/session/sessions-provider";
@@ -22,6 +23,11 @@ export default function AttendanceDocumentDialog({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
 }) {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
   if (!session || !groupId) return null;
 
   const group = session.school?.interventionGroups?.find((g) => g.id === groupId);
@@ -46,7 +52,7 @@ export default function AttendanceDocumentDialog({
               <div className="h-4 w-1 rounded-full bg-shamiri-new-blue" />
               <h3 className="text-sm font-semibold text-gray-900">View Document</h3>
             </div>
-            <ViewAttendanceDocument sessionId={session.id} groupId={groupId} />
+            <ViewAttendanceDocument key={refreshKey} sessionId={session.id} groupId={groupId} onDeleteSuccess={handleRefresh} />
           </div>
 
           <div className="border-t border-shamiri-light-grey" />
@@ -65,6 +71,7 @@ export default function AttendanceDocumentDialog({
               sessionDate={sessionDate}
               sessionType={sessionType}
               onClose={onOpenChange}
+              onUploadSuccess={handleRefresh}
             />
           </div>
         </div>
