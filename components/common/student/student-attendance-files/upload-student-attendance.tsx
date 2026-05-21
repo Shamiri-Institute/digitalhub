@@ -180,7 +180,8 @@ export default function UploadStudentAttendanceDocument({
 
         if (response.success) {
           onUploadSuccess?.();
-          onClose(false);
+          setSelectedFiles([]);
+          setPreviewUrls([]);
           toast({
             title: "File uploaded successfully",
           });
