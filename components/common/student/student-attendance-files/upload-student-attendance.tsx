@@ -7,16 +7,28 @@ import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
+import { objectId } from "#/lib/crypto";
 import { createStudentAttendanceDocument } from "#/lib/actions/file/student-attendance";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
+import { buildS3Key } from "#/lib/utils/s3-key-builder";
 
 export default function UploadStudentAttendanceDocument({
   groupId,
   sessionId,
+  schoolName,
+  fellowName,
+  groupName,
+  sessionDate,
+  sessionType,
   onClose,
 }: {
   groupId: string;
   sessionId: string;
+  schoolName?: string;
+  fellowName?: string;
+  groupName?: string;
+  sessionDate?: string;
+  sessionType?: string;
   onClose: (val: boolean) => void;
 }) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -41,24 +53,67 @@ export default function UploadStudentAttendanceDocument({
 
   const handleFileChange = useCallback(
     async (file: File) => {
+      const missing: string[] = [];
+      if (!schoolName) missing.push("schoolName");
+      if (!fellowName) missing.push("fellowName");
+      if (!groupName) missing.push("groupName");
+      if (!sessionDate) missing.push("sessionDate");
+      if (!sessionType) missing.push("sessionType");
+      if (!groupId) missing.push("groupId");
+      if (!sessionId) missing.push("sessionId");
+      if (missing.length > 0) {
+        const msg = `Missing session data: ${missing.join(", ")}`;
+        console.error(msg, { schoolName, fellowName, groupName, sessionDate, sessionType, groupId, sessionId });
+        toast({
+          title: "Upload failed",
+          description: msg,
+          variant: "destructive",
+        });
+        return;
+      }
+
       try {
         setUploading(true);
-        const { key } = await uploadToS3(file);
 
-        if (key) {
-          const response = await createStudentAttendanceDocument({
-            fileName: file.name,
-            link: key.toString(),
-            groupId,
-            sessionId,
+        const docId = objectId("att_doc");
+        const extension = file.name.split(".").pop()?.toLowerCase() ?? "pdf";
+
+        const s3Key = buildS3Key({
+          schoolName: schoolName as string,
+          fellowName: fellowName as string,
+          groupName: groupName as string,
+          sessionType: sessionType as string,
+          recordingId: docId,
+          extension,
+          prefix: "student-attendance",
+        });
+
+        const fileName = `${sessionType as string}_${docId}.${extension}`;
+
+        const { key } = await uploadToS3(file, {
+          endpoint: {
+            request: {
+              body: { key: s3Key, bucket: "student-attendance" },
+            },
+          },
+        });
+
+        if (!key) {
+          throw new Error("Upload failed - no key returned");
+        }
+
+        const response = await createStudentAttendanceDocument({
+          fileName,
+          link: key,
+          groupId,
+          sessionId,
+        });
+
+        if (response.success) {
+          onClose(false);
+          toast({
+            title: "File uploaded successfully",
           });
-
-          if (response.success) {
-            onClose(false);
-            toast({
-              title: "File uploaded successfully",
-            });
-          }
         }
       } catch (error) {
         console.error("File upload error:", error);
@@ -71,7 +126,7 @@ export default function UploadStudentAttendanceDocument({
         setUploading(false);
       }
     },
-    [uploadToS3, groupId, sessionId, onClose, toast],
+    [uploadToS3, groupId, sessionId, schoolName, fellowName, groupName, sessionDate, sessionType, onClose, toast],
   );
 
   return (
