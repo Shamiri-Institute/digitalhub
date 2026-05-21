@@ -94,18 +94,19 @@ export default function ViewAttendanceDocument({
   if (!state.url) return null;
 
   return (
-    <div className="flex h-full items-center justify-center p-4">
+    <div className="space-y-5">
       <div className="flex items-center gap-4">
         <a
           href={state.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-4 transition-colors hover:border-shamiri-new-blue hover:bg-blue-bg"
+          className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-4 transition-colors hover:border-shamiri-new-blue hover:bg-blue-bg"
         >
           <Icons.paperFileText className="h-10 w-10 text-shamiri-new-blue" />
+          <span className="mt-2 text-xs text-gray-500">Click to view</span>
         </a>
-        <div className="flex flex-col gap-2">
-          <p className="max-w-[200px] truncate text-sm font-medium text-gray-700">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <p className="truncate text-sm font-medium text-gray-700">
             {state.fileName ?? "document.pdf"}
           </p>
           <Button
