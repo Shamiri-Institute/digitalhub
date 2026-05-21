@@ -1824,6 +1824,7 @@ model AttendanceDocuments {
   id         String              @id @default(cuid())
   createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt  DateTime            @default(now()) @map("updated_at") @db.Timestamptz()
+  archivedAt DateTime?           @map("archived_at")
   fileName   String              @map("file_name") @db.VarChar(255)
   groupId    String              @map("group_id") @db.VarChar(255)
   group      InterventionGroup   @relation(fields: [groupId], references: [id])

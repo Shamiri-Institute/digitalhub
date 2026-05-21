@@ -49,7 +49,7 @@ export async function getAttendanceDocument(sessionId: string, groupId: string) 
     }
 
     const doc = await db.attendanceDocuments.findFirst({
-      where: { sessionId, groupId },
+      where: { sessionId, groupId, archivedAt: null },
       orderBy: { createdAt: "desc" },
     });
 
@@ -75,5 +75,57 @@ export async function getAttendanceDocument(sessionId: string, groupId: string) 
   } catch (error) {
     console.error(error);
     return { success: false, error: "Failed to load attendance document" };
+  }
+}
+
+export async function archiveAttendanceDocument(documentId: string) {
+  try {
+    const session = await getCurrentUserSession();
+
+    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    await db.attendanceDocuments.update({
+      where: { id: documentId },
+      data: { archivedAt: new Date() },
+    });
+
+    return {
+      success: true,
+      message: "Successfully archived the attendance document.",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      error: "Something went wrong archiving the attendance document",
+    };
+  }
+}
+
+export async function unarchiveAttendanceDocument(documentId: string) {
+  try {
+    const session = await getCurrentUserSession();
+
+    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    await db.attendanceDocuments.update({
+      where: { id: documentId },
+      data: { archivedAt: null },
+    });
+
+    return {
+      success: true,
+      message: "Successfully unarchived the attendance document.",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      error: "Something went wrong unarchiving the attendance document",
+    };
   }
 }
