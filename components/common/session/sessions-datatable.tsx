@@ -12,9 +12,11 @@ import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import type { Session } from "#/components/common/session/sessions-provider";
 import StudentAttendance from "#/components/common/student/student-attendance";
-import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
+import StudentAttendanceFilesTable from "#/components/common/student/student-attendance-files/student-attendance-files-table";
 import UploadAttendanceDocumentDialog from "#/components/common/student/upload-attendance-dialog";
+import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import DataTable from "#/components/data-table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 
 export default function SessionsDatatable({
   sessions,
@@ -66,6 +68,7 @@ export default function SessionsDatatable({
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
   const [uploadAttendanceDialog, setUploadAttendanceDialog] = React.useState(false);
+  const [studentAttendanceFilesDialog, setStudentAttendanceFilesDialog] = React.useState(false);
 
   const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
 
@@ -96,6 +99,7 @@ export default function SessionsDatatable({
           setRescheduleSessionDialog,
           setCancelSessionDialog,
           setUploadAttendanceDialog,
+          setStudentAttendanceFilesDialog,
           role,
           fellowId,
           supervisorId,
@@ -196,6 +200,21 @@ export default function SessionsDatatable({
         open={uploadAttendanceDialog}
         onOpenChange={setUploadAttendanceDialog}
       />
+      <Dialog open={studentAttendanceFilesDialog} onOpenChange={setStudentAttendanceFilesDialog}>
+        <DialogContent className="lg:w-3/4 lg:max-w-none">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Student Attendance Documents</DialogTitle>
+          </DialogHeader>
+          {session && (
+            <StudentAttendanceFilesTable
+              filters={{ sessionId: session.id }}
+              session={session}
+              groupId={groupId}
+              role={role}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
       <SupervisorAttendance
         supervisors={supervisors}
         role={role}
