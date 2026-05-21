@@ -1,14 +1,13 @@
 "use client";
 
-import { type ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { format } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
 import { SessionDetail } from "#/components/common/session/session-list";
 import type { Session } from "#/components/common/session/sessions-provider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import UploadStudentAttendanceDocument from "#/components/common/student/student-attendance-files/upload-student-attendance";
 import ViewAttendanceDocument from "#/components/common/student/student-attendance-files/view-attendance-document";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 
 export default function AttendanceDocumentDialog({
   session,
@@ -38,19 +37,25 @@ export default function AttendanceDocumentDialog({
         <DialogHeader>
           <DialogTitle>Attendance Document</DialogTitle>
         </DialogHeader>
-        <div className="pb-2 pt-4">
+        <div className="pb-1 pt-2">
           <SessionDetail state={{ session }} layout="compact" withDropdown={false} role={role} />
         </div>
-        <Tabs defaultValue="upload">
-          <TabsList className="w-full">
-            <TabsTrigger value="upload" className="flex-1">
-              Upload
-            </TabsTrigger>
-            <TabsTrigger value="view" className="flex-1">
-              View
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="upload">
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-1 rounded-full bg-shamiri-new-blue" />
+              <h3 className="text-sm font-semibold text-gray-900">View Document</h3>
+            </div>
+            <ViewAttendanceDocument sessionId={session.id} groupId={groupId} />
+          </div>
+
+          <div className="border-t border-shamiri-light-grey" />
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-1 rounded-full bg-shamiri-green" />
+              <h3 className="text-sm font-semibold text-gray-900">Upload Document</h3>
+            </div>
             <UploadStudentAttendanceDocument
               groupId={groupId}
               sessionId={session.id}
@@ -61,13 +66,8 @@ export default function AttendanceDocumentDialog({
               sessionType={sessionType}
               onClose={onOpenChange}
             />
-          </TabsContent>
-          <TabsContent value="view">
-            <div className="h-[500px] overflow-hidden">
-              <ViewAttendanceDocument sessionId={session.id} groupId={groupId} />
-            </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

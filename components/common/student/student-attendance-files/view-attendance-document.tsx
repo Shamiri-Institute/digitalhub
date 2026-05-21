@@ -76,7 +76,7 @@ export default function ViewAttendanceDocument({
         <Alert variant="primary">
           <AlertDescription>
             No attendance document has been uploaded for this session yet. Use the{" "}
-            <strong>Upload</strong> tab above to upload one.
+            <strong>Upload</strong> section below to upload one.
           </AlertDescription>
         </Alert>
       </div>
