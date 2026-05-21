@@ -201,8 +201,8 @@ export default function SessionsDatatable({
         onOpenChange={setUploadAttendanceDialog}
       />
       <Dialog open={viewAttendanceDialog} onOpenChange={setViewAttendanceDialog}>
-        <DialogContent className="h-[90vh] w-[90vw] max-w-5xl">
-          <DialogHeader>
+        <DialogContent className="flex h-[90vh] w-[90vw] max-w-5xl flex-col gap-0 overflow-hidden p-0">
+          <DialogHeader className="border-b px-6 py-4">
             <DialogTitle>Attendance Document</DialogTitle>
           </DialogHeader>
           {session && groupId && (
