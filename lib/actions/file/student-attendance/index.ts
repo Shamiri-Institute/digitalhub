@@ -3,6 +3,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
+import { getPresignedUrl } from "#/lib/s3";
 
 export interface CreateStudentAttendanceDocPayload {
   fileName: string;
@@ -36,5 +37,43 @@ export async function createStudentAttendanceDocument(payload: CreateStudentAtte
       error: "Something went wrong uploading the document",
       success: false,
     };
+  }
+}
+
+export async function getAttendanceDocument(sessionId: string, groupId: string) {
+  try {
+    const session = await getCurrentUserSession();
+
+    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const doc = await db.attendanceDocuments.findFirst({
+      where: { sessionId, groupId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!doc) {
+      return { success: false, error: "No attendance document found for this session" };
+    }
+
+    const bucket = doc.link.startsWith("student-attendance/")
+      ? ("student-attendance" as const)
+      : ("uploads" as const);
+
+    const presignedUrl = await getPresignedUrl(doc.link, bucket);
+
+    return {
+      success: true,
+      data: {
+        id: doc.id,
+        fileName: doc.fileName,
+        presignedUrl,
+        createdAt: doc.createdAt,
+      },
+    };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to load attendance document" };
   }
 }

@@ -287,6 +287,7 @@ export function SessionDropDown({
     setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog?: Dispatch<SetStateAction<boolean>>;
     setUploadAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
+    setViewAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
   fellowId?: string;
@@ -487,6 +488,21 @@ export function SessionDropDown({
               }
             >
               Upload attendance document
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setViewAttendanceDialog?.(true);
+              }}
+              disabled={
+                session.status === "Cancelled" ||
+                !session.occurred ||
+                !session.school?.interventionGroups.find((group) => {
+                  return group.leaderId === fellowId;
+                })
+              }
+            >
+              View attendance document
             </DropdownMenuItem>
           </>
         ) : null}

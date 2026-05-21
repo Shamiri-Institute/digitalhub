@@ -48,6 +48,7 @@ export const columns = (state: {
   setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
   setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
   setUploadAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setViewAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setSession: Dispatch<SetStateAction<Session | null>>;
   fellowId?: string;
   supervisorId?: string;
@@ -147,6 +148,7 @@ export const columns = (state: {
           setRescheduleSessionDialog: state.setRescheduleSessionDialog,
           setCancelSessionDialog: state.setCancelSessionDialog,
           setUploadAttendanceDialog: state.setUploadAttendanceDialog,
+          setViewAttendanceDialog: state.setViewAttendanceDialog,
         }}
         role={state.role}
         fellowId={state.fellowId}

@@ -13,8 +13,10 @@ import SessionRatings from "#/components/common/session/session-ratings";
 import type { Session } from "#/components/common/session/sessions-provider";
 import StudentAttendance from "#/components/common/student/student-attendance";
 import UploadAttendanceDocumentDialog from "#/components/common/student/student-attendance-files/upload-attendance-dialog";
+import ViewAttendanceDocument from "#/components/common/student/student-attendance-files/view-attendance-document";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import DataTable from "#/components/data-table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 
 export default function SessionsDatatable({
   sessions,
@@ -66,6 +68,7 @@ export default function SessionsDatatable({
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
   const [uploadAttendanceDialog, setUploadAttendanceDialog] = React.useState(false);
+  const [viewAttendanceDialog, setViewAttendanceDialog] = React.useState(false);
 
   const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
 
@@ -96,6 +99,7 @@ export default function SessionsDatatable({
           setRescheduleSessionDialog,
           setCancelSessionDialog,
           setUploadAttendanceDialog,
+          setViewAttendanceDialog,
           role,
           fellowId,
           supervisorId,
@@ -196,6 +200,21 @@ export default function SessionsDatatable({
         open={uploadAttendanceDialog}
         onOpenChange={setUploadAttendanceDialog}
       />
+      <Dialog open={viewAttendanceDialog} onOpenChange={setViewAttendanceDialog}>
+        <DialogContent className="h-[90vh] w-[90vw] max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Attendance Document</DialogTitle>
+          </DialogHeader>
+          {session && groupId && (
+            <div className="flex-1 overflow-hidden">
+              <ViewAttendanceDocument
+                sessionId={session.id}
+                groupId={groupId}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       <SupervisorAttendance
         supervisors={supervisors}
         role={role}
