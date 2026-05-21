@@ -60,11 +60,11 @@ export default function ViewAttendanceDocument({
     }
   };
 
-  if (state.loading) return <Skeleton className="h-96 w-full rounded-lg" />;
+  if (state.loading) return <Skeleton className="h-16 w-full rounded-lg" />;
 
   if (state.archived) {
     return (
-      <div className="flex h-48 items-center justify-center text-gray-500">
+      <div className="flex items-center justify-center p-4 text-sm text-gray-500">
         Document has been deleted.
       </div>
     );
@@ -72,7 +72,7 @@ export default function ViewAttendanceDocument({
 
   if (state.error === "No attendance document found for this session") {
     return (
-      <div className="flex h-48 items-center justify-center p-4">
+      <div className="flex items-center justify-center p-4">
         <Alert variant="primary">
           <AlertDescription>
             No attendance document has been uploaded for this session yet. Use the{" "}
@@ -85,7 +85,7 @@ export default function ViewAttendanceDocument({
 
   if (state.error) {
     return (
-      <div className="flex h-48 items-center justify-center text-gray-500">
+      <div className="flex items-center justify-center p-4 text-sm text-gray-500">
         {state.error}
       </div>
     );
@@ -94,8 +94,8 @@ export default function ViewAttendanceDocument({
   if (!state.url) return null;
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-4">
+    <div>
+      <div className="grid grid-cols-[auto_1fr] items-center gap-4">
         <a
           href={state.url}
           target="_blank"
@@ -105,8 +105,8 @@ export default function ViewAttendanceDocument({
           <Icons.paperFileText className="h-10 w-10 text-shamiri-new-blue" />
           <span className="mt-2 text-xs text-gray-500">Click to view</span>
         </a>
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <p className="truncate text-sm font-medium text-gray-700">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-gray-700" title={state.fileName}>
             {state.fileName ?? "document.pdf"}
           </p>
           <Button
@@ -114,7 +114,7 @@ export default function ViewAttendanceDocument({
             size="sm"
             onClick={handleDelete}
             loading={state.archiving}
-            className="hover:bg-shamiri-light-red/90"
+            className="mt-2 w-fit hover:bg-shamiri-light-red/90"
           >
             {state.archiving ? "Deleting..." : "Delete"}
           </Button>

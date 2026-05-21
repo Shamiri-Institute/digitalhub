@@ -195,7 +195,7 @@ export default function UploadStudentAttendanceDocument({
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <FileDropzone
         selectedCount={selectedFiles.length}
         onDrop={handleDrop}
@@ -204,13 +204,13 @@ export default function UploadStudentAttendanceDocument({
       />
 
       {selectedFiles.length > 0 && (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid max-h-28 grid-cols-6 gap-2 overflow-y-auto">
           {selectedFiles.map((file, i) => (
             <div key={`${file.name}_${i}`} className="group relative overflow-hidden rounded-lg border">
               <img
                 src={previewUrls[i]}
                 alt={file.name}
-                className="h-24 w-full object-cover"
+                className="h-12 w-full object-cover"
               />
               <button
                 type="button"

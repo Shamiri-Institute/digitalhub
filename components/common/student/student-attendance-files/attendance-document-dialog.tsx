@@ -33,15 +33,15 @@ export default function AttendanceDocumentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="overflow-hidden">
         <DialogHeader>
           <DialogTitle>Attendance Document</DialogTitle>
         </DialogHeader>
         <div className="pb-1 pt-2">
           <SessionDetail state={{ session }} layout="compact" withDropdown={false} role={role} />
         </div>
-        <div className="space-y-8">
-          <div className="space-y-4">
+        <div className="space-y-4">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="h-4 w-1 rounded-full bg-shamiri-new-blue" />
               <h3 className="text-sm font-semibold text-gray-900">View Document</h3>
@@ -51,7 +51,7 @@ export default function AttendanceDocumentDialog({
 
           <div className="border-t border-shamiri-light-grey" />
 
-          <div className="space-y-4">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="h-4 w-1 rounded-full bg-shamiri-green" />
               <h3 className="text-sm font-semibold text-gray-900">Upload Document</h3>
