@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useToast } from "#/components/ui/use-toast";
-import { PdfViewer } from "#/lib/utils/pdf";
+import { Icons } from "#/components/icons";
 
 export default function ViewAttendanceDocument({
   sessionId,
@@ -94,24 +94,30 @@ export default function ViewAttendanceDocument({
   if (!state.url) return null;
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="space-y-2 border-b px-4 py-3">
-        <p className="truncate text-sm font-medium text-gray-700">
-          {state.fileName ?? "document.pdf"}
-        </p>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <a href={state.url} download={state.fileName ?? "document.pdf"}>
-              Download
-            </a>
-          </Button>
-          <Button variant="destructive" size="sm" onClick={handleDelete} loading={state.archiving}>
+    <div className="flex h-full items-center justify-center p-4">
+      <div className="flex items-center gap-4">
+        <a
+          href={state.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-4 transition-colors hover:border-shamiri-new-blue hover:bg-blue-bg"
+        >
+          <Icons.paperFileText className="h-10 w-10 text-shamiri-new-blue" />
+        </a>
+        <div className="flex flex-col gap-2">
+          <p className="max-w-[200px] truncate text-sm font-medium text-gray-700">
+            {state.fileName ?? "document.pdf"}
+          </p>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+            loading={state.archiving}
+            className="hover:bg-shamiri-light-red/90"
+          >
             {state.archiving ? "Deleting..." : "Delete"}
           </Button>
         </div>
-      </div>
-      <div className="flex-1 overflow-hidden">
-        <PdfViewer url={state.url} fileName={state.fileName ?? "document.pdf"} />
       </div>
     </div>
   );
