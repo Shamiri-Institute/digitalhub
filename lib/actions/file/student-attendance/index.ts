@@ -20,11 +20,22 @@ export async function createStudentAttendanceDocument(payload: CreateStudentAtte
       throw new Error("The session has not been authenticated");
     }
 
-    await db.attendanceDocuments.create({
-      data: {
-        ...payload,
-        uploadedBy: session.user.id,
-      },
+    await db.$transaction(async (tx) => {
+      await tx.attendanceDocuments.updateMany({
+        where: {
+          sessionId: payload.sessionId,
+          groupId: payload.groupId,
+          archivedAt: null,
+        },
+        data: { archivedAt: new Date() },
+      });
+
+      await tx.attendanceDocuments.create({
+        data: {
+          ...payload,
+          uploadedBy: session.user.id!,
+        },
+      });
     });
 
     return {
