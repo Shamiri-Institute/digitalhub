@@ -63,7 +63,6 @@ export default function UploadStudentAttendanceDocument({
       if (!sessionId) missing.push("sessionId");
       if (missing.length > 0) {
         const msg = `Missing session data: ${missing.join(", ")}`;
-        console.error(msg, { schoolName, fellowName, groupName, sessionDate, sessionType, groupId, sessionId });
         toast({
           title: "Upload failed",
           description: msg,
