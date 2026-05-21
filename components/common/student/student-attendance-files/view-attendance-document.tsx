@@ -95,10 +95,10 @@ export default function ViewAttendanceDocument({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <span className="max-w-[60%] truncate text-sm font-medium text-gray-700">
+      <div className="space-y-2 border-b px-4 py-3">
+        <p className="truncate text-sm font-medium text-gray-700">
           {state.fileName ?? "document.pdf"}
-        </span>
+        </p>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" asChild>
             <a href={state.url} download={state.fileName ?? "document.pdf"}>
