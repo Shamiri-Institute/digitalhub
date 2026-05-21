@@ -74,3 +74,25 @@ export async function imagesToPdf(images: File[]): Promise<Blob> {
   const bytes = await pdfDoc.save();
   return new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
 }
+
+export async function appendToPdf(
+  existingPdfBytes: ArrayBuffer,
+  newImages: File[],
+): Promise<Blob> {
+  const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+  for (const image of newImages) {
+    const img = await loadImage(image);
+    const embedded = await embedImage(pdfDoc, image, img);
+    const { width, height, x, y } = calculateA4Fit(
+      img.naturalWidth,
+      img.naturalHeight,
+    );
+
+    const page = pdfDoc.addPage([A4_WIDTH_PTS, A4_HEIGHT_PTS]);
+    page.drawImage(embedded, { x, y, width, height });
+  }
+
+  const bytes = await pdfDoc.save();
+  return new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
+}

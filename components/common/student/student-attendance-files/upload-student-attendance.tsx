@@ -8,10 +8,13 @@ import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { objectId } from "#/lib/crypto";
-import { createStudentAttendanceDocument } from "#/lib/actions/file/student-attendance";
+import {
+  createStudentAttendanceDocument,
+  getAttendanceDocument,
+} from "#/lib/actions/file/student-attendance";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
-import { imagesToPdf } from "#/lib/utils/pdf";
+import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
 
 export default function UploadStudentAttendanceDocument({
   groupId,
@@ -100,7 +103,17 @@ export default function UploadStudentAttendanceDocument({
     setUploading(true);
 
     try {
-      const pdfBlob = await imagesToPdf(selectedFiles);
+      const existing = await getAttendanceDocument(sessionId, groupId);
+
+      let pdfBlob: Blob;
+      if (existing.success && existing.data?.presignedUrl) {
+        const response = await fetch(existing.data.presignedUrl);
+        const existingPdfBytes = await response.arrayBuffer();
+        pdfBlob = await appendToPdf(existingPdfBytes, selectedFiles);
+      } else {
+        pdfBlob = await imagesToPdf(selectedFiles);
+      }
+
       const pdfFile = new File([pdfBlob], "attendance.pdf", { type: "application/pdf" });
       await handleFileChange(pdfFile);
     } catch (error) {
