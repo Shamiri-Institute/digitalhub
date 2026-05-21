@@ -12,7 +12,7 @@ import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import type { Session } from "#/components/common/session/sessions-provider";
 import StudentAttendance from "#/components/common/student/student-attendance";
-import UploadAttendanceDocumentDialog from "#/components/common/student/upload-attendance-dialog";
+import UploadAttendanceDocumentDialog from "#/components/common/student/student-attendance-files/upload-attendance-dialog";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import DataTable from "#/components/data-table";
 

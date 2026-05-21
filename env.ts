@@ -14,6 +14,9 @@ const schema = z.object({
   // Recordings bucket (dedicated for session recordings)
   S3_RECORDINGS_BUCKET: z.string(),
   S3_RECORDINGS_REGION: z.string().default("af-south-1"),
+
+  S3_STUDENT_ATTENDANCE_BUCKET: z.string(),
+  S3_STUDENT_ATTENDANCE_REGION: z.string().default("af-south-1"),
 });
 
 export const env = process.env.CI

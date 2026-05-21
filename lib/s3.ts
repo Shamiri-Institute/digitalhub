@@ -10,12 +10,15 @@ import {
 
 import { env } from "#/env";
 
-export type S3Bucket = "uploads" | "recordings";
+export type S3Bucket = "uploads" | "recordings"|"student-attendance";
 
 function getBucketName(bucket: S3Bucket): string {
   switch (bucket) {
     case "recordings":
       return env.S3_RECORDINGS_BUCKET;
+
+    case "student-attendance":
+      return env.S3_STUDENT_ATTENDANCE_BUCKET;
     default:
       return env.S3_UPLOAD_BUCKET;
   }
@@ -25,6 +28,9 @@ function getBucketRegion(bucket: S3Bucket): string {
   switch (bucket) {
     case "recordings":
       return env.S3_RECORDINGS_REGION;
+
+    case "student-attendance":
+      return env.S3_STUDENT_ATTENDANCE_REGION;
     default:
       return env.S3_UPLOAD_REGION;
   }
