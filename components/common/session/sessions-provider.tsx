@@ -38,8 +38,8 @@ export type Session = Prisma.InterventionSessionGetPayload<{
         interventionGroups: {
           include: {
             leader: {
-              select: { fellowName: true },
-            },
+              select: { fellowName: true };
+            };
             students: {
               include: {
                 _count: {

@@ -11,7 +11,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { env } from "#/env";
 
-export type S3Bucket = "uploads" | "recordings"|"student-attendance";
+export type S3Bucket = "uploads" | "recordings" | "student-attendance";
 
 function getBucketName(bucket: S3Bucket): string {
   switch (bucket) {

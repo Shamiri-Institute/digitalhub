@@ -7,14 +7,14 @@ import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
-import { objectId } from "#/lib/crypto";
 import {
   createStudentAttendanceDocument,
   getAttendanceDocument,
 } from "#/lib/actions/file/student-attendance";
+import { objectId } from "#/lib/crypto";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
-import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
 import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
+import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
 
 export default function UploadStudentAttendanceDocument({
   groupId,
@@ -208,7 +208,19 @@ export default function UploadStudentAttendanceDocument({
         });
       }
     },
-    [uploadToS3, groupId, sessionId, schoolName, fellowName, groupName, sessionDate, sessionType, onClose, onUploadSuccess, toast],
+    [
+      uploadToS3,
+      groupId,
+      sessionId,
+      schoolName,
+      fellowName,
+      groupName,
+      sessionDate,
+      sessionType,
+      onClose,
+      onUploadSuccess,
+      toast,
+    ],
   );
 
   return (
@@ -223,12 +235,11 @@ export default function UploadStudentAttendanceDocument({
       {selectedFiles.length > 0 && (
         <div className="grid max-h-28 grid-cols-6 gap-2 overflow-y-auto">
           {selectedFiles.map((file, i) => (
-            <div key={`${file.name}_${i}`} className="group relative overflow-hidden rounded-lg border">
-              <img
-                src={previewUrls[i]}
-                alt={file.name}
-                className="h-12 w-full object-cover"
-              />
+            <div
+              key={`${file.name}_${i}`}
+              className="group relative overflow-hidden rounded-lg border"
+            >
+              <img src={previewUrls[i]} alt={file.name} className="h-12 w-full object-cover" />
               <button
                 type="button"
                 onClick={() => removeFile(i)}

@@ -2,8 +2,8 @@
 
 import type { ImplementerRole } from "@prisma/client";
 import { format } from "date-fns";
-import { useCallback, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import { useCallback, useState } from "react";
 import { SessionDetail } from "#/components/common/session/session-list";
 import type { Session } from "#/components/common/session/sessions-provider";
 import UploadStudentAttendanceDocument from "#/components/common/student/student-attendance-files/upload-student-attendance";
@@ -52,7 +52,12 @@ export default function AttendanceDocumentDialog({
               <div className="h-4 w-1 rounded-full bg-shamiri-new-blue" />
               <h3 className="text-sm font-semibold text-gray-900">View Document</h3>
             </div>
-            <ViewAttendanceDocument key={refreshKey} sessionId={session.id} groupId={groupId} onDeleteSuccess={handleRefresh} />
+            <ViewAttendanceDocument
+              key={refreshKey}
+              sessionId={session.id}
+              groupId={groupId}
+              onDeleteSuccess={handleRefresh}
+            />
           </div>
 
           <div className="border-t border-shamiri-light-grey" />

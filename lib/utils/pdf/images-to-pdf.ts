@@ -32,11 +32,7 @@ function calculateA4Fit(imgW: number, imgH: number): ScaledImagePosition {
   return { width, height, x, y };
 }
 
-async function embedImage(
-  pdfDoc: PDFDocument,
-  file: File,
-  img: HTMLImageElement,
-) {
+async function embedImage(pdfDoc: PDFDocument, file: File, img: HTMLImageElement) {
   const arrayBuffer = await file.arrayBuffer();
 
   if (file.type === "image/png") {
@@ -53,7 +49,13 @@ async function embedImage(
   const ctx = canvas.getContext("2d")!;
   ctx.drawImage(img, 0, 0);
   const pngData = canvas.toDataURL("image/png").split(",")[1] ?? "";
-  return pdfDoc.embedPng(new Uint8Array(atob(pngData).split("").map((c) => c.charCodeAt(0))));
+  return pdfDoc.embedPng(
+    new Uint8Array(
+      atob(pngData)
+        .split("")
+        .map((c) => c.charCodeAt(0)),
+    ),
+  );
 }
 
 export async function imagesToPdf(images: File[]): Promise<Blob> {
@@ -62,10 +64,7 @@ export async function imagesToPdf(images: File[]): Promise<Blob> {
   for (const image of images) {
     const img = await loadImage(image);
     const embedded = await embedImage(pdfDoc, image, img);
-    const { width, height, x, y } = calculateA4Fit(
-      img.naturalWidth,
-      img.naturalHeight,
-    );
+    const { width, height, x, y } = calculateA4Fit(img.naturalWidth, img.naturalHeight);
 
     const page = pdfDoc.addPage([A4_WIDTH_PTS, A4_HEIGHT_PTS]);
     page.drawImage(embedded, { x, y, width, height });
@@ -75,19 +74,13 @@ export async function imagesToPdf(images: File[]): Promise<Blob> {
   return new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
 }
 
-export async function appendToPdf(
-  existingPdfBytes: ArrayBuffer,
-  newImages: File[],
-): Promise<Blob> {
+export async function appendToPdf(existingPdfBytes: ArrayBuffer, newImages: File[]): Promise<Blob> {
   const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
   for (const image of newImages) {
     const img = await loadImage(image);
     const embedded = await embedImage(pdfDoc, image, img);
-    const { width, height, x, y } = calculateA4Fit(
-      img.naturalWidth,
-      img.naturalHeight,
-    );
+    const { width, height, x, y } = calculateA4Fit(img.naturalWidth, img.naturalHeight);
 
     const page = pdfDoc.addPage([A4_WIDTH_PTS, A4_HEIGHT_PTS]);
     page.drawImage(embedded, { x, y, width, height });

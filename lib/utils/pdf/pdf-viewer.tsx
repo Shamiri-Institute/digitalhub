@@ -5,13 +5,7 @@ import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 
-export default function PdfViewer({
-  url,
-  fileName,
-}: {
-  url: string;
-  fileName: string;
-}) {
+export default function PdfViewer({ url, fileName }: { url: string; fileName: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 

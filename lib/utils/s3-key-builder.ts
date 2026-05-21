@@ -72,7 +72,16 @@ export interface S3KeyParams {
  * // Returns: "recordings/2024/01/nairobi_primary_school/john_doe/group_a/session_1_rec_abc123xyz.mp3"
  */
 export function buildS3Key(params: S3KeyParams): string {
-  const { schoolName, fellowName, groupName, sessionType, recordingId, extension, prefix = "recordings", customFileName } = params;
+  const {
+    schoolName,
+    fellowName,
+    groupName,
+    sessionType,
+    recordingId,
+    extension,
+    prefix = "recordings",
+    customFileName,
+  } = params;
 
   // Get current date for year/month path
   const now = new Date();

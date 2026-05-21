@@ -1,4 +1,4 @@
 export * from "./constants";
-export * from "./types";
-export { imagesToPdf, appendToPdf } from "./images-to-pdf";
+export { appendToPdf, imagesToPdf } from "./images-to-pdf";
 export { default as PdfViewer } from "./pdf-viewer";
+export * from "./types";

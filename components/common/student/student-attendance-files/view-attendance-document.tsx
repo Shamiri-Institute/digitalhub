@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  archiveAttendanceDocument,
-  getAttendanceDocument,
-} from "#/lib/actions/file/student-attendance";
+import { Icons } from "#/components/icons";
 import { Alert, AlertDescription, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useToast } from "#/components/ui/use-toast";
-import { Icons } from "#/components/icons";
+import {
+  archiveAttendanceDocument,
+  getAttendanceDocument,
+} from "#/lib/actions/file/student-attendance";
 
 export default function ViewAttendanceDocument({
   sessionId,
