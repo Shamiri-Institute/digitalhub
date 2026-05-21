@@ -10,7 +10,7 @@ import { useToast } from "#/components/ui/use-toast";
 import { objectId } from "#/lib/crypto";
 import { createStudentAttendanceDocument } from "#/lib/actions/file/student-attendance";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
-import { buildS3Key } from "#/lib/utils/s3-key-builder";
+import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
 import { imagesToPdf } from "#/lib/utils/pdf";
 
 export default function UploadStudentAttendanceDocument({
@@ -137,6 +137,13 @@ export default function UploadStudentAttendanceDocument({
         const docId = objectId("att_doc");
         const extension = "pdf";
 
+        const sanitizedSession = sanitizeForS3Key(sessionType as string);
+        const sanitizedDate = (sessionDate as string).replace(/-/g, "_");
+        const sanitizedGroup = sanitizeForS3Key(groupName as string);
+        const sanitizedName = sanitizeForS3Key(fellowName as string);
+
+        const customFileName = `${sanitizedSession}_${sanitizedDate}_${sanitizedGroup}_${sanitizedName}_${docId}`;
+
         const s3Key = buildS3Key({
           schoolName: schoolName as string,
           fellowName: fellowName as string,
@@ -145,9 +152,10 @@ export default function UploadStudentAttendanceDocument({
           recordingId: docId,
           extension,
           prefix: "student-attendance",
+          customFileName,
         });
 
-        const fileName = `${sessionType as string}_${docId}.${extension}`;
+        const fileName = `${customFileName}.${extension}`;
 
         const { key } = await uploadToS3(file, {
           endpoint: {

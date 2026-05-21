@@ -51,6 +51,8 @@ export interface S3KeyParams {
   extension: string;
   /** Prefix of s3 bucket */
   prefix?: string;
+  /** Custom filename to use instead of the default {sessionType}_{recordingId}.{ext} */
+  customFileName?: string;
 }
 
 /**
@@ -70,7 +72,7 @@ export interface S3KeyParams {
  * // Returns: "recordings/2024/01/nairobi_primary_school/john_doe/group_a/session_1_rec_abc123xyz.mp3"
  */
 export function buildS3Key(params: S3KeyParams): string {
-  const { schoolName, fellowName, groupName, sessionType, recordingId, extension, prefix = "recordings"  } = params;
+  const { schoolName, fellowName, groupName, sessionType, recordingId, extension, prefix = "recordings", customFileName } = params;
 
   // Get current date for year/month path
   const now = new Date();
@@ -81,10 +83,14 @@ export function buildS3Key(params: S3KeyParams): string {
   const sanitizedSchool = sanitizeForS3Key(schoolName);
   const sanitizedFellow = sanitizeForS3Key(fellowName);
   const sanitizedGroup = sanitizeForS3Key(groupName);
-  const sanitizedSession = sanitizeForS3Key(sessionType);
 
   // Clean extension (remove leading dot if present)
   const cleanExtension = extension.replace(/^\./, "").toLowerCase();
+
+  // Use custom filename if provided, otherwise use default format
+  const filename = customFileName
+    ? `${customFileName}.${cleanExtension}`
+    : `${sanitizeForS3Key(sessionType)}_${recordingId}.${cleanExtension}`;
 
   // Build the key
   const key = [
@@ -94,7 +100,7 @@ export function buildS3Key(params: S3KeyParams): string {
     sanitizedSchool,
     sanitizedFellow,
     sanitizedGroup,
-    `${sanitizedSession}_${recordingId}.${cleanExtension}`,
+    filename,
   ].join("/");
 
   return key;
