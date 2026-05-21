@@ -2,7 +2,7 @@
 
 import { type ImplementerRole } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
-import UploadStudentAttendanceDocument from "#/components/common/student/upload-student-attendance";
+import UploadStudentAttendanceDocument from "#/components/common/student/student-attendance-files/upload-student-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
 import type { Session } from "#/components/common/session/sessions-provider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
