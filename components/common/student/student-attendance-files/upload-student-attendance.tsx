@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
@@ -11,6 +11,7 @@ import { objectId } from "#/lib/crypto";
 import { createStudentAttendanceDocument } from "#/lib/actions/file/student-attendance";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { buildS3Key } from "#/lib/utils/s3-key-builder";
+import { imagesToPdf } from "#/lib/utils/pdf";
 
 export default function UploadStudentAttendanceDocument({
   groupId,
@@ -31,24 +32,85 @@ export default function UploadStudentAttendanceDocument({
   sessionType?: string;
   onClose: (val: boolean) => void;
 }) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const { uploadToS3 } = useS3Upload();
-
   const { toast } = useToast();
 
-  const handleFileUpload = (files: File[]) => {
-    setSelectedFile(files[0] || null);
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
+
+  const addFiles = (files: File[]) => {
+    const newFiles = [...selectedFiles, ...files];
+    const newUrls = files.map((file) => URL.createObjectURL(file));
+    setSelectedFiles(newFiles);
+    setPreviewUrls((prev) => [...prev, ...newUrls]);
   };
 
+  const removeFile = useCallback((index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => {
+      if (prev[index]) URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLLabelElement>) => {
+      e.preventDefault();
+
+      let files: File[] = [];
+      if (e.dataTransfer.items) {
+        files = Array.from(e.dataTransfer.items)
+          .map((item) => item.getAsFile())
+          .filter((file): file is File => file !== null);
+      } else {
+        files = Array.from(e.dataTransfer.files);
+      }
+
+      if (files.length > 0) {
+        addFiles(files);
+      }
+    },
+    [selectedFiles],
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files || []);
+      if (files.length > 0) {
+        addFiles(files);
+      }
+    },
+    [selectedFiles],
+  );
+
   const handleUpload = async () => {
-    if (!selectedFile) {
-      toast({ title: "No file selected", variant: "destructive" });
-      console.error("No file selected");
+    if (selectedFiles.length === 0) {
+      toast({ title: "No files selected", variant: "destructive" });
       return;
     }
 
-    await handleFileChange(selectedFile);
+    setUploading(true);
+
+    try {
+      const pdfBlob = await imagesToPdf(selectedFiles);
+      const pdfFile = new File([pdfBlob], "attendance.pdf", { type: "application/pdf" });
+      await handleFileChange(pdfFile);
+    } catch (error) {
+      console.error("PDF conversion error:", error);
+      toast({
+        title: "PDF conversion failed",
+        description: "Could not convert images to PDF",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleFileChange = useCallback(
@@ -72,10 +134,8 @@ export default function UploadStudentAttendanceDocument({
       }
 
       try {
-        setUploading(true);
-
         const docId = objectId("att_doc");
-        const extension = file.name.split(".").pop()?.toLowerCase() ?? "pdf";
+        const extension = "pdf";
 
         const s3Key = buildS3Key({
           schoolName: schoolName as string,
@@ -121,8 +181,6 @@ export default function UploadStudentAttendanceDocument({
           description: "Something went wrong uploading the file",
           variant: "destructive",
         });
-      } finally {
-        setUploading(false);
       }
     },
     [uploadToS3, groupId, sessionId, schoolName, fellowName, groupName, sessionDate, sessionType, onClose, toast],
@@ -130,12 +188,37 @@ export default function UploadStudentAttendanceDocument({
 
   return (
     <div className="space-y-5">
-      <FileUploaderWithDrop
-        label="Upload attendance document"
-        onChange={handleFileUpload}
-        files={selectedFile ? [selectedFile] : []}
-        accept="application/pdf,image/*"
+      <FileDropzone
+        selectedCount={selectedFiles.length}
+        onDrop={handleDrop}
+        onInputChange={handleInputChange}
+        uploading={uploading}
       />
+
+      {selectedFiles.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {selectedFiles.map((file, i) => (
+            <div key={`${file.name}_${i}`} className="group relative overflow-hidden rounded-lg border">
+              <img
+                src={previewUrls[i]}
+                alt={file.name}
+                className="h-24 w-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => removeFile(i)}
+                disabled={uploading}
+                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <Icons.crossCircleFilled className="h-3 w-3" />
+              </button>
+              <span className="absolute bottom-0 left-0 right-0 truncate bg-black/50 px-1 text-xs text-white">
+                {file.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <Separator />
       <DialogFooter className="flex justify-end">
@@ -144,70 +227,39 @@ export default function UploadStudentAttendanceDocument({
         </Button>
         <Button
           type="submit"
-          disabled={!selectedFile || uploading}
+          disabled={selectedFiles.length === 0 || uploading}
           variant="brand"
           onClick={handleUpload}
           className="bg-shamiri-new-blue"
           loading={uploading}
         >
-          {uploading ? "Uploading attendance document..." : "Upload attendance document"}
+          {uploading ? "Processing upload..." : "Upload attendance document"}
         </Button>
       </DialogFooter>
     </div>
   );
 }
 
-function FileUploaderWithDrop({
-  label: _label,
-  onChange,
-  files,
-  className,
-  accept = "application/pdf,image/*",
+function FileDropzone({
+  selectedCount,
+  onDrop,
+  onInputChange,
+  uploading,
 }: {
-  label?: string;
-  onChange: (files: File[]) => void;
-  files: File[];
-  className?: string;
-  accept?: string;
+  selectedCount: number;
+  onDrop: (e: React.DragEvent<HTMLLabelElement>) => void;
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  uploading: boolean;
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (onChange) onChange(files);
-  };
-
-  const handleDrop = async (e: React.DragEvent<HTMLLabelElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
-
-    let files: File[];
-
-    if (e.dataTransfer.items) {
-      files = Array.from(e.dataTransfer.items)
-        .map((item) => item.getAsFile())
-        .filter((file): file is File => file !== null);
-    } else {
-      files = Array.from(e.dataTransfer.files);
-    }
-
-    if (files?.length) {
-      if (onChange) onChange(files);
-    } else {
-      window.alert("Invalid file type.");
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
-    e.preventDefault();
-  };
+  const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className={clsx(className || "")}>
+    <div>
       <label
         id="drop_zone"
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
+        onDrop={onDrop}
+        onDragOver={(e) => e.preventDefault()}
         onDragEnter={(e) => {
           e.preventDefault();
           setIsDragOver(true);
@@ -217,34 +269,36 @@ function FileUploaderWithDrop({
           setIsDragOver(false);
         }}
         className={clsx(
-          "mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-3",
-          isDragOver ? "border-secondary" : "border-gray-200",
+          "mt-1 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-3 transition-colors",
+          isDragOver ? "border-shamiri-new-blue bg-blue-bg" : "border-gray-200",
+          uploading && "pointer-events-none opacity-50",
         )}
       >
-        <div className=" flex w-full items-center space-x-6">
+        <div className="flex w-full items-center space-x-6">
           <div className="cursor-pointer rounded-lg border border-gray-200 p-2">
-            <span className="text-normal cursor-pointer text-center">{"Select Files"}</span>
+            <span className="text-normal cursor-pointer text-center">Select Images</span>
           </div>
-
-          <div className="flex space-x-2">
-            {files?.length === 0 && <Icons.uploadCloudIcon className="h-6 w-6" />}
-            <span className="text-normal text-center">Drop files here...</span>
-            <input type="file" accept={accept} hidden onChange={handleUpload} />
+          <div className="flex items-center space-x-2">
+            <Icons.uploadCloudIcon className="h-6 w-6 text-gray-400" />
+            <span className="text-normal text-center text-gray-500">
+              {selectedCount > 0
+                ? `${selectedCount} file${selectedCount > 1 ? "s" : ""} selected`
+                : "Drop images here..."}
+            </span>
           </div>
         </div>
-        <div className="mt-3 flex w-full border-t border-gray-500 ">
-          {files?.length !== 0 && (
-            <div className="text-normal flex items-center space-y-1 pt-2 text-center text-gray-700">
-              {files.map((file: File) => (
-                <div key={file.name} className="flex items-center space-x-2">
-                  <Icons.check className="h-4 w-4" />
-                  <span key={file.name}>{file.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={onInputChange}
+        />
       </label>
+      <p className="mt-1 text-xs text-gray-500">
+        Supports PNG, JPEG, WebP and other image formats. Images are combined into a single PDF.
+      </p>
     </div>
   );
 }
