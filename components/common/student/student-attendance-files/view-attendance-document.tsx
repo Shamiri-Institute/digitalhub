@@ -94,13 +94,25 @@ export default function ViewAttendanceDocument({
   if (!state.url) return null;
 
   return (
-    <div className="relative h-full">
-      <div className="absolute right-2 top-2 z-10">
-        <Button variant="destructive" size="sm" onClick={handleDelete} loading={state.archiving}>
-          {state.archiving ? "Deleting..." : "Delete"}
-        </Button>
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b px-4 py-3">
+        <span className="max-w-[60%] truncate text-sm font-medium text-gray-700">
+          {state.fileName ?? "document.pdf"}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <a href={state.url} download={state.fileName ?? "document.pdf"}>
+              Download
+            </a>
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handleDelete} loading={state.archiving}>
+            {state.archiving ? "Deleting..." : "Delete"}
+          </Button>
+        </div>
       </div>
-      <PdfViewer url={state.url} fileName={state.fileName ?? "document.pdf"} />
+      <div className="flex-1 overflow-hidden">
+        <PdfViewer url={state.url} fileName={state.fileName ?? "document.pdf"} />
+      </div>
     </div>
   );
 }
