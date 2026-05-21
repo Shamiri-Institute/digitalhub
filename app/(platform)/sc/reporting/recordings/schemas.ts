@@ -211,6 +211,22 @@ export async function validateAudioMagicBytes(file: File): Promise<FileValidatio
 }
 
 /**
+ * Zod schema for the edit recording form.
+ * schoolId is intentionally excluded — it is derived server-side from groupId.
+ */
+export const RecordingEditSchema = z.object({
+  fellowId: z.string().min(1, "Fellow is required"),
+  groupId: z.string().min(1, "Intervention group is required"),
+  sessionId: z.string().min(1, "Session is required"),
+  originalFileName: z
+    .string()
+    .min(1, "Recording name is required")
+    .max(255, "Recording name must be 255 characters or fewer"),
+});
+
+export type RecordingEditFormData = z.infer<typeof RecordingEditSchema>;
+
+/**
  * Get file extension from filename
  */
 export function getFileExtension(filename: string): string {

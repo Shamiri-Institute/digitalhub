@@ -19,6 +19,10 @@ export interface RecordingTableData {
   retryCount: number;
   overallScore: string | null;
   fidelityFeedback: JsonValue;
+  fellowId: string;
+  schoolId: string;
+  groupId: string;
+  sessionId: string;
   fellowName: string;
   schoolName: string;
   groupName: string;
@@ -30,6 +34,7 @@ export interface RecordingTableData {
 export interface ColumnState {
   setViewFeedbackDialog: Dispatch<SetStateAction<boolean>>;
   setSelectedRecording: Dispatch<SetStateAction<RecordingTableData | null>>;
+  setEditDialog: Dispatch<SetStateAction<boolean>>;
 }
 
 function formatDate(date: Date): string {
