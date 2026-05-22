@@ -9,6 +9,7 @@ import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import {
   createStudentAttendanceDocument,
+  deleteAttendanceFile,
   getAttendanceDocument,
 } from "#/lib/actions/file/student-attendance";
 import { objectId } from "#/lib/crypto";
@@ -107,6 +108,8 @@ export default function UploadStudentAttendanceDocument({
     try {
       const existing = await getAttendanceDocument(sessionId, groupId);
 
+      const oldDocKey = existing.success ? existing.data?.link : undefined;
+
       let pdfBlob: Blob;
       if (existing.success && existing.data?.presignedUrl) {
         const response = await fetch(existing.data.presignedUrl);
@@ -117,7 +120,7 @@ export default function UploadStudentAttendanceDocument({
       }
 
       const pdfFile = new File([pdfBlob], "attendance.pdf", { type: "application/pdf" });
-      await handleFileChange(pdfFile);
+      await handleFileChange(pdfFile, oldDocKey);
     } catch (error) {
       console.error("PDF conversion error:", error);
       toast({
@@ -131,7 +134,7 @@ export default function UploadStudentAttendanceDocument({
   };
 
   const handleFileChange = useCallback(
-    async (file: File) => {
+    async (file: File, oldDocKey?: string) => {
       const missing: string[] = [];
       if (!schoolName) missing.push("schoolName");
       if (!fellowName) missing.push("fellowName");
@@ -194,6 +197,12 @@ export default function UploadStudentAttendanceDocument({
         });
 
         if (response.success) {
+          if (oldDocKey) {
+            deleteAttendanceFile(oldDocKey).catch((err) =>
+              console.error("Failed to delete old attendance file:", err),
+            );
+          }
+
           onUploadSuccess?.();
           setSelectedFiles([]);
           setPreviewUrls([]);

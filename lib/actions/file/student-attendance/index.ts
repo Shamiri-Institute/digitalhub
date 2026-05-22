@@ -3,7 +3,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
-import { getPresignedUrl } from "#/lib/s3";
+import { deleteObject, getPresignedUrl } from "#/lib/s3";
 
 export interface CreateStudentAttendanceDocPayload {
   fileName: string;
@@ -80,6 +80,7 @@ export async function getAttendanceDocument(sessionId: string, groupId: string) 
       data: {
         id: doc.id,
         fileName: doc.fileName,
+        link: doc.link,
         presignedUrl,
         createdAt: doc.createdAt,
       },
@@ -87,6 +88,33 @@ export async function getAttendanceDocument(sessionId: string, groupId: string) 
   } catch (error) {
     console.error(error);
     return { success: false, error: "Failed to load attendance document" };
+  }
+}
+
+export async function deleteAttendanceFile(key: string) {
+  try {
+    const session = await getCurrentUserSession();
+
+    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    const bucket = key.startsWith("student-attendance/")
+      ? ("student-attendance" as const)
+      : ("uploads" as const);
+
+    await deleteObject({ Key: key }, bucket);
+
+    return {
+      success: true,
+      message: "Successfully deleted the attendance file.",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      error: "Something went wrong deleting the attendance file",
+    };
   }
 }
 
