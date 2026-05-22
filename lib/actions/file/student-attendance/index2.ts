@@ -4,7 +4,7 @@ import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
 import { deleteObject, getPresignedUrl } from "#/lib/s3";
-import { AttendanceDocument, StudentAttendanceDocsFilters } from "./types";
+import { StudentAttendanceDocsFilters } from "./types";
 
 export interface CreateStudentAttendanceDocPayload {
   fileName: string;
@@ -53,38 +53,45 @@ export async function createStudentAttendanceDocument(payload: CreateStudentAtte
   }
 }
 
-export async function getAttendanceDocument(filters:StudentAttendanceDocsFilters):Promise<AttendanceDocument> {
+export async function getAttendanceDocument(filters:StudentAttendanceDocsFilters) {
+  try {
 
-  const { sessionId, groupId } = filters;
-  const session = await getCurrentUserSession();
+    const { sessionId, groupId } = filters;
+    const session = await getCurrentUserSession();
 
-  if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
-    throw new Error(`user is unauthorized`)
+    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const doc = await db.attendanceDocuments.findFirst({
+      where: { sessionId, groupId, archivedAt: null },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!doc) {
+      return { success: false, error: "No attendance document found for this session" };
+    }
+
+    const bucket = doc.link.startsWith("student-attendance/")
+      ? ("student-attendance" as const)
+      : ("uploads" as const);
+
+    const presignedUrl = await getPresignedUrl(doc.link, bucket);
+
+    return {
+      success: true,
+      data: {
+        id: doc.id,
+        fileName: doc.fileName,
+        link: doc.link,
+        presignedUrl,
+        createdAt: doc.createdAt,
+      },
+    };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to load attendance document" };
   }
-
-  const doc = await db.attendanceDocuments.findFirst({
-    where: { sessionId, groupId, archivedAt: null },
-    orderBy: { createdAt: "desc" },
-  });
-
-  if (!doc) throw new Error(`No attendance document was found`)
-
-  const bucket = doc.link.startsWith("student-attendance/")
-    ? ("student-attendance" as const)
-    : ("uploads" as const);
-
-  const presignedUrl = await getPresignedUrl(doc.link, bucket);
-
-  const document: AttendanceDocument = {
-    id: doc.id,
-    fileName: doc.fileName,
-    link: doc.link,
-    presignedUrl,
-    createdAt: doc.createdAt,
-  }
-
-  return document;
-
 }
 
 export async function deleteAttendanceFile(key: string) {
