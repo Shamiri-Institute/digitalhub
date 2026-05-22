@@ -10,7 +10,7 @@ import {
   createStudentAttendanceDocument,
   deleteAttendanceFile,
   getAttendanceDocument,
-} from "#/lib/actions/file/student-attendance";
+} from "#/lib/actions/file/student-attendance/index2";
 import { objectId } from "#/lib/crypto";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
@@ -86,7 +86,7 @@ export default function UploadStudentAttendanceDocument({
     setUploading(true);
 
     try {
-      const existing = await getAttendanceDocument(sessionId, groupId);
+      const existing = await getAttendanceDocument({ sessionId: sessionId, groupId:groupId });
 
       const oldDocKey = existing.success ? existing.data?.link : undefined;
 

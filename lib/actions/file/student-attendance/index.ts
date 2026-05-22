@@ -4,7 +4,7 @@ import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
 import { deleteObject, getPresignedUrl } from "#/lib/s3";
-import { AttendanceDocument, StudentAttendanceDocsFilters } from "./types";
+import { AttendanceDoc, StudentAttendanceDocsFilters } from "./types";
 
 export interface CreateStudentAttendanceDocPayload {
   fileName: string;
@@ -53,7 +53,7 @@ export async function createStudentAttendanceDocument(payload: CreateStudentAtte
   }
 }
 
-export async function getAttendanceDocument(filters:StudentAttendanceDocsFilters):Promise<AttendanceDocument> {
+export async function getAttendanceDocument(filters:StudentAttendanceDocsFilters):Promise<AttendanceDoc> {
 
   const { sessionId, groupId } = filters;
   const session = await getCurrentUserSession();
@@ -75,7 +75,7 @@ export async function getAttendanceDocument(filters:StudentAttendanceDocsFilters
 
   const presignedUrl = await getPresignedUrl(doc.link, bucket);
 
-  const document: AttendanceDocument = {
+  const document: AttendanceDoc = {
     id: doc.id,
     fileName: doc.fileName,
     link: doc.link,
