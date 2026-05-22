@@ -45,16 +45,17 @@ export default function UploadStudentAttendanceDocument({
 
   useEffect(() => {
     return () => {
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+      previewUrls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
     };
   }, [previewUrls]);
 
-  const addFiles = (files: File[]) => {
-    const newFiles = [...selectedFiles, ...files];
+  const addFiles = useCallback((files: File[]) => {
+    setSelectedFiles((prev) => [...prev, ...files]);
     const newUrls = files.map((file) => URL.createObjectURL(file));
-    setSelectedFiles(newFiles);
     setPreviewUrls((prev) => [...prev, ...newUrls]);
-  };
+  }, []);
 
   const removeFile = useCallback((index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
@@ -81,7 +82,7 @@ export default function UploadStudentAttendanceDocument({
         addFiles(files);
       }
     },
-    [selectedFiles],
+    [addFiles],
   );
 
   const handleInputChange = useCallback(
@@ -91,7 +92,7 @@ export default function UploadStudentAttendanceDocument({
         addFiles(files);
       }
     },
-    [selectedFiles],
+    [addFiles],
   );
 
   const handleUpload = async () => {
@@ -217,7 +218,6 @@ export default function UploadStudentAttendanceDocument({
       groupName,
       sessionDate,
       sessionType,
-      onClose,
       onUploadSuccess,
       toast,
     ],
@@ -236,9 +236,10 @@ export default function UploadStudentAttendanceDocument({
         <div className="grid max-h-28 grid-cols-6 gap-2 overflow-y-auto">
           {selectedFiles.map((file, i) => (
             <div
-              key={`${file.name}_${i}`}
+              key={`${file.name}_${file.size}_${file.lastModified}`}
               className="group relative overflow-hidden rounded-lg border"
             >
+              {/* biome-ignore lint/performance/noImgElement: blob URL previews cannot use next/image */}
               <img src={previewUrls[i]} alt={file.name} className="h-12 w-full object-cover" />
               <button
                 type="button"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
-import { Alert, AlertDescription, AlertTitle } from "#/components/ui/alert";
+import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useToast } from "#/components/ui/use-toast";
@@ -32,18 +32,20 @@ export default function ViewAttendanceDocument({
   }>({ loading: true });
 
   useEffect(() => {
-    getAttendanceDocument(sessionId, groupId).then((result) => {
-      if (result.success) {
-        setState({
-          loading: false,
-          url: result.data!.presignedUrl,
-          fileName: result.data!.fileName,
-          id: result.data!.id,
-        });
-      } else {
-        setState({ loading: false, error: result.error });
-      }
-    });
+    getAttendanceDocument(sessionId, groupId)
+      .then((result) => {
+        if (result.success) {
+          setState({
+            loading: false,
+            url: result.data?.presignedUrl,
+            fileName: result.data?.fileName,
+            id: result.data?.id,
+          });
+        } else {
+          setState({ loading: false, error: result.error });
+        }
+      })
+      .catch(() => setState({ loading: false, error: "Failed to load document" }));
   }, [sessionId, groupId]);
 
   const handleDelete = async () => {

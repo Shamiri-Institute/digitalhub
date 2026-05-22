@@ -46,7 +46,8 @@ async function embedImage(pdfDoc: PDFDocument, file: File, img: HTMLImageElement
   const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;
   canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to get 2d rendering context");
   ctx.drawImage(img, 0, 0);
   const pngData = canvas.toDataURL("image/png").split(",")[1] ?? "";
   return pdfDoc.embedPng(
