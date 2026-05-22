@@ -93,6 +93,7 @@ export default function UploadStudentAttendanceDocument({
       if (files.length > 0) {
         addFiles(files);
       }
+      e.target.value = "";
     },
     [addFiles],
   );
