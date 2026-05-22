@@ -4,6 +4,7 @@ import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
 import { deleteObject, getPresignedUrl } from "#/lib/s3";
+import { StudentAttendanceDocsFilters } from "./types";
 
 export interface CreateStudentAttendanceDocPayload {
   fileName: string;
@@ -52,8 +53,10 @@ export async function createStudentAttendanceDocument(payload: CreateStudentAtte
   }
 }
 
-export async function getAttendanceDocument(sessionId: string, groupId: string) {
+export async function getAttendanceDocument(filters:StudentAttendanceDocsFilters) {
   try {
+
+    const { sessionId, groupId } = filters;
     const session = await getCurrentUserSession();
 
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
