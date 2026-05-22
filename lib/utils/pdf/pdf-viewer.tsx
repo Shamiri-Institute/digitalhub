@@ -29,6 +29,7 @@ export default function PdfViewer({ url, fileName }: { url: string; fileName: st
         )}
         <iframe
           src={url}
+          title={fileName}
           className="h-full w-full"
           onLoad={() => setLoading(false)}
           onError={() => setError(true)}
