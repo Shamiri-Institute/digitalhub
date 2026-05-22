@@ -40,6 +40,7 @@ export default function UploadStudentAttendanceDocument({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { uploadToS3 } = useS3Upload();
   const { toast } = useToast();
 
@@ -239,25 +240,22 @@ export default function UploadStudentAttendanceDocument({
         </label>
       </div>
 
-      {/*
-      <FileDropzone
-        selectedCount={selectedFiles.length}
-        onDrop={handleDrop}
-        onInputChange={handleInputChange}
-        uploading={uploading}
-      />
-
       {selectedFiles.length > 0 && (
-        <div className="grid max-h-28 grid-cols-6 gap-2 overflow-y-auto">
+        <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
           {selectedFiles.map((file, i) => (
             <div
               key={`${file.name}_${file.size}_${file.lastModified}`}
-              className="group relative overflow-hidden rounded-lg border"
+              className="group relative overflow-hidden rounded-lg border cursor-pointer"
+              onClick={() => setLightboxIndex(i)}
             >
-              <img src={previewUrls[i]} alt={file.name} className="h-12 w-full object-cover" />
+              {/* biome-ignore lint/performance/noImgElement: blob URL previews cannot use next/image */}
+              <img src={previewUrls[i]} alt={file.name} className="h-20 w-full object-cover" />
               <button
                 type="button"
-                onClick={() => removeFile(i)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeFile(i);
+                }}
                 disabled={uploading}
                 className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition-opacity group-hover:opacity-100"
               >
@@ -270,7 +268,31 @@ export default function UploadStudentAttendanceDocument({
           ))}
         </div>
       )}
-      */}
+
+      {lightboxIndex !== null && previewUrls[lightboxIndex] && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightboxIndex(null)}
+        >
+          {/* biome-ignore lint/performance/noImgElement: blob URL previews */}
+          <img
+            src={previewUrls[lightboxIndex]}
+            alt={selectedFiles[lightboxIndex]?.name}
+            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            onClick={() => setLightboxIndex(null)}
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+          >
+            <Icons.crossCircleFilled className="h-5 w-5" />
+          </button>
+          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 truncate rounded bg-black/50 px-3 py-1 text-xs text-white">
+            {selectedFiles[lightboxIndex]?.name}
+          </span>
+        </div>
+      )}
 
       <Separator />
       <DialogFooter className="flex justify-end">
