@@ -56,7 +56,10 @@ export async function createAttendancePdf(filters:StudentAttendanceDocsFilters, 
   return pdfFile
 }
 
-function buildAttendanceS3Key(fields: AttendanceDocS3Key): string{
+function buildAttendanceS3Key(fields: AttendanceDocS3Key): {
+  fileName: string,
+  s3Key:string
+}{
 
   const { schoolName, fellowName, groupName, sessionDate, sessionType, groupId, sessionId } = fields;
 
@@ -83,5 +86,5 @@ function buildAttendanceS3Key(fields: AttendanceDocS3Key): string{
     customFileName,
   });
 
-  return s3Key;
+  return { fileName: customFileName, s3Key };
 }
