@@ -225,6 +225,21 @@ export default function UploadStudentAttendanceDocument({
 
   return (
     <div className="space-y-3">
+      <div className="flex justify-center">
+        <label className="flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed border-shamiri-new-blue bg-blue-bg p-6 transition-colors hover:bg-blue-bg/80">
+          <Icons.camera className="h-8 w-8 text-shamiri-new-blue" />
+          <span className="mt-2 text-sm font-medium text-shamiri-new-blue">Take Photo</span>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={handleInputChange}
+          />
+        </label>
+      </div>
+
+      {/*
       <FileDropzone
         selectedCount={selectedFiles.length}
         onDrop={handleDrop}
@@ -239,7 +254,6 @@ export default function UploadStudentAttendanceDocument({
               key={`${file.name}_${file.size}_${file.lastModified}`}
               className="group relative overflow-hidden rounded-lg border"
             >
-              {/* biome-ignore lint/performance/noImgElement: blob URL previews cannot use next/image */}
               <img src={previewUrls[i]} alt={file.name} className="h-12 w-full object-cover" />
               <button
                 type="button"
@@ -256,6 +270,7 @@ export default function UploadStudentAttendanceDocument({
           ))}
         </div>
       )}
+      */}
 
       <Separator />
       <DialogFooter className="flex justify-end">
