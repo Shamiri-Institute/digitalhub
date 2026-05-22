@@ -1,7 +1,6 @@
 "use client";
 
-import clsx from "clsx";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
@@ -66,26 +65,6 @@ export default function UploadStudentAttendanceDocument({
       return prev.filter((_, i) => i !== index);
     });
   }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLLabelElement>) => {
-      e.preventDefault();
-
-      let files: File[] = [];
-      if (e.dataTransfer.items) {
-        files = Array.from(e.dataTransfer.items)
-          .map((item) => item.getAsFile())
-          .filter((file): file is File => file !== null);
-      } else {
-        files = Array.from(e.dataTransfer.files);
-      }
-
-      if (files.length > 0) {
-        addFiles(files);
-      }
-    },
-    [addFiles],
-  );
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -310,7 +289,7 @@ export default function UploadStudentAttendanceDocument({
           Cancel
         </Button>
         <Button
-          type="submit"
+          type="button"
           disabled={selectedFiles.length === 0 || uploading}
           variant="brand"
           onClick={handleUpload}
@@ -320,69 +299,6 @@ export default function UploadStudentAttendanceDocument({
           {uploading ? "Processing upload..." : "Upload attendance document"}
         </Button>
       </DialogFooter>
-    </div>
-  );
-}
-
-function FileDropzone({
-  selectedCount,
-  onDrop,
-  onInputChange,
-  uploading,
-}: {
-  selectedCount: number;
-  onDrop: (e: React.DragEvent<HTMLLabelElement>) => void;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  uploading: boolean;
-}) {
-  const [isDragOver, setIsDragOver] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  return (
-    <div>
-      <label
-        id="drop_zone"
-        onDrop={onDrop}
-        onDragOver={(e) => e.preventDefault()}
-        onDragEnter={(e) => {
-          e.preventDefault();
-          setIsDragOver(true);
-        }}
-        onDragLeave={(e) => {
-          e.preventDefault();
-          setIsDragOver(false);
-        }}
-        className={clsx(
-          "mt-1 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-3 transition-colors",
-          isDragOver ? "border-shamiri-new-blue bg-blue-bg" : "border-gray-200",
-          uploading && "pointer-events-none opacity-50",
-        )}
-      >
-        <div className="flex w-full items-center space-x-6">
-          <div className="cursor-pointer rounded-lg border border-gray-200 p-2">
-            <span className="text-normal cursor-pointer text-center">Select Images</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Icons.uploadCloudIcon className="h-6 w-6 text-gray-400" />
-            <span className="text-normal text-center text-gray-500">
-              {selectedCount > 0
-                ? `${selectedCount} file${selectedCount > 1 ? "s" : ""} selected`
-                : "Drop images here..."}
-            </span>
-          </div>
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          onChange={onInputChange}
-        />
-      </label>
-      <p className="mt-1 text-xs text-gray-500">
-        Supports PNG, JPEG, WebP and other image formats. Images are combined into a single PDF.
-      </p>
     </div>
   );
 }
