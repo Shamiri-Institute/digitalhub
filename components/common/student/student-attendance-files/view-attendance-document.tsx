@@ -8,6 +8,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { useToast } from "#/components/ui/use-toast";
 import {
   archiveAttendanceDocument,
+  deleteAttendanceFile,
   getAttendanceDocument,
 } from "#/lib/actions/file/student-attendance";
 
@@ -27,6 +28,7 @@ export default function ViewAttendanceDocument({
     url?: string;
     fileName?: string;
     id?: string;
+    link?: string;
     archived?: boolean;
     archiving?: boolean;
   }>({ loading: true });
@@ -40,6 +42,7 @@ export default function ViewAttendanceDocument({
             url: result.data?.presignedUrl,
             fileName: result.data?.fileName,
             id: result.data?.id,
+            link: result.data?.link,
           });
         } else {
           setState({ loading: false, error: result.error });
@@ -53,6 +56,12 @@ export default function ViewAttendanceDocument({
     setState((prev) => ({ ...prev, archiving: true }));
     const result = await archiveAttendanceDocument(state.id);
     if (result.success) {
+      if (state.link) {
+        deleteAttendanceFile(state.link).catch((err) =>
+          console.error("Failed to delete S3 attendance file:", err),
+        );
+      }
+
       setState({ loading: false, archived: true, archiving: false });
       onDeleteSuccess?.();
       toast({ description: "Attendance document deleted successfully." });
