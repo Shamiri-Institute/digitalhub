@@ -37,7 +37,7 @@ export default function UploadStudentAttendanceDocument({
   const [uploading, setUploading] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { toast } = useToast();
-  const { uploadToS3, files: uploadFiles } = useS3Upload();
+  const { uploadToS3 } = useS3Upload();
 
   useEffect(() => {
     return () => {
@@ -109,11 +109,11 @@ export default function UploadStudentAttendanceDocument({
       };
 
       const existing = await getAttendanceDocument(filters);
-      const oldS3Key = existing.data?.link ? existing.data?.link: null;
+
+      const oldS3Key = existing.data?.link ? existing.data?.link : null;
+
       const pdfFile = await createAttendancePdf(oldS3Key, selectedFiles)
-
       const { fileName, s3Key } = buildAttendanceS3Key(s3KeyFields);
-
       await uploadToS3(pdfFile, {
         endpoint: { request: { body: { key: s3Key, bucket: "student-attendance" } } },
       });
