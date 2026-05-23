@@ -4,7 +4,7 @@ import { putObject } from "#/lib/s3";
 import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
 import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
 import { ApiResponse } from "#/types/api.types";
-import { createStudentAttendanceDocument, getAttendanceDocument } from ".";
+import { createStudentAttendanceDocument, deleteAttendanceFile, getAttendanceDocument } from ".";
 import { AttendanceDocS3Key, StudentAttendanceDocsFilters } from "./types";
 
 export async function uploadAttendanceDocument(
@@ -16,12 +16,12 @@ export async function uploadAttendanceDocument(
 
     if (!filters.groupId || !filters.sessionId) throw new Error(`No groupId or session Id was prpvided`)
 
-    const attendancePdf = await createAttendancePdf(filters, files)
-    if (!attendancePdf) throw new Error(`No attendance pdf was generated`);
+    const { pdfFile, oldS3Key } = await createAttendancePdf(filters, files);
+    if (!pdfFile) throw new Error(`No attendance pdf was generated`);
 
     const { fileName ,s3Key } = buildAttendanceS3Key(s3KeyFields);
 
-    const buffer = Buffer.from(await attendancePdf.arrayBuffer());
+    const buffer = Buffer.from(await pdfFile.arrayBuffer());
 
     await putObject(
       { Body: buffer, Key: s3Key, ContentType: "application/pdf" },
@@ -35,6 +35,12 @@ export async function uploadAttendanceDocument(
       link:s3Key
     })
 
+    if (oldS3Key) deleteAttendanceFile(oldS3Key);
+
+    const response: ApiResponse = {
+      success: true,
+      message: `Successfully created attendance pdf`
+    }
 
   } catch (error:any) {
 
@@ -47,7 +53,10 @@ export async function uploadAttendanceDocument(
   }
 }
 
-export async function createAttendancePdf(filters:StudentAttendanceDocsFilters, files:File[]):Promise<File> {
+export async function createAttendancePdf(filters: StudentAttendanceDocsFilters, files: File[]): Promise<{
+  pdfFile: File,
+  oldS3Key:string | null
+}> {
 
   const existing = await getAttendanceDocument(filters);
 
@@ -63,8 +72,9 @@ export async function createAttendancePdf(filters:StudentAttendanceDocsFilters, 
   }
 
   const pdfFile = new File([pdfBlob], "attendance.pdf", { type: "application/pdf" });
+  const oldS3Key = existing.link ? existing.link : null
 
-  return pdfFile
+  return { pdfFile, oldS3Key };
 }
 
 function buildAttendanceS3Key(fields: AttendanceDocS3Key): {
