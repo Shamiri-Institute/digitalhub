@@ -4,53 +4,36 @@ import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
 import { deleteObject, getPresignedUrl } from "#/lib/s3";
-import { AttendanceDoc, StudentAttendanceDocsFilters } from "./types";
+import { AttendanceDoc, CreateStudentAttendanceDocPayload, StudentAttendanceDocsFilters } from "./types";
 
-export interface CreateStudentAttendanceDocPayload {
-  fileName: string;
-  groupId: string;
-  sessionId: string;
-  link: string;
-}
+
 
 export async function createStudentAttendanceDocument(payload: CreateStudentAttendanceDocPayload) {
-  try {
-    const session = await getCurrentUserSession();
+  const session = await getCurrentUserSession();
 
-    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
-      throw new Error("The session has not been authenticated");
-    }
+  if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
+    throw new Error("The session has not been authenticated");
+  }
 
-    const userId = session.user.id;
-    await db.$transaction(async (tx) => {
-      await tx.attendanceDocuments.updateMany({
-        where: {
-          sessionId: payload.sessionId,
-          groupId: payload.groupId,
-          archivedAt: null,
-        },
-        data: { archivedAt: new Date() },
-      });
-
-      await tx.attendanceDocuments.create({
-        data: {
-          ...payload,
-          uploadedBy: userId,
-        },
-      });
+  const userId = session.user.id;
+  await db.$transaction(async (tx) => {
+    await tx.attendanceDocuments.updateMany({
+      where: {
+        sessionId: payload.sessionId,
+        groupId: payload.groupId,
+        archivedAt: null,
+      },
+      data: { archivedAt: new Date() },
     });
 
-    return {
-      success: true,
-      message: "Successfully uploaded the document.",
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      error: "Something went wrong uploading the document",
-      success: false,
-    };
-  }
+    await tx.attendanceDocuments.create({
+      data: {
+        ...payload,
+        uploadedBy: userId,
+      },
+    });
+  });
+
 }
 
 export async function getAttendanceDocument(filters:StudentAttendanceDocsFilters):Promise<AttendanceDoc> {

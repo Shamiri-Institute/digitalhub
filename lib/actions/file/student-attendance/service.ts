@@ -1,9 +1,10 @@
 import { objectId } from "#/lib/crypto";
 import useS3Upload from "#/lib/hooks/use-s3-upload";
+import { putObject } from "#/lib/s3";
 import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
 import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
 import { ApiResponse } from "#/types/api.types";
-import { getAttendanceDocument } from ".";
+import { createStudentAttendanceDocument, getAttendanceDocument } from ".";
 import { AttendanceDocS3Key, StudentAttendanceDocsFilters } from "./types";
 
 export async function uploadAttendanceDocument(
@@ -13,12 +14,26 @@ export async function uploadAttendanceDocument(
 ) {
   try {
 
-    const attendancePdf = createAttendancePdf(filters, files)
+    if (!filters.groupId || !filters.sessionId) throw new Error(`No groupId or session Id was prpvided`)
+
+    const attendancePdf = await createAttendancePdf(filters, files)
     if (!attendancePdf) throw new Error(`No attendance pdf was generated`);
 
-    const { s3Key, fileName } = buildAttendanceS3Key(s3KeyFields);
+    const { fileName ,s3Key } = buildAttendanceS3Key(s3KeyFields);
 
-    const {} = useS3Upload()
+    const buffer = Buffer.from(await attendancePdf.arrayBuffer());
+
+    await putObject(
+      { Body: buffer, Key: s3Key, ContentType: "application/pdf" },
+      "student-attendance"
+    );
+
+    await createStudentAttendanceDocument({
+      groupId: filters.groupId,
+      sessionId: filters.sessionId,
+      fileName,
+      link:s3Key
+    })
 
 
   } catch (error:any) {
@@ -52,12 +67,12 @@ export async function createAttendancePdf(filters:StudentAttendanceDocsFilters, 
   return pdfFile
 }
 
-function buildAttendanceS3Key(fields: AttendanceDocS3Key):{
-  fileName: string,
+function buildAttendanceS3Key(fields: AttendanceDocS3Key): {
+  fileName:string,
   s3Key:string
 }{
 
-  const { schoolName, fellowName, groupName, sessionDate, sessionType, groupId, sessionId } = fields;
+  const { schoolName, fellowName, groupName, sessionDate, sessionType } = fields;
 
   const docId = objectId("att_doc");
   const extension = "pdf";
