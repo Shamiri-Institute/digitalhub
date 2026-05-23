@@ -14,18 +14,36 @@ import {
 } from "./repo";
 import { AttendanceDocS3Key, StudentAttendanceDocsFilters } from "./types";
 
+export async function getAttendanceDocument(
+  filters: StudentAttendanceDocsFilters,
+): Promise<ApiResponse> {
+  try {
+    const session = await getCurrentUserSession();
+    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
+      throw new Error("The session has not been authenticated");
+
+    const data = await getAttendanceDocumentFromRepo(filters);
+    const response: ApiResponse = { success: true, data, message: "Successfully fetched attendance document" };
+    return response;
+  } catch (error: any) {
+    const response: ApiResponse = { success: false, message: error.message };
+    return response;
+  }
+}
+
 export async function uploadAttendanceDocument(
   filters: StudentAttendanceDocsFilters,
   files: File[],
   s3KeyFields: AttendanceDocS3Key,
 ): Promise<ApiResponse> {
   try {
-    if (!filters.groupId || !filters.sessionId)
-      throw new Error("No groupId or sessionId was provided");
 
     const session = await getCurrentUserSession();
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
       throw new Error("The session has not been authenticated");
+
+    if (!filters.groupId || !filters.sessionId)
+      throw new Error("No groupId or sessionId was provided");
 
     const { pdfFile, oldS3Key } = await createAttendancePdf(filters, files);
     if (!pdfFile) throw new Error("No attendance pdf was generated");
@@ -62,23 +80,6 @@ export async function uploadAttendanceDocument(
   }
 }
 
-export async function getAttendanceDocument(
-  filters: StudentAttendanceDocsFilters,
-): Promise<ApiResponse> {
-  try {
-    const session = await getCurrentUserSession();
-    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
-      throw new Error("The session has not been authenticated");
-
-    const data = await getAttendanceDocumentFromRepo(filters);
-    const response: ApiResponse = { success: true, data, message: "Successfully fetched attendance document" };
-    return response;
-  } catch (error: any) {
-    const response: ApiResponse = { success: false, message: error.message };
-    return response;
-  }
-}
-
 export async function deleteAttendanceFile(documentId:string,key: string): Promise<ApiResponse> {
   try {
     const session = await getCurrentUserSession();
@@ -106,8 +107,6 @@ async function createAttendancePdf(
   files: File[],
 ): Promise<{ pdfFile: File; oldS3Key: string | null }> {
   const existing = await getAttendanceDocumentFromRepo(filters);
-
-  if (!existing) throw new Error("No attendance document was found");
 
   let pdfBlob: Blob;
   if (existing.presignedUrl) {
