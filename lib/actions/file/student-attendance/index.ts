@@ -1,7 +1,7 @@
 export {
   deleteAttendanceFile,
   getAttendanceDocument,
-  uploadAttendanceDocument,
+  createAnduploadAttendanceDocument
 } from "./service";
 export type {
   AttendanceDoc,

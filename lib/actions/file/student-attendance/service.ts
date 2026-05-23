@@ -35,7 +35,7 @@ export async function getAttendanceDocument(
   }
 }
 
-export async function uploadAttendanceDocument(
+export async function createAnduploadAttendanceDocument(
   filters: StudentAttendanceDocsFilters,
   files: File[],
   s3KeyFields: AttendanceDocS3Key,
@@ -90,14 +90,13 @@ export async function deleteAttendanceFile(documentId:string,key: string): Promi
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
       throw new Error("The session has not been authenticated");
 
+    await archiveDocument(documentId);
+
     const bucket = key.startsWith("student-attendance/")
       ? ("student-attendance" as const)
       : ("uploads" as const);
 
     await deleteObject({ Key: key }, bucket);
-
-    await archiveDocument(documentId);
-
     const response: ApiResponse = { success: true, message: "Successfully deleted the attendance file." };
     return response;
   } catch (error: any) {
