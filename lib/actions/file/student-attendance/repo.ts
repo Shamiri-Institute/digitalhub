@@ -5,7 +5,7 @@ import { AttendanceDoc, CreateStudentAttendanceDocPayload, StudentAttendanceDocs
 export async function createStudentAttendanceDocument(
   payload: CreateStudentAttendanceDocPayload,
   userId: string,
-) {
+): Promise<void> {
   await db.$transaction(async (tx) => {
     await tx.attendanceDocuments.updateMany({
       where: {
@@ -49,7 +49,7 @@ export async function getAttendanceDocument(
   };
 }
 
-export async function archiveDocument(documentId: string) {
+export async function archiveDocument(documentId: string): Promise<void> {
   await db.attendanceDocuments.update({
     where: { id: documentId },
     data: { archivedAt: new Date() },
