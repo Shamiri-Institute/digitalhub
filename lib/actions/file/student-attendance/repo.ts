@@ -36,7 +36,7 @@ export async function getAttendanceDocument(
     orderBy: { createdAt: "desc" },
   });
 
-  if (!doc) throw new Error("No attendance document was found");
+  if (!doc) throw new Error("No attendance document found for this session");
 
   const bucket = doc.link.startsWith("student-attendance/")
     ? ("student-attendance" as const)
