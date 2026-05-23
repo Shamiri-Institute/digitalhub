@@ -1,5 +1,4 @@
 export {
-  archiveAttendanceDocument,
   deleteAttendanceFile,
   getAttendanceDocument,
   uploadAttendanceDocument,

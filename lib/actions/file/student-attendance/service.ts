@@ -79,11 +79,13 @@ export async function getAttendanceDocument(
   }
 }
 
-export async function deleteAttendanceFile(key: string): Promise<ApiResponse> {
+export async function deleteAttendanceFile(documentId:string,key: string): Promise<ApiResponse> {
   try {
     const session = await getCurrentUserSession();
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
       throw new Error("The session has not been authenticated");
+
+    await archiveDocument(documentId);
 
     const bucket = key.startsWith("student-attendance/")
       ? ("student-attendance" as const)
@@ -95,22 +97,6 @@ export async function deleteAttendanceFile(key: string): Promise<ApiResponse> {
   } catch (error) {
     console.error(error);
     const response: ApiResponse = { success: false, message: "Something went wrong deleting the attendance file" };
-    return response;
-  }
-}
-
-export async function archiveAttendanceDocument(documentId: string): Promise<ApiResponse> {
-  try {
-    const session = await getCurrentUserSession();
-    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
-      throw new Error("The session has not been authenticated");
-
-    await archiveDocument(documentId);
-    const response: ApiResponse = { success: true, message: "Successfully archived the attendance document." };
-    return response;
-  } catch (error) {
-    console.error(error);
-    const response: ApiResponse = { success: false, message: "Something went wrong archiving the attendance document" };
     return response;
   }
 }
