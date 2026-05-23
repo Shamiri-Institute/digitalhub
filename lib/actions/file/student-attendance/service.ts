@@ -11,7 +11,7 @@ export async function uploadAttendanceDocument(
   filters: StudentAttendanceDocsFilters,
   files: File[],
   s3KeyFields:AttendanceDocS3Key
-) {
+):Promise<ApiResponse> {
   try {
 
     if (!filters.groupId || !filters.sessionId) throw new Error(`No groupId or session Id was prpvided`)
@@ -19,10 +19,8 @@ export async function uploadAttendanceDocument(
     const { pdfFile, oldS3Key } = await createAttendancePdf(filters, files);
     if (!pdfFile) throw new Error(`No attendance pdf was generated`);
 
-    const { fileName ,s3Key } = buildAttendanceS3Key(s3KeyFields);
-
     const buffer = Buffer.from(await pdfFile.arrayBuffer());
-
+    const { fileName ,s3Key } = buildAttendanceS3Key(s3KeyFields);
     await putObject(
       { Body: buffer, Key: s3Key, ContentType: "application/pdf" },
       "student-attendance"
@@ -42,6 +40,7 @@ export async function uploadAttendanceDocument(
       message: `Successfully created attendance pdf`
     }
 
+    return response;
   } catch (error:any) {
 
     const response: ApiResponse = {
