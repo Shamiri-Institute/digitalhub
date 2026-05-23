@@ -6,10 +6,14 @@ import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
-import {useS3Upload} from "#/lib/hooks/use-s3-upload"
-import { buildAttendanceS3Key, createAttendanceDocument, createAttendancePdf, getAttendanceDocument } from "#/lib/actions/file/student-attendance";
+import {
+  buildAttendanceS3Key,
+  createAttendanceDocument,
+  createAttendancePdf,
+  getAttendanceDocument,
+} from "#/lib/actions/file/student-attendance";
 import type { AttendanceDocS3Key } from "#/lib/actions/file/student-attendance/types";
-
+import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 
 export default function UploadStudentAttendanceDocument({
   groupId,
@@ -112,16 +116,21 @@ export default function UploadStudentAttendanceDocument({
 
       const oldS3Key = existing.data?.link ? existing.data?.link : null;
 
-      const pdfFile = await createAttendancePdf(oldS3Key, selectedFiles)
+      const pdfFile = await createAttendancePdf(oldS3Key, selectedFiles);
       const { fileName, s3Key } = buildAttendanceS3Key(s3KeyFields);
       const { key } = await uploadToS3(pdfFile, {
         endpoint: { request: { body: { key: s3Key, bucket: "student-attendance" } } },
       });
 
-      const result = await createAttendanceDocument({
-        groupId, sessionId, fileName, link: key,
-      },oldS3Key);
-
+      const result = await createAttendanceDocument(
+        {
+          groupId,
+          sessionId,
+          fileName,
+          link: key,
+        },
+        oldS3Key,
+      );
 
       if (result.success) {
         onUploadSuccess?.();

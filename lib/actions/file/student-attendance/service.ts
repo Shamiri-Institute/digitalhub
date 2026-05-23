@@ -3,13 +3,17 @@
 import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { deleteObject } from "#/lib/s3";
-import { ApiResponse } from "#/types/api.types";
+import type { ApiResponse } from "#/types/api.types";
 import {
   archiveDocument,
   createStudentAttendanceDocument,
   getAttendanceDocument as getAttendanceDocumentFromRepo,
 } from "./repo";
-import { AttendanceDoc, CreateStudentAttendanceDocPayload, StudentAttendanceDocsFilters } from "./types";
+import type {
+  AttendanceDoc,
+  CreateStudentAttendanceDocPayload,
+  StudentAttendanceDocsFilters,
+} from "./types";
 
 export async function getAttendanceDocument(
   filters: StudentAttendanceDocsFilters,
@@ -23,7 +27,7 @@ export async function getAttendanceDocument(
     const response: ApiResponse<AttendanceDoc> = {
       success: true,
       data,
-      message: "Successfully fetched attendance document"
+      message: "Successfully fetched attendance document",
     };
     return response;
   } catch (error: any) {
@@ -34,7 +38,7 @@ export async function getAttendanceDocument(
 
 export async function createAttendanceDocument(
   payload: CreateStudentAttendanceDocPayload,
-  oldS3Key:string | null
+  oldS3Key: string | null,
 ): Promise<ApiResponse> {
   try {
     const session = await getCurrentUserSession();
@@ -59,7 +63,7 @@ export async function createAttendanceDocument(
   }
 }
 
-export async function deleteAttendanceFile(documentId:string,key: string): Promise<ApiResponse> {
+export async function deleteAttendanceFile(documentId: string, key: string): Promise<ApiResponse> {
   try {
     const session = await getCurrentUserSession();
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
@@ -72,11 +76,17 @@ export async function deleteAttendanceFile(documentId:string,key: string): Promi
       : ("uploads" as const);
 
     await deleteObject({ Key: key }, bucket);
-    const response: ApiResponse = { success: true, message: "Successfully deleted the attendance file." };
+    const response: ApiResponse = {
+      success: true,
+      message: "Successfully deleted the attendance file.",
+    };
     return response;
   } catch (error: any) {
     console.error(error);
-    const response: ApiResponse = { success: false, message: "Something went wrong deleting the attendance file" };
+    const response: ApiResponse = {
+      success: false,
+      message: "Something went wrong deleting the attendance file",
+    };
     return response;
   }
 }

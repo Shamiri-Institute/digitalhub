@@ -1,10 +1,9 @@
 import { objectId } from "#/lib/crypto";
 import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
 import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
-import { AttendanceDocS3Key } from "./types";
+import type { AttendanceDocS3Key } from "./types";
 
 export async function createAttendancePdf(fileUrl: string | null, files: File[]): Promise<File> {
-
   let pdfBlob: Blob;
   if (fileUrl) {
     const res = await fetch(fileUrl);
@@ -17,9 +16,10 @@ export async function createAttendancePdf(fileUrl: string | null, files: File[])
   return pdfFile;
 }
 
-export function buildAttendanceS3Key(
-  fields: AttendanceDocS3Key,
-): { fileName: string; s3Key: string } {
+export function buildAttendanceS3Key(fields: AttendanceDocS3Key): {
+  fileName: string;
+  s3Key: string;
+} {
   const { schoolName, fellowName, groupName, sessionDate, sessionType } = fields;
 
   const docId = objectId("att_doc");

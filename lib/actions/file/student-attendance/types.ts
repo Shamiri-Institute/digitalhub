@@ -9,7 +9,7 @@ export interface AttendanceDoc {
   link: string;
   presignedUrl: string;
   createdAt: Date;
-};
+}
 
 export interface CreateStudentAttendanceDocPayload {
   fileName: string;
@@ -18,7 +18,7 @@ export interface CreateStudentAttendanceDocPayload {
   link: string;
 }
 
-export interface AttendanceDocS3Key{
+export interface AttendanceDocS3Key {
   schoolName: string;
   fellowName: string;
   groupName: string;

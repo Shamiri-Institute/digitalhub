@@ -6,10 +6,7 @@ import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useToast } from "#/components/ui/use-toast";
-import {
-  deleteAttendanceFile,
-  getAttendanceDocument,
-} from "#/lib/actions/file/student-attendance";
+import { deleteAttendanceFile, getAttendanceDocument } from "#/lib/actions/file/student-attendance";
 
 export default function ViewAttendanceDocument({
   sessionId,

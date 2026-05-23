@@ -1,6 +1,10 @@
 import { db } from "#/lib/db";
 import { getPresignedUrl } from "#/lib/s3";
-import { AttendanceDoc, CreateStudentAttendanceDocPayload, StudentAttendanceDocsFilters } from "./types";
+import type {
+  AttendanceDoc,
+  CreateStudentAttendanceDocPayload,
+  StudentAttendanceDocsFilters,
+} from "./types";
 
 export async function createStudentAttendanceDocument(
   payload: CreateStudentAttendanceDocPayload,
