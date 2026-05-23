@@ -6,8 +6,10 @@ import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
-import { createAnduploadAttendanceDocument, createAttendancePdfAndS3Key } from "#/lib/actions/file/student-attendance";
+import {useS3Upload} from "#/lib/hooks/use-s3-upload"
+import { buildAttendanceS3Key, createAttendanceDocument, createAttendancePdf, getAttendanceDocument } from "#/lib/actions/file/student-attendance";
 import type { AttendanceDocS3Key } from "#/lib/actions/file/student-attendance/types";
+
 
 export default function UploadStudentAttendanceDocument({
   groupId,
@@ -35,6 +37,7 @@ export default function UploadStudentAttendanceDocument({
   const [uploading, setUploading] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { toast } = useToast();
+  const { uploadToS3, files: uploadFiles } = useS3Upload();
 
   useEffect(() => {
     return () => {
@@ -105,11 +108,20 @@ export default function UploadStudentAttendanceDocument({
         sessionType: sessionType!,
       };
 
-      const pdfResponse = await createAttendancePdfAndS3Key(filters, selectedFiles, s3KeyFields)
+      const existing = await getAttendanceDocument(filters);
+      const oldS3Key = existing.data?.link ? existing.data?.link: null;
+      const pdfFile = await createAttendancePdf(oldS3Key, selectedFiles)
 
-      if (!pdfResponse.success) throw new Error(`Error in generating attendance pdf`);
+      const { fileName, s3Key } = buildAttendanceS3Key(s3KeyFields);
 
-      const result = await createAnduploadAttendanceDocument(filters, selectedFiles, s3KeyFields);
+      await uploadToS3(pdfFile, {
+        endpoint: { request: { body: { key: s3Key, bucket: "student-attendance" } } },
+      });
+
+      const result = await createAttendanceDocument({
+        groupId, sessionId, fileName, link: s3Key,
+      },oldS3Key);
+
 
       if (result.success) {
         onUploadSuccess?.();

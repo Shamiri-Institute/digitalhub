@@ -1,11 +1,9 @@
 export {
   deleteAttendanceFile,
   getAttendanceDocument,
-  createAnduploadAttendanceDocument,
   createAttendanceDocument,
-  createAttendancePdfAndS3Key,
-  createAttendancePdf,
 } from "./service";
+export { createAttendancePdf, buildAttendanceS3Key } from "./utils";
 export type {
   AttendanceDoc,
   AttendanceDocS3Key,
