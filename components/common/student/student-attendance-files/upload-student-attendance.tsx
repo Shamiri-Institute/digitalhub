@@ -6,15 +6,8 @@ import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
-import {
-  createStudentAttendanceDocument,
-  deleteAttendanceFile,
-  getAttendanceDocument,
-} from "#/lib/actions/file/student-attendance/index2";
-import { objectId } from "#/lib/crypto";
-import { useS3Upload } from "#/lib/hooks/use-s3-upload";
-import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
-import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
+import { createAnduploadAttendanceDocument } from "#/lib/actions/file/student-attendance";
+import type { AttendanceDocS3Key } from "#/lib/actions/file/student-attendance/types";
 
 export default function UploadStudentAttendanceDocument({
   groupId,
@@ -41,7 +34,6 @@ export default function UploadStudentAttendanceDocument({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const { uploadToS3 } = useS3Upload();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,135 +75,61 @@ export default function UploadStudentAttendanceDocument({
       return;
     }
 
+    const missing: string[] = [];
+    if (!schoolName) missing.push("schoolName");
+    if (!fellowName) missing.push("fellowName");
+    if (!groupName) missing.push("groupName");
+    if (!sessionDate) missing.push("sessionDate");
+    if (!sessionType) missing.push("sessionType");
+    if (!groupId) missing.push("groupId");
+    if (!sessionId) missing.push("sessionId");
+    if (missing.length > 0) {
+      toast({
+        title: "Upload failed",
+        description: `Missing session data: ${missing.join(", ")}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setUploading(true);
 
     try {
-      const existing = await getAttendanceDocument({ sessionId: sessionId, groupId:groupId });
+      const filters = { sessionId, groupId };
 
-      const oldDocKey = existing.success ? existing.data?.link : undefined;
+      const s3KeyFields: AttendanceDocS3Key = {
+        schoolName: schoolName!,
+        fellowName: fellowName!,
+        groupName: groupName!,
+        sessionDate: new Date(sessionDate!),
+        sessionType: sessionType!,
+      };
 
-      let pdfBlob: Blob;
-      if (existing.success && existing.data?.presignedUrl) {
-        const response = await fetch(existing.data.presignedUrl);
-        const existingPdfBytes = await response.arrayBuffer();
-        pdfBlob = await appendToPdf(existingPdfBytes, selectedFiles);
+      const result = await createAnduploadAttendanceDocument(filters, selectedFiles, s3KeyFields);
+
+      if (result.success) {
+        onUploadSuccess?.();
+        setSelectedFiles([]);
+        setPreviewUrls([]);
+        toast({ title: "File uploaded successfully" });
       } else {
-        pdfBlob = await imagesToPdf(selectedFiles);
+        toast({
+          title: "Upload failed",
+          description: result.message,
+          variant: "destructive",
+        });
       }
-
-      const pdfFile = new File([pdfBlob], "attendance.pdf", { type: "application/pdf" });
-      await handleFileChange(pdfFile, oldDocKey);
     } catch (error) {
-      console.error("PDF conversion error:", error);
+      console.error("Upload error:", error);
       toast({
-        title: "PDF conversion failed",
-        description: "Could not convert images to PDF",
+        title: "Upload failed",
+        description: "Something went wrong uploading the file",
         variant: "destructive",
       });
     } finally {
       setUploading(false);
     }
   };
-
-  const handleFileChange = useCallback(
-    async (file: File, oldDocKey?: string) => {
-      const missing: string[] = [];
-      if (!schoolName) missing.push("schoolName");
-      if (!fellowName) missing.push("fellowName");
-      if (!groupName) missing.push("groupName");
-      if (!sessionDate) missing.push("sessionDate");
-      if (!sessionType) missing.push("sessionType");
-      if (!groupId) missing.push("groupId");
-      if (!sessionId) missing.push("sessionId");
-      if (missing.length > 0) {
-        const msg = `Missing session data: ${missing.join(", ")}`;
-        toast({
-          title: "Upload failed",
-          description: msg,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      try {
-        const docId = objectId("att_doc");
-        const extension = "pdf";
-
-        const sanitizedSession = sanitizeForS3Key(sessionType as string);
-        const sanitizedDate = (sessionDate as string).replace(/-/g, "_");
-        const sanitizedGroup = sanitizeForS3Key(groupName as string);
-        const sanitizedName = sanitizeForS3Key(fellowName as string);
-
-        const customFileName = `${sanitizedSession}_${sanitizedDate}_${sanitizedGroup}_${sanitizedName}_${docId}`;
-
-        const s3Key = buildS3Key({
-          schoolName: schoolName as string,
-          fellowName: fellowName as string,
-          groupName: groupName as string,
-          sessionType: sessionType as string,
-          recordingId: docId,
-          extension,
-          prefix: "student-attendance",
-          customFileName,
-        });
-
-        const fileName = `${customFileName}.${extension}`;
-
-        const { key } = await uploadToS3(file, {
-          endpoint: {
-            request: {
-              body: { key: s3Key, bucket: "student-attendance" },
-            },
-          },
-        });
-
-        if (!key) {
-          throw new Error("Upload failed - no key returned");
-        }
-
-        const response = await createStudentAttendanceDocument({
-          fileName,
-          link: key,
-          groupId,
-          sessionId,
-        });
-
-        if (response.success) {
-          if (oldDocKey) {
-            deleteAttendanceFile(oldDocKey).catch((err) =>
-              console.error("Failed to delete old attendance file:", err),
-            );
-          }
-
-          onUploadSuccess?.();
-          setSelectedFiles([]);
-          setPreviewUrls([]);
-          toast({
-            title: "File uploaded successfully",
-          });
-        }
-      } catch (error) {
-        console.error("File upload error:", error);
-        toast({
-          title: "File upload error",
-          description: "Something went wrong uploading the file",
-          variant: "destructive",
-        });
-      }
-    },
-    [
-      uploadToS3,
-      groupId,
-      sessionId,
-      schoolName,
-      fellowName,
-      groupName,
-      sessionDate,
-      sessionType,
-      onUploadSuccess,
-      toast,
-    ],
-  );
 
   return (
     <div className="space-y-3">
