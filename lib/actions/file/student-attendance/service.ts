@@ -12,7 +12,7 @@ import {
   createStudentAttendanceDocument,
   getAttendanceDocument as getAttendanceDocumentFromRepo,
 } from "./repo";
-import { AttendanceDoc, AttendanceDocS3Key, StudentAttendanceDocsFilters } from "./types";
+import { AttendanceDoc, AttendanceDocS3Key, CreateStudentAttendanceDocPayload, StudentAttendanceDocsFilters } from "./types";
 
 export async function getAttendanceDocument(
   filters: StudentAttendanceDocsFilters,
@@ -84,6 +84,33 @@ export async function createAnduploadAttendanceDocument(
   }
 }
 
+export async function createAttendanceDocument(
+  payload: CreateStudentAttendanceDocPayload,
+  oldS3Key:string
+): Promise<ApiResponse> {
+  try {
+    const session = await getCurrentUserSession();
+    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
+      throw new Error("The session has not been authenticated");
+
+    if (!payload.groupId || !payload.sessionId)
+      throw new Error("No groupId or sessionId was provided");
+
+    await createStudentAttendanceDocument(payload, session.user.id);
+
+    if (oldS3Key) {
+      const bucket = oldS3Key.startsWith("student-attendance/")
+        ? ("student-attendance" as const)
+        : ("uploads" as const);
+      await deleteObject({ Key: oldS3Key }, bucket);
+    }
+
+    return { success: true, message: "Successfully created attendance document" };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+}
+
 export async function deleteAttendanceFile(documentId:string,key: string): Promise<ApiResponse> {
   try {
     const session = await getCurrentUserSession();
@@ -106,7 +133,39 @@ export async function deleteAttendanceFile(documentId:string,key: string): Promi
   }
 }
 
-async function createAttendancePdf(
+export async function createAttendancePdfAndS3Key(
+  filters: StudentAttendanceDocsFilters,
+  files: File[],
+  s3KeyFields: AttendanceDocS3Key
+):Promise<ApiResponse> {
+  try {
+
+    const session = await getCurrentUserSession();
+    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
+      throw new Error("The session has not been authenticated");
+
+    const { pdfFile, oldS3Key } = await createAttendancePdf(filters, files);
+    const { fileName, s3Key } = buildAttendanceS3Key(s3KeyFields);
+
+    const response: ApiResponse = {
+      success: true,
+      message: "successfully created attendance pdf and s3 key",
+      data: {
+        pdfFile,
+        oldS3Key,
+        fileName,
+        s3Key
+      }
+    }
+
+    return response;
+  } catch (error: any) {
+    const response: ApiResponse = { success: false, message: error.message  };
+    return response;
+  }
+}
+
+export async function createAttendancePdf(
   filters: StudentAttendanceDocsFilters,
   files: File[],
 ): Promise<{ pdfFile: File; oldS3Key: string | null }> {

@@ -6,7 +6,7 @@ import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
-import { createAnduploadAttendanceDocument } from "#/lib/actions/file/student-attendance";
+import { createAnduploadAttendanceDocument, createAttendancePdfAndS3Key } from "#/lib/actions/file/student-attendance";
 import type { AttendanceDocS3Key } from "#/lib/actions/file/student-attendance/types";
 
 export default function UploadStudentAttendanceDocument({
@@ -104,6 +104,10 @@ export default function UploadStudentAttendanceDocument({
         sessionDate: new Date(sessionDate!),
         sessionType: sessionType!,
       };
+
+      const pdfResponse = await createAttendancePdfAndS3Key(filters, selectedFiles, s3KeyFields)
+
+      if (!pdfResponse.success) throw new Error(`Error in generating attendance pdf`);
 
       const result = await createAnduploadAttendanceDocument(filters, selectedFiles, s3KeyFields);
 
