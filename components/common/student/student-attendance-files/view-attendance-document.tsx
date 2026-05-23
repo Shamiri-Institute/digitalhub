@@ -7,7 +7,6 @@ import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useToast } from "#/components/ui/use-toast";
 import {
-  archiveAttendanceDocument,
   deleteAttendanceFile,
   getAttendanceDocument,
 } from "#/lib/actions/file/student-attendance";
@@ -34,7 +33,7 @@ export default function ViewAttendanceDocument({
   }>({ loading: true });
 
   useEffect(() => {
-    getAttendanceDocument(sessionId, groupId)
+    getAttendanceDocument({ sessionId, groupId })
       .then((result) => {
         if (result.success) {
           setState({
@@ -45,30 +44,24 @@ export default function ViewAttendanceDocument({
             link: result.data?.link,
           });
         } else {
-          setState({ loading: false, error: result.error });
+          setState({ loading: false, error: result.message });
         }
       })
       .catch(() => setState({ loading: false, error: "Failed to load document" }));
   }, [sessionId, groupId]);
 
   const handleDelete = async () => {
-    if (!state.id) return;
+    if (!state.id || !state.link) return;
     setState((prev) => ({ ...prev, archiving: true }));
-    const result = await archiveAttendanceDocument(state.id);
+    const result = await deleteAttendanceFile(state.id, state.link);
     if (result.success) {
-      if (state.link) {
-        deleteAttendanceFile(state.link).catch((err) =>
-          console.error("Failed to delete S3 attendance file:", err),
-        );
-      }
-
       setState({ loading: false, archived: true, archiving: false });
       onDeleteSuccess?.();
       toast({ description: "Attendance document deleted successfully." });
     } else {
       setState((prev) => ({ ...prev, archiving: false }));
       toast({
-        description: result.error ?? "Failed to delete document",
+        description: result.message ?? "Failed to delete document",
         variant: "destructive",
       });
     }
