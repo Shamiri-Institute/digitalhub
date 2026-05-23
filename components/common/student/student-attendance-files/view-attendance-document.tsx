@@ -49,7 +49,7 @@ export default function ViewAttendanceDocument({
       }
     }
 
-    loadDocument();
+    void loadDocument();
   }, [sessionId, groupId]);
 
   const handleDelete = async () => {

@@ -105,11 +105,11 @@ export default function UploadStudentAttendanceDocument({
       const filters = { sessionId, groupId };
 
       const s3KeyFields: AttendanceDocS3Key = {
-        schoolName: schoolName!,
-        fellowName: fellowName!,
-        groupName: groupName!,
-        sessionDate: new Date(sessionDate!),
-        sessionType: sessionType!,
+        schoolName: schoolName as string,
+        fellowName: fellowName as string,
+        groupName: groupName as string,
+        sessionDate: new Date(sessionDate as string),
+        sessionType: sessionType as string,
       };
 
       const existing = await getAttendanceDocument(filters);
@@ -175,7 +175,8 @@ export default function UploadStudentAttendanceDocument({
       {selectedFiles.length > 0 && (
         <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
           {selectedFiles.map((file, i) => (
-            <div
+            <button
+              type="button"
               key={`${file.name}_${file.size}_${file.lastModified}`}
               className="group relative overflow-hidden rounded-lg border cursor-pointer"
               onClick={() => setLightboxIndex(i)}
@@ -196,7 +197,7 @@ export default function UploadStudentAttendanceDocument({
               <span className="absolute bottom-0 left-0 right-0 truncate bg-black/50 px-1 text-xs text-white">
                 {file.name}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -205,21 +206,28 @@ export default function UploadStudentAttendanceDocument({
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
           onClick={() => setLightboxIndex(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setLightboxIndex(null);
+          }}
+          role="dialog"
+          tabIndex={-1}
         >
-          {/* biome-ignore lint/performance/noImgElement: blob URL previews */}
-          <img
-            src={previewUrls[lightboxIndex]}
-            alt={selectedFiles[lightboxIndex]?.name}
-            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <button
-            type="button"
-            onClick={() => setLightboxIndex(null)}
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-          >
-            <Icons.crossCircleFilled className="h-5 w-5" />
-          </button>
+          <div className="relative">
+            {/* biome-ignore lint/performance/noImgElement: blob URL previews cannot use next/image */}
+            <img
+              src={previewUrls[lightboxIndex]}
+              alt={selectedFiles[lightboxIndex]?.name}
+              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+            />
+            <button
+              type="button"
+              onClick={() => setLightboxIndex(null)}
+              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+              aria-label="Close lightbox"
+            >
+              <Icons.crossCircleFilled className="h-5 w-5" />
+            </button>
+          </div>
           <span className="absolute bottom-4 left-1/2 -translate-x-1/2 truncate rounded bg-black/50 px-3 py-1 text-xs text-white">
             {selectedFiles[lightboxIndex]?.name}
           </span>

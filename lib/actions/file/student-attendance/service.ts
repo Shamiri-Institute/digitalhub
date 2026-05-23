@@ -30,8 +30,11 @@ export async function getAttendanceDocument(
       message: "Successfully fetched attendance document",
     };
     return response;
-  } catch (error: any) {
-    const response: ApiResponse = { success: false, message: error.message };
+  } catch (error: unknown) {
+    const response: ApiResponse = {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
     return response;
   }
 }
@@ -58,8 +61,8 @@ export async function createAttendanceDocument(
     }
 
     return { success: true, message: "Successfully created attendance document" };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error: unknown) {
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
   }
 }
 
@@ -81,11 +84,14 @@ export async function deleteAttendanceFile(documentId: string, key: string): Pro
       message: "Successfully deleted the attendance file.",
     };
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
     const response: ApiResponse = {
       success: false,
-      message: "Something went wrong deleting the attendance file",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Something went wrong deleting the attendance file",
     };
     return response;
   }
