@@ -12,18 +12,22 @@ import {
   createStudentAttendanceDocument,
   getAttendanceDocument as getAttendanceDocumentFromRepo,
 } from "./repo";
-import { AttendanceDocS3Key, StudentAttendanceDocsFilters } from "./types";
+import { AttendanceDoc, AttendanceDocS3Key, StudentAttendanceDocsFilters } from "./types";
 
 export async function getAttendanceDocument(
   filters: StudentAttendanceDocsFilters,
-): Promise<ApiResponse> {
+): Promise<ApiResponse<AttendanceDoc>> {
   try {
     const session = await getCurrentUserSession();
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
       throw new Error("The session has not been authenticated");
 
     const data = await getAttendanceDocumentFromRepo(filters);
-    const response: ApiResponse = { success: true, data, message: "Successfully fetched attendance document" };
+    const response: ApiResponse<AttendanceDoc> = {
+      success: true,
+      data,
+      message: "Successfully fetched attendance document"
+    };
     return response;
   } catch (error: any) {
     const response: ApiResponse = { success: false, message: error.message };
