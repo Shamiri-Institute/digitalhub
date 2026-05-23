@@ -33,8 +33,9 @@ export default function ViewAttendanceDocument({
   }>({ loading: true });
 
   useEffect(() => {
-    getAttendanceDocument({ sessionId, groupId })
-      .then((result) => {
+    async function loadDocument() {
+      try {
+        const result = await getAttendanceDocument({ sessionId, groupId });
         if (result.success) {
           setState({
             loading: false,
@@ -46,8 +47,12 @@ export default function ViewAttendanceDocument({
         } else {
           setState({ loading: false, error: result.message });
         }
-      })
-      .catch(() => setState({ loading: false, error: "Failed to load document" }));
+      } catch {
+        setState({ loading: false, error: "Failed to load document" });
+      }
+    }
+
+    loadDocument();
   }, [sessionId, groupId]);
 
   const handleDelete = async () => {

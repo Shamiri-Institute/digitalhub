@@ -114,12 +114,12 @@ export default function UploadStudentAttendanceDocument({
 
       const pdfFile = await createAttendancePdf(oldS3Key, selectedFiles)
       const { fileName, s3Key } = buildAttendanceS3Key(s3KeyFields);
-      await uploadToS3(pdfFile, {
+      const { key } = await uploadToS3(pdfFile, {
         endpoint: { request: { body: { key: s3Key, bucket: "student-attendance" } } },
       });
 
       const result = await createAttendanceDocument({
-        groupId, sessionId, fileName, link: s3Key,
+        groupId, sessionId, fileName, link: key,
       },oldS3Key);
 
 
