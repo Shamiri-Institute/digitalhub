@@ -1,29 +1,25 @@
-"use server";
 import { objectId } from "#/lib/crypto";
+import useS3Upload from "#/lib/hooks/use-s3-upload";
 import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
 import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
 import { ApiResponse } from "#/types/api.types";
 import { getAttendanceDocument } from ".";
 import { AttendanceDocS3Key, StudentAttendanceDocsFilters } from "./types";
 
-export async function uploadAttendanceDocument(filters:StudentAttendanceDocsFilters, files:File[]) {
+export async function uploadAttendanceDocument(
+  filters: StudentAttendanceDocsFilters,
+  files: File[],
+  s3KeyFields:AttendanceDocS3Key
+) {
   try {
 
-    const existing = await getAttendanceDocument(filters);
+    const attendancePdf = createAttendancePdf(filters, files)
+    if (!attendancePdf) throw new Error(`No attendance pdf was generated`);
 
-    if (!existing) throw new Error(`No attendance document was found`);
+    const { s3Key, fileName } = buildAttendanceS3Key(s3KeyFields);
 
-    let pdfBlob: Blob;
-    if (existing.presignedUrl) {
-      const response = await fetch(existing.presignedUrl);
-      const existingPdfBytes = await response.arrayBuffer();
-      pdfBlob = await appendToPdf(existingPdfBytes, files);
-    } else {
-      pdfBlob = await imagesToPdf(files);
-    }
+    const {} = useS3Upload()
 
-    const pdfFile = new File([pdfBlob], "attendance.pdf", { type: "application/pdf" });
-    await handleFileChange(pdfFile, oldDocKey);
 
   } catch (error:any) {
 
@@ -56,7 +52,7 @@ export async function createAttendancePdf(filters:StudentAttendanceDocsFilters, 
   return pdfFile
 }
 
-function buildAttendanceS3Key(fields: AttendanceDocS3Key): {
+function buildAttendanceS3Key(fields: AttendanceDocS3Key):{
   fileName: string,
   s3Key:string
 }{
