@@ -176,17 +176,20 @@ export default function UploadStudentAttendanceDocument({
         <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
           {selectedFiles.map((file, i) => (
             <div
-              role="button"
-              tabIndex={0}
               key={`${file.name}_${file.size}_${file.lastModified}`}
-              className="group relative overflow-hidden rounded-lg border cursor-pointer"
-              onClick={() => setLightboxIndex(i)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") setLightboxIndex(i);
-              }}
+              className="relative group"
             >
-              {/* biome-ignore lint/performance/noImgElement: blob URL previews cannot use next/image */}
-              <img src={previewUrls[i]} alt={file.name} className="h-20 w-full object-cover" />
+              <button
+                type="button"
+                className="overflow-hidden rounded-lg border w-full"
+                onClick={() => setLightboxIndex(i)}
+              >
+                {/* biome-ignore lint/performance/noImgElement: blob URL previews cannot use next/image */}
+                <img src={previewUrls[i]} alt={file.name} className="h-20 w-full object-cover" />
+              </button>
+              <span className="absolute bottom-0 left-0 right-0 truncate bg-black/50 px-1 text-xs text-white pointer-events-none">
+                {file.name}
+              </span>
               <button
                 type="button"
                 onClick={(e) => {
@@ -199,9 +202,6 @@ export default function UploadStudentAttendanceDocument({
               >
                 <Icons.crossCircleFilled className="h-3 w-3" />
               </button>
-              <span className="absolute bottom-0 left-0 right-0 truncate bg-black/50 px-1 text-xs text-white">
-                {file.name}
-              </span>
             </div>
           ))}
         </div>
