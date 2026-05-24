@@ -45,7 +45,7 @@ export function buildAttendanceS3Key(fields: AttendanceDocS3Key): {
     sessionType: sessionType as string,
     recordingId: docId,
     extension,
-    prefix: "student_attendance",
+    prefix: "student-attendance",
     customFileName,
   });
 
