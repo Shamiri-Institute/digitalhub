@@ -14,6 +14,7 @@ import type {
   CreateStudentAttendanceDocPayload,
   StudentAttendanceDocsFilters,
 } from "./types";
+
 export type {
   AttendanceDoc,
   AttendanceDocS3Key,
@@ -72,7 +73,10 @@ export async function createAttendanceDocument(
   }
 }
 
-export async function deleteAttendanceFile(documentId: string, key: string): Promise<ActionResponse> {
+export async function deleteAttendanceFile(
+  documentId: string,
+  key: string,
+): Promise<ActionResponse> {
   try {
     const session = await getCurrentUserSession();
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)

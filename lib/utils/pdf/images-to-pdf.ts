@@ -1,6 +1,6 @@
 import { PDFDocument } from "pdf-lib";
-import { A4_HEIGHT_PTS, A4_MARGIN_PTS, A4_WIDTH_PTS } from "#/lib/utils/pdf/types";
 import type { ScaledImagePosition } from "#/lib/utils/pdf/types";
+import { A4_HEIGHT_PTS, A4_MARGIN_PTS, A4_WIDTH_PTS } from "#/lib/utils/pdf/types";
 
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {

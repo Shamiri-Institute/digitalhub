@@ -115,7 +115,10 @@ export default function ViewAttendanceDocument({
           <span className="mt-2 text-xs text-shamiri-text-grey">Click to view</span>
         </a>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-shamiri-text-dark-grey" title={state.fileName}>
+          <p
+            className="truncate text-sm font-medium text-shamiri-text-dark-grey"
+            title={state.fileName}
+          >
             {state.fileName ?? "document.pdf"}
           </p>
           <Button
