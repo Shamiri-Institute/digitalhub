@@ -31,7 +31,7 @@ export async function getAttendanceDocument(
     };
     return response;
   } catch (error: unknown) {
-    const response: ApiResponse = {
+    const response: ApiResponse<AttendanceDoc> = {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
     };
