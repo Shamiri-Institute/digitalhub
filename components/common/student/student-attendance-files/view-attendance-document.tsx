@@ -73,7 +73,7 @@ export default function ViewAttendanceDocument({
 
   if (state.archived) {
     return (
-      <div className="flex items-center justify-center p-4 text-sm text-gray-500">
+      <div className="flex items-center justify-center p-4 text-sm text-shamiri-text-grey">
         Document has been deleted.
       </div>
     );
@@ -94,7 +94,7 @@ export default function ViewAttendanceDocument({
 
   if (state.error) {
     return (
-      <div className="flex items-center justify-center p-4 text-sm text-gray-500">
+      <div className="flex items-center justify-center p-4 text-sm text-shamiri-text-grey">
         {state.error}
       </div>
     );
@@ -109,13 +109,13 @@ export default function ViewAttendanceDocument({
           href={state.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-4 transition-colors hover:border-shamiri-new-blue hover:bg-blue-bg"
+          className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-shamiri-light-grey p-4 transition-colors hover:border-shamiri-new-blue hover:bg-blue-bg"
         >
           <Icons.paperFileText className="h-10 w-10 text-shamiri-new-blue" />
-          <span className="mt-2 text-xs text-gray-500">Click to view</span>
+          <span className="mt-2 text-xs text-shamiri-text-grey">Click to view</span>
         </a>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-gray-700" title={state.fileName}>
+          <p className="truncate text-sm font-medium text-shamiri-text-dark-grey" title={state.fileName}>
             {state.fileName ?? "document.pdf"}
           </p>
           <Button

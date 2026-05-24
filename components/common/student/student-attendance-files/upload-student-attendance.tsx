@@ -174,11 +174,15 @@ export default function UploadStudentAttendanceDocument({
       {selectedFiles.length > 0 && (
         <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
           {selectedFiles.map((file, i) => (
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               key={`${file.name}_${file.size}_${file.lastModified}`}
               className="group relative overflow-hidden rounded-lg border cursor-pointer"
               onClick={() => setLightboxIndex(i)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") setLightboxIndex(i);
+              }}
             >
               {/* biome-ignore lint/performance/noImgElement: blob URL previews cannot use next/image */}
               <img src={previewUrls[i]} alt={file.name} className="h-20 w-full object-cover" />
@@ -189,14 +193,15 @@ export default function UploadStudentAttendanceDocument({
                   removeFile(i);
                 }}
                 disabled={uploading}
-                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-light-red text-white opacity-0 transition-opacity group-hover:opacity-100"
+                aria-label={`Remove ${file.name}`}
               >
                 <Icons.crossCircleFilled className="h-3 w-3" />
               </button>
               <span className="absolute bottom-0 left-0 right-0 truncate bg-black/50 px-1 text-xs text-white">
                 {file.name}
               </span>
-            </button>
+            </div>
           ))}
         </div>
       )}
