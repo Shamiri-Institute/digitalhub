@@ -31,7 +31,7 @@ const nextConfig = {
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://shamiri-assets.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; " +
               "font-src 'self'; " +
               "connect-src 'self' https://o4505804271845376.ingest.sentry.io https://o4505804271845376.ingest.us.sentry.io https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; " +
-              "frame-src https://dash.shamiri.institute https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; " +
+              "frame-src https://dash.shamiri.institute; " +
               "frame-ancestors 'none'; " +
               "base-uri 'self'; " +
               "form-action 'self'",
@@ -50,7 +50,7 @@ const nextConfig = {
           },
           {
             key: "Permissions-Policy",
-            value: "camera=*, microphone=(), geolocation=(), browsing-topics=()",
+            value: "camera=(self), microphone=(), geolocation=(), browsing-topics=()",
           },
         ],
       },
