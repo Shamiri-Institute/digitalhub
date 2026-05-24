@@ -175,10 +175,7 @@ export default function UploadStudentAttendanceDocument({
       {selectedFiles.length > 0 && (
         <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
           {selectedFiles.map((file, i) => (
-            <div
-              key={`${file.name}_${file.size}_${file.lastModified}`}
-              className="relative group"
-            >
+            <div key={`${file.name}_${file.size}_${file.lastModified}`} className="relative group">
               <button
                 type="button"
                 className="overflow-hidden rounded-lg border w-full"
