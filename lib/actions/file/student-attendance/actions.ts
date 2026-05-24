@@ -3,7 +3,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { deleteObject } from "#/lib/s3";
-import type { ApiResponse } from "#/types/api.types";
+import type { ActionResponse } from "#/types/actions.types";
 import {
   archiveDocument,
   createStudentAttendanceDocument,
@@ -17,21 +17,21 @@ import type {
 
 export async function getAttendanceDocument(
   filters: StudentAttendanceDocsFilters,
-): Promise<ApiResponse<AttendanceDoc>> {
+): Promise<ActionResponse<AttendanceDoc>> {
   try {
     const session = await getCurrentUserSession();
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
       throw new Error("The session has not been authenticated");
 
     const data = await getAttendanceDocumentFromRepo(filters);
-    const response: ApiResponse<AttendanceDoc> = {
+    const response: ActionResponse<AttendanceDoc> = {
       success: true,
       data,
       message: "Successfully fetched attendance document",
     };
     return response;
   } catch (error: unknown) {
-    const response: ApiResponse<AttendanceDoc> = {
+    const response: ActionResponse<AttendanceDoc> = {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
     };
@@ -42,7 +42,7 @@ export async function getAttendanceDocument(
 export async function createAttendanceDocument(
   payload: CreateStudentAttendanceDocPayload,
   oldS3Key: string | null,
-): Promise<ApiResponse> {
+): Promise<ActionResponse> {
   try {
     const session = await getCurrentUserSession();
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
@@ -66,7 +66,7 @@ export async function createAttendanceDocument(
   }
 }
 
-export async function deleteAttendanceFile(documentId: string, key: string): Promise<ApiResponse> {
+export async function deleteAttendanceFile(documentId: string, key: string): Promise<ActionResponse> {
   try {
     const session = await getCurrentUserSession();
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
@@ -79,14 +79,14 @@ export async function deleteAttendanceFile(documentId: string, key: string): Pro
       : ("uploads" as const);
 
     await deleteObject({ Key: key }, bucket);
-    const response: ApiResponse = {
+    const response: ActionResponse = {
       success: true,
       message: "Successfully deleted the attendance file.",
     };
     return response;
   } catch (error: unknown) {
     console.error(error);
-    const response: ApiResponse = {
+    const response: ActionResponse = {
       success: false,
       message:
         error instanceof Error

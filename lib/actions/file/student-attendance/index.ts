@@ -2,7 +2,7 @@ export {
   createAttendanceDocument,
   deleteAttendanceFile,
   getAttendanceDocument,
-} from "./service";
+} from "./actions";
 export type {
   AttendanceDoc,
   AttendanceDocS3Key,
