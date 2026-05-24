@@ -7,13 +7,12 @@ import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import {
-  buildAttendanceS3Key,
   createAttendanceDocument,
-  createAttendancePdf,
   getAttendanceDocument,
 } from "#/lib/actions/file/student-attendance";
 import type { AttendanceDocS3Key } from "#/lib/actions/file/student-attendance/types";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
+import { buildAttendanceS3Key, createAttendancePdf } from "#/lib/utils/attendance-upload";
 
 export default function UploadStudentAttendanceDocument({
   groupId,

@@ -1,7 +1,7 @@
 import { objectId } from "#/lib/crypto";
 import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
 import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
-import type { AttendanceDocS3Key } from "./types";
+import type { AttendanceDocS3Key } from "../actions/file/student-attendance/types";
 
 export async function createAttendancePdf(fileUrl: string | null, files: File[]): Promise<File> {
   let pdfBlob: Blob;

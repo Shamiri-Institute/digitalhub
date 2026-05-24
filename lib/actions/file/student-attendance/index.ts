@@ -9,4 +9,3 @@ export type {
   CreateStudentAttendanceDocPayload,
   StudentAttendanceDocsFilters,
 } from "./types";
-export { buildAttendanceS3Key, createAttendancePdf } from "./utils";
