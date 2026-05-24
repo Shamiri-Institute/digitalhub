@@ -7,7 +7,11 @@ export async function createAttendancePdf(fileUrl: string | null, files: File[])
   let pdfBlob: Blob;
   if (fileUrl) {
     const res = await fetch(fileUrl);
-    pdfBlob = await appendToPdf(await res.arrayBuffer(), files);
+    if (!res.ok) {
+      pdfBlob = await imagesToPdf(files);
+    } else {
+      pdfBlob = await appendToPdf(await res.arrayBuffer(), files);
+    }
   } else {
     pdfBlob = await imagesToPdf(files);
   }
