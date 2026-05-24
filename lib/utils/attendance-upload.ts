@@ -3,16 +3,6 @@ import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
 import { buildS3Key } from "#/lib/utils/s3-key-builder";
 import type { AttendanceDocS3Key } from "../actions/file/student-attendance/types";
 
-function sanitizeAttendanceKey(name: string): string {
-  return name
-    .toUpperCase()
-    .replace(/[\s-]+/g, "_")
-    .replace(/[^A-Z0-9_]/g, "")
-    .replace(/_+/g, "_")
-    .replace(/^_|_$/g, "")
-    .substring(0, 50);
-}
-
 export async function createAttendancePdf(fileUrl: string | null, files: File[]): Promise<File> {
   let pdfBlob: Blob;
   if (fileUrl) {
@@ -60,4 +50,14 @@ export function buildAttendanceS3Key(fields: AttendanceDocS3Key): {
   });
 
   return { fileName: customFileName, s3Key };
+}
+
+function sanitizeAttendanceKey(name: string): string {
+  return name
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_")
+    .replace(/[^A-Z0-9_]/g, "")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "")
+    .substring(0, 50);
 }
