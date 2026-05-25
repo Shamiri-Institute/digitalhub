@@ -26,12 +26,20 @@ export default function PdfViewerModal({
 }: PdfViewerModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[900px] overflow-hidden">
+      <DialogContent className="flex max-h-[90dvh] w-full flex-col overflow-hidden lg:w-4/5 lg:max-w-none">
         <DialogHeader>
           <DialogTitle>{fileName ?? "Document"}</DialogTitle>
           <DialogDescription>View the document below.</DialogDescription>
         </DialogHeader>
-        <PdfViewer url={url} fileName={fileName} fileType={fileType} showCloseButton={false} />
+        <div className="flex-1 min-h-0 overflow-auto">
+          <PdfViewer
+            url={url}
+            fileName={fileName}
+            fileType={fileType}
+            showCloseButton={false}
+            className="h-full"
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

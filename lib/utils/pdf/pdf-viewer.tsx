@@ -23,7 +23,7 @@ export default function PdfViewer({
   showCloseButton = true,
 }: PdfViewerProps) {
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("h-full", className)}>
       <DocViewer
         documents={[
           {
@@ -38,7 +38,7 @@ export default function PdfViewer({
           header: { disableHeader: true },
           pdfVerticalScrollByDefault: true,
         }}
-        className="h-[500px] rounded-lg border border-shamiri-light-grey"
+        className="h-full min-h-[300px] rounded-lg border border-shamiri-light-grey"
       />
       {showCloseButton && onClose && (
         <Button variant="outline" size="sm" onClick={onClose} className="w-full">
