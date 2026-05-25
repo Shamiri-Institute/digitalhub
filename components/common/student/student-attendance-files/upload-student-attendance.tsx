@@ -249,7 +249,7 @@ export default function UploadStudentAttendanceDocument({
           className="bg-shamiri-new-blue"
           loading={uploading}
         >
-          {uploading ? "Processing upload..." : "Upload attendance document"}
+          {uploading ? "Processing upload..." : "Upload"}
         </Button>
       </DialogFooter>
     </div>

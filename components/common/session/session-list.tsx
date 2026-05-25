@@ -486,7 +486,7 @@ export function SessionDropDown({
                 })
               }
             >
-              Upload/View attendance document
+              Upload attendance
             </DropdownMenuItem>
           </>
         ) : null}
