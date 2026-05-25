@@ -305,7 +305,9 @@ export function FellowAttendanceDataTable({
         enableRowSelection={enableRowSelection}
         onRowSelectionChange={setSelectedRows}
         renderTableActions={
-          !overrideColumns && role === ImplementerRole.HUB_COORDINATOR && renderTableActions()
+          !overrideColumns &&
+          (role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR) &&
+          renderTableActions()
         }
         columnVisibilityState={{
           checkbox: role !== ImplementerRole.ADMIN,
