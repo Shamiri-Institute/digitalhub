@@ -22,8 +22,8 @@ export default async function SchoolViewLayout({ children }: { children: React.R
           role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
         />
       </div>
-      <div className="flex flex-1 flex-col">
-        <div className="container w-full grow space-y-5 pb-6 pl-6 pr-8 pt-5">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="container w-full min-w-0 grow space-y-5 pb-6 pl-6 pr-8 pt-5">
           <SchoolsBreadcrumb />
           <SchoolsNav />
           <Separator />
