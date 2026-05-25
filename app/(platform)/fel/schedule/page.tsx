@@ -22,16 +22,12 @@ export default async function FellowSchedulePage() {
           stats={[
             {
               title: "Sessions",
-              count:
-                scheduleData?.groups.reduce(
-                  (a, b) => a + b.school._count.interventionSessions,
-                  0,
-                ) || 0,
+              count: scheduleData?.stats.total_sessions ?? 0,
             },
-            { title: "Groups", count: scheduleData?.groups.length || 0 },
+            { title: "Groups", count: scheduleData?.stats.group_count ?? 0 },
             {
               title: "Students",
-              count: scheduleData?.groups.reduce((a, b) => a + b._count.students, 0) || 0,
+              count: scheduleData?.stats.total_students ?? 0,
             },
           ]}
         />
