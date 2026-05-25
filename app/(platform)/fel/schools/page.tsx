@@ -25,16 +25,12 @@ export default async function SchoolsPage() {
             stats={[
               {
                 title: "Sessions",
-                count:
-                  fellowData?.groups.reduce(
-                    (a, b) => a + b.school._count.interventionSessions,
-                    0,
-                  ) || 0,
+                count: fellowData?.stats.total_sessions ?? 0,
               },
-              { title: "Groups", count: fellowData?.groups.length || 0 },
+              { title: "Groups", count: fellowData?.stats.group_count ?? 0 },
               {
                 title: "Students",
-                count: fellowData?.groups.reduce((a, b) => a + b._count.students, 0) || 0,
+                count: fellowData?.stats.total_students ?? 0,
               },
             ]}
           />
