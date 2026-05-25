@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.26.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.26.0...v1.26.1) (2026-05-25)
+
+
+### Bug Fixes
+
+* **fellows:** implement stable fellow ordering in supervisor SC view ([#709](https://github.com/Shamiri-Institute/digitalhub/issues/709)) ([7e098dc](https://github.com/Shamiri-Institute/digitalhub/commit/7e098dc128897c0eaee72eefa54a0220797c3cd4))
+
 ## [1.26.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.25.0...v1.26.0) (2026-05-20)
 
 
