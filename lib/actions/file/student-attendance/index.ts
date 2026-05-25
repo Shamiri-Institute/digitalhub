@@ -2,13 +2,9 @@
 
 import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
-import { deleteObject } from "#/lib/s3";
+import { db } from "#/lib/db";
+import { deleteObject, getPresignedUrl } from "#/lib/s3";
 import type { ActionResponse } from "#/types/actions.types";
-import {
-  archiveDocument,
-  createStudentAttendanceDocument,
-  getAttendanceDocument as getAttendanceDocumentFromRepo,
-} from "./repo";
 import type {
   AttendanceDoc,
   CreateStudentAttendanceDocPayload,
@@ -30,7 +26,29 @@ export async function getAttendanceDocument(
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
       throw new Error("The session has not been authenticated");
 
-    const data = await getAttendanceDocumentFromRepo(filters);
+    const { sessionId, groupId } = filters;
+
+    const doc = await db.attendanceDocuments.findFirst({
+      where: { sessionId, groupId, archivedAt: null },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!doc) throw new Error("No attendance document found for this session");
+
+    const bucket = doc.link.startsWith("student-attendance/")
+      ? ("student-attendance" as const)
+      : ("uploads" as const);
+
+    const presignedUrl = await getPresignedUrl(doc.link, bucket);
+
+    const data: AttendanceDoc = {
+      id: doc.id,
+      fileName: doc.fileName,
+      link: doc.link,
+      presignedUrl,
+      createdAt: doc.createdAt,
+    };
+
     const response: ActionResponse<AttendanceDoc> = {
       success: true,
       data,
@@ -58,7 +76,20 @@ export async function createAttendanceDocument(
     if (!payload.groupId || !payload.sessionId)
       throw new Error("No groupId or sessionId was provided");
 
-    await createStudentAttendanceDocument(payload, session.user.id);
+    await db.$transaction(async (tx) => {
+      await tx.attendanceDocuments.updateMany({
+        where: {
+          sessionId: payload.sessionId,
+          groupId: payload.groupId,
+          archivedAt: null,
+        },
+        data: { archivedAt: new Date() },
+      });
+
+      await tx.attendanceDocuments.create({
+        data: { ...payload, uploadedBy: session.user.id! },
+      });
+    });
 
     if (oldS3Key) {
       const bucket = oldS3Key.startsWith("student-attendance/")
@@ -82,7 +113,10 @@ export async function deleteAttendanceFile(
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
       throw new Error("The session has not been authenticated");
 
-    await archiveDocument(documentId);
+    await db.attendanceDocuments.update({
+      where: { id: documentId },
+      data: { archivedAt: new Date() },
+    });
 
     const bucket = key.startsWith("student-attendance/")
       ? ("student-attendance" as const)
