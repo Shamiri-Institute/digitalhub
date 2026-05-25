@@ -20,7 +20,7 @@ export async function loadFellowsData() {
       where: {
         supervisorId: supervisor.profile?.id,
       },
-      orderBy: { id: "asc" },
+      orderBy: {  id: "asc" },
       include: {
         fellowAttendances: {
           include: {
