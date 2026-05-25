@@ -27,7 +27,7 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value:
               "default-src 'self'; " +
-              "script-src 'self' 'unsafe-inline'; " +
+              "script-src 'self' 'unsafe-inline' blob: https://unpkg.com; " +
               "style-src 'self' 'unsafe-inline'; " +
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://shamiri-assets.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; " +
               "font-src 'self'; " +

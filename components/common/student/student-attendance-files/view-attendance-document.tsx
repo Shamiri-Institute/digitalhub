@@ -7,6 +7,7 @@ import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useToast } from "#/components/ui/use-toast";
 import { deleteAttendanceFile, getAttendanceDocument } from "#/lib/actions/file/student-attendance";
+import PdfViewerModal from "#/lib/utils/pdf/pdf-viewer-modal";
 
 export default function ViewAttendanceDocument({
   sessionId,
@@ -18,6 +19,7 @@ export default function ViewAttendanceDocument({
   onDeleteSuccess?: () => void;
 }) {
   const { toast } = useToast();
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [state, setState] = useState<{
     loading: boolean;
     error?: string;
@@ -105,15 +107,14 @@ export default function ViewAttendanceDocument({
   return (
     <div>
       <div className="grid grid-cols-[auto_1fr] items-center gap-4">
-        <a
-          href={state.url}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => setPdfModalOpen(true)}
           className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-shamiri-light-grey p-4 transition-colors hover:border-shamiri-new-blue hover:bg-blue-bg"
         >
           <Icons.paperFileText className="h-10 w-10 text-shamiri-new-blue" />
           <span className="mt-2 text-xs text-shamiri-text-grey">Click to view</span>
-        </a>
+        </button>
         <div className="min-w-0">
           <p
             className="truncate text-sm font-medium text-shamiri-text-dark-grey"
@@ -132,6 +133,12 @@ export default function ViewAttendanceDocument({
           </Button>
         </div>
       </div>
+      <PdfViewerModal
+        open={pdfModalOpen}
+        onOpenChange={setPdfModalOpen}
+        url={state.url}
+        fileName={state.fileName}
+      />
     </div>
   );
 }

@@ -8,7 +8,13 @@ import { SessionDetail } from "#/components/common/session/session-list";
 import type { Session } from "#/components/common/session/sessions-provider";
 import UploadStudentAttendanceDocument from "#/components/common/student/student-attendance-files/upload-student-attendance";
 import ViewAttendanceDocument from "#/components/common/student/student-attendance-files/view-attendance-document";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 
 export default function AttendanceDocumentDialog({
   session,
@@ -42,6 +48,9 @@ export default function AttendanceDocumentDialog({
       <DialogContent className="overflow-hidden">
         <DialogHeader>
           <DialogTitle>Attendance Document</DialogTitle>
+          <DialogDescription>
+            View or upload attendance documents for this session.
+          </DialogDescription>
         </DialogHeader>
         <div className="pb-1 pt-2">
           <SessionDetail state={{ session }} layout="compact" withDropdown={false} role={role} />
