@@ -34,7 +34,7 @@ export default function PdfViewer({
         ]}
         pluginRenderers={DocViewerRenderers}
         prefetchMethod="GET"
-        config={{ header: { disableHeader: false } }}
+        config={{ header: { disableHeader: true } }}
         className="h-[500px] rounded-lg border border-shamiri-light-grey"
       />
       {showCloseButton && onClose && (
