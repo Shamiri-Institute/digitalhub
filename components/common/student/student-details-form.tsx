@@ -324,10 +324,7 @@ export default function StudentDetailsForm({
                           <Select
                             onValueChange={field.onChange}
                             value={field.value ?? "none"}
-                            disabled={
-                              mode === "view" ||
-                              (mode === "edit" && role === ImplementerRole.FELLOW)
-                            }
+                            disabled={mode === "view" || role === ImplementerRole.FELLOW}
                           >
                             <FormControl>
                               <SelectTrigger>
