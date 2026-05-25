@@ -70,11 +70,14 @@ export async function createAttendanceDocument(
 ): Promise<ActionResponse> {
   try {
     const session = await getCurrentUserSession();
-    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
+    if (!session) throw new Error("The session has not been authenticated");
+    if (!session.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
       throw new Error("The session has not been authenticated");
 
     if (!payload.groupId || !payload.sessionId)
       throw new Error("No groupId or sessionId was provided");
+
+    const userId = session.user.id;
 
     await db.$transaction(async (tx) => {
       await tx.attendanceDocuments.updateMany({
@@ -87,7 +90,7 @@ export async function createAttendanceDocument(
       });
 
       await tx.attendanceDocuments.create({
-        data: { ...payload, uploadedBy: session.user.id! },
+        data: { ...payload, uploadedBy: userId },
       });
     });
 
