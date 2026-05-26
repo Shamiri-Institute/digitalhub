@@ -28,7 +28,9 @@ export default function PdfViewerInner({ url, className }: PdfViewerInnerProps) 
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const pages = Array.from({ length: numPages }, (_, i) => i + 1).map((pageNumber) => (
+  const pageCount = numPages ?? 0;
+  const pageNumbers = Array.from({ length: pageCount }, (_, i) => i + 1);
+  const pages = pageNumbers.map((pageNumber) => (
     <Page
       key={pageNumber}
       pageNumber={pageNumber}
