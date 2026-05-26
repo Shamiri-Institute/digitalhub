@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.27.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.26.1...v1.27.0) (2026-05-26)
+
+
+### Features
+
+* **ai:** enable supervisors to edit session recording details ([#707](https://github.com/Shamiri-Institute/digitalhub/issues/707)) ([bb0314f](https://github.com/Shamiri-Institute/digitalhub/commit/bb0314f5efbf2bb7a7e9b11bafdef71bde68dc83))
+* **attendance-upload:** implement attendance sheet upload for fellows  ([12afdda](https://github.com/Shamiri-Institute/digitalhub/commit/12afdda64a0a4ef02cd5d42f795cafd6957e936e))
+
 ## [1.26.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.26.0...v1.26.1) (2026-05-25)
 
 
