@@ -74,19 +74,12 @@ export default function RecordingsDataTableMenu({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleEdit}>
-          <Icons.edit className="mr-2 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
         {recording.fidelityFeedback != null ? (
-          <DropdownMenuItem onClick={handleViewFeedback}>
-            <Icons.eye className="mr-2 h-4 w-4" />
-            View Feedback
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleViewFeedback}>View Feedback</DropdownMenuItem>
         ) : null}
         {canRetry && (
           <DropdownMenuItem onClick={handleRetry} disabled={isRetrying}>
-            <Icons.refreshCw className="mr-2 h-4 w-4" />
             {isRetrying ? "Retrying..." : "Retry Processing"}
           </DropdownMenuItem>
         )}

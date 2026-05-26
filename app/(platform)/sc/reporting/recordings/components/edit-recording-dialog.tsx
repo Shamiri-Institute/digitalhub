@@ -78,7 +78,6 @@ export default function EditRecordingDialog({
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
 
-  // Load fellows when dialog opens and reset form to current recording values
   useEffect(() => {
     if (!open) return;
 
@@ -145,7 +144,6 @@ export default function EditRecordingDialog({
       .finally(() => setLoadingGroups(false));
   }, [fellowId, recording.fellowId, recording.groupId, form.setValue]);
 
-  // When groupId changes to a value other than the original, reload sessions
   useEffect(() => {
     if (!groupId || groupId === recording.groupId) return;
 
@@ -187,7 +185,7 @@ export default function EditRecordingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit recording</DialogTitle>
           <DialogDescription>Update the details for this recording.</DialogDescription>
