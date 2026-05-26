@@ -158,18 +158,25 @@ export default function UploadStudentAttendanceDocument({
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-center">
-        <label className="flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed border-shamiri-new-blue bg-blue-bg p-6 transition-colors hover:bg-blue-bg/80">
-          <Icons.camera className="h-8 w-8 text-shamiri-new-blue" />
-          <span className="mt-2 text-sm font-medium text-shamiri-new-blue">Take Photo</span>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            hidden
-            onChange={handleInputChange}
-          />
-        </label>
+      <div className="flex items-start gap-4">
+        <div className="flex shrink-0 justify-center">
+          <label className="flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed border-shamiri-new-blue bg-blue-bg p-6 transition-colors hover:bg-blue-bg/80">
+            <Icons.camera className="h-8 w-8 text-shamiri-new-blue" />
+            <span className="mt-2 text-sm font-medium text-shamiri-new-blue">Take Photo</span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              hidden
+              onChange={handleInputChange}
+            />
+          </label>
+        </div>
+        <div className="mt-2 space-y-1 text-xs text-shamiri-text-grey">
+          <p className="font-medium">Instructions:</p>
+          <p>- Take a picture of all the pages</p>
+          <p>- Ensure the pictures are visible and clear</p>
+        </div>
       </div>
 
       {selectedFiles.length > 0 && (
