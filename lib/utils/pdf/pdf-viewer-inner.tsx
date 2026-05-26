@@ -28,10 +28,10 @@ export default function PdfViewerInner({ url, className }: PdfViewerInnerProps) 
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const pages = Array.from(new Array(numPages), (_, i) => (
+  const pages = Array.from({ length: numPages }, (_, i) => i + 1).map((pageNumber) => (
     <Page
-      key={i}
-      pageNumber={i + 1}
+      key={pageNumber}
+      pageNumber={pageNumber}
       width={pageWidth || undefined}
       renderTextLayer={false}
       renderAnnotationLayer={false}
