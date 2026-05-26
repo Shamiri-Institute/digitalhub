@@ -747,7 +747,7 @@ async function getSchoolsForUser(user: User) {
 
 Requires `.env.development` file with:
 
-- Database URL for PostgreSQL
+- Dtabase URL for PostgreSQL
 - NextAuth configuration
 - Google OAuth credentials
 - AWS S3 configuration for file uploads
