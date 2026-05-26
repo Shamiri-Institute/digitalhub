@@ -23,6 +23,11 @@ export default function RecordingsDataTableMenu({
 }: RecordingsDataTableMenuProps) {
   const [isRetrying, setIsRetrying] = useState(false);
 
+  const handleEdit = () => {
+    state.setSelectedRecording(recording);
+    state.setEditDialog(true);
+  };
+
   const handleViewFeedback = () => {
     state.setSelectedRecording(recording);
     state.setViewFeedbackDialog(true);
@@ -69,15 +74,12 @@ export default function RecordingsDataTableMenu({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
         {recording.fidelityFeedback != null ? (
-          <DropdownMenuItem onClick={handleViewFeedback}>
-            <Icons.eye className="mr-2 h-4 w-4" />
-            View Feedback
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleViewFeedback}>View Feedback</DropdownMenuItem>
         ) : null}
         {canRetry && (
           <DropdownMenuItem onClick={handleRetry} disabled={isRetrying}>
-            <Icons.refreshCw className="mr-2 h-4 w-4" />
             {isRetrying ? "Retrying..." : "Retry Processing"}
           </DropdownMenuItem>
         )}

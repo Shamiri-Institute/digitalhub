@@ -60,3 +60,4 @@ vscode
 #.env files
 .env
 .env.*
+.claude/settings.local.json

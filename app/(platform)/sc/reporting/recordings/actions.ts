@@ -435,6 +435,10 @@ export async function loadSupervisorRecordings() {
     retryCount: r.retryCount,
     overallScore: r.overallScore,
     fidelityFeedback: r.fidelityFeedback,
+    fellowId: r.fellowId,
+    schoolId: r.schoolId,
+    groupId: r.groupId,
+    sessionId: r.sessionId,
     fellowName: r.fellow.fellowName ?? "Unknown Fellow",
     schoolName: r.school.schoolName,
     groupName: r.group.groupName,
@@ -728,6 +732,111 @@ export async function updateRecordingsStatusBatch(
       message: "Failed to update recording statuses",
       updatedCount: 0,
     };
+  }
+}
+
+/**
+ * Update editable metadata on an existing session recording.
+ * The S3 file is never touched — only the DB record is updated.
+ *
+ * schoolId is intentionally NOT accepted from the client. It is derived
+ * server-side from groupId to prevent mismatched group/school pairs.
+ */
+export async function updateSessionRecording(input: {
+  recordingId: string;
+  fellowId: string;
+  groupId: string;
+  sessionId: string;
+  originalFileName: string;
+}) {
+  const supervisor = await currentSupervisor();
+
+  if (!supervisor?.profile?.id) {
+    return { success: false, message: "Unauthorized user" };
+  }
+
+  // Verify ownership of the recording
+  const recording = await db.sessionRecording.findFirst({
+    where: {
+      id: input.recordingId,
+      supervisorId: supervisor.profile.id,
+    },
+  });
+
+  if (!recording) {
+    return { success: false, message: "Recording not found or unauthorized" };
+  }
+
+  // Verify fellow belongs to this supervisor via the database — do not rely on
+  // the session payload, which may not eagerly load the fellows array.
+  const authorizedFellow = await db.fellow.findFirst({
+    where: { id: input.fellowId, supervisorId: supervisor.profile.id },
+    select: { id: true },
+  });
+
+  if (!authorizedFellow) {
+    return { success: false, message: "Fellow not found or unauthorized" };
+  }
+
+  // Derive schoolId server-side from the group — never trust the client for this.
+  // A mismatched groupId/schoolId pair would corrupt relational integrity.
+  const group = await db.interventionGroup.findUnique({
+    where: { id: input.groupId },
+    select: { schoolId: true },
+  });
+
+  if (!group) {
+    return { success: false, message: "Invalid intervention group" };
+  }
+
+  const schoolId = group.schoolId;
+
+  // Pre-flight uniqueness check (excludes the current recording).
+  // A P2002 catch below handles the residual race-condition window.
+  const conflict = await db.sessionRecording.findFirst({
+    where: {
+      fellowId: input.fellowId,
+      schoolId,
+      groupId: input.groupId,
+      sessionId: input.sessionId,
+      id: { not: input.recordingId },
+    },
+    select: { id: true },
+  });
+
+  if (conflict) {
+    return {
+      success: false,
+      message: "A recording already exists for this fellow/group/session combination",
+    };
+  }
+
+  try {
+    await db.sessionRecording.update({
+      where: { id: input.recordingId },
+      data: {
+        fellowId: input.fellowId,
+        schoolId,
+        groupId: input.groupId,
+        sessionId: input.sessionId,
+        originalFileName: input.originalFileName,
+      },
+    });
+
+    revalidatePath("/sc/reporting/recordings");
+
+    return { success: true, message: "Recording updated successfully" };
+  } catch (error) {
+    // Catch the unique constraint violation that can still occur in the narrow
+    // race window between the pre-flight check and the update above.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return {
+        success: false,
+        message: "A recording already exists for this combination",
+      };
+    }
+    console.error("Error updating session recording:", error);
+    return { success: false, message: "Failed to update recording" };
   }
 }
 
