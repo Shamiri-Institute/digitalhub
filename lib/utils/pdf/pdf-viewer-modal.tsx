@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "#/components/ui/dialog";
+import { useEffect } from "react";
+import { Icons } from "#/components/icons";
 import PdfViewer from "#/lib/utils/pdf/pdf-viewer";
 
 interface PdfViewerModalProps {
@@ -21,26 +16,39 @@ export default function PdfViewerModal({
   open,
   onOpenChange,
   url,
-  fileName,
-  fileType = "pdf",
 }: PdfViewerModalProps) {
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOpenChange(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [open, onOpenChange]);
+
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90dvh] w-full flex-col overflow-hidden lg:w-4/5 lg:max-w-none">
-        <DialogHeader>
-          <DialogTitle>{fileName ?? "Document"}</DialogTitle>
-          <DialogDescription>View the document below.</DialogDescription>
-        </DialogHeader>
-        <div className="flex-1 min-h-0 overflow-auto">
-          <PdfViewer
-            url={url}
-            fileName={fileName}
-            fileType={fileType}
-            showCloseButton={false}
-            className="h-full"
-          />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2 md:px-4"
+      onClick={() => onOpenChange(false)}
+    >
+      <div
+        className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          className="sticky top-2 z-10 float-right mr-2 md:mr-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm"
+        >
+          <Icons.xIcon className="h-4 w-4" />
+        </button>
+
+        <div className="px-2 md:px-4 pb-2 md:pb-4">
+          <PdfViewer url={url} showCloseButton={false} />
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
