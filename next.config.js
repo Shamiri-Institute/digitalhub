@@ -2,7 +2,6 @@ const { withSentryConfig } = require("@sentry/nextjs");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: ['5d68-41-215-134-1.ngrok-free.app'],
   images: {
     remotePatterns: [
       {
