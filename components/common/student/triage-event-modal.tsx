@@ -81,6 +81,7 @@ export default function TriageEventModal({
   sessionName,
   hubId,
   existingEvent,
+  readOnly = false,
   onSuccess,
 }: {
   isOpen: boolean;
@@ -91,6 +92,7 @@ export default function TriageEventModal({
   sessionName?: string;
   hubId?: string | null;
   existingEvent?: TriageEventWithRelations | null;
+  readOnly?: boolean;
   onSuccess?: () => void;
 }) {
   const [supervisorsInHub, setSupervisorsInHub] = useState<
@@ -196,7 +198,9 @@ export default function TriageEventModal({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="lg:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Document triage</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            {readOnly ? "View triage" : "Document triage"}
+          </DialogTitle>
           <p className="text-sm text-shamiri-text-grey">
             {studentName ? (
               <span className="capitalize">{studentName.toLowerCase()}</span>
@@ -212,14 +216,21 @@ export default function TriageEventModal({
           </p>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={readOnly ? (e) => e.preventDefault() : form.handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="riskScreenOutcome"
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel className="text-sm">Risk screen outcome (required)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? ""}
+                    disabled={readOnly}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select outcome" />
@@ -249,7 +260,11 @@ export default function TriageEventModal({
                     <p className="text-xs text-shamiri-text-grey">
                       Shown when Risk screen outcome is Not completed.
                     </p>
-                    <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? ""}
+                      disabled={readOnly}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select reason" />
@@ -274,7 +289,11 @@ export default function TriageEventModal({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel className="text-sm">Action taken (required)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? ""}
+                    disabled={readOnly}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select action" />
@@ -304,7 +323,11 @@ export default function TriageEventModal({
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <FormLabel className="text-sm">Supervisor (in your hub)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? ""}
+                      disabled={readOnly}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select supervisor" />
@@ -333,7 +356,11 @@ export default function TriageEventModal({
                     <p className="text-xs text-shamiri-text-grey">
                       Shown when Action taken is Referred, Escalated, or Student refused.
                     </p>
-                    <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? ""}
+                      disabled={readOnly}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -366,6 +393,7 @@ export default function TriageEventModal({
                       className="resize-none"
                       maxLength={200}
                       rows={2}
+                      disabled={readOnly}
                       {...field}
                     />
                   </FormControl>
@@ -375,17 +403,25 @@ export default function TriageEventModal({
               )}
             />
             <DialogFooter className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-shamiri-new-blue hover:bg-blue-bg"
-                onClick={() => setIsOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Saving…" : "Save triage"}
-              </Button>
+              {readOnly ? (
+                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                  Close
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-shamiri-new-blue hover:bg-blue-bg"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting ? "Saving…" : "Save triage"}
+                  </Button>
+                </>
+              )}
             </DialogFooter>
           </form>
         </Form>
