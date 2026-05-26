@@ -201,10 +201,10 @@ export default function UploadStudentAttendanceDocument({
                   removeFile(i);
                 }}
                 disabled={uploading}
-                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-light-red text-white opacity-0 transition-opacity group-hover:opacity-100"
+                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-shamiri-light-red text-white"
                 aria-label={`Remove ${file.name}`}
               >
-                <Icons.crossCircleFilled className="h-3 w-3" />
+                <Icons.crossCircleFilled className="h-4 w-4" />
               </button>
             </div>
           ))}
