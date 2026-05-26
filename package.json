@@ -38,6 +38,7 @@
     "db:preview:create": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBPORT} -U ${PROD_DBUSER} -d ${PROD_DBNAME} -c \"CREATE DATABASE ${PROD_PREVIEWDBNAME} WITH TEMPLATE ${PROD_DBNAME} OWNER ${PROD_DBUSER};\"'",
     "db:preview:reset": "npm run db:preview:kill-sessions && npm run db:preview:drop && npm run db:prod:kill-sessions && npm run db:preview:create",
     "db:dump:local": "dotenv -c development -- ./scripts/db/dump-db.sh",
+    "postinstall": "cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.js || true",
     "release": "commit-and-tag-version"
   },
   "commit-and-tag-version": {
@@ -89,12 +90,14 @@
     "next": "16.2.6",
     "next-auth": "^4.24.13",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.4.296",
     "react": "19.2.6",
     "react-aria-components": "^1.10.1",
     "react-day-picker": "^9.8.0",
     "react-dom": "19.2.6",
     "react-hook-form": "^7.71.1",
     "react-markdown": "^10.1.0",
+    "react-pdf": "^10.4.1",
     "react-stately": "^3.30.1",
     "recharts": "^3.6.0",
     "tailwind-merge": "^3.6.0",

@@ -1,9 +1,7 @@
 "use client";
 
-import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
-import "@cyntler/react-doc-viewer/dist/index.css";
-import { Button } from "#/components/ui/button";
-import { cn } from "#/lib/utils";
+import dynamic from "next/dynamic";
+import { Icons } from "#/components/icons";
 
 interface PdfViewerProps {
   url: string;
@@ -14,37 +12,16 @@ interface PdfViewerProps {
   showCloseButton?: boolean;
 }
 
-export default function PdfViewer({
-  url,
-  fileName,
-  fileType = "pdf",
-  className,
-  onClose,
-  showCloseButton = true,
-}: PdfViewerProps) {
-  return (
-    <div className={cn("h-full", className)}>
-      <DocViewer
-        documents={[
-          {
-            uri: url,
-            fileName: fileName ?? "document.pdf",
-            fileType,
-          },
-        ]}
-        pluginRenderers={DocViewerRenderers}
-        prefetchMethod="GET"
-        config={{
-          header: { disableHeader: true },
-          pdfVerticalScrollByDefault: true,
-        }}
-        className="h-full min-h-[300px] rounded-lg border border-shamiri-light-grey"
-      />
-      {showCloseButton && onClose && (
-        <Button variant="outline" size="sm" onClick={onClose} className="w-full">
-          Close Viewer
-        </Button>
-      )}
+const PdfViewerInner = dynamic(() => import("./pdf-viewer-inner"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-col items-center justify-center py-16 text-shamiri-text-grey">
+      <Icons.loaderCircle className="h-10 w-10 mb-4 animate-spin" />
+      <p>Loading PDF viewer...</p>
     </div>
-  );
+  ),
+});
+
+export default function PdfViewer({ url, className }: PdfViewerProps) {
+  return <PdfViewerInner key={url} url={url} className={className} />;
 }
