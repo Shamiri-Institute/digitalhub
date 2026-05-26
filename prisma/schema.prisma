@@ -41,6 +41,7 @@ model User {
   confirmedPayouts                        PayoutStatements[]                        @relation("payout_statements_confirmed_by")
   sessionRecordings                       SessionRecording[]
   triageEventAudits                       TriageEventAudit[]
+  attendanceDocuments                     AttendanceDocuments[]
   reviewedTriageEvents                    TriageEvent[]     @relation("TriageEventReviewer")
 
   @@map("users")
@@ -363,8 +364,8 @@ model TriageEvent {
   riskNotCompletedReason  RiskNotCompletedReason?  @map("risk_not_completed_reason")
   actionTaken             TriageActionTaken?       @map("action_taken")
   referredSupervisorId    String?                  @map("referred_supervisor_id") @db.VarChar(255)
-  referredSupervisor      Supervisor?               @relation(fields: [referredSupervisorId], references: [id], onDelete: SetNull)
-  supervisorHandoffStatus SupervisorHandoffStatus?  @map("supervisor_handoff_status")
+  referredSupervisor      Supervisor?              @relation(fields: [referredSupervisorId], references: [id], onDelete: SetNull)
+  supervisorHandoffStatus SupervisorHandoffStatus? @map("supervisor_handoff_status")
   note                    String?                  @db.VarChar(500)
   metadata                Json?                    @map("metadata")
   reviewedById            String?                  @map("reviewed_by_id") @db.VarChar(255)
@@ -378,14 +379,14 @@ model TriageEvent {
 }
 
 model TriageEventAudit {
-  id           String     @id @default(cuid())
-  createdAt    DateTime   @default(now()) @map("created_at")
-  triageEventId String    @map("triage_event_id") @db.VarChar(255)
-  triageEvent  TriageEvent @relation(fields: [triageEventId], references: [id], onDelete: Cascade)
-  editedById   String     @map("edited_by_id") @db.VarChar(255)
-  editedBy     User       @relation(fields: [editedById], references: [id], onDelete: Cascade)
-  beforeData   Json?      @map("before_data")
-  afterData    Json?      @map("after_data")
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now()) @map("created_at")
+  triageEventId String      @map("triage_event_id") @db.VarChar(255)
+  triageEvent   TriageEvent @relation(fields: [triageEventId], references: [id], onDelete: Cascade)
+  editedById    String      @map("edited_by_id") @db.VarChar(255)
+  editedBy      User        @relation(fields: [editedById], references: [id], onDelete: Cascade)
+  beforeData    Json?       @map("before_data")
+  afterData     Json?       @map("after_data")
 
   @@map("triage_event_audits")
 }
@@ -986,6 +987,7 @@ model InterventionSession {
   supervisorAttendances   SupervisorAttendance[]
   studentAttendances      StudentAttendance[]
   delayedPaymentRequests  DelayedPaymentRequest[]
+  attendanceDocuments     AttendanceDocuments[]
   InterventionGroupReport InterventionGroupReport[]
   sessionComments         SessionComment[]
   clinicalCases           ClinicalScreeningInfo[]
@@ -1057,6 +1059,7 @@ model InterventionGroup {
   studentAttendances        StudentAttendance[]
   studentGroupTransferTrail StudentGroupTransferTrail[]
   sessionRecordings         SessionRecording[]
+  attendanceDocuments       AttendanceDocuments[]
 
   @@unique([leaderId, schoolId], name: "interventionGroupByLeaderIdAndSchoolId")
   @@map("intervention_groups")
@@ -1816,10 +1819,27 @@ model SessionRecording {
   // AI Feedback (hybrid storage: key fields + JSON blob)
   fidelityFeedback Json?   @map("fidelity_feedback")
   overallScore     String? @map("overall_score") @db.VarChar(50)
-  transcript Json? @map("transcript")
+  transcript       Json?   @map("transcript")
 
   @@unique([fellowId, schoolId, groupId, sessionId], name: "unique_recording_per_session")
   @@index([supervisorId])
   @@index([status])
   @@map("session_recordings")
+}
+
+model AttendanceDocuments {
+  id         String              @id @default(cuid())
+  createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime            @default(now()) @map("updated_at") @db.Timestamptz()
+  archivedAt DateTime?           @map("archived_at")
+  fileName   String              @map("file_name") @db.VarChar(255)
+  groupId    String              @map("group_id") @db.VarChar(255)
+  group      InterventionGroup   @relation(fields: [groupId], references: [id])
+  sessionId  String              @map("session_id") @db.VarChar(255)
+  session    InterventionSession @relation(fields: [sessionId], references: [id])
+  uploadedBy String              @map("uploaded_by") @db.VarChar(255)
+  user       User                @relation(fields: [uploadedBy], references: [id])
+  link       String              @db.VarChar(255)
+
+  @@map("attendance_documents")
 }

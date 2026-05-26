@@ -7,15 +7,19 @@ import {
   type PutObjectCommandInput,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { env } from "#/env";
 
-export type S3Bucket = "uploads" | "recordings";
+export type S3Bucket = "uploads" | "recordings" | "student-attendance";
 
 function getBucketName(bucket: S3Bucket): string {
   switch (bucket) {
     case "recordings":
       return env.S3_RECORDINGS_BUCKET;
+
+    case "student-attendance":
+      return env.S3_STUDENT_ATTENDANCE_BUCKET;
     default:
       return env.S3_UPLOAD_BUCKET;
   }
@@ -25,6 +29,9 @@ function getBucketRegion(bucket: S3Bucket): string {
   switch (bucket) {
     case "recordings":
       return env.S3_RECORDINGS_REGION;
+
+    case "student-attendance":
+      return env.S3_STUDENT_ATTENDANCE_REGION;
     default:
       return env.S3_UPLOAD_REGION;
   }
@@ -65,4 +72,17 @@ export function deleteObject(
     Bucket: getBucketName(bucket),
   });
   return s3Client.send(command);
+}
+
+export async function getPresignedUrl(
+  key: string,
+  bucket: S3Bucket = "uploads",
+  expiresIn = 3600,
+): Promise<string> {
+  const s3Client = createClient(bucket);
+  const command = new GetObjectCommand({
+    Bucket: getBucketName(bucket),
+    Key: key,
+  });
+  return getSignedUrl(s3Client, command, { expiresIn });
 }

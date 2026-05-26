@@ -1,6 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -10,18 +10,26 @@ const RequestSchema = z.object({
   filename: z.string(),
   contentType: z.string(),
   key: z.string().optional(),
-  bucket: z.enum(["uploads", "recordings"]).default("uploads"),
+  bucket: z.enum(["uploads", "recordings", "student-attendance"]).default("uploads"),
 });
 
 function sanitizeKey(key: string): string {
   return key.replace(/[^0-9a-zA-Z!_\\.\\*'\\(\\)\\\-/]/g, "-");
 }
 
-function getBucketConfig(bucket: "uploads" | "recordings") {
+function getBucketConfig(bucket: "uploads" | "recordings" | "student-attendance") {
   if (bucket === "recordings") {
     return {
       bucketName: env.S3_RECORDINGS_BUCKET,
       region: env.S3_RECORDINGS_REGION,
+      accessKeyId: env.S3_UPLOAD_KEY,
+      secretAccessKey: env.S3_UPLOAD_SECRET,
+    };
+  }
+  if (bucket === "student-attendance") {
+    return {
+      bucketName: env.S3_STUDENT_ATTENDANCE_BUCKET,
+      region: env.S3_STUDENT_ATTENDANCE_REGION,
       accessKeyId: env.S3_UPLOAD_KEY,
       secretAccessKey: env.S3_UPLOAD_SECRET,
     };

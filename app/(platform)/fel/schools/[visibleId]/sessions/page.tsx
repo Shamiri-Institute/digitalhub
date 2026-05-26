@@ -31,6 +31,9 @@ export default async function SchoolSessionsPage(props: {
           assignedSupervisor: true,
           interventionGroups: {
             include: {
+              leader: {
+                select: { fellowName: true },
+              },
               students: {
                 include: {
                   _count: {

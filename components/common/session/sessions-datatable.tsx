@@ -12,6 +12,7 @@ import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import type { Session } from "#/components/common/session/sessions-provider";
 import StudentAttendance from "#/components/common/student/student-attendance";
+import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import DataTable from "#/components/data-table";
 
@@ -64,6 +65,9 @@ export default function SessionsDatatable({
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
+  const [attendanceDocumentDialog, setAttendanceDocumentDialog] = React.useState(false);
+
+  const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
 
   const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
   const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
@@ -91,6 +95,7 @@ export default function SessionsDatatable({
           setSessionOccurrenceDialog,
           setRescheduleSessionDialog,
           setCancelSessionDialog,
+          setAttendanceDocumentDialog,
           role,
           fellowId,
           supervisorId,
@@ -184,6 +189,13 @@ export default function SessionsDatatable({
           supervisorId={supervisorId}
         />
       ) : null}
+      <AttendanceDocumentDialog
+        session={session}
+        groupId={groupId}
+        role={role}
+        open={attendanceDocumentDialog}
+        onOpenChange={setAttendanceDocumentDialog}
+      />
       <SupervisorAttendance
         supervisors={supervisors}
         role={role}
