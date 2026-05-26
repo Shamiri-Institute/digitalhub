@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { Icons } from "#/components/icons";
+import { Dialog, DialogClose, DialogContent } from "#/components/ui/dialog";
 import PdfViewer from "#/lib/utils/pdf/pdf-viewer";
 
 interface PdfViewerModalProps {
@@ -13,42 +13,23 @@ interface PdfViewerModalProps {
 }
 
 export default function PdfViewerModal({ open, onOpenChange, url }: PdfViewerModalProps) {
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOpenChange(false);
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [open, onOpenChange]);
-
-  if (!open) return null;
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2 md:px-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onOpenChange(false);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onOpenChange(false);
-      }}
-    >
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
-        <button
-          type="button"
-          onClick={() => onOpenChange(false)}
-          className="sticky top-2 z-10 float-right mr-2 md:mr-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm"
-        >
-          <Icons.xIcon className="h-4 w-4" />
-        </button>
-
-        <div className="px-2 md:px-4 pb-2 md:pb-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col rounded-lg border-0 bg-white p-0 shadow-xl [&>button:last-child]:hidden">
+        <div className="sticky top-0 z-10 flex justify-end p-2 md:p-4">
+          <DialogClose asChild>
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+            >
+              <Icons.xIcon className="h-4 w-4" />
+            </button>
+          </DialogClose>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto px-2 md:px-4 pb-2 md:pb-4">
           <PdfViewer url={url} showCloseButton={false} />
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
