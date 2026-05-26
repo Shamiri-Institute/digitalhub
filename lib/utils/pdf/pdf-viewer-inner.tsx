@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Icons } from "#/components/icons";
 
-pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PdfViewerInnerProps {
   url: string;
