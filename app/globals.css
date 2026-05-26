@@ -505,14 +505,3 @@
   }
 }
 
-/* Hide download buttons and PDF controls toolbar in react-doc-viewer */
-#react-doc-viewer #pdf-controls {
-  display: none;
-}
-
-#react-doc-viewer #pdf-download,
-#react-doc-viewer .download,
-#react-doc-viewer [title="Download"],
-#react-doc-viewer [aria-label="Download"] {
-  display: none;
-}
