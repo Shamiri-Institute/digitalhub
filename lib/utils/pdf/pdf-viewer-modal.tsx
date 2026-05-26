@@ -26,13 +26,17 @@ export default function PdfViewerModal({ open, onOpenChange, url }: PdfViewerMod
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2 md:px-4"
-      onClick={() => onOpenChange(false)}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onOpenChange(false);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onOpenChange(false);
+      }}
     >
-      <div
-        className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
         <button
           type="button"
           onClick={() => onOpenChange(false)}
