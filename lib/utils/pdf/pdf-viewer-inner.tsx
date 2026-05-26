@@ -28,7 +28,6 @@ export default function PdfViewerInner({ url, className }: PdfViewerInnerProps) 
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  // biome-ignore lint/suspicious/noArrayIndexKey: page order is fixed and sequential
   const pages = Array.from(new Array(numPages), (_, i) => (
     <Page
       key={i}
