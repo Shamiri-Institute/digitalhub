@@ -1,7 +1,13 @@
 "use client";
 
 import { Icons } from "#/components/icons";
-import { Dialog, DialogClose, DialogContent } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import PdfViewer from "#/lib/utils/pdf/pdf-viewer";
 
 interface PdfViewerModalProps {
@@ -12,10 +18,14 @@ interface PdfViewerModalProps {
   fileType?: string;
 }
 
-export default function PdfViewerModal({ open, onOpenChange, url }: PdfViewerModalProps) {
+export default function PdfViewerModal({ open, onOpenChange, url, fileName }: PdfViewerModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col rounded-lg border-0 bg-white p-0 shadow-xl [&>button:last-child]:hidden">
+        <DialogTitle className="sr-only">{fileName ?? "PDF Viewer"}</DialogTitle>
+        <DialogDescription className="sr-only">
+          View PDF document{fileName ? `: ${fileName}` : ""}
+        </DialogDescription>
         <div className="sticky top-0 z-10 flex justify-end p-2 md:p-4">
           <DialogClose asChild>
             <button
