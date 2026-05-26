@@ -12,11 +12,7 @@ interface PdfViewerModalProps {
   fileType?: string;
 }
 
-export default function PdfViewerModal({
-  open,
-  onOpenChange,
-  url,
-}: PdfViewerModalProps) {
+export default function PdfViewerModal({ open, onOpenChange, url }: PdfViewerModalProps) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
