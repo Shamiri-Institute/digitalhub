@@ -101,8 +101,10 @@ export function useS3Upload() {
       const providedKey = (requestBody as { key?: string }).key;
       const bucket =
         providedKey?.startsWith("recordings/") ||
-        (requestBody as { bucket?: string }).bucket === "recordings"
-          ? "recordings"
+        providedKey?.startsWith("student-attendance/") ||
+        (requestBody as { bucket?: string }).bucket === "recordings" ||
+        (requestBody as { bucket?: string }).bucket === "student-attendance"
+          ? (requestBody as { bucket?: string }).bucket || "uploads"
           : "uploads";
 
       // Get presigned URL from our unified API

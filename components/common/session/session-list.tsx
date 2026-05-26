@@ -286,6 +286,7 @@ export function SessionDropDown({
     setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog?: Dispatch<SetStateAction<boolean>>;
+    setAttendanceDocumentDialog?: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
   fellowId?: string;
@@ -455,22 +456,39 @@ export function SessionDropDown({
         ) : null}
 
         {role === ImplementerRole.FELLOW ? (
-          <DropdownMenuItem
-            onClick={() => {
-              state.setSession?.(session);
-              state.setStudentAttendanceDialog?.(true);
-            }}
-            disabled={
-              session.status === "Cancelled" ||
-              session.session?.sessionType === "DATA_COLLECTION" ||
-              !session.occurred ||
-              !session.school?.interventionGroups.find((group) => {
-                return group.leaderId === fellowId;
-              })
-            }
-          >
-            Mark student attendance
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setStudentAttendanceDialog?.(true);
+              }}
+              disabled={
+                session.status === "Cancelled" ||
+                session.session?.sessionType === "DATA_COLLECTION" ||
+                !session.occurred ||
+                !session.school?.interventionGroups.find((group) => {
+                  return group.leaderId === fellowId;
+                })
+              }
+            >
+              Mark student attendance
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession?.(session);
+                state.setAttendanceDocumentDialog?.(true);
+              }}
+              disabled={
+                session.status === "Cancelled" ||
+                !session.occurred ||
+                !session.school?.interventionGroups.find((group) => {
+                  return group.leaderId === fellowId;
+                })
+              }
+            >
+              Upload attendance
+            </DropdownMenuItem>
+          </>
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
