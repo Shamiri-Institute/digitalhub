@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.28.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.27.0...v1.28.0) (2026-05-28)
+
+
+### Features
+
+* **fellow-dropout:** add group archiving option ([#714](https://github.com/Shamiri-Institute/digitalhub/issues/714)) ([3ba5afb](https://github.com/Shamiri-Institute/digitalhub/commit/3ba5afb79aa04585d123a51fd9b2cf9375ebe77c))
+* **speed-insights:** integrate Vercel Speed Insights for performance monitoring ([#713](https://github.com/Shamiri-Institute/digitalhub/issues/713)) ([9309571](https://github.com/Shamiri-Institute/digitalhub/commit/9309571cd237e58f00b08ebebac9f6ffdf140857))
+
 ## [1.27.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.26.1...v1.27.0) (2026-05-26)
 
 
