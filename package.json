@@ -73,6 +73,7 @@
     "@sentry/nextjs": "^10.29.0",
     "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/react-table": "^8.13.2",
+    "@vercel/speed-insights": "^2.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

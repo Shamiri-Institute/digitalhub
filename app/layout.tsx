@@ -1,9 +1,9 @@
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Figtree, Inter } from "next/font/google";
 import { Providers } from "#/components/providers";
 import { getCachedSession } from "#/lib/auth-options";
 import { cn } from "#/lib/utils";
-
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -32,6 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="w-full">{children}</div>
         </Providers>
       </body>
+      <SpeedInsights />
     </html>
   );
 }
