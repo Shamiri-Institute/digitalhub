@@ -406,13 +406,14 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
       const groups = await db.interventionGroup.count({
         where: {
           leaderId: fellowId,
+          archivedAt: null,
         },
       });
 
       if (groups > 0) {
         return {
           success: false,
-          message: `Sorry, could not drop out fellow. Fellow is still assigned to ${groups} groups. Please assign a new leader to the groups.`,
+          message: `Sorry, could not drop out fellow. Fellow is still assigned to ${groups} active groups. Please assign a new leader or archive the groups.`,
         };
       }
     }

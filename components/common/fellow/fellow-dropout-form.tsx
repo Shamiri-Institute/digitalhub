@@ -10,6 +10,7 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import { DropoutFellowSchema } from "#/components/common/fellow/schema";
+import ArchiveGroup from "#/components/common/group/archive-group";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
@@ -56,8 +57,11 @@ export default function FellowDropoutForm({
   const [confirmDialog, setConfirmDialog] = useState(false);
   const [replaceDialog, setReplaceDialog] = useState(false);
   const [replaceGroupLeaderDialog, setReplaceGroupLeaderDialog] = useState(false);
+  const [archiveGroupDialog, setArchiveGroupDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const pathname = usePathname();
+
+  const activeGroups = fellow.groups?.filter((group) => !group.archivedAt) ?? [];
 
   const form = useForm<z.infer<typeof DropoutFellowSchema>>({
     resolver: zodResolver(DropoutFellowSchema),
@@ -77,15 +81,15 @@ export default function FellowDropoutForm({
   }, [fellow, isOpen, form]);
 
   useEffect(() => {
-    if (fellow.groups && fellow.groups.length === 0 && replaceDialog) {
+    if (activeGroups.length === 0 && replaceDialog) {
       setConfirmDialog(true);
       setReplaceDialog(false);
     }
-  }, [fellow.groups, replaceDialog]);
+  }, [activeGroups.length, replaceDialog]);
 
   async function confirmSubmit() {
     setLoading(true);
-    if (fellow.groups && fellow.groups.length > 0 && form.getValues("mode") === "dropout") {
+    if (activeGroups.length > 0 && form.getValues("mode") === "dropout") {
       setReplaceDialog(true);
       setConfirmDialog(false);
       setLoading(false);
@@ -259,23 +263,35 @@ export default function FellowDropoutForm({
           </DialogHeader>
           {renderAlertWidget()}
           <div className="space-y-4">
-            <h3>Replace this fellow in the following groups:</h3>
+            <h3>For each of the following groups, assign a replacement or archive the group:</h3>
             <div className="divide-shamiri-light-gray flex flex-col gap-2 divide-y">
-              {fellow.groups?.map((group) => (
+              {activeGroups.map((group) => (
                 <div key={group.id} className="flex items-center justify-between gap-2 px-4 py-2">
                   <p className="">
                     <span className="font-medium">{group.groupName}</span>
                     <span className="text-muted-foreground"> - {group.school.schoolName}</span>
                   </p>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedGroup(group);
-                      setReplaceGroupLeaderDialog(true);
-                    }}
-                  >
-                    Replace
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedGroup(group);
+                        setReplaceGroupLeaderDialog(true);
+                      }}
+                    >
+                      Replace
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-shamiri-light-red hover:bg-red-bg"
+                      onClick={() => {
+                        setSelectedGroup(group);
+                        setArchiveGroupDialog(true);
+                      }}
+                    >
+                      Archive
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -312,6 +328,24 @@ export default function FellowDropoutForm({
             </div>
           </DialogAlertWidget>
         </ReplaceFellow>
+      )}
+
+      {selectedGroup && (
+        <ArchiveGroup
+          groupId={selectedGroup.id}
+          open={archiveGroupDialog}
+          onOpenChange={setArchiveGroupDialog}
+        >
+          <DialogAlertWidget>
+            <div className="flex items-center gap-2">
+              <span>{fellow.fellowName}</span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span>{selectedGroup.groupName}</span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span>{selectedGroup.school.schoolName}</span>
+            </div>
+          </DialogAlertWidget>
+        </ArchiveGroup>
       )}
     </Form>
   );
