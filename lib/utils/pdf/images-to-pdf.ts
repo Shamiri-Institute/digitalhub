@@ -32,17 +32,7 @@ function calculateA4Fit(imgW: number, imgH: number): ScaledImagePosition {
   return { width, height, x, y };
 }
 
-async function embedImage(pdfDoc: PDFDocument, file: File, img: HTMLImageElement) {
-  const arrayBuffer = await file.arrayBuffer();
-
-  if (file.type === "image/png") {
-    return pdfDoc.embedPng(arrayBuffer);
-  }
-
-  if (file.type === "image/jpeg" || file.type === "image/jpg") {
-    return pdfDoc.embedJpg(arrayBuffer);
-  }
-
+async function embedImage(pdfDoc: PDFDocument, _file: File, img: HTMLImageElement) {
   const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;
   canvas.height = img.naturalHeight;
