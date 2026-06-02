@@ -39,14 +39,11 @@ async function embedImage(pdfDoc: PDFDocument, _file: File, img: HTMLImageElemen
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Failed to get 2d rendering context");
   ctx.drawImage(img, 0, 0);
-  const pngData = canvas.toDataURL("image/png").split(",")[1] ?? "";
-  return pdfDoc.embedPng(
-    new Uint8Array(
-      atob(pngData)
-        .split("")
-        .map((c) => c.charCodeAt(0)),
-    ),
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.92),
   );
+  if (!blob) throw new Error("Failed to export canvas as JPEG");
+  return pdfDoc.embedJpg(await blob.arrayBuffer());
 }
 
 export async function imagesToPdf(images: File[]): Promise<Blob> {
