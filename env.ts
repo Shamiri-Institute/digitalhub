@@ -15,7 +15,8 @@ const schema = z.object({
   S3_RECORDINGS_BUCKET: z.string(),
   S3_RECORDINGS_REGION: z.string().default("af-south-1"),
 
-  S3_STUDENT_ATTENDANCE_BUCKET: z.string(),
+  // TODO: make this required once S3_STUDENT_ATTENDANCE_BUCKET is set in all environments
+  S3_STUDENT_ATTENDANCE_BUCKET: z.string().default(""),
   S3_STUDENT_ATTENDANCE_REGION: z.string().default("af-south-1"),
 });
 
