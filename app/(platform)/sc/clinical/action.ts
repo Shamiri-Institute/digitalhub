@@ -4,7 +4,9 @@ import { ImplementerRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentPersonnel } from "#/app/auth";
+import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { generateStudentVisibleID } from "#/lib/utils";
 
 export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
 
@@ -355,25 +357,63 @@ export async function getSchoolsInHub() {
 }
 
 export async function createStudentClinicalCase(data: {
-  studentId: string;
+  studentId?: string;
   schoolId: string;
   creatorId: string;
   pseudonym: string;
-  stream: string;
-  classForm: string;
-  age: number;
-  gender: string;
   initialContact: string;
   supervisorId?: string;
   fellowId?: string;
   sessionId: string;
   role: "CLINICAL_LEAD" | "SUPERVISOR";
+  newStudent?: {
+    studentName: string;
+    admissionNumber: string;
+    yearOfBirth: number;
+    age: number;
+    gender: string;
+    classForm: string;
+    stream: string;
+  };
 }) {
+  if (!data.studentId && !data.newStudent) {
+    return {
+      success: false,
+      message: "Please select an existing student or provide new student details",
+    };
+  }
+
   try {
     await db.$transaction(async (tx) => {
+      let studentId = data.studentId;
+
+      if (data.newStudent) {
+        const studentCount = await tx.student.count();
+        const student = await tx.student.create({
+          data: {
+            id: objectId("stu"),
+            visibleId: generateStudentVisibleID("CLN", studentCount),
+            studentName: data.newStudent.studentName,
+            schoolId: data.schoolId,
+            admissionNumber: data.newStudent.admissionNumber,
+            yearOfBirth: data.newStudent.yearOfBirth,
+            age: data.newStudent.age,
+            gender: data.newStudent.gender,
+            form: Number.parseInt(data.newStudent.classForm, 10),
+            stream: data.newStudent.stream,
+            isClinicalCase: true,
+          },
+        });
+        studentId = student.id;
+      }
+
+      if (!studentId) {
+        throw new Error("No student available to attach the clinical case to");
+      }
+
       await tx.clinicalScreeningInfo.create({
         data: {
-          studentId: data.studentId,
+          studentId,
           schoolId: data.schoolId,
           currentSupervisorId: data.role === "SUPERVISOR" ? data.creatorId : null,
           pseudonym: data.pseudonym,
@@ -384,18 +424,6 @@ export async function createStudentClinicalCase(data: {
           caseStatus: "Active",
           sessionWhenCaseIsFlaggedId: data.sessionId,
           clinicalLeadId: data.role === "CLINICAL_LEAD" ? data.creatorId : null,
-        },
-      });
-
-      await tx.student.update({
-        where: {
-          id: data.studentId,
-        },
-        data: {
-          form: Number.parseInt(data.classForm, 10),
-          stream: data.stream,
-          age: data.age,
-          gender: data.gender,
         },
       });
     });
