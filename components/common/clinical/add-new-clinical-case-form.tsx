@@ -33,28 +33,63 @@ import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
-const formSchema = z.object({
-  school: stringValidation("School"),
-  studentName: stringValidation("Student name is required"),
-  pseudonym: stringValidation("Pseudonym is required"),
-  admissionNumber: z.number().min(1, "Admission number is required"),
-  yearOfBirth: z.date("Year of birth is required").refine(
-    (date) => {
-      const today = new Date();
-      const minDate = new Date(today.getFullYear() - 35, today.getMonth(), today.getDate());
-      const maxDate = new Date(today.getFullYear() - 9, today.getMonth(), today.getDate());
-      return date >= minDate && date <= maxDate;
-    },
-    { error: "Student must be between 9 and 35 years old" },
-  ),
-  gender: z.enum(GENDER_OPTIONS),
-  classForm: stringValidation("Class/Form is required"),
-  stream: z.string().optional(),
-  initialContact: z.enum(["student", "fellow", "supervisor", "teacher"]),
-  supervisor: z.string().optional(),
-  fellow: z.string().optional(),
-  session: stringValidation("Session is required"),
-});
+function isValidStudentAge(date: Date) {
+  const today = new Date();
+  const minDate = new Date(today.getFullYear() - 35, today.getMonth(), today.getDate());
+  const maxDate = new Date(today.getFullYear() - 9, today.getMonth(), today.getDate());
+  return date >= minDate && date <= maxDate;
+}
+
+const formSchema = z
+  .object({
+    school: stringValidation("School"),
+    isNewStudent: z.boolean(),
+    studentName: z.string().optional(),
+    pseudonym: stringValidation("Pseudonym is required"),
+    admissionNumber: z.number().optional(),
+    yearOfBirth: z.date().optional(),
+    gender: z.enum(GENDER_OPTIONS).optional(),
+    classForm: z.string().optional(),
+    stream: z.string().optional(),
+    initialContact: z.enum(["student", "fellow", "supervisor", "teacher"]),
+    supervisor: z.string().optional(),
+    fellow: z.string().optional(),
+    session: stringValidation("Session is required"),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.isNewStudent) {
+      return;
+    }
+
+    if (!data.studentName) {
+      ctx.addIssue({ code: "custom", path: ["studentName"], message: "Student name is required" });
+    }
+    if (!data.admissionNumber || data.admissionNumber < 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["admissionNumber"],
+        message: "Admission number is required",
+      });
+    }
+    if (!data.yearOfBirth) {
+      ctx.addIssue({ code: "custom", path: ["yearOfBirth"], message: "Year of birth is required" });
+    } else if (!isValidStudentAge(data.yearOfBirth)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["yearOfBirth"],
+        message: "Student must be between 9 and 35 years old",
+      });
+    }
+    if (!data.gender) {
+      ctx.addIssue({ code: "custom", path: ["gender"], message: "Gender is required" });
+    }
+    if (!data.classForm) {
+      ctx.addIssue({ code: "custom", path: ["classForm"], message: "Grade/Form is required" });
+    }
+    if (!data.stream) {
+      ctx.addIssue({ code: "custom", path: ["stream"], message: "Stream is required" });
+    }
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -96,6 +131,7 @@ export function AddNewClinicalCaseForm({
   }>[];
 }) {
   const [open, setOpen] = useState(false);
+  const [isNewStudent, setIsNewStudent] = useState(false);
   const [initialContactType, setInitialContactType] = useState<string>("");
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
@@ -110,6 +146,7 @@ export function AddNewClinicalCaseForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       school: "",
+      isNewStudent: false,
       studentName: "",
       pseudonym: "",
       stream: "",
@@ -156,6 +193,19 @@ export function AddNewClinicalCaseForm({
     }
   };
 
+  const toggleNewStudent = () => {
+    const nextIsNewStudent = !isNewStudent;
+    setIsNewStudent(nextIsNewStudent);
+    form.setValue("isNewStudent", nextIsNewStudent);
+    setSelectedStudentId("");
+    form.setValue("studentName", "");
+    form.setValue("admissionNumber", undefined);
+    form.setValue("yearOfBirth", undefined);
+    form.setValue("gender", undefined);
+    form.setValue("classForm", "");
+    form.setValue("stream", "");
+  };
+
   const handleInitialContactChange = (value: string) => {
     setInitialContactType(value);
     if (value !== "fellow") {
@@ -176,10 +226,19 @@ export function AddNewClinicalCaseForm({
   };
 
   const onSubmit = async (data: FormValues) => {
-    if (!selectedSchoolId || !selectedStudentId) {
+    if (!selectedSchoolId) {
       toast({
         title: "Missing required fields",
-        description: "Please select both a school and a student",
+        description: "Please select a school",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isNewStudent && !selectedStudentId) {
+      toast({
+        title: "Missing required fields",
+        description: "Please select a student or add a new one",
         variant: "destructive",
       });
       return;
@@ -189,12 +248,20 @@ export function AddNewClinicalCaseForm({
       const response = await createStudentClinicalCase({
         schoolId: selectedSchoolId,
         creatorId,
-        studentId: selectedStudentId,
+        studentId: isNewStudent ? undefined : selectedStudentId,
+        newStudent:
+          isNewStudent && data.yearOfBirth
+            ? {
+                studentName: data.studentName ?? "",
+                admissionNumber: String(data.admissionNumber),
+                yearOfBirth: data.yearOfBirth.getFullYear(),
+                age: new Date().getFullYear() - data.yearOfBirth.getFullYear(),
+                gender: data.gender ?? "",
+                classForm: data.classForm ?? "",
+                stream: data.stream ?? "",
+              }
+            : undefined,
         pseudonym: data.pseudonym,
-        stream: data.stream || "",
-        classForm: data.classForm,
-        age: new Date().getFullYear() - data.yearOfBirth.getFullYear(),
-        gender: data.gender,
         initialContact: data.initialContact,
         supervisorId: data.supervisor,
         fellowId: data.fellow,
@@ -207,6 +274,7 @@ export function AddNewClinicalCaseForm({
           title: "Clinical case created successfully",
         });
         form.reset();
+        setIsNewStudent(false);
         setSelectedSchoolId("");
         setSelectedStudentId("");
         setSelectedHubId("");
@@ -259,20 +327,45 @@ export function AddNewClinicalCaseForm({
             </div>
 
             <div className="space-y-2">
-              <FormLabel>
-                Student
-                <span className="text-red-500">*</span>
-              </FormLabel>
-              <Combobox
-                items={students.map((student) => ({
-                  id: student.id,
-                  label: student.studentName || "Unknown Student",
-                }))}
-                activeItemId={selectedStudentId}
-                onSelectItem={handleStudentSelect}
-                placeholder="Select a student..."
-                inputPlaceholder="Search students..."
-              />
+              <div className="flex items-center justify-between">
+                <FormLabel>
+                  Student
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto p-0 text-sm text-shamiri-new-blue"
+                  onClick={toggleNewStudent}
+                >
+                  {isNewStudent ? "Select existing student" : "Add new student"}
+                </Button>
+              </div>
+              {isNewStudent ? (
+                <FormField
+                  control={form.control}
+                  name="studentName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input placeholder="Enter student name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <Combobox
+                  items={students.map((student) => ({
+                    id: student.id,
+                    label: student.studentName || "Unknown Student",
+                  }))}
+                  activeItemId={selectedStudentId}
+                  onSelectItem={handleStudentSelect}
+                  placeholder="Select a student..."
+                  inputPlaceholder="Search students..."
+                />
+              )}
             </div>
 
             <FormField
@@ -292,144 +385,148 @@ export function AddNewClinicalCaseForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="admissionNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    School Admission Number
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter admission number"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) =>
-                        field.onChange(e.target.value ? Number(e.target.value) : undefined)
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex flex-row gap-4">
-              <FormField
-                control={form.control}
-                name="yearOfBirth"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>
-                      Year of Birth <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {field.value ? (
-                            format(field.value, "dd/MM/yyyy")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          captionLayout="dropdown"
-                          fromYear={new Date().getFullYear() - 35}
-                          toYear={new Date().getFullYear() - 9}
-                          initialFocus
+            {isNewStudent && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="admissionNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        School Admission Number
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Enter admission number"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.value ? Number(e.target.value) : undefined)
+                          }
                         />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>
-                      Gender
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {GENDER_OPTIONS.map((g) => (
-                          <SelectItem key={g} value={g}>
-                            {g}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                <div className="flex flex-row gap-4">
+                  <FormField
+                    control={form.control}
+                    name="yearOfBirth"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>
+                          Year of Birth <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                !field.value && "text-muted-foreground",
+                              )}
+                            >
+                              <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                              {field.value ? (
+                                format(field.value, "dd/MM/yyyy")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              captionLayout="dropdown"
+                              fromYear={new Date().getFullYear() - 35}
+                              toYear={new Date().getFullYear() - 9}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <div className="flex flex-row gap-4">
-              <FormField
-                control={form.control}
-                name="classForm"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>
-                      Class/Form
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select class" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">Form 1</SelectItem>
-                        <SelectItem value="2">Form 2</SelectItem>
-                        <SelectItem value="3">Form 3</SelectItem>
-                        <SelectItem value="4">Form 4</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="gender"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>
+                          Gender
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {GENDER_OPTIONS.map((g) => (
+                              <SelectItem key={g} value={g}>
+                                {g}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <FormField
-                control={form.control}
-                name="stream"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>
-                      Stream
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                <div className="flex flex-row gap-4">
+                  <FormField
+                    control={form.control}
+                    name="classForm"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>
+                          Grade/Form
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select class" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">Form 1</SelectItem>
+                            <SelectItem value="2">Form 2</SelectItem>
+                            <SelectItem value="3">Form 3</SelectItem>
+                            <SelectItem value="4">Form 4</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="stream"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>
+                          Stream
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </>
+            )}
 
             <FormField
               control={form.control}
