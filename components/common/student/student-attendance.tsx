@@ -245,7 +245,13 @@ export default function StudentAttendance({
         ) : null}
 
         {selectedGroup && session && (
-          <div className="my-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-1 rounded-full bg-shamiri-new-blue" />
+              <h3 className="text-sm font-semibold text-shamiri-text-dark-grey">
+                Attendance Uploads
+              </h3>
+            </div>
             <ViewAttendanceDocument sessionId={session.id} groupId={selectedGroup} />
           </div>
         )}

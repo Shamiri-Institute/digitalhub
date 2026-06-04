@@ -86,8 +86,7 @@ export default function ViewAttendanceDocument({
       <div className="flex items-center justify-center p-4">
         <Alert variant="primary">
           <AlertDescription>
-            No attendance document has been uploaded for this session yet. Use the{" "}
-            <strong>Upload</strong> section below to upload one.
+            No attendance document has been uploaded for this session yet.
           </AlertDescription>
         </Alert>
       </div>
