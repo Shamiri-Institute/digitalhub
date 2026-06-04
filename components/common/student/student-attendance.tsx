@@ -14,6 +14,7 @@ import { type Session, SessionsContext } from "#/components/common/session/sessi
 import StudentAttendanceMenu from "#/components/common/student/student-attendance-menu";
 import StudentTriageHistoryModal from "#/components/common/student/student-triage-history-modal";
 import TriageEventModal from "#/components/common/student/triage-event-modal";
+import ViewAttendanceDocument from "#/components/common/student/student-attendance-files/view-attendance-document";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -242,6 +243,12 @@ export default function StudentAttendance({
             </Form>
           </div>
         ) : null}
+
+        {selectedGroup && session && (
+          <div className="my-4">
+            <ViewAttendanceDocument sessionId={session.id} groupId={selectedGroup} />
+          </div>
+        )}
 
         {Object.keys(triageEventsByStudent).length > 0 && (
           <TriageSessionSummary triageEventsByStudent={triageEventsByStudent} />

@@ -23,7 +23,12 @@ export async function getAttendanceDocument(
 ): Promise<ActionResponse<AttendanceDoc>> {
   try {
     const session = await getCurrentUserSession();
-    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
+    if (
+      !session?.user.id ||
+      (session.user.activeMembership?.role !== ImplementerRole.FELLOW &&
+        session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR &&
+        session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR)
+    )
       throw new Error("The session has not been authenticated");
 
     const { sessionId, groupId } = filters;
