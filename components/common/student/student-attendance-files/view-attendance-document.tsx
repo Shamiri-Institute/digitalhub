@@ -1,5 +1,6 @@
 "use client";
 
+import type { ImplementerRole } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Alert, AlertDescription } from "#/components/ui/alert";
@@ -12,10 +13,12 @@ import PdfViewerModal from "#/lib/utils/pdf/pdf-viewer-modal";
 export default function ViewAttendanceDocument({
   sessionId,
   groupId,
+  role,
   onDeleteSuccess,
 }: {
   sessionId: string;
   groupId: string;
+  role: ImplementerRole;
   onDeleteSuccess?: () => void;
 }) {
   const { toast } = useToast();
@@ -86,7 +89,9 @@ export default function ViewAttendanceDocument({
       <div className="flex items-center justify-center p-4">
         <Alert variant="primary">
           <AlertDescription>
-            No attendance document has been uploaded for this session yet.
+            {role === "FELLOW"
+              ? "Upload is not available. Please use the upload section below to take a picture."
+              : "The fellow did not upload an attendance document."}
           </AlertDescription>
         </Alert>
       </div>
@@ -121,15 +126,17 @@ export default function ViewAttendanceDocument({
           >
             {state.fileName ?? "document.pdf"}
           </p>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDelete}
-            loading={state.archiving}
-            className="mt-2 w-fit hover:bg-shamiri-light-red/90"
-          >
-            {state.archiving ? "Deleting..." : "Delete"}
-          </Button>
+          {role === "FELLOW" && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              loading={state.archiving}
+              className="mt-2 w-fit hover:bg-shamiri-light-red/90"
+            >
+              {state.archiving ? "Deleting..." : "Delete"}
+            </Button>
+          )}
         </div>
       </div>
       <PdfViewerModal

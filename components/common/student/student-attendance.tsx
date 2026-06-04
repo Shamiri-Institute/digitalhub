@@ -252,7 +252,7 @@ export default function StudentAttendance({
                 Attendance Uploads
               </h3>
             </div>
-            <ViewAttendanceDocument sessionId={session.id} groupId={selectedGroup} />
+            <ViewAttendanceDocument sessionId={session.id} groupId={selectedGroup} role={role} />
           </div>
         )}
 
