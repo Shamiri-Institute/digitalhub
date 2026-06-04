@@ -10,7 +10,13 @@ import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
 import { Combobox } from "#/components/ui/combobox";
-import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -28,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn, stringValidation } from "#/lib/utils";
@@ -304,174 +311,372 @@ export function AddNewClinicalCaseForm({
       {children}
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <span className="text-xl">Add clinical case</span>
+              <DialogTitle className="text-xl">Add clinical case</DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-2">
-              <FormLabel>
-                School
-                <span className="text-red-500">*</span>
-              </FormLabel>
-              <Combobox
-                items={schools.map((school) => ({
-                  id: school.id,
-                  label: school.schoolName || "Unknown School",
-                }))}
-                activeItemId={selectedSchoolId}
-                onSelectItem={handleSchoolSelect}
-                placeholder="Select a school..."
-                inputPlaceholder="Search schools..."
-              />
-            </div>
+            <div className="space-y-6 pt-4">
+              <div className="flex flex-col">
+                <div className="col-span-2 py-2">
+                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                    Student Information
+                  </span>
+                  <Separator />
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <FormLabel>
+                      School
+                      <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
+                    <Combobox
+                      items={schools.map((school) => ({
+                        id: school.id,
+                        label: school.schoolName || "Unknown School",
+                      }))}
+                      activeItemId={selectedSchoolId}
+                      onSelectItem={handleSchoolSelect}
+                      placeholder="Select a school..."
+                      inputPlaceholder="Search schools..."
+                    />
+                  </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <FormLabel>
-                  Student
-                  <span className="text-red-500">*</span>
-                </FormLabel>
-                <Button
-                  type="button"
-                  variant="link"
-                  className="h-auto p-0 text-sm text-shamiri-new-blue"
-                  onClick={toggleNewStudent}
-                >
-                  {isNewStudent ? "Select existing student" : "Add new student"}
-                </Button>
-              </div>
-              {isNewStudent ? (
-                <FormField
-                  control={form.control}
-                  name="studentName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input placeholder="Enter student name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <Combobox
-                  items={students.map((student) => ({
-                    id: student.id,
-                    label: student.studentName || "Unknown Student",
-                  }))}
-                  activeItemId={selectedStudentId}
-                  onSelectItem={handleStudentSelect}
-                  placeholder="Select a student..."
-                  inputPlaceholder="Search students..."
-                />
-              )}
-            </div>
-
-            <FormField
-              control={form.control}
-              name="pseudonym"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Pseudonym
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {isNewStudent && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="admissionNumber"
-                  render={({ field }) => (
-                    <FormItem>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
                       <FormLabel>
-                        School Admission Number
-                        <span className="text-red-500">*</span>
+                        Student
+                        <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter admission number"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) =>
-                            field.onChange(e.target.value ? Number(e.target.value) : undefined)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="h-auto p-0 text-sm text-shamiri-new-blue"
+                        onClick={toggleNewStudent}
+                      >
+                        {isNewStudent ? "Select existing student" : "Add new student"}
+                      </Button>
+                    </div>
+                    {isNewStudent ? (
+                      <FormField
+                        control={form.control}
+                        name="studentName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input placeholder="Enter student name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ) : (
+                      <Combobox
+                        items={students.map((student) => ({
+                          id: student.id,
+                          label: student.studentName || "Unknown Student",
+                        }))}
+                        activeItemId={selectedStudentId}
+                        onSelectItem={handleStudentSelect}
+                        placeholder="Select a student..."
+                        inputPlaceholder="Search students..."
+                      />
+                    )}
+                  </div>
 
-                <div className="flex flex-row gap-4">
                   <FormField
                     control={form.control}
-                    name="yearOfBirth"
+                    name="pseudonym"
                     render={({ field }) => (
-                      <FormItem className="flex-1">
+                      <FormItem>
                         <FormLabel>
-                          Year of Birth <span className="text-red-500">*</span>
+                          Pseudonym
+                          <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              captionLayout="dropdown"
-                              fromYear={new Date().getFullYear() - 35}
-                              toYear={new Date().getFullYear() - 9}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
+                  {isNewStudent && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="admissionNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              School Admission Number
+                              <span className="text-shamiri-light-red">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="Enter admission number"
+                                {...field}
+                                value={field.value || ""}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value ? Number(e.target.value) : undefined,
+                                  )
+                                }
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex flex-row gap-4">
+                        <FormField
+                          control={form.control}
+                          name="yearOfBirth"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>
+                                Year of Birth <span className="text-shamiri-light-red">*</span>
+                              </FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                      "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                      !field.value && "text-muted-foreground",
+                                    )}
+                                  >
+                                    <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                                    {field.value ? (
+                                      format(field.value, "dd/MM/yyyy")
+                                    ) : (
+                                      <span>Pick a date</span>
+                                    )}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    captionLayout="dropdown"
+                                    fromYear={new Date().getFullYear() - 35}
+                                    toYear={new Date().getFullYear() - 9}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="gender"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>
+                                Gender
+                                <span className="text-shamiri-light-red">*</span>
+                              </FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select gender" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {GENDER_OPTIONS.map((g) => (
+                                    <SelectItem key={g} value={g}>
+                                      {g}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="flex flex-row gap-4">
+                        <FormField
+                          control={form.control}
+                          name="classForm"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>
+                                Grade/Form
+                                <span className="text-shamiri-light-red">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <Input {...field} type="number" placeholder="Enter grade/form" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="stream"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>
+                                Stream
+                                <span className="text-shamiri-light-red">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <div className="col-span-2 py-2">
+                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                    Case Details
+                  </span>
+                  <Separator />
+                </div>
+                <div className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="gender"
+                    name="initialContact"
                     render={({ field }) => (
-                      <FormItem className="flex-1">
+                      <FormItem>
                         <FormLabel>
-                          Gender
-                          <span className="text-red-500">*</span>
+                          Initial Contact
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            handleInitialContactChange(value);
+                          }}
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select initial contact" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="student">Student</SelectItem>
+                            <SelectItem value="fellow">Fellow</SelectItem>
+                            <SelectItem value="supervisor">Supervisor</SelectItem>
+                            <SelectItem value="teacher">Teacher</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex w-full flex-1 flex-col gap-4">
+                    {initialContactType === "supervisor" && (
+                      <FormField
+                        control={form.control}
+                        name="supervisor"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormLabel>
+                              Select Supervisor
+                              <span className="text-shamiri-light-red">*</span>
+                            </FormLabel>
+                            <div>
+                              <Combobox
+                                items={supervisorsInHub.map((supervisor) => ({
+                                  id: supervisor.id,
+                                  label: supervisor.supervisorName || "Unknown Supervisor",
+                                }))}
+                                activeItemId={field.value || ""}
+                                onSelectItem={field.onChange}
+                                placeholder="Select a supervisor..."
+                                inputPlaceholder="Search supervisors..."
+                              />
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {initialContactType === "fellow" && (
+                      <>
+                        <div className="w-full">
+                          <FormLabel>
+                            Select Hub
+                            <span className="text-shamiri-light-red">*</span>
+                          </FormLabel>
+                          <div>
+                            <Combobox
+                              items={hubs.map((hub) => ({
+                                id: hub.id,
+                                label: hub.hubName || "Unknown Hub",
+                              }))}
+                              activeItemId={selectedHubId}
+                              onSelectItem={handleHubSelect}
+                              placeholder="Select a hub..."
+                              inputPlaceholder="Search hubs..."
+                            />
+                          </div>
+                        </div>
+
+                        {selectedHubId && (
+                          <FormField
+                            control={form.control}
+                            name="fellow"
+                            render={({ field }) => (
+                              <FormItem className="w-full">
+                                <FormLabel>
+                                  Select Fellow
+                                  <span className="text-shamiri-light-red">*</span>
+                                </FormLabel>
+                                <div>
+                                  <Combobox
+                                    items={fellowsInHub.map((fellow) => ({
+                                      id: fellow.id,
+                                      label: fellow.fellowName || "Unknown Fellow",
+                                    }))}
+                                    activeItemId={field.value || ""}
+                                    onSelectItem={field.onChange}
+                                    placeholder="Select a fellow..."
+                                    inputPlaceholder="Search fellows..."
+                                  />
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="session"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Select Session
+                          <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
+                            <SelectValue placeholder="Select session" />
                           </SelectTrigger>
                           <SelectContent>
-                            {GENDER_OPTIONS.map((g) => (
-                              <SelectItem key={g} value={g}>
-                                {g}
+                            {availableSessions.map((session) => (
+                              <SelectItem key={session.id} value={session.id}>
+                                {session.sessionLabel}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -481,203 +686,28 @@ export function AddNewClinicalCaseForm({
                     )}
                   />
                 </div>
-
-                <div className="flex flex-row gap-4">
-                  <FormField
-                    control={form.control}
-                    name="classForm"
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormLabel>
-                          Grade/Form
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select class" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">Form 1</SelectItem>
-                            <SelectItem value="2">Form 2</SelectItem>
-                            <SelectItem value="3">Form 3</SelectItem>
-                            <SelectItem value="4">Form 4</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="stream"
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormLabel>
-                          Stream
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </>
-            )}
-
-            <FormField
-              control={form.control}
-              name="initialContact"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Initial Contact
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      handleInitialContactChange(value);
-                    }}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select initial contact" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">Student</SelectItem>
-                      <SelectItem value="fellow">Fellow</SelectItem>
-                      <SelectItem value="supervisor">Supervisor</SelectItem>
-                      <SelectItem value="teacher">Teacher</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex w-full flex-1 flex-col gap-4">
-              {initialContactType === "supervisor" && (
-                <FormField
-                  control={form.control}
-                  name="supervisor"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>
-                        Select Supervisor
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <div>
-                        <Combobox
-                          items={supervisorsInHub.map((supervisor) => ({
-                            id: supervisor.id,
-                            label: supervisor.supervisorName || "Unknown Supervisor",
-                          }))}
-                          activeItemId={field.value || ""}
-                          onSelectItem={field.onChange}
-                          placeholder="Select a supervisor..."
-                          inputPlaceholder="Search supervisors..."
-                        />
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {initialContactType === "fellow" && (
-                <>
-                  <div className="w-full">
-                    <FormLabel>
-                      Select Hub
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <div>
-                      <Combobox
-                        items={hubs.map((hub) => ({
-                          id: hub.id,
-                          label: hub.hubName || "Unknown Hub",
-                        }))}
-                        activeItemId={selectedHubId}
-                        onSelectItem={handleHubSelect}
-                        placeholder="Select a hub..."
-                        inputPlaceholder="Search hubs..."
-                      />
-                    </div>
-                  </div>
-
-                  {selectedHubId && (
-                    <FormField
-                      control={form.control}
-                      name="fellow"
-                      render={({ field }) => (
-                        <FormItem className="w-full">
-                          <FormLabel>
-                            Select Fellow
-                            <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <div>
-                            <Combobox
-                              items={fellowsInHub.map((fellow) => ({
-                                id: fellow.id,
-                                label: fellow.fellowName || "Unknown Fellow",
-                              }))}
-                              activeItemId={field.value || ""}
-                              onSelectItem={field.onChange}
-                              placeholder="Select a fellow..."
-                              inputPlaceholder="Search fellows..."
-                            />
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                </>
-              )}
+              </div>
             </div>
 
-            <FormField
-              control={form.control}
-              name="session"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Select Session
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select session" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableSessions.map((session) => (
-                        <SelectItem key={session.id} value={session.id}>
-                          {session.sessionLabel}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex flex-row justify-end gap-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Dismiss
+            <Separator className="my-6" />
+            <DialogFooter className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
               </Button>
               <Button
+                variant="brand"
                 type="submit"
                 disabled={form.formState.isSubmitting}
                 loading={form.formState.isSubmitting}
               >
                 Save
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>
