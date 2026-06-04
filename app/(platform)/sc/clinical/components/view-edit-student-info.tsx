@@ -41,7 +41,7 @@ const EditStudentSchema = z.object({
   gender: stringValidation("Gender is required"),
   shamiriId: stringValidation("Shamiri ID is required"),
   admissionNumber: stringValidation("Admission number is required"),
-  classForm: stringValidation("Class/Form is required"),
+  classForm: stringValidation("Grade/Form is required"),
   stream: stringValidation("Stream is required"),
   group: stringValidation("Group is required"),
   caseId: stringValidation("Case ID is required"),
@@ -219,7 +219,7 @@ export default function ViewEditClinicalCaseStudentInfo({
                 name="classForm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Class/Form</FormLabel>
+                    <FormLabel>Grade/Form</FormLabel>
                     <FormControl>
                       <Input {...field} type="number" />
                     </FormControl>
