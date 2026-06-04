@@ -352,7 +352,7 @@ export default function StudentDetailsForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Class/form <span className="text-shamiri-light-red">*</span>
+                            Grade/Form <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input {...field} type="text" disabled={mode === "view"} />
