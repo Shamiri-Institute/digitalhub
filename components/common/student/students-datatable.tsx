@@ -83,7 +83,7 @@ export default function StudentsDatatable({
           "Admission number": false,
           "Clinical Sessions": false,
           Stream: false,
-          "Class/Form": false,
+          "Grade/Form": false,
           "Date added": false,
           Age: false,
           checkbox: false,

@@ -198,8 +198,8 @@ export const columns = (state: {
     accessorKey: "stream",
   },
   {
-    header: "Class/Form",
-    id: "Class/Form",
+    header: "Grade/Form",
+    id: "Grade/Form",
     accessorKey: "form",
   },
   {
