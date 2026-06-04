@@ -47,7 +47,7 @@ export default function StudentsDatatableSkeleton({ role }: { role: ImplementerR
         "Shamiri ID": false,
         "Admission number": false,
         Stream: false,
-        "Class/Form": false,
+        "Grade/Form": false,
         "Date added": false,
         Age: false,
         "Clinical Sessions": false,
