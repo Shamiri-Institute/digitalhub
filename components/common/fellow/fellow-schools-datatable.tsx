@@ -2,7 +2,7 @@
 import type { ImplementerRole, Project } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
@@ -33,8 +33,8 @@ export default function FellowSchoolsDatatable({
   project?: Project;
   role: ImplementerRole;
 }) {
-  const [fellow, setFellow] = useState<FellowsData | null>(null);
-  const [fellowGroup, setFellowGroup] = useState<FellowGroupData | undefined>();
+  const [_fellow, _setFellow] = useState<FellowsData | null>(null);
+  const [_fellowGroup, _setFellowGroup] = useState<FellowGroupData | undefined>();
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
   const [addFellowDialog, setAddFellowDialog] = useState(false);
   const [editFellowDialog, setEditFellowDialog] = useState(false);
@@ -49,7 +49,7 @@ export default function FellowSchoolsDatatable({
 
   const mainColumns = useMemo(() => {
     const columns = {
-      setFellow,
+      setFellow: _setFellow,
       setWeeklyEvaluationDialog,
       setEditFellowDialog,
       setAttendanceHistoryDialog,
@@ -65,7 +65,7 @@ export default function FellowSchoolsDatatable({
 
   const subColumnsMemo = useMemo(() => {
     const columns = {
-      setFellowGroup,
+      setFellowGroup: _setFellowGroup,
       setAttendanceDialog,
       setStudentsDialog,
       setEvaluationDialog,
@@ -114,16 +114,21 @@ export default function FellowSchoolsDatatable({
     );
   }
 
-  useEffect(() => {
-    setFellow(fellows.find((fellow) => fellow.id === fellowGroup?.leaderId) ?? null);
-  }, [fellowGroup, fellows]);
+  const fellow = useMemo(() => {
+    if (_fellowGroup) {
+      return fellows.find((f) => f.id === _fellowGroup.leaderId) ?? null;
+    }
+    return _fellow;
+  }, [_fellow, _fellowGroup, fellows]);
 
-  useEffect(() => {
-    const group = fellows
-      .find((fellow) => fellow.id === fellowGroup?.leaderId)
-      ?.groups.find((group) => group.id === fellowGroup?.id);
-    setFellowGroup(group);
-  }, [fellows]);
+  const fellowGroup = useMemo(() => {
+    if (!_fellowGroup) {
+      return;
+    }
+    return fellows
+      .find((f) => f.id === _fellowGroup.leaderId)
+      ?.groups.find((g) => g.id === _fellowGroup.id);
+  }, [_fellowGroup, fellows]);
 
   return (
     <>
