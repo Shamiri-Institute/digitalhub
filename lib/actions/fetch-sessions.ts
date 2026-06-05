@@ -14,6 +14,7 @@ export async function fetchInterventionSessions({
   start,
   end,
   filters,
+  fellowId,
 }: {
   activeProjectId?: string | null;
   hubId?: string;
@@ -22,6 +23,7 @@ export async function fetchInterventionSessions({
   start?: Date;
   end?: Date;
   filters?: Filters;
+  fellowId?: string;
 }) {
   let projectId: string;
   if (role === ImplementerRole.ADMIN) {
@@ -45,6 +47,8 @@ export async function fetchInterventionSessions({
 
   const { start: rangeStart, end: rangeEnd } =
     start && end ? { start, end } : getDefaultSessionDateRange();
+
+  const isFellow = role === ImplementerRole.FELLOW && !!fellowId;
 
   const sessions = await db.interventionSession.findMany({
     where: {
@@ -73,6 +77,13 @@ export async function fetchInterventionSessions({
             return filters.statusTypes[status];
           }) as SessionStatus[]),
       },
+      ...(isFellow
+        ? {
+            school: {
+              interventionGroups: { some: { leaderId: fellowId } },
+            },
+          }
+        : {}),
     },
     include: {
       hub: {
@@ -81,6 +92,7 @@ export async function fetchInterventionSessions({
       school: {
         include: {
           interventionGroups: {
+            ...(isFellow ? { where: { leaderId: fellowId } } : {}),
             include: {
               students: {
                 include: {

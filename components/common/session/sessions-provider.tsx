@@ -66,12 +66,14 @@ export function SessionsProvider({
   implementerId,
   filters,
   role,
+  fellowId,
 }: PropsWithChildren<{
   activeProjectId?: string | null;
   hubId?: string;
   implementerId?: string;
   filters: Filters;
   role: ImplementerRole;
+  fellowId?: string;
 }>) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +90,7 @@ export function SessionsProvider({
         start,
         end,
         filters,
+        fellowId,
       });
       setSessions(fetchedSessions);
       setLoading(false);
@@ -105,6 +108,7 @@ export function SessionsProvider({
     hubId,
     implementerId,
     role,
+    fellowId,
     filters.statusTypes,
     filters.dates,
     dateRangeKey,
