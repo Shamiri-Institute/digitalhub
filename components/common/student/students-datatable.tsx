@@ -15,6 +15,7 @@ import GroupTransferHistory from "#/components/common/student/group-transfer-his
 import StudentArchiveForm from "#/components/common/student/student-archive-form";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import StudentDropoutForm from "#/components/common/student/student-dropout-form";
+import StudentMoveSchoolForm from "#/components/common/student/student-move-school-form";
 import DataTable from "#/components/data-table";
 import { markStudentAttendance } from "#/lib/actions/student";
 
@@ -31,6 +32,7 @@ export default function StudentsDatatable({
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState<boolean>(false);
   const [reportingNotesDialog, setReportingNotesDialog] = useState<boolean>(false);
   const [groupTransferHistory, setGroupTransferHistory] = useState<boolean>(false);
+  const [moveSchoolDialog, setMoveSchoolDialog] = useState<boolean>(false);
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
   const [archiveDialog, setArchiveDialog] = useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
@@ -69,6 +71,7 @@ export default function StudentsDatatable({
           setMarkAttendanceDialog,
           setReportingNotesDialog,
           setGroupTransferHistory,
+          setMoveSchoolDialog,
           setDropoutDialog,
           setArchiveDialog,
           role,
@@ -158,6 +161,13 @@ export default function StudentsDatatable({
           <StudentArchiveForm student={student} isOpen={archiveDialog} setIsOpen={setArchiveDialog}>
             {renderDialogAlert()}
           </StudentArchiveForm>
+          <StudentMoveSchoolForm
+            student={student}
+            isOpen={moveSchoolDialog}
+            setIsOpen={setMoveSchoolDialog}
+          >
+            {renderDialogAlert()}
+          </StudentMoveSchoolForm>
         </div>
       )}
     </div>

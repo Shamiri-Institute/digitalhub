@@ -8,8 +8,11 @@ import {
   MarkAttendanceSchema,
   StudentReportingNotesSchema,
 } from "#/app/(platform)/hc/schemas";
-import { getCurrentPersonnel } from "#/app/auth";
-import { StudentDetailsSchema } from "#/components/common/student/schemas";
+import { currentHubCoordinator, getCurrentPersonnel } from "#/app/auth";
+import {
+  MoveStudentToSchoolSchema,
+  StudentDetailsSchema,
+} from "#/components/common/student/schemas";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateStudentVisibleID } from "#/lib/utils";
@@ -452,5 +455,153 @@ export async function transferStudentToGroup(id: string, groupId: string) {
     };
   } catch {
     return { error: "Something went wrong while adding student to the group." };
+  }
+}
+
+export async function getHubSchoolsForStudentTransfer() {
+  const hubCoordinator = await currentHubCoordinator();
+  const hubId = hubCoordinator?.profile?.assignedHubId;
+  if (!hubId) {
+    return [];
+  }
+
+  return await db.school.findMany({
+    where: {
+      hubId,
+      archivedAt: null,
+    },
+    select: {
+      id: true,
+      schoolName: true,
+      visibleId: true,
+    },
+    orderBy: {
+      schoolName: "asc",
+    },
+  });
+}
+
+export async function getSchoolGroupsForStudentTransfer(schoolId: string) {
+  const hubCoordinator = await currentHubCoordinator();
+  const hubId = hubCoordinator?.profile?.assignedHubId;
+  if (!hubId) {
+    return [];
+  }
+
+  return await db.interventionGroup.findMany({
+    where: {
+      schoolId,
+      archivedAt: null,
+      school: {
+        hubId,
+      },
+    },
+    select: {
+      id: true,
+      groupName: true,
+      leader: {
+        select: {
+          id: true,
+          fellowName: true,
+        },
+      },
+    },
+    orderBy: {
+      groupName: "asc",
+    },
+  });
+}
+
+export async function moveStudentToSchool(data: z.infer<typeof MoveStudentToSchoolSchema>) {
+  try {
+    const hubCoordinator = await currentHubCoordinator();
+    const hubId = hubCoordinator?.profile?.assignedHubId;
+    if (!hubId) {
+      throw new Error("You are not authorized to move students between schools.");
+    }
+
+    const { studentId, schoolId, assignedGroupId } = MoveStudentToSchoolSchema.parse(data);
+
+    const student = await db.student.findUniqueOrThrow({
+      where: { id: studentId },
+      select: {
+        id: true,
+        studentName: true,
+        schoolId: true,
+        assignedGroupId: true,
+      },
+    });
+
+    if (student.schoolId === schoolId) {
+      return {
+        success: false,
+        message: "This student already belongs to the selected school.",
+      };
+    }
+
+    const group = await db.interventionGroup.findFirstOrThrow({
+      where: {
+        id: assignedGroupId,
+        schoolId,
+        school: {
+          hubId,
+        },
+      },
+      include: {
+        school: {
+          select: {
+            id: true,
+            schoolName: true,
+          },
+        },
+        leader: {
+          select: {
+            id: true,
+            fellowName: true,
+            supervisor: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    await db.$transaction(async (tx) => {
+      await tx.studentAttendance.deleteMany({
+        where: { studentId: student.id },
+      });
+
+      await tx.student.update({
+        where: { id: student.id },
+        data: {
+          schoolId: group.school.id,
+          assignedGroupId: group.id,
+          fellowId: group.leader.id,
+          supervisorId: group.leader.supervisor?.id ?? null,
+        },
+      });
+
+      await tx.studentGroupTransferTrail.create({
+        data: {
+          studentId: student.id,
+          currentGroupId: group.id,
+          fromGroupId: student.assignedGroupId,
+        },
+      });
+    });
+
+    return {
+      success: true,
+      message: `Successfully moved ${student.studentName} to ${group.school.schoolName} (${group.leader.fellowName} · ${group.groupName})`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ?? "Sorry, could not move the student to the selected school.",
+    };
   }
 }
