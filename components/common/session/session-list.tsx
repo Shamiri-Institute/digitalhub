@@ -483,11 +483,27 @@ export function SessionDropDown({
                 !session.occurred ||
                 !session.school?.interventionGroups.find((group) => {
                   return group.leaderId === fellowId;
-                })
+                }) ||
+                (session.school?.interventionGroups
+                  .find((group) => group.leaderId === fellowId)
+                  ?.students.filter((student) =>
+                    student.studentAttendances.some((a) => a.sessionId === session.id)
+                  ).length ?? 0) < 2
               }
             >
               Upload attendance
             </DropdownMenuItem>
+            {(session.school?.interventionGroups
+              .find((group) => group.leaderId === fellowId)
+              ?.students.filter((student) =>
+                student.studentAttendances.some((a) => a.sessionId === session.id)
+              ).length ?? 0) < 2 &&
+              session.occurred &&
+              session.status !== "Cancelled" && (
+                <div className="px-2 py-1 text-xs text-shamiri-light-red">
+                  Mark attendance for at least 2 students before uploading
+                </div>
+              )}
           </>
         ) : null}
       </DropdownMenuContent>
