@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.28.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.28.0...v1.28.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* **attendance-uploads:** correct image orientation in attendance PDFs ([#716](https://github.com/Shamiri-Institute/digitalhub/issues/716)) ([e82f72e](https://github.com/Shamiri-Institute/digitalhub/commit/e82f72e07c371b88604a10b4e4634aa0bcd313d9))
+* **fellows-datatable:** eliminate cascading renders causing hook lint errors ([#715](https://github.com/Shamiri-Institute/digitalhub/issues/715)) ([9e5cfcc](https://github.com/Shamiri-Institute/digitalhub/commit/9e5cfcc0bfcfeb89bc3697b94f194e0a31a8702f))
+* **s3:** prevent ZodError when S3_STUDENT_ATTENDANCE_BUCKET is unset ([#717](https://github.com/Shamiri-Institute/digitalhub/issues/717)) ([94714e2](https://github.com/Shamiri-Institute/digitalhub/commit/94714e2f1a72071cfedee441f8ea6d1bd7f41b7f))
+
 ## [1.28.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.27.0...v1.28.0) (2026-05-28)
 
 
