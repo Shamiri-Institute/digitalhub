@@ -11,6 +11,7 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
 import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
+import ViewAttendanceDocument from "#/components/common/student/student-attendance-files/view-attendance-document";
 import StudentAttendanceMenu from "#/components/common/student/student-attendance-menu";
 import StudentTriageHistoryModal from "#/components/common/student/student-triage-history-modal";
 import TriageEventModal from "#/components/common/student/triage-event-modal";
@@ -242,6 +243,18 @@ export default function StudentAttendance({
             </Form>
           </div>
         ) : null}
+
+        {selectedGroup && session && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-1 rounded-full bg-shamiri-new-blue" />
+              <h3 className="text-sm font-semibold text-shamiri-text-dark-grey">
+                Attendance Uploads
+              </h3>
+            </div>
+            <ViewAttendanceDocument sessionId={session.id} groupId={selectedGroup} role={role} />
+          </div>
+        )}
 
         {Object.keys(triageEventsByStudent).length > 0 && (
           <TriageSessionSummary triageEventsByStudent={triageEventsByStudent} />
