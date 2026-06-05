@@ -65,6 +65,7 @@ export default function AttendanceDocumentDialog({
               key={refreshKey}
               sessionId={session.id}
               groupId={groupId}
+              role={role}
               onDeleteSuccess={handleRefresh}
             />
           </div>
