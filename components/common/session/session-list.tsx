@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn, sessionDisplayName } from "#/lib/utils";
+import { toast } from "#/components/ui/use-toast";
 import type { Session } from "./sessions-provider";
 
 export function SessionList({
@@ -308,10 +309,18 @@ export function SessionDropDown({
   const canMarkAttendance =
     isSessionActive && fellowGroup && session.session?.sessionType !== "DATA_COLLECTION";
   const canUploadAttendance = isSessionActive && fellowGroup && hasMinimumAttendance;
-  const showMinAttendanceWarning = isSessionActive && fellowGroup && !hasMinimumAttendance;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      onOpenChange={(open) => {
+        if (open && isSessionActive && fellowGroup && !hasMinimumAttendance) {
+          toast({
+            variant: "destructive",
+            description: "Mark attendance for at least 2 students before uploading",
+          });
+        }
+      }}
+    >
       <DropdownMenuTrigger className="w-full" asChild>
         {children}
       </DropdownMenuTrigger>
@@ -489,11 +498,6 @@ export function SessionDropDown({
             >
               Upload attendance
             </DropdownMenuItem>
-            {showMinAttendanceWarning && (
-              <DropdownMenuLabel className="font-normal text-xs text-shamiri-light-red">
-                Mark attendance for at least 2 students before uploading
-              </DropdownMenuLabel>
-            )}
           </>
         ) : null}
       </DropdownMenuContent>
