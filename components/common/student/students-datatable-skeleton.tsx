@@ -14,6 +14,7 @@ export default function StudentsDatatableSkeleton({ role }: { role: ImplementerR
     setMarkAttendanceDialog: () => {},
     setReportingNotesDialog: () => {},
     setGroupTransferHistory: () => {},
+    setMoveSchoolDialog: () => {},
     setDropoutDialog: () => {},
     setArchiveDialog: () => {},
     role,

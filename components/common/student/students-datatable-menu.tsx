@@ -23,6 +23,7 @@ export default function StudentsDataTableMenu({
     setArchiveDialog: Dispatch<SetStateAction<boolean>>;
     setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
     setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
+    setMoveSchoolDialog: Dispatch<SetStateAction<boolean>>;
     setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
     role: ImplementerRole;
   };
@@ -87,14 +88,24 @@ export default function StudentsDataTableMenu({
               Reporting notes
             </DropdownMenuItem>
             {state.role === ImplementerRole.HUB_COORDINATOR && (
-              <DropdownMenuItem
-                onClick={() => {
-                  state.setStudent(student);
-                  state.setArchiveDialog(true);
-                }}
-              >
-                <div className="text-shamiri-red">Archive student</div>
-              </DropdownMenuItem>
+              <>
+                <DropdownMenuItem
+                  onClick={() => {
+                    state.setStudent(student);
+                    state.setMoveSchoolDialog(true);
+                  }}
+                >
+                  <div className="text-shamiri-red">Move to another school</div>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    state.setStudent(student);
+                    state.setArchiveDialog(true);
+                  }}
+                >
+                  <div className="text-shamiri-red">Archive student</div>
+                </DropdownMenuItem>
+              </>
             )}
             <DropdownMenuItem
               onClick={() => {
