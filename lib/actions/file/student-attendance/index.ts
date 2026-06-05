@@ -79,6 +79,17 @@ export async function createAttendanceDocument(
 
     const userId = session.user.id;
 
+    const markedStudentCount = await db.studentAttendance.count({
+      where: {
+        sessionId: payload.sessionId,
+        groupId: payload.groupId,
+      },
+    });
+
+    if (markedStudentCount < 2) {
+      throw new Error("At least 2 students must have attendance marked before uploading");
+    }
+
     await db.$transaction(async (tx) => {
       await tx.attendanceDocuments.updateMany({
         where: {
