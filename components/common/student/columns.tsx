@@ -86,6 +86,7 @@ export const columns = (state: {
   setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
   setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
   setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
+  setMoveSchoolDialog: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
   sessions: InterventionSession[];
 }): ColumnDef<SchoolStudentTableData>[] => [
