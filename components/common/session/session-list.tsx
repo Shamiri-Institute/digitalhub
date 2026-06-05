@@ -13,8 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { cn, sessionDisplayName } from "#/lib/utils";
 import { toast } from "#/components/ui/use-toast";
+import { cn, sessionDisplayName } from "#/lib/utils";
 import type { Session } from "./sessions-provider";
 
 export function SessionList({
