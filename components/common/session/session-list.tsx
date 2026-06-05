@@ -296,6 +296,20 @@ export function SessionDropDown({
   const pathname = usePathname();
   const isSchedulePage = pathname.includes("/schedule");
 
+  const fellowGroup = session.school?.interventionGroups.find(
+    (group) => group.leaderId === fellowId,
+  );
+  const markedStudentCount =
+    fellowGroup?.students.filter((student) =>
+      student.studentAttendances.some((a) => a.sessionId === session.id),
+    ).length ?? 0;
+  const hasMinimumAttendance = markedStudentCount >= 2;
+  const isSessionActive = session.occurred && session.status !== "Cancelled";
+  const canMarkAttendance =
+    isSessionActive && !!fellowGroup && session.session?.sessionType !== "DATA_COLLECTION";
+  const canUploadAttendance = isSessionActive && !!fellowGroup && hasMinimumAttendance;
+  const showMinAttendanceWarning = isSessionActive && !!fellowGroup && !hasMinimumAttendance;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="w-full" asChild>
@@ -462,14 +476,7 @@ export function SessionDropDown({
                 state.setSession?.(session);
                 state.setStudentAttendanceDialog?.(true);
               }}
-              disabled={
-                session.status === "Cancelled" ||
-                session.session?.sessionType === "DATA_COLLECTION" ||
-                !session.occurred ||
-                !session.school?.interventionGroups.find((group) => {
-                  return group.leaderId === fellowId;
-                })
-              }
+              disabled={!canMarkAttendance}
             >
               Mark student attendance
             </DropdownMenuItem>
@@ -478,32 +485,15 @@ export function SessionDropDown({
                 state.setSession?.(session);
                 state.setAttendanceDocumentDialog?.(true);
               }}
-              disabled={
-                session.status === "Cancelled" ||
-                !session.occurred ||
-                !session.school?.interventionGroups.find((group) => {
-                  return group.leaderId === fellowId;
-                }) ||
-                (session.school?.interventionGroups
-                  .find((group) => group.leaderId === fellowId)
-                  ?.students.filter((student) =>
-                    student.studentAttendances.some((a) => a.sessionId === session.id)
-                  ).length ?? 0) < 2
-              }
+              disabled={!canUploadAttendance}
             >
               Upload attendance
             </DropdownMenuItem>
-            {(session.school?.interventionGroups
-              .find((group) => group.leaderId === fellowId)
-              ?.students.filter((student) =>
-                student.studentAttendances.some((a) => a.sessionId === session.id)
-              ).length ?? 0) < 2 &&
-              session.occurred &&
-              session.status !== "Cancelled" && (
-                <div className="px-2 py-1 text-xs text-shamiri-light-red">
-                  Mark attendance for at least 2 students before uploading
-                </div>
-              )}
+            {showMinAttendanceWarning && (
+              <DropdownMenuLabel className="font-normal text-xs text-shamiri-light-red">
+                Mark attendance for at least 2 students before uploading
+              </DropdownMenuLabel>
+            )}
           </>
         ) : null}
       </DropdownMenuContent>
