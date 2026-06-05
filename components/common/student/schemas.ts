@@ -8,6 +8,12 @@ export const QUESTIONNAIRE_TYPE_OPTIONS: [QuestionnaireType, ...QuestionnaireTyp
   "JSS",
 ];
 
+export const MoveStudentToSchoolSchema = z.object({
+  studentId: z.string({ error: "Student is required" }),
+  schoolId: z.string({ error: "Please select a school to move the student to" }),
+  assignedGroupId: z.string({ error: "Please select a group/fellow for the student" }),
+});
+
 export const StudentDetailsSchema = z
   .object({
     id: z.string().optional(),
