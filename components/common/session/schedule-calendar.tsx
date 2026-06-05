@@ -276,6 +276,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       implementerId={implementerId}
       filters={filters}
       role={props.role}
+      fellowId={props.fellowId}
     >
       <ModeProvider defaultMode={mode as Mode}>
         <TitleProvider>
