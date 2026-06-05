@@ -306,9 +306,9 @@ export function SessionDropDown({
   const hasMinimumAttendance = markedStudentCount >= 2;
   const isSessionActive = session.occurred && session.status !== "Cancelled";
   const canMarkAttendance =
-    isSessionActive && !!fellowGroup && session.session?.sessionType !== "DATA_COLLECTION";
-  const canUploadAttendance = isSessionActive && !!fellowGroup && hasMinimumAttendance;
-  const showMinAttendanceWarning = isSessionActive && !!fellowGroup && !hasMinimumAttendance;
+    isSessionActive && fellowGroup && session.session?.sessionType !== "DATA_COLLECTION";
+  const canUploadAttendance = isSessionActive && fellowGroup && hasMinimumAttendance;
+  const showMinAttendanceWarning = isSessionActive && fellowGroup && !hasMinimumAttendance;
 
   return (
     <DropdownMenu>
