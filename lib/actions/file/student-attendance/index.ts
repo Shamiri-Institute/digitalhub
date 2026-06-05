@@ -27,7 +27,8 @@ export async function getAttendanceDocument(
       !session?.user.id ||
       (session.user.activeMembership?.role !== ImplementerRole.FELLOW &&
         session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR &&
-        session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR)
+        session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
+        session.user.activeMembership?.role !== ImplementerRole.ADMIN)
     )
       throw new Error("The session has not been authenticated");
 
