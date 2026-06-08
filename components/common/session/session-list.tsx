@@ -480,8 +480,10 @@ export function SessionDropDown({
               Mark student attendance
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
+              onSelect={(e) => {
                 if (!hasMinimumAttendance) {
+                  e.preventDefault();
+                  (e.target as HTMLElement).blur();
                   toast({
                     variant: "destructive",
                     description: "Mark attendance for at least 2 students before uploading",
