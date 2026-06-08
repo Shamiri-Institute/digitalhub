@@ -2,6 +2,7 @@
 
 import { ImplementerRole, Prisma } from "@prisma/client";
 import { useEffect, useState } from "react";
+import { PerformanceProfiler } from "#/components/performance-profiler";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
@@ -59,99 +60,101 @@ export default function FellowsDatatable({
   }, [fellows, fellow]);
 
   return (
-    <>
-      <DataTable
-        columns={columns({
-          state: {
-            setFellow,
-            setDetailsDialog,
-            setReplaceDialog,
-            setStudentsDialog,
-            setAttendanceHistoryDialog,
-            setAssignSupervisorDialog,
-          },
-          role,
-        })}
-        data={fellows}
-        className={"data-table data-table-action lg:mt-4"}
-        emptyStateMessage="No fellows associated with this school"
-        columnVisibilityState={{
-          checkbox: role === ImplementerRole.HUB_COORDINATOR,
-          Supervisor: false,
-        }}
-      />
-      {fellow && (
-        <>
-          <FellowDetailsForm
-            open={detailsDialog}
-            onOpenChange={setDetailsDialog}
-            mode={
-              role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
-                ? "view"
-                : role === ImplementerRole.SUPERVISOR
-                  ? "edit"
-                  : null
-            }
-            fellow={fellow}
-          />
-          <AttendanceHistory
-            open={attendanceHistoryDialog}
-            onOpenChange={setAttendanceHistoryDialog}
-            attendances={attendances}
-            fellow={fellow}
-          >
-            <DialogAlertWidget>
-              <div className="flex items-center gap-2">
-                <span>{fellow.fellowName}</span>
-              </div>
-            </DialogAlertWidget>
-          </AttendanceHistory>
-          <AssignFellowSupervisorDialog
-            supervisors={supervisors}
-            open={assignSupervisorDialog}
-            onOpenChange={setAssignSupervisorDialog}
-            fellow={fellow}
-          >
-            <DialogAlertWidget label={fellow.fellowName} />
-          </AssignFellowSupervisorDialog>
-          {fellow.groupId !== null ? (
-            <>
-              <ReplaceFellow
-                open={replaceDialog}
-                onOpenChange={setReplaceDialog}
-                fellowId={fellow.id}
-                groupId={fellow.groupId}
-                supervisors={supervisors}
-              >
-                <DialogAlertWidget>
-                  <div className="flex items-center gap-2">
-                    <span>{fellow.fellowName}</span>
-                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
-                    <span>{fellow.groupName}</span>
-                  </div>
-                </DialogAlertWidget>
-              </ReplaceFellow>
-              <StudentsInGroup
-                students={fellow.students}
-                groupId={fellow.groupId}
-                groupName={fellow.groupName}
-                schoolId={schoolId}
-                open={studentsDialog}
-                onOpenChange={setStudentsDialog}
-                role={role}
-              >
-                <DialogAlertWidget separator={false}>
-                  <div className="flex items-center gap-2">
-                    <span>{fellow.fellowName}</span>
-                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
-                    <span>{fellow.groupName}</span>
-                  </div>
-                </DialogAlertWidget>
-              </StudentsInGroup>
-            </>
-          ) : null}
-        </>
-      )}
-    </>
+    <PerformanceProfiler id="fellows-datatable">
+      <>
+        <DataTable
+          columns={columns({
+            state: {
+              setFellow,
+              setDetailsDialog,
+              setReplaceDialog,
+              setStudentsDialog,
+              setAttendanceHistoryDialog,
+              setAssignSupervisorDialog,
+            },
+            role,
+          })}
+          data={fellows}
+          className={"data-table data-table-action lg:mt-4"}
+          emptyStateMessage="No fellows associated with this school"
+          columnVisibilityState={{
+            checkbox: role === ImplementerRole.HUB_COORDINATOR,
+            Supervisor: false,
+          }}
+        />
+        {fellow && (
+          <>
+            <FellowDetailsForm
+              open={detailsDialog}
+              onOpenChange={setDetailsDialog}
+              mode={
+                role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
+                  ? "view"
+                  : role === ImplementerRole.SUPERVISOR
+                    ? "edit"
+                    : null
+              }
+              fellow={fellow}
+            />
+            <AttendanceHistory
+              open={attendanceHistoryDialog}
+              onOpenChange={setAttendanceHistoryDialog}
+              attendances={attendances}
+              fellow={fellow}
+            >
+              <DialogAlertWidget>
+                <div className="flex items-center gap-2">
+                  <span>{fellow.fellowName}</span>
+                </div>
+              </DialogAlertWidget>
+            </AttendanceHistory>
+            <AssignFellowSupervisorDialog
+              supervisors={supervisors}
+              open={assignSupervisorDialog}
+              onOpenChange={setAssignSupervisorDialog}
+              fellow={fellow}
+            >
+              <DialogAlertWidget label={fellow.fellowName} />
+            </AssignFellowSupervisorDialog>
+            {fellow.groupId !== null ? (
+              <>
+                <ReplaceFellow
+                  open={replaceDialog}
+                  onOpenChange={setReplaceDialog}
+                  fellowId={fellow.id}
+                  groupId={fellow.groupId}
+                  supervisors={supervisors}
+                >
+                  <DialogAlertWidget>
+                    <div className="flex items-center gap-2">
+                      <span>{fellow.fellowName}</span>
+                      <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+                      <span>{fellow.groupName}</span>
+                    </div>
+                  </DialogAlertWidget>
+                </ReplaceFellow>
+                <StudentsInGroup
+                  students={fellow.students}
+                  groupId={fellow.groupId}
+                  groupName={fellow.groupName}
+                  schoolId={schoolId}
+                  open={studentsDialog}
+                  onOpenChange={setStudentsDialog}
+                  role={role}
+                >
+                  <DialogAlertWidget separator={false}>
+                    <div className="flex items-center gap-2">
+                      <span>{fellow.fellowName}</span>
+                      <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+                      <span>{fellow.groupName}</span>
+                    </div>
+                  </DialogAlertWidget>
+                </StudentsInGroup>
+              </>
+            ) : null}
+          </>
+        )}
+      </>
+    </PerformanceProfiler>
   );
 }

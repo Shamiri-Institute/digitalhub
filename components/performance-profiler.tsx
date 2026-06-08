@@ -2,34 +2,16 @@
 
 import * as React from "react";
 
-const onRender: React.ProfilerOnRenderCallback = (
-  id,
-  phase,
-  actualDuration,
-  baseDuration,
-  startTime,
-  commitTime,
-) => {
-  console.group(
-    `%c[Profiler] ${id} — ${phase}`,
-    "color: #0085FF; font-weight: bold",
+const onRender: React.ProfilerOnRenderCallback = (id, phase, actualDuration, baseDuration) => {
+  const color = actualDuration < 16 ? "#00BA34" : actualDuration < 50 ? "#F59E0B" : "#E92C2C";
+
+  console.log(
+    `%c[${id}] ${phase}: ${actualDuration.toFixed(2)}ms (base: ${baseDuration.toFixed(2)}ms)`,
+    `color: ${color}; font-weight: bold`,
   );
-  console.table({
-    "Actual (ms)": actualDuration.toFixed(2),
-    "Base (ms)": baseDuration.toFixed(2),
-    "Start": startTime.toFixed(2),
-    "Commit": commitTime.toFixed(2),
-  });
-  console.groupEnd();
 };
 
-export function PerformanceProfiler({
-  id,
-  children,
-}: {
-  id: string;
-  children: React.ReactNode;
-}) {
+export function PerformanceProfiler({ id, children }: { id: string; children: React.ReactNode }) {
   if (process.env.NODE_ENV === "production") {
     return <>{children}</>;
   }
