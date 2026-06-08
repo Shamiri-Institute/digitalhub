@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { toast } from "#/components/ui/use-toast";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import type { Session } from "./sessions-provider";
 
@@ -295,6 +296,18 @@ export function SessionDropDown({
   const { session } = state;
   const pathname = usePathname();
   const isSchedulePage = pathname.includes("/schedule");
+  const fellowGroup = session.school?.interventionGroups.find(
+    (group) => group.leaderId === fellowId,
+  );
+  const markedStudentCount =
+    fellowGroup?.students.filter((student) =>
+      student.studentAttendances.some((a) => a.sessionId === session.id),
+    ).length ?? 0;
+  const hasMinimumAttendance = markedStudentCount >= 2;
+  const isSessionActive = session.occurred && session.status !== "Cancelled";
+  const canMarkAttendance =
+    isSessionActive && fellowGroup && session.session?.sessionType !== "DATA_COLLECTION";
+  const canAccessUpload = isSessionActive && fellowGroup;
 
   return (
     <DropdownMenu>
@@ -462,29 +475,25 @@ export function SessionDropDown({
                 state.setSession?.(session);
                 state.setStudentAttendanceDialog?.(true);
               }}
-              disabled={
-                session.status === "Cancelled" ||
-                session.session?.sessionType === "DATA_COLLECTION" ||
-                !session.occurred ||
-                !session.school?.interventionGroups.find((group) => {
-                  return group.leaderId === fellowId;
-                })
-              }
+              disabled={!canMarkAttendance}
             >
               Mark student attendance
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
+              onSelect={(e) => {
+                if (!hasMinimumAttendance) {
+                  e.preventDefault();
+                  (e.target as HTMLElement).blur();
+                  toast({
+                    variant: "destructive",
+                    description: "Mark attendance for at least 2 students before uploading",
+                  });
+                  return;
+                }
                 state.setSession?.(session);
                 state.setAttendanceDocumentDialog?.(true);
               }}
-              disabled={
-                session.status === "Cancelled" ||
-                !session.occurred ||
-                !session.school?.interventionGroups.find((group) => {
-                  return group.leaderId === fellowId;
-                })
-              }
+              disabled={!canAccessUpload}
             >
               Upload attendance
             </DropdownMenuItem>
