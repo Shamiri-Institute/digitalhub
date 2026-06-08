@@ -39,6 +39,11 @@ const onRender: React.ProfilerOnRenderCallback = (id, phase, actualDuration, bas
 };
 
 export function PerformanceProfiler({ id, children }: { id: string; children: React.ReactNode }) {
+
+  if (process.env.NODE_ENV === "production") {
+    return <>{children}</>;
+  }
+
   return (
     <React.Profiler id={id} onRender={onRender}>
       {children}
