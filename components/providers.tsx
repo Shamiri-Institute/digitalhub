@@ -5,6 +5,7 @@ import { SessionProvider } from "next-auth/react";
 import type * as React from "react";
 import { I18nProvider } from "react-aria";
 
+import { PerformanceProfiler } from "#/components/performance-profiler";
 import { Toaster } from "#/components/ui/toaster";
 import { TooltipProvider } from "#/components/ui/tooltip";
 
@@ -16,13 +17,15 @@ export function Providers({
   children: React.ReactNode;
 }) {
   return (
-    <I18nProvider locale="en-KE">
-      <SessionProvider session={session}>
-        <TooltipProvider>
-          {children}
-          <Toaster />
-        </TooltipProvider>
-      </SessionProvider>
-    </I18nProvider>
+    <PerformanceProfiler id="app">
+      <I18nProvider locale="en-KE">
+        <SessionProvider session={session}>
+          <TooltipProvider>
+            {children}
+            <Toaster />
+          </TooltipProvider>
+        </SessionProvider>
+      </I18nProvider>
+    </PerformanceProfiler>
   );
 }
