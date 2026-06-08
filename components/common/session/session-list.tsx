@@ -3,7 +3,7 @@ import { addHours, addMinutes, format } from "date-fns";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type * as React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -296,8 +296,6 @@ export function SessionDropDown({
   const { session } = state;
   const pathname = usePathname();
   const isSchedulePage = pathname.includes("/schedule");
-  const toastRef = useRef<{ dismiss: () => void } | null>(null);
-
   const fellowGroup = session.school?.interventionGroups.find(
     (group) => group.leaderId === fellowId,
   );
@@ -309,29 +307,10 @@ export function SessionDropDown({
   const isSessionActive = session.occurred && session.status !== "Cancelled";
   const canMarkAttendance =
     isSessionActive && fellowGroup && session.session?.sessionType !== "DATA_COLLECTION";
-  const canUploadAttendance = isSessionActive && fellowGroup && hasMinimumAttendance;
+  const canAccessUpload = isSessionActive && fellowGroup;
 
   return (
-    <DropdownMenu
-      onOpenChange={(open) => {
-        if (open) {
-          if (
-            role === ImplementerRole.FELLOW &&
-            isSessionActive &&
-            fellowGroup &&
-            !hasMinimumAttendance
-          ) {
-            toastRef.current = toast({
-              variant: "destructive",
-              description: "Mark attendance for at least 2 students before uploading",
-            });
-          }
-        } else {
-          toastRef.current?.dismiss();
-          toastRef.current = null;
-        }
-      }}
-    >
+    <DropdownMenu>
       <DropdownMenuTrigger className="w-full" asChild>
         {children}
       </DropdownMenuTrigger>
@@ -502,10 +481,17 @@ export function SessionDropDown({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
+                if (!hasMinimumAttendance) {
+                  toast({
+                    variant: "destructive",
+                    description: "Mark attendance for at least 2 students before uploading",
+                  });
+                  return;
+                }
                 state.setSession?.(session);
                 state.setAttendanceDocumentDialog?.(true);
               }}
-              disabled={!canUploadAttendance}
+              disabled={!canAccessUpload}
             >
               Upload attendance
             </DropdownMenuItem>
