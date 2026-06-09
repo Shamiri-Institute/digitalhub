@@ -962,6 +962,20 @@ type FellowGroupStats = {
 export async function getFellowGroupsAndHubData(fellowId: string) {
   if (!fellowId) return null;
 
+  const fellow = await db.fellow.findUnique({
+    where: { id: fellowId },
+    select: {
+      hubId: true,
+      groups: { select: { id: true, schoolId: true } },
+    },
+  });
+
+  if (!fellow) return null;
+
+  const { hubId } = fellow;
+  const fellowGroupIds = fellow.groups.map((group) => group.id);
+  const fellowSchoolIds = Array.from(new Set(fellow.groups.map((group) => group.schoolId)));
+
   const statsPromise = db.$queryRaw<FellowGroupStats[]>`
     SELECT
       COUNT(*)::int                 AS group_count,
@@ -979,40 +993,30 @@ export async function getFellowGroupsAndHubData(fellowId: string) {
     WHERE ig.leader_id = ${fellowId}
   `;
 
-  const fellow = await db.fellow.findFirst({
-    where: { id: fellowId },
-    select: { hubId: true },
-  });
-
-  if (!fellow) return null;
-
-  const [statsRows, hub] = await Promise.all([
+  const [statsRows, schools, sessions] = await Promise.all([
     statsPromise,
-    fellow.hubId
-      ? db.hub.findFirst({
-          where: { id: fellow.hubId },
+    fellowSchoolIds.length
+      ? db.school.findMany({
+          where: { id: { in: fellowSchoolIds } },
           include: {
-            schools: {
+            assignedSupervisor: true,
+            interventionSessions: {
               include: {
-                assignedSupervisor: true,
-                interventionSessions: {
-                  include: {
-                    sessionRatings: true,
-                    session: true,
-                  },
-                },
-                students: {
-                  include: {
-                    assignedGroup: true,
-                    _count: { select: { clinicalCases: true } },
-                  },
-                },
+                sessionRatings: true,
+                session: true,
               },
             },
-            sessions: true,
+            students: {
+              where: { assignedGroupId: { in: fellowGroupIds } },
+              include: {
+                assignedGroup: true,
+                _count: { select: { clinicalCases: true } },
+              },
+            },
           },
         })
-      : null,
+      : Promise.resolve([]),
+    hubId ? db.sessionName.findMany({ where: { hubId } }) : Promise.resolve([]),
   ]);
 
   const stats = statsRows[0] ?? {
@@ -1020,5 +1024,6 @@ export async function getFellowGroupsAndHubData(fellowId: string) {
     total_students: 0,
     total_sessions: 0,
   };
-  return { stats, hub };
+
+  return { stats, hub: { schools, sessions } };
 }
