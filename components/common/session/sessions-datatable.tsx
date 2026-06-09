@@ -2,7 +2,7 @@
 
 import { ImplementerRole, type Prisma } from "@prisma/client";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
@@ -61,11 +61,36 @@ export default function SessionsDatatable({
   const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
   const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
-  const [session, setSession] = React.useState<Session | null>(null);
+  // const [session, setSession] = React.useState<Session | null>(null);
+  const [_session, _setSession] = React.useState<Session | null>(null);
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
   const [attendanceDocumentDialog, setAttendanceDocumentDialog] = React.useState(false);
+
+  const session = useMemo(() => {
+    if (sessions.length > 0) {
+      return sessions.find((s) => s.id === _session?.id) ?? null;
+    }
+    return _session;
+  }, [sessions, _session]);
+
+  const memoizedColumns = useMemo(() => {
+    return columns({
+      setSession: _setSession,
+      setRatingsDialog,
+      setFellowAttendanceDialog,
+      setSupervisorAttendanceDialog,
+      setStudentAttendanceDialog,
+      setSessionOccurrenceDialog,
+      setRescheduleSessionDialog,
+      setCancelSessionDialog,
+      setAttendanceDocumentDialog,
+      role,
+      fellowId,
+      supervisorId,
+    });
+  }, [fellowId, role, supervisorId]);
 
   const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
 
@@ -76,30 +101,11 @@ export default function SessionsDatatable({
       ? (supervisors?.find((s) => s.id === supervisorId)?.fellows ?? [])
       : allFellows.filter((f) => leaderIds.has(f.id));
 
-  useEffect(() => {
-    if (sessions.length > 0) {
-      setSession(sessions.find((s) => s.id === session?.id) ?? null);
-    }
-  }, [sessions, session?.id]);
-
   return (
     <>
       <DataTable
         data={sessions}
-        columns={columns({
-          setSession,
-          setRatingsDialog,
-          setFellowAttendanceDialog,
-          setSupervisorAttendanceDialog,
-          setStudentAttendanceDialog,
-          setSessionOccurrenceDialog,
-          setRescheduleSessionDialog,
-          setCancelSessionDialog,
-          setAttendanceDocumentDialog,
-          role,
-          fellowId,
-          supervisorId,
-        })}
+        columns={memoizedColumns}
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No sessions found for this school"
       />
