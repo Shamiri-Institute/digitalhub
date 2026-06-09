@@ -1819,6 +1819,7 @@ model SessionRecording {
   // AI Feedback (hybrid storage: key fields + JSON blob)
   fidelityFeedback Json?   @map("fidelity_feedback")
   overallScore     String? @map("overall_score") @db.VarChar(50)
+  promptVersion    Int?    @map("prompt_version")
   transcript       Json?   @map("transcript")
 
   @@unique([fellowId, schoolId, groupId, sessionId], name: "unique_recording_per_session")
