@@ -1,7 +1,7 @@
 "use client";
 
 import { ImplementerRole, Prisma } from "@prisma/client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
@@ -42,36 +42,42 @@ export default function FellowsDatatable({
     };
   }>[];
 }) {
-  const [fellow, setFellow] = useState<SchoolFellowTableData | undefined>();
+  // const [fellow, setFellow] = useState<SchoolFellowTableData | undefined>();
+  const [_fellow, _setFellow] = useState<SchoolFellowTableData | undefined>();
   const [detailsDialog, setDetailsDialog] = useState(false);
   const [replaceDialog, setReplaceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
   const [assignSupervisorDialog, setAssignSupervisorDialog] = useState(false);
 
-  useEffect(() => {
-    if (fellow) {
-      const updatedFellow = fellows.find((_fellow) => {
-        return _fellow.id === fellow.id;
+  const fellow = useMemo(() => {
+    if (_fellow) {
+      const updatedFellow = fellows.find((f) => {
+        return f.id === _fellow.id;
       });
-      setFellow(updatedFellow);
+      return updatedFellow;
     }
-  }, [fellows, fellow]);
+    return _fellow;
+  }, [fellows, _fellow]);
+
+  const memoizedColumns = useMemo(() => {
+    return columns({
+      state: {
+        setFellow: _setFellow,
+        setDetailsDialog,
+        setReplaceDialog,
+        setStudentsDialog,
+        setAttendanceHistoryDialog,
+        setAssignSupervisorDialog,
+      },
+      role,
+    });
+  }, [role]);
 
   return (
     <>
       <DataTable
-        columns={columns({
-          state: {
-            setFellow,
-            setDetailsDialog,
-            setReplaceDialog,
-            setStudentsDialog,
-            setAttendanceHistoryDialog,
-            setAssignSupervisorDialog,
-          },
-          role,
-        })}
+        columns={memoizedColumns}
         data={fellows}
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No fellows associated with this school"
