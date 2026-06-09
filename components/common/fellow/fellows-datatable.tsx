@@ -1,7 +1,7 @@
 "use client";
 
 import { ImplementerRole, Prisma } from "@prisma/client";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
