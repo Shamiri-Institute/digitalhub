@@ -1,7 +1,7 @@
 "use client";
 
 import { ImplementerRole, type Prisma } from "@prisma/client";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import ArchiveGroup from "#/components/common/group/archive-group";
@@ -35,21 +35,33 @@ export default function GroupsDataTable({
   }>[];
   role: ImplementerRole;
 }) {
-  const [group, setGroup] = useState<SchoolGroupDataTableData>();
+  // const [group, setGroup] = useState<SchoolGroupDataTableData>();
+  const [_group, _setGroup] = useState<SchoolGroupDataTableData>();
+
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
   const [leaderDialog, setLeaderDialog] = useState(false);
   const [archiveDialog, setArchiveDialog] = useState(false);
   const [unarchiveDialog, setUnarchiveDialog] = useState(false);
 
-  useEffect(() => {
-    if (group) {
-      const updatedGroup = data.find((_group) => {
-        return _group.id === group.id;
-      });
-      setGroup(updatedGroup);
+  const group = useMemo(() => {
+    if (data.length > 0 && _group) {
+      return data.find((g) => g.id === _group?.id) ?? undefined;
     }
-  }, [data, group]);
+    return _group;
+  }, [data, _group]);
+
+  const memoizedColumns = useMemo(() => {
+    return columns({
+      setGroup: _setGroup,
+      setStudentsDialog,
+      setEvaluationDialog,
+      setLeaderDialog,
+      setArchiveDialog,
+      setUnarchiveDialog,
+      role,
+    });
+  }, [role]);
 
   const renderTableActions = () => {
     return (
@@ -63,15 +75,7 @@ export default function GroupsDataTable({
   return (
     <>
       <DataTable
-        columns={columns({
-          setGroup,
-          setStudentsDialog,
-          setEvaluationDialog,
-          setLeaderDialog,
-          setArchiveDialog,
-          setUnarchiveDialog,
-          role,
-        })}
+        columns={memoizedColumns}
         data={data}
         className="data-table data-table-action lg:mt-4"
         columnVisibilityState={{ "Group Type": false }}
