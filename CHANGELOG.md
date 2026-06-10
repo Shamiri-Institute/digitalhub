@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.29.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.28.1...v1.29.0) (2026-06-10)
+
+
+### Features
+
+* **recordings:** add prompt_version column to session_recordings ([#725](https://github.com/Shamiri-Institute/digitalhub/issues/725)) ([344c5cc](https://github.com/Shamiri-Institute/digitalhub/commit/344c5ccc2f31fc0a4648d72dd178f456e700e48a))
+* **student-transfer:** implement student move to another school ([#720](https://github.com/Shamiri-Institute/digitalhub/issues/720)) ([21c8d3b](https://github.com/Shamiri-Institute/digitalhub/commit/21c8d3bff48fe68bc899a9d1137c800c0a54bc13))
+
 ## [1.28.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.28.0...v1.28.1) (2026-06-05)
 
 
