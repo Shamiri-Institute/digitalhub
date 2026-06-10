@@ -15,13 +15,7 @@ export function getScoreColor(score: string | number | undefined): string {
   return "bg-red-bg text-red-base border-red-border";
 }
 
-export function FeedbackSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+export function FeedbackSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border p-4">
       <h4 className="mb-3 font-medium text-shamiri-text-dark-grey">{title}</h4>
@@ -90,10 +84,7 @@ export function SafetyFlagsSection({ flags }: { flags: SafetyFlag[] }) {
                 {flag.type} {flag.severity && `- ${flag.severity} severity`}
               </span>
               {flag.requires_follow_up && (
-                <Badge
-                  variant="outline"
-                  className="bg-amber-50 text-amber-700 border-amber-300"
-                >
+                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
                   Follow-up Required
                 </Badge>
               )}
@@ -102,9 +93,7 @@ export function SafetyFlagsSection({ flags }: { flags: SafetyFlag[] }) {
               <MarkdownText>{flag.description}</MarkdownText>
             </p>
             {flag.timestamp_reference && (
-              <p className="text-xs text-muted-foreground">
-                Timestamp: {flag.timestamp_reference}
-              </p>
+              <p className="text-xs text-muted-foreground">Timestamp: {flag.timestamp_reference}</p>
             )}
             {flag.context_analysis && (
               <div className="mt-2 pt-2 border-t border-red-200">

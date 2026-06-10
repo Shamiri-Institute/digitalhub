@@ -1,12 +1,7 @@
 "use client";
 
+import { FeedbackSection, MarkdownText, SafetyFlagsSection, ScoreCard } from "./feedback-shared";
 import type { V1FeedbackData } from "./feedback-types";
-import {
-  FeedbackSection,
-  MarkdownText,
-  SafetyFlagsSection,
-  ScoreCard,
-} from "./feedback-shared";
 
 interface FeedbackV1ContentProps {
   feedback: V1FeedbackData;
@@ -45,9 +40,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
               <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
                 <h5 className="font-medium mb-2">Overall Assessment</h5>
                 <p className="text-sm">
-                  <MarkdownText>
-                    {feedback.fidelity_scores.overall_assessment}
-                  </MarkdownText>
+                  <MarkdownText>{feedback.fidelity_scores.overall_assessment}</MarkdownText>
                 </p>
               </div>
             )}
