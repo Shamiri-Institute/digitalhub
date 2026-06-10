@@ -2,13 +2,8 @@
 
 import { Badge } from "#/components/ui/badge";
 import { cn } from "#/lib/utils";
+import { FeedbackSection, MarkdownText, SafetyFlagsSection, ScoreCard } from "./feedback-shared";
 import type { V2CompetencyItem, V2FeedbackData } from "./feedback-types";
-import {
-  FeedbackSection,
-  MarkdownText,
-  SafetyFlagsSection,
-  ScoreCard,
-} from "./feedback-shared";
 
 interface FeedbackV2ContentProps {
   feedback: V2FeedbackData;
@@ -122,9 +117,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
               <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
                 <h5 className="font-medium mb-2">Overall Assessment</h5>
                 <p className="text-sm">
-                  <MarkdownText>
-                    {feedback.fidelity_scores.overall_fidelity_summary}
-                  </MarkdownText>
+                  <MarkdownText>{feedback.fidelity_scores.overall_fidelity_summary}</MarkdownText>
                 </p>
               </div>
             )}
@@ -217,9 +210,8 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
               <div>
                 <h5 className="font-medium text-green-700 mb-2">Strengths to Acknowledge</h5>
                 <div className="space-y-3">
-                  {supervisionBrief.strengths_to_acknowledge.map((item, idx) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; composite key disambiguates potential duplicate text
-                    <div key={`${idx}-${item.strength.slice(0, 40)}`} className="rounded-md border p-4">
+                  {supervisionBrief.strengths_to_acknowledge.map((item) => (
+                    <div key={item.strength} className="rounded-md border p-4">
                       <p className="font-medium text-sm">{item.strength}</p>
                       <p className="text-sm text-muted-foreground mt-1">
                         <MarkdownText>{item.evidence}</MarkdownText>
@@ -273,10 +265,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
                 <ul className="space-y-2">
                   {supervisionBrief.reflective_questions_for_supervision.map((question, idx) => (
                     // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; composite key disambiguates potential duplicate text
-                    <li
-                      key={`${idx}-${question.slice(0, 40)}`}
-                      className="flex gap-2 text-sm"
-                    >
+                    <li key={`${idx}-${question.slice(0, 40)}`} className="flex gap-2 text-sm">
                       <span className="font-semibold text-blue-600 mt-0.5">{idx + 1}.</span>
                       <span className="text-muted-foreground">
                         <MarkdownText>{question}</MarkdownText>
