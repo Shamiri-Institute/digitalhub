@@ -43,8 +43,8 @@ export default function GroupsDataTable({
   const [unarchiveDialog, setUnarchiveDialog] = useState(false);
 
   const group = useMemo(() => {
-    if (data.length > 0 && _group) {
-      return data.find((g) => g.id === _group?.id) ?? undefined;
+    if (_group) {
+      return data.find((g) => g.id === _group.id);
     }
     return _group;
   }, [data, _group]);
