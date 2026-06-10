@@ -434,6 +434,7 @@ export async function loadSupervisorRecordings() {
     errorMessage: r.errorMessage,
     retryCount: r.retryCount,
     overallScore: r.overallScore,
+    promptVersion: r.promptVersion,
     fidelityFeedback: r.fidelityFeedback,
     fellowId: r.fellowId,
     schoolId: r.schoolId,
