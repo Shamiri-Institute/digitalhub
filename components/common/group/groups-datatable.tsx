@@ -35,9 +35,7 @@ export default function GroupsDataTable({
   }>[];
   role: ImplementerRole;
 }) {
-  // const [group, setGroup] = useState<SchoolGroupDataTableData>();
   const [_group, _setGroup] = useState<SchoolGroupDataTableData>();
-
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
   const [leaderDialog, setLeaderDialog] = useState(false);

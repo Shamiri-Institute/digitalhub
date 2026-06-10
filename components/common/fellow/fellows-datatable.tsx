@@ -42,7 +42,6 @@ export default function FellowsDatatable({
     };
   }>[];
 }) {
-  // const [fellow, setFellow] = useState<SchoolFellowTableData | undefined>();
   const [_fellow, _setFellow] = useState<SchoolFellowTableData | undefined>();
   const [detailsDialog, setDetailsDialog] = useState(false);
   const [replaceDialog, setReplaceDialog] = useState(false);
