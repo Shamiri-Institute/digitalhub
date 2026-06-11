@@ -43,6 +43,8 @@ model User {
   triageEventAudits                       TriageEventAudit[]
   attendanceDocuments                     AttendanceDocuments[]
   reviewedTriageEvents                    TriageEvent[]     @relation("TriageEventReviewer")
+  escalationsMade    TicketEscalations[] @relation("EscalatedByUser")
+  escalationsReceived TicketEscalations[] @relation("EscalatedToUser")
 
   @@map("users")
 }
@@ -1886,6 +1888,7 @@ model Tickets {
   createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt  DateTime            @default(now()) @map("updated_at") @db.Timestamptz()
 
+  escalations TicketEscalations
   @@map("tickets")
 }
 
@@ -1902,5 +1905,5 @@ model TicketEscalations {
   createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt  DateTime            @default(now()) @map("updated_at") @db.Timestamptz()
 
-  @@map("ticket_escalations").
+  @@map("ticket_escalations")
 }
