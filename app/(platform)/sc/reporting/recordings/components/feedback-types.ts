@@ -1,5 +1,3 @@
-// Shared
-
 export interface SafetyFlag {
   type: string;
   description: string;
@@ -11,8 +9,6 @@ export interface SafetyFlag {
   confidence_level?: string;
   requires_follow_up?: boolean;
 }
-
-// V1
 
 export interface V1QuestionScore {
   score: number;
@@ -38,8 +34,6 @@ export interface V1FeedbackData {
   recommendations: string[];
   qualitative_feedback: V1QualitativeFeedback;
 }
-
-// V2
 
 export interface V2SessionParticipation {
   estimated_speakers: string;

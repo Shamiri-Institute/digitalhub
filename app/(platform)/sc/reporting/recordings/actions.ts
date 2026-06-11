@@ -9,15 +9,11 @@ import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import { createJob } from "#/lib/fidelity-ratings-api";
 import { deleteObject } from "#/lib/s3";
 
-// Types for server action responses
 export type SupervisorFellow = Awaited<ReturnType<typeof loadSupervisorFellows>>[number];
 export type FellowGroup = Awaited<ReturnType<typeof loadFellowGroups>>[number];
 export type GroupSession = Awaited<ReturnType<typeof loadGroupSessions>>[number];
 export type SupervisorRecording = Awaited<ReturnType<typeof loadSupervisorRecordings>>[number];
 
-/**
- * Load fellows supervised by the current user
- */
 export async function loadSupervisorFellows() {
   const supervisor = await currentSupervisor();
 
@@ -31,9 +27,6 @@ export async function loadSupervisorFellows() {
     .sort((a, b) => (a.fellowName ?? "").localeCompare(b.fellowName ?? ""));
 }
 
-/**
- * Load intervention groups led by a specific fellow
- */
 export async function loadFellowGroups(fellowId: string) {
   const supervisor = await currentSupervisor();
 
@@ -67,9 +60,6 @@ export async function loadFellowGroups(fellowId: string) {
   });
 }
 
-/**
- * Load occurred sessions for a group's school
- */
 export async function loadGroupSessions(groupId: string) {
   const supervisor = await currentSupervisor();
 
@@ -77,7 +67,6 @@ export async function loadGroupSessions(groupId: string) {
     throw new Error("Unauthorized user");
   }
 
-  // Get the group and verify access through fellow (leader)
   const group = await db.interventionGroup.findFirst({
     where: {
       id: groupId,
@@ -94,7 +83,6 @@ export async function loadGroupSessions(groupId: string) {
     throw new Error("Group not found or unauthorized");
   }
 
-  // Get sessions that have already occurred for this school
   const sessions = await db.interventionSession.findMany({
     where: {
       schoolId: group.schoolId,
@@ -123,9 +111,6 @@ export async function loadGroupSessions(groupId: string) {
   }));
 }
 
-/**
- * Check if a recording already exists for the given combination
- */
 export async function checkRecordingExists(params: {
   fellowId: string;
   schoolId: string;
@@ -154,19 +139,6 @@ export async function checkRecordingExists(params: {
   });
 }
 
-// ---------------------------------------------------------------------------
-// App URL resolution
-// ---------------------------------------------------------------------------
-
-/**
- * Resolve the base URL for this SDH instance.
- *
- * Resolution order:
- * 1. NEXT_PUBLIC_APP_URL — explicitly set (production)
- * 2. VERCEL_URL — auto-set by Vercel deployments (needs https:// prefix)
- * 3. Fallback to http://localhost:{PORT} for local development
- *    PORT defaults to 3000 (Next.js default) if not set
- */
 function getAppBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
@@ -176,35 +148,16 @@ function getAppBaseUrl(): string {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  // Local development fallback
   const port = process.env.PORT || "3000";
   return `http://localhost:${port}`;
 }
 
-// ---------------------------------------------------------------------------
-// Fidelity API submission helper (non-exported, used internally)
-// ---------------------------------------------------------------------------
-
-/**
- * Submit a recording to the Fidelity API for async processing.
- *
- * This function:
- * 1. Constructs webhook URLs for the Fidelity API to call back
- * 2. Submits the job via the mTLS-authenticated client
- * 3. Updates the DB record with the job_id and PROCESSING status
- *
- * On failure, marks the recording as FAILED with the error message.
- *
- * @param recordingId - The SDH recording ID (e.g. "rec_xxxxx")
- * @param s3Key - The S3 key where the audio file is stored
- */
 async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<void> {
   try {
     const appUrl = getAppBaseUrl();
 
-    // Construct webhook URLs for Fidelity API callbacks
     const completionWebhookUrl = `${appUrl}/api/recordings/batch/status`;
-    const progressWebhookUrl = undefined; // TODO
+    const progressWebhookUrl = undefined;
 
     console.log(`Submitting recording ${recordingId} to Fidelity API`, {
       s3Key,
@@ -222,8 +175,6 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
       progress_webhook_url: progressWebhookUrl,
     });
 
-    // Update recording with job tracking info and PROCESSING status
-    // Only set to PROCESSING if not already in a final state
     const updateResult = await db.sessionRecording.updateMany({
       where: {
         id: recordingId,
@@ -239,7 +190,6 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
       },
     });
 
-    // Check if the update actually happened
     if (updateResult.count === 0) {
       const current = await db.sessionRecording.findUnique({
         where: { id: recordingId },
@@ -254,7 +204,6 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
   } catch (error) {
     console.error(`✗ Failed to submit recording ${recordingId} to Fidelity API:`, error);
 
-    // Mark recording as FAILED so supervisors can see the error and retry
     try {
       await db.sessionRecording.update({
         where: { id: recordingId },
@@ -264,7 +213,6 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
         },
       });
     } catch (dbError) {
-      // If even the DB update fails, log it but don't mask the original error
       console.error(`Failed to mark recording ${recordingId} as FAILED:`, dbError);
     }
 
@@ -272,17 +220,6 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
   }
 }
 
-// ---------------------------------------------------------------------------
-// Server Actions
-// ---------------------------------------------------------------------------
-
-/**
- * Create a new session recording record after S3 upload, then immediately
- * submit it to the Fidelity API for processing.
- *
- * The Fidelity API submission is non-blocking — the upload succeeds even if
- * the Fidelity submission fails. Failed submissions can be retried.
- */
 export async function createSessionRecording(input: {
   fellowId: string;
   schoolId: string;
@@ -344,7 +281,6 @@ export async function createSessionRecording(input: {
         `Non-blocking Fidelity submission failed for recording ${recording.id}:`,
         error,
       );
-      // TODO: Implement retry mechanism for failed submissions.
     });
 
     revalidatePath("/sc/reporting/recordings");
@@ -355,9 +291,7 @@ export async function createSessionRecording(input: {
       data: recording,
     };
   } catch (error) {
-    // Handle unique constraint violation (race condition from multiple tabs)
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      // Clean up orphaned S3 file from recordings bucket
       try {
         await deleteObject({ Key: input.s3Key }, "recordings");
       } catch (cleanupError) {
@@ -459,12 +393,6 @@ export async function loadSupervisorRecordings() {
   return mappedRecordings;
 }
 
-/**
- * Retry processing for a failed recording.
- *
- * Resets the recording to PENDING, clears previous job tracking data,
- * and immediately resubmits to the Fidelity API.
- */
 export async function retryRecordingProcessing(recordingId: string) {
   const supervisor = await currentSupervisor();
 
@@ -497,7 +425,7 @@ export async function retryRecordingProcessing(recordingId: string) {
         message: "Recording not found or cannot be retried",
       };
     }
-    // Only allow retry if in FINAL state (COMPLETED/FAILED)
+
     if (recording.status === "PENDING" || recording.status === "PROCESSING") {
       return {
         success: false,
@@ -505,7 +433,6 @@ export async function retryRecordingProcessing(recordingId: string) {
       };
     }
 
-    // Reset to PENDING and clear previous job tracking
     await db.sessionRecording.update({
       where: { id: recordingId },
       data: {
@@ -517,13 +444,11 @@ export async function retryRecordingProcessing(recordingId: string) {
       },
     });
 
-    // Immediately resubmit to Fidelity API (non-blocking)
     await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
       console.error(
         `Non-blocking Fidelity resubmission failed for recording ${recording.id}:`,
         error,
       );
-      // TODO: Same retry mechanism as in createSessionRecording
     });
 
     revalidatePath("/sc/reporting/recordings");
@@ -541,27 +466,15 @@ export async function retryRecordingProcessing(recordingId: string) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Batch update types and function (used by webhook endpoints)
-// ---------------------------------------------------------------------------
-
-/**
- * Type for batch recording updates from Fidelity API webhook.
- * CRITICAL: includes both transcript AND fidelityFeedback — no data loss.
- */
 export type BatchRecordingUpdate = {
   id: string;
   status: RecordingProcessingStatus;
   overallScore?: string;
   fidelityFeedback?: Prisma.InputJsonValue;
-  /** Full transcript JSON with speaker labels, timestamps, and prosody annotations */
   transcript?: Prisma.InputJsonValue;
   errorMessage?: string;
 };
 
-/**
- * Update recording status (called by API for external service — single recording)
- */
 export async function updateRecordingStatus(
   recordingId: string,
   status: RecordingProcessingStatus,
@@ -597,7 +510,6 @@ export async function updateRecordingStatus(
       },
     });
 
-    // Revalidate for any supervisor viewing recordings
     revalidatePath("/sc/reporting/recordings");
 
     return {
@@ -613,21 +525,10 @@ export async function updateRecordingStatus(
   }
 }
 
-/**
- * Batch update recording statuses using PostgreSQL unnest() pattern.
- *
- * This function performs an atomic batch update — all recordings are updated
- * in a single SQL statement. If any recording ID is not found, the entire
- * batch fails (validated before the update).
- *
- * CRITICAL: This function stores BOTH transcript AND fidelityFeedback.
- * The unnest() arrays must all have matching lengths.
- */
 export async function updateRecordingsStatusBatch(
   updates: BatchRecordingUpdate[],
 ): Promise<{ success: boolean; message: string; updatedCount: number }> {
   try {
-    // Validate no duplicate IDs in input (would cause non-deterministic updates)
     const recordingIds = updates.map((u) => u.id);
     const uniqueIds = new Set(recordingIds);
     if (uniqueIds.size !== recordingIds.length) {
@@ -640,7 +541,6 @@ export async function updateRecordingsStatusBatch(
       };
     }
 
-    // Validate all recording IDs exist before updating
     const existingRecordings = await db.sessionRecording.findMany({
       where: { id: { in: recordingIds } },
       select: { id: true },
@@ -657,17 +557,12 @@ export async function updateRecordingsStatusBatch(
       };
     }
 
-    // Build arrays for the UPDATE FROM unnest() pattern.
-    // Use empty string as sentinel for NULL values since Prisma cannot serialize
-    // arrays containing null values in raw queries. See:
-    // - https://github.com/prisma/prisma/issues/26545
-    // - https://github.com/prisma/prisma/issues/26335
     const NULL_SENTINEL = "";
     const ids: string[] = [];
     const statuses: string[] = [];
     const overallScores: string[] = [];
     const fidelityFeedbacks: string[] = [];
-    const transcripts: string[] = []; // NEW — stores full transcript JSON
+    const transcripts: string[] = [];
     const errorMessages: string[] = [];
 
     for (const update of updates) {
@@ -677,15 +572,12 @@ export async function updateRecordingsStatusBatch(
       fidelityFeedbacks.push(
         update.fidelityFeedback != null ? JSON.stringify(update.fidelityFeedback) : NULL_SENTINEL,
       );
-      // CRITICAL: transcript must be included — this is the full processed transcript
       transcripts.push(
         update.transcript != null ? JSON.stringify(update.transcript) : NULL_SENTINEL,
       );
       errorMessages.push(update.errorMessage ?? NULL_SENTINEL);
     }
 
-    // Atomic batch update using PostgreSQL unnest()
-    // CRITICAL: The unnest() parameter count and the AS t(...) column list must match exactly
     const updatedCount = await db.$executeRaw`
       UPDATE "session_recordings" AS sr
       SET
@@ -736,13 +628,6 @@ export async function updateRecordingsStatusBatch(
   }
 }
 
-/**
- * Update editable metadata on an existing session recording.
- * The S3 file is never touched — only the DB record is updated.
- *
- * schoolId is intentionally NOT accepted from the client. It is derived
- * server-side from groupId to prevent mismatched group/school pairs.
- */
 export async function updateSessionRecording(input: {
   recordingId: string;
   fellowId: string;
@@ -756,7 +641,6 @@ export async function updateSessionRecording(input: {
     return { success: false, message: "Unauthorized user" };
   }
 
-  // Verify ownership of the recording
   const recording = await db.sessionRecording.findFirst({
     where: {
       id: input.recordingId,
@@ -768,8 +652,6 @@ export async function updateSessionRecording(input: {
     return { success: false, message: "Recording not found or unauthorized" };
   }
 
-  // Verify fellow belongs to this supervisor via the database — do not rely on
-  // the session payload, which may not eagerly load the fellows array.
   const authorizedFellow = await db.fellow.findFirst({
     where: { id: input.fellowId, supervisorId: supervisor.profile.id },
     select: { id: true },
@@ -779,8 +661,6 @@ export async function updateSessionRecording(input: {
     return { success: false, message: "Fellow not found or unauthorized" };
   }
 
-  // Derive schoolId server-side from the group — never trust the client for this.
-  // A mismatched groupId/schoolId pair would corrupt relational integrity.
   const group = await db.interventionGroup.findUnique({
     where: { id: input.groupId },
     select: { schoolId: true },
@@ -792,8 +672,6 @@ export async function updateSessionRecording(input: {
 
   const schoolId = group.schoolId;
 
-  // Pre-flight uniqueness check (excludes the current recording).
-  // A P2002 catch below handles the residual race-condition window.
   const conflict = await db.sessionRecording.findFirst({
     where: {
       fellowId: input.fellowId,
@@ -828,8 +706,6 @@ export async function updateSessionRecording(input: {
 
     return { success: true, message: "Recording updated successfully" };
   } catch (error) {
-    // Catch the unique constraint violation that can still occur in the narrow
-    // race window between the pre-flight check and the update above.
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return {
         success: false,

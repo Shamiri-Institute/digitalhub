@@ -42,7 +42,6 @@ export default function ViewFeedbackDialog({
     console.error("Failed to parse feedback:", error);
   }
 
-  // Sample preview is always v1 format — only shown in dev when no real feedback exists
   const effectiveVersion = showSamplePreview ? 1 : (recording.promptVersion ?? 1);
   const displayFeedback = showSamplePreview
     ? (SAMPLE_FEEDBACK as unknown as V1FeedbackData)
@@ -68,7 +67,6 @@ export default function ViewFeedbackDialog({
         </DialogHeader>
 
         <div className="mt-4 space-y-6">
-          {/* Sample Preview Toggle (Development Only) */}
           {process.env.NODE_ENV === "development" && !feedback && (
             <div className="flex items-center justify-between rounded-lg bg-blue-50 p-3">
               <span className="text-sm font-medium text-blue-700">
@@ -84,7 +82,6 @@ export default function ViewFeedbackDialog({
             </div>
           )}
 
-          {/* Overall Score */}
           <FeedbackSection title="Overall Score">
             <div className="flex items-center gap-3">
               <Badge
@@ -108,7 +105,6 @@ export default function ViewFeedbackDialog({
             </div>
           </FeedbackSection>
 
-          {/* Recording Details */}
           <FeedbackSection title="Recording Details">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>

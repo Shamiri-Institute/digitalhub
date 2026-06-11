@@ -35,7 +35,6 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
 
   return (
     <>
-      {/* Session Participation */}
       {feedback.session_participation && (
         <FeedbackSection title="Session Participation">
           <div className="space-y-4">
@@ -86,7 +85,6 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
         </FeedbackSection>
       )}
 
-      {/* Fidelity Scores */}
       {feedback.fidelity_scores && (
         <FeedbackSection title="Fidelity Scores">
           <div className="space-y-4">
@@ -125,7 +123,6 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
         </FeedbackSection>
       )}
 
-      {/* Competency Profile */}
       {sortedCompetencies.length > 0 && (
         <FeedbackSection title="Competency Profile">
           <div className="space-y-4">
@@ -163,7 +160,6 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
               );
             })}
 
-            {/* Red Flag Check */}
             {feedback.competency_profile.red_flag_check && (
               <div
                 className={cn(
@@ -201,11 +197,9 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
         </FeedbackSection>
       )}
 
-      {/* Supervision Preparation Brief */}
       {supervisionBrief && (
         <FeedbackSection title="Supervision Preparation Brief">
           <div className="space-y-4">
-            {/* Strengths to Acknowledge */}
             {supervisionBrief.strengths_to_acknowledge?.length > 0 && (
               <div>
                 <h5 className="font-medium text-green-700 mb-2">Strengths to Acknowledge</h5>
@@ -225,7 +219,6 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
               </div>
             )}
 
-            {/* Areas for Growth */}
             {supervisionBrief.areas_for_growth?.length > 0 && (
               <div>
                 <h5 className="font-medium text-amber-700 mb-2">Areas for Growth</h5>
@@ -258,7 +251,6 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
               </div>
             )}
 
-            {/* Reflective Questions for Supervision */}
             {supervisionBrief.reflective_questions_for_supervision?.length > 0 && (
               <div>
                 <h5 className="font-medium mb-2">Reflective Questions for Supervision</h5>
@@ -279,7 +271,6 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
         </FeedbackSection>
       )}
 
-      {/* Fellow Wellness Flag — only rendered when flagged */}
       {wellnessFlag?.flagged && (
         <FeedbackSection title="Fellow Wellness Flag">
           <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
@@ -300,7 +291,6 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
         </FeedbackSection>
       )}
 
-      {/* Safety Flags */}
       <SafetyFlagsSection flags={feedback.safety_flags} />
     </>
   );

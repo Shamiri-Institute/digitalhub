@@ -20,7 +20,6 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
 
   return (
     <>
-      {/* Fidelity Scores */}
       {feedback.fidelity_scores && (
         <FeedbackSection title="Fidelity Scores">
           <div className="space-y-4">
@@ -48,7 +47,6 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
         </FeedbackSection>
       )}
 
-      {/* Recommendations */}
       {feedback.recommendations && feedback.recommendations.length > 0 && (
         <FeedbackSection title="Recommendations">
           <ul className="space-y-2">
@@ -65,7 +63,6 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
         </FeedbackSection>
       )}
 
-      {/* Qualitative Feedback */}
       {feedback.qualitative_feedback && (
         <FeedbackSection title="Qualitative Feedback">
           <div className="space-y-4">
@@ -120,7 +117,6 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
         </FeedbackSection>
       )}
 
-      {/* Safety Flags */}
       <SafetyFlagsSection flags={feedback.safety_flags} />
     </>
   );
