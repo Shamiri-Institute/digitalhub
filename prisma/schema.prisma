@@ -1855,19 +1855,52 @@ enum TicketPriorityLevel {
 
 enum TicketCategories {
   TECH
+  RESEARCH
+  OPERATIONS
+  CARE
+  CLINICAL
 
   @@map("ticket_categories")
 }
 
-model Ticket {
+enum TicketStatus {
+  OPEN
+  ESCALATED
+  RESOLVED
+  CANCELLED
+
+  @@map("ticket_status")
+}
+
+model Tickets {
   id String @id @default(cuid())
   createdBy String @map("created_by") @db.VarChar(255)
+  visibleId Int @unique @default(dbgenerated("nextval('ticket_seq')")) @map("visible_id")
   user       User                @relation(fields: [createdBy], references: [id])
   subject    String @db.VarChar(100)
   description String @db.Text()
   priority  TicketPriorityLevel
   category  TicketCategories
+  status TicketStatus
   archivedAt DateTime?           @map("archived_at")
   createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt  DateTime            @default(now()) @map("updated_at") @db.Timestamptz()
+
+  @@map("tickets")
+}
+
+model TicketEscalations {
+  id String @id @default(cuid())
+  ticketId String @map("ticket_id") @db.VarChar(255)
+  ticket Tickets @relation(fields: [ticketId], references: [id])
+  escalatedBy String @map("escalated_by") @db.VarChar(255)
+  escalatedByUser User @relation(fields: [escalatedBy], references: [id], name: "EscalatedByUser")
+  escalatedTo String @map("escalated_to") @db.VarChar(255)
+  escalatedToUser User @relation(fields: [escalatedTo], references: [id], name: "EscalatedToUser")
+  escalationReason String @db.Text()
+  archivedAt DateTime?           @map("archived_at")
+  createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime            @default(now()) @map("updated_at") @db.Timestamptz()
+
+  @@map("ticket_escalations").
 }
