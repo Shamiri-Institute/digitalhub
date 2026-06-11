@@ -3,7 +3,7 @@
 import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -45,13 +45,23 @@ export default function SupervisorsDataTable({
   const [selectedRows, setSelectedRows] = useState<Row<SupervisorsData>[]>([]);
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
   const [selectedSession] = useState<string>();
-  const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);
+  const [_supervisor, _setSupervisor] = useState<SupervisorsData | null>(null);
 
-  useEffect(() => {
-    if (!markAttendanceDialog) {
-      setBatchMode(false);
+  const supervisor = useMemo(() => {
+    if (supervisors.length > 0 && _supervisor) {
+      return supervisors.find((s) => s.id === _supervisor?.id) ?? null;
     }
-  }, [markAttendanceDialog]);
+    return _supervisor;
+  }, [supervisors, _supervisor]);
+
+  const memoizedColumns = useMemo(() => {
+    return columns({
+      setMarkAttendanceDialog,
+      sessions: school?.interventionSessions ?? [],
+      setSupervisor: _setSupervisor,
+      role,
+    });
+  }, [role, school?.interventionSessions]);
 
   const renderTableActions = () => {
     return (
@@ -80,12 +90,7 @@ export default function SupervisorsDataTable({
     <div>
       <DataTable
         data={supervisors}
-        columns={columns({
-          setMarkAttendanceDialog,
-          sessions: school?.interventionSessions ?? [],
-          setSupervisor,
-          role,
-        })}
+        columns={memoizedColumns}
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No supervisors found for this hub"
         columnVisibilityState={{
