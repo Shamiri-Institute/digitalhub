@@ -1856,7 +1856,7 @@ enum TicketPriorityLevel {
   @@map("ticket_priority_level")
 }
 
-enum TicketCategories {
+enum TicketCategory {
   TECH
   RESEARCH
   OPERATIONS
@@ -1882,9 +1882,9 @@ model Tickets {
   creator     User                @relation(fields: [createdById], references: [id])
   subject     String              @db.VarChar(100)
   description String              @db.Text()
-  priority    TicketPriorityLevel
-  category    TicketCategories
-  status      TicketStatus
+  priority    TicketPriorityLevel @default(MEDIUM)
+  category    TicketCategory
+  status      TicketStatus        @default(OPEN)
   archivedAt  DateTime?           @map("archived_at")
   createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime            @default(now()) @map("updated_at") @db.Timestamptz()
