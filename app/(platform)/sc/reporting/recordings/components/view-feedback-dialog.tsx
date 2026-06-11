@@ -13,10 +13,10 @@ import {
 } from "#/components/ui/dialog";
 import { cn } from "#/lib/utils";
 import type { SupervisorRecording } from "../actions";
-import FeedbackV1Content from "./feedback-v1-content";
-import FeedbackV2Content from "./feedback-v2-content";
 import { FeedbackSection, getScoreColor } from "./feedback-shared";
 import type { V1FeedbackData, V2FeedbackData } from "./feedback-types";
+import FeedbackV1Content from "./feedback-v1-content";
+import FeedbackV2Content from "./feedback-v2-content";
 import { SAMPLE_FEEDBACK } from "./sample-response";
 
 interface ViewFeedbackDialogProps {
@@ -35,9 +35,10 @@ export default function ViewFeedbackDialog({
   let feedback: V1FeedbackData | V2FeedbackData | null = null;
   try {
     const raw = recording.fidelityFeedback;
-    feedback = typeof raw === "string"
-      ? JSON.parse(raw)
-      : (raw as unknown as V1FeedbackData | V2FeedbackData);
+    feedback =
+      typeof raw === "string"
+        ? JSON.parse(raw)
+        : (raw as unknown as V1FeedbackData | V2FeedbackData);
   } catch (error) {
     console.error("Failed to parse feedback:", error);
   }
@@ -50,11 +51,11 @@ export default function ViewFeedbackDialog({
   const overallScore =
     effectiveVersion === 2
       ? ((displayFeedback as V2FeedbackData)?.fidelity_scores?.overall_fidelity_score ??
-          recording.overallScore ??
-          undefined)
+        recording.overallScore ??
+        undefined)
       : ((displayFeedback as V1FeedbackData)?.fidelity_scores?.overall_score ??
-          recording.overallScore ??
-          undefined);
+        recording.overallScore ??
+        undefined);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
