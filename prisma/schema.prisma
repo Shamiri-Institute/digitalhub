@@ -1887,7 +1887,7 @@ model Tickets {
   status      TicketStatus        @default(OPEN)
   archivedAt  DateTime?           @map("archived_at")
   createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt   DateTime            @default(now()) @map("updated_at") @db.Timestamptz()
+  updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
 
   escalations TicketEscalations[]
 
@@ -1905,7 +1905,7 @@ model TicketEscalations {
   escalationReason String    @map("escalation_reason") @db.Text()
   archivedAt       DateTime? @map("archived_at")
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt        DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@map("ticket_escalations")
 }

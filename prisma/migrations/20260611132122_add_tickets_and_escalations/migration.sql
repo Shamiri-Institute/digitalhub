@@ -7,9 +7,6 @@ CREATE TYPE "ticket_category" AS ENUM ('TECH', 'RESEARCH', 'OPERATIONS', 'CARE',
 -- CreateEnum
 CREATE TYPE "ticket_status" AS ENUM ('OPEN', 'ESCALATED', 'RESOLVED', 'CANCELLED');
 
--- AlterTable
-ALTER TABLE "attendance_documents" ALTER COLUMN "archived_at" SET DATA TYPE TIMESTAMP(3);
-
 -- CreateTable
 CREATE TABLE "tickets" (
     "id" TEXT NOT NULL,
