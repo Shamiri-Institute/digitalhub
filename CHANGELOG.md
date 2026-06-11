@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.30.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.29.0...v1.30.0) (2026-06-11)
+
+
+### Features
+
+* **ai:** add v2 fidelity feedback rendering support ([#727](https://github.com/Shamiri-Institute/digitalhub/issues/727)) ([3c842ca](https://github.com/Shamiri-Institute/digitalhub/commit/3c842ca81d96a260ebd2ddfc1af7cef5b030902e))
+
 ## [1.29.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.28.1...v1.29.0) (2026-06-10)
 
 
