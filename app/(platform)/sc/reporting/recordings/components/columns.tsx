@@ -18,6 +18,7 @@ export interface RecordingTableData {
   errorMessage: string | null;
   retryCount: number;
   overallScore: string | null;
+  promptVersion: number | null;
   fidelityFeedback: JsonValue;
   fellowId: string;
   schoolId: string;
