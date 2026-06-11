@@ -1,11 +1,13 @@
 "use client";
 
 import { ImplementerRole, type School } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
+import {
+  buildSkeletonColumns,
+  buildSkeletonRows,
+} from "#/components/common/build-skeleton-columns";
 import { columns, type SchoolGroupDataTableData } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
 import DataTable from "#/components/data-table";
-import { Skeleton } from "#/components/ui/skeleton";
 
 export default function GroupsDatatableSkeleton({
   role,
@@ -14,26 +16,17 @@ export default function GroupsDatatableSkeleton({
   role: ImplementerRole;
   rows?: number;
 }) {
-  const loadingColumns = columns({
-    setGroup: () => {},
-    setStudentsDialog: () => {},
-    setEvaluationDialog: () => {},
-    setLeaderDialog: () => {},
-    setArchiveDialog: () => {},
-    setUnarchiveDialog: () => {},
-    role,
-  })
-    .map((column) => column.id ?? column.header)
-    .map((column) => {
-      const renderSkeleton = column !== "checkbox" && column !== "button";
-      return {
-        header: renderSkeleton ? column : "",
-        id: column,
-        cell: () => {
-          return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
-        },
-      };
-    });
+  const loadingColumns = buildSkeletonColumns(
+    columns({
+      setGroup: () => {},
+      setStudentsDialog: () => {},
+      setEvaluationDialog: () => {},
+      setLeaderDialog: () => {},
+      setArchiveDialog: () => {},
+      setUnarchiveDialog: () => {},
+      role,
+    }),
+  );
 
   const renderTableActions = () => {
     return role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
@@ -52,12 +45,8 @@ export default function GroupsDatatableSkeleton({
 
   return (
     <DataTable
-      columns={loadingColumns as ColumnDef<SchoolGroupDataTableData>[]}
-      data={
-        Array.from(Array(rows).keys()).map(() => {
-          return {};
-        }) as SchoolGroupDataTableData[]
-      }
+      columns={loadingColumns}
+      data={buildSkeletonRows<SchoolGroupDataTableData>(rows)}
       className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
       renderTableActions={renderTableActions()}
