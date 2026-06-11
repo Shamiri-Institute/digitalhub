@@ -1,45 +1,34 @@
 "use client";
 
 import type { ImplementerRole } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
+import {
+  buildSkeletonColumns,
+  buildSkeletonRows,
+} from "#/components/common/build-skeleton-columns";
 import { columns, type SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
-import { Skeleton } from "#/components/ui/skeleton";
 
 export default function StudentsDatatableSkeleton({ role }: { role: ImplementerRole }) {
-  const loadingColumns = columns({
-    setEditDialog: () => {},
-    setStudent: () => {},
-    setAttendanceHistoryDialog: () => {},
-    setMarkAttendanceDialog: () => {},
-    setReportingNotesDialog: () => {},
-    setGroupTransferHistory: () => {},
-    setMoveSchoolDialog: () => {},
-    setDropoutDialog: () => {},
-    setArchiveDialog: () => {},
-    role,
-    sessions: [],
-  })
-    .map((column) => column.id ?? column.header)
-    .map((column) => {
-      const renderSkeleton = column !== "checkbox" && column !== "button";
-      return {
-        header: renderSkeleton ? column : "",
-        id: column,
-        cell: () => {
-          return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
-        },
-      };
-    });
+  const loadingColumns = buildSkeletonColumns(
+    columns({
+      setEditDialog: () => {},
+      setStudent: () => {},
+      setAttendanceHistoryDialog: () => {},
+      setMarkAttendanceDialog: () => {},
+      setReportingNotesDialog: () => {},
+      setGroupTransferHistory: () => {},
+      setMoveSchoolDialog: () => {},
+      setDropoutDialog: () => {},
+      setArchiveDialog: () => {},
+      role,
+      sessions: [],
+    }),
+  );
 
   return (
     <DataTable
-      columns={loadingColumns as ColumnDef<SchoolStudentTableData>[]}
-      data={
-        Array.from(Array(10).keys()).map(() => {
-          return {};
-        }) as SchoolStudentTableData[]
-      }
+      columns={loadingColumns}
+      data={buildSkeletonRows<SchoolStudentTableData>()}
       className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
       columnVisibilityState={{

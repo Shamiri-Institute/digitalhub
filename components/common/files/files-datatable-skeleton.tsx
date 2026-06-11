@@ -1,30 +1,23 @@
 "use client";
 
 import type { ImplementerRole } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
+import {
+  buildSkeletonColumns,
+  buildSkeletonRows,
+} from "#/components/common/build-skeleton-columns";
 import { fileColumns, type SchoolFilesTableData } from "#/components/common/files/columns";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Skeleton } from "#/components/ui/skeleton";
 
 export default function FilesDatatableSkeleton({ role: _role }: { role: ImplementerRole }) {
-  const loadingColumns = fileColumns({
-    setRenameDialog: () => {},
-    setFile: () => {},
-    setDeleteDialog: () => {},
-  })
-    .map((column) => column.id ?? column.header)
-    .map((column) => {
-      const renderSkeleton = column !== "checkbox" && column !== "button";
-      return {
-        header: renderSkeleton ? column : "",
-        id: column,
-        cell: () => {
-          return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
-        },
-      };
-    });
+  const loadingColumns = buildSkeletonColumns(
+    fileColumns({
+      setRenameDialog: () => {},
+      setFile: () => {},
+      setDeleteDialog: () => {},
+    }),
+  );
 
   const renderTableActions = () => {
     return (
@@ -37,12 +30,8 @@ export default function FilesDatatableSkeleton({ role: _role }: { role: Implemen
 
   return (
     <DataTable
-      columns={loadingColumns as ColumnDef<SchoolFilesTableData>[]}
-      data={
-        Array.from(Array(10).keys()).map(() => {
-          return {};
-        }) as SchoolFilesTableData[]
-      }
+      columns={loadingColumns}
+      data={buildSkeletonRows<SchoolFilesTableData>()}
       className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
       renderTableActions={renderTableActions()}
