@@ -1,44 +1,33 @@
 "use client";
 
 import type { ImplementerRole } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
+import {
+  buildSkeletonColumns,
+  buildSkeletonRows,
+} from "#/components/common/build-skeleton-columns";
 import { columns, type SessionData } from "#/components/common/session/columns";
 import DataTable from "#/components/data-table";
-import { Skeleton } from "#/components/ui/skeleton";
 
 export default function SessionsDatatableSkeleton({ role }: { role: ImplementerRole }) {
-  const loadingColumns = columns({
-    setSession: () => {},
-    setRatingsDialog: () => {},
-    setFellowAttendanceDialog: () => {},
-    setSupervisorAttendanceDialog: () => {},
-    setStudentAttendanceDialog: () => {},
-    setSessionOccurrenceDialog: () => {},
-    setRescheduleSessionDialog: () => {},
-    setCancelSessionDialog: () => {},
-    setAttendanceDocumentDialog: () => {},
-    role,
-  })
-    .map((column) => column.id ?? column.header)
-    .map((column) => {
-      const renderSkeleton = column !== "checkbox" && column !== "button";
-      return {
-        header: renderSkeleton ? column : "",
-        id: column,
-        cell: () => {
-          return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
-        },
-      };
-    });
+  const loadingColumns = buildSkeletonColumns(
+    columns({
+      setSession: () => {},
+      setRatingsDialog: () => {},
+      setFellowAttendanceDialog: () => {},
+      setSupervisorAttendanceDialog: () => {},
+      setStudentAttendanceDialog: () => {},
+      setSessionOccurrenceDialog: () => {},
+      setRescheduleSessionDialog: () => {},
+      setCancelSessionDialog: () => {},
+      setAttendanceDocumentDialog: () => {},
+      role,
+    }),
+  );
 
   return (
     <DataTable
-      columns={loadingColumns as ColumnDef<SessionData>[]}
-      data={
-        Array.from(Array(5).keys()).map(() => {
-          return {};
-        }) as SessionData[]
-      }
+      columns={loadingColumns}
+      data={buildSkeletonRows<SessionData>(5)}
       className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
     />
