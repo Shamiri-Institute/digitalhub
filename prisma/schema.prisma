@@ -1877,8 +1877,8 @@ enum TicketStatus {
 model Tickets {
   id            String              @id @default(cuid())
   visibleId     Int                 @unique @default(autoincrement()) @map("visible_id")
-  createdBy     String              @map("created_by") @db.VarChar(255)
-  creator       User                @relation(fields: [createdBy], references: [id])
+  createdById     String              @map("created_by") @db.VarChar(255)
+  creator       User                @relation(fields: [createdById], references: [id])
   subject       String              @db.VarChar(100)
   description   String              @db.Text()
   priority      TicketPriorityLevel
