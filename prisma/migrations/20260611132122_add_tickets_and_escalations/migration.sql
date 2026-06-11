@@ -2,7 +2,7 @@
 CREATE TYPE "ticket_priority_level" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
 
 -- CreateEnum
-CREATE TYPE "ticket_categories" AS ENUM ('TECH', 'RESEARCH', 'OPERATIONS', 'CARE', 'CLINICAL');
+CREATE TYPE "ticket_category" AS ENUM ('TECH', 'RESEARCH', 'OPERATIONS', 'CARE', 'CLINICAL');
 
 -- CreateEnum
 CREATE TYPE "ticket_status" AS ENUM ('OPEN', 'ESCALATED', 'RESOLVED', 'CANCELLED');
@@ -17,9 +17,9 @@ CREATE TABLE "tickets" (
     "created_by" VARCHAR(255) NOT NULL,
     "subject" VARCHAR(100) NOT NULL,
     "description" TEXT NOT NULL,
-    "priority" "ticket_priority_level" NOT NULL,
-    "category" "ticket_categories" NOT NULL,
-    "status" "ticket_status" NOT NULL,
+    "priority" "ticket_priority_level" NOT NULL DEFAULT 'MEDIUM',
+    "category" "ticket_category" NOT NULL,
+    "status" "ticket_status" NOT NULL DEFAULT 'OPEN',
     "archived_at" TIMESTAMP(3),
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

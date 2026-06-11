@@ -1863,7 +1863,7 @@ enum TicketCategory {
   CARE
   CLINICAL
 
-  @@map("ticket_categories")
+  @@map("ticket_category")
 }
 
 enum TicketStatus {
