@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { ENABLE_PERF_PROFILER, NEXT_PUBLIC_ENV } from "#/lib/constants";
 
 export function PerformanceProfiler({ id, children }: { id: string; children: React.ReactNode }) {
-  if (process.env.NODE_ENV === "production") {
+  if (NEXT_PUBLIC_ENV === "production" || !ENABLE_PERF_PROFILER) {
     return <>{children}</>;
   }
 
@@ -54,5 +55,9 @@ function DevProfiler({ id, children }: { id: string; children: React.ReactNode }
     [],
   );
 
-  return <React.Profiler id={id} onRender={onRender}>{children}</React.Profiler>;
+  return (
+    <React.Profiler id={id} onRender={onRender}>
+      {children}
+    </React.Profiler>
+  );
 }
