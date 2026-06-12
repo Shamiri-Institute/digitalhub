@@ -42,7 +42,10 @@ model User {
   sessionRecordings                       SessionRecording[]
   triageEventAudits                       TriageEventAudit[]
   attendanceDocuments                     AttendanceDocuments[]
-  reviewedTriageEvents                    TriageEvent[]     @relation("TriageEventReviewer")
+  reviewedTriageEvents                    TriageEvent[]                             @relation("TriageEventReviewer")
+  escalationsMade                         TicketEscalations[]                       @relation("EscalatedByUser")
+  escalationsReceived                     TicketEscalations[]                       @relation("EscalatedToUser")
+  tickets                                 Tickets[]
 
   @@map("users")
 }
@@ -1843,4 +1846,66 @@ model AttendanceDocuments {
   link       String              @db.VarChar(255)
 
   @@map("attendance_documents")
+}
+
+enum TicketPriorityLevel {
+  LOW
+  MEDIUM
+  HIGH
+
+  @@map("ticket_priority_level")
+}
+
+enum TicketCategory {
+  TECH
+  RESEARCH
+  OPERATIONS
+  CARE
+  CLINICAL
+
+  @@map("ticket_category")
+}
+
+enum TicketStatus {
+  OPEN
+  ESCALATED
+  RESOLVED
+  CANCELLED
+
+  @@map("ticket_status")
+}
+
+model Tickets {
+  id          String              @id @default(cuid())
+  visibleId   Int                 @unique @default(autoincrement()) @map("visible_id")
+  createdById String              @map("created_by") @db.VarChar(255)
+  creator     User                @relation(fields: [createdById], references: [id])
+  subject     String              @db.VarChar(100)
+  description String              @db.Text()
+  priority    TicketPriorityLevel @default(MEDIUM)
+  category    TicketCategory
+  status      TicketStatus        @default(OPEN)
+  archivedAt  DateTime?           @map("archived_at")
+  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
+
+  escalations TicketEscalations[]
+
+  @@map("tickets")
+}
+
+model TicketEscalations {
+  id               String    @id @default(cuid())
+  ticketId         String    @map("ticket_id") @db.VarChar(255)
+  ticket           Tickets   @relation(fields: [ticketId], references: [id])
+  escalatedById    String    @map("escalated_by") @db.VarChar(255)
+  escalatedByUser  User      @relation("EscalatedByUser", fields: [escalatedById], references: [id])
+  escalatedToId    String    @map("escalated_to") @db.VarChar(255)
+  escalatedToUser  User      @relation("EscalatedToUser", fields: [escalatedToId], references: [id])
+  escalationReason String    @map("escalation_reason") @db.Text()
+  archivedAt       DateTime? @map("archived_at")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("ticket_escalations")
 }
