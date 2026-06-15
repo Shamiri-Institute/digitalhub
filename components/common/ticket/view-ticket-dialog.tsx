@@ -1,6 +1,5 @@
 "use client";
 
-import { ImplementerRole } from "@prisma/client";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
@@ -15,7 +14,6 @@ import {
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
-import { toast } from "#/components/ui/use-toast";
 import { getEscalationsPerTicket } from "#/lib/actions/ticket";
 import type { TicketEscalation } from "#/lib/actions/ticket/types";
 import type { TicketData } from "./columns";
@@ -23,7 +21,7 @@ import type { TicketData } from "./columns";
 const formatSafeDate = (date: Date | string | null | undefined) => {
   if (!date) return "—";
   const d = typeof date === "string" ? new Date(date) : date;
-  return isNaN(d.getTime()) ? "—" : format(d, "dd MMM yyyy");
+  return Number.isNaN(d.getTime()) ? "—" : format(d, "dd MMM yyyy");
 };
 
 export function ViewTicketDialog({
@@ -50,7 +48,7 @@ export function ViewTicketDialog({
       setLoadingEscalations(false);
     };
 
-    fetchEscalations();
+    void fetchEscalations();
   }, [open, ticket?.id]);
 
   if (!ticket) return null;

@@ -38,7 +38,7 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
     `;
 
     const firstResult = supervisorResult[0];
-    if (!firstResult || !firstResult.supervisor_user_id) {
+    if (!firstResult?.supervisor_user_id) {
       throw new Error("Unable to resolve supervisor for your account");
     }
 
