@@ -123,7 +123,7 @@ const ticketHandlers: Record<string, TicketHandler> = {
         AND im_tier.implementer_id = ${implementerId}
       WHERE t.created_by = ${userId}
       ${filters.status ? Prisma.sql`AND t.status = ${filters.status}` : Prisma.empty}
-      ORDER BY t.created_at DESC
+      ORDER BY t.id, e.created_at DESC
     `;
   },
 };
