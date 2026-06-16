@@ -2,7 +2,14 @@ import type { CalendarDate } from "@internationalized/date";
 import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useMemo, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
@@ -418,9 +425,7 @@ export function TableView({
   const enableRowSelection = useMemo(() => {
     return (row: Row<FellowAttendancesTableData>) => {
       return (
-        !(
-          row.original.sessionType === "INTERVENTION" && row.original.groupId === undefined
-        ) &&
+        !(row.original.sessionType === "INTERVENTION" && row.original.groupId === undefined) &&
         row.original.groupType === "TREATMENT" &&
         (row.original.supervisorId === supervisorId || role === "HUB_COORDINATOR") &&
         !row.original.droppedOut &&

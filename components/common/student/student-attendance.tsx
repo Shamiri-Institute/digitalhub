@@ -1,7 +1,14 @@
 import { type Fellow, ImplementerRole, type Prisma } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useMemo, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
@@ -145,7 +152,9 @@ export default function StudentAttendance({
     if (!session?.id) return;
 
     getTriageEventsForSession(session.id)
-      .then((events) => setTriageEventsByStudent(Object.fromEntries(events.map((e) => [e.studentId, e]))))
+      .then((events) =>
+        setTriageEventsByStudent(Object.fromEntries(events.map((e) => [e.studentId, e]))),
+      )
       .catch(() => setTriageEventsByStudent({}));
   }, [session?.id]);
 
