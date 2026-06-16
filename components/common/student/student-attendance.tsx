@@ -1,7 +1,7 @@
 import { type Fellow, ImplementerRole, type Prisma } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
@@ -59,28 +59,7 @@ export default function StudentAttendance({
   const [selectedGroup, setSelectedGroup] = useState<string>();
   const [attendance, setAttendance] = useState<StudentAttendanceData>();
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState(false);
-  const [groups, setGroups] = useState<
-    {
-      fellow: Fellow;
-      group:
-        | Prisma.InterventionGroupGetPayload<{
-            include: {
-              students: {
-                include: {
-                  _count: {
-                    select: {
-                      clinicalCases: true;
-                    };
-                  };
-                  studentAttendances: true;
-                };
-              };
-            };
-          }>
-        | undefined;
-    }[]
-  >([]);
-  const { sessions, setSessions, refresh } = useContext(SessionsContext);
+  const { sessions, refresh } = useContext(SessionsContext);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<StudentAttendanceData>[]>([]);
   const [triageModalOpen, setTriageModalOpen] = useState(false);
@@ -101,22 +80,44 @@ export default function StudentAttendance({
     },
   });
 
-  useEffect(() => {
-    const groups = fellows.map((fellow) => {
+  const groups = useMemo(() => {
+    return fellows.map((fellow) => {
       const _session = sessions.length > 0 ? sessions.find((x) => x.id === session?.id) : session;
       const group = _session?.school?.interventionGroups.find(
         (group) => group.leaderId === fellow.id,
       );
       return { fellow, group };
     });
-
-    setGroups(groups);
-    setSessions(sessions);
   }, [fellows, session, sessions]);
+
+  const memoizedColumns = useMemo(() => {
+    return columns({
+      setAttendance,
+      setAttendanceDialog: setMarkAttendanceDialog,
+      setTriageStudent,
+      setTriageModalOpen,
+      setTriageReadOnly,
+      setHistoryStudent,
+      setHistoryModalOpen,
+      triageEventsByStudent,
+      session,
+      role,
+    });
+  }, [
+    setAttendance,
+    setMarkAttendanceDialog,
+    setTriageStudent,
+    setTriageModalOpen,
+    setTriageReadOnly,
+    setHistoryStudent,
+    setHistoryModalOpen,
+    triageEventsByStudent,
+    session,
+    role,
+  ]);
 
   useEffect(() => {
     if (!triageModalOpen || !triageStudent?.id || !session?.id) {
-      setTriageExistingEvent(null);
       return;
     }
     const load = async () => {
@@ -141,13 +142,12 @@ export default function StudentAttendance({
   };
 
   useEffect(() => {
-    if (!isOpen) {
-      setTriageEventsByStudent({});
-      return;
-    }
-    void loadTriageEventsForSession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- session.id is the only changing dep
-  }, [isOpen, session?.id]);
+    if (!session?.id) return;
+
+    getTriageEventsForSession(session.id)
+      .then((events) => setTriageEventsByStudent(Object.fromEntries(events.map((e) => [e.studentId, e]))))
+      .catch(() => setTriageEventsByStudent({}));
+  }, [session?.id]);
 
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     const [res] = await Promise.all([
@@ -260,18 +260,7 @@ export default function StudentAttendance({
           <TriageSessionSummary triageEventsByStudent={triageEventsByStudent} />
         )}
         <DataTable
-          columns={columns({
-            setAttendance,
-            setAttendanceDialog: setMarkAttendanceDialog,
-            setTriageStudent,
-            setTriageModalOpen,
-            setTriageReadOnly,
-            setHistoryStudent,
-            setHistoryModalOpen,
-            triageEventsByStudent,
-            session,
-            role,
-          })}
+          columns={memoizedColumns}
           editColumns={true}
           data={
             groups.find((group) => group.group?.id === selectedGroup)?.group?.students ??

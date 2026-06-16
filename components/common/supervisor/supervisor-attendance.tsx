@@ -1,7 +1,7 @@
 import { ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
@@ -58,10 +58,8 @@ export default function SupervisorAttendance({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   session: Session | null;
 }) {
-  const [attendances, setAttendances] = useState<SupervisorAttendanceTableData[]>([]);
-
-  useEffect(() => {
-    const tableData =
+  const attendances = useMemo(() => {
+    return (
       supervisors?.map((supervisor) => {
         const attendance = supervisor.supervisorAttendances.find(
           (_attendance) => _attendance.sessionId === session?.id,
@@ -85,9 +83,9 @@ export default function SupervisorAttendance({
           sessionType: session?.session?.sessionName,
           sessionStatus: session?.status,
         };
-      }) ?? [];
-    setAttendances(tableData);
-  }, [isOpen, session, supervisors]);
+      }) ?? []
+    );
+  }, [supervisors, session]);
 
   return (
     <div>
@@ -167,21 +165,22 @@ export function SupervisorAttendanceDataTable({
     );
   };
 
+  const memoizedColumns = useMemo(() => {
+    return overrideColumns
+      ? overrideColumns({
+          setAttendance,
+          setMarkAttendanceDialog,
+        })
+      : (columns({
+          setAttendance,
+          setMarkAttendanceDialog,
+        }) as ColumnDef<SupervisorAttendanceTableData>[]);
+  }, [overrideColumns, setAttendance, setMarkAttendanceDialog]);
+
   return (
     <div className="space-y-4 pt-2">
-      {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
       <DataTable
-        columns={
-          overrideColumns
-            ? overrideColumns({
-                setAttendance,
-                setMarkAttendanceDialog,
-              })
-            : (columns({
-                setAttendance,
-                setMarkAttendanceDialog,
-              }) as ColumnDef<SupervisorAttendanceTableData>[])
-        }
+        columns={memoizedColumns}
         data={data}
         editColumns={false}
         className={"data-table data-table-action lg:mt-4"}

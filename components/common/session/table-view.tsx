@@ -2,7 +2,7 @@ import type { CalendarDate } from "@internationalized/date";
 import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useMemo, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
@@ -287,7 +287,7 @@ export function TableView({
   role: ImplementerRole;
   supervisorId?: string;
 }) {
-  const [selectedDay, setSelectedDay] = useState<CalendarDate | null>(state.value);
+  const [userSelectedDay, setUserSelectedDay] = useState<CalendarDate | null>(null);
   const weekDays = state.getDatesInWeek(0);
   const { setTitle } = useTitle();
   const dayFormatter = useDateFormatter({
@@ -297,16 +297,34 @@ export function TableView({
     dateStyle: "long",
     calendar: state.visibleRange.start.calendar.identifier,
   });
-  const [supervisorAttendances, setSupervisorAttendances] = useState<
-    SupervisorAttendanceTableData[]
-  >([]);
-  const [fellowAttendances, setFellowAttendances] = useState<FellowAttendancesTableData[]>([]);
   const [roleToggle, setRoleToggle] = useState<Role>("supervisors");
   const { filters } = useContext(FiltersContext);
   const { sessions } = useContext(SessionsContext);
 
-  useEffect(() => {
-    if (!selectedDay) return;
+  const selectedDay = useMemo(() => {
+    const today = getCalendarDate(new Date());
+    const rangeStart = state.visibleRange.start.toDate(state.timeZone);
+    const rangeEnd = addDays(rangeStart, 7);
+    const todayDate = today.toDate(state.timeZone);
+
+    if (userSelectedDay) {
+      const userDate = userSelectedDay.toDate(state.timeZone);
+      if (isWithinInterval(userDate, { start: rangeStart, end: rangeEnd })) {
+        return userSelectedDay;
+      }
+    }
+
+    if (isBefore(todayDate, rangeStart)) {
+      return state.visibleRange.start;
+    }
+    return today;
+  }, [state.timeZone, state.visibleRange.start, userSelectedDay]);
+
+  const { supervisorAttendances, fellowAttendances } = useMemo(() => {
+    if (!selectedDay) {
+      return { supervisorAttendances: [], fellowAttendances: [] };
+    }
+
     const start = selectedDay.toDate(state.timeZone);
     const end = addDays(selectedDay.toDate(state.timeZone), 1);
     const activeSessions = sessions.filter((session) => {
@@ -315,7 +333,6 @@ export function TableView({
     const _fellowAttendances: FellowAttendancesTableData[] = [];
 
     const attendances = activeSessions.flatMap((session) => {
-      // filter by sessionType
       if (filters.sessionTypes) {
         if (
           session.session?.sessionName !== undefined &&
@@ -324,7 +341,6 @@ export function TableView({
           return [];
         }
       }
-      // filter by session status
       if (filters.statusTypes) {
         if (session.status !== null && !Object.keys(filters.statusTypes).includes(session.status)) {
           return [];
@@ -387,9 +403,8 @@ export function TableView({
         };
       });
     });
-    setSupervisorAttendances(attendances);
-    setFellowAttendances(_fellowAttendances);
-  }, [selectedDay, roleToggle, filters, sessions, supervisors, state]);
+    return { supervisorAttendances: attendances, fellowAttendances: _fellowAttendances };
+  }, [selectedDay, filters, sessions, supervisors, state.timeZone]);
 
   useEffect(() => {
     setTitle(
@@ -400,13 +415,19 @@ export function TableView({
     );
   }, [state.visibleRange.start, state.visibleRange.end, dateFormatter, setTitle, state.timeZone]);
 
-  useEffect(() => {
-    if (isBefore(new Date(), state.visibleRange.start.toDate(state.timeZone))) {
-      setSelectedDay(state.visibleRange.start);
-    } else {
-      setSelectedDay(getCalendarDate(new Date()));
-    }
-  }, [state.timeZone, state.visibleRange.start]);
+  const enableRowSelection = useMemo(() => {
+    return (row: Row<FellowAttendancesTableData>) => {
+      return (
+        !(
+          row.original.sessionType === "INTERVENTION" && row.original.groupId === undefined
+        ) &&
+        row.original.groupType === "TREATMENT" &&
+        (row.original.supervisorId === supervisorId || role === "HUB_COORDINATOR") &&
+        !row.original.droppedOut &&
+        row.original.processedAt === null
+      );
+    };
+  }, [supervisorId, role]);
 
   return (
     <div className="flex flex-col gap-3 py-3">
@@ -419,7 +440,7 @@ export function TableView({
           }
           value={selectedDay ? format(selectedDay.toDate(state.timeZone), "yyyy-MM-dd") : undefined}
           onValueChange={(value) => {
-            if (value) setSelectedDay(getCalendarDate(new Date(value)));
+            if (value) setUserSelectedDay(getCalendarDate(new Date(value)));
           }}
         >
           {weekDays.map((date) => {
@@ -479,17 +500,7 @@ export function TableView({
           data={fellowAttendances}
           editColumns={true}
           emptyStateMessage={"No sessions scheduled on this day."}
-          enableRowSelection={(row: Row<FellowAttendancesTableData>) => {
-            return (
-              !(
-                row.original.sessionType === "INTERVENTION" && row.original.groupId === undefined
-              ) &&
-              row.original.groupType === "TREATMENT" &&
-              (row.original.supervisorId === supervisorId || role === "HUB_COORDINATOR") &&
-              !row.original.droppedOut &&
-              row.original.processedAt === null
-            );
-          }}
+          enableRowSelection={enableRowSelection}
           role={role}
         />
       )}
