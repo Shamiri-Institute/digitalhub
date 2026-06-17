@@ -1,8 +1,8 @@
 import type { ImplementerRole } from "@prisma/client";
 import {
   TicketCategory as PrismaTicketCategory,
-  TicketStatus as PrismaTicketStatus,
   TicketPriorityLevel as PrismaTicketPriorityLevel,
+  TicketStatus as PrismaTicketStatus,
 } from "@prisma/client";
 import { z } from "zod";
 import { stringValidation } from "#/lib/utils";

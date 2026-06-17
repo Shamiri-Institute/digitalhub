@@ -1,5 +1,6 @@
 "use client";
 
+import { TicketCategory, TicketPriorityLevel } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -34,7 +35,6 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { createTicket } from "#/lib/actions/ticket";
 import { CreateTicketSchema } from "#/lib/actions/ticket/types";
-import { TicketCategory, TicketPriorityLevel } from "@prisma/client";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export default function CreateTicketDialog({ disabled }: { disabled?: boolean }) {
