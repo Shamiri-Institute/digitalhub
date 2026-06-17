@@ -4,6 +4,7 @@ import {
   BarChartIcon,
   CalendarIcon,
   GraduationCapIcon,
+  Icons,
   NotificationIcon,
   PeopleIcon,
   PeopleIconAlternate,
@@ -31,6 +32,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { ENABLE_TICKETS, NEXT_PUBLIC_ENV } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import ArrowDropdown from "#/public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -398,6 +400,12 @@ function getCurrentUserNavigationLinks(
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/portal`}>Fellow portal</Link>
       </div>,
+      ENABLE_TICKETS && NEXT_PUBLIC_ENV !== "production" ? (
+        <div className="tab-link" key="fel-tickets">
+          <Icons.ticket />
+          <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
+        </div>
+      ) : null,
     );
   }
 

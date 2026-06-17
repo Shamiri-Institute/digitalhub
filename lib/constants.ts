@@ -24,10 +24,12 @@ export const constants = (() => {
           error:
             "NEXT_PUBLIC_ENV is required and must be one of: development, preview, production, testing, training",
         }),
+        NEXT_PUBLIC_ENABLE_TICKETS: z.string().default("false"),
       })
       .parse({
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
         NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV,
+        NEXT_PUBLIC_ENABLE_TICKETS: process.env.NEXT_PUBLIC_ENABLE_TICKETS,
       });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -41,6 +43,7 @@ export const constants = (() => {
 })();
 
 export const NEXT_PUBLIC_ENV = validate(constants.NEXT_PUBLIC_ENV, "NEXT_PUBLIC_ENV");
+export const ENABLE_TICKETS = constants.NEXT_PUBLIC_ENABLE_TICKETS === "true";
 export const APP_ENV = process.env.APP_ENV || "production";
 export const SHOW_DUPLICATE_ID_CHECKBOX = "show-duplicate-id-checkbox";
 export const GENDER_OPTIONS = ["Male", "Female", "Other"] as const;
