@@ -51,7 +51,7 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
 
     await db.$transaction(async (transaction) => {
       const ticket = await transaction.tickets.create({
-        data: ticketPayload,
+        data: { ...ticketPayload, status: "ESCALATED" },
       });
 
       await transaction.ticketEscalations.create({
@@ -61,11 +61,6 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
           escalatedToId: supervisorUserId,
           escalationReason: ticketPayload.description,
         },
-      });
-
-      await transaction.tickets.update({
-        where: { id: ticket.id },
-        data: { status: "ESCALATED" },
       });
     });
 
@@ -137,6 +132,8 @@ export async function getEscalationsPerTicket(
       throw new Error("The session has not been authenticated");
 
     const userId = session.user.id;
+    const activeImplementerId = session.user.activeMembership?.implementerId;
+    if (!activeImplementerId) throw new Error("No active implementer found");
 
     const escalations = await db.$queryRaw<
       {
@@ -166,7 +163,9 @@ export async function getEscalationsPerTicket(
       FROM ticket_escalations te
       JOIN tickets t ON t.id = te.ticket_id
       LEFT JOIN implementer_members im_by ON im_by.user_id = te.escalated_by
+        AND im_by.implementer_id = ${activeImplementerId}
       LEFT JOIN implementer_members im_to ON im_to.user_id = te.escalated_to
+        AND im_to.implementer_id = ${activeImplementerId}
       LEFT JOIN fellows f ON f.id = im_by.identifier AND im_by.role = 'FELLOW'
       LEFT JOIN supervisors s ON s.id = im_by.identifier AND im_by.role = 'SUPERVISOR'
       LEFT JOIN fellows f2 ON f2.id = im_to.identifier AND im_to.role = 'FELLOW'

@@ -34,6 +34,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { createTicket } from "#/lib/actions/ticket";
 import { CreateTicketSchema } from "#/lib/actions/ticket/types";
+import { TicketCategory, TicketPriorityLevel } from "@prisma/client";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export default function CreateTicketDialog({ disabled }: { disabled?: boolean }) {
@@ -136,11 +137,11 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="TECH">Tech</SelectItem>
-                          <SelectItem value="RESEARCH">Research</SelectItem>
-                          <SelectItem value="OPERATIONS">Operations</SelectItem>
-                          <SelectItem value="CARE">Care</SelectItem>
-                          <SelectItem value="CLINICAL">Clinical</SelectItem>
+                          {Object.values(TicketCategory).map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -160,9 +161,11 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="LOW">Low</SelectItem>
-                          <SelectItem value="MEDIUM">Medium</SelectItem>
-                          <SelectItem value="HIGH">High</SelectItem>
+                          {Object.values(TicketPriorityLevel).map((priority) => (
+                            <SelectItem key={priority} value={priority}>
+                              {priority}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
