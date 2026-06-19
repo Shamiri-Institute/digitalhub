@@ -147,6 +147,34 @@ export const currentSupervisor = cache(async () => {
   return { profile: supervisor, session, fellows: newFellowsData };
 });
 
+export type CurrentSupervisorLite = Awaited<ReturnType<typeof currentSupervisorLite>>;
+
+export const currentSupervisorLite = cache(async () => {
+  const session = await getCurrentUserSession();
+  if (!session) {
+    return null;
+  }
+  const membership = session.user.activeMembership;
+  if (!membership?.identifier) {
+    return null;
+  }
+
+  const supervisor = await db.supervisor.findFirst({
+    where: { id: membership.identifier },
+    select: {
+      id: true,
+      hubId: true,
+      hub: { select: { projectId: true } },
+    },
+  });
+
+  if (!supervisor) {
+    return null;
+  }
+
+  return { profile: supervisor, session };
+});
+
 export type CurrentFellow = Awaited<ReturnType<typeof currentFellow>>;
 
 export const currentFellow = cache(async () => {

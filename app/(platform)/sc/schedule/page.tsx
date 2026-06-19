@@ -1,6 +1,5 @@
 import { signOut } from "next-auth/react";
-import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import { ScheduleCalendar } from "#/components/common/session/schedule-calendar";
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
@@ -8,13 +7,17 @@ import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 
 export default async function SupervisorSchedulePage() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }
 
   const [schools, schoolStats, supervisors, fellowRatings, hubSessionTypes] = await Promise.all([
-    fetchSchoolData(supervisor?.profile.hubId as string),
+    db.school.findMany({
+      where: {
+        hubId: supervisor?.profile.hubId as string,
+      },
+    }),
     db.$queryRaw<
       {
         session_count: number;
