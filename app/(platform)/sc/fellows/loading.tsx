@@ -1,10 +1,10 @@
 import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import FellowSchoolsDatatableSkeleton from "#/components/common/fellow/fellow-schools-datatable-skeleton";
 
 export default async function TableSkeleton() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }
