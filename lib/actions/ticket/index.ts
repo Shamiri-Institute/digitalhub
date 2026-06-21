@@ -340,11 +340,21 @@ const fetchTicketsHandlers: Record<TicketQueryRole, FetchTicketsHandler> = {
         t.status,
         t.priority,
         t.created_at AS "createdAt",
-        im_tier.role AS "currentTier"
+        latest_im.role AS "currentTier"
       FROM "tickets" t
       JOIN "ticket_escalations" e ON t.id = e.ticket_id
-      JOIN "implementer_members" im_tier ON e.escalated_to = im_tier.user_id
-        AND im_tier.implementer_id = ${implementerId}
+      JOIN "implementer_members" im ON e.escalated_to = im.user_id
+        AND im.implementer_id = ${implementerId}
+      JOIN LATERAL (
+        SELECT e2.escalated_to
+        FROM "ticket_escalations" e2
+        WHERE e2.ticket_id = t.id
+        ORDER BY e2.created_at DESC
+        LIMIT 1
+      ) latest_e ON true
+      JOIN "implementer_members" latest_im
+        ON latest_e.escalated_to = latest_im.user_id
+        AND latest_im.implementer_id = ${implementerId}
       WHERE e.escalated_to = ${userId}
       ${filters.status ? Prisma.sql`AND t.status = ${filters.status}` : Prisma.empty}
       ORDER BY t.id, e.created_at DESC

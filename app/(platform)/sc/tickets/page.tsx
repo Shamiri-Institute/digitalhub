@@ -14,6 +14,7 @@ export default async function TicketsPage() {
   if (!ENABLE_TICKETS || NEXT_PUBLIC_ENV === "production") notFound();
 
   const result = await getAllTickets({});
+  console.log("get all ticketsss", result)
   const tickets = result.success ? (result.data ?? []) : [];
 
   return (
