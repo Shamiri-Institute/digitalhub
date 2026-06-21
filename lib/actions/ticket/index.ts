@@ -104,15 +104,15 @@ export async function getEscalationsPerTicket(
     const session = await getCurrentUserSession();
     if (!session?.user.id) throw new Error("The session has not been authenticated");
 
-    const activeImplementerId = session.user.activeMembership?.implementerId;
-    if (!activeImplementerId) throw new Error("No active implementer found");
-
     const escalations = await db.ticketEscalations.findMany({
-      where: { ticketId },
+      where: {
+        ticketId,
+        OR: [{ escalatedById: session.user.id }, { escalatedToId: session.user.id }],
+      },
       orderBy: { createdAt: "asc" },
     });
 
-    if (escalations.length === 0) throw new Error("No escalations exist for this ticket");
+    if (escalations.length === 0) throw new Error("No escalations were found for this ticket");
 
     const escalationsCount = escalations.length;
     if (!isValidEscalationCount(escalationsCount)) {
@@ -218,29 +218,31 @@ export async function resolveTicket(ticketId: string): Promise<ActionResponse> {
       throw new Error("Only escalation recipients can resolve tickets");
     }
 
-    const latestEscalation = await db.ticketEscalations.findFirst({
-      where: { ticketId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        ticket: {
-          select: { status: true },
+    await db.$transaction(async (tx) => {
+      const latestEscalation = await tx.ticketEscalations.findFirst({
+        where: { ticketId },
+        orderBy: { createdAt: "desc" },
+        include: {
+          ticket: {
+            select: { status: true },
+          },
         },
-      },
-    });
+      });
 
-    if (!latestEscalation) throw new Error("No escalation exists for this ticket");
+      if (!latestEscalation) throw new Error("No escalation exists for this ticket");
 
-    if (latestEscalation.ticket.status === "RESOLVED") {
-      throw new Error("Ticket is already resolved");
-    }
+      if (latestEscalation.ticket.status === "RESOLVED") {
+        throw new Error("Ticket is already resolved");
+      }
 
-    if (latestEscalation.escalatedToId !== userId) {
-      throw new Error("Only the current escalation recipient can resolve this ticket");
-    }
+      if (latestEscalation.escalatedToId !== userId) {
+        throw new Error("Only the current escalation recipient can resolve this ticket");
+      }
 
-    await db.tickets.update({
-      where: { id: ticketId },
-      data: { status: "RESOLVED" },
+      await tx.tickets.update({
+        where: { id: ticketId },
+        data: { status: "RESOLVED" },
+      });
     });
 
     return { success: true, message: "Ticket resolved successfully" };
