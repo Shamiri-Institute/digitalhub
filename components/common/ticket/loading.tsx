@@ -10,11 +10,11 @@ import { columns, type TicketData } from "./columns";
 import CreateTicketDialog from "./create-ticket-dialog";
 
 export default function TicketsLoading({
-  role = ImplementerRole.FELLOW,
+  userRole = ImplementerRole.FELLOW,
   rows = 5,
   showCreateButton = true,
 }: {
-  role?: ImplementerRole;
+  userRole?: ImplementerRole;
   rows?: number;
   showCreateButton?: boolean;
 }) {
@@ -24,7 +24,7 @@ export default function TicketsLoading({
       setViewDialog: () => {},
       setEditDialog: () => {},
       setEscalateDialog: () => {},
-      role,
+      role: userRole,
     }),
   );
 
