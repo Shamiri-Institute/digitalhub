@@ -317,17 +317,24 @@ const fetchTicketsHandlers: Record<TicketQueryRole, FetchTicketsHandler> = {
         t.status,
         t.priority,
         t.created_at AS "createdAt",
-        im_tier.role AS "currentTier"
+        latest_im.role AS "currentTier"
       FROM "tickets" t
       JOIN "implementer_members" im_creator ON t.created_by = im_creator.user_id
         AND im_creator.implementer_id = ${implementerId}
         AND im_creator.role = 'FELLOW'
-      LEFT JOIN "ticket_escalations" e ON t.id = e.ticket_id
-      LEFT JOIN "implementer_members" im_tier ON e.escalated_to = im_tier.user_id
-        AND im_tier.implementer_id = ${implementerId}
+      LEFT JOIN LATERAL (
+        SELECT e.escalated_to
+        FROM "ticket_escalations" e
+        WHERE e.ticket_id = t.id
+        ORDER BY e.created_at DESC
+        LIMIT 1
+      ) latest_e ON true
+      LEFT JOIN "implementer_members" latest_im
+        ON latest_e.escalated_to = latest_im.user_id
+        AND latest_im.implementer_id = ${implementerId}
       WHERE t.created_by = ${userId}
       ${filters.status ? Prisma.sql`AND t.status = ${filters.status}` : Prisma.empty}
-      ORDER BY t.id, e.created_at DESC
+      ORDER BY t.id
     `;
   },
   NON_FELLOW: async (userId, implementerId, filters) => {
