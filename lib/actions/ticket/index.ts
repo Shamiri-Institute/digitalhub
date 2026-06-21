@@ -193,6 +193,11 @@ export async function createEscalation(
       }
 
       await tx.ticketEscalations.create({ data: escalationData });
+
+      await tx.tickets.update({
+        where: { id: ticketId },
+        data: { status: "ESCALATED" },
+      });
     });
 
     return { success: true, message: "Escalation created successfully" };
@@ -216,9 +221,18 @@ export async function resolveTicket(ticketId: string): Promise<ActionResponse> {
     const latestEscalation = await db.ticketEscalations.findFirst({
       where: { ticketId },
       orderBy: { createdAt: "desc" },
+      include: {
+        ticket: {
+          select: { status: true },
+        },
+      },
     });
 
     if (!latestEscalation) throw new Error("No escalation exists for this ticket");
+
+    if (latestEscalation.ticket.status === "RESOLVED") {
+      throw new Error("Ticket is already resolved");
+    }
 
     if (latestEscalation.escalatedToId !== userId) {
       throw new Error("Only the current escalation recipient can resolve this ticket");
