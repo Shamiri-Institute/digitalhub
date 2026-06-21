@@ -12,19 +12,24 @@ import CreateTicketDialog from "./create-ticket-dialog";
 export default function TicketsLoading({
   role = ImplementerRole.FELLOW,
   rows = 5,
+  showCreateButton = true,
 }: {
   role?: ImplementerRole;
   rows?: number;
+  showCreateButton?: boolean;
 }) {
   const loadingColumns = buildSkeletonColumns(
     columns({
       setTicket: () => {},
       setViewDialog: () => {},
+      setEditDialog: () => {},
+      setEscalateDialog: () => {},
       role,
     }),
   );
 
   const renderTableActions = () => {
+    if (!showCreateButton) return null;
     return <CreateTicketDialog disabled />;
   };
 
