@@ -102,7 +102,7 @@
     "tailwind-merge": "^3.6.0",
     "tsx": "^4.22.4",
     "typeid-js": "^1.2.0",
-    "undici": "^7.28.0",
+    "undici": "^7.24.0",
     "zod": "^4.3.5"
   },
   "devDependencies": {
