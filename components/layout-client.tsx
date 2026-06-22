@@ -49,6 +49,7 @@ interface NavigationLinkProps {
   popoverOpen: boolean;
   setPopoverOpen: (open: boolean) => void;
   hubsActive: boolean;
+  ticketsActive: boolean;
 }
 
 export function LayoutClient({
@@ -71,6 +72,7 @@ export function LayoutClient({
   const clinicalActive = subRoute?.includes("clinical");
   const triageActive = subRoute?.includes("triage");
   const hubsActive = subRoute?.includes("hubs") || subRoute?.includes("schools");
+  const ticketsActive = subRoute?.includes("tickets");
 
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -202,6 +204,7 @@ export function LayoutClient({
                 popoverOpen: popoverOpen,
                 setPopoverOpen: setPopoverOpen,
                 hubsActive: hubsActive ?? false,
+                ticketsActive: ticketsActive ?? false,
               })}
           </div>
         </div>
@@ -296,6 +299,7 @@ function getCurrentUserNavigationLinks(
     popoverOpen,
     setPopoverOpen,
     hubsActive,
+    ticketsActive,
   }: NavigationLinkProps,
 ) {
   const links = [];
@@ -382,6 +386,12 @@ function getCurrentUserNavigationLinks(
         <ShieldAlert className="h-5 w-5" />
         <Link href={`/${mainRoute}/triage`}>Triage</Link>
       </div>,
+      ENABLE_TICKETS && NEXT_PUBLIC_ENV !== "production" ? (
+        <div className={`tab-link ${cn(ticketsActive && "active")}`} key="sc-tickets">
+          <Icons.ticket />
+          <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
+        </div>
+      ) : null,
     );
   }
 
