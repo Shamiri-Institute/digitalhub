@@ -619,6 +619,7 @@ model Fellow {
   fellowDocuments         FellowDocuments[]
   sessionRecordings       SessionRecording[]
   triageEvents            TriageEvent[]
+  fellowGroupReports      FellowGroupReport[]
 
   @@map("fellows")
 }
@@ -1063,9 +1064,74 @@ model InterventionGroup {
   studentGroupTransferTrail StudentGroupTransferTrail[]
   sessionRecordings         SessionRecording[]
   attendanceDocuments       AttendanceDocuments[]
+  fellowGroupReports        FellowGroupReport[]
 
   @@unique([leaderId, schoolId], name: "interventionGroupByLeaderIdAndSchoolId")
   @@map("intervention_groups")
+}
+
+enum AdaptationType {
+  CONTENT
+  PACING
+  LANGUAGE
+  FORMAT
+  OTHER
+
+  @@map("adaptation_types")
+}
+
+enum SupportType {
+  TRAINING
+  CHECK_INS
+  MATERIALS
+  PEER_SUPPORT
+  SUFFICIENT
+  OTHER
+
+  @@map("support_types")
+}
+
+model FellowGroupReport {
+  id          String   @id @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  submittedAt DateTime @map("submitted_at") @db.Timestamptz()
+
+  fellowId  String            @map("fellow_id") @db.VarChar(255)
+  fellow    Fellow            @relation(fields: [fellowId], references: [id])
+  groupId   String            @map("group_id") @db.VarChar(255)
+  group     InterventionGroup @relation(fields: [groupId], references: [id])
+  projectId String            @map("project_id") @db.VarChar(100)
+  project   Project           @relation(fields: [projectId], references: [id])
+
+  structuralFidelity        Int             @map("structural_fidelity")
+  processFidelity           Int             @map("process_fidelity")
+  adaptationsMade           Boolean         @map("adaptations_made")
+  adaptationType            AdaptationType? @map("adaptation_type")
+  adaptationReason          String?         @map("adaptation_reason") @db.VarChar(500)
+  behavioralEngagement      Int             @map("behavioral_engagement")
+  reflectiveEngagement      Int             @map("reflective_engagement")
+  psychologicalSafety       Int             @map("psychological_safety")
+  groupCohesion             Int             @map("group_cohesion")
+  climateConcerns           Boolean         @map("climate_concerns")
+  climateConcernsDetail     String?         @map("climate_concerns_detail") @db.VarChar(500)
+  skillComprehension        Int             @map("skill_comprehension")
+  inSessionTransfer         Int             @map("in_session_transfer")
+  homePracticeApplicable    Boolean         @map("home_practice_applicable")
+  homePracticeEngagement    Int?            @map("home_practice_engagement")
+  fellowGroupRelationship   Int             @map("fellow_group_relationship")
+  externalDisruptions       Boolean         @map("external_disruptions")
+  externalDisruptionsDetail String?         @map("external_disruptions_detail") @db.VarChar(500)
+  facilitatorConfidence     Int             @map("facilitator_confidence")
+  hardestAspect             String          @map("hardest_aspect") @db.VarChar(500)
+  challengeImpact           Int             @map("challenge_impact")
+  whatWentWell              String          @map("what_went_well") @db.VarChar(500)
+  supportType               SupportType     @map("support_type")
+  supportDetail             String?         @map("support_detail") @db.VarChar(500)
+
+  @@unique([fellowId, groupId], name: "fellowGroupReportByFellowAndGroup")
+  @@index([groupId])
+  @@index([projectId])
+  @@map("fellow_group_reports")
 }
 
 model InterventionGroupReport {
@@ -1429,6 +1495,7 @@ model Project {
   interventionGroups          InterventionGroup[]
   projectImplementers         ProjectImplementer[]
   MonthlySupervisorEvaluation MonthlySupervisorEvaluation[]
+  fellowGroupReports          FellowGroupReport[]
 
   @@map("projects")
 }
