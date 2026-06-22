@@ -10,21 +10,26 @@ import { columns, type TicketData } from "./columns";
 import CreateTicketDialog from "./create-ticket-dialog";
 
 export default function TicketsLoading({
-  role = ImplementerRole.FELLOW,
+  userRole = ImplementerRole.FELLOW,
   rows = 5,
+  showCreateButton = true,
 }: {
-  role?: ImplementerRole;
+  userRole?: ImplementerRole;
   rows?: number;
+  showCreateButton?: boolean;
 }) {
   const loadingColumns = buildSkeletonColumns(
     columns({
       setTicket: () => {},
       setViewDialog: () => {},
-      role,
+      setEditDialog: () => {},
+      setEscalateDialog: () => {},
+      role: userRole,
     }),
   );
 
   const renderTableActions = () => {
+    if (!showCreateButton) return null;
     return <CreateTicketDialog disabled />;
   };
 

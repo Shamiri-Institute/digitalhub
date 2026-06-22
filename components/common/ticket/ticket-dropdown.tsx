@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
 import { Icons } from "#/components/icons";
 import {
@@ -22,9 +22,13 @@ export function TicketDropdown({
   state: {
     setTicket: Dispatch<SetStateAction<TicketData | undefined>>;
     setViewDialog: Dispatch<SetStateAction<boolean>>;
+    setEditDialog: Dispatch<SetStateAction<boolean>>;
+    setEscalateDialog: Dispatch<SetStateAction<boolean>>;
     role: ImplementerRole;
   };
 }) {
+  const isSupervisor = state.role === ImplementerRole.SUPERVISOR;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -47,6 +51,26 @@ export function TicketDropdown({
         >
           View ticket
         </DropdownMenuItem>
+        {isSupervisor && (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setTicket(ticket);
+                state.setEditDialog(true);
+              }}
+            >
+              Edit ticket
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setTicket(ticket);
+                state.setEscalateDialog(true);
+              }}
+            >
+              Escalate ticket
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
