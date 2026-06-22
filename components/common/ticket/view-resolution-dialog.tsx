@@ -2,7 +2,6 @@
 
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
@@ -54,10 +53,7 @@ export function ViewResolutionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Icons.ticket className="h-5 w-5 text-shamiri-new-blue" />
-            <span className="text-xl">Resolution Details</span>
-          </DialogTitle>
+          <DialogTitle className="text-xl font-bold">Resolution Details</DialogTitle>
         </DialogHeader>
 
         {loading ? (
