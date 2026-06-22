@@ -2,14 +2,14 @@
 import type { Fellow } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
 import { db } from "#/lib/db";
 import { DropoutFellowSchema, SupervisorSchema, WeeklyFellowRatingSchema } from "./schemas";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
 export async function loadFellowsData() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor) {
     throw new Error("Unauthorised user");
@@ -100,54 +100,64 @@ export async function loadFellowsData() {
     }),
   ]);
 
-  return fellows.map((fellow) => ({
-    county: fellow.county,
-    subCounty: fellow.subCounty,
-    fellowName: fellow.fellowName,
-    fellowEmail: fellow.fellowEmail,
-    cellNumber: fellow.cellNumber,
-    mpesaNumber: fellow.mpesaNumber,
-    mpesaName: fellow.mpesaName,
-    createdAt: fellow.createdAt,
-    droppedOut: fellow.droppedOut,
-    droppedOutAt: fellow.droppedOutAt,
-    idNumber: fellow.idNumber,
-    gender: fellow.gender,
-    dateOfBirth: fellow.dateOfBirth ?? null,
-    supervisorId: fellow.supervisorId,
-    supervisorName:
-      supervisors.find((supervisor) => supervisor.id === fellow.supervisorId)?.supervisorName ??
-      null,
-    id: fellow.id,
-    weeklyFellowRatings: fellow.weeklyFellowRatings,
-    supervisors,
-    sessions: fellow.groups.map((group) => ({
-      schoolName: group.school?.schoolName,
-      sessionType:
-        group.school?.interventionSessions[0]?.sessionDate &&
-        group.school?.interventionSessions[0]?.sessionDate > new Date()
-          ? group.school?.interventionSessions[0]?.sessionType
-          : "No upcoming session",
-      groupName: group.groupName,
-      numberOfStudents: group.students.length,
-      students: group.students.map((student) => ({
-        ...student,
-        numClinicalCases: student._count.clinicalCases,
+  const supervisorNameById = new Map(supervisors.map((s) => [s.id, s.supervisorName]));
+  const averageRatingById = new Map(
+    fellowAverageRatings.map((rating) => [rating.id, rating.averageRating]),
+  );
+
+  return fellows.map((fellow) => {
+    const attendancesByGroupId = new Map<string, typeof fellow.fellowAttendances>();
+    for (const attendance of fellow.fellowAttendances) {
+      if (!attendance.groupId) continue;
+      const existing = attendancesByGroupId.get(attendance.groupId);
+      if (existing) {
+        existing.push(attendance);
+      } else {
+        attendancesByGroupId.set(attendance.groupId, [attendance]);
+      }
+    }
+
+    return {
+      county: fellow.county,
+      subCounty: fellow.subCounty,
+      fellowName: fellow.fellowName,
+      fellowEmail: fellow.fellowEmail,
+      cellNumber: fellow.cellNumber,
+      mpesaNumber: fellow.mpesaNumber,
+      mpesaName: fellow.mpesaName,
+      createdAt: fellow.createdAt,
+      droppedOut: fellow.droppedOut,
+      droppedOutAt: fellow.droppedOutAt,
+      idNumber: fellow.idNumber,
+      gender: fellow.gender,
+      dateOfBirth: fellow.dateOfBirth ?? null,
+      supervisorId: fellow.supervisorId,
+      supervisorName: supervisorNameById.get(fellow.supervisorId ?? "") ?? null,
+      id: fellow.id,
+      weeklyFellowRatings: fellow.weeklyFellowRatings,
+      sessions: fellow.groups.map((group) => ({
+        schoolName: group.school?.schoolName,
+        sessionType:
+          group.school?.interventionSessions[0]?.sessionDate &&
+          group.school?.interventionSessions[0]?.sessionDate > new Date()
+            ? group.school?.interventionSessions[0]?.sessionType
+            : "No upcoming session",
+        groupName: group.groupName,
+        numberOfStudents: group.students.length,
+        students: group.students.map((student) => ({
+          ...student,
+          numClinicalCases: student._count.clinicalCases,
+        })),
       })),
-    })),
-    attendances: fellow.fellowAttendances,
-    groups: fellow.groups.map((group) => {
-      return {
+      attendances: fellow.fellowAttendances,
+      groups: fellow.groups.map((group) => ({
         ...group,
-        attendances: fellow.fellowAttendances.filter((attendance) => {
-          return attendance.groupId === group.id;
-        }),
-      };
-    }),
-    complaints: fellow.fellowComplaints,
-    averageRating:
-      Number(fellowAverageRatings.find((rating) => rating.id === fellow.id)?.averageRating) ?? 0,
-  }));
+        attendances: attendancesByGroupId.get(group.id) ?? [],
+      })),
+      complaints: fellow.fellowComplaints,
+      averageRating: Number(averageRatingById.get(fellow.id)) ?? 0,
+    };
+  });
 }
 
 export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {

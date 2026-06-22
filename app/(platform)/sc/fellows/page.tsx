@@ -1,12 +1,12 @@
 import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { loadFellowsData } from "#/app/(platform)/sc/actions";
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import { db } from "#/lib/db";
 import FellowSchoolsDatatable from "../../../../components/common/fellow/fellow-schools-datatable";
 
 export default async function FellowsPage() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }
