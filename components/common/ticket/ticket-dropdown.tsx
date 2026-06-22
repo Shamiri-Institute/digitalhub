@@ -2,6 +2,7 @@
 
 import { ImplementerRole } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -11,6 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { getTicketEscalationStatus } from "#/lib/actions/ticket";
+import type { TicketEscalationStatus } from "#/lib/actions/ticket/types";
 
 import type { TicketData } from "./columns";
 
@@ -22,15 +25,34 @@ export function TicketDropdown({
   state: {
     setTicket: Dispatch<SetStateAction<TicketData | undefined>>;
     setViewDialog: Dispatch<SetStateAction<boolean>>;
-    setEditDialog: Dispatch<SetStateAction<boolean>>;
+    setResolutionDialog: Dispatch<SetStateAction<boolean | "view">>;
     setEscalateDialog: Dispatch<SetStateAction<boolean>>;
     role: ImplementerRole;
   };
 }) {
+  const [status, setStatus] = useState<TicketEscalationStatus | null>(null);
+
+  const fetchStatus = async () => {
+    const result = await getTicketEscalationStatus(ticket.id);
+    if (result.success && result.data) {
+      setStatus(result.data);
+    }
+  };
+
   const isSupervisor = state.role === ImplementerRole.SUPERVISOR;
+  const isResolved = status?.isResolved ?? false;
+  const showEscalate = status?.canEscalate ?? false;
+  const showResolve =
+    !isResolved && isSupervisor && ticket.currentTier === ImplementerRole.SUPERVISOR;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      onOpenChange={(open) => {
+        if (open) {
+          void fetchStatus();
+        }
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <div className="absolute inset-0 border-l">
           <div className="flex h-full w-full items-center justify-center">
@@ -51,25 +73,25 @@ export function TicketDropdown({
         >
           View ticket
         </DropdownMenuItem>
-        {isSupervisor && (
-          <>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setTicket(ticket);
-                state.setEditDialog(true);
-              }}
-            >
-              Edit ticket
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setTicket(ticket);
-                state.setEscalateDialog(true);
-              }}
-            >
-              Escalate ticket
-            </DropdownMenuItem>
-          </>
+        {(showResolve || isResolved) && (
+          <DropdownMenuItem
+            onClick={() => {
+              state.setTicket(ticket);
+              state.setResolutionDialog(showResolve ? true : "view");
+            }}
+          >
+            {showResolve ? "Resolve ticket" : "View resolution"}
+          </DropdownMenuItem>
+        )}
+        {showEscalate && (
+          <DropdownMenuItem
+            onClick={() => {
+              state.setTicket(ticket);
+              state.setEscalateDialog(true);
+            }}
+          >
+            Escalate ticket
+          </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

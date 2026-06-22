@@ -22,7 +22,7 @@ export default function TicketsLoading({
     columns({
       setTicket: () => {},
       setViewDialog: () => {},
-      setEditDialog: () => {},
+      setResolutionDialog: () => {},
       setEscalateDialog: () => {},
       role: userRole,
     }),

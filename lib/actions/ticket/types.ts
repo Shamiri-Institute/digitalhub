@@ -165,3 +165,18 @@ export interface TicketEscalationStatus {
   isResolved: boolean;
   reason?: string;
 }
+
+export interface TicketResolution {
+  id: string;
+  ticketId: string;
+  resolvedById: string;
+  resolvedByRole: string | null;
+  resolutionReason: string;
+  createdAt: Date;
+}
+
+export interface TicketResolutionPayload {
+  ticketId: string;
+  resolvedById: string;
+  resolutionReason: string;
+}
