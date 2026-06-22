@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -64,10 +63,8 @@ export function EditTicketDialog({ ticket, open, onOpenChange }: EditTicketDialo
     const checkEscalationStatus = async () => {
       const result = await getTicketEscalationStatus(ticket.id);
       if (result.success && result.data) {
-        if (!result.data.canEscalate) {
-          setIsDisabled(true);
-          setDisabledReason(result.data.reason ?? "");
-        }
+        setIsDisabled(!result.data.canEscalate);
+        setDisabledReason(result.data.reason ?? "");
       } else if (ticket.status === "RESOLVED") {
         setIsDisabled(true);
         setDisabledReason("Ticket has already been resolved");
@@ -76,6 +73,15 @@ export function EditTicketDialog({ ticket, open, onOpenChange }: EditTicketDialo
 
     void checkEscalationStatus();
   }, [open, ticket, ticket?.id]);
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      form.reset();
+      setIsDisabled(false);
+      setDisabledReason("");
+    }
+    onOpenChange(next);
+  };
 
   const onSubmit = async (data: EditTicketFormData) => {
     if (!ticket?.id) return;
@@ -103,11 +109,10 @@ export function EditTicketDialog({ ticket, open, onOpenChange }: EditTicketDialo
   if (!ticket) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <Icons.ticket className="h-5 w-5 text-shamiri-new-blue" />
+          <DialogTitle className="text-xl font-bold">
             <span>Edit Ticket</span>
           </DialogTitle>
         </DialogHeader>
