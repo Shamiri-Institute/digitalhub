@@ -158,7 +158,7 @@ export function EditTicketDialog({ ticket, open, onOpenChange }: EditTicketDialo
             <Separator />
 
             <DialogFooter className="flex justify-end gap-2">
-              <Button variant="ghost" type="button" onClick={() => onOpenChange(false)}>
+              <Button variant="ghost" type="button" onClick={() => handleOpenChange(false)}>
                 Cancel
               </Button>
               <Button
