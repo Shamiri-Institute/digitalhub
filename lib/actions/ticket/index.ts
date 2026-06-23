@@ -83,7 +83,6 @@ export async function getAllTickets(filters: TicketFilters): Promise<ActionRespo
 
     if (!handler) throw new Error("No handler was found for this role");
     const activeImplementerId = session.user.activeMembership?.implementerId;
-    console.log("iddd", session.user.id, activeImplementerId)
 
     const tickets = await handler(session.user.id, activeImplementerId ?? "", filters);
 
@@ -109,12 +108,11 @@ export async function getEscalationsPerTicket(
 
     const escalations = await db.ticketEscalations.findMany({
       where: {
-        ticketId
+        ticketId,
       },
       orderBy: { createdAt: "asc" },
     });
 
-    console.log("escalations", escalations)
     if (escalations.length === 0) throw new Error("No escalations were found for this ticket");
 
     const escalationsCount = escalations.length;
@@ -126,8 +124,6 @@ export async function getEscalationsPerTicket(
       ...escalation,
       escOrder: index + 1,
     }));
-
-    console.log("ordered escalations", orderedEscalations)
 
     const handler = fetchEscalationMappingHandlers[escalationsCount];
     const mappedEscalations = await handler(orderedEscalations, ticketCategory);
@@ -275,7 +271,6 @@ export async function getTicketEscalationStatus(
     if (!session?.user.id) throw new Error("Not authenticated");
 
     const userId = session.user.id;
-    console.log("roleee")
 
     const ticket = await db.tickets.findUnique({
       where: { id: ticketId },
@@ -560,7 +555,6 @@ const fetchEscalationMappingHandlers: Record<EscalationCount, FetchEscalationMap
     const firstEscalation = orderedEscalations.find((esc) => esc.escOrder === 1);
     const secondEscalation = orderedEscalations.find((esc) => esc.escOrder === 2);
 
-    console.log("were heree", orderedEscalations)
     if (
       !firstEscalation?.escalatedById ||
       !firstEscalation?.escalatedToId ||
@@ -570,7 +564,6 @@ const fetchEscalationMappingHandlers: Record<EscalationCount, FetchEscalationMap
     }
 
     const recipientRole = ESCALATION_RECIPIENT_FROM_CATEGORY[ticketCategory];
-    console.log("recipient rile", recipientRole)
     const names = await getEscalationUserNames(
       firstEscalation.escalatedById,
       firstEscalation.escalatedToId,
@@ -578,7 +571,6 @@ const fetchEscalationMappingHandlers: Record<EscalationCount, FetchEscalationMap
       recipientRole,
     );
 
-    console.log("namesss", names)
     return [
       {
         ...firstEscalation,
@@ -680,8 +672,6 @@ async function getEscalationUserNames(
       AND im_third.role = ${Prisma.sql`${lookup.role}::implementer_roles`}
     LIMIT 1
   `;
-
-  console.log("resultt", result)
 
   const { fellow_name, supervisor_name, third_name } = result[0] ?? {};
 

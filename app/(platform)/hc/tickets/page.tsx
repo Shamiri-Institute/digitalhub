@@ -20,7 +20,9 @@ export default async function TicketsPage() {
     <div className="px-6 py-5">
       <TicketsDatatable
         tickets={tickets}
-        role={hubCoordinator?.session?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR}
+        role={
+          hubCoordinator?.session?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR
+        }
         showCreateButton={false}
       />
     </div>

@@ -31,7 +31,7 @@ export const ESCALATION_INITIATOR_ROLES: EscalationInitiatorRole[] = [
   "FELLOW",
   "SUPERVISOR",
   "HUB_COORDINATOR",
-  "CLINICAL_LEAD"
+  "CLINICAL_LEAD",
 ];
 
 export type EscalationRecipientRole = Extract<

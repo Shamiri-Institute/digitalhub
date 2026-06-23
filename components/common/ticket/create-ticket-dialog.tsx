@@ -71,14 +71,14 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
 
   return (
     <Dialog
-        open={open}
-        onOpenChange={(open) => {
-          if (!open) {
-            form.reset();
-          }
-          setOpen(open);
-        }}
-      >
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) {
+          form.reset();
+        }
+        setOpen(open);
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="brand" className="flex gap-1" disabled={disabled}>
           <Icons.plusCircle className="h-4 w-4" />

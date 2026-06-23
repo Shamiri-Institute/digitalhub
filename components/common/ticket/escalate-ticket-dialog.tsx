@@ -87,20 +87,20 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
 
   return (
     <Dialog
-        open={open}
-        onOpenChange={(open) => {
-          if (!open) {
-            form.reset();
-          }
-          onOpenChange(open);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Escalate Ticket</DialogTitle>
-          </DialogHeader>
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) {
+          form.reset();
+        }
+        onOpenChange(open);
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">Escalate Ticket</DialogTitle>
+        </DialogHeader>
 
-          <Form {...form}>
+        <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex flex-col">
               <div className="grid grid-cols-2 gap-3">
@@ -116,7 +116,6 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
                         onValueChange={field.onChange}
                         value={field.value}
                         defaultValue={field.value}
-
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -147,7 +146,6 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
                             {...field}
                             placeholder="Explain why this ticket needs to be escalated"
                             className="min-h-[100px]"
-
                           />
                         </FormControl>
                         <FormMessage />
