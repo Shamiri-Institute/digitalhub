@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { getTicketEscalationStatus } from "#/lib/actions/ticket";
-import type { TicketEscalationStatus } from "#/lib/actions/ticket/types";
+import { ESCALATION_RECIPIENT_ROLES, type TicketEscalationStatus } from "#/lib/actions/ticket/types";
 
 import type { TicketData } from "./columns";
 
@@ -34,16 +34,16 @@ export function TicketDropdown({
 
   const fetchStatus = async () => {
     const result = await getTicketEscalationStatus(ticket.id);
+    console.log("dataaa", result)
     if (result.success && result.data) {
       setStatus(result.data);
     }
   };
 
-  const isSupervisor = state.role === ImplementerRole.SUPERVISOR;
   const isResolved = status?.isResolved ?? false;
   const showEscalate = status?.canEscalate ?? false;
-  const showResolve =
-    !isResolved && isSupervisor && ticket.currentTier === ImplementerRole.SUPERVISOR;
+  const isEscalationRecipient = ESCALATION_RECIPIENT_ROLES.includes(state.role as (typeof ESCALATION_RECIPIENT_ROLES)[number]);
+  const showResolve = !isResolved && isEscalationRecipient && ticket.currentTier === state.role;
 
   return (
     <DropdownMenu

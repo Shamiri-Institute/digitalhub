@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "#/components/ui/button";
@@ -30,7 +29,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
-import { getTicketEscalationStatus, resolveTicket } from "#/lib/actions/ticket";
+import { resolveTicket } from "#/lib/actions/ticket";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { TicketData } from "./columns";
@@ -50,8 +49,6 @@ interface ResolveTicketDialogProps {
 
 export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicketDialogProps) {
   const router = useRouter();
-  const [isDisabled, setIsDisabled] = useState(false);
-  const [disabledReason, setDisabledReason] = useState<string>("");
 
   const form = useForm<ResolveTicketFormData>({
     resolver: zodResolver(ResolveTicketSchema),
@@ -62,33 +59,6 @@ export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicke
   });
 
   const resolveValue = form.watch("resolve");
-
-  useEffect(() => {
-    if (!open || !ticket?.id) return;
-
-    const checkStatus = async () => {
-      const result = await getTicketEscalationStatus(ticket.id);
-      if (result.success && result.data) {
-        if (result.data.isResolved) {
-          setIsDisabled(true);
-          setDisabledReason("Ticket has already been resolved");
-        } else if (!result.data.canEscalate) {
-          setIsDisabled(true);
-          setDisabledReason("You have already escalated this ticket");
-        }
-      }
-    };
-
-    void checkStatus();
-  }, [open, ticket, ticket?.id]);
-
-  useEffect(() => {
-    if (!open) {
-      form.reset();
-      setIsDisabled(false);
-      setDisabledReason("");
-    }
-  }, [open, form]);
 
   const onSubmit = async (data: ResolveTicketFormData) => {
     if (!ticket?.id) return;
@@ -116,19 +86,21 @@ export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicke
   if (!ticket) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Resolve Ticket</DialogTitle>
-        </DialogHeader>
+    <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          if (!open) {
+            form.reset();
+          }
+          onOpenChange(open);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Resolve Ticket</DialogTitle>
+          </DialogHeader>
 
-        {isDisabled && (
-          <div className="rounded-md bg-yellow-bg border border-yellow-border p-3">
-            <p className="text-sm text-yellow-base font-medium">{disabledReason}</p>
-          </div>
-        )}
-
-        <Form {...form}>
+          <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex flex-col">
               <div className="grid grid-cols-2 gap-3">
@@ -144,7 +116,7 @@ export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicke
                         onValueChange={field.onChange}
                         value={field.value}
                         defaultValue={field.value}
-                        disabled={isDisabled}
+
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -175,7 +147,7 @@ export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicke
                             {...field}
                             placeholder="Explain how this ticket was resolved"
                             className="min-h-[100px]"
-                            disabled={isDisabled}
+
                           />
                         </FormControl>
                         <FormMessage />
@@ -195,7 +167,7 @@ export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicke
               <Button
                 variant="brand"
                 type="submit"
-                disabled={form.formState.isSubmitting || isDisabled}
+                disabled={form.formState.isSubmitting}
                 loading={form.formState.isSubmitting}
               >
                 Resolve Ticket

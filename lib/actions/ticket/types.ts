@@ -24,13 +24,14 @@ export type TicketPriorityLevel = z.infer<typeof TicketPriorityLevelEnum>;
 
 export type EscalationInitiatorRole = Extract<
   ImplementerRole,
-  "FELLOW" | "SUPERVISOR" | "HUB_COORDINATOR"
+  "FELLOW" | "SUPERVISOR" | "HUB_COORDINATOR" | "CLINICAL_LEAD"
 >;
 
 export const ESCALATION_INITIATOR_ROLES: EscalationInitiatorRole[] = [
   "FELLOW",
   "SUPERVISOR",
   "HUB_COORDINATOR",
+  "CLINICAL_LEAD"
 ];
 
 export type EscalationRecipientRole = Extract<
@@ -58,7 +59,7 @@ export type FetchEscalationRecipientHandler = (
   implementerId: string,
 ) => Promise<string | null>;
 
-export type EscalationCount = 1 | 2;
+export type EscalationCount = 1 | 2 | 3;
 
 export type FetchEscalationMappingHandler = (
   orderedEscalations: OrderedEscalation[],
@@ -81,6 +82,7 @@ export const ESCALATION_RECIPIENT_FROM_INITIATOR: Record<
   SUPERVISOR: (category?: TicketCategory): EscalationRecipientRole =>
     category ? ESCALATION_RECIPIENT_FROM_CATEGORY[category] : "HUB_COORDINATOR",
   HUB_COORDINATOR: (): EscalationRecipientRole => "ADMIN",
+  CLINICAL_LEAD: (): EscalationRecipientRole => "ADMIN",
 };
 
 export const IMPLEMENTER_ROLE_TABLE_LOOKUP: Record<

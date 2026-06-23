@@ -2,7 +2,7 @@
 
 import { TicketCategory, TicketPriorityLevel } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Icons } from "#/components/icons";
@@ -51,12 +51,6 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
     },
   });
 
-  useEffect(() => {
-    if (!open) {
-      form.reset();
-    }
-  }, [open, form]);
-
   const onSubmit = async (data: z.infer<typeof CreateTicketSchema>) => {
     const response = await createTicket(data);
     if (!response.success) {
@@ -76,7 +70,15 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          if (!open) {
+            form.reset();
+          }
+          setOpen(open);
+        }}
+      >
       <DialogTrigger asChild>
         <Button variant="brand" className="flex gap-1" disabled={disabled}>
           <Icons.plusCircle className="h-4 w-4" />
