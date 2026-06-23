@@ -46,6 +46,7 @@ model User {
   escalationsMade                         TicketEscalations[]                       @relation("EscalatedByUser")
   escalationsReceived                     TicketEscalations[]                       @relation("EscalatedToUser")
   tickets                                 Tickets[]
+  resolvedTickets                         TicketResolutions[]                   @relation("resolvedByUser")
 
   @@map("users")
 }
@@ -1890,6 +1891,7 @@ model Tickets {
   updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
 
   escalations TicketEscalations[]
+  resolutions TicketResolutions[]
 
   @@map("tickets")
 }
@@ -1908,4 +1910,18 @@ model TicketEscalations {
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@map("ticket_escalations")
+}
+
+model TicketResolutions {
+  id               String    @id @default(cuid())
+  ticketId         String    @unique @map("ticket_id") @db.VarChar(255)
+  ticket           Tickets   @relation(fields: [ticketId], references: [id])
+  resolvedById     String    @map("resolved_by") @db.VarChar(255)
+  resolvedByUser   User      @relation("resolvedByUser", fields: [resolvedById], references: [id])
+  resolutionReason String    @map("resolution_reason") @db.Text()
+  archivedAt       DateTime? @map("archived_at")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("ticket_resolutions")
 }
