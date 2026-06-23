@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -118,10 +117,7 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <Icons.ticket className="h-5 w-5 text-shamiri-new-blue" />
-            <span>Escalate Ticket</span>
-          </DialogTitle>
+          <DialogTitle className="text-xl font-bold">Escalate Ticket</DialogTitle>
         </DialogHeader>
 
         {isDisabled && (

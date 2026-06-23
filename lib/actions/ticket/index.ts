@@ -26,6 +26,7 @@ import {
   type TicketEscalationStatus,
   type TicketFilters,
   type TicketQueryRole,
+  type TicketResolution,
 } from "./types";
 
 export async function createTicket(payload: CreateTicketInput): Promise<ActionResponse> {
@@ -206,7 +207,10 @@ export async function createEscalation(
   }
 }
 
-export async function resolveTicket(ticketId: string): Promise<ActionResponse> {
+export async function resolveTicket(
+  ticketId: string,
+  resolutionReason: string,
+): Promise<ActionResponse> {
   try {
     const session = await getCurrentUserSession();
     if (!session?.user.id) throw new Error("The session has not been authenticated");
@@ -238,6 +242,14 @@ export async function resolveTicket(ticketId: string): Promise<ActionResponse> {
       if (latestEscalation.escalatedToId !== userId) {
         throw new Error("Only the current escalation recipient can resolve this ticket");
       }
+
+      await tx.ticketResolutions.create({
+        data: {
+          ticketId,
+          resolvedById: userId,
+          resolutionReason,
+        },
+      });
 
       await tx.tickets.update({
         where: { id: ticketId },
@@ -295,6 +307,58 @@ export async function getTicketEscalationStatus(
       success: true,
       message: "Ticket escalation status retrieved",
       data: { canEscalate: true, isResolved: false },
+    };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function getTicketResolution(
+  ticketId: string,
+): Promise<ActionResponse<TicketResolution>> {
+  try {
+    const session = await getCurrentUserSession();
+    if (!session?.user.id) throw new Error("Not authenticated");
+
+    const escalationParticipant = await db.ticketEscalations.findFirst({
+      where: {
+        ticketId,
+        OR: [{ escalatedById: session.user.id }, { escalatedToId: session.user.id }],
+      },
+      take: 1,
+    });
+
+    if (!escalationParticipant)
+      throw new Error("You are not authorized to view this ticket's resolution");
+
+    const resolution = await db.ticketResolutions.findFirst({
+      where: { ticketId },
+      include: {
+        resolvedByUser: {
+          include: {
+            memberships: {
+              select: { role: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!resolution) throw new Error("No memberships found for this role");
+
+    const resolvedByRole = resolution.resolvedByUser?.memberships?.[0]?.role ?? null;
+
+    return {
+      success: true,
+      message: "Resolution retrieved successfully",
+      data: {
+        id: resolution.id,
+        ticketId: resolution.ticketId,
+        resolvedById: resolution.resolvedById,
+        resolvedByRole,
+        resolutionReason: resolution.resolutionReason,
+        createdAt: resolution.createdAt,
+      },
     };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };

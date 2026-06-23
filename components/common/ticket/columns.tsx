@@ -13,7 +13,7 @@ export type TicketData = FullTicket;
 export const columns = (state: {
   setTicket: Dispatch<SetStateAction<TicketData | undefined>>;
   setViewDialog: Dispatch<SetStateAction<boolean>>;
-  setEditDialog: Dispatch<SetStateAction<boolean>>;
+  setResolutionDialog: Dispatch<SetStateAction<boolean | "view">>;
   setEscalateDialog: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
 }): ColumnDef<TicketData>[] => {

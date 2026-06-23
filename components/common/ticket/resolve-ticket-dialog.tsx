@@ -28,66 +28,73 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
+import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { getTicketEscalationStatus, resolveTicket } from "#/lib/actions/ticket";
+import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { TicketData } from "./columns";
 
-const EditTicketSchema = z.object({
-  status: z.enum(["resolve"]).optional(),
+const ResolveTicketSchema = z.object({
+  resolve: z.enum(["yes", "no"]),
+  resolutionReason: stringValidation("Resolution reason is required"),
 });
 
-type EditTicketFormData = z.infer<typeof EditTicketSchema>;
+type ResolveTicketFormData = z.infer<typeof ResolveTicketSchema>;
 
-interface EditTicketDialogProps {
+interface ResolveTicketDialogProps {
   ticket: TicketData | undefined;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditTicketDialog({ ticket, open, onOpenChange }: EditTicketDialogProps) {
+export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicketDialogProps) {
   const router = useRouter();
   const [isDisabled, setIsDisabled] = useState(false);
   const [disabledReason, setDisabledReason] = useState<string>("");
 
-  const form = useForm<EditTicketFormData>({
-    resolver: zodResolver(EditTicketSchema),
+  const form = useForm<ResolveTicketFormData>({
+    resolver: zodResolver(ResolveTicketSchema),
     defaultValues: {
-      status: undefined,
+      resolve: "no",
+      resolutionReason: "",
     },
   });
+
+  const resolveValue = form.watch("resolve");
 
   useEffect(() => {
     if (!open || !ticket?.id) return;
 
-    const checkEscalationStatus = async () => {
+    const checkStatus = async () => {
       const result = await getTicketEscalationStatus(ticket.id);
       if (result.success && result.data) {
-        setIsDisabled(!result.data.canEscalate);
-        setDisabledReason(result.data.reason ?? "");
-      } else if (ticket.status === "RESOLVED") {
-        setIsDisabled(true);
-        setDisabledReason("Ticket has already been resolved");
+        if (result.data.isResolved) {
+          setIsDisabled(true);
+          setDisabledReason("Ticket has already been resolved");
+        } else if (!result.data.canEscalate) {
+          setIsDisabled(true);
+          setDisabledReason("You have already escalated this ticket");
+        }
       }
     };
 
-    void checkEscalationStatus();
+    void checkStatus();
   }, [open, ticket, ticket?.id]);
 
-  const handleOpenChange = (next: boolean) => {
-    if (!next) {
+  useEffect(() => {
+    if (!open) {
       form.reset();
       setIsDisabled(false);
       setDisabledReason("");
     }
-    onOpenChange(next);
-  };
+  }, [open, form]);
 
-  const onSubmit = async (data: EditTicketFormData) => {
+  const onSubmit = async (data: ResolveTicketFormData) => {
     if (!ticket?.id) return;
 
-    if (data.status === "resolve") {
-      const result = await resolveTicket(ticket.id);
+    if (data.resolve === "yes") {
+      const result = await resolveTicket(ticket.id, data.resolutionReason);
       if (!result.success) {
         toast({
           variant: "destructive",
@@ -109,12 +116,10 @@ export function EditTicketDialog({ ticket, open, onOpenChange }: EditTicketDialo
   if (!ticket) return null;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            <span>Edit Ticket</span>
-          </DialogTitle>
+          <DialogTitle className="text-xl font-bold">Resolve Ticket</DialogTitle>
         </DialogHeader>
 
         {isDisabled && (
@@ -129,10 +134,12 @@ export function EditTicketDialog({ ticket, open, onOpenChange }: EditTicketDialo
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="resolve"
                   render={({ field }) => (
                     <FormItem className="col-span-2">
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>
+                        Resolve <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
@@ -141,24 +148,48 @@ export function EditTicketDialog({ ticket, open, onOpenChange }: EditTicketDialo
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select action" />
+                            <SelectValue placeholder="Select option" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="resolve">Resolve ticket</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {resolveValue === "yes" && (
+                  <FormField
+                    control={form.control}
+                    name="resolutionReason"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>
+                          Resolution Reason <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Explain how this ticket was resolved"
+                            className="min-h-[100px]"
+                            disabled={isDisabled}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
             </div>
 
             <Separator />
 
             <DialogFooter className="flex justify-end gap-2">
-              <Button variant="ghost" type="button" onClick={() => handleOpenChange(false)}>
+              <Button variant="ghost" type="button" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button
@@ -167,7 +198,7 @@ export function EditTicketDialog({ ticket, open, onOpenChange }: EditTicketDialo
                 disabled={form.formState.isSubmitting || isDisabled}
                 loading={form.formState.isSubmitting}
               >
-                Submit
+                Resolve Ticket
               </Button>
             </DialogFooter>
           </form>
