@@ -19,6 +19,10 @@ export default function RenderSCReportingTabs() {
       name: "Student group evaluation",
       href: "/sc/reporting/fellow-reports/student-group-evaluation",
     },
+    {
+      name: "Group report",
+      href: "/sc/reporting/fellow-reports/group-report",
+    },
     { name: "Complaints", href: "/sc/reporting/fellow-reports/complaints" },
   ];
 
