@@ -697,6 +697,8 @@ async function getEscalationUserNamesForThirdEscalation(
 
   const result = await db.$queryRaw<
     {
+      user_id: string;
+      role: string;
       fellow_name: string | null;
       supervisor_name: string | null;
       third_name: string | null;
@@ -704,42 +706,46 @@ async function getEscalationUserNamesForThirdEscalation(
     }[]
   >`
     SELECT
+      im.user_id,
+      im.role,
       f.fellow_name,
       s.supervisor_name,
       ${Prisma.raw(`t.${lookup.nameColumn}`)} AS third_name,
       a.name AS admin_name
-    FROM implementer_members im_fellow
-    CROSS JOIN implementer_members im_supervisor
-    CROSS JOIN implementer_members im_third
-    CROSS JOIN implementer_members im_admin
-    LEFT JOIN fellows f ON f.id = im_fellow.identifier
-    LEFT JOIN supervisors s ON s.id = im_supervisor.identifier
+    FROM implementer_members im
+    LEFT JOIN fellows f
+      ON f.id = im.identifier
+      AND im.role = 'FELLOW'::implementer_roles
+    LEFT JOIN supervisors s
+      ON s.id = im.identifier
+      AND im.role = 'SUPERVISOR'::implementer_roles
     LEFT JOIN ${Prisma.raw(lookup.table)} t
-      ON t.id = im_third.identifier
-      AND im_third.role = ${Prisma.sql`${lookup.role}::implementer_roles`}
-    LEFT JOIN admin_users a ON a.id = im_admin.identifier
-      AND im_admin.role = 'ADMIN'::implementer_roles
-    WHERE im_fellow.user_id = ${fellowUserId}
-      AND im_fellow.role = 'FELLOW'::implementer_roles
-      AND im_supervisor.user_id = ${supervisorUserId}
-      AND im_supervisor.role = 'SUPERVISOR'::implementer_roles
-      AND im_third.user_id = ${thirdUserId}
-      AND im_third.role = ${Prisma.sql`${lookup.role}::implementer_roles`}
-      AND im_admin.user_id = ${adminUserId}
-      AND im_admin.role = 'ADMIN'::implementer_roles
-    LIMIT 1
+      ON t.id = im.identifier
+      AND im.role = ${Prisma.sql`${lookup.role}::implementer_roles`}
+    LEFT JOIN admin_users a
+      ON a.id = im.identifier
+      AND im.role = 'ADMIN'::implementer_roles
+    WHERE (im.user_id = ${fellowUserId} AND im.role = 'FELLOW'::implementer_roles)
+      OR (im.user_id = ${supervisorUserId} AND im.role = 'SUPERVISOR'::implementer_roles)
+      OR (im.user_id = ${thirdUserId} AND im.role = ${Prisma.sql`${lookup.role}::implementer_roles`})
+      OR (im.user_id = ${adminUserId} AND im.role = 'ADMIN'::implementer_roles)
   `;
 
-  const { fellow_name, supervisor_name, third_name, admin_name } = result[0] ?? {};
+  const rowMap = Object.fromEntries(result.map((row) => [row.user_id, row]));
 
-  if (!fellow_name || !supervisor_name || !third_name || !admin_name) {
+  const fellowName = rowMap[fellowUserId]?.fellow_name;
+  const supervisorName = rowMap[supervisorUserId]?.supervisor_name;
+  const thirdName = rowMap[thirdUserId]?.third_name;
+  const adminName = rowMap[adminUserId]?.admin_name;
+
+  if (!fellowName || !supervisorName || !thirdName || !adminName) {
     throw new Error("Could not resolve all escalation user names");
   }
 
   return {
-    fellowName: fellow_name,
-    supervisorName: supervisor_name,
-    thirdName: third_name,
-    adminName: admin_name,
+    fellowName,
+    supervisorName,
+    thirdName,
+    adminName,
   };
 }
