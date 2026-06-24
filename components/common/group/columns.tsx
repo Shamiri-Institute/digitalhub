@@ -16,6 +16,7 @@ export type SchoolGroupDataTableData = {
   supervisorId: string;
   supervisorName: string;
   schoolId: string;
+  projectId: string;
   archivedAt: string;
   groupRating: number | null;
   students: Prisma.StudentGetPayload<{
