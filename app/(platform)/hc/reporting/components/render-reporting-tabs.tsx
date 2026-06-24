@@ -18,6 +18,10 @@ export default function RenderReportingTabs() {
       name: "Student group evaluation",
       href: "/hc/reporting/fellow-reports/student-group-evaluation",
     },
+    {
+      name: "Group report",
+      href: "/hc/reporting/fellow-reports/group-report",
+    },
     { name: "Complaints", href: "/hc/reporting/fellow-reports/complaints" },
   ];
 
