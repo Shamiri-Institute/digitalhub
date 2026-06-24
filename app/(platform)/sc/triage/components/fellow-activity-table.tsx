@@ -8,6 +8,7 @@ import type {
   TriageEventForSupervisor,
 } from "#/app/(platform)/sc/triage/action";
 import CreateClinicalCaseModal from "#/app/(platform)/sc/triage/components/create-clinical-case-modal";
+import TriageDetailsModal from "#/app/(platform)/sc/triage/components/triage-details-modal";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
@@ -57,10 +58,12 @@ function FellowEventSubTable({
   events,
   supervisorId,
   onCreateCase,
+  onViewDetails,
 }: {
   events: TriageEventForSupervisor[];
   supervisorId: string;
   onCreateCase: (id: string) => void;
+  onViewDetails: (event: TriageEventForSupervisor) => void;
 }) {
   const columns = useMemo<ColumnDef<TriageEventForSupervisor>[]>(
     () => [
@@ -146,39 +149,42 @@ function FellowEventSubTable({
         id: "button",
         cell: ({ row }) => {
           const e = row.original;
-          if (e.referredSupervisorId === supervisorId && !e.clinicalCaseExists) {
-            return (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div className="absolute inset-0 border-l bg-white">
-                    <div className="flex h-full w-full items-center justify-center">
-                      <Icons.moreHorizontal className="text-shamiri-text-grey h-5 w-5" />
-                    </div>
+          const canCreateCase = e.referredSupervisorId === supervisorId && !e.clinicalCaseExists;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="absolute inset-0 border-l bg-white">
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Icons.moreHorizontal className="text-shamiri-text-grey h-5 w-5" />
                   </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>
-                    <span className="text-shamiri-text-grey text-xs font-medium uppercase">
-                      Actions
-                    </span>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>
+                  <span className="text-shamiri-text-grey text-xs font-medium uppercase">
+                    Actions
+                  </span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-shamiri-black" onClick={() => onViewDetails(e)}>
+                  View details
+                </DropdownMenuItem>
+                {canCreateCase && (
                   <DropdownMenuItem
                     className="text-shamiri-black"
                     onClick={() => onCreateCase(e.id)}
                   >
                     Create clinical case
                   </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            );
-          }
-          return null;
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
         },
         enableHiding: false,
       },
     ],
-    [supervisorId, onCreateCase],
+    [supervisorId, onCreateCase, onViewDetails],
   );
 
   return (
@@ -205,6 +211,7 @@ export default function FellowActivityTable({
   supervisorId: string;
 }) {
   const [caseTarget, setCaseTarget] = useState<string | null>(null);
+  const [detailsTarget, setDetailsTarget] = useState<TriageEventForSupervisor | null>(null);
 
   const eventsByFellow = useMemo(
     () =>
@@ -334,6 +341,10 @@ export default function FellowActivityTable({
   );
 
   const handleCreateCase = useCallback((id: string) => setCaseTarget(id), []);
+  const handleViewDetails = useCallback(
+    (event: TriageEventForSupervisor) => setDetailsTarget(event),
+    [],
+  );
 
   return (
     <>
@@ -352,6 +363,7 @@ export default function FellowActivityTable({
             events={row.original.events}
             supervisorId={supervisorId}
             onCreateCase={handleCreateCase}
+            onViewDetails={handleViewDetails}
           />
         )}
       />
@@ -360,6 +372,13 @@ export default function FellowActivityTable({
           triageEventId={caseTarget}
           isOpen={true}
           onClose={() => setCaseTarget(null)}
+        />
+      )}
+      {detailsTarget && (
+        <TriageDetailsModal
+          event={detailsTarget}
+          isOpen={true}
+          onClose={() => setDetailsTarget(null)}
         />
       )}
     </>
