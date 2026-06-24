@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "#/components/ui/button";
@@ -30,7 +29,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
-import { createEscalation, getTicketEscalationStatus } from "#/lib/actions/ticket";
+import { createEscalation } from "#/lib/actions/ticket";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { TicketData } from "./columns";
@@ -50,8 +49,6 @@ interface EscalateTicketDialogProps {
 
 export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTicketDialogProps) {
   const router = useRouter();
-  const [isDisabled, setIsDisabled] = useState(false);
-  const [disabledReason, setDisabledReason] = useState<string>("");
 
   const form = useForm<EscalateTicketFormData>({
     resolver: zodResolver(EscalateTicketSchema),
@@ -62,31 +59,6 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
   });
 
   const escalateValue = form.watch("escalate");
-
-  useEffect(() => {
-    if (!open || !ticket?.id) return;
-
-    const checkEscalationStatus = async () => {
-      const result = await getTicketEscalationStatus(ticket.id);
-      if (result.success && result.data) {
-        setIsDisabled(!result.data.canEscalate);
-        setDisabledReason(result.data.reason ?? "");
-      } else if (ticket.status === "RESOLVED") {
-        setIsDisabled(true);
-        setDisabledReason("Ticket has already been resolved");
-      }
-    };
-
-    void checkEscalationStatus();
-  }, [open, ticket, ticket?.id]);
-
-  useEffect(() => {
-    if (!open) {
-      form.reset();
-      setIsDisabled(false);
-      setDisabledReason("");
-    }
-  }, [open, form]);
 
   const onSubmit = async (data: EscalateTicketFormData) => {
     if (!ticket?.id) return;
@@ -114,17 +86,19 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
   if (!ticket) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) {
+          form.reset();
+        }
+        onOpenChange(open);
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Escalate Ticket</DialogTitle>
         </DialogHeader>
-
-        {isDisabled && (
-          <div className="rounded-md bg-yellow-bg border border-yellow-border p-3">
-            <p className="text-sm text-yellow-base font-medium">{disabledReason}</p>
-          </div>
-        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -142,7 +116,6 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
                         onValueChange={field.onChange}
                         value={field.value}
                         defaultValue={field.value}
-                        disabled={isDisabled}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -173,7 +146,6 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
                             {...field}
                             placeholder="Explain why this ticket needs to be escalated"
                             className="min-h-[100px]"
-                            disabled={isDisabled}
                           />
                         </FormControl>
                         <FormMessage />
@@ -193,7 +165,7 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
               <Button
                 variant="brand"
                 type="submit"
-                disabled={form.formState.isSubmitting || isDisabled}
+                disabled={form.formState.isSubmitting}
                 loading={form.formState.isSubmitting}
               >
                 Escalate Ticket
