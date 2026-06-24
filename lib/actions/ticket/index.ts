@@ -519,34 +519,42 @@ const fetchEscalationMappingHandlers: Record<EscalationCount, FetchEscalationMap
     }
 
     const result = await db.$queryRaw<
-      { fellow_name: string | null; supervisor_name: string | null }[]
+      {
+        user_id: string;
+        fellow_name: string | null;
+        supervisor_name: string | null;
+      }[]
     >`
       SELECT
+        im.user_id,
         f.fellow_name,
         s.supervisor_name
-      FROM implementer_members im_fellow
-      CROSS JOIN implementer_members im_supervisor
-      LEFT JOIN fellows f ON f.id = im_fellow.identifier
-      LEFT JOIN supervisors s ON s.id = im_supervisor.identifier
-      WHERE im_fellow.user_id = ${firstEscalation.escalatedById}
-        AND im_fellow.role = 'FELLOW'
-        AND im_supervisor.user_id = ${firstEscalation.escalatedToId}
-        AND im_supervisor.role = 'SUPERVISOR'
-      LIMIT 1
+      FROM implementer_members im
+      LEFT JOIN fellows f
+        ON f.id = im.identifier
+        AND im.role = 'FELLOW'::implementer_roles
+      LEFT JOIN supervisors s
+        ON s.id = im.identifier
+        AND im.role = 'SUPERVISOR'::implementer_roles
+      WHERE (im.user_id = ${firstEscalation.escalatedById} AND im.role = 'FELLOW'::implementer_roles)
+        OR (im.user_id = ${firstEscalation.escalatedToId} AND im.role = 'SUPERVISOR'::implementer_roles)
     `;
 
-    const { fellow_name, supervisor_name } = result[0] ?? {};
+    const rowMap = Object.fromEntries(result.map((row) => [row.user_id, row]));
 
-    if (!fellow_name || !supervisor_name) {
+    const fellowName = rowMap[firstEscalation.escalatedById]?.fellow_name;
+    const supervisorName = rowMap[firstEscalation.escalatedToId]?.supervisor_name;
+
+    if (!fellowName || !supervisorName) {
       throw new Error("Fellow or supervisor name not found");
     }
 
     return [
       {
         ...firstEscalation,
-        escalatedByName: fellow_name,
+        escalatedByName: fellowName,
         escalatedByRole: "FELLOW",
-        escalatedToName: supervisor_name,
+        escalatedToName: supervisorName,
         escalatedToRole: "SUPERVISOR",
       },
     ];
@@ -647,42 +655,48 @@ async function getEscalationUserNames(
 
   const result = await db.$queryRaw<
     {
+      user_id: string;
+      role: string;
       fellow_name: string | null;
       supervisor_name: string | null;
       third_name: string | null;
     }[]
   >`
     SELECT
+      im.user_id,
+      im.role,
       f.fellow_name,
       s.supervisor_name,
       ${Prisma.raw(`t.${lookup.nameColumn}`)} AS third_name
-    FROM implementer_members im_fellow
-    CROSS JOIN implementer_members im_supervisor
-    CROSS JOIN implementer_members im_third
-    LEFT JOIN fellows f ON f.id = im_fellow.identifier
-    LEFT JOIN supervisors s ON s.id = im_supervisor.identifier
+    FROM implementer_members im
+    LEFT JOIN fellows f
+      ON f.id = im.identifier
+      AND im.role = 'FELLOW'::implementer_roles
+    LEFT JOIN supervisors s
+      ON s.id = im.identifier
+      AND im.role = 'SUPERVISOR'::implementer_roles
     LEFT JOIN ${Prisma.raw(lookup.table)} t
-      ON t.id = im_third.identifier
-      AND im_third.role = ${Prisma.sql`${lookup.role}::implementer_roles`}
-    WHERE im_fellow.user_id = ${fellowUserId}
-      AND im_fellow.role = 'FELLOW'::implementer_roles
-      AND im_supervisor.user_id = ${supervisorUserId}
-      AND im_supervisor.role = 'SUPERVISOR'::implementer_roles
-      AND im_third.user_id = ${thirdUserId}
-      AND im_third.role = ${Prisma.sql`${lookup.role}::implementer_roles`}
-    LIMIT 1
+      ON t.id = im.identifier
+      AND im.role = ${Prisma.sql`${lookup.role}::implementer_roles`}
+    WHERE (im.user_id = ${fellowUserId} AND im.role = 'FELLOW'::implementer_roles)
+      OR (im.user_id = ${supervisorUserId} AND im.role = 'SUPERVISOR'::implementer_roles)
+      OR (im.user_id = ${thirdUserId} AND im.role = ${Prisma.sql`${lookup.role}::implementer_roles`})
   `;
 
-  const { fellow_name, supervisor_name, third_name } = result[0] ?? {};
+  const rowMap = Object.fromEntries(result.map((row) => [row.user_id, row]));
 
-  if (!fellow_name || !supervisor_name || !third_name) {
+  const fellowName = rowMap[fellowUserId]?.fellow_name;
+  const supervisorName = rowMap[supervisorUserId]?.supervisor_name;
+  const thirdName = rowMap[thirdUserId]?.third_name;
+
+  if (!fellowName || !supervisorName || !thirdName) {
     throw new Error("Could not resolve all escalation user names");
   }
 
   return {
-    fellowName: fellow_name,
-    supervisorName: supervisor_name,
-    thirdName: third_name,
+    fellowName,
+    supervisorName,
+    thirdName,
   };
 }
 
