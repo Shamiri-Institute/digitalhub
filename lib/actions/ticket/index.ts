@@ -117,7 +117,6 @@ export async function getEscalationsPerTicket(
 
     if (!authorized) throw new Error("Not authorized to view this ticket's escalations");
 
-
     const escalations = await db.ticketEscalations.findMany({
       where: {
         ticketId,
