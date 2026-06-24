@@ -8,6 +8,7 @@ import {
   type CreateTicketEscalationPayload,
   type CreateTicketInput,
   type CreateTicketPayload,
+  ESCALATION_COUNTS,
   ESCALATION_INITIATOR_ROLES,
   ESCALATION_RECIPIENT_FROM_CATEGORY,
   ESCALATION_RECIPIENT_FROM_INITIATOR,
@@ -519,7 +520,7 @@ const fetchEscalationRecipientHandlers: Record<
 };
 
 function isValidEscalationCount(count: number): count is EscalationCount {
-  return count === 1 || count === 2 || count === 3;
+  return (ESCALATION_COUNTS as readonly number[]).includes(count);
 }
 
 const fetchEscalationMappingHandlers: Record<EscalationCount, FetchEscalationMappingHandler> = {

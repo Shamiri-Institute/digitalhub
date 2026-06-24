@@ -59,7 +59,8 @@ export type FetchEscalationRecipientHandler = (
   implementerId: string,
 ) => Promise<string | null>;
 
-export type EscalationCount = 1 | 2 | 3;
+export const ESCALATION_COUNTS = [1, 2, 3] as const;
+export type EscalationCount = (typeof ESCALATION_COUNTS)[number];
 
 export type FetchEscalationMappingHandler = (
   orderedEscalations: OrderedEscalation[],
