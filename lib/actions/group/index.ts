@@ -2,8 +2,12 @@
 
 import { ImplementerRole, Prisma } from "@prisma/client";
 import type { z } from "zod";
-import { getCurrentPersonnel } from "#/app/auth";
-import { CreateGroupSchema, StudentGroupEvaluationSchema } from "#/components/common/group/schema";
+import { currentFellow, getCurrentPersonnel } from "#/app/auth";
+import {
+  CreateGroupSchema,
+  FellowGroupReportSchema,
+  StudentGroupEvaluationSchema,
+} from "#/components/common/group/schema";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
@@ -206,6 +210,80 @@ export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEva
       message: `Successfully submitted evaluation for ${result.group.groupName}`,
     };
   } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message: (err as Error)?.message ?? "Something went wrong.",
+    };
+  }
+}
+
+export async function submitFellowGroupReport(data: z.infer<typeof FellowGroupReportSchema>) {
+  try {
+    const fellow = await currentFellow();
+    if (!fellow?.profile || fellow.session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
+      throw new Error("User not authorised to perform this action");
+    }
+
+    const parsed = FellowGroupReportSchema.parse(data);
+
+    const group = await db.interventionGroup.findFirstOrThrow({
+      where: { id: parsed.groupId, leaderId: fellow.profile.id },
+      select: { id: true, projectId: true, groupName: true },
+    });
+
+    await db.fellowGroupReport.create({
+      data: {
+        id: objectId("fgr"),
+        submittedAt: new Date(),
+        fellowId: fellow.profile.id,
+        groupId: group.id,
+        projectId: group.projectId,
+        structuralFidelity: parsed.structuralFidelity,
+        processFidelity: parsed.processFidelity,
+        adaptationsMade: parsed.adaptationsMade,
+        // Null out conditional fields when their trigger is not met (spec Section 9 constraints).
+        adaptationType: parsed.adaptationsMade ? (parsed.adaptationType ?? null) : null,
+        adaptationReason: parsed.adaptationsMade ? (parsed.adaptationReason ?? null) : null,
+        behavioralEngagement: parsed.behavioralEngagement,
+        reflectiveEngagement: parsed.reflectiveEngagement,
+        psychologicalSafety: parsed.psychologicalSafety,
+        groupCohesion: parsed.groupCohesion,
+        climateConcerns: parsed.climateConcerns,
+        climateConcernsDetail: parsed.climateConcerns
+          ? (parsed.climateConcernsDetail ?? null)
+          : null,
+        skillComprehension: parsed.skillComprehension,
+        inSessionTransfer: parsed.inSessionTransfer,
+        homePracticeApplicable: parsed.homePracticeApplicable,
+        homePracticeEngagement: parsed.homePracticeApplicable
+          ? (parsed.homePracticeEngagement ?? null)
+          : null,
+        fellowGroupRelationship: parsed.fellowGroupRelationship,
+        externalDisruptions: parsed.externalDisruptions,
+        externalDisruptionsDetail: parsed.externalDisruptions
+          ? (parsed.externalDisruptionsDetail ?? null)
+          : null,
+        facilitatorConfidence: parsed.facilitatorConfidence,
+        hardestAspect: parsed.hardestAspect,
+        challengeImpact: parsed.challengeImpact,
+        whatWentWell: parsed.whatWentWell,
+        supportType: parsed.supportType,
+        supportDetail: parsed.supportDetail ?? null,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Group Report submitted for ${group.groupName}`,
+    };
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return {
+        success: false,
+        message: "A report has already been submitted for this group.",
+      };
+    }
     console.error(err);
     return {
       success: false,
