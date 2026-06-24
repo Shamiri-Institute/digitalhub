@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import type { TriageEventForSupervisor } from "#/app/(platform)/sc/triage/action";
 import CreateClinicalCaseModal from "#/app/(platform)/sc/triage/components/create-clinical-case-modal";
+import TriageDetailsModal from "#/app/(platform)/sc/triage/components/triage-details-modal";
 import TriageReviewModal from "#/app/(platform)/sc/triage/components/triage-review-modal";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -32,6 +33,7 @@ const HANDOFF_LABELS: Record<string, string> = {
 export default function RequiresActionTable({ events }: { events: RequiresActionEvent[] }) {
   const [reviewTarget, setReviewTarget] = useState<RequiresActionEvent | null>(null);
   const [caseTarget, setCaseTarget] = useState<string | null>(null);
+  const [detailsTarget, setDetailsTarget] = useState<RequiresActionEvent | null>(null);
 
   const columns = useMemo<ColumnDef<RequiresActionEvent>[]>(
     () => [
@@ -141,6 +143,12 @@ export default function RequiresActionTable({ events }: { events: RequiresAction
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-shamiri-black"
+                onClick={() => setDetailsTarget(row.original)}
+              >
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-shamiri-black"
                 onClick={() => setCaseTarget(row.original.id)}
               >
                 Create clinical case
@@ -182,6 +190,13 @@ export default function RequiresActionTable({ events }: { events: RequiresAction
           triageEventId={reviewTarget.id}
           isOpen={true}
           onClose={() => setReviewTarget(null)}
+        />
+      )}
+      {detailsTarget && (
+        <TriageDetailsModal
+          event={detailsTarget}
+          isOpen={true}
+          onClose={() => setDetailsTarget(null)}
         />
       )}
     </>
