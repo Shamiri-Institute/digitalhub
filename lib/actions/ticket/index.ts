@@ -532,12 +532,14 @@ const fetchEscalationMappingHandlers: Record<EscalationCount, FetchEscalationMap
     const result = await db.$queryRaw<
       {
         user_id: string;
+        role: string;
         fellow_name: string | null;
         supervisor_name: string | null;
       }[]
     >`
       SELECT
         im.user_id,
+        im.role,
         f.fellow_name,
         s.supervisor_name
       FROM implementer_members im
@@ -551,10 +553,10 @@ const fetchEscalationMappingHandlers: Record<EscalationCount, FetchEscalationMap
         OR (im.user_id = ${firstEscalation.escalatedToId} AND im.role = 'SUPERVISOR'::implementer_roles)
     `;
 
-    const rowMap = Object.fromEntries(result.map((row) => [row.user_id, row]));
+    const rowMap = Object.fromEntries(result.map((row) => [`${row.user_id}:${row.role}`, row]));
 
-    const fellowName = rowMap[firstEscalation.escalatedById]?.fellow_name;
-    const supervisorName = rowMap[firstEscalation.escalatedToId]?.supervisor_name;
+    const fellowName = rowMap[`${firstEscalation.escalatedById}:FELLOW`]?.fellow_name;
+    const supervisorName = rowMap[`${firstEscalation.escalatedToId}:SUPERVISOR`]?.supervisor_name;
 
     if (!fellowName || !supervisorName) {
       throw new Error("Fellow or supervisor name not found");
@@ -694,11 +696,11 @@ async function getEscalationUserNames(
       OR (im.user_id = ${thirdUserId} AND im.role = ${Prisma.sql`${lookup.role}::implementer_roles`})
   `;
 
-  const rowMap = Object.fromEntries(result.map((row) => [row.user_id, row]));
+  const rowMap = Object.fromEntries(result.map((row) => [`${row.user_id}:${row.role}`, row]));
 
-  const fellowName = rowMap[fellowUserId]?.fellow_name;
-  const supervisorName = rowMap[supervisorUserId]?.supervisor_name;
-  const thirdName = rowMap[thirdUserId]?.third_name;
+  const fellowName = rowMap[`${fellowUserId}:FELLOW`]?.fellow_name;
+  const supervisorName = rowMap[`${supervisorUserId}:SUPERVISOR`]?.supervisor_name;
+  const thirdName = rowMap[`${thirdUserId}:${lookup.role}`]?.third_name;
 
   if (!fellowName || !supervisorName || !thirdName) {
     throw new Error("Could not resolve all escalation user names");
@@ -756,12 +758,12 @@ async function getEscalationUserNamesForThirdEscalation(
       OR (im.user_id = ${adminUserId} AND im.role = 'ADMIN'::implementer_roles)
   `;
 
-  const rowMap = Object.fromEntries(result.map((row) => [row.user_id, row]));
+  const rowMap = Object.fromEntries(result.map((row) => [`${row.user_id}:${row.role}`, row]));
 
-  const fellowName = rowMap[fellowUserId]?.fellow_name;
-  const supervisorName = rowMap[supervisorUserId]?.supervisor_name;
-  const thirdName = rowMap[thirdUserId]?.third_name;
-  const adminName = rowMap[adminUserId]?.admin_name;
+  const fellowName = rowMap[`${fellowUserId}:FELLOW`]?.fellow_name;
+  const supervisorName = rowMap[`${supervisorUserId}:SUPERVISOR`]?.supervisor_name;
+  const thirdName = rowMap[`${thirdUserId}:${lookup.role}`]?.third_name;
+  const adminName = rowMap[`${adminUserId}:ADMIN`]?.admin_name;
 
   if (!fellowName || !supervisorName || !thirdName || !adminName) {
     throw new Error("Could not resolve all escalation user names");
