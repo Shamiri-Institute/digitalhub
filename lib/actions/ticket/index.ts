@@ -106,6 +106,17 @@ export async function getEscalationsPerTicket(
     const session = await getCurrentUserSession();
     if (!session?.user.id) throw new Error("The session has not been authenticated");
 
+    const authorized = await db.ticketEscalations.findFirst({
+      where: {
+        ticketId,
+        OR: [{ escalatedById: session.user.id }, { escalatedToId: session.user.id }],
+      },
+      take: 1,
+    });
+
+    if (!authorized) throw new Error("Not authorized to view this ticket's escalations");
+
+
     const escalations = await db.ticketEscalations.findMany({
       where: {
         ticketId,
