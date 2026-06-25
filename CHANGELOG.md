@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.31.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.30.0...v1.31.0) (2026-06-25)
+
+
+### Features
+
+* **sc/triage:** allow supervisors to view triage event details ([#747](https://github.com/Shamiri-Institute/digitalhub/issues/747)) ([c2a88e8](https://github.com/Shamiri-Institute/digitalhub/commit/c2a88e828f63d49f7d0c0549f4b4b35e43f68819))
+
 ## [1.30.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.29.0...v1.30.0) (2026-06-11)
 
 
