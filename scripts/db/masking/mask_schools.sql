@@ -16,7 +16,8 @@ suffixes(n, val) AS (
 UPDATE schools sc
 SET school_name = p.val || ' ' || x.val || ' ' || upper(substr(md5(sc.id), 9, 8))
 FROM prefixes p, suffixes x
-WHERE p.n = (abs(('x' || substr(md5(sc.id), 1, 4))::bit(16)::int) % 32)
+WHERE sc.school_name IS NOT NULL
+  AND p.n = (abs(('x' || substr(md5(sc.id), 1, 4))::bit(16)::int) % 32)
   AND x.n = (abs(('x' || substr(md5(sc.id), 5, 4))::bit(16)::int) % 8);
 
 COMMIT;
