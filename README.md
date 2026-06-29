@@ -190,6 +190,16 @@ DEBUG="0"        # Set to 1 to enable debug mode
 # RECORDINGS API (Fidelity Service)
 # ====================================
 RECORDINGS_API_KEY="your-recordings-api-key"
+
+# ====================================
+# SENTRY (Error Monitoring) — OPTIONAL
+# ====================================
+# Leave blank to run with Sentry disabled (the app builds and runs fine).
+# To enable it, create a project at https://sentry.io and fill these in.
+NEXT_PUBLIC_SENTRY_DSN=""  # Client DSN (public). When set, errors report to your project.
+SENTRY_ORG=""              # Your Sentry org slug — only needed for source-map upload
+SENTRY_PROJECT=""          # Your Sentry project slug — only needed for source-map upload
+SENTRY_AUTH_TOKEN=""       # Build-time token for source-map upload (keep secret, set in CI/host)
 ```
 
 #### Minimal Setup (Development Only)
@@ -204,6 +214,16 @@ NEXT_PUBLIC_ENV="development"
 ```
 
 > **Note:** File uploads and email sending require AWS credentials. If you need these features, add the AWS S3 variables from the full configuration above.
+
+#### Error Monitoring (Sentry) — Optional
+
+Sentry is **disabled by default**. The app builds and runs without any Sentry
+configuration. To send errors to your own Sentry project, set
+`NEXT_PUBLIC_SENTRY_DSN` (the app automatically whitelists your DSN's ingest
+host in the Content-Security-Policy). To also upload source maps for readable
+stack traces, additionally set `SENTRY_ORG`, `SENTRY_PROJECT`, and
+`SENTRY_AUTH_TOKEN` in your build/CI environment. None of these values are
+hardcoded, so forks plug in their own account with zero code changes.
 
 ### Database Setup
 
