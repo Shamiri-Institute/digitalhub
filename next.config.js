@@ -1,5 +1,17 @@
 const { withSentryConfig } = require("@sentry/nextjs");
 
+// Sentry is fully optional and configured via environment variables so that
+// forks can plug in their own Sentry project — or run with Sentry disabled
+// (the SDK no-ops when NEXT_PUBLIC_SENTRY_DSN is unset). See .env.example.
+const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN || "";
+const sentryIngestOrigin = (() => {
+  try {
+    return SENTRY_DSN ? new URL(SENTRY_DSN).origin : "";
+  } catch {
+    return "";
+  }
+})();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -30,7 +42,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'; " +
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://shamiri-assets.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; " +
               "font-src 'self'; " +
-              "connect-src 'self' https://o4505804271845376.ingest.sentry.io https://o4505804271845376.ingest.us.sentry.io https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; " +
+              `connect-src 'self' ${sentryIngestOrigin} https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; ` +
               "frame-src https://dash.shamiri.institute; " +
               "frame-ancestors 'none'; " +
               "base-uri 'self'; " +
@@ -102,8 +114,10 @@ module.exports = withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: "shamiri-institute-21336c4e6",
-  project: "digitalhub-frontend",
+  // Provided via env so forks point source-map uploads at their own project.
+  // When unset (or no SENTRY_AUTH_TOKEN), the plugin simply skips the upload.
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
 
   // Tie each deploy to a Sentry release so errors link back to the exact commit
   // that introduced them. On Vercel, VERCEL_GIT_COMMIT_SHA is injected at build
