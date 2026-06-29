@@ -105,6 +105,15 @@ module.exports = withSentryConfig(nextConfig, {
   org: "shamiri-institute-21336c4e6",
   project: "digitalhub-frontend",
 
+  // Tie each deploy to a Sentry release so errors link back to the exact commit
+  // that introduced them. On Vercel, VERCEL_GIT_COMMIT_SHA is injected at build
+  // time; falling back to undefined lets the SDK auto-detect locally. This gives
+  // us the deploy/release tracking offered by the paid Vercel-Sentry integration
+  // for free.
+  release: {
+    name: process.env.VERCEL_GIT_COMMIT_SHA || undefined,
+  },
+
   // Only print logs for uploading source maps in CI
   silent: true,
 
