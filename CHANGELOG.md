@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.32.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.31.0...v1.32.0) (2026-06-29)
+
+
+### Features
+
+* **sentry:** enable free deploy/release tracking ([#748](https://github.com/Shamiri-Institute/digitalhub/issues/748)) ([7273a17](https://github.com/Shamiri-Institute/digitalhub/commit/7273a177043efc98bc8f4518e3f20ef62b2296b8))
+
 ## [1.31.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.30.0...v1.31.0) (2026-06-25)
 
 
