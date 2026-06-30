@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "vercel:build": "prisma generate && prisma migrate deploy && next build",
+    "vercel:build": "if [ -n \"$VERCEL_ENV\" ] && [ \"$VERCEL_ENV\" != \"production\" ]; then npm run vercel:seeded:build; else npm run vercel:prod:build; fi",
+    "vercel:prod:build": "prisma generate && prisma migrate deploy && next build",
     "vercel:seeded:build": "prisma generate && prisma migrate reset --force && prisma migrate deploy && npm run db:seed && next build",
     "start": "next start",
     "format": "biome format --write",

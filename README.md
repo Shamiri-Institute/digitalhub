@@ -467,22 +467,25 @@ Configure these in your Vercel project settings:
 | Preview / Staging | `dev` / PRs | Dedicated DB rebuilt from faker seed data (no production data) |
 | Development | local | Local DB |
 
-#### Build Configuration
-
-The build process automatically runs migrations:
-
-```bash
-prisma generate && prisma migrate deploy && next build
-```
-
 ### Database per Environment
 
-Migrations are applied automatically during Vercel builds:
+Vercel's Build Command is a single project-wide setting (it can't be set per
+environment), so `vercel:build` self-selects based on the `VERCEL_ENV` system
+variable. Set the project's **Build Command** to `npm run vercel:build` and it
+does the right thing everywhere:
 
-- **Production** (`vercel:build`): `prisma migrate deploy` — applies pending migrations, never touches data.
-- **Preview / Staging / Training** (`vercel:seeded:build`): `prisma migrate reset` + `prisma migrate deploy` + `npm run db:seed` — rebuilds the database from faker-generated data on each deploy. Set these environments' build command to `npm run vercel:seeded:build` in Vercel.
+- **Production** (`VERCEL_ENV=production`) → `vercel:prod:build`: `prisma migrate deploy` + `next build` — applies pending migrations, never touches data.
+- **Preview / Staging / Training** (any non-production `VERCEL_ENV`) → `vercel:seeded:build`: `prisma migrate reset` + `prisma migrate deploy` + `npm run db:seed` + `next build` — rebuilds the database from faker-generated data on each deploy.
+- **Run locally with no `VERCEL_ENV` set** → falls back to `vercel:prod:build`, so it never wipes a local database by accident.
 
-The preview/staging database is **seeded with synthetic data and never cloned from production**, so it contains no real student, clinical, or financial information.
+The preview/staging database is **seeded with synthetic data and never cloned
+from production**, so it contains no real student, clinical, or financial
+information.
+
+> If staging/testing/training are separate Vercel **projects** (not custom
+> environments), set each project's Build Command directly to
+> `npm run vercel:seeded:build` instead — there `VERCEL_ENV` is `production` for
+> every project, so the auto-selector can't tell them apart.
 
 ---
 
