@@ -1,6 +1,6 @@
 "use client";
 
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 import { Icons } from "#/components/icons";
@@ -13,7 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { getTicketEscalationStatus } from "#/lib/actions/ticket";
-import type { TicketEscalationStatus } from "#/lib/actions/ticket/types";
+import {
+  ESCALATION_RECIPIENT_ROLES,
+  type TicketEscalationStatus,
+} from "#/lib/actions/ticket/types";
 
 import type { TicketData } from "./columns";
 
@@ -39,11 +42,12 @@ export function TicketDropdown({
     }
   };
 
-  const isSupervisor = state.role === ImplementerRole.SUPERVISOR;
   const isResolved = status?.isResolved ?? false;
   const showEscalate = status?.canEscalate ?? false;
-  const showResolve =
-    !isResolved && isSupervisor && ticket.currentTier === ImplementerRole.SUPERVISOR;
+  const isEscalationRecipient = ESCALATION_RECIPIENT_ROLES.includes(
+    state.role as (typeof ESCALATION_RECIPIENT_ROLES)[number],
+  );
+  const showResolve = !isResolved && isEscalationRecipient && ticket.currentTier === state.role;
 
   return (
     <DropdownMenu

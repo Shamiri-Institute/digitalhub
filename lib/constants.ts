@@ -47,3 +47,4 @@ export const ENABLE_TICKETS = constants.NEXT_PUBLIC_ENABLE_TICKETS === "true";
 export const APP_ENV = process.env.APP_ENV || "production";
 export const SHOW_DUPLICATE_ID_CHECKBOX = "show-duplicate-id-checkbox";
 export const GENDER_OPTIONS = ["Male", "Female", "Other"] as const;
+export const ENABLE_PERF_PROFILER = process.env.NEXT_PUBLIC_ENABLE_PERF_PROFILER === "true";
