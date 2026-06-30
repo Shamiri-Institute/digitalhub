@@ -2024,7 +2024,41 @@ const SAFETY_FLAG_TEMPLATES = [
   },
 ];
 
-function buildFidelityFeedback() {
+// V2-only pools (newer prompt format: participation stats, competency
+// profile and a supervision-preparation brief).
+const REFLECTIVE_QUESTIONS_POOL = [
+  "What helped you decide when to move from group discussion to individual work?",
+  "How did you notice and respond to the quieter students in the room?",
+  "What would you keep the same, and what would you change, about how you opened the session?",
+  "When the disclosure came up, what guided your response in the moment?",
+  "How confident did you feel delivering the confidentiality agreement, and what would make it easier?",
+];
+
+const V2_COMPETENCIES = [
+  "B1_active_listening",
+  "B2_empathy_and_validation",
+  "B3_protocol_delivery",
+  "B4_group_facilitation",
+  "B5_safety_and_risk_response",
+];
+
+const COMPETENCY_LEVELS = ["Emerging", "Developing", "Proficient", "Advanced"];
+const CONFIDENCE_LEVELS = ["low", "medium", "high"];
+
+// Shared across both feedback versions: ~40% of recordings carry a safety flag.
+function buildSafetyFlags() {
+  return faker.datatype.boolean({ probability: 0.4 })
+    ? [
+        {
+          ...faker.helpers.arrayElement(SAFETY_FLAG_TEMPLATES),
+          requires_follow_up: faker.datatype.boolean({ probability: 0.7 }),
+          timestamp_reference: `around the ${faker.number.int({ min: 2, max: 40 })}-minute mark`,
+        },
+      ]
+    : [];
+}
+
+function buildFidelityFeedbackV1() {
   const questionScores = FIDELITY_QUESTIONS.map((question) => ({
     key: question.key,
     score: faker.number.int({ min: 1, max: 7 }),
@@ -2042,16 +2076,6 @@ function buildFidelityFeedback() {
     fidelityScores[q.key] = { score: q.score, justification: q.justification };
   }
 
-  const safetyFlags = faker.datatype.boolean({ probability: 0.4 })
-    ? [
-        {
-          ...faker.helpers.arrayElement(SAFETY_FLAG_TEMPLATES),
-          requires_follow_up: faker.datatype.boolean({ probability: 0.7 }),
-          timestamp_reference: `around the ${faker.number.int({ min: 2, max: 40 })}-minute mark`,
-        },
-      ]
-    : [];
-
   const feedback = {
     fidelity_scores: fidelityScores,
     recommendations: faker.helpers.arrayElements(RECOMMENDATIONS_POOL, { min: 2, max: 3 }),
@@ -2061,10 +2085,111 @@ function buildFidelityFeedback() {
       areas_for_improvement: faker.helpers.arrayElements(IMPROVEMENTS_POOL, { min: 1, max: 3 }),
       session_flow_and_engagement: faker.helpers.arrayElement(SESSION_FLOWS),
     },
-    safety_flags: safetyFlags,
+    safety_flags: buildSafetyFlags(),
   } as Prisma.InputJsonValue;
 
-  return { feedback, overallScore };
+  return { feedback, overallScore, promptVersion: 1 };
+}
+
+function buildFidelityFeedbackV2() {
+  const questionScores = FIDELITY_QUESTIONS.map((question) => ({
+    key: question.key,
+    score: faker.number.int({ min: 1, max: 7 }),
+    justification: faker.helpers.arrayElement(question.justifications),
+  }));
+
+  const average = questionScores.reduce((sum, q) => sum + q.score, 0) / questionScores.length;
+  const overallScore = average.toFixed(1);
+
+  const fidelityScores: Record<string, unknown> = {
+    overall_fidelity_score: overallScore,
+    overall_fidelity_summary: faker.helpers.arrayElement(OVERALL_ASSESSMENTS),
+  };
+  for (const q of questionScores) {
+    fidelityScores[q.key] = {
+      score: `${q.score}/7`,
+      justification: q.justification,
+      open_closed_question_ratio: `${faker.number.int({ min: 1, max: 4 })}:${faker.number.int({ min: 1, max: 3 })}`,
+    };
+  }
+
+  const selectedCompetencies = faker.helpers.arrayElements(V2_COMPETENCIES, {
+    min: 3,
+    max: V2_COMPETENCIES.length,
+  });
+  const competencyProfile: Record<string, unknown> = {};
+  for (const key of selectedCompetencies) {
+    competencyProfile[key] = {
+      observed_behaviours: faker.lorem.sentence(),
+      estimated_level: faker.helpers.arrayElement(COMPETENCY_LEVELS),
+      level_framing: faker.lorem.sentence(),
+      confidence: faker.helpers.arrayElement(CONFIDENCE_LEVELS),
+      confidence_note: faker.lorem.sentence(),
+    };
+  }
+  const anyCritical = faker.datatype.boolean({ probability: 0.15 });
+  competencyProfile.red_flag_check = {
+    any_critical_L1: anyCritical,
+    flagged_domains: anyCritical
+      ? faker.helpers.arrayElements(selectedCompetencies, { min: 1, max: 2 })
+      : [],
+    recommendation: anyCritical ? faker.helpers.arrayElement(RECOMMENDATIONS_POOL) : null,
+  };
+
+  const totalMinutes = faker.number.int({ min: 30, max: 50 });
+  const fellowMinutes = faker.number.int({ min: 10, max: 25 });
+  const studentMinutes = totalMinutes - fellowMinutes;
+  const wellnessFlagged = faker.datatype.boolean({ probability: 0.2 });
+
+  const feedback = {
+    session_participation: {
+      estimated_speakers: `${faker.number.int({ min: 6, max: 12 })}`,
+      lead_fellow_speaking_time: `${fellowMinutes}m`,
+      lead_fellow_speaking_percentage: `${Math.round((fellowMinutes / totalMinutes) * 100)}%`,
+      total_student_speaking_time: `${studentMinutes}m`,
+      participation_distribution: faker.lorem.sentence(),
+      prosodic_observations: faker.lorem.sentence(),
+    },
+    fidelity_scores: fidelityScores,
+    competency_profile: competencyProfile,
+    supervision_preparation_brief: {
+      strengths_to_acknowledge: faker.helpers
+        .arrayElements(STRENGTHS_POOL, { min: 2, max: 3 })
+        .map((strength) => ({
+          strength,
+          evidence: faker.lorem.sentence(),
+          why_it_matters: faker.lorem.sentence(),
+        })),
+      areas_for_growth: faker.helpers
+        .arrayElements(IMPROVEMENTS_POOL, { min: 1, max: 2 })
+        .map((area) => ({
+          area,
+          what_was_observed: faker.lorem.sentence(),
+          why_it_matters: faker.lorem.sentence(),
+          suggested_supervision_activity: faker.helpers.arrayElement(RECOMMENDATIONS_POOL),
+          supervision_protocol_section: `Section ${faker.number.int({ min: 1, max: 6 })}.${faker.number.int({ min: 1, max: 4 })}`,
+        })),
+      fellow_wellness_flag: {
+        flagged: wellnessFlagged,
+        observation: wellnessFlagged ? faker.lorem.sentence() : null,
+        suggested_check_in: wellnessFlagged ? faker.lorem.sentence() : null,
+      },
+      reflective_questions_for_supervision: faker.helpers.arrayElements(REFLECTIVE_QUESTIONS_POOL, {
+        min: 2,
+        max: 3,
+      }),
+    },
+    safety_flags: buildSafetyFlags(),
+  } as Prisma.InputJsonValue;
+
+  return { feedback, overallScore, promptVersion: 2 };
+}
+
+// ~35% of recordings use the newer V2 prompt format, the rest use V1.
+function buildFidelityFeedback() {
+  return faker.datatype.boolean({ probability: 0.35 })
+    ? buildFidelityFeedbackV2()
+    : buildFidelityFeedbackV1();
 }
 
 async function createSessionRecordings(
@@ -2086,9 +2211,10 @@ async function createSessionRecordings(
       for (const group of groups) {
         const recordingId = objectId("rec");
         const sessionType = session.sessionType ?? "session";
-        // Varied feedback per recording; overallScore is derived from the
-        // per-question scores so it matches the stored overall_score column.
-        const { feedback: fidelityFeedback, overallScore } = buildFidelityFeedback();
+        // Varied feedback per recording (mix of V1/V2 prompt formats);
+        // overallScore is derived from the per-question scores so it matches
+        // the stored overall_score column.
+        const { feedback: fidelityFeedback, overallScore, promptVersion } = buildFidelityFeedback();
 
         // Synthetic key: looks real, points at no real object. The bucket is
         // resolved from env at runtime, so staging never touches prod audio.
@@ -2126,7 +2252,7 @@ async function createSessionRecordings(
           status: RecordingProcessingStatus.COMPLETED,
           processedAt: faker.date.recent({ days: 20 }),
           overallScore,
-          promptVersion: 1,
+          promptVersion,
           fidelityFeedback,
           transcript,
         });
