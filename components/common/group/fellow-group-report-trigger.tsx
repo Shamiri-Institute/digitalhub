@@ -1,7 +1,8 @@
 "use client";
 
 import type { FellowGroupReport } from "@prisma/client";
-import { CheckCircledIcon } from "@radix-ui/react-icons";
+import { CheckCircledIcon, EyeOpenIcon } from "@radix-ui/react-icons";
+import { format } from "date-fns";
 import { useState } from "react";
 import FellowGroupReportForm from "#/components/common/group/fellow-group-report-form";
 import FellowGroupReportView from "#/components/common/group/fellow-group-report-view";
@@ -25,18 +26,25 @@ export default function FellowGroupReportTrigger({
   const [formOpen, setFormOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
 
-  // Submitted state — read-only.
   if (report) {
     return (
-      <div className="flex flex-col gap-2 rounded-2xl border border-green-border bg-green-bg p-4">
+      <div className="flex flex-col gap-3 rounded-2xl border border-green-border bg-green-bg p-4">
+        <div className="flex items-center gap-2 text-green-base">
+          <CheckCircledIcon className="h-5 w-5 shrink-0" />
+          <span className="font-semibold">Group Report submitted</span>
+        </div>
+        <span className="text-sm text-shamiri-text-grey">
+          Submitted on {format(report.submittedAt, "dd MMM yyyy")}. This report is final and can no
+          longer be edited.
+        </span>
         <Button
           type="button"
-          variant="base"
-          className="w-fit gap-2 bg-transparent p-0 text-green-base hover:bg-transparent"
+          variant="outline"
+          className="w-fit gap-2 bg-white"
           onClick={() => setViewOpen(true)}
         >
-          <CheckCircledIcon className="h-5 w-5" />
-          Group Report Submitted
+          <EyeOpenIcon className="h-4 w-4" />
+          View report
         </Button>
         <FellowGroupReportView
           report={report}
