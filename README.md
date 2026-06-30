@@ -1,6 +1,6 @@
 [![E2E Tests](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/e2e.yml/badge.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.11.2-blue.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/releases)
+[![Version](https://img.shields.io/badge/version-1.32.0-blue.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/releases)
 
 # Shamiri Digital Hub
 
@@ -145,6 +145,9 @@ NEXTAUTH_SECRET="your-nextauth-secret"  # Generate with: openssl rand -base64 32
 GOOGLE_ID="your-google-client-id"
 GOOGLE_SECRET="your-google-client-secret"
 
+# Comma-separated emails granted super-admin access
+SUPERADMINS="admin@example.com"
+
 # ====================================
 # GOOGLE DRIVE API (Document Storage)
 # ====================================
@@ -169,7 +172,11 @@ S3_UPLOAD_REGION="your-aws-region"
 
 # S3 Recordings Bucket (Session Recordings)
 S3_RECORDINGS_BUCKET="your-recordings-bucket"
-S3_RECORDINGS_REGION="your-aws-region"
+S3_RECORDINGS_REGION="your-aws-region"  # defaults to af-south-1
+
+# S3 Student Attendance Bucket (attendance documents)
+S3_STUDENT_ATTENDANCE_BUCKET="your-student-attendance-bucket"
+S3_STUDENT_ATTENDANCE_REGION="your-aws-region"  # defaults to af-south-1
 
 # ====================================
 # METABASE (Analytics)
@@ -183,13 +190,18 @@ METABASE_MONITORING_DASHBOARD_ID="your-metabase-dashboard-id"  # Dashboard ID fo
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NEXT_PUBLIC_ENV="development"
 APP_ENV="development"
-SEND_EMAILS="0"  # Set to 1 to enable email sending
-DEBUG="0"        # Set to 1 to enable debug mode
+DEBUG="0"        # Set to 1 to enable verbose Prisma query logging
+
+# Feature flags
+NEXT_PUBLIC_ENABLE_TICKETS="0"        # Set to 1 to enable the ticketing UI
+NEXT_PUBLIC_ENABLE_PERF_PROFILER="0"  # Set to 1 to enable the performance profiler
 
 # ====================================
-# RECORDINGS API (Fidelity Service)
+# RECORDINGS / FIDELITY SERVICE
 # ====================================
-RECORDINGS_API_KEY="your-recordings-api-key"
+FIDELITY_API_URL="https://fidelity-service.example.com"  # External fidelity-analysis API
+FIDELITY_API_KEY="your-fidelity-api-key"
+RECORDINGS_API_KEY="your-recordings-api-key"  # Shared secret for the recordings worker
 
 # ====================================
 # SENTRY (Error Monitoring) — OPTIONAL
@@ -433,9 +445,17 @@ Configure these in your Vercel project settings:
 | `NEXTAUTH_SECRET` | Yes | Authentication secret |
 | `GOOGLE_ID` | Yes | Google OAuth Client ID |
 | `GOOGLE_SECRET` | Yes | Google OAuth Client Secret |
+| `AWS_REGION` | Yes | AWS region |
 | `AWS_ACCESS_KEY_ID` | Yes | AWS credentials for S3 |
 | `AWS_SECRET_ACCESS_KEY` | Yes | AWS credentials for S3 |
+| `S3_UPLOAD_KEY` | Yes | Access key for the uploads bucket |
+| `S3_UPLOAD_SECRET` | Yes | Secret key for the uploads bucket |
 | `S3_UPLOAD_BUCKET` | Yes | S3 bucket for uploads |
+| `S3_UPLOAD_REGION` | Yes | Region of the uploads bucket |
+| `S3_RECORDINGS_BUCKET` | Yes | S3 bucket for session recordings |
+| `S3_RECORDINGS_REGION` | No | Recordings bucket region (defaults to `af-south-1`) |
+| `S3_STUDENT_ATTENDANCE_BUCKET` | No | Bucket for attendance documents |
+| `RECORDINGS_API_KEY` | For fidelity | Shared secret for the recordings/fidelity worker |
 | `METABASE_SECRET_KEY` | For analytics | Metabase JWT signing key |
 | `METABASE_MONITORING_DASHBOARD_ID` | For analytics | Metabase Monitoring and Evaluation dashboard ID (numeric) |
 
@@ -537,8 +557,9 @@ This platform can be adapted for similar intervention programs:
 
 | Feature | Configuration | Description |
 |---------|--------------|-------------|
-| Email Sending | `SEND_EMAILS=1` | Enable transactional emails |
-| Debug Mode | `DEBUG=1` | Enable verbose logging |
+| Debug Mode | `DEBUG=1` | Enable verbose Prisma query logging |
+| Tickets UI | `NEXT_PUBLIC_ENABLE_TICKETS=1` | Enable the ticketing interface |
+| Perf Profiler | `NEXT_PUBLIC_ENABLE_PERF_PROFILER=1` | Enable the performance profiler |
 | OAuth | `GOOGLE_ID/SECRET` | Google authentication |
 | File Storage | `S3_*` variables | AWS S3 configuration |
 | Analytics | `METABASE_SECRET_KEY`, `METABASE_MONITORING_DASHBOARD_ID` | Embedded Metabase dashboards |
