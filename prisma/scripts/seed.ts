@@ -24,7 +24,6 @@ import {
 } from "@prisma/client";
 import { isBefore, startOfMonth } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
-import { SAMPLE_FEEDBACK } from "#/app/(platform)/sc/reporting/recordings/components/sample-response";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -1905,6 +1904,169 @@ async function createPayoutRecords(
   await db.reimbursementRequest.createMany({ data: reimbursementData });
 }
 
+// Pools used to generate varied (V1-shaped) fidelity feedback per recording so
+// the recordings table isn't 378 copies of one canned response.
+const FIDELITY_QUESTIONS = [
+  {
+    key: "question_1_protocol_adherence",
+    justifications: [
+      "All mandatory protocol elements were delivered in order, including the confidentiality agreement at the start and a structured wrap-up at the end.",
+      "Most protocol steps were followed, though the confidentiality explanation was rushed and the closing reflection was only partially completed.",
+      "Several mandatory elements were missing — the confidentiality agreement was skipped and the session ended without the required reflection.",
+    ],
+  },
+  {
+    key: "question_2_content_specifications",
+    justifications: [
+      "The facilitator covered every required content point and guided students through the corresponding workbook activities.",
+      "Core content was covered, but the delivery skipped some of the specified facilitation techniques.",
+      "Key content topics were addressed only briefly and one workbook activity was omitted.",
+    ],
+  },
+  {
+    key: "question_3_thoroughness",
+    justifications: [
+      "Activities were given ample time and discussions explored each student's contribution in depth.",
+      "Thoroughness was mixed — individual work was well paced but group discussion stayed surface-level.",
+      "The session felt rushed, with limited time for reflection and a hurried conclusion.",
+    ],
+  },
+  {
+    key: "question_4_skillful_delivery",
+    justifications: [
+      "Strong use of open-ended questions, active listening and theme-linking across students.",
+      "Good rapport overall, though a few opportunities to reflect student input back were missed.",
+      "Delivery was functional but relied on closed questions and offered little validation.",
+    ],
+  },
+  {
+    key: "question_5_clarity_accessibility",
+    justifications: [
+      "Concepts were broken down clearly with relatable, age-appropriate examples.",
+      "Instructions were mostly clear but a couple of terms needed further explanation.",
+      "Some instructions were ambiguous, leaving students unsure how to start the activity.",
+    ],
+  },
+  {
+    key: "question_6_protocol_boundaries",
+    justifications: [
+      "The facilitator stayed within the curriculum and used personal examples appropriately to model activities.",
+      "Boundaries were generally maintained, with one minor over-disclosure during a discussion.",
+      "The session drifted into off-curriculum content on a few occasions.",
+    ],
+  },
+] as const;
+
+const OVERALL_ASSESSMENTS = [
+  "High fidelity overall. The facilitator delivered the protocol confidently while keeping the group engaged and safe.",
+  "Moderate fidelity with a few gaps. Core content was covered but some procedural techniques were inconsistent.",
+  "Developing fidelity. The facilitator showed promise in rapport-building but omitted several mandatory protocol steps.",
+  "Strong session with minor refinements needed around pacing and the structured close.",
+];
+
+const RECOMMENDATIONS_POOL = [
+  "Review and rehearse the confidentiality script so it is delivered consistently at the start of every session.",
+  "Practise the rephrasing technique to confirm understanding and surface key student contributions.",
+  "Use a closing cheat-sheet to ensure the 3-step reflection is completed before ending the session.",
+  "Plan timeboxes for each activity to avoid a rushed conclusion.",
+  "In supervision, role-play handling sensitive disclosures using the warm-handoff protocol.",
+  "Invite quieter students to contribute with targeted open-ended questions.",
+];
+
+const STRENGTHS_POOL = [
+  "Consistent use of open-ended questions to draw out student experiences.",
+  "Warm, encouraging tone that created a safe space for sharing.",
+  "Effective use of verbal nodding and active listening throughout.",
+  "Connected themes across students to build a sense of shared experience.",
+  "Handled a sensitive disclosure with empathy and a clear offer of follow-up.",
+  "Good use of silence to allow students time for individual reflection.",
+];
+
+const IMPROVEMENTS_POOL = [
+  "Deliver the confidentiality explanation in full at the start of the session.",
+  "Use rephrasing to summarise and validate student contributions.",
+  "Complete the structured 3-step reflection before closing.",
+  "Tighten transitions between discussion and individual work.",
+  "Manage time so the final activity is not rushed.",
+  "Check in with students who did not participate during the session.",
+];
+
+const SESSION_SUMMARIES = [
+  "The session covered the day's core topic with a check-in, a workbook activity and a group discussion before an individual goal-setting task.",
+  "After a brief check-in, the facilitator introduced the topic, guided students through the workbook and facilitated a reflective group discussion.",
+  "The facilitator opened with a warm check-in, delivered the main content and closed with a short reflection on what students had learned.",
+];
+
+const SESSION_FLOWS = [
+  "The session flowed smoothly with clear transitions and steady engagement from most students.",
+  "Flow was generally good, though engagement dipped during individual work and required occasional prompting.",
+  "The session was somewhat uneven — strong discussion early on, but the closing felt rushed.",
+];
+
+const SAFETY_FLAG_TEMPLATES = [
+  {
+    type: "other",
+    severity: "medium",
+    description:
+      "A student disclosed ongoing distress related to a recent loss; a co-facilitator offered follow-up support.",
+  },
+  {
+    type: "self_harm",
+    severity: "high",
+    description:
+      "A student alluded to thoughts of self-harm. The facilitator followed the escalation protocol and notified the supervisor.",
+  },
+  {
+    type: "home_environment",
+    severity: "low",
+    description:
+      "A student mentioned tension at home affecting concentration; noted for supervisor awareness.",
+  },
+];
+
+function buildFidelityFeedback() {
+  const questionScores = FIDELITY_QUESTIONS.map((question) => ({
+    key: question.key,
+    score: faker.number.int({ min: 1, max: 7 }),
+    justification: faker.helpers.arrayElement(question.justifications),
+  }));
+
+  const average = questionScores.reduce((sum, q) => sum + q.score, 0) / questionScores.length;
+  const overallScore = average.toFixed(1);
+
+  const fidelityScores: Record<string, unknown> = {
+    overall_score: overallScore,
+    overall_assessment: faker.helpers.arrayElement(OVERALL_ASSESSMENTS),
+  };
+  for (const q of questionScores) {
+    fidelityScores[q.key] = { score: q.score, justification: q.justification };
+  }
+
+  const safetyFlags = faker.datatype.boolean({ probability: 0.4 })
+    ? [
+        {
+          ...faker.helpers.arrayElement(SAFETY_FLAG_TEMPLATES),
+          requires_follow_up: faker.datatype.boolean({ probability: 0.7 }),
+          timestamp_reference: `around the ${faker.number.int({ min: 2, max: 40 })}-minute mark`,
+        },
+      ]
+    : [];
+
+  const feedback = {
+    fidelity_scores: fidelityScores,
+    recommendations: faker.helpers.arrayElements(RECOMMENDATIONS_POOL, { min: 2, max: 3 }),
+    qualitative_feedback: {
+      strengths: faker.helpers.arrayElements(STRENGTHS_POOL, { min: 2, max: 4 }),
+      session_summary: faker.helpers.arrayElement(SESSION_SUMMARIES),
+      areas_for_improvement: faker.helpers.arrayElements(IMPROVEMENTS_POOL, { min: 1, max: 3 }),
+      session_flow_and_engagement: faker.helpers.arrayElement(SESSION_FLOWS),
+    },
+    safety_flags: safetyFlags,
+  } as Prisma.InputJsonValue;
+
+  return { feedback, overallScore };
+}
+
 async function createSessionRecordings(
   schools: DemoSchool[],
   sessionsBySchool: Map<string, DemoSessions>,
@@ -1924,7 +2086,9 @@ async function createSessionRecordings(
       for (const group of groups) {
         const recordingId = objectId("rec");
         const sessionType = session.sessionType ?? "session";
-        const overallScore = faker.number.float({ min: 2, max: 7, fractionDigits: 1 }).toFixed(1);
+        // Varied feedback per recording; overallScore is derived from the
+        // per-question scores so it matches the stored overall_score column.
+        const { feedback: fidelityFeedback, overallScore } = buildFidelityFeedback();
 
         // Synthetic key: looks real, points at no real object. The bucket is
         // resolved from env at runtime, so staging never touches prod audio.
@@ -1936,11 +2100,6 @@ async function createSessionRecordings(
           recordingId,
           extension: "mp3",
         });
-
-        const fidelityFeedback = {
-          ...SAMPLE_FEEDBACK,
-          fidelity_scores: { ...SAMPLE_FEEDBACK.fidelity_scores, overall_score: overallScore },
-        } as Prisma.InputJsonValue;
 
         const transcript = {
           segments: [
