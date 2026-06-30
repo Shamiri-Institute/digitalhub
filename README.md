@@ -56,7 +56,7 @@ This platform can support your research by providing:
 
 ```
 Shamiri Institute. (2026). Shamiri Digital Hub [Computer software].
-https://github.com/Shamiri-Institute/digitalhub-frontend
+https://github.com/Shamiri-Institute/digitalhub
 ```
 
 ### License
@@ -85,8 +85,8 @@ Get the platform running locally in under 5 minutes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Shamiri-Institute/digitalhub-frontend.git
-cd digitalhub-frontend
+git clone https://github.com/Shamiri-Institute/digitalhub.git
+cd digitalhub
 
 # Install dependencies
 npm install
@@ -600,8 +600,8 @@ We welcome contributions from the community!
 
 ### Getting Help
 
-- **Issues**: [GitHub Issues](https://github.com/Shamiri-Institute/digitalhub-frontend/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Shamiri-Institute/digitalhub-frontend/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Shamiri-Institute/digitalhub/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Shamiri-Institute/digitalhub/discussions)
 
 ### Contact
 
