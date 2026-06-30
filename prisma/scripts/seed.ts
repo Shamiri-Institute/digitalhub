@@ -3,7 +3,9 @@ import {
   type AdminUser,
   type ClinicalLead,
   type ClinicalTeam,
+  caseStatusOptions,
   type Fellow,
+  FollowUpPlanOptions,
   type Hub,
   type HubCoordinator,
   type Implementer,
@@ -11,15 +13,22 @@ import {
   type OpsUser,
   type Prisma,
   type Project,
+  RecordingProcessingStatus,
+  RiskScreenOutcome,
+  referralStatusOptions,
+  riskStatusOptions,
   type SessionName,
   type Supervisor,
   sessionTypes,
+  TriageActionTaken,
 } from "@prisma/client";
 import { isBefore, startOfMonth } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
+import { SAMPLE_FEEDBACK } from "#/app/(platform)/sc/reporting/recordings/components/sample-response";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
 import { hubSessionTypes } from "#/prisma/scripts/hub-session-types";
 
 // GETTING STARTED WITH SEEDING
@@ -1492,13 +1501,545 @@ async function createInterventionSessionsForSchools(
     }
   }
 
-  return db.interventionSession.createMany({
+  return db.interventionSession.createManyAndReturn({
     data: interventionSessions,
   });
 }
 
-// TODO: should we guarantee that all child records are created for each parent record?
-//POSSIBLE PERFORMANCE WIN BY PARALLELISING SOME OF THESE QUERIES?
+// ============================================================================
+// DEMO TRACKING / CLINICAL / FINANCIAL DATA
+// ----------------------------------------------------------------------------
+// These records were historically left as TODOs. They are seeded with
+// faker-generated data for a *bounded sample* of schools/groups/students so the
+// staging/preview environment looks realistic end-to-end (attendance, clinical
+// cases, payouts, recordings) without generating production-scale volume.
+// ============================================================================
+
+const DEMO_SCHOOL_SAMPLE = 8; // schools enriched with the records below
+const DEMO_GROUPS_PER_SCHOOL = 6; // cap groups enriched per school
+const DEMO_STUDENTS_PER_SCHOOL = 25; // students given attendance/outcomes per school
+const DEMO_CLINICAL_CASES_PER_SCHOOL = 2; // clinical cases opened per school
+const DEMO_PAYOUT_SAMPLE = 80; // fellow-attendance rows backing payout flows
+const TREATMENT_INTERVENTIONS = [
+  "CBT",
+  "Behavioural Activation",
+  "Psychoeducation",
+  "Problem Solving Therapy",
+  "Mindfulness",
+];
+
+type DemoSchool = Prisma.SchoolGetPayload<{
+  include: { interventionGroups: { include: { leader: true } }; hub: true };
+}>;
+type DemoStudents = Awaited<ReturnType<typeof createStudentsForSchools>>;
+type DemoSessions = Awaited<ReturnType<typeof createInterventionSessionsForSchools>>;
+type DemoFellowAttendances = Awaited<
+  ReturnType<typeof createAttendanceRecords>
+>["fellowAttendances"];
+
+async function createAttendanceRecords(
+  schools: DemoSchool[],
+  studentsBySchool: Map<string, DemoStudents>,
+  sessionsBySchool: Map<string, DemoSessions>,
+  seederUserId: string,
+) {
+  console.log("creating attendance records");
+
+  const fellowAttendanceData: Prisma.FellowAttendanceCreateManyInput[] = [];
+  const studentAttendanceData: Prisma.StudentAttendanceCreateManyInput[] = [];
+  const supervisorAttendanceData: Prisma.SupervisorAttendanceCreateManyInput[] = [];
+
+  for (const school of schools) {
+    const projectId = school.hub?.projectId;
+    if (!projectId) continue;
+
+    const sessions = sessionsBySchool.get(school.id) ?? [];
+    const groups = school.interventionGroups.slice(0, DEMO_GROUPS_PER_SCHOOL);
+    const students = (studentsBySchool.get(school.id) ?? []).slice(0, DEMO_STUDENTS_PER_SCHOOL);
+
+    for (const session of sessions) {
+      // Fellow attendance: one row per group leader in this school
+      for (const group of groups) {
+        fellowAttendanceData.push({
+          projectId,
+          fellowId: group.leaderId,
+          sessionId: session.id,
+          schoolId: school.id,
+          supervisorId: school.assignedSupervisorId ?? undefined,
+          groupId: group.id,
+          sessionDate: session.sessionDate,
+          yearOfImplementation: session.yearOfImplementation ?? undefined,
+          attended: faker.datatype.boolean({ probability: 0.9 }),
+          paymentInitiated: true,
+          markedBy: seederUserId,
+        });
+      }
+
+      // Supervisor attendance: one row per school's assigned supervisor
+      if (school.assignedSupervisorId) {
+        supervisorAttendanceData.push({
+          projectId,
+          schoolId: school.id,
+          supervisorId: school.assignedSupervisorId,
+          sessionId: session.id,
+          attended: faker.datatype.boolean({ probability: 0.9 }),
+          markedBy: seederUserId,
+        });
+      }
+
+      // Student attendance: for the sampled students (unique per student+session)
+      for (const student of students) {
+        const group = groups.find((g) => g.id === student.assignedGroupId);
+        studentAttendanceData.push({
+          projectId,
+          studentId: student.id,
+          sessionId: session.id,
+          groupId: student.assignedGroupId ?? undefined,
+          schoolId: school.id,
+          fellowId: group?.leaderId,
+          attended: faker.datatype.boolean({ probability: 0.85 }),
+          markedBy: seederUserId,
+        });
+      }
+    }
+  }
+
+  const fellowAttendances = await db.fellowAttendance.createManyAndReturn({
+    data: fellowAttendanceData,
+  });
+  const studentAttendances = await db.studentAttendance.createManyAndReturn({
+    data: studentAttendanceData,
+  });
+  await db.supervisorAttendance.createMany({ data: supervisorAttendanceData });
+
+  return { fellowAttendances, studentAttendances };
+}
+
+async function createStudentOutcomes(
+  schools: DemoSchool[],
+  studentsBySchool: Map<string, DemoStudents>,
+  groupTypeByGroupId: Map<string, string>,
+) {
+  console.log("creating student outcomes");
+  const outcomes: Prisma.StudentOutcomeCreateManyInput[] = [];
+  const score = () => faker.number.int({ min: 0, max: 3 });
+
+  for (const school of schools) {
+    const students = (studentsBySchool.get(school.id) ?? []).slice(0, DEMO_STUDENTS_PER_SCHOOL);
+    for (const student of students) {
+      const condition = student.assignedGroupId
+        ? (groupTypeByGroupId.get(student.assignedGroupId) ?? "CONTROL")
+        : "CONTROL";
+      // Baseline (0) and endpoint (1) time points
+      for (const timePoint of [0, 1]) {
+        outcomes.push({
+          id: objectId("outcome"),
+          shamiriId: student.visibleId,
+          timePoint,
+          yearOfImplementation: new Date().getFullYear(),
+          condition,
+          phq1: score(),
+          phq2: score(),
+          phq3: score(),
+          phq4: score(),
+          gad1: score(),
+          gad2: score(),
+          gad3: score(),
+          gad4: score(),
+        });
+      }
+    }
+  }
+
+  await db.studentOutcome.createMany({ data: outcomes });
+}
+
+async function createClinicalRecords(
+  schools: DemoSchool[],
+  studentsBySchool: Map<string, DemoStudents>,
+  sessionsBySchool: Map<string, DemoSessions>,
+  groupLeaderByGroupId: Map<string, string>,
+  seederUserId: string,
+) {
+  console.log("creating clinical records");
+
+  for (const school of schools) {
+    const caseStudents = (studentsBySchool.get(school.id) ?? []).slice(
+      0,
+      DEMO_CLINICAL_CASES_PER_SCHOOL,
+    );
+    const sessions = sessionsBySchool.get(school.id) ?? [];
+
+    for (const student of caseStudents) {
+      const caseStatus = faker.helpers.arrayElement([
+        caseStatusOptions.Active,
+        caseStatusOptions.FollowUp,
+        caseStatusOptions.Terminated,
+        caseStatusOptions.Referred,
+      ]);
+      const riskStatus = faker.helpers.arrayElement([
+        riskStatusOptions.Low,
+        riskStatusOptions.Medium,
+        riskStatusOptions.High,
+      ]);
+
+      const screeningCase = await db.clinicalScreeningInfo.create({
+        data: {
+          studentId: student.id,
+          schoolId: school.id,
+          caseStatus,
+          riskStatus,
+          currentSupervisorId: school.assignedSupervisorId ?? undefined,
+          acceptCase: true,
+          referralStatus: referralStatusOptions.Approved,
+          pseudonym: `${faker.color.human()}-${faker.animal.type()}`,
+          generalPresentingIssues: faker.helpers.arrayElement([
+            "Academic stress",
+            "Anxiety",
+            "Low mood",
+            "Family conflict",
+            "Peer relationships",
+          ]),
+          anxiety: true,
+          academicStruggles: faker.datatype.boolean(),
+          referralReason: faker.lorem.sentence(),
+          referralNotes: faker.lorem.paragraph(),
+          progressNotes: faker.internet.url(),
+          flagged: riskStatus === riskStatusOptions.High,
+          flaggedReason: riskStatus === riskStatusOptions.High ? faker.lorem.sentence() : undefined,
+        },
+      });
+
+      // 2-3 clinical session attendances per case
+      const numClinicalSessions = faker.number.int({ min: 2, max: 3 });
+      const clinicalSessions = [];
+      for (let s = 0; s < numClinicalSessions; s++) {
+        const clinicalSession = await db.clinicalSessionAttendance.create({
+          data: {
+            caseId: screeningCase.id,
+            session: `Clinical Session ${s + 1}`,
+            supervisorId: school.assignedSupervisorId ?? undefined,
+            attendanceStatus: true,
+          },
+        });
+        clinicalSessions.push(clinicalSession);
+      }
+
+      // One case note per clinical session (unique [caseId, sessionId])
+      for (const clinicalSession of clinicalSessions) {
+        await db.clinicalCaseNotes.create({
+          data: {
+            caseId: screeningCase.id,
+            sessionId: clinicalSession.id,
+            createdBy: seederUserId,
+            presentingIssues: faker.lorem.sentence(),
+            orsAssessment: faker.number.int({ min: 0, max: 40 }),
+            riskLevel: riskStatus,
+            necessaryConditions: faker.lorem.sentence(),
+            treatmentInterventions: faker.helpers.arrayElements(TREATMENT_INTERVENTIONS, {
+              min: 1,
+              max: 3,
+            }),
+            otherIntervention: faker.lorem.words(3),
+            interventionExplanation: faker.lorem.sentence(),
+            studentResponseExplanations: faker.lorem.paragraph(),
+            followUpPlan: faker.helpers.arrayElement([
+              FollowUpPlanOptions.GROUP,
+              FollowUpPlanOptions.INDIVIDUAL,
+            ]),
+            followUpPlanExplanation: faker.lorem.sentence(),
+          },
+        });
+      }
+
+      // Follow-up treatment plan for FollowUp cases (caseId is unique)
+      if (caseStatus === caseStatusOptions.FollowUp) {
+        await db.clinicalFollowUpTreatmentPlan.create({
+          data: {
+            caseId: screeningCase.id,
+            currentORSScore: faker.number.int({ min: 0, max: 40 }),
+            plannedSessions: faker.number.int({ min: 2, max: 8 }),
+            sessionFrequency: faker.helpers.arrayElement(["Weekly", "Bi-weekly", "Monthly"]),
+            plannedTreatmentIntervention: faker.helpers.arrayElements(TREATMENT_INTERVENTIONS, {
+              min: 1,
+              max: 3,
+            }),
+            plannedTreatmentInterventionExplanation: faker.lorem.sentence(),
+          },
+        });
+      }
+
+      // Termination record for Terminated cases
+      const lastClinicalSession = clinicalSessions.at(-1);
+      if (caseStatus === caseStatusOptions.Terminated && lastClinicalSession) {
+        await db.clinicalCaseTermination.create({
+          data: {
+            caseId: screeningCase.id,
+            sessionId: lastClinicalSession.id,
+            createdBy: seederUserId,
+            terminationDate: faker.date.recent({ days: 30 }),
+            terminationReason: faker.helpers.arrayElement([
+              "Goals met",
+              "Referred out",
+              "Student relocated",
+              "Dropped out",
+            ]),
+            terminationReasonExplanation: faker.lorem.sentence(),
+          },
+        });
+      }
+
+      // Triage event on the first intervention session for this case's student
+      const firstSession = sessions[0];
+      const fellowId = student.assignedGroupId
+        ? groupLeaderByGroupId.get(student.assignedGroupId)
+        : undefined;
+      if (firstSession && fellowId) {
+        await db.triageEvent.create({
+          data: {
+            sessionId: firstSession.id,
+            studentId: student.id,
+            fellowId,
+            hubId: school.hubId ?? undefined,
+            triageOccurred: true,
+            riskScreenOutcome: RiskScreenOutcome.ANY_YES,
+            actionTaken: TriageActionTaken.REFERRED,
+            referredSupervisorId: school.assignedSupervisorId ?? undefined,
+            note: faker.lorem.sentence(),
+          },
+        });
+      }
+    }
+  }
+}
+
+async function createPayoutRecords(
+  fellowAttendances: DemoFellowAttendances,
+  hubIdBySchoolId: Map<string, string>,
+  seederUserId: string,
+) {
+  console.log("creating payout records");
+
+  // Only attendances with a supervisor + resolvable hub can back the payment flows
+  const eligible = fellowAttendances.filter(
+    (fa) => fa.supervisorId && fa.schoolId && hubIdBySchoolId.has(fa.schoolId),
+  );
+  const sample = eligible.slice(0, DEMO_PAYOUT_SAMPLE);
+
+  const payoutStatementData: Prisma.PayoutStatementsCreateManyInput[] = [];
+  const reconciliationData: Prisma.PayoutReconciliationCreateManyInput[] = [];
+  const repaymentData: Prisma.RepaymentRequestCreateManyInput[] = [];
+  const delayedData: Prisma.DelayedPaymentRequestCreateManyInput[] = [];
+
+  for (const fa of sample) {
+    const hubId = hubIdBySchoolId.get(fa.schoolId as string) as string;
+    const supervisorId = fa.supervisorId as string;
+
+    payoutStatementData.push({
+      fellowAttendanceId: fa.id,
+      fellowId: fa.fellowId,
+      amount: faker.number.int({ min: 500, max: 3000 }),
+      reason: faker.helpers.arrayElement([
+        "timely_attendance",
+        "delayed_attendance",
+        "reconciliation",
+      ]),
+      notes: faker.lorem.sentence(),
+      createdBy: seederUserId,
+      executedAt: faker.date.recent({ days: 30 }),
+      mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+    });
+
+    reconciliationData.push({
+      amount: faker.number.int({ min: -1000, max: 3000 }),
+      fellowId: fa.fellowId,
+      description: faker.lorem.sentence(),
+    });
+
+    // Spread the remaining sample between repayments and delayed payments
+    const flow = faker.number.int({ min: 0, max: 2 });
+    if (flow === 0) {
+      repaymentData.push({
+        supervisorId,
+        fellowId: fa.fellowId,
+        hubId,
+        fellowAttendanceId: fa.id,
+      });
+    } else if (flow === 1 && fa.sessionId) {
+      delayedData.push({
+        fellowId: fa.fellowId,
+        supervisorId,
+        interventionSessionId: fa.sessionId,
+        fellowAttendanceId: fa.id,
+      });
+    }
+  }
+
+  // A handful of reimbursement requests, one per unique supervisor in the sample
+  const reimbursementData: Prisma.ReimbursementRequestCreateManyInput[] = [];
+  const supervisorHubPairs = Array.from(
+    new Map(
+      sample.map((fa) => [fa.supervisorId as string, hubIdBySchoolId.get(fa.schoolId as string)]),
+    ).entries(),
+  ).slice(0, 20);
+  for (const [supervisorId, hubId] of supervisorHubPairs) {
+    if (!hubId) continue;
+    reimbursementData.push({
+      id: objectId("reim"),
+      supervisorId,
+      hubId,
+      incurredAt: faker.date.recent({ days: 30 }),
+      amount: faker.number.int({ min: 200, max: 5000 }),
+      kind: faker.helpers.arrayElement(["travel", "internet", "airtime", "materials"]),
+      status: faker.helpers.arrayElement(["pending", "approved", "rejected"]),
+      details: { subtype: "materials", receipt_link: faker.internet.url() },
+      mpesaName: faker.person.fullName(),
+      mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+    });
+  }
+
+  await db.payoutStatements.createMany({ data: payoutStatementData });
+  await db.payoutReconciliation.createMany({ data: reconciliationData });
+  await db.repaymentRequest.createMany({ data: repaymentData });
+  await db.delayedPaymentRequest.createMany({ data: delayedData });
+  await db.reimbursementRequest.createMany({ data: reimbursementData });
+}
+
+async function createSessionRecordings(
+  schools: DemoSchool[],
+  sessionsBySchool: Map<string, DemoSessions>,
+  seederUserId: string,
+) {
+  console.log("creating session recordings");
+
+  const recordings: Prisma.SessionRecordingCreateManyInput[] = [];
+
+  for (const school of schools) {
+    if (!school.assignedSupervisorId) continue;
+
+    const sessions = sessionsBySchool.get(school.id) ?? [];
+    const groups = school.interventionGroups.slice(0, DEMO_GROUPS_PER_SCHOOL);
+
+    for (const session of sessions) {
+      for (const group of groups) {
+        const recordingId = objectId("rec");
+        const sessionType = session.sessionType ?? "session";
+        const overallScore = faker.number.float({ min: 2, max: 7, fractionDigits: 1 }).toFixed(1);
+
+        // Synthetic key: looks real, points at no real object. The bucket is
+        // resolved from env at runtime, so staging never touches prod audio.
+        const s3Key = buildS3Key({
+          schoolName: school.schoolName,
+          fellowName: group.leader.fellowName ?? "fellow",
+          groupName: group.groupName,
+          sessionType,
+          recordingId,
+          extension: "mp3",
+        });
+
+        const fidelityFeedback = {
+          ...SAMPLE_FEEDBACK,
+          fidelity_scores: { ...SAMPLE_FEEDBACK.fidelity_scores, overall_score: overallScore },
+        } as Prisma.InputJsonValue;
+
+        const transcript = {
+          segments: [
+            { speaker: "fellow", text: faker.lorem.paragraph() },
+            { speaker: "student", text: faker.lorem.sentence() },
+          ],
+        } as Prisma.InputJsonValue;
+
+        recordings.push({
+          id: recordingId,
+          fileName: generateRecordingFilename(sessionType, recordingId, "mp3"),
+          originalFileName: faker.system.commonFileName("mp3"),
+          s3Key,
+          contentType: "audio/mpeg",
+          fileSize: faker.number.int({ min: 1_000_000, max: 30_000_000 }),
+          fellowId: group.leaderId,
+          schoolId: school.id,
+          groupId: group.id,
+          sessionId: session.id,
+          uploadedBy: seederUserId,
+          supervisorId: school.assignedSupervisorId,
+          // COMPLETED so the /api/recordings/pending worker never picks these up
+          // and nothing is ever submitted to the external Fidelity service.
+          status: RecordingProcessingStatus.COMPLETED,
+          processedAt: faker.date.recent({ days: 20 }),
+          overallScore,
+          promptVersion: 1,
+          fidelityFeedback,
+          transcript,
+        });
+      }
+    }
+  }
+
+  await db.sessionRecording.createMany({ data: recordings });
+}
+
+async function createDemoRecords(
+  allSchools: DemoSchool[],
+  students: DemoStudents,
+  sessions: DemoSessions,
+) {
+  const schools = allSchools.slice(0, DEMO_SCHOOL_SAMPLE);
+  const schoolIds = new Set(schools.map((s) => s.id));
+
+  // markedBy / createdBy / uploadedBy require a real user FK; reuse one seeded user
+  const seeder = await db.user.findFirst({ select: { id: true } });
+  if (!seeder) {
+    console.warn("No users found - skipping demo tracking/clinical/financial records");
+    return;
+  }
+  const seederUserId = seeder.id;
+
+  // Lookup maps scoped to the sampled schools
+  const studentsBySchool = new Map<string, DemoStudents>();
+  for (const student of students) {
+    if (!student.schoolId || !schoolIds.has(student.schoolId)) continue;
+    const list = studentsBySchool.get(student.schoolId) ?? [];
+    list.push(student);
+    studentsBySchool.set(student.schoolId, list);
+  }
+
+  const sessionsBySchool = new Map<string, DemoSessions>();
+  for (const session of sessions) {
+    if (!session.schoolId || !schoolIds.has(session.schoolId)) continue;
+    const list = sessionsBySchool.get(session.schoolId) ?? [];
+    list.push(session);
+    sessionsBySchool.set(session.schoolId, list);
+  }
+
+  const hubIdBySchoolId = new Map<string, string>();
+  const groupLeaderByGroupId = new Map<string, string>();
+  const groupTypeByGroupId = new Map<string, string>();
+  for (const school of schools) {
+    if (school.hubId) hubIdBySchoolId.set(school.id, school.hubId);
+    for (const group of school.interventionGroups) {
+      groupLeaderByGroupId.set(group.id, group.leaderId);
+      groupTypeByGroupId.set(group.id, group.groupType);
+    }
+  }
+
+  const { fellowAttendances } = await createAttendanceRecords(
+    schools,
+    studentsBySchool,
+    sessionsBySchool,
+    seederUserId,
+  );
+  await createStudentOutcomes(schools, studentsBySchool, groupTypeByGroupId);
+  await createClinicalRecords(
+    schools,
+    studentsBySchool,
+    sessionsBySchool,
+    groupLeaderByGroupId,
+    seederUserId,
+  );
+  await createPayoutRecords(fellowAttendances, hubIdBySchoolId, seederUserId);
+  await createSessionRecordings(schools, sessionsBySchool, seederUserId);
+}
+
 async function main() {
   await truncateTables();
 
@@ -1543,21 +2084,17 @@ async function main() {
       hub: true,
     },
   });
-  const _students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
+  const students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
   const { interventionSessionsNames } = await createSessionNames(hubs);
 
-  // TODO: question, should we also dynamically mark attendance for fellows in these sessions?
-  const _interventionSessions = await createInterventionSessionsForSchools(
+  const interventionSessions = await createInterventionSessionsForSchools(
     schoolsWithGroupsAndFellows,
     interventionSessionsNames,
   );
 
-  // TODO:
-  // create fellow attendance records
-  // create student attendance records
-  // create supervisor attendance records
-  // create clinical records
-  // create payouts
+  // Comprehensive demo data (attendance, clinical cases, payouts, recordings)
+  // for a bounded sample of schools so staging looks realistic end-to-end.
+  await createDemoRecords(schoolsWithGroupsAndFellows, students, interventionSessions);
 }
 
 void main();
