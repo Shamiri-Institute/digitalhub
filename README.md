@@ -480,7 +480,7 @@ prisma generate && prisma migrate deploy && next build
 Migrations are applied automatically during Vercel builds:
 
 - **Production** (`vercel:build`): `prisma migrate deploy` — applies pending migrations, never touches data.
-- **Preview / Staging / Training** (`vercel:preview:build`, `vercel:testing:build`, `vercel:training:build` — all aliases of `vercel:seeded:build`): `prisma migrate reset` + `prisma migrate deploy` + `npm run db:seed` — rebuilds the database from faker-generated data on each deploy.
+- **Preview / Staging / Training** (`vercel:seeded:build`): `prisma migrate reset` + `prisma migrate deploy` + `npm run db:seed` — rebuilds the database from faker-generated data on each deploy. Set these environments' build command to `npm run vercel:seeded:build` in Vercel.
 
 The preview/staging database is **seeded with synthetic data and never cloned from production**, so it contains no real student, clinical, or financial information.
 
