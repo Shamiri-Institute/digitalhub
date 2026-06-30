@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/preview.yaml/badge.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/preview.yaml)
+[![E2E Tests](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/e2e.yml/badge.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-1.11.2-blue.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/releases)
 
@@ -98,7 +98,7 @@ cp .env.example .env.development
 npm run db:dev:up &
 sleep 5  # Wait for database to start
 npm run db:dev:migrate
-npm run db:dev:seed
+npm run db:seed
 
 # Start development server
 npm run dev
@@ -237,7 +237,7 @@ npm run db:dev:up
 npm run db:dev:migrate
 
 # Seed with test data
-npm run db:dev:seed
+npm run db:seed
 ```
 
 #### Using Existing PostgreSQL
@@ -248,7 +248,7 @@ npm run db:dev:seed
 
 ```bash
 npm run db:dev:migrate
-npm run db:dev:seed
+npm run db:seed
 ```
 
 ### Authentication Options
@@ -355,9 +355,8 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 | `npm run db:dev:up` | Start local PostgreSQL (Docker) |
 | `npm run db:dev:migrate` | Run Prisma migrations |
 | `npm run db:dev:migrate:reset` | Reset and reapply all migrations |
-| `npm run db:dev:seed` | Seed with test data |
-| `npm run db:dev:types` | Generate Prisma client types |
-| `npm run db:studio` | Open Prisma Studio GUI |
+| `npm run db:seed` | Seed with faker-generated test data |
+| `npm run db:dev:generate` | Generate Prisma client types |
 
 #### Code Quality
 
@@ -445,7 +444,7 @@ Configure these in your Vercel project settings:
 | Environment | Branch | Database |
 |-------------|--------|----------|
 | Production | `main` | Production DB |
-| Preview | `dev` / PRs | Preview DB |
+| Preview / Staging | `dev` / PRs | Dedicated DB rebuilt from faker seed data (no production data) |
 | Development | local | Local DB |
 
 #### Build Configuration
@@ -456,14 +455,14 @@ The build process automatically runs migrations:
 prisma generate && prisma migrate deploy && next build
 ```
 
-### Database Migrations in Production
+### Database per Environment
 
-Migrations are automatically applied during Vercel builds. For manual operations:
+Migrations are applied automatically during Vercel builds:
 
-```bash
-# Preview database management
-npm run db:preview:reset  # Recreate from production
-```
+- **Production** (`vercel:build`): `prisma migrate deploy` — applies pending migrations, never touches data.
+- **Preview / Staging / Training** (`vercel:preview:build`, `vercel:testing:build`, `vercel:training:build`): `prisma migrate reset` + `prisma migrate deploy` + `npm run db:seed` — rebuilds the database from faker-generated data on each deploy.
+
+The preview/staging database is **seeded with synthetic data and never cloned from production**, so it contains no real student, clinical, or financial information.
 
 ---
 
