@@ -1,6 +1,6 @@
 [![E2E Tests](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/e2e.yml/badge.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.32.0-blue.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/releases)
+[![Version](https://img.shields.io/github/package-json/v/Shamiri-Institute/digitalhub?color=blue)](https://github.com/Shamiri-Institute/digitalhub/releases)
 
 # Shamiri Digital Hub
 
