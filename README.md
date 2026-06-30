@@ -1,6 +1,6 @@
-[![Build Status](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/preview.yaml/badge.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/preview.yaml)
+[![E2E Tests](https://github.com/Shamiri-Institute/digitalhub/actions/workflows/e2e.yml/badge.svg)](https://github.com/Shamiri-Institute/digitalhub/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.11.2-blue.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/releases)
+[![Version](https://img.shields.io/github/package-json/v/Shamiri-Institute/digitalhub?color=blue)](https://github.com/Shamiri-Institute/digitalhub/releases)
 
 # Shamiri Digital Hub
 
@@ -56,7 +56,7 @@ This platform can support your research by providing:
 
 ```
 Shamiri Institute. (2026). Shamiri Digital Hub [Computer software].
-https://github.com/Shamiri-Institute/digitalhub-frontend
+https://github.com/Shamiri-Institute/digitalhub
 ```
 
 ### License
@@ -85,8 +85,8 @@ Get the platform running locally in under 5 minutes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Shamiri-Institute/digitalhub-frontend.git
-cd digitalhub-frontend
+git clone https://github.com/Shamiri-Institute/digitalhub.git
+cd digitalhub
 
 # Install dependencies
 npm install
@@ -98,7 +98,7 @@ cp .env.example .env.development
 npm run db:dev:up &
 sleep 5  # Wait for database to start
 npm run db:dev:migrate
-npm run db:dev:seed
+npm run db:seed
 
 # Start development server
 npm run dev
@@ -145,6 +145,9 @@ NEXTAUTH_SECRET="your-nextauth-secret"  # Generate with: openssl rand -base64 32
 GOOGLE_ID="your-google-client-id"
 GOOGLE_SECRET="your-google-client-secret"
 
+# Comma-separated emails granted super-admin access
+SUPERADMINS="admin@example.com"
+
 # ====================================
 # GOOGLE DRIVE API (Document Storage)
 # ====================================
@@ -169,7 +172,11 @@ S3_UPLOAD_REGION="your-aws-region"
 
 # S3 Recordings Bucket (Session Recordings)
 S3_RECORDINGS_BUCKET="your-recordings-bucket"
-S3_RECORDINGS_REGION="your-aws-region"
+S3_RECORDINGS_REGION="your-aws-region"  # defaults to af-south-1
+
+# S3 Student Attendance Bucket (attendance documents)
+S3_STUDENT_ATTENDANCE_BUCKET="your-student-attendance-bucket"
+S3_STUDENT_ATTENDANCE_REGION="your-aws-region"  # defaults to af-south-1
 
 # ====================================
 # METABASE (Analytics)
@@ -183,13 +190,18 @@ METABASE_MONITORING_DASHBOARD_ID="your-metabase-dashboard-id"  # Dashboard ID fo
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NEXT_PUBLIC_ENV="development"
 APP_ENV="development"
-SEND_EMAILS="0"  # Set to 1 to enable email sending
-DEBUG="0"        # Set to 1 to enable debug mode
+DEBUG="0"        # Set to 1 to enable verbose Prisma query logging
+
+# Feature flags
+NEXT_PUBLIC_ENABLE_TICKETS="0"        # Set to 1 to enable the ticketing UI
+NEXT_PUBLIC_ENABLE_PERF_PROFILER="0"  # Set to 1 to enable the performance profiler
 
 # ====================================
-# RECORDINGS API (Fidelity Service)
+# RECORDINGS / FIDELITY SERVICE
 # ====================================
-RECORDINGS_API_KEY="your-recordings-api-key"
+FIDELITY_API_URL="https://fidelity-service.example.com"  # External fidelity-analysis API
+FIDELITY_API_KEY="your-fidelity-api-key"
+RECORDINGS_API_KEY="your-recordings-api-key"  # Shared secret for the recordings worker
 
 # ====================================
 # SENTRY (Error Monitoring) — OPTIONAL
@@ -237,7 +249,7 @@ npm run db:dev:up
 npm run db:dev:migrate
 
 # Seed with test data
-npm run db:dev:seed
+npm run db:seed
 ```
 
 #### Using Existing PostgreSQL
@@ -248,7 +260,7 @@ npm run db:dev:seed
 
 ```bash
 npm run db:dev:migrate
-npm run db:dev:seed
+npm run db:seed
 ```
 
 ### Authentication Options
@@ -355,9 +367,8 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 | `npm run db:dev:up` | Start local PostgreSQL (Docker) |
 | `npm run db:dev:migrate` | Run Prisma migrations |
 | `npm run db:dev:migrate:reset` | Reset and reapply all migrations |
-| `npm run db:dev:seed` | Seed with test data |
-| `npm run db:dev:types` | Generate Prisma client types |
-| `npm run db:studio` | Open Prisma Studio GUI |
+| `npm run db:seed` | Seed with faker-generated test data |
+| `npm run db:dev:generate` | Generate Prisma client types |
 
 #### Code Quality
 
@@ -434,9 +445,17 @@ Configure these in your Vercel project settings:
 | `NEXTAUTH_SECRET` | Yes | Authentication secret |
 | `GOOGLE_ID` | Yes | Google OAuth Client ID |
 | `GOOGLE_SECRET` | Yes | Google OAuth Client Secret |
+| `AWS_REGION` | Yes | AWS region |
 | `AWS_ACCESS_KEY_ID` | Yes | AWS credentials for S3 |
 | `AWS_SECRET_ACCESS_KEY` | Yes | AWS credentials for S3 |
+| `S3_UPLOAD_KEY` | Yes | Access key for the uploads bucket |
+| `S3_UPLOAD_SECRET` | Yes | Secret key for the uploads bucket |
 | `S3_UPLOAD_BUCKET` | Yes | S3 bucket for uploads |
+| `S3_UPLOAD_REGION` | Yes | Region of the uploads bucket |
+| `S3_RECORDINGS_BUCKET` | Yes | S3 bucket for session recordings |
+| `S3_RECORDINGS_REGION` | No | Recordings bucket region (defaults to `af-south-1`) |
+| `S3_STUDENT_ATTENDANCE_BUCKET` | No | Bucket for attendance documents |
+| `RECORDINGS_API_KEY` | For fidelity | Shared secret for the recordings/fidelity worker |
 | `METABASE_SECRET_KEY` | For analytics | Metabase JWT signing key |
 | `METABASE_MONITORING_DASHBOARD_ID` | For analytics | Metabase Monitoring and Evaluation dashboard ID (numeric) |
 
@@ -445,25 +464,28 @@ Configure these in your Vercel project settings:
 | Environment | Branch | Database |
 |-------------|--------|----------|
 | Production | `main` | Production DB |
-| Preview | `dev` / PRs | Preview DB |
+| Preview / Staging | `dev` / PRs | Dedicated DB rebuilt from faker seed data (no production data) |
 | Development | local | Local DB |
 
-#### Build Configuration
+### Database per Environment
 
-The build process automatically runs migrations:
+Vercel's Build Command is a single project-wide setting (it can't be set per
+environment), so `vercel:build` self-selects based on the `VERCEL_ENV` system
+variable. Set the project's **Build Command** to `npm run vercel:build` and it
+does the right thing everywhere:
 
-```bash
-prisma generate && prisma migrate deploy && next build
-```
+- **Production** (`VERCEL_ENV=production`) → `vercel:prod:build`: `prisma migrate deploy` + `next build` — applies pending migrations, never touches data.
+- **Preview / Staging / Training** (any non-production `VERCEL_ENV`) → `vercel:seeded:build`: `prisma migrate reset` + `prisma migrate deploy` + `npm run db:seed` + `next build` — rebuilds the database from faker-generated data on each deploy.
+- **Run locally with no `VERCEL_ENV` set** → falls back to `vercel:prod:build`, so it never wipes a local database by accident.
 
-### Database Migrations in Production
+The preview/staging database is **seeded with synthetic data and never cloned
+from production**, so it contains no real student, clinical, or financial
+information.
 
-Migrations are automatically applied during Vercel builds. For manual operations:
-
-```bash
-# Preview database management
-npm run db:preview:reset  # Recreate from production
-```
+> If staging/testing/training are separate Vercel **projects** (not custom
+> environments), set each project's Build Command directly to
+> `npm run vercel:seeded:build` instead — there `VERCEL_ENV` is `production` for
+> every project, so the auto-selector can't tell them apart.
 
 ---
 
@@ -538,8 +560,9 @@ This platform can be adapted for similar intervention programs:
 
 | Feature | Configuration | Description |
 |---------|--------------|-------------|
-| Email Sending | `SEND_EMAILS=1` | Enable transactional emails |
-| Debug Mode | `DEBUG=1` | Enable verbose logging |
+| Debug Mode | `DEBUG=1` | Enable verbose Prisma query logging |
+| Tickets UI | `NEXT_PUBLIC_ENABLE_TICKETS=1` | Enable the ticketing interface |
+| Perf Profiler | `NEXT_PUBLIC_ENABLE_PERF_PROFILER=1` | Enable the performance profiler |
 | OAuth | `GOOGLE_ID/SECRET` | Google authentication |
 | File Storage | `S3_*` variables | AWS S3 configuration |
 | Analytics | `METABASE_SECRET_KEY`, `METABASE_MONITORING_DASHBOARD_ID` | Embedded Metabase dashboards |
@@ -580,8 +603,8 @@ We welcome contributions from the community!
 
 ### Getting Help
 
-- **Issues**: [GitHub Issues](https://github.com/Shamiri-Institute/digitalhub-frontend/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Shamiri-Institute/digitalhub-frontend/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Shamiri-Institute/digitalhub/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Shamiri-Institute/digitalhub/discussions)
 
 ### Contact
 

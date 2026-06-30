@@ -3,7 +3,9 @@ import {
   type AdminUser,
   type ClinicalLead,
   type ClinicalTeam,
+  caseStatusOptions,
   type Fellow,
+  FollowUpPlanOptions,
   type Hub,
   type HubCoordinator,
   type Implementer,
@@ -11,15 +13,21 @@ import {
   type OpsUser,
   type Prisma,
   type Project,
+  RecordingProcessingStatus,
+  RiskScreenOutcome,
+  referralStatusOptions,
+  riskStatusOptions,
   type SessionName,
   type Supervisor,
   sessionTypes,
+  TriageActionTaken,
 } from "@prisma/client";
 import { isBefore, startOfMonth } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
 import { hubSessionTypes } from "#/prisma/scripts/hub-session-types";
 
 // GETTING STARTED WITH SEEDING
@@ -1492,13 +1500,852 @@ async function createInterventionSessionsForSchools(
     }
   }
 
-  return db.interventionSession.createMany({
+  return db.interventionSession.createManyAndReturn({
     data: interventionSessions,
   });
 }
 
-// TODO: should we guarantee that all child records are created for each parent record?
-//POSSIBLE PERFORMANCE WIN BY PARALLELISING SOME OF THESE QUERIES?
+// ============================================================================
+// DEMO TRACKING / CLINICAL / FINANCIAL DATA
+// ----------------------------------------------------------------------------
+// These records were historically left as TODOs. They are seeded with
+// faker-generated data for a *bounded sample* of schools/groups/students so the
+// staging/preview environment looks realistic end-to-end (attendance, clinical
+// cases, payouts, recordings) without generating production-scale volume.
+// ============================================================================
+
+const DEMO_SCHOOL_SAMPLE = 8; // schools enriched with the records below
+const DEMO_GROUPS_PER_SCHOOL = 6; // cap groups enriched per school
+const DEMO_STUDENTS_PER_SCHOOL = 25; // students given attendance/outcomes per school
+const DEMO_CLINICAL_CASES_PER_SCHOOL = 2; // clinical cases opened per school
+const DEMO_PAYOUT_SAMPLE = 80; // fellow-attendance rows backing payout flows
+const TREATMENT_INTERVENTIONS = [
+  "CBT",
+  "Behavioural Activation",
+  "Psychoeducation",
+  "Problem Solving Therapy",
+  "Mindfulness",
+];
+
+type DemoSchool = Prisma.SchoolGetPayload<{
+  include: { interventionGroups: { include: { leader: true } }; hub: true };
+}>;
+type DemoStudents = Awaited<ReturnType<typeof createStudentsForSchools>>;
+type DemoSessions = Awaited<ReturnType<typeof createInterventionSessionsForSchools>>;
+type DemoFellowAttendances = Awaited<
+  ReturnType<typeof createAttendanceRecords>
+>["fellowAttendances"];
+
+async function createAttendanceRecords(
+  schools: DemoSchool[],
+  studentsBySchool: Map<string, DemoStudents>,
+  sessionsBySchool: Map<string, DemoSessions>,
+  seederUserId: string,
+) {
+  console.log("creating attendance records");
+
+  const fellowAttendanceData: Prisma.FellowAttendanceCreateManyInput[] = [];
+  const studentAttendanceData: Prisma.StudentAttendanceCreateManyInput[] = [];
+  const supervisorAttendanceData: Prisma.SupervisorAttendanceCreateManyInput[] = [];
+
+  for (const school of schools) {
+    const projectId = school.hub?.projectId;
+    if (!projectId) continue;
+
+    const sessions = sessionsBySchool.get(school.id) ?? [];
+    const groups = school.interventionGroups.slice(0, DEMO_GROUPS_PER_SCHOOL);
+    const students = (studentsBySchool.get(school.id) ?? []).slice(0, DEMO_STUDENTS_PER_SCHOOL);
+
+    for (const session of sessions) {
+      // Fellow attendance: one row per group leader in this school
+      for (const group of groups) {
+        fellowAttendanceData.push({
+          projectId,
+          fellowId: group.leaderId,
+          sessionId: session.id,
+          schoolId: school.id,
+          supervisorId: school.assignedSupervisorId ?? undefined,
+          groupId: group.id,
+          sessionDate: session.sessionDate,
+          yearOfImplementation: session.yearOfImplementation ?? undefined,
+          attended: faker.datatype.boolean({ probability: 0.9 }),
+          paymentInitiated: true,
+          markedBy: seederUserId,
+        });
+      }
+
+      // Supervisor attendance: one row per school's assigned supervisor
+      if (school.assignedSupervisorId) {
+        supervisorAttendanceData.push({
+          projectId,
+          schoolId: school.id,
+          supervisorId: school.assignedSupervisorId,
+          sessionId: session.id,
+          attended: faker.datatype.boolean({ probability: 0.9 }),
+          markedBy: seederUserId,
+        });
+      }
+
+      // Student attendance: for the sampled students (unique per student+session)
+      for (const student of students) {
+        const group = groups.find((g) => g.id === student.assignedGroupId);
+        studentAttendanceData.push({
+          projectId,
+          studentId: student.id,
+          sessionId: session.id,
+          groupId: student.assignedGroupId ?? undefined,
+          schoolId: school.id,
+          fellowId: group?.leaderId,
+          attended: faker.datatype.boolean({ probability: 0.85 }),
+          markedBy: seederUserId,
+        });
+      }
+    }
+  }
+
+  const fellowAttendances = await db.fellowAttendance.createManyAndReturn({
+    data: fellowAttendanceData,
+  });
+  const studentAttendances = await db.studentAttendance.createManyAndReturn({
+    data: studentAttendanceData,
+  });
+  await db.supervisorAttendance.createMany({ data: supervisorAttendanceData });
+
+  return { fellowAttendances, studentAttendances };
+}
+
+async function createStudentOutcomes(
+  schools: DemoSchool[],
+  studentsBySchool: Map<string, DemoStudents>,
+  groupTypeByGroupId: Map<string, string>,
+) {
+  console.log("creating student outcomes");
+  const outcomes: Prisma.StudentOutcomeCreateManyInput[] = [];
+  const score = () => faker.number.int({ min: 0, max: 3 });
+
+  for (const school of schools) {
+    const students = (studentsBySchool.get(school.id) ?? []).slice(0, DEMO_STUDENTS_PER_SCHOOL);
+    for (const student of students) {
+      const condition = student.assignedGroupId
+        ? (groupTypeByGroupId.get(student.assignedGroupId) ?? "CONTROL")
+        : "CONTROL";
+      // Baseline (0) and endpoint (1) time points
+      for (const timePoint of [0, 1]) {
+        outcomes.push({
+          id: objectId("outcome"),
+          shamiriId: student.visibleId,
+          timePoint,
+          yearOfImplementation: new Date().getFullYear(),
+          condition,
+          phq1: score(),
+          phq2: score(),
+          phq3: score(),
+          phq4: score(),
+          gad1: score(),
+          gad2: score(),
+          gad3: score(),
+          gad4: score(),
+        });
+      }
+    }
+  }
+
+  await db.studentOutcome.createMany({ data: outcomes });
+}
+
+async function createClinicalRecords(
+  schools: DemoSchool[],
+  studentsBySchool: Map<string, DemoStudents>,
+  sessionsBySchool: Map<string, DemoSessions>,
+  groupLeaderByGroupId: Map<string, string>,
+  seederUserId: string,
+) {
+  console.log("creating clinical records");
+
+  // Pre-generate ids so the whole clinical graph can be built in memory and
+  // written with a few bulk inserts instead of one create per row.
+  const screeningData: Prisma.ClinicalScreeningInfoCreateManyInput[] = [];
+  const sessionData: Prisma.ClinicalSessionAttendanceCreateManyInput[] = [];
+  const notesData: Prisma.ClinicalCaseNotesCreateManyInput[] = [];
+  const followUpData: Prisma.ClinicalFollowUpTreatmentPlanCreateManyInput[] = [];
+  const terminationData: Prisma.ClinicalCaseTerminationCreateManyInput[] = [];
+  const triageData: Prisma.TriageEventCreateManyInput[] = [];
+
+  // Cycle through case statuses so every state (incl. Terminated/FollowUp) is
+  // reliably represented for demos, regardless of sample size.
+  const CASE_STATUSES = [
+    caseStatusOptions.Active,
+    caseStatusOptions.FollowUp,
+    caseStatusOptions.Terminated,
+    caseStatusOptions.Referred,
+  ];
+  let caseIndex = 0;
+
+  for (const school of schools) {
+    const caseStudents = (studentsBySchool.get(school.id) ?? []).slice(
+      0,
+      DEMO_CLINICAL_CASES_PER_SCHOOL,
+    );
+    const sessions = sessionsBySchool.get(school.id) ?? [];
+
+    for (const student of caseStudents) {
+      const caseStatus =
+        CASE_STATUSES[caseIndex % CASE_STATUSES.length] ?? caseStatusOptions.Active;
+      caseIndex += 1;
+      const riskStatus = faker.helpers.arrayElement([
+        riskStatusOptions.Low,
+        riskStatusOptions.Medium,
+        riskStatusOptions.High,
+      ]);
+      const caseId = objectId("case");
+
+      screeningData.push({
+        id: caseId,
+        studentId: student.id,
+        schoolId: school.id,
+        caseStatus,
+        riskStatus,
+        currentSupervisorId: school.assignedSupervisorId ?? undefined,
+        acceptCase: true,
+        referralStatus: referralStatusOptions.Approved,
+        pseudonym: `${faker.color.human()}-${faker.animal.type()}`,
+        generalPresentingIssues: faker.helpers.arrayElement([
+          "Academic stress",
+          "Anxiety",
+          "Low mood",
+          "Family conflict",
+          "Peer relationships",
+        ]),
+        anxiety: true,
+        academicStruggles: faker.datatype.boolean(),
+        referralReason: faker.lorem.sentence(),
+        referralNotes: faker.lorem.paragraph(),
+        progressNotes: faker.internet.url(),
+        flagged: riskStatus === riskStatusOptions.High,
+        flaggedReason: riskStatus === riskStatusOptions.High ? faker.lorem.sentence() : undefined,
+      });
+
+      // 2-3 clinical session attendances per case, each with one case note
+      const numClinicalSessions = faker.number.int({ min: 2, max: 3 });
+      const clinicalSessionIds: string[] = [];
+      for (let s = 0; s < numClinicalSessions; s++) {
+        const clinicalSessionId = objectId("csess");
+        clinicalSessionIds.push(clinicalSessionId);
+
+        sessionData.push({
+          id: clinicalSessionId,
+          caseId,
+          session: `Clinical Session ${s + 1}`,
+          supervisorId: school.assignedSupervisorId ?? undefined,
+          attendanceStatus: true,
+        });
+
+        notesData.push({
+          caseId,
+          sessionId: clinicalSessionId,
+          createdBy: seederUserId,
+          presentingIssues: faker.lorem.sentence(),
+          orsAssessment: faker.number.int({ min: 0, max: 40 }),
+          riskLevel: riskStatus,
+          necessaryConditions: faker.lorem.sentence(),
+          treatmentInterventions: faker.helpers.arrayElements(TREATMENT_INTERVENTIONS, {
+            min: 1,
+            max: 3,
+          }),
+          otherIntervention: faker.lorem.words(3),
+          interventionExplanation: faker.lorem.sentence(),
+          studentResponseExplanations: faker.lorem.paragraph(),
+          followUpPlan: faker.helpers.arrayElement([
+            FollowUpPlanOptions.GROUP,
+            FollowUpPlanOptions.INDIVIDUAL,
+          ]),
+          followUpPlanExplanation: faker.lorem.sentence(),
+        });
+      }
+
+      // Follow-up treatment plan for FollowUp cases (caseId is unique)
+      if (caseStatus === caseStatusOptions.FollowUp) {
+        followUpData.push({
+          caseId,
+          currentORSScore: faker.number.int({ min: 0, max: 40 }),
+          plannedSessions: faker.number.int({ min: 2, max: 8 }),
+          sessionFrequency: faker.helpers.arrayElement(["Weekly", "Bi-weekly", "Monthly"]),
+          plannedTreatmentIntervention: faker.helpers.arrayElements(TREATMENT_INTERVENTIONS, {
+            min: 1,
+            max: 3,
+          }),
+          plannedTreatmentInterventionExplanation: faker.lorem.sentence(),
+        });
+      }
+
+      // Termination record for Terminated cases
+      const lastClinicalSessionId = clinicalSessionIds.at(-1);
+      if (caseStatus === caseStatusOptions.Terminated && lastClinicalSessionId) {
+        terminationData.push({
+          caseId,
+          sessionId: lastClinicalSessionId,
+          createdBy: seederUserId,
+          terminationDate: faker.date.recent({ days: 30 }),
+          terminationReason: faker.helpers.arrayElement([
+            "Goals met",
+            "Referred out",
+            "Student relocated",
+            "Dropped out",
+          ]),
+          terminationReasonExplanation: faker.lorem.sentence(),
+        });
+      }
+
+      // Triage event on the first intervention session for this case's student
+      const firstSession = sessions[0];
+      const fellowId = student.assignedGroupId
+        ? groupLeaderByGroupId.get(student.assignedGroupId)
+        : undefined;
+      if (firstSession && fellowId) {
+        triageData.push({
+          sessionId: firstSession.id,
+          studentId: student.id,
+          fellowId,
+          hubId: school.hubId ?? undefined,
+          triageOccurred: true,
+          riskScreenOutcome: RiskScreenOutcome.ANY_YES,
+          actionTaken: TriageActionTaken.REFERRED,
+          referredSupervisorId: school.assignedSupervisorId ?? undefined,
+          note: faker.lorem.sentence(),
+        });
+      }
+    }
+  }
+
+  // Insert respecting FK order: screening -> sessions -> (notes/termination),
+  // with the independent leaf tables written in parallel.
+  await db.clinicalScreeningInfo.createMany({ data: screeningData });
+  await db.clinicalSessionAttendance.createMany({ data: sessionData });
+  await Promise.all([
+    db.clinicalCaseNotes.createMany({ data: notesData }),
+    db.clinicalCaseTermination.createMany({ data: terminationData }),
+    db.clinicalFollowUpTreatmentPlan.createMany({ data: followUpData }),
+    db.triageEvent.createMany({ data: triageData }),
+  ]);
+}
+
+async function createPayoutRecords(
+  fellowAttendances: DemoFellowAttendances,
+  hubIdBySchoolId: Map<string, string>,
+  seederUserId: string,
+) {
+  console.log("creating payout records");
+
+  // Only attendances with a supervisor + resolvable hub can back the payment flows
+  const eligible = fellowAttendances.filter(
+    (fa) => fa.supervisorId && fa.schoolId && hubIdBySchoolId.has(fa.schoolId),
+  );
+  const sample = eligible.slice(0, DEMO_PAYOUT_SAMPLE);
+
+  const payoutStatementData: Prisma.PayoutStatementsCreateManyInput[] = [];
+  const reconciliationData: Prisma.PayoutReconciliationCreateManyInput[] = [];
+  const repaymentData: Prisma.RepaymentRequestCreateManyInput[] = [];
+  const delayedData: Prisma.DelayedPaymentRequestCreateManyInput[] = [];
+
+  for (const fa of sample) {
+    const hubId = hubIdBySchoolId.get(fa.schoolId as string) as string;
+    const supervisorId = fa.supervisorId as string;
+
+    payoutStatementData.push({
+      fellowAttendanceId: fa.id,
+      fellowId: fa.fellowId,
+      amount: faker.number.int({ min: 500, max: 3000 }),
+      reason: faker.helpers.arrayElement([
+        "timely_attendance",
+        "delayed_attendance",
+        "reconciliation",
+      ]),
+      notes: faker.lorem.sentence(),
+      createdBy: seederUserId,
+      executedAt: faker.date.recent({ days: 30 }),
+      mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+    });
+
+    reconciliationData.push({
+      amount: faker.number.int({ min: -1000, max: 3000 }),
+      fellowId: fa.fellowId,
+      description: faker.lorem.sentence(),
+    });
+
+    // Spread the remaining sample between repayments and delayed payments
+    const flow = faker.number.int({ min: 0, max: 2 });
+    if (flow === 0) {
+      repaymentData.push({
+        supervisorId,
+        fellowId: fa.fellowId,
+        hubId,
+        fellowAttendanceId: fa.id,
+      });
+    } else if (flow === 1 && fa.sessionId) {
+      delayedData.push({
+        fellowId: fa.fellowId,
+        supervisorId,
+        interventionSessionId: fa.sessionId,
+        fellowAttendanceId: fa.id,
+      });
+    }
+  }
+
+  // A handful of reimbursement requests, one per unique supervisor in the sample
+  const reimbursementData: Prisma.ReimbursementRequestCreateManyInput[] = [];
+  const supervisorHubPairs = Array.from(
+    new Map(
+      sample.map((fa) => [fa.supervisorId as string, hubIdBySchoolId.get(fa.schoolId as string)]),
+    ).entries(),
+  ).slice(0, 20);
+  for (const [supervisorId, hubId] of supervisorHubPairs) {
+    if (!hubId) continue;
+    reimbursementData.push({
+      id: objectId("reim"),
+      supervisorId,
+      hubId,
+      incurredAt: faker.date.recent({ days: 30 }),
+      amount: faker.number.int({ min: 200, max: 5000 }),
+      kind: faker.helpers.arrayElement(["travel", "internet", "airtime", "materials"]),
+      status: faker.helpers.arrayElement(["pending", "approved", "rejected"]),
+      details: { subtype: "materials", receipt_link: faker.internet.url() },
+      mpesaName: faker.person.fullName(),
+      mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+    });
+  }
+
+  await db.payoutStatements.createMany({ data: payoutStatementData });
+  await db.payoutReconciliation.createMany({ data: reconciliationData });
+  await db.repaymentRequest.createMany({ data: repaymentData });
+  await db.delayedPaymentRequest.createMany({ data: delayedData });
+  await db.reimbursementRequest.createMany({ data: reimbursementData });
+}
+
+// Pools used to generate varied (V1-shaped) fidelity feedback per recording so
+// the recordings table isn't 378 copies of one canned response.
+const FIDELITY_QUESTIONS = [
+  {
+    key: "question_1_protocol_adherence",
+    justifications: [
+      "All mandatory protocol elements were delivered in order, including the confidentiality agreement at the start and a structured wrap-up at the end.",
+      "Most protocol steps were followed, though the confidentiality explanation was rushed and the closing reflection was only partially completed.",
+      "Several mandatory elements were missing — the confidentiality agreement was skipped and the session ended without the required reflection.",
+    ],
+  },
+  {
+    key: "question_2_content_specifications",
+    justifications: [
+      "The facilitator covered every required content point and guided students through the corresponding workbook activities.",
+      "Core content was covered, but the delivery skipped some of the specified facilitation techniques.",
+      "Key content topics were addressed only briefly and one workbook activity was omitted.",
+    ],
+  },
+  {
+    key: "question_3_thoroughness",
+    justifications: [
+      "Activities were given ample time and discussions explored each student's contribution in depth.",
+      "Thoroughness was mixed — individual work was well paced but group discussion stayed surface-level.",
+      "The session felt rushed, with limited time for reflection and a hurried conclusion.",
+    ],
+  },
+  {
+    key: "question_4_skillful_delivery",
+    justifications: [
+      "Strong use of open-ended questions, active listening and theme-linking across students.",
+      "Good rapport overall, though a few opportunities to reflect student input back were missed.",
+      "Delivery was functional but relied on closed questions and offered little validation.",
+    ],
+  },
+  {
+    key: "question_5_clarity_accessibility",
+    justifications: [
+      "Concepts were broken down clearly with relatable, age-appropriate examples.",
+      "Instructions were mostly clear but a couple of terms needed further explanation.",
+      "Some instructions were ambiguous, leaving students unsure how to start the activity.",
+    ],
+  },
+  {
+    key: "question_6_protocol_boundaries",
+    justifications: [
+      "The facilitator stayed within the curriculum and used personal examples appropriately to model activities.",
+      "Boundaries were generally maintained, with one minor over-disclosure during a discussion.",
+      "The session drifted into off-curriculum content on a few occasions.",
+    ],
+  },
+] as const;
+
+const OVERALL_ASSESSMENTS = [
+  "High fidelity overall. The facilitator delivered the protocol confidently while keeping the group engaged and safe.",
+  "Moderate fidelity with a few gaps. Core content was covered but some procedural techniques were inconsistent.",
+  "Developing fidelity. The facilitator showed promise in rapport-building but omitted several mandatory protocol steps.",
+  "Strong session with minor refinements needed around pacing and the structured close.",
+];
+
+const RECOMMENDATIONS_POOL = [
+  "Review and rehearse the confidentiality script so it is delivered consistently at the start of every session.",
+  "Practise the rephrasing technique to confirm understanding and surface key student contributions.",
+  "Use a closing cheat-sheet to ensure the 3-step reflection is completed before ending the session.",
+  "Plan timeboxes for each activity to avoid a rushed conclusion.",
+  "In supervision, role-play handling sensitive disclosures using the warm-handoff protocol.",
+  "Invite quieter students to contribute with targeted open-ended questions.",
+];
+
+const STRENGTHS_POOL = [
+  "Consistent use of open-ended questions to draw out student experiences.",
+  "Warm, encouraging tone that created a safe space for sharing.",
+  "Effective use of verbal nodding and active listening throughout.",
+  "Connected themes across students to build a sense of shared experience.",
+  "Handled a sensitive disclosure with empathy and a clear offer of follow-up.",
+  "Good use of silence to allow students time for individual reflection.",
+];
+
+const IMPROVEMENTS_POOL = [
+  "Deliver the confidentiality explanation in full at the start of the session.",
+  "Use rephrasing to summarise and validate student contributions.",
+  "Complete the structured 3-step reflection before closing.",
+  "Tighten transitions between discussion and individual work.",
+  "Manage time so the final activity is not rushed.",
+  "Check in with students who did not participate during the session.",
+];
+
+const SESSION_SUMMARIES = [
+  "The session covered the day's core topic with a check-in, a workbook activity and a group discussion before an individual goal-setting task.",
+  "After a brief check-in, the facilitator introduced the topic, guided students through the workbook and facilitated a reflective group discussion.",
+  "The facilitator opened with a warm check-in, delivered the main content and closed with a short reflection on what students had learned.",
+];
+
+const SESSION_FLOWS = [
+  "The session flowed smoothly with clear transitions and steady engagement from most students.",
+  "Flow was generally good, though engagement dipped during individual work and required occasional prompting.",
+  "The session was somewhat uneven — strong discussion early on, but the closing felt rushed.",
+];
+
+const SAFETY_FLAG_TEMPLATES = [
+  {
+    type: "other",
+    severity: "medium",
+    description:
+      "A student disclosed ongoing distress related to a recent loss; a co-facilitator offered follow-up support.",
+  },
+  {
+    type: "self_harm",
+    severity: "high",
+    description:
+      "A student alluded to thoughts of self-harm. The facilitator followed the escalation protocol and notified the supervisor.",
+  },
+  {
+    type: "home_environment",
+    severity: "low",
+    description:
+      "A student mentioned tension at home affecting concentration; noted for supervisor awareness.",
+  },
+];
+
+// V2-only pools (newer prompt format: participation stats, competency
+// profile and a supervision-preparation brief).
+const REFLECTIVE_QUESTIONS_POOL = [
+  "What helped you decide when to move from group discussion to individual work?",
+  "How did you notice and respond to the quieter students in the room?",
+  "What would you keep the same, and what would you change, about how you opened the session?",
+  "When the disclosure came up, what guided your response in the moment?",
+  "How confident did you feel delivering the confidentiality agreement, and what would make it easier?",
+];
+
+const V2_COMPETENCIES = [
+  "B1_active_listening",
+  "B2_empathy_and_validation",
+  "B3_protocol_delivery",
+  "B4_group_facilitation",
+  "B5_safety_and_risk_response",
+];
+
+const COMPETENCY_LEVELS = ["Emerging", "Developing", "Proficient", "Advanced"];
+const CONFIDENCE_LEVELS = ["low", "medium", "high"];
+
+// Shared across both feedback versions: ~40% of recordings carry a safety flag.
+function buildSafetyFlags() {
+  return faker.datatype.boolean({ probability: 0.4 })
+    ? [
+        {
+          ...faker.helpers.arrayElement(SAFETY_FLAG_TEMPLATES),
+          requires_follow_up: faker.datatype.boolean({ probability: 0.7 }),
+          timestamp_reference: `around the ${faker.number.int({ min: 2, max: 40 })}-minute mark`,
+        },
+      ]
+    : [];
+}
+
+function buildFidelityFeedbackV1() {
+  const questionScores = FIDELITY_QUESTIONS.map((question) => ({
+    key: question.key,
+    score: faker.number.int({ min: 1, max: 7 }),
+    justification: faker.helpers.arrayElement(question.justifications),
+  }));
+
+  const average = questionScores.reduce((sum, q) => sum + q.score, 0) / questionScores.length;
+  const overallScore = average.toFixed(1);
+
+  const fidelityScores: Record<string, unknown> = {
+    overall_score: overallScore,
+    overall_assessment: faker.helpers.arrayElement(OVERALL_ASSESSMENTS),
+  };
+  for (const q of questionScores) {
+    fidelityScores[q.key] = { score: q.score, justification: q.justification };
+  }
+
+  const feedback = {
+    fidelity_scores: fidelityScores,
+    recommendations: faker.helpers.arrayElements(RECOMMENDATIONS_POOL, { min: 2, max: 3 }),
+    qualitative_feedback: {
+      strengths: faker.helpers.arrayElements(STRENGTHS_POOL, { min: 2, max: 4 }),
+      session_summary: faker.helpers.arrayElement(SESSION_SUMMARIES),
+      areas_for_improvement: faker.helpers.arrayElements(IMPROVEMENTS_POOL, { min: 1, max: 3 }),
+      session_flow_and_engagement: faker.helpers.arrayElement(SESSION_FLOWS),
+    },
+    safety_flags: buildSafetyFlags(),
+  } as Prisma.InputJsonValue;
+
+  return { feedback, overallScore, promptVersion: 1 };
+}
+
+function buildFidelityFeedbackV2() {
+  const questionScores = FIDELITY_QUESTIONS.map((question) => ({
+    key: question.key,
+    score: faker.number.int({ min: 1, max: 7 }),
+    justification: faker.helpers.arrayElement(question.justifications),
+  }));
+
+  const average = questionScores.reduce((sum, q) => sum + q.score, 0) / questionScores.length;
+  const overallScore = average.toFixed(1);
+
+  const fidelityScores: Record<string, unknown> = {
+    overall_fidelity_score: overallScore,
+    overall_fidelity_summary: faker.helpers.arrayElement(OVERALL_ASSESSMENTS),
+  };
+  for (const q of questionScores) {
+    fidelityScores[q.key] = {
+      score: `${q.score}/7`,
+      justification: q.justification,
+      open_closed_question_ratio: `${faker.number.int({ min: 1, max: 4 })}:${faker.number.int({ min: 1, max: 3 })}`,
+    };
+  }
+
+  const selectedCompetencies = faker.helpers.arrayElements(V2_COMPETENCIES, {
+    min: 3,
+    max: V2_COMPETENCIES.length,
+  });
+  const competencyProfile: Record<string, unknown> = {};
+  for (const key of selectedCompetencies) {
+    competencyProfile[key] = {
+      observed_behaviours: faker.lorem.sentence(),
+      estimated_level: faker.helpers.arrayElement(COMPETENCY_LEVELS),
+      level_framing: faker.lorem.sentence(),
+      confidence: faker.helpers.arrayElement(CONFIDENCE_LEVELS),
+      confidence_note: faker.lorem.sentence(),
+    };
+  }
+  const anyCritical = faker.datatype.boolean({ probability: 0.15 });
+  competencyProfile.red_flag_check = {
+    any_critical_L1: anyCritical,
+    flagged_domains: anyCritical
+      ? faker.helpers.arrayElements(selectedCompetencies, { min: 1, max: 2 })
+      : [],
+    recommendation: anyCritical ? faker.helpers.arrayElement(RECOMMENDATIONS_POOL) : null,
+  };
+
+  const totalMinutes = faker.number.int({ min: 30, max: 50 });
+  const fellowMinutes = faker.number.int({ min: 10, max: 25 });
+  const studentMinutes = totalMinutes - fellowMinutes;
+  const wellnessFlagged = faker.datatype.boolean({ probability: 0.2 });
+
+  const feedback = {
+    session_participation: {
+      estimated_speakers: `${faker.number.int({ min: 6, max: 12 })}`,
+      lead_fellow_speaking_time: `${fellowMinutes}m`,
+      lead_fellow_speaking_percentage: `${Math.round((fellowMinutes / totalMinutes) * 100)}%`,
+      total_student_speaking_time: `${studentMinutes}m`,
+      participation_distribution: faker.lorem.sentence(),
+      prosodic_observations: faker.lorem.sentence(),
+    },
+    fidelity_scores: fidelityScores,
+    competency_profile: competencyProfile,
+    supervision_preparation_brief: {
+      strengths_to_acknowledge: faker.helpers
+        .arrayElements(STRENGTHS_POOL, { min: 2, max: 3 })
+        .map((strength) => ({
+          strength,
+          evidence: faker.lorem.sentence(),
+          why_it_matters: faker.lorem.sentence(),
+        })),
+      areas_for_growth: faker.helpers
+        .arrayElements(IMPROVEMENTS_POOL, { min: 1, max: 2 })
+        .map((area) => ({
+          area,
+          what_was_observed: faker.lorem.sentence(),
+          why_it_matters: faker.lorem.sentence(),
+          suggested_supervision_activity: faker.helpers.arrayElement(RECOMMENDATIONS_POOL),
+          supervision_protocol_section: `Section ${faker.number.int({ min: 1, max: 6 })}.${faker.number.int({ min: 1, max: 4 })}`,
+        })),
+      fellow_wellness_flag: {
+        flagged: wellnessFlagged,
+        observation: wellnessFlagged ? faker.lorem.sentence() : null,
+        suggested_check_in: wellnessFlagged ? faker.lorem.sentence() : null,
+      },
+      reflective_questions_for_supervision: faker.helpers.arrayElements(REFLECTIVE_QUESTIONS_POOL, {
+        min: 2,
+        max: 3,
+      }),
+    },
+    safety_flags: buildSafetyFlags(),
+  } as Prisma.InputJsonValue;
+
+  return { feedback, overallScore, promptVersion: 2 };
+}
+
+// ~35% of recordings use the newer V2 prompt format, the rest use V1.
+function buildFidelityFeedback() {
+  return faker.datatype.boolean({ probability: 0.35 })
+    ? buildFidelityFeedbackV2()
+    : buildFidelityFeedbackV1();
+}
+
+async function createSessionRecordings(
+  schools: DemoSchool[],
+  sessionsBySchool: Map<string, DemoSessions>,
+  seederUserId: string,
+) {
+  console.log("creating session recordings");
+
+  const recordings: Prisma.SessionRecordingCreateManyInput[] = [];
+
+  for (const school of schools) {
+    if (!school.assignedSupervisorId) continue;
+
+    const sessions = sessionsBySchool.get(school.id) ?? [];
+    const groups = school.interventionGroups.slice(0, DEMO_GROUPS_PER_SCHOOL);
+
+    for (const session of sessions) {
+      for (const group of groups) {
+        const recordingId = objectId("rec");
+        const sessionType = session.sessionType ?? "session";
+        // Varied feedback per recording (mix of V1/V2 prompt formats);
+        // overallScore is derived from the per-question scores so it matches
+        // the stored overall_score column.
+        const { feedback: fidelityFeedback, overallScore, promptVersion } = buildFidelityFeedback();
+
+        // Synthetic key: looks real, points at no real object. The bucket is
+        // resolved from env at runtime, so staging never touches prod audio.
+        const s3Key = buildS3Key({
+          schoolName: school.schoolName,
+          fellowName: group.leader.fellowName ?? "fellow",
+          groupName: group.groupName,
+          sessionType,
+          recordingId,
+          extension: "mp3",
+        });
+
+        const transcript = {
+          segments: [
+            { speaker: "fellow", text: faker.lorem.paragraph() },
+            { speaker: "student", text: faker.lorem.sentence() },
+          ],
+        } as Prisma.InputJsonValue;
+
+        recordings.push({
+          id: recordingId,
+          fileName: generateRecordingFilename(sessionType, recordingId, "mp3"),
+          originalFileName: faker.system.commonFileName("mp3"),
+          s3Key,
+          contentType: "audio/mpeg",
+          fileSize: faker.number.int({ min: 1_000_000, max: 30_000_000 }),
+          fellowId: group.leaderId,
+          schoolId: school.id,
+          groupId: group.id,
+          sessionId: session.id,
+          uploadedBy: seederUserId,
+          supervisorId: school.assignedSupervisorId,
+          // COMPLETED so the /api/recordings/pending worker never picks these up
+          // and nothing is ever submitted to the external Fidelity service.
+          status: RecordingProcessingStatus.COMPLETED,
+          processedAt: faker.date.recent({ days: 20 }),
+          overallScore,
+          promptVersion,
+          fidelityFeedback,
+          transcript,
+        });
+      }
+    }
+  }
+
+  await db.sessionRecording.createMany({ data: recordings });
+}
+
+async function createDemoRecords(
+  allSchools: DemoSchool[],
+  students: DemoStudents,
+  sessions: DemoSessions,
+) {
+  const schools = allSchools.slice(0, DEMO_SCHOOL_SAMPLE);
+  const schoolIds = new Set(schools.map((s) => s.id));
+
+  // markedBy / createdBy / uploadedBy require a real user FK; reuse one seeded user
+  const seeder = await db.user.findFirst({ select: { id: true } });
+  if (!seeder) {
+    console.warn("No users found - skipping demo tracking/clinical/financial records");
+    return;
+  }
+  const seederUserId = seeder.id;
+
+  // Lookup maps scoped to the sampled schools
+  const studentsBySchool = new Map<string, DemoStudents>();
+  for (const student of students) {
+    if (!student.schoolId || !schoolIds.has(student.schoolId)) continue;
+    const list = studentsBySchool.get(student.schoolId) ?? [];
+    list.push(student);
+    studentsBySchool.set(student.schoolId, list);
+  }
+
+  const sessionsBySchool = new Map<string, DemoSessions>();
+  for (const session of sessions) {
+    if (!session.schoolId || !schoolIds.has(session.schoolId)) continue;
+    const list = sessionsBySchool.get(session.schoolId) ?? [];
+    list.push(session);
+    sessionsBySchool.set(session.schoolId, list);
+  }
+
+  const hubIdBySchoolId = new Map<string, string>();
+  const groupLeaderByGroupId = new Map<string, string>();
+  const groupTypeByGroupId = new Map<string, string>();
+  for (const school of schools) {
+    if (school.hubId) hubIdBySchoolId.set(school.id, school.hubId);
+    for (const group of school.interventionGroups) {
+      groupLeaderByGroupId.set(group.id, group.leaderId);
+      groupTypeByGroupId.set(group.id, group.groupType);
+    }
+  }
+
+  // Attendance must complete first since payouts reference fellow attendance
+  // rows; the remaining four sets are independent and run concurrently.
+  const { fellowAttendances } = await createAttendanceRecords(
+    schools,
+    studentsBySchool,
+    sessionsBySchool,
+    seederUserId,
+  );
+  await Promise.all([
+    createStudentOutcomes(schools, studentsBySchool, groupTypeByGroupId),
+    createClinicalRecords(
+      schools,
+      studentsBySchool,
+      sessionsBySchool,
+      groupLeaderByGroupId,
+      seederUserId,
+    ),
+    createPayoutRecords(fellowAttendances, hubIdBySchoolId, seederUserId),
+    createSessionRecordings(schools, sessionsBySchool, seederUserId),
+  ]);
+}
+
 async function main() {
   await truncateTables();
 
@@ -1543,21 +2390,17 @@ async function main() {
       hub: true,
     },
   });
-  const _students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
+  const students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
   const { interventionSessionsNames } = await createSessionNames(hubs);
 
-  // TODO: question, should we also dynamically mark attendance for fellows in these sessions?
-  const _interventionSessions = await createInterventionSessionsForSchools(
+  const interventionSessions = await createInterventionSessionsForSchools(
     schoolsWithGroupsAndFellows,
     interventionSessionsNames,
   );
 
-  // TODO:
-  // create fellow attendance records
-  // create student attendance records
-  // create supervisor attendance records
-  // create clinical records
-  // create payouts
+  // Comprehensive demo data (attendance, clinical cases, payouts, recordings)
+  // for a bounded sample of schools so staging looks realistic end-to-end.
+  await createDemoRecords(schoolsWithGroupsAndFellows, students, interventionSessions);
 }
 
 void main();
