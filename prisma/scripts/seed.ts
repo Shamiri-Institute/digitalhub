@@ -1662,6 +1662,25 @@ async function createClinicalRecords(
 ) {
   console.log("creating clinical records");
 
+  // Pre-generate ids so the whole clinical graph can be built in memory and
+  // written with a few bulk inserts instead of one create per row.
+  const screeningData: Prisma.ClinicalScreeningInfoCreateManyInput[] = [];
+  const sessionData: Prisma.ClinicalSessionAttendanceCreateManyInput[] = [];
+  const notesData: Prisma.ClinicalCaseNotesCreateManyInput[] = [];
+  const followUpData: Prisma.ClinicalFollowUpTreatmentPlanCreateManyInput[] = [];
+  const terminationData: Prisma.ClinicalCaseTerminationCreateManyInput[] = [];
+  const triageData: Prisma.TriageEventCreateManyInput[] = [];
+
+  // Cycle through case statuses so every state (incl. Terminated/FollowUp) is
+  // reliably represented for demos, regardless of sample size.
+  const CASE_STATUSES = [
+    caseStatusOptions.Active,
+    caseStatusOptions.FollowUp,
+    caseStatusOptions.Terminated,
+    caseStatusOptions.Referred,
+  ];
+  let caseIndex = 0;
+
   for (const school of schools) {
     const caseStudents = (studentsBySchool.get(school.id) ?? []).slice(
       0,
@@ -1670,121 +1689,110 @@ async function createClinicalRecords(
     const sessions = sessionsBySchool.get(school.id) ?? [];
 
     for (const student of caseStudents) {
-      const caseStatus = faker.helpers.arrayElement([
-        caseStatusOptions.Active,
-        caseStatusOptions.FollowUp,
-        caseStatusOptions.Terminated,
-        caseStatusOptions.Referred,
-      ]);
+      const caseStatus =
+        CASE_STATUSES[caseIndex % CASE_STATUSES.length] ?? caseStatusOptions.Active;
+      caseIndex += 1;
       const riskStatus = faker.helpers.arrayElement([
         riskStatusOptions.Low,
         riskStatusOptions.Medium,
         riskStatusOptions.High,
       ]);
+      const caseId = objectId("case");
 
-      const screeningCase = await db.clinicalScreeningInfo.create({
-        data: {
-          studentId: student.id,
-          schoolId: school.id,
-          caseStatus,
-          riskStatus,
-          currentSupervisorId: school.assignedSupervisorId ?? undefined,
-          acceptCase: true,
-          referralStatus: referralStatusOptions.Approved,
-          pseudonym: `${faker.color.human()}-${faker.animal.type()}`,
-          generalPresentingIssues: faker.helpers.arrayElement([
-            "Academic stress",
-            "Anxiety",
-            "Low mood",
-            "Family conflict",
-            "Peer relationships",
-          ]),
-          anxiety: true,
-          academicStruggles: faker.datatype.boolean(),
-          referralReason: faker.lorem.sentence(),
-          referralNotes: faker.lorem.paragraph(),
-          progressNotes: faker.internet.url(),
-          flagged: riskStatus === riskStatusOptions.High,
-          flaggedReason: riskStatus === riskStatusOptions.High ? faker.lorem.sentence() : undefined,
-        },
+      screeningData.push({
+        id: caseId,
+        studentId: student.id,
+        schoolId: school.id,
+        caseStatus,
+        riskStatus,
+        currentSupervisorId: school.assignedSupervisorId ?? undefined,
+        acceptCase: true,
+        referralStatus: referralStatusOptions.Approved,
+        pseudonym: `${faker.color.human()}-${faker.animal.type()}`,
+        generalPresentingIssues: faker.helpers.arrayElement([
+          "Academic stress",
+          "Anxiety",
+          "Low mood",
+          "Family conflict",
+          "Peer relationships",
+        ]),
+        anxiety: true,
+        academicStruggles: faker.datatype.boolean(),
+        referralReason: faker.lorem.sentence(),
+        referralNotes: faker.lorem.paragraph(),
+        progressNotes: faker.internet.url(),
+        flagged: riskStatus === riskStatusOptions.High,
+        flaggedReason: riskStatus === riskStatusOptions.High ? faker.lorem.sentence() : undefined,
       });
 
-      // 2-3 clinical session attendances per case
+      // 2-3 clinical session attendances per case, each with one case note
       const numClinicalSessions = faker.number.int({ min: 2, max: 3 });
-      const clinicalSessions = [];
+      const clinicalSessionIds: string[] = [];
       for (let s = 0; s < numClinicalSessions; s++) {
-        const clinicalSession = await db.clinicalSessionAttendance.create({
-          data: {
-            caseId: screeningCase.id,
-            session: `Clinical Session ${s + 1}`,
-            supervisorId: school.assignedSupervisorId ?? undefined,
-            attendanceStatus: true,
-          },
-        });
-        clinicalSessions.push(clinicalSession);
-      }
+        const clinicalSessionId = objectId("csess");
+        clinicalSessionIds.push(clinicalSessionId);
 
-      // One case note per clinical session (unique [caseId, sessionId])
-      for (const clinicalSession of clinicalSessions) {
-        await db.clinicalCaseNotes.create({
-          data: {
-            caseId: screeningCase.id,
-            sessionId: clinicalSession.id,
-            createdBy: seederUserId,
-            presentingIssues: faker.lorem.sentence(),
-            orsAssessment: faker.number.int({ min: 0, max: 40 }),
-            riskLevel: riskStatus,
-            necessaryConditions: faker.lorem.sentence(),
-            treatmentInterventions: faker.helpers.arrayElements(TREATMENT_INTERVENTIONS, {
-              min: 1,
-              max: 3,
-            }),
-            otherIntervention: faker.lorem.words(3),
-            interventionExplanation: faker.lorem.sentence(),
-            studentResponseExplanations: faker.lorem.paragraph(),
-            followUpPlan: faker.helpers.arrayElement([
-              FollowUpPlanOptions.GROUP,
-              FollowUpPlanOptions.INDIVIDUAL,
-            ]),
-            followUpPlanExplanation: faker.lorem.sentence(),
-          },
+        sessionData.push({
+          id: clinicalSessionId,
+          caseId,
+          session: `Clinical Session ${s + 1}`,
+          supervisorId: school.assignedSupervisorId ?? undefined,
+          attendanceStatus: true,
+        });
+
+        notesData.push({
+          caseId,
+          sessionId: clinicalSessionId,
+          createdBy: seederUserId,
+          presentingIssues: faker.lorem.sentence(),
+          orsAssessment: faker.number.int({ min: 0, max: 40 }),
+          riskLevel: riskStatus,
+          necessaryConditions: faker.lorem.sentence(),
+          treatmentInterventions: faker.helpers.arrayElements(TREATMENT_INTERVENTIONS, {
+            min: 1,
+            max: 3,
+          }),
+          otherIntervention: faker.lorem.words(3),
+          interventionExplanation: faker.lorem.sentence(),
+          studentResponseExplanations: faker.lorem.paragraph(),
+          followUpPlan: faker.helpers.arrayElement([
+            FollowUpPlanOptions.GROUP,
+            FollowUpPlanOptions.INDIVIDUAL,
+          ]),
+          followUpPlanExplanation: faker.lorem.sentence(),
         });
       }
 
       // Follow-up treatment plan for FollowUp cases (caseId is unique)
       if (caseStatus === caseStatusOptions.FollowUp) {
-        await db.clinicalFollowUpTreatmentPlan.create({
-          data: {
-            caseId: screeningCase.id,
-            currentORSScore: faker.number.int({ min: 0, max: 40 }),
-            plannedSessions: faker.number.int({ min: 2, max: 8 }),
-            sessionFrequency: faker.helpers.arrayElement(["Weekly", "Bi-weekly", "Monthly"]),
-            plannedTreatmentIntervention: faker.helpers.arrayElements(TREATMENT_INTERVENTIONS, {
-              min: 1,
-              max: 3,
-            }),
-            plannedTreatmentInterventionExplanation: faker.lorem.sentence(),
-          },
+        followUpData.push({
+          caseId,
+          currentORSScore: faker.number.int({ min: 0, max: 40 }),
+          plannedSessions: faker.number.int({ min: 2, max: 8 }),
+          sessionFrequency: faker.helpers.arrayElement(["Weekly", "Bi-weekly", "Monthly"]),
+          plannedTreatmentIntervention: faker.helpers.arrayElements(TREATMENT_INTERVENTIONS, {
+            min: 1,
+            max: 3,
+          }),
+          plannedTreatmentInterventionExplanation: faker.lorem.sentence(),
         });
       }
 
       // Termination record for Terminated cases
-      const lastClinicalSession = clinicalSessions.at(-1);
-      if (caseStatus === caseStatusOptions.Terminated && lastClinicalSession) {
-        await db.clinicalCaseTermination.create({
-          data: {
-            caseId: screeningCase.id,
-            sessionId: lastClinicalSession.id,
-            createdBy: seederUserId,
-            terminationDate: faker.date.recent({ days: 30 }),
-            terminationReason: faker.helpers.arrayElement([
-              "Goals met",
-              "Referred out",
-              "Student relocated",
-              "Dropped out",
-            ]),
-            terminationReasonExplanation: faker.lorem.sentence(),
-          },
+      const lastClinicalSessionId = clinicalSessionIds.at(-1);
+      if (caseStatus === caseStatusOptions.Terminated && lastClinicalSessionId) {
+        terminationData.push({
+          caseId,
+          sessionId: lastClinicalSessionId,
+          createdBy: seederUserId,
+          terminationDate: faker.date.recent({ days: 30 }),
+          terminationReason: faker.helpers.arrayElement([
+            "Goals met",
+            "Referred out",
+            "Student relocated",
+            "Dropped out",
+          ]),
+          terminationReasonExplanation: faker.lorem.sentence(),
         });
       }
 
@@ -1794,22 +1802,31 @@ async function createClinicalRecords(
         ? groupLeaderByGroupId.get(student.assignedGroupId)
         : undefined;
       if (firstSession && fellowId) {
-        await db.triageEvent.create({
-          data: {
-            sessionId: firstSession.id,
-            studentId: student.id,
-            fellowId,
-            hubId: school.hubId ?? undefined,
-            triageOccurred: true,
-            riskScreenOutcome: RiskScreenOutcome.ANY_YES,
-            actionTaken: TriageActionTaken.REFERRED,
-            referredSupervisorId: school.assignedSupervisorId ?? undefined,
-            note: faker.lorem.sentence(),
-          },
+        triageData.push({
+          sessionId: firstSession.id,
+          studentId: student.id,
+          fellowId,
+          hubId: school.hubId ?? undefined,
+          triageOccurred: true,
+          riskScreenOutcome: RiskScreenOutcome.ANY_YES,
+          actionTaken: TriageActionTaken.REFERRED,
+          referredSupervisorId: school.assignedSupervisorId ?? undefined,
+          note: faker.lorem.sentence(),
         });
       }
     }
   }
+
+  // Insert respecting FK order: screening -> sessions -> (notes/termination),
+  // with the independent leaf tables written in parallel.
+  await db.clinicalScreeningInfo.createMany({ data: screeningData });
+  await db.clinicalSessionAttendance.createMany({ data: sessionData });
+  await Promise.all([
+    db.clinicalCaseNotes.createMany({ data: notesData }),
+    db.clinicalCaseTermination.createMany({ data: terminationData }),
+    db.clinicalFollowUpTreatmentPlan.createMany({ data: followUpData }),
+    db.triageEvent.createMany({ data: triageData }),
+  ]);
 }
 
 async function createPayoutRecords(
@@ -2307,22 +2324,26 @@ async function createDemoRecords(
     }
   }
 
+  // Attendance must complete first since payouts reference fellow attendance
+  // rows; the remaining four sets are independent and run concurrently.
   const { fellowAttendances } = await createAttendanceRecords(
     schools,
     studentsBySchool,
     sessionsBySchool,
     seederUserId,
   );
-  await createStudentOutcomes(schools, studentsBySchool, groupTypeByGroupId);
-  await createClinicalRecords(
-    schools,
-    studentsBySchool,
-    sessionsBySchool,
-    groupLeaderByGroupId,
-    seederUserId,
-  );
-  await createPayoutRecords(fellowAttendances, hubIdBySchoolId, seederUserId);
-  await createSessionRecordings(schools, sessionsBySchool, seederUserId);
+  await Promise.all([
+    createStudentOutcomes(schools, studentsBySchool, groupTypeByGroupId),
+    createClinicalRecords(
+      schools,
+      studentsBySchool,
+      sessionsBySchool,
+      groupLeaderByGroupId,
+      seederUserId,
+    ),
+    createPayoutRecords(fellowAttendances, hubIdBySchoolId, seederUserId),
+    createSessionRecordings(schools, sessionsBySchool, seederUserId),
+  ]);
 }
 
 async function main() {
