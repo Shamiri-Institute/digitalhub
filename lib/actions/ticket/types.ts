@@ -57,21 +57,13 @@ export type FetchTicketsHandler = (
 export type FetchEscalationRecipientHandler = (
   userId: string,
   implementerId: string,
-) => Promise<string | null>;
-
-export const ESCALATION_COUNTS = [1, 2, 3] as const;
-export type EscalationCount = (typeof ESCALATION_COUNTS)[number];
-
-export type FetchEscalationMappingHandler = (
-  orderedEscalations: OrderedEscalation[],
-  ticketCategory: TicketCategory,
-) => Promise<TicketEscalation[]>;
+) => Promise<string>;
 
 export const ESCALATION_RECIPIENT_FROM_CATEGORY: Record<TicketCategory, EscalationRecipientRole> = {
   TECH: "HUB_COORDINATOR",
   RESEARCH: "HUB_COORDINATOR",
   OPERATIONS: "HUB_COORDINATOR",
-  CARE: "ADMIN",
+  CARE: "HUB_COORDINATOR",
   CLINICAL: "CLINICAL_LEAD",
 };
 
@@ -84,27 +76,6 @@ export const ESCALATION_RECIPIENT_FROM_INITIATOR: Record<
     category ? ESCALATION_RECIPIENT_FROM_CATEGORY[category] : "HUB_COORDINATOR",
   HUB_COORDINATOR: (): EscalationRecipientRole => "ADMIN",
   CLINICAL_LEAD: (): EscalationRecipientRole => "ADMIN",
-};
-
-export const IMPLEMENTER_ROLE_TABLE_LOOKUP: Record<
-  ImplementerRole,
-  { role: ImplementerRole; table: string; nameColumn: string }
-> = {
-  SUPERVISOR: { role: "SUPERVISOR", table: "supervisors", nameColumn: "supervisor_name" },
-  HUB_COORDINATOR: {
-    role: "HUB_COORDINATOR",
-    table: "hub_coordinators",
-    nameColumn: "coordinator_name",
-  },
-  ADMIN: { role: "ADMIN", table: "admin_users", nameColumn: "name" },
-  CLINICAL_LEAD: {
-    role: "CLINICAL_LEAD",
-    table: "clinical_leads",
-    nameColumn: "clinical_lead_name",
-  },
-  FELLOW: { role: "FELLOW", table: "fellows", nameColumn: "fellow_name" },
-  OPERATIONS: { role: "OPERATIONS", table: "ops_users", nameColumn: "name" },
-  CLINICAL_TEAM: { role: "CLINICAL_TEAM", table: "clinical_teams", nameColumn: "name" },
 };
 
 export interface CreateTicketPayload {
@@ -144,6 +115,9 @@ export interface FullTicket {
   currentTier: ImplementerRole | null;
 }
 
+export type FullTicketPendingTier = Omit<FullTicket, "currentTier"> & {
+  currentRecipientId: string | null;
+};
 export interface TicketEscalation {
   id: string;
   ticketId: string;
@@ -157,11 +131,6 @@ export interface TicketEscalation {
   escalatedByRole: EscalationInitiatorRole;
   escalatedToRole: EscalationRecipientRole;
 }
-
-export type OrderedEscalation = Omit<
-  TicketEscalation,
-  "escalatedByName" | "escalatedToName" | "escalatedByRole" | "escalatedToRole"
->;
 
 export interface TicketEscalationStatus {
   canEscalate: boolean;
@@ -183,3 +152,15 @@ export interface TicketResolutionPayload {
   resolvedById: string;
   resolutionReason: string;
 }
+
+export type UserRoleNameMap = Map<`${string}:${ImplementerRole}`, string | null>;
+
+export const ROLE_NAME_CONFIG: { role: ImplementerRole; table: string; column: string }[] = [
+  { role: "FELLOW", table: "fellows", column: "fellow_name" },
+  { role: "SUPERVISOR", table: "supervisors", column: "supervisor_name" },
+  { role: "HUB_COORDINATOR", table: "hub_coordinators", column: "coordinator_name" },
+  { role: "CLINICAL_LEAD", table: "clinical_leads", column: "clinical_lead_name" },
+  { role: "CLINICAL_TEAM", table: "clinical_teams", column: "name" },
+  { role: "OPERATIONS", table: "ops_users", column: "name" },
+  { role: "ADMIN", table: "admin_users", column: "name" },
+];
