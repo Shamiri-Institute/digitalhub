@@ -1,49 +1,45 @@
 "use server";
 
 import { ImplementerRole, Prisma } from "@prisma/client";
-import { getCurrentUserSession } from "#/app/auth";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { db } from "#/lib/db";
 import type { ActionResponse } from "#/types/actions.types";
 import {
   type CreateTicketEscalationPayload,
   type CreateTicketInput,
   type CreateTicketPayload,
-  ESCALATION_COUNTS,
   ESCALATION_INITIATOR_ROLES,
-  ESCALATION_RECIPIENT_FROM_CATEGORY,
   ESCALATION_RECIPIENT_FROM_INITIATOR,
   ESCALATION_RECIPIENT_ROLES,
-  type EscalationCount,
   type EscalationInitiatorRole,
   type EscalationRecipientRole,
-  type FetchEscalationMappingHandler,
   type FetchEscalationRecipientHandler,
   type FetchTicketsHandler,
   type FullTicket,
-  IMPLEMENTER_ROLE_TABLE_LOOKUP,
-  type OrderedEscalation,
+  type FullTicketPendingTier,
+  ROLE_NAME_CONFIG,
   type TicketCategory,
   type TicketEscalation,
   type TicketEscalationStatus,
   type TicketFilters,
   type TicketQueryRole,
   type TicketResolution,
+  type UserRoleNameMap,
 } from "./types";
 
 export async function createTicket(payload: CreateTicketInput): Promise<ActionResponse> {
   try {
-    const session = await getCurrentUserSession();
-    if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
-      throw new Error("The session has not been authenticated");
+    const {
+      userId: createdById,
+      role,
+      implementerId: activeImplementerId,
+    } = await requireAuthRole(ImplementerRole.FELLOW);
 
-    const createdById = session.user.id;
-    const activeImplementerId = session.user.activeMembership?.implementerId;
-
-    if (!activeImplementerId) throw new Error("No active implementer found for user");
-
-    const handler = fetchEscalationRecipientHandlers["SUPERVISOR"];
-    const supervisorUserId = await handler(createdById, activeImplementerId);
-    if (!supervisorUserId) throw new Error("Unable to resolve supervisor for your account");
+    const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role as EscalationInitiatorRole](
+      payload.category,
+    );
+    const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
+    const escalationRecipientId = await handler(createdById, activeImplementerId);
 
     const ticketPayload: CreateTicketPayload = {
       ...payload,
@@ -59,7 +55,7 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
         data: {
           ticketId: ticket.id,
           escalatedById: createdById,
-          escalatedToId: supervisorUserId,
+          escalatedToId: escalationRecipientId,
           escalationReason: ticketPayload.description,
         },
       });
@@ -73,19 +69,16 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
 
 export async function getAllTickets(filters: TicketFilters): Promise<ActionResponse<FullTicket[]>> {
   try {
-    const session = await getCurrentUserSession();
-    if (!session?.user.id) throw new Error("The session has not been authenticated");
+    const { userId, role, implementerId } = await requireAuthRole(
+      ...Object.values(ImplementerRole),
+    );
 
-    const role: ImplementerRole | null = session.user.activeMembership?.role ?? null;
-
-    if (!role) throw new Error("No role exists for this user");
     const queryRole: TicketQueryRole = role === "FELLOW" ? "FELLOW" : "NON_FELLOW";
     const handler = fetchTicketsHandlers[queryRole];
 
     if (!handler) throw new Error("No handler was found for this role");
-    const activeImplementerId = session.user.activeMembership?.implementerId;
 
-    const tickets = await handler(session.user.id, activeImplementerId ?? "", filters);
+    const tickets = await handler(userId, implementerId, filters);
 
     const response: ActionResponse<FullTicket[]> = {
       success: true,
@@ -104,40 +97,60 @@ export async function getEscalationsPerTicket(
   ticketCategory: TicketCategory,
 ): Promise<ActionResponse<TicketEscalation[]>> {
   try {
-    const session = await getCurrentUserSession();
-    if (!session?.user.id) throw new Error("The session has not been authenticated");
+    const { userId } = await requireAuthRole();
 
     const authorized = await db.ticketEscalations.findFirst({
-      where: {
-        ticketId,
-        OR: [{ escalatedById: session.user.id }, { escalatedToId: session.user.id }],
-      },
+      where: { ticketId, OR: [{ escalatedById: userId }, { escalatedToId: userId }] },
       take: 1,
     });
-
     if (!authorized) throw new Error("Not authorized to view this ticket's escalations");
 
     const escalations = await db.ticketEscalations.findMany({
-      where: {
-        ticketId,
-      },
+      where: { ticketId },
       orderBy: { createdAt: "asc" },
     });
 
     if (escalations.length === 0) throw new Error("No escalations were found for this ticket");
 
-    const escalationsCount = escalations.length;
-    if (!isValidEscalationCount(escalationsCount)) {
-      throw new Error("Unsupported escalation count");
-    }
+    const { orderedEscalations, uniqueRoles } = escalations.reduce<{
+      orderedEscalations: TicketEscalation[];
+      uniqueRoles: ImplementerRole[];
+    }>(
+      (acc, escalation, index) => {
+        const escalatedByRole = acc.uniqueRoles[acc.uniqueRoles.length - 1] ?? "FELLOW";
+        if (!isEscalationInitiatorRole(escalatedByRole))
+          throw new Error("The role cannot create escalations");
+        const escalatedToRole =
+          ESCALATION_RECIPIENT_FROM_INITIATOR[escalatedByRole](ticketCategory);
 
-    const orderedEscalations: OrderedEscalation[] = escalations.map((escalation, index) => ({
+        acc.orderedEscalations.push({
+          ...escalation,
+          escOrder: index + 1,
+          escalatedByName: null,
+          escalatedToName: null,
+          escalatedByRole,
+          escalatedToRole,
+        });
+
+        if (!acc.uniqueRoles.includes(escalatedToRole)) acc.uniqueRoles.push(escalatedToRole);
+
+        return acc;
+      },
+      { orderedEscalations: [], uniqueRoles: ["FELLOW"] },
+    );
+
+    const userIds = Array.from(
+      new Set(orderedEscalations.flatMap((e) => [e.escalatedById, e.escalatedToId])),
+    );
+    const nameMap = await getUserNamesByIdAndRole(userIds, uniqueRoles);
+
+    const mappedEscalations = orderedEscalations.map((escalation) => ({
       ...escalation,
-      escOrder: index + 1,
+      escalatedByName:
+        nameMap.get(`${escalation.escalatedById}:${escalation.escalatedByRole}`) ?? null,
+      escalatedToName:
+        nameMap.get(`${escalation.escalatedToId}:${escalation.escalatedToRole}`) ?? null,
     }));
-
-    const handler = fetchEscalationMappingHandlers[escalationsCount];
-    const mappedEscalations = await handler(orderedEscalations, ticketCategory);
 
     return {
       success: true,
@@ -155,24 +168,17 @@ export async function createEscalation(
   ticketCategory: TicketCategory,
 ): Promise<ActionResponse> {
   try {
-    const session = await getCurrentUserSession();
-    if (!session?.user.id) throw new Error("The session has not been authenticated");
-    const userId = session.user.id;
+    const {
+      userId,
+      role,
+      implementerId: activeImplementerId,
+    } = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
 
-    const activeImplementerId = session.user.activeMembership?.implementerId;
-    if (!activeImplementerId) throw new Error("No active implementer found for user");
+    if (!isEscalationInitiatorRole(role)) throw new Error("The role cannot create escalations");
+    const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](ticketCategory);
 
-    const sessionRole = session.user.activeMembership?.role;
-    if (!sessionRole) throw new Error("No role was found for this user");
-
-    if (!isEscalationInitiatorRole(sessionRole))
-      throw new Error("The role cannot create escalations");
-    const role =
-      ESCALATION_RECIPIENT_FROM_INITIATOR[sessionRole as EscalationInitiatorRole](ticketCategory);
-
-    const handler = fetchEscalationRecipientHandlers[role];
+    const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
     const escalationRecipientId = await handler(userId, activeImplementerId);
-    if (!escalationRecipientId) throw new Error("No escalation recipient was found");
 
     const escalationData: CreateTicketEscalationPayload = {
       escalatedById: userId,
@@ -223,15 +229,7 @@ export async function resolveTicket(
   resolutionReason: string,
 ): Promise<ActionResponse> {
   try {
-    const session = await getCurrentUserSession();
-    if (!session?.user.id) throw new Error("The session has not been authenticated");
-
-    const userId = session.user.id;
-    const userRole = session.user.activeMembership?.role;
-
-    if (!userRole || !ESCALATION_RECIPIENT_ROLES.includes(userRole as EscalationRecipientRole)) {
-      throw new Error("Only escalation recipients can resolve tickets");
-    }
+    const { userId } = await requireAuthRole(...ESCALATION_RECIPIENT_ROLES);
 
     await db.$transaction(async (tx) => {
       const latestEscalation = await tx.ticketEscalations.findFirst({
@@ -278,10 +276,7 @@ export async function getTicketEscalationStatus(
   ticketId: string,
 ): Promise<ActionResponse<TicketEscalationStatus>> {
   try {
-    const session = await getCurrentUserSession();
-    if (!session?.user.id) throw new Error("Not authenticated");
-
-    const userId = session.user.id;
+    const { userId, role } = await requireAuthRole(...Object.values(ImplementerRole));
 
     const ticket = await db.tickets.findUnique({
       where: { id: ticketId },
@@ -298,7 +293,7 @@ export async function getTicketEscalationStatus(
       };
     }
 
-    if (session.user.activeMembership?.role === ImplementerRole.ADMIN) {
+    if (role === ImplementerRole.ADMIN) {
       return {
         success: true,
         message: "User is admin cannot escalate ticket but only resolve",
@@ -336,13 +331,12 @@ export async function getTicketResolution(
   ticketId: string,
 ): Promise<ActionResponse<TicketResolution>> {
   try {
-    const session = await getCurrentUserSession();
-    if (!session?.user.id) throw new Error("Not authenticated");
+    const { userId } = await requireAuthRole();
 
     const escalationParticipant = await db.ticketEscalations.findFirst({
       where: {
         ticketId,
-        OR: [{ escalatedById: session.user.id }, { escalatedToId: session.user.id }],
+        OR: [{ escalatedById: userId }, { escalatedToId: userId }],
       },
       take: 1,
     });
@@ -384,14 +378,13 @@ export async function getTicketResolution(
   }
 }
 
-function isEscalationInitiatorRole(role: ImplementerRole): boolean {
-  if (!ESCALATION_INITIATOR_ROLES.includes(role as EscalationInitiatorRole)) return false;
-  return true;
+function isEscalationInitiatorRole(role: ImplementerRole): role is EscalationInitiatorRole {
+  return ESCALATION_INITIATOR_ROLES.includes(role as EscalationInitiatorRole);
 }
 
 const fetchTicketsHandlers: Record<TicketQueryRole, FetchTicketsHandler> = {
   FELLOW: async (userId, implementerId, filters) => {
-    return await db.$queryRaw<FullTicket[]>`
+    const rows = await db.$queryRaw<FullTicketPendingTier[]>`
       SELECT DISTINCT ON (t.id)
         t.id,
         t.subject,
@@ -400,11 +393,8 @@ const fetchTicketsHandlers: Record<TicketQueryRole, FetchTicketsHandler> = {
         t.status,
         t.priority,
         t.created_at AS "createdAt",
-        latest_im.role AS "currentTier"
+        latest_e.escalated_to AS "currentRecipientId"
       FROM "tickets" t
-      JOIN "implementer_members" im_creator ON t.created_by = im_creator.user_id
-        AND im_creator.implementer_id = ${implementerId}
-        AND im_creator.role = 'FELLOW'
       LEFT JOIN LATERAL (
         SELECT e.escalated_to
         FROM "ticket_escalations" e
@@ -412,16 +402,24 @@ const fetchTicketsHandlers: Record<TicketQueryRole, FetchTicketsHandler> = {
         ORDER BY e.created_at DESC
         LIMIT 1
       ) latest_e ON true
-      LEFT JOIN "implementer_members" latest_im
-        ON latest_e.escalated_to = latest_im.user_id
-        AND latest_im.implementer_id = ${implementerId}
       WHERE t.created_by = ${userId}
       ${filters.status ? Prisma.sql`AND t.status = ${filters.status}` : Prisma.empty}
       ORDER BY t.id
     `;
+
+    const roleMap = await getRoleFromUserIdMap(
+      rows.map((r) => r.currentRecipientId).filter((id): id is string => !!id),
+      implementerId,
+    );
+
+    return rows.map((row) => ({
+      ...row,
+      currentTier: row.currentRecipientId ? (roleMap.get(row.currentRecipientId) ?? null) : null,
+    }));
   },
+
   NON_FELLOW: async (userId, implementerId, filters) => {
-    return await db.$queryRaw<FullTicket[]>`
+    const rows = await db.$queryRaw<FullTicketPendingTier[]>`
       SELECT DISTINCT ON (t.id)
         t.id,
         t.subject,
@@ -430,11 +428,9 @@ const fetchTicketsHandlers: Record<TicketQueryRole, FetchTicketsHandler> = {
         t.status,
         t.priority,
         t.created_at AS "createdAt",
-        latest_im.role AS "currentTier"
+        latest_e.escalated_to AS "currentRecipientId"
       FROM "tickets" t
       JOIN "ticket_escalations" e ON t.id = e.ticket_id
-      JOIN "implementer_members" im ON e.escalated_to = im.user_id
-        AND im.implementer_id = ${implementerId}
       JOIN LATERAL (
         SELECT e2.escalated_to
         FROM "ticket_escalations" e2
@@ -442,15 +438,35 @@ const fetchTicketsHandlers: Record<TicketQueryRole, FetchTicketsHandler> = {
         ORDER BY e2.created_at DESC
         LIMIT 1
       ) latest_e ON true
-      JOIN "implementer_members" latest_im
-        ON latest_e.escalated_to = latest_im.user_id
-        AND latest_im.implementer_id = ${implementerId}
       WHERE e.escalated_to = ${userId}
       ${filters.status ? Prisma.sql`AND t.status = ${filters.status}` : Prisma.empty}
       ORDER BY t.id, e.created_at DESC
     `;
+
+    const roleMap = await getRoleFromUserIdMap(
+      rows.map((r) => r.currentRecipientId).filter((id): id is string => !!id),
+      implementerId,
+    );
+
+    return rows.map((row) => ({
+      ...row,
+      currentTier: row.currentRecipientId ? (roleMap.get(row.currentRecipientId) ?? null) : null,
+    }));
   },
 };
+
+async function getRoleFromUserIdMap(
+  userIds: string[],
+  implementerId: string,
+): Promise<Map<string, ImplementerRole>> {
+  if (userIds.length === 0) return new Map();
+
+  const rows = await db.implementerMember.findMany({
+    where: { implementerId, userId: { in: userIds } },
+    select: { userId: true, role: true },
+  });
+  return new Map(rows.map((row) => [row.userId, row.role]));
+}
 
 const fetchEscalationRecipientHandlers: Record<
   EscalationRecipientRole,
@@ -469,7 +485,10 @@ const fetchEscalationRecipientHandlers: Record<
       LIMIT 1;
     `;
 
-    return result[0]?.supervisor_user_id ?? null;
+    const supervisorUserId = result[0]?.supervisor_user_id;
+    if (!supervisorUserId) throw new Error("No supervisor found for this fellow");
+
+    return supervisorUserId;
   },
   HUB_COORDINATOR: async (userId, implementerId) => {
     const result = await db.$queryRaw<{ hub_coordinator_user_id: string }[]>`
@@ -487,7 +506,10 @@ const fetchEscalationRecipientHandlers: Record<
       LIMIT 1
     `;
 
-    return result[0]?.hub_coordinator_user_id ?? null;
+    const hubCoordinatorUserId = result[0]?.hub_coordinator_user_id;
+    if (!hubCoordinatorUserId) throw new Error("No hub coordinator found for this supervisor");
+
+    return hubCoordinatorUserId;
   },
   CLINICAL_LEAD: async (userId, implementerId) => {
     const result = await db.$queryRaw<{ clinical_lead_user_id: string }[]>`
@@ -505,274 +527,68 @@ const fetchEscalationRecipientHandlers: Record<
       LIMIT 1
     `;
 
-    return result[0]?.clinical_lead_user_id ?? null;
+    const clinicalLeadUserId = result[0]?.clinical_lead_user_id;
+    if (!clinicalLeadUserId) throw new Error("No clinical lead found for this supervisor");
+
+    return clinicalLeadUserId;
   },
   ADMIN: async () => {
-    const result = await db.implementerMember.findFirst({
-      where: { role: "ADMIN" },
-      select: { userId: true },
+    const adminUsers = await db.adminUser.findMany({
       orderBy: { createdAt: "desc" },
     });
 
-    return result?.userId ?? null;
+    const adminMemberships = await db.implementerMember.findMany({
+      where: {
+        role: "ADMIN",
+        identifier: { in: adminUsers.map((a) => a.id) },
+      },
+      select: { userId: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      take: 1,
+    });
+
+    const adminUserId = adminMemberships[0]?.userId;
+    if (!adminUserId) throw new Error("No admin user found");
+
+    return adminUserId;
   },
 };
 
-function isValidEscalationCount(count: number): count is EscalationCount {
-  return (ESCALATION_COUNTS as readonly number[]).includes(count);
-}
+async function getUserNamesByIdAndRole(
+  userIds: string[],
+  roles: ImplementerRole[] = [],
+): Promise<UserRoleNameMap> {
+  const result: UserRoleNameMap = new Map();
+  if (userIds.length === 0) return result;
 
-const fetchEscalationMappingHandlers: Record<EscalationCount, FetchEscalationMappingHandler> = {
-  1: async (orderedEscalations) => {
-    const firstEscalation = orderedEscalations.find((esc) => esc.escOrder === 1);
-    if (!firstEscalation?.escalatedById || !firstEscalation?.escalatedToId) {
-      throw new Error("Escalator or recipient ID is missing");
-    }
+  const activeConfigs =
+    roles.length > 0
+      ? ROLE_NAME_CONFIG.filter((config) => roles.includes(config.role))
+      : ROLE_NAME_CONFIG;
 
-    const result = await db.$queryRaw<
-      {
-        user_id: string;
-        role: string;
-        fellow_name: string | null;
-        supervisor_name: string | null;
-      }[]
-    >`
-      SELECT
-        im.user_id,
-        im.role,
-        f.fellow_name,
-        s.supervisor_name
-      FROM implementer_members im
-      LEFT JOIN fellows f
-        ON f.id = im.identifier
-        AND im.role = 'FELLOW'::implementer_roles
-      LEFT JOIN supervisors s
-        ON s.id = im.identifier
-        AND im.role = 'SUPERVISOR'::implementer_roles
-      WHERE (im.user_id = ${firstEscalation.escalatedById} AND im.role = 'FELLOW'::implementer_roles)
-        OR (im.user_id = ${firstEscalation.escalatedToId} AND im.role = 'SUPERVISOR'::implementer_roles)
-    `;
+  const coalesceSql = activeConfigs.map((c) => `${c.table}.${c.column}`).join(", ");
+  const joinsSql = activeConfigs
+    .map(
+      (c) =>
+        `LEFT JOIN ${c.table} ON ${c.table}.id = im.identifier AND im.role = '${c.role}'::implementer_roles`,
+    )
+    .join("\n");
 
-    const rowMap = Object.fromEntries(result.map((row) => [`${row.user_id}:${row.role}`, row]));
-
-    const fellowName = rowMap[`${firstEscalation.escalatedById}:FELLOW`]?.fellow_name;
-    const supervisorName = rowMap[`${firstEscalation.escalatedToId}:SUPERVISOR`]?.supervisor_name;
-
-    if (!fellowName || !supervisorName) {
-      throw new Error("Fellow or supervisor name not found");
-    }
-
-    return [
-      {
-        ...firstEscalation,
-        escalatedByName: fellowName,
-        escalatedByRole: "FELLOW",
-        escalatedToName: supervisorName,
-        escalatedToRole: "SUPERVISOR",
-      },
-    ];
-  },
-  2: async (orderedEscalations, ticketCategory) => {
-    const firstEscalation = orderedEscalations.find((esc) => esc.escOrder === 1);
-    const secondEscalation = orderedEscalations.find((esc) => esc.escOrder === 2);
-
-    if (
-      !firstEscalation?.escalatedById ||
-      !firstEscalation?.escalatedToId ||
-      !secondEscalation?.escalatedToId
-    ) {
-      throw new Error("Escalation data is missing");
-    }
-
-    const recipientRole = ESCALATION_RECIPIENT_FROM_CATEGORY[ticketCategory];
-    const names = await getEscalationUserNames(
-      firstEscalation.escalatedById,
-      firstEscalation.escalatedToId,
-      secondEscalation.escalatedToId,
-      recipientRole,
-    );
-
-    return [
-      {
-        ...firstEscalation,
-        escalatedByName: names.fellowName,
-        escalatedByRole: "FELLOW",
-        escalatedToName: names.supervisorName,
-        escalatedToRole: "SUPERVISOR",
-      },
-      {
-        ...secondEscalation,
-        escalatedByName: names.supervisorName,
-        escalatedByRole: "SUPERVISOR",
-        escalatedToName: names.thirdName,
-        escalatedToRole: recipientRole,
-      },
-    ];
-  },
-  3: async (orderedEscalations, ticketCategory) => {
-    const firstEscalation = orderedEscalations.find((esc) => esc.escOrder === 1);
-    const secondEscalation = orderedEscalations.find((esc) => esc.escOrder === 2);
-    const thirdEscalation = orderedEscalations.find((esc) => esc.escOrder === 3);
-
-    if (
-      !firstEscalation?.escalatedById ||
-      !firstEscalation?.escalatedToId ||
-      !secondEscalation?.escalatedToId ||
-      !thirdEscalation?.escalatedToId
-    ) {
-      throw new Error("Escalation data is missing");
-    }
-
-    const recipientRole = ESCALATION_RECIPIENT_FROM_CATEGORY[ticketCategory];
-    const names = await getEscalationUserNamesForThirdEscalation(
-      firstEscalation.escalatedById,
-      firstEscalation.escalatedToId,
-      secondEscalation.escalatedToId,
-      thirdEscalation.escalatedToId,
-      recipientRole,
-    );
-
-    return [
-      {
-        ...firstEscalation,
-        escalatedByName: names.fellowName,
-        escalatedByRole: "FELLOW",
-        escalatedToName: names.supervisorName,
-        escalatedToRole: "SUPERVISOR",
-      },
-      {
-        ...secondEscalation,
-        escalatedByName: names.supervisorName,
-        escalatedByRole: "SUPERVISOR",
-        escalatedToName: names.thirdName,
-        escalatedToRole: recipientRole,
-      },
-      {
-        ...thirdEscalation,
-        escalatedByName: names.thirdName,
-        escalatedByRole: recipientRole as EscalationInitiatorRole,
-        escalatedToName: names.adminName,
-        escalatedToRole: "ADMIN",
-      },
-    ];
-  },
-};
-
-async function getEscalationUserNames(
-  fellowUserId: string,
-  supervisorUserId: string,
-  thirdUserId: string,
-  recipientRole: EscalationRecipientRole,
-): Promise<{ fellowName: string; supervisorName: string; thirdName: string }> {
-  const lookup = IMPLEMENTER_ROLE_TABLE_LOOKUP[recipientRole];
-
-  const result = await db.$queryRaw<
-    {
-      user_id: string;
-      role: string;
-      fellow_name: string | null;
-      supervisor_name: string | null;
-      third_name: string | null;
-    }[]
+  const rows = await db.$queryRaw<
+    { user_id: string; role: ImplementerRole; name: string | null }[]
   >`
     SELECT
       im.user_id,
-      im.role,
-      f.fellow_name,
-      s.supervisor_name,
-      ${Prisma.raw(`t.${lookup.nameColumn}`)} AS third_name
+      im.role::text AS role,
+      COALESCE(${Prisma.raw(coalesceSql)}) AS name
     FROM implementer_members im
-    LEFT JOIN fellows f
-      ON f.id = im.identifier
-      AND im.role = 'FELLOW'::implementer_roles
-    LEFT JOIN supervisors s
-      ON s.id = im.identifier
-      AND im.role = 'SUPERVISOR'::implementer_roles
-    LEFT JOIN ${Prisma.raw(lookup.table)} t
-      ON t.id = im.identifier
-      AND im.role = ${Prisma.sql`${lookup.role}::implementer_roles`}
-    WHERE (im.user_id = ${fellowUserId} AND im.role = 'FELLOW'::implementer_roles)
-      OR (im.user_id = ${supervisorUserId} AND im.role = 'SUPERVISOR'::implementer_roles)
-      OR (im.user_id = ${thirdUserId} AND im.role = ${Prisma.sql`${lookup.role}::implementer_roles`})
+    ${Prisma.raw(joinsSql)}
+    WHERE im.user_id = ANY(${userIds}::text[])
   `;
 
-  const rowMap = Object.fromEntries(result.map((row) => [`${row.user_id}:${row.role}`, row]));
-
-  const fellowName = rowMap[`${fellowUserId}:FELLOW`]?.fellow_name;
-  const supervisorName = rowMap[`${supervisorUserId}:SUPERVISOR`]?.supervisor_name;
-  const thirdName = rowMap[`${thirdUserId}:${lookup.role}`]?.third_name;
-
-  if (!fellowName || !supervisorName || !thirdName) {
-    throw new Error("Could not resolve all escalation user names");
+  for (const row of rows) {
+    result.set(`${row.user_id}:${row.role}`, row.name);
   }
 
-  return {
-    fellowName,
-    supervisorName,
-    thirdName,
-  };
-}
-
-async function getEscalationUserNamesForThirdEscalation(
-  fellowUserId: string,
-  supervisorUserId: string,
-  thirdUserId: string,
-  adminUserId: string,
-  recipientRole: EscalationRecipientRole,
-): Promise<{ fellowName: string; supervisorName: string; thirdName: string; adminName: string }> {
-  const lookup = IMPLEMENTER_ROLE_TABLE_LOOKUP[recipientRole];
-
-  const result = await db.$queryRaw<
-    {
-      user_id: string;
-      role: string;
-      fellow_name: string | null;
-      supervisor_name: string | null;
-      third_name: string | null;
-      admin_name: string | null;
-    }[]
-  >`
-    SELECT
-      im.user_id,
-      im.role,
-      f.fellow_name,
-      s.supervisor_name,
-      ${Prisma.raw(`t.${lookup.nameColumn}`)} AS third_name,
-      a.name AS admin_name
-    FROM implementer_members im
-    LEFT JOIN fellows f
-      ON f.id = im.identifier
-      AND im.role = 'FELLOW'::implementer_roles
-    LEFT JOIN supervisors s
-      ON s.id = im.identifier
-      AND im.role = 'SUPERVISOR'::implementer_roles
-    LEFT JOIN ${Prisma.raw(lookup.table)} t
-      ON t.id = im.identifier
-      AND im.role = ${Prisma.sql`${lookup.role}::implementer_roles`}
-    LEFT JOIN admin_users a
-      ON a.id = im.identifier
-      AND im.role = 'ADMIN'::implementer_roles
-    WHERE (im.user_id = ${fellowUserId} AND im.role = 'FELLOW'::implementer_roles)
-      OR (im.user_id = ${supervisorUserId} AND im.role = 'SUPERVISOR'::implementer_roles)
-      OR (im.user_id = ${thirdUserId} AND im.role = ${Prisma.sql`${lookup.role}::implementer_roles`})
-      OR (im.user_id = ${adminUserId} AND im.role = 'ADMIN'::implementer_roles)
-  `;
-
-  const rowMap = Object.fromEntries(result.map((row) => [`${row.user_id}:${row.role}`, row]));
-
-  const fellowName = rowMap[`${fellowUserId}:FELLOW`]?.fellow_name;
-  const supervisorName = rowMap[`${supervisorUserId}:SUPERVISOR`]?.supervisor_name;
-  const thirdName = rowMap[`${thirdUserId}:${lookup.role}`]?.third_name;
-  const adminName = rowMap[`${adminUserId}:ADMIN`]?.admin_name;
-
-  if (!fellowName || !supervisorName || !thirdName || !adminName) {
-    throw new Error("Could not resolve all escalation user names");
-  }
-
-  return {
-    fellowName,
-    supervisorName,
-    thirdName,
-    adminName,
-  };
+  return result;
 }
