@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.33.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.32.1...v1.33.0) (2026-07-01)
+
+
+### Features
+
+* **migrations:** seed session names for JSS Program v2 ([#751](https://github.com/Shamiri-Institute/digitalhub/issues/751)) ([4ac81b9](https://github.com/Shamiri-Institute/digitalhub/commit/4ac81b92a7894d32eea6d80170de1ae8ebfcf276))
+
+## [1.33.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.32.1...v1.33.0) (2026-07-01)
+
+
+### Features
+
+* **migrations:** seed session names for JSS Program v2 ([#751](https://github.com/Shamiri-Institute/digitalhub/issues/751)) ([4ac81b9](https://github.com/Shamiri-Institute/digitalhub/commit/4ac81b92a7894d32eea6d80170de1ae8ebfcf276))
+
 ## [1.32.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.32.0...v1.32.1) (2026-06-30)
 
 ## [1.32.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.31.0...v1.32.0) (2026-06-29)
