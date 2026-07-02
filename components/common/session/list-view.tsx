@@ -31,6 +31,7 @@ export function ListView({
     setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
     setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setAttendanceDocumentDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
   fellowId?: string;

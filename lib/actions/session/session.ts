@@ -9,6 +9,7 @@ import {
   ScheduleNewSessionSchema,
   SessionRatingsSchema,
 } from "#/components/common/session/schema";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
@@ -374,4 +375,40 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
       message: (error as Error)?.message ?? "An error occurred while marking attendance.",
     };
   }
+}
+
+export async function fetchSessionAttendances(sessionId: string) {
+  await requireAuthRole(
+    ImplementerRole.FELLOW,
+    ImplementerRole.SUPERVISOR,
+    ImplementerRole.HUB_COORDINATOR,
+    ImplementerRole.ADMIN,
+  );
+  return db.studentAttendance.findMany({
+    where: { sessionId },
+    select: {
+      id: true,
+      studentId: true,
+      attended: true,
+      absenceReason: true,
+      comments: true,
+      sessionId: true,
+      schoolId: true,
+    },
+  });
+}
+
+export async function countSessionGroupAttendance(sessionId: string, fellowId: string) {
+  const { role, identifier } = await requireAuthRole(
+    ImplementerRole.FELLOW,
+    ImplementerRole.SUPERVISOR,
+    ImplementerRole.HUB_COORDINATOR,
+    ImplementerRole.ADMIN,
+  );
+  if (role === ImplementerRole.FELLOW && identifier !== fellowId) {
+    throw new Error("Unauthorized: fellows may only count their own group attendance");
+  }
+  return db.studentAttendance.count({
+    where: { sessionId, fellowId },
+  });
 }
