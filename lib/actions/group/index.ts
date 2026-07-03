@@ -242,7 +242,6 @@ export async function submitFellowGroupReport(data: z.infer<typeof FellowGroupRe
         structuralFidelity: parsed.structuralFidelity,
         processFidelity: parsed.processFidelity,
         adaptationsMade: parsed.adaptationsMade,
-        // Null out conditional fields when their trigger is not met (spec Section 9 constraints).
         adaptationType: parsed.adaptationsMade ? (parsed.adaptationType ?? null) : null,
         adaptationReason: parsed.adaptationsMade ? (parsed.adaptationReason ?? null) : null,
         behavioralEngagement: parsed.behavioralEngagement,
