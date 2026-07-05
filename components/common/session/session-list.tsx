@@ -35,7 +35,6 @@ export function SessionList({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setAttendanceDocumentDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
   fellowId?: string;
@@ -144,7 +143,6 @@ export function SessionDetail({
     setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog?: Dispatch<SetStateAction<boolean>>;
-    setAttendanceDocumentDialog?: Dispatch<SetStateAction<boolean>>;
   };
   layout: "compact" | "expanded";
   withDropdown?: boolean;

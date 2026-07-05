@@ -36,7 +36,6 @@ import { ScheduleNewSession } from "#/components/common/session/schedule-new-ses
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import StudentAttendance from "#/components/common/student/student-attendance";
-import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -480,10 +479,7 @@ function CalendarView({
   const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
-  const [attendanceDocumentDialog, setAttendanceDocumentDialog] = React.useState(false);
   const [session, setSession] = React.useState<Session | null>(null);
-
-  const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
 
   const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
   const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
@@ -509,7 +505,6 @@ function CalendarView({
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
               setCancelSessionDialog,
-              setAttendanceDocumentDialog,
             }}
             fellowId={fellowId}
           />
@@ -529,7 +524,6 @@ function CalendarView({
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
               setCancelSessionDialog,
-              setAttendanceDocumentDialog,
             }}
             fellowId={fellowId}
           />
@@ -550,7 +544,6 @@ function CalendarView({
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
               setCancelSessionDialog,
-              setAttendanceDocumentDialog,
             }}
             supervisorId={supervisorId}
             fellowId={fellowId}
@@ -573,7 +566,6 @@ function CalendarView({
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
               setCancelSessionDialog,
-              setAttendanceDocumentDialog,
             }}
             fellowId={fellowId}
           />
@@ -651,13 +643,6 @@ function CalendarView({
         session={session}
         fellows={fellowsForStudentAttendance}
         fellowId={fellowId}
-      />
-      <AttendanceDocumentDialog
-        session={session}
-        groupId={groupId}
-        role={role}
-        open={attendanceDocumentDialog}
-        onOpenChange={setAttendanceDocumentDialog}
       />
       {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
         <SessionRatings

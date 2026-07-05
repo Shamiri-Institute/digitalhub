@@ -210,8 +210,17 @@ export default function StudentAttendance({
     const res = await markStudentAttendance(data);
     await revalidatePageAction(pathname);
     if (session?.id) {
-      const rows = await fetchSessionAttendances(session.id);
-      setSessionAttendances(rows);
+      try {
+        const rows = await fetchSessionAttendances(session.id);
+        setSessionAttendances(rows);
+      } catch {
+        setAttendanceFetchId(null);
+        setSessionAttendances([]);
+        toast({
+          variant: "destructive",
+          description: "Could not refresh attendance. Please close and reopen.",
+        });
+      }
     }
     return res;
   };
@@ -220,8 +229,17 @@ export default function StudentAttendance({
     const res = await markManyStudentsAttendance(ids, data);
     await revalidatePageAction(pathname);
     if (session?.id) {
-      const rows = await fetchSessionAttendances(session.id);
-      setSessionAttendances(rows);
+      try {
+        const rows = await fetchSessionAttendances(session.id);
+        setSessionAttendances(rows);
+      } catch {
+        setAttendanceFetchId(null);
+        setSessionAttendances([]);
+        toast({
+          variant: "destructive",
+          description: "Could not refresh attendance. Please close and reopen.",
+        });
+      }
     }
     return res;
   };
@@ -246,7 +264,17 @@ export default function StudentAttendance({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+          setAttendanceFetchId(null);
+          setSessionAttendances([]);
+        }
+      }}
+      modal={true}
+    >
       <DialogContent className="lg:w-3/4 lg:max-w-none">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">

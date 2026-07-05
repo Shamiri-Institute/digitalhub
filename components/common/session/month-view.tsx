@@ -30,7 +30,6 @@ export function MonthView({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setAttendanceDocumentDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
   fellowId?: string;
@@ -157,7 +156,6 @@ export function MonthCalendarCell({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setAttendanceDocumentDialog: Dispatch<SetStateAction<boolean>>;
   };
   fellowId?: string;
   supervisorId?: string;
