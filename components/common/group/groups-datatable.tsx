@@ -35,7 +35,7 @@ export default function GroupsDataTable({
   }>[];
   role: ImplementerRole;
 }) {
-  const [_group, _setGroup] = useState<SchoolGroupDataTableData>();
+  const [selectedGroup, setSelectedGroup] = useState<SchoolGroupDataTableData>();
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
   const [leaderDialog, setLeaderDialog] = useState(false);
@@ -43,15 +43,15 @@ export default function GroupsDataTable({
   const [unarchiveDialog, setUnarchiveDialog] = useState(false);
 
   const group = useMemo(() => {
-    if (_group) {
-      return data.find((g) => g.id === _group.id);
+    if (selectedGroup) {
+      return data.find((g) => g.id === selectedGroup.id);
     }
-    return _group;
-  }, [data, _group]);
+    return selectedGroup;
+  }, [data, selectedGroup]);
 
   const memoizedColumns = useMemo(() => {
     return columns({
-      setGroup: _setGroup,
+      setGroup: setSelectedGroup,
       setStudentsDialog,
       setEvaluationDialog,
       setLeaderDialog,
