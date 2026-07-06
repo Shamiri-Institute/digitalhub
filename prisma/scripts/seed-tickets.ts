@@ -1,7 +1,7 @@
-import type { TicketCategory, TicketPriorityLevel, TicketStatus } from "@prisma/client";
-import { parse } from "csv-parse/sync";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import type { TicketCategory, TicketPriorityLevel, TicketStatus } from "@prisma/client";
+import { parse } from "csv-parse/sync";
 import { TEST_CREDENTIALS } from "#/lib/auth/credential-auth";
 import { db } from "#/lib/db";
 
