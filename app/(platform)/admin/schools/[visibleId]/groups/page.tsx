@@ -32,6 +32,7 @@ export default async function GroupsPage({ params }: { params: Promise<{ visible
 	intg.group_name AS "groupName",
 	intg.leader_id AS "leaderId",
 	intg.school_id AS "schoolId",
+	intg.project_id AS "projectId",
 	intg.archived_at AS "archivedAt",
 	fel.fellow_name AS "fellowName",
 	sup.supervisor_name AS "supervisorName",
@@ -47,6 +48,7 @@ export default async function GroupsPage({ params }: { params: Promise<{ visible
       sch.id = ${school.id}
   GROUP BY
       intg.id,
+      intg.project_id,
       fel.fellow_name,
       sup.supervisor_name,
       sup.id
