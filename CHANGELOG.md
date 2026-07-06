@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.34.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.33.0...v1.34.0) (2026-07-06)
+
+
+### Features
+
+* **group:** fellow final group report ([#746](https://github.com/Shamiri-Institute/digitalhub/issues/746)) ([75a594f](https://github.com/Shamiri-Institute/digitalhub/commit/75a594f5d6000a0c98709ac2e7f6dcc3540f5608))
+
 ## [1.33.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.32.1...v1.33.0) (2026-07-01)
 
 
