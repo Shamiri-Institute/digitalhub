@@ -214,7 +214,7 @@ export default function StudentAttendance({
         const rows = await fetchSessionAttendances(session.id);
         setSessionAttendances(rows);
       } catch {
-        setAttendanceFetchId(null);
+        setAttendanceFetchId(session.id);
         setSessionAttendances([]);
         toast({
           variant: "destructive",
@@ -233,7 +233,7 @@ export default function StudentAttendance({
         const rows = await fetchSessionAttendances(session.id);
         setSessionAttendances(rows);
       } catch {
-        setAttendanceFetchId(null);
+        setAttendanceFetchId(session.id);
         setSessionAttendances([]);
         toast({
           variant: "destructive",
