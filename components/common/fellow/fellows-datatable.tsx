@@ -42,7 +42,7 @@ export default function FellowsDatatable({
     };
   }>[];
 }) {
-  const [_fellow, _setFellow] = useState<SchoolFellowTableData | undefined>();
+  const [selectedFellow, setSelectedFellow] = useState<SchoolFellowTableData | undefined>();
   const [detailsDialog, setDetailsDialog] = useState(false);
   const [replaceDialog, setReplaceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
@@ -50,19 +50,19 @@ export default function FellowsDatatable({
   const [assignSupervisorDialog, setAssignSupervisorDialog] = useState(false);
 
   const fellow = useMemo(() => {
-    if (_fellow) {
+    if (selectedFellow) {
       const updatedFellow = fellows.find((f) => {
-        return f.id === _fellow.id;
+        return f.id === selectedFellow.id;
       });
       return updatedFellow;
     }
-    return _fellow;
-  }, [fellows, _fellow]);
+    return selectedFellow;
+  }, [fellows, selectedFellow]);
 
   const memoizedColumns = useMemo(() => {
     return columns({
       state: {
-        setFellow: _setFellow,
+        setFellow: setSelectedFellow,
         setDetailsDialog,
         setReplaceDialog,
         setStudentsDialog,
