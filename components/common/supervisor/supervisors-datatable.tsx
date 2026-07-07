@@ -45,20 +45,20 @@ export default function SupervisorsDataTable({
   const [selectedRows, setSelectedRows] = useState<Row<SupervisorsData>[]>([]);
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
   const [selectedSession] = useState<string>();
-  const [_supervisor, _setSupervisor] = useState<SupervisorsData | null>(null);
+  const [selectedSupervisor, setSelectedSupervisor] = useState<SupervisorsData | null>(null);
 
   const supervisor = useMemo(() => {
-    if (supervisors.length > 0 && _supervisor) {
-      return supervisors.find((s) => s.id === _supervisor?.id) ?? null;
+    if (supervisors.length > 0 && selectedSupervisor) {
+      return supervisors.find((s) => s.id === selectedSupervisor?.id) ?? null;
     }
-    return _supervisor;
-  }, [supervisors, _supervisor]);
+    return selectedSupervisor;
+  }, [supervisors, selectedSupervisor]);
 
   const memoizedColumns = useMemo(() => {
     return columns({
       setMarkAttendanceDialog,
       sessions: school?.interventionSessions ?? [],
-      setSupervisor: _setSupervisor,
+      setSupervisor: setSelectedSupervisor,
       role,
     });
   }, [role, school?.interventionSessions]);

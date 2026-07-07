@@ -61,20 +61,20 @@ export default function SessionsDatatable({
   const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
   const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
-  const [_session, _setSession] = React.useState<Session | null>(null);
+  const [selectedSession, setSelectedSession] = React.useState<Session | null>(null);
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
   const [attendanceDocumentDialog, setAttendanceDocumentDialog] = React.useState(false);
 
   const session = useMemo(() => {
-    if (!_session) return null;
-    return sessions.find((s) => s.id === _session.id) ?? null;
-  }, [_session, sessions]);
+    if (!selectedSession) return null;
+    return sessions.find((s) => s.id === selectedSession.id) ?? null;
+  }, [selectedSession, sessions]);
 
   const memoizedColumns = useMemo(() => {
     return columns({
-      setSession: _setSession,
+      setSession: setSelectedSession,
       setRatingsDialog,
       setFellowAttendanceDialog,
       setSupervisorAttendanceDialog,

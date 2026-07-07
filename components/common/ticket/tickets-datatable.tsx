@@ -19,21 +19,21 @@ export default function TicketsDatatable({
   role: ImplementerRole;
   showCreateButton?: boolean;
 }) {
-  const [_ticket, _setTicket] = useState<TicketData | undefined>();
+  const [selectedTicket, setSelectedTicket] = useState<TicketData | undefined>();
   const [viewDialog, setViewDialog] = useState(false);
   const [resolutionDialog, setResolutionDialog] = useState<boolean | "view">(false);
   const [escalateDialog, setEscalateDialog] = useState(false);
 
   const ticket = useMemo(() => {
-    if (_ticket) {
-      return tickets.find((t) => t.id === _ticket.id);
+    if (selectedTicket) {
+      return tickets.find((t) => t.id === selectedTicket.id);
     }
-    return _ticket;
-  }, [tickets, _ticket]);
+    return selectedTicket;
+  }, [tickets, selectedTicket]);
 
   const memoizedColumns = useMemo(() => {
     return columns({
-      setTicket: _setTicket,
+      setTicket: setSelectedTicket,
       setViewDialog,
       setResolutionDialog,
       setEscalateDialog,

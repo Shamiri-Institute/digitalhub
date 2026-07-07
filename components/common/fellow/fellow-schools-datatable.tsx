@@ -33,8 +33,8 @@ export default function FellowSchoolsDatatable({
   project?: Project;
   role: ImplementerRole;
 }) {
-  const [_fellow, _setFellow] = useState<FellowsData | null>(null);
-  const [_fellowGroup, _setFellowGroup] = useState<FellowGroupData | undefined>();
+  const [selectedFellow, setSelectedFellow] = useState<FellowsData | null>(null);
+  const [selectedFellowGroup, setSelectedFellowGroup] = useState<FellowGroupData | undefined>();
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
   const [addFellowDialog, setAddFellowDialog] = useState(false);
   const [editFellowDialog, setEditFellowDialog] = useState(false);
@@ -49,7 +49,7 @@ export default function FellowSchoolsDatatable({
 
   const mainColumns = useMemo(() => {
     const columns = {
-      setFellow: _setFellow,
+      setFellow: setSelectedFellow,
       setWeeklyEvaluationDialog,
       setEditFellowDialog,
       setAttendanceHistoryDialog,
@@ -65,7 +65,7 @@ export default function FellowSchoolsDatatable({
 
   const subColumnsMemo = useMemo(() => {
     const columns = {
-      setFellowGroup: _setFellowGroup,
+      setFellowGroup: setSelectedFellowGroup,
       setAttendanceDialog,
       setStudentsDialog,
       setEvaluationDialog,
@@ -115,20 +115,20 @@ export default function FellowSchoolsDatatable({
   }
 
   const fellow = useMemo(() => {
-    if (_fellowGroup) {
-      return fellows.find((f) => f.id === _fellowGroup.leaderId) ?? null;
+    if (selectedFellowGroup) {
+      return fellows.find((f) => f.id === selectedFellowGroup.leaderId) ?? null;
     }
-    return _fellow;
-  }, [_fellow, _fellowGroup, fellows]);
+    return selectedFellow;
+  }, [selectedFellow, selectedFellowGroup, fellows]);
 
   const fellowGroup = useMemo(() => {
-    if (!_fellowGroup) {
+    if (!selectedFellowGroup) {
       return;
     }
     return fellows
-      .find((f) => f.id === _fellowGroup.leaderId)
-      ?.groups.find((g) => g.id === _fellowGroup.id);
-  }, [_fellowGroup, fellows]);
+      .find((f) => f.id === selectedFellowGroup.leaderId)
+      ?.groups.find((g) => g.id === selectedFellowGroup.id);
+  }, [selectedFellowGroup, fellows]);
 
   return (
     <>
