@@ -1,0 +1,25 @@
+Ticket_ID,Fellow_Email,Supervisor_Email,Category,Priority,Status,Subject,Description
+TCK_001,bukayo.saka@test.com,martin.odegaard@test.com,TECH,HIGH,ESCALATED,WiFi connection unstable,The device is unable to maintain a stable WiFi connection during sessions
+TCK_002,bukayo.saka@test.com,martin.odegaard@test.com,TECH,MEDIUM,ESCALATED,App crashes on startup,The application keeps crashing when I attempt to start it
+TCK_003,bukayo.saka@test.com,martin.odegaard@test.com,RESEARCH,HIGH,ESCALATED,IRB renewal deadline,My IRB approval is expiring soon and needs to be renewed
+TCK_004,bukayo.saka@test.com,martin.odegaard@test.com,RESEARCH,MEDIUM,ESCALATED,Consent form issues,There are issues with the participant consent forms
+TCK_005,bukayo.saka@test.com,martin.odegaard@test.com,OPERATIONS,HIGH,ESCALATED,Venue booking pending,The venue booking for next week's training is still pending confirmation
+TCK_006,bukayo.saka@test.com,martin.odegaard@test.com,CARE,MEDIUM,ESCALATED,Student distress signal,A student showed clear signs of distress during yesterday's session
+TCK_007,bukayo.saka@test.com,martin.odegaard@test.com,CLINICAL,HIGH,ESCALATED,Screening tool error,The mental health screening tool is returning errors during assessments
+TCK_008,bukayo.saka@test.com,martin.odegaard@test.com,CLINICAL,MEDIUM,ESCALATED,Assessment scoring query,Need clarification on the new assessment scoring guidelines
+TCK_009,gabriel.martinelli@test.com,declan.rice@test.com,TECH,HIGH,ESCALATED,Device battery draining,Battery drains quickly even when the device is idle
+TCK_010,gabriel.martinelli@test.com,declan.rice@test.com,TECH,MEDIUM,ESCALATED,Screen display flickering,The screen flickers intermittently causing visibility issues
+TCK_011,gabriel.martinelli@test.com,declan.rice@test.com,RESEARCH,HIGH,ESCALATED,Data collection delay,Data collection is delayed due to scheduling conflicts
+TCK_012,gabriel.martinelli@test.com,declan.rice@test.com,RESEARCH,MEDIUM,ESCALATED,Survey responses missing,Several survey responses were not recorded in the system
+TCK_013,gabriel.martinelli@test.com,declan.rice@test.com,OPERATIONS,HIGH,ESCALATED,Transport logistics,Transport arrangements for the field visit need to be coordinated
+TCK_014,gabriel.martinelli@test.com,declan.rice@test.com,CARE,MEDIUM,ESCALATED,Resource referral request,Need to refer a student to appropriate mental health resources
+TCK_015,gabriel.martinelli@test.com,declan.rice@test.com,CLINICAL,HIGH,ESCALATED,Clinical protocol unclear,The clinical protocol for the intervention is unclear to me
+TCK_016,gabriel.martinelli@test.com,declan.rice@test.com,CLINICAL,MEDIUM,ESCALATED,Case notes issue,There is an issue with accessing or updating case notes
+TCK_017,gabriel.jesus@test.com,william.saliba@test.com,TECH,HIGH,ESCALATED,Audio not working,Audio output is not working during important presentations
+TCK_018,gabriel.jesus@test.com,william.saliba@test.com,TECH,MEDIUM,ESCALATED,Login timeout issues,Login attempts timeout before completing authentication
+TCK_019,gabriel.jesus@test.com,william.saliba@test.com,RESEARCH,HIGH,ESCALATED,Ethics training expired,My ethics training certification has expired and needs renewal
+TCK_020,gabriel.jesus@test.com,william.saliba@test.com,RESEARCH,MEDIUM,ESCALATED,Participant dropout form,Need to document a participant who has dropped out of the study
+TCK_021,gabriel.jesus@test.com,william.saliba@test.com,OPERATIONS,HIGH,ESCALATED,Budget approval needed,Budget approval for the new equipment is taking too long
+TCK_022,gabriel.jesus@test.com,william.saliba@test.com,CARE,MEDIUM,ESCALATED,Follow-up call needed,Requesting a follow-up call with a student's family
+TCK_023,gabriel.jesus@test.com,william.saliba@test.com,CLINICAL,HIGH,ESCALATED,Diagnostic delay,Diagnostic assessments are being delayed due to system issues
+TCK_024,gabriel.jesus@test.com,william.saliba@test.com,CLINICAL,MEDIUM,ESCALATED,Supervision session request,Requesting a clinical supervision session to discuss cases
