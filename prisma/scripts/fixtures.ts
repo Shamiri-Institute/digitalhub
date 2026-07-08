@@ -18,16 +18,14 @@ export const userFixtures: Fixtures = {
       name: "Wendy Mmbone",
       implementerByVisibleId: "Imp_1",
       implementerRole: ImplementerRole.ADMIN,
-      avatarUrl:
-        "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/wendy-mmbone-headshot.jpeg",
+      avatarUrl: null,
     },
     {
       email: "benny@shamiri.institute",
       name: "Benny H. Otieno",
       implementerByVisibleId: "Imp_1",
       implementerRole: ImplementerRole.OPERATIONS,
-      avatarUrl:
-        "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/benny-h-otieno-headshot.jpeg",
+      avatarUrl: null,
     },
     {
       email: "linus@shamiri.institute",
@@ -47,8 +45,7 @@ export const userFixtures: Fixtures = {
     {
       email: "dmndetei@amhf.or.ke",
       name: "Dennis Mndetei",
-      avatarUrl:
-        "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/david-ndetei-headshot.jpg",
+      avatarUrl: null,
       implementerByVisibleId: "Imp_2",
       implementerRole: ImplementerRole.ADMIN,
     },
