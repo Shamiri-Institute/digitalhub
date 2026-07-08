@@ -63,7 +63,7 @@ jobs:
       - name: Migrate database
         run: npm run db:dev:migrate
       # ideally we might want to create a different seed script for these tests so that we have deterministic data
-      - name: Load test database dump
+      - name: Seed test database
         run: npm run db:seed
 
       - name: Run playwright tests
