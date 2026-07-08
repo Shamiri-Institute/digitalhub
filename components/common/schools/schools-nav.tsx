@@ -62,7 +62,7 @@ export default function SchoolsNav() {
                   name: "Students",
                   href: `/fel/schools/${visibleId}/students`,
                 },
-                { name: "Files", href: `/fel/schools/${visibleId}/files` },
+                // { name: "Files", href: `/fel/schools/${visibleId}/files` },
               ]
             : [];
 
