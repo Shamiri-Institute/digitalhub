@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.34.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.34.0...v1.34.1) (2026-07-08)
+
+
+### Bug Fixes
+
+* **cleanup:** remove references to deleted shamiridigitalhub-public S3 bucket ([#757](https://github.com/Shamiri-Institute/digitalhub/issues/757)) ([c85056b](https://github.com/Shamiri-Institute/digitalhub/commit/c85056bcda49e0e3166172caa59dda73ccd5d5ed))
+* **schools-nav:** hide "Files" tab under schools for fellows ([#758](https://github.com/Shamiri-Institute/digitalhub/issues/758)) ([53f4f57](https://github.com/Shamiri-Institute/digitalhub/commit/53f4f577b6983a895180d22afb66f78bb6a5a770))
+
 ## [1.34.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.33.0...v1.34.0) (2026-07-06)
 
 
