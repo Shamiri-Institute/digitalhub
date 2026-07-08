@@ -72,6 +72,7 @@ export default function StudentAttendance({
   const { sessions, refresh } = useContext(SessionsContext);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<StudentAttendanceData>[]>([]);
+  const [resetSelectionTrigger, setResetSelectionTrigger] = useState<number>(0);
   const [triageModalOpen, setTriageModalOpen] = useState(false);
   const [triageReadOnly, setTriageReadOnly] = useState(false);
   const [triageStudent, setTriageStudent] = useState<StudentAttendanceData | undefined>();
@@ -347,6 +348,7 @@ export default function StudentAttendance({
           <TriageSessionSummary triageEventsByStudent={triageEventsByStudent} />
         )}
         <DataTable
+          key={`student-attendance-table-${resetSelectionTrigger}`}
           columns={memoizedColumns}
           editColumns={true}
           data={
@@ -397,6 +399,11 @@ export default function StudentAttendance({
           markBulkAttendanceAction={markBulkAttendance}
           bulkMode={bulkMode}
           setBulkMode={setBulkMode}
+          onSuccess={() => {
+            setSelectedRows([]);
+            setBulkMode(false);
+            setResetSelectionTrigger((prev) => prev + 1);
+          }}
         >
           <DialogAlertWidget>
             <p className="flex flex-wrap items-center gap-2">
