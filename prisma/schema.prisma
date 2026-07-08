@@ -309,6 +309,7 @@ model StudentAttendance {
   triageEvents  TriageEvent[]
 
   @@unique([studentId, sessionId])
+  @@index([sessionId])
   @@map("student_attendances")
 }
 

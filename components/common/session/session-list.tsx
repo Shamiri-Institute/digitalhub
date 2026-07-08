@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/use-toast";
+import { countSessionGroupAttendance } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import type { Session } from "./sessions-provider";
 
@@ -299,11 +300,6 @@ export function SessionDropDown({
   const fellowGroup = session.school?.interventionGroups.find(
     (group) => group.leaderId === fellowId,
   );
-  const markedStudentCount =
-    fellowGroup?.students.filter((student) =>
-      student.studentAttendances.some((a) => a.sessionId === session.id),
-    ).length ?? 0;
-  const hasMinimumAttendance = markedStudentCount >= 2;
   const isSessionActive = session.occurred && session.status !== "Cancelled";
   const canMarkAttendance =
     isSessionActive && fellowGroup && session.session?.sessionType !== "DATA_COLLECTION";
@@ -480,18 +476,26 @@ export function SessionDropDown({
               Mark student attendance
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={(e) => {
-                if (!hasMinimumAttendance) {
-                  e.preventDefault();
-                  (e.target as HTMLElement).blur();
-                  toast({
-                    variant: "destructive",
-                    description: "Mark attendance for at least 2 students before uploading",
+              onSelect={() => {
+                if (!fellowId) return;
+                void countSessionGroupAttendance(session.id, fellowId)
+                  .then((count) => {
+                    if (count < 2) {
+                      toast({
+                        variant: "destructive",
+                        description: "Mark attendance for at least 2 students before uploading",
+                      });
+                      return;
+                    }
+                    state.setSession?.(session);
+                    state.setAttendanceDocumentDialog?.(true);
+                  })
+                  .catch(() => {
+                    toast({
+                      variant: "destructive",
+                      description: "Could not verify attendance count. Please try again.",
+                    });
                   });
-                  return;
-                }
-                state.setSession?.(session);
-                state.setAttendanceDocumentDialog?.(true);
               }}
               disabled={!canAccessUpload}
             >

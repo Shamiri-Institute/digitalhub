@@ -101,7 +101,6 @@ export async function fetchInterventionSessions({
                       clinicalCases: true,
                     },
                   },
-                  studentAttendances: true,
                 },
               },
             },

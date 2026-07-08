@@ -42,6 +42,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import { Skeleton } from "#/components/ui/skeleton";
+import { toast } from "#/components/ui/use-toast";
+import { fetchSessionAttendances } from "#/lib/actions/session/session";
 import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
 import { getTriageEventByStudentAndSession, getTriageEventsForSession } from "#/lib/actions/triage";
@@ -69,6 +72,7 @@ export default function StudentAttendance({
   const { sessions, refresh } = useContext(SessionsContext);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<StudentAttendanceData>[]>([]);
+  const [resetSelectionTrigger, setResetSelectionTrigger] = useState<number>(0);
   const [triageModalOpen, setTriageModalOpen] = useState(false);
   const [triageReadOnly, setTriageReadOnly] = useState(false);
   const [triageStudent, setTriageStudent] = useState<StudentAttendanceData | undefined>();
@@ -80,6 +84,47 @@ export default function StudentAttendance({
   >({});
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [historyStudent, setHistoryStudent] = useState<StudentAttendanceData | undefined>();
+
+  const [sessionAttendances, setSessionAttendances] = useState<
+    Awaited<ReturnType<typeof fetchSessionAttendances>>
+  >([]);
+  const [attendanceFetchId, setAttendanceFetchId] = useState<string | null>(null);
+
+  const loadingAttendances = isOpen && !!session?.id && attendanceFetchId !== session.id;
+
+  const attendanceByStudentId = useMemo(
+    () =>
+      attendanceFetchId === session?.id
+        ? Object.fromEntries(sessionAttendances.map((a) => [a.studentId, a]))
+        : {},
+    [attendanceFetchId, session?.id, sessionAttendances],
+  );
+
+  useEffect(() => {
+    if (!isOpen || !session?.id) return;
+    const targetSessionId = session.id;
+    let cancelled = false;
+    void fetchSessionAttendances(targetSessionId)
+      .then((rows) => {
+        if (!cancelled) {
+          setSessionAttendances(rows);
+          setAttendanceFetchId(targetSessionId);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSessionAttendances([]);
+          setAttendanceFetchId(targetSessionId);
+          toast({
+            variant: "destructive",
+            description: "Failed to load attendance data. Please close and reopen.",
+          });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, session?.id]);
 
   const form = useForm<{ fellow: string }>({
     defaultValues: {
@@ -107,6 +152,8 @@ export default function StudentAttendance({
       setHistoryStudent,
       setHistoryModalOpen,
       triageEventsByStudent,
+      attendanceByStudentId,
+      loadingAttendances,
       session,
       role,
     });
@@ -119,6 +166,8 @@ export default function StudentAttendance({
     setHistoryStudent,
     setHistoryModalOpen,
     triageEventsByStudent,
+    attendanceByStudentId,
+    loadingAttendances,
     session,
     role,
   ]);
@@ -159,20 +208,40 @@ export default function StudentAttendance({
   }, [session?.id]);
 
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
-    const [res] = await Promise.all([
-      await markStudentAttendance(data),
-      await revalidatePageAction(pathname),
-      await refresh(),
-    ]);
+    const res = await markStudentAttendance(data);
+    await revalidatePageAction(pathname);
+    if (session?.id) {
+      try {
+        const rows = await fetchSessionAttendances(session.id);
+        setSessionAttendances(rows);
+      } catch {
+        setAttendanceFetchId(session.id);
+        setSessionAttendances([]);
+        toast({
+          variant: "destructive",
+          description: "Could not refresh attendance. Please close and reopen.",
+        });
+      }
+    }
     return res;
   };
 
   const markBulkAttendance = async (ids: string[], data: z.infer<typeof MarkAttendanceSchema>) => {
-    const [res] = await Promise.all([
-      await markManyStudentsAttendance(ids, data),
-      await revalidatePageAction(pathname),
-      await refresh(),
-    ]);
+    const res = await markManyStudentsAttendance(ids, data);
+    await revalidatePageAction(pathname);
+    if (session?.id) {
+      try {
+        const rows = await fetchSessionAttendances(session.id);
+        setSessionAttendances(rows);
+      } catch {
+        setAttendanceFetchId(session.id);
+        setSessionAttendances([]);
+        toast({
+          variant: "destructive",
+          description: "Could not refresh attendance. Please close and reopen.",
+        });
+      }
+    }
     return res;
   };
 
@@ -196,7 +265,17 @@ export default function StudentAttendance({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+          setAttendanceFetchId(null);
+          setSessionAttendances([]);
+        }
+      }}
+      modal={true}
+    >
       <DialogContent className="lg:w-3/4 lg:max-w-none">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
@@ -269,6 +348,7 @@ export default function StudentAttendance({
           <TriageSessionSummary triageEventsByStudent={triageEventsByStudent} />
         )}
         <DataTable
+          key={`student-attendance-table-${resetSelectionTrigger}`}
           columns={memoizedColumns}
           editColumns={true}
           data={
@@ -294,20 +374,21 @@ export default function StudentAttendance({
         />
         <MarkAttendance
           title={"Mark student attendance"}
-          attendances={
-            attendance?.studentAttendances.map((_attendance) => {
-              const { id, studentId, attended, absenceReason, sessionId, comments } = _attendance;
-              return {
-                attendanceId: id.toString(),
-                id: studentId,
-                attended,
-                absenceReason,
-                sessionId,
-                schoolId: _attendance.schoolId,
-                comments,
-              };
-            }) ?? []
-          }
+          attendances={(() => {
+            const a = attendance?.id ? attendanceByStudentId[attendance.id] : undefined;
+            if (!a) return [];
+            return [
+              {
+                attendanceId: a.id.toString(),
+                id: a.studentId,
+                attended: a.attended,
+                absenceReason: a.absenceReason,
+                sessionId: a.sessionId,
+                schoolId: a.schoolId,
+                comments: a.comments,
+              },
+            ];
+          })()}
           id={attendance?.id}
           selectedSessionId={session?.id}
           selectedIds={selectedRows.map((student) => student.original.id)}
@@ -318,6 +399,11 @@ export default function StudentAttendance({
           markBulkAttendanceAction={markBulkAttendance}
           bulkMode={bulkMode}
           setBulkMode={setBulkMode}
+          onSuccess={() => {
+            setSelectedRows([]);
+            setBulkMode(false);
+            setResetSelectionTrigger((prev) => prev + 1);
+          }}
         >
           <DialogAlertWidget>
             <p className="flex flex-wrap items-center gap-2">
@@ -375,7 +461,6 @@ export type StudentAttendanceData = Prisma.StudentGetPayload<{
         clinicalCases: true;
       };
     };
-    studentAttendances: true;
   };
 }>;
 
@@ -463,6 +548,11 @@ const columns = (state: {
   setHistoryStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setHistoryModalOpen: Dispatch<SetStateAction<boolean>>;
   triageEventsByStudent: Record<string, TriageEventWithRelations>;
+  attendanceByStudentId: Record<
+    string,
+    Awaited<ReturnType<typeof fetchSessionAttendances>>[number]
+  >;
+  loadingAttendances: boolean;
   session: Session | null;
   role: ImplementerRole;
 }): ColumnDef<StudentAttendanceData>[] => [
@@ -529,14 +619,15 @@ const columns = (state: {
 
   {
     cell: ({ row }) => {
-      const attended =
-        row.original.studentAttendances.find((attendance) => {
-          return attendance.sessionId === state.session?.id;
-        })?.attended ?? null;
+      const attended = state.attendanceByStudentId[row.original.id]?.attended ?? null;
       const triageEvent = state.triageEventsByStudent[row.original.id];
       return (
         <div className="flex flex-row flex-wrap items-center gap-1">
-          <AttendanceStatusWidget attended={attended} />
+          {state.loadingAttendances ? (
+            <Skeleton className="h-5 w-20 rounded" />
+          ) : (
+            <AttendanceStatusWidget attended={attended} />
+          )}
           {triageEvent && <TriageBadge event={triageEvent} />}
         </div>
       );
@@ -555,7 +646,7 @@ const columns = (state: {
           setHistoryModalOpen: state.setHistoryModalOpen,
         }}
         attendance={row.original}
-        disabled={!row.getCanSelect()}
+        disabled={!row.getCanSelect() || state.loadingAttendances}
         hasExistingTriageEvent={!!state.triageEventsByStudent[row.original.id]}
       />
     ),
