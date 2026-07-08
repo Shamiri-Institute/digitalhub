@@ -59,6 +59,7 @@ export function MarkAttendance({
   bulkMode = false,
   setBulkMode,
   selectedIds,
+  onSuccess,
 }: {
   id?: string;
   title: string;
@@ -87,6 +88,7 @@ export function MarkAttendance({
   bulkMode?: boolean;
   setBulkMode?: Dispatch<SetStateAction<boolean>>;
   selectedIds?: string[];
+  onSuccess?: () => void;
 }) {
   const pathname = usePathname();
 
@@ -158,6 +160,7 @@ export function MarkAttendance({
     });
 
     await revalidatePageAction(pathname);
+    onSuccess?.();
     setIsOpen(false);
   };
 

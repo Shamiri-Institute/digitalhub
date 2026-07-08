@@ -47,7 +47,6 @@ export type Session = Prisma.InterventionSessionGetPayload<{
                     clinicalCases: true;
                   };
                 };
-                studentAttendances: true;
               };
             };
           };
