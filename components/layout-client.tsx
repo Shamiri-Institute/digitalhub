@@ -32,7 +32,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ENABLE_TICKETS, NEXT_PUBLIC_ENV } from "#/lib/constants";
+
 import { cn } from "#/lib/utils";
 import ArrowDropdown from "#/public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -330,12 +330,10 @@ function getCurrentUserNavigationLinks(
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,
-      ENABLE_TICKETS && NEXT_PUBLIC_ENV !== "production" ? (
-        <div className={`tab-link ${cn(ticketsActive && "active")}`} key="admin-tickets">
-          <Icons.ticket />
-          <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
-        </div>
-      ) : null,
+      <div className={`tab-link ${cn(ticketsActive && "active")}`} key="admin-tickets">
+        <Icons.ticket />
+        <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
+      </div>,
     );
   }
 
@@ -362,12 +360,10 @@ function getCurrentUserNavigationLinks(
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,
-      ENABLE_TICKETS && NEXT_PUBLIC_ENV !== "production" ? (
-        <div className={`tab-link ${cn(ticketsActive && "active")}`} key="hc-tickets">
-          <Icons.ticket />
-          <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
-        </div>
-      ) : null,
+      <div className={`tab-link ${cn(ticketsActive && "active")}`} key="hc-tickets">
+        <Icons.ticket />
+        <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
+      </div>,
     );
   }
 
@@ -398,12 +394,10 @@ function getCurrentUserNavigationLinks(
         <ShieldAlert className="h-5 w-5" />
         <Link href={`/${mainRoute}/triage`}>Triage</Link>
       </div>,
-      ENABLE_TICKETS && NEXT_PUBLIC_ENV !== "production" ? (
-        <div className={`tab-link ${cn(ticketsActive && "active")}`} key="sc-tickets">
-          <Icons.ticket />
-          <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
-        </div>
-      ) : null,
+      <div className={`tab-link ${cn(ticketsActive && "active")}`} key="sc-tickets">
+        <Icons.ticket />
+        <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
+      </div>,
     );
   }
 
@@ -422,12 +416,10 @@ function getCurrentUserNavigationLinks(
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/portal`}>Fellow portal</Link>
       </div>,
-      ENABLE_TICKETS && NEXT_PUBLIC_ENV !== "production" ? (
-        <div className="tab-link" key="fel-tickets">
-          <Icons.ticket />
-          <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
-        </div>
-      ) : null,
+      <div className={`tab-link ${cn(ticketsActive && "active")}`} key="fel-tickets">
+        <Icons.ticket />
+        <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
+      </div>,
     );
   }
 
@@ -454,12 +446,10 @@ function getCurrentUserNavigationLinks(
         <ShieldAlert className="h-5 w-5" />
         <Link href={`/${mainRoute}/triage`}>Triage</Link>
       </div>,
-      ENABLE_TICKETS && NEXT_PUBLIC_ENV !== "production" ? (
-        <div className={`tab-link ${cn(ticketsActive && "active")}`} key="cl-tickets">
-          <Icons.ticket />
-          <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
-        </div>
-      ) : null,
+      <div className={`tab-link ${cn(ticketsActive && "active")}`} key="cl-tickets">
+        <Icons.ticket />
+        <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
+      </div>,
     );
   }
 

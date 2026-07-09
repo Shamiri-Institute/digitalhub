@@ -193,7 +193,6 @@ APP_ENV="development"
 DEBUG="0"        # Set to 1 to enable verbose Prisma query logging
 
 # Feature flags
-NEXT_PUBLIC_ENABLE_TICKETS="0"        # Set to 1 to enable the ticketing UI
 NEXT_PUBLIC_ENABLE_PERF_PROFILER="0"  # Set to 1 to enable the performance profiler
 
 # ====================================
@@ -561,7 +560,6 @@ This platform can be adapted for similar intervention programs:
 | Feature | Configuration | Description |
 |---------|--------------|-------------|
 | Debug Mode | `DEBUG=1` | Enable verbose Prisma query logging |
-| Tickets UI | `NEXT_PUBLIC_ENABLE_TICKETS=1` | Enable the ticketing interface |
 | Perf Profiler | `NEXT_PUBLIC_ENABLE_PERF_PROFILER=1` | Enable the performance profiler |
 | OAuth | `GOOGLE_ID/SECRET` | Google authentication |
 | File Storage | `S3_*` variables | AWS S3 configuration |
