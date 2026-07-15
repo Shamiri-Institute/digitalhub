@@ -4,7 +4,7 @@ import type { ImplementerRole, InterventionSessionRating, Prisma } from "@prisma
 import { addDays, addHours, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useContext, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -80,52 +80,56 @@ export default function SessionRatings({
 }) {
   const { refresh } = useContext(SessionsContext);
   const sessionRatings = selectedSession.sessionRatings;
-  const rating =
-    role === "SUPERVISOR"
-      ? sessionRatings.find((_rating) => {
-          return _rating.supervisorId === supervisorId;
-        })
-      : role === "HUB_COORDINATOR" || role === "ADMIN"
-        ? sessionRatings[0]
-        : undefined;
-  const [existingRating, setExistingRating] = useState<InterventionSessionRating | undefined>(
-    rating,
-  );
-  const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
   const pathname = usePathname();
 
-  const form = useForm<z.infer<typeof SessionRatingsSchema>>({
-    resolver: zodResolver(SessionRatingsSchema),
-    defaultValues: getDefaultValues(),
-  });
+  const initialRating = useMemo(() => {
+    if (role === "SUPERVISOR") {
+      return sessionRatings.find((_rating) => _rating.supervisorId === supervisorId);
+    }
+    if (role === "HUB_COORDINATOR" || role === "ADMIN") {
+      return sessionRatings[0];
+    }
+    return;
+  }, [sessionRatings, role, supervisorId]);
 
-  function getDefaultValues() {
+  const [selectedRatingId, setSelectedRatingId] = useState<string | undefined>(initialRating?.id);
+
+  const existingRating = useMemo(() => {
+    if (!selectedRatingId) return;
+    return sessionRatings.find((_rating) => _rating.id === selectedRatingId);
+  }, [sessionRatings, selectedRatingId]);
+
+  const updateWindowDuration = useMemo(() => {
+    return existingRating
+      ? differenceInSeconds(addDays(existingRating.createdAt, 14), new Date())
+      : 0;
+  }, [existingRating]);
+
+  function getDefaultValues(currentRating?: InterventionSessionRating) {
     return {
       mode,
-      ratingId: rating?.id,
+      ratingId: currentRating?.id,
       sessionId: selectedSession.id,
-      studentBehaviorRating: existingRating?.studentBehaviorRating ?? undefined,
-      adminSupportRating: existingRating?.adminSupportRating ?? undefined,
-      workloadRating: existingRating?.workloadRating ?? undefined,
-      recommendations: existingRating?.recommendations ?? "",
-      challenges: existingRating?.challenges ?? "",
-      positiveHighlights: existingRating?.positiveHighlights ?? "",
-      headcount: existingRating?.headcount ?? undefined,
+      studentBehaviorRating: currentRating?.studentBehaviorRating ?? undefined,
+      adminSupportRating: currentRating?.adminSupportRating ?? undefined,
+      workloadRating: currentRating?.workloadRating ?? undefined,
+      recommendations: currentRating?.recommendations ?? "",
+      challenges: currentRating?.challenges ?? "",
+      positiveHighlights: currentRating?.positiveHighlights ?? "",
+      headcount: currentRating?.headcount ?? undefined,
     };
   }
 
-  useEffect(() => {
-    form.reset(getDefaultValues());
-    if (existingRating) {
-      setUpdateWindowDuration(
-        differenceInSeconds(addDays(existingRating.createdAt, 14), new Date()),
-      );
-    }
-  }, [existingRating, open, form]);
+  const form = useForm<z.infer<typeof SessionRatingsSchema>>({
+    resolver: zodResolver(SessionRatingsSchema),
+    defaultValues: getDefaultValues(existingRating),
+  });
 
-  useEffect(() => {
-    setExistingRating(rating);
-  }, [open, rating]);
+  const handleOpenChange = (newOpen: boolean) => {
+    setSelectedRatingId(initialRating?.id);
+    form.reset(getDefaultValues(initialRating));
+    onOpenChange(newOpen);
+  };
 
   const onSubmit = async (data: z.infer<typeof SessionRatingsSchema>) => {
     const response = await submitSessionRatings(data);
@@ -142,11 +146,10 @@ export default function SessionRatings({
     toast({
       description: response.message,
     });
-    form.reset();
-    onOpenChange(false);
+    handleOpenChange(false);
   };
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-2/5 max-w-none p-5 text-base font-medium leading-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Weekly session report</DialogTitle>
@@ -164,7 +167,7 @@ export default function SessionRatings({
                 variant="brand"
                 type="button"
                 onClick={() => {
-                  onOpenChange(false);
+                  handleOpenChange(false);
                 }}
               >
                 Done
@@ -188,13 +191,13 @@ export default function SessionRatings({
                         <span className="ml-1 text-shamiri-light-red">*</span>
                       </FormLabel>{" "}
                       <Select
-                        defaultValue={field.value}
+                        value={field.value}
                         onValueChange={(value) => {
-                          field.onChange(value);
                           const match = sessionRatings.find((_rating) => {
                             return _rating.id === value;
                           });
-                          setExistingRating(match);
+                          setSelectedRatingId(value);
+                          form.reset(getDefaultValues(match));
                         }}
                       >
                         <FormControl>
@@ -417,7 +420,7 @@ export default function SessionRatings({
                       variant="ghost"
                       type="button"
                       onClick={() => {
-                        onOpenChange(false);
+                        handleOpenChange(false);
                       }}
                     >
                       Cancel
@@ -441,7 +444,7 @@ export default function SessionRatings({
                     variant="brand"
                     type="button"
                     onClick={() => {
-                      onOpenChange(false);
+                      handleOpenChange(false);
                     }}
                   >
                     Done

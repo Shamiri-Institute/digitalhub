@@ -3,12 +3,20 @@
 import { format, isBefore } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema";
-import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
+import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
@@ -37,8 +45,6 @@ export function MarkSessionOccurrence({
   const { sessions, refresh } = useContext(SessionsContext);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [previousUnmarkedSessions, setPreviousUnmarkedSessions] = useState<Session[]>([]);
-
   const form = useForm<z.infer<typeof MarkSessionOccurrenceSchema>>({
     resolver: zodResolver(MarkSessionOccurrenceSchema),
     defaultValues: {
@@ -47,33 +53,39 @@ export function MarkSessionOccurrence({
     },
   });
 
+  const isMounted = useRef(true);
   useEffect(() => {
-    if (isOpen) {
-      const activeSession = sessions.find((session) => session.id === id);
-      const _previousSessions = activeSession
-        ? sessions
-            .filter((session) => {
-              return (
-                isBefore(session.sessionDate, activeSession?.sessionDate) &&
-                activeSession.schoolId === session.schoolId &&
-                !session.occurred &&
-                session.status !== "Cancelled" &&
-                session.session?.sessionType === activeSession.session?.sessionType
-              );
-            })
-            .sort((a, b) => {
-              return a.sessionDate.getTime() - b.sessionDate.getTime();
-            })
-        : [];
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
-      setPreviousUnmarkedSessions(_previousSessions);
+  const previousUnmarkedSessions = useMemo(() => {
+    if (!isOpen || !id) return [];
+    const activeSession = sessions.find((session) => session.id === id);
+    if (!activeSession) return [];
+    return sessions
+      .filter((session) => {
+        return (
+          isBefore(session.sessionDate, activeSession.sessionDate) &&
+          activeSession.schoolId === session.schoolId &&
+          !session.occurred &&
+          session.status !== "Cancelled" &&
+          session.session?.sessionType === activeSession.session?.sessionType
+        );
+      })
+      .sort((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
+  }, [sessions, id, isOpen]);
 
+  useEffect(() => {
+    if (isOpen && id) {
       form.reset({
         sessionId: id,
         occurrence: defaultOccurrence ? "attended" : "unmarked",
       });
     }
-  }, [id, form, isOpen, defaultOccurrence, sessions]);
+  }, [isOpen, id, defaultOccurrence, form]);
 
   const onSubmit = () => {
     setIsOpen(false);
@@ -85,6 +97,8 @@ export function MarkSessionOccurrence({
     const data = form.getValues();
     const response = await markSessionOccurrence(data);
 
+    if (!isMounted.current) return;
+
     if (!response.success) {
       toast({
         variant: "destructive",
@@ -94,6 +108,8 @@ export function MarkSessionOccurrence({
       return;
     }
     await Promise.all([refresh(), revalidatePageAction(pathname)]);
+    if (!isMounted.current) return;
+
     setLoading(false);
     setConfirmDialogOpen(false);
     setIsOpen(false);
@@ -104,7 +120,12 @@ export function MarkSessionOccurrence({
 
   return (
     <Form {...form}>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog
+        open={isOpen}
+        onOpenChange={(newOpen) => {
+          setIsOpen(newOpen);
+        }}
+      >
         <DialogContent className="w-2/5 max-w-none">
           <DialogHeader>
             <h2 className="text-lg font-bold">Mark session occurrence</h2>
@@ -119,7 +140,6 @@ export function MarkSessionOccurrence({
                   <FormItem className="space-y-2">
                     <FormLabel>Select occurrence</FormLabel>
                     <RadioGroup
-                      defaultValue={field.value}
                       value={field.value}
                       name="attended"
                       onValueChange={(value) => {
@@ -229,6 +249,7 @@ export function MarkSessionOccurrence({
             <Button
               className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
               variant="ghost"
+              type="button"
               onClick={() => {
                 setConfirmDialogOpen(false);
               }}
