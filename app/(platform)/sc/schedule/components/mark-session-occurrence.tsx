@@ -9,7 +9,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { useForm } from "react-hook-form";
@@ -53,14 +52,6 @@ export function MarkSessionOccurrence({
     },
   });
 
-  const isMounted = useRef(true);
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
   const previousUnmarkedSessions = useMemo(() => {
     if (!isOpen || !id) return [];
     const activeSession = sessions.find((session) => session.id === id);
@@ -97,8 +88,6 @@ export function MarkSessionOccurrence({
     const data = form.getValues();
     const response = await markSessionOccurrence(data);
 
-    if (!isMounted.current) return;
-
     if (!response.success) {
       toast({
         variant: "destructive",
@@ -108,7 +97,6 @@ export function MarkSessionOccurrence({
       return;
     }
     await Promise.all([refresh(), revalidatePageAction(pathname)]);
-    if (!isMounted.current) return;
 
     setLoading(false);
     setConfirmDialogOpen(false);
