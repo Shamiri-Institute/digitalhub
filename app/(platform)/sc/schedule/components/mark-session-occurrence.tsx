@@ -3,14 +3,7 @@
 import { format, isBefore } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import {
-  type Dispatch,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
@@ -52,7 +45,7 @@ export function MarkSessionOccurrence({
     },
   });
 
-  const previousUnmarkedSessions = useMemo(() => {
+  const previousUnmarkedSessions = (() => {
     if (!isOpen || !id) return [];
     const activeSession = sessions.find((session) => session.id === id);
     if (!activeSession) return [];
@@ -67,7 +60,7 @@ export function MarkSessionOccurrence({
         );
       })
       .sort((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
-  }, [sessions, id, isOpen]);
+  })();
 
   useEffect(() => {
     if (isOpen && id) {
@@ -97,7 +90,6 @@ export function MarkSessionOccurrence({
       return;
     }
     await Promise.all([refresh(), revalidatePageAction(pathname)]);
-
     setLoading(false);
     setConfirmDialogOpen(false);
     setIsOpen(false);
