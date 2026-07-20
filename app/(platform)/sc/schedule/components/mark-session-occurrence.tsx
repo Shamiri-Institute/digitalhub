@@ -108,12 +108,7 @@ export function MarkSessionOccurrence({
 
   return (
     <Form {...form}>
-      <Dialog
-        open={isOpen}
-        onOpenChange={(newOpen) => {
-          setIsOpen(newOpen);
-        }}
-      >
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="w-2/5 max-w-none">
           <DialogHeader>
             <h2 className="text-lg font-bold">Mark session occurrence</h2>
