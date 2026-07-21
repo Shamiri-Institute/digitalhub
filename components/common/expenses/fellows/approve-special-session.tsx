@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -41,12 +41,6 @@ export default function ApproveSpecialSessionFellows({
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (!open) {
-      form.reset();
-    }
-  }, [open]);
-
   const form = useForm<z.infer<typeof RequestSpecialSessionSchema>>({
     resolver: zodResolver(RequestSpecialSessionSchema),
     defaultValues: {
@@ -55,6 +49,13 @@ export default function ApproveSpecialSessionFellows({
     },
   });
 
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      form.reset();
+    }
+    setDialogOpen(isOpen);
+  };
+
   const onSubmit = async (_data: z.infer<typeof RequestSpecialSessionSchema>) => {
     // todo: add action to approve special session
     form.reset();
@@ -62,7 +63,7 @@ export default function ApproveSpecialSessionFellows({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setDialogOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <DialogHeader className="sticky top-0 z-10 bg-white">
@@ -110,6 +111,7 @@ export default function ApproveSpecialSessionFellows({
               <DialogFooter>
                 <Button
                   variant="ghost"
+                  type="button"
                   onClick={() => {
                     form.reset();
                     setDialogOpen(false);
