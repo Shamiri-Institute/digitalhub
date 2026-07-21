@@ -4,7 +4,7 @@ import { useGSAP } from "@gsap/react";
 import { type CalendarDate, isToday } from "@internationalized/date";
 import type { ImplementerRole } from "@prisma/client";
 import gsap from "gsap";
-import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
@@ -49,12 +49,7 @@ export function DayView({
     return `${hourIn12HourFormat}:00 ${period}`;
   }
 
-  const [headerLabel, setHeaderLabel] = useState("");
-  useEffect(() => {
-    setHeaderLabel(
-      `${currentDate.day} - ${dayFormatter.format(currentDate.toDate(state.timeZone))}`,
-    );
-  }, [currentDate, dayFormatter, state.timeZone]);
+  const headerLabel = `${currentDate.day} - ${dayFormatter.format(currentDate.toDate(state.timeZone))}`;
 
   const { setTitle } = useTitle();
   const titleFormatter = useDateFormatter({
@@ -70,7 +65,7 @@ export function DayView({
 
   useGSAP(
     () => {
-      if (headerRowRef !== null) {
+      if (headerRowRef.current) {
         gsap.timeline({
           scrollTrigger: {
             trigger: headerRowRef.current,
