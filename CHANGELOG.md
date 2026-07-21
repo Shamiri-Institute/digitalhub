@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.35.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.34.2...v1.35.0) (2026-07-21)
+
+
+### Features
+
+* **migration:** add additional Supervision sessions (sv8, sv9) ([#761](https://github.com/Shamiri-Institute/digitalhub/issues/761)) ([3572eef](https://github.com/Shamiri-Institute/digitalhub/commit/3572eefb824377b7c9bfebf352a05984116f7a4a))
+
 ## [1.34.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.34.1...v1.34.2) (2026-07-10)
 
 ## [1.34.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.34.0...v1.34.1) (2026-07-08)
