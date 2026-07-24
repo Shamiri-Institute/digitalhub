@@ -66,6 +66,7 @@ export default function StudentAttendance({
   fellowId?: string;
 }) {
   const pathname = usePathname();
+  const isFellow = role === ImplementerRole.FELLOW;
   const [selectedGroup, setSelectedGroup] = useState<string>();
   const [attendance, setAttendance] = useState<StudentAttendanceData>();
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState(false);
@@ -173,7 +174,7 @@ export default function StudentAttendance({
   ]);
 
   useEffect(() => {
-    if (!triageModalOpen || !triageStudent?.id || !session?.id) {
+    if (!isFellow || !triageModalOpen || !triageStudent?.id || !session?.id) {
       return;
     }
     const load = async () => {
@@ -185,10 +186,10 @@ export default function StudentAttendance({
       }
     };
     void load();
-  }, [triageModalOpen, triageStudent?.id, session?.id]);
+  }, [isFellow, triageModalOpen, triageStudent?.id, session?.id]);
 
   const loadTriageEventsForSession = async () => {
-    if (!session?.id) return;
+    if (!isFellow || !session?.id) return;
     try {
       const events = await getTriageEventsForSession(session.id);
       setTriageEventsByStudent(Object.fromEntries(events.map((e) => [e.studentId, e])));
@@ -198,14 +199,14 @@ export default function StudentAttendance({
   };
 
   useEffect(() => {
-    if (!session?.id) return;
+    if (!isFellow || !session?.id) return;
 
     getTriageEventsForSession(session.id)
       .then((events) =>
         setTriageEventsByStudent(Object.fromEntries(events.map((e) => [e.studentId, e]))),
       )
       .catch(() => setTriageEventsByStudent({}));
-  }, [session?.id]);
+  }, [isFellow, session?.id]);
 
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     const res = await markStudentAttendance(data);
@@ -647,6 +648,7 @@ const columns = (state: {
         }}
         attendance={row.original}
         disabled={!row.getCanSelect() || state.loadingAttendances}
+        isFellow={state.role === ImplementerRole.FELLOW}
         hasExistingTriageEvent={!!state.triageEventsByStudent[row.original.id]}
       />
     ),
