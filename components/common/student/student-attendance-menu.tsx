@@ -25,11 +25,13 @@ export default function StudentAttendanceMenu({
   state,
   attendance,
   disabled,
+  isFellow,
   hasExistingTriageEvent,
 }: {
   state: StudentAttendanceMenuState;
   attendance: StudentAttendanceData;
   disabled: boolean;
+  isFellow: boolean;
   hasExistingTriageEvent: boolean;
 }) {
   const openTriageModal = (readOnly: boolean) => {
@@ -61,12 +63,12 @@ export default function StudentAttendanceMenu({
         >
           Mark attendance
         </DropdownMenuItem>
-        {!hasExistingTriageEvent && (
+        {isFellow && !hasExistingTriageEvent && (
           <DropdownMenuItem onClick={() => openTriageModal(false)}>
             Triage occurred
           </DropdownMenuItem>
         )}
-        {hasExistingTriageEvent && (
+        {isFellow && hasExistingTriageEvent && (
           <>
             <DropdownMenuItem onClick={() => openTriageModal(false)}>Edit triage</DropdownMenuItem>
             <DropdownMenuItem onClick={() => openTriageModal(true)}>View triage</DropdownMenuItem>
