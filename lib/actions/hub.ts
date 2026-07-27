@@ -11,8 +11,8 @@ export async function getHubScheduleStats(hubId: string): Promise<HubScheduleSta
     db.interventionSession.count({
       where: { school: { hubId } },
     }),
-    db.student.count({
-      where: { isClinicalCase: true, school: { hubId } },
+    db.clinicalScreeningInfo.count({
+      where: { student: { school: { hubId } } },
     }),
     db.fellow.count({
       where: { hubId },
