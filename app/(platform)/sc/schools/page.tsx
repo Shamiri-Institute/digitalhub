@@ -6,7 +6,7 @@ import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { db } from "#/lib/db";
+import { getHubScheduleStats } from "#/lib/actions/hub";
 import { fetchHubSupervisors, fetchSchoolData } from "./actions";
 
 export default async function SchoolsPage() {
@@ -27,30 +27,7 @@ export default async function SchoolsPage() {
         hubId: supervisor?.profile?.hubId,
       },
     }),
-    db.$queryRaw<
-      {
-        session_count: number;
-        clinical_case_count: number;
-        fellow_count: number;
-      }[]
-    >`SELECT 
-    h.id,
-    COUNT(DISTINCT s.id) AS session_count,
-    COUNT(DISTINCT c.id) AS clinical_case_count,
-    COUNT(DISTINCT f.id) AS fellow_count
-    FROM 
-        hubs h
-    JOIN 
-        schools sch ON h.id = sch.hub_id
-    LEFT JOIN 
-        intervention_sessions s ON sch.id = s.school_id
-    LEFT JOIN 
-        students c ON sch.id = c.school_id AND c.is_clinical_case=TRUE
-    LEFT JOIN 
-        fellows f ON h.id = f.hub_id
-        WHERE h.id=${supervisor?.profile?.hubId}
-    GROUP BY
-        h.id, h.hub_name`,
+    getHubScheduleStats(hubId),
   ]);
 
   return (
@@ -62,15 +39,15 @@ export default async function SchoolsPage() {
             stats={[
               {
                 title: "Sessions",
-                count: Number(schoolsStats[0]?.session_count) || 0,
+                count: schoolsStats.sessionCount,
               },
               {
                 title: "Fellows",
-                count: Number(schoolsStats[0]?.fellow_count) || 0,
+                count: schoolsStats.fellowCount,
               },
               {
                 title: "Cases",
-                count: Number(schoolsStats[0]?.clinical_case_count) || 0,
+                count: schoolsStats.clinicalCaseCount,
               },
             ]}
           />
