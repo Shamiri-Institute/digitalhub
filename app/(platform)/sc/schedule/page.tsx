@@ -4,6 +4,7 @@ import { ScheduleCalendar } from "#/components/common/session/schedule-calendar"
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
+import { getHubScheduleStats } from "#/lib/actions/hub";
 import { db } from "#/lib/db";
 
 export default async function SupervisorSchedulePage() {
@@ -12,39 +13,18 @@ export default async function SupervisorSchedulePage() {
     await signOut({ callbackUrl: "/login" });
   }
 
-  const [schools, schoolStats, supervisors, fellowRatings, hubSessionTypes] = await Promise.all([
+  const hubId = supervisor?.profile.hubId as string;
+
+  const [schools, stats, supervisors, fellowRatings, hubSessionTypes] = await Promise.all([
     db.school.findMany({
       where: {
-        hubId: supervisor?.profile.hubId as string,
+        hubId,
       },
     }),
-    db.$queryRaw<
-      {
-        session_count: number;
-        clinical_case_count: number;
-        fellow_count: number;
-      }[]
-    >`SELECT 
-    h.id,
-    COUNT(DISTINCT s.id) AS session_count,
-    COUNT(DISTINCT c.id) AS clinical_case_count,
-    COUNT(DISTINCT f.id) AS fellow_count
-    FROM 
-        hubs h
-    JOIN 
-        schools sch ON h.id = sch.hub_id
-    LEFT JOIN 
-        intervention_sessions s ON sch.id = s.school_id
-    LEFT JOIN 
-        students c ON sch.id = c.school_id AND c.is_clinical_case=TRUE
-    LEFT JOIN 
-        fellows f ON h.id = f.hub_id
-        WHERE h.id=${supervisor?.profile.hubId}
-    GROUP BY
-        h.id, h.hub_name`,
+    getHubScheduleStats(hubId),
     db.supervisor.findMany({
       where: {
-        hubId: supervisor?.profile.hubId as string,
+        hubId,
       },
       include: {
         supervisorAttendances: {
@@ -80,11 +60,11 @@ export default async function SupervisorSchedulePage() {
     FROM
     fellows fel
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${supervisor?.profile.hubId}
+    WHERE fel.hub_id=${hubId}
     GROUP BY fel.id`,
     db.sessionName.findMany({
       where: {
-        hubId: supervisor?.profile.hubId as string,
+        hubId,
       },
     }),
   ]);
@@ -96,15 +76,15 @@ export default async function SupervisorSchedulePage() {
           stats={[
             {
               title: "Sessions",
-              count: Number(schoolStats[0]?.session_count) || 0,
+              count: stats.sessionCount,
             },
             {
               title: "Fellows",
-              count: Number(schoolStats[0]?.fellow_count) || 0,
+              count: stats.fellowCount,
             },
             {
               title: "Cases",
-              count: Number(schoolStats[0]?.clinical_case_count) || 0,
+              count: stats.clinicalCaseCount,
             },
           ]}
         />
