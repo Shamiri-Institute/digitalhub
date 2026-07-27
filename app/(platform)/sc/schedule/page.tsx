@@ -4,6 +4,7 @@ import { ScheduleCalendar } from "#/components/common/session/schedule-calendar"
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
+import { getHubScheduleStats } from "#/lib/actions/hub";
 import { db } from "#/lib/db";
 
 export default async function SupervisorSchedulePage() {
@@ -14,32 +15,13 @@ export default async function SupervisorSchedulePage() {
 
   const hubId = supervisor?.profile.hubId as string;
 
-  const [
-    schools,
-    [sessionCount, clinicalCaseCount, fellowCount],
-    supervisors,
-    fellowRatings,
-    hubSessionTypes,
-  ] = await Promise.all([
+  const [schools, stats, supervisors, fellowRatings, hubSessionTypes] = await Promise.all([
     db.school.findMany({
       where: {
         hubId,
       },
     }),
-    // Compute each hub stat as an independent, indexed count. Joining sessions,
-    // clinical-case students and fellows in a single query (the previous raw SQL)
-    // produced a cartesian fan-out that COUNT(DISTINCT) then had to de-duplicate.
-    Promise.all([
-      db.interventionSession.count({
-        where: { school: { hubId } },
-      }),
-      db.student.count({
-        where: { isClinicalCase: true, school: { hubId } },
-      }),
-      db.fellow.count({
-        where: { hubId },
-      }),
-    ]),
+    getHubScheduleStats(hubId),
     db.supervisor.findMany({
       where: {
         hubId,
@@ -94,15 +76,15 @@ export default async function SupervisorSchedulePage() {
           stats={[
             {
               title: "Sessions",
-              count: sessionCount,
+              count: stats.sessionCount,
             },
             {
               title: "Fellows",
-              count: fellowCount,
+              count: stats.fellowCount,
             },
             {
               title: "Cases",
-              count: clinicalCaseCount,
+              count: stats.clinicalCaseCount,
             },
           ]}
         />
