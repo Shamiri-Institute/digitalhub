@@ -18,9 +18,9 @@ export default async function HubCoordinatorSchedulePage() {
   }
 
   const values = await Promise.all([
-    await fetchSchoolData(coordinator?.profile?.assignedHubId as string),
-    await getHubScheduleStats(coordinator?.profile?.assignedHubId as string),
-    await db.supervisor.findMany({
+    fetchSchoolData(coordinator?.profile?.assignedHubId as string),
+    getHubScheduleStats(coordinator?.profile?.assignedHubId as string),
+    db.supervisor.findMany({
       where: {
         hubId: coordinator?.profile?.assignedHubId as string,
       },
@@ -47,7 +47,7 @@ export default async function HubCoordinatorSchedulePage() {
         assignedSchools: true,
       },
     }),
-    await db.$queryRaw<
+    db.$queryRaw<
       {
         id: string;
         averageRating: number;
@@ -60,7 +60,7 @@ export default async function HubCoordinatorSchedulePage() {
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
     WHERE fel.hub_id=${coordinator?.profile?.assignedHubId}
     GROUP BY fel.id`,
-    await db.sessionName.findMany({
+    db.sessionName.findMany({
       where: {
         hubId: coordinator?.profile?.assignedHubId as string,
       },
