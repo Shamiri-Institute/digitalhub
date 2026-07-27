@@ -281,6 +281,7 @@ model Student {
   triageEvents              TriageEvent[]
 
   @@index([assignedGroupId])
+  @@index([schoolId])
   @@map("students")
 }
 
@@ -623,6 +624,7 @@ model Fellow {
   triageEvents            TriageEvent[]
   fellowGroupReports      FellowGroupReport[]
 
+  @@index([hubId])
   @@map("fellows")
 }
 
