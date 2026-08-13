@@ -9,15 +9,14 @@ import { ResolveTicketDialog } from "#/components/common/ticket/resolve-ticket-d
 import { ViewResolutionDialog } from "#/components/common/ticket/view-resolution-dialog";
 import { ViewTicketDialog } from "#/components/common/ticket/view-ticket-dialog";
 import DataTable from "#/components/data-table";
+import { isEscalationInitiatorRole } from "#/lib/actions/ticket/types";
 
 export default function TicketsDatatable({
   tickets,
   role,
-  showCreateButton = true,
 }: {
   tickets: TicketData[];
   role: ImplementerRole;
-  showCreateButton?: boolean;
 }) {
   const [selectedTicket, setSelectedTicket] = useState<TicketData | undefined>();
   const [viewDialog, setViewDialog] = useState(false);
@@ -42,7 +41,7 @@ export default function TicketsDatatable({
   }, [role]);
 
   const renderTableActions = () => {
-    if (!showCreateButton) return null;
+    if (!isEscalationInitiatorRole(role)) return null;
     return <CreateTicketDialog />;
   };
 
