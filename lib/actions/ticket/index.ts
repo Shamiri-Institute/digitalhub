@@ -14,15 +14,14 @@ import {
   type EscalationInitiatorRole,
   type EscalationRecipientRole,
   type FetchEscalationRecipientHandler,
-  type FetchTicketsHandler,
   type FullTicket,
   type FullTicketPendingTier,
+  isEscalationInitiatorRole,
   ROLE_NAME_CONFIG,
   type TicketCategory,
   type TicketEscalation,
   type TicketEscalationStatus,
   type TicketFilters,
-  type TicketQueryRole,
   type TicketResolution,
   type UserRoleNameMap,
 } from "./types";
@@ -33,11 +32,11 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
       userId: createdById,
       role,
       implementerId: activeImplementerId,
-    } = await requireAuthRole(ImplementerRole.FELLOW);
+    } = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
 
-    const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role as EscalationInitiatorRole](
-      payload.category,
-    );
+    if (!isEscalationInitiatorRole(role)) throw new Error("The role cannot create tickets");
+
+    const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](payload.category);
     const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
     const escalationRecipientId = await handler(createdById, activeImplementerId);
 
@@ -69,16 +68,9 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
 
 export async function getAllTickets(filters: TicketFilters): Promise<ActionResponse<FullTicket[]>> {
   try {
-    const { userId, role, implementerId } = await requireAuthRole(
-      ...Object.values(ImplementerRole),
-    );
+    const { userId, implementerId } = await requireAuthRole(...Object.values(ImplementerRole));
 
-    const queryRole: TicketQueryRole = role === "FELLOW" ? "FELLOW" : "NON_FELLOW";
-    const handler = fetchTicketsHandlers[queryRole];
-
-    if (!handler) throw new Error("No handler was found for this role");
-
-    const tickets = await handler(userId, implementerId, filters);
+    const tickets = await fetchTicketsForUser(userId, implementerId, filters);
 
     const response: ActionResponse<FullTicket[]> = {
       success: true,
@@ -94,10 +86,9 @@ export async function getAllTickets(filters: TicketFilters): Promise<ActionRespo
 
 export async function getEscalationsPerTicket(
   ticketId: string,
-  ticketCategory: TicketCategory,
 ): Promise<ActionResponse<TicketEscalation[]>> {
   try {
-    const { userId } = await requireAuthRole();
+    const { userId, implementerId } = await requireAuthRole(...Object.values(ImplementerRole));
 
     const authorized = await db.ticketEscalations.findFirst({
       where: { ticketId, OR: [{ escalatedById: userId }, { escalatedToId: userId }] },
@@ -112,45 +103,26 @@ export async function getEscalationsPerTicket(
 
     if (escalations.length === 0) throw new Error("No escalations were found for this ticket");
 
-    const { orderedEscalations, uniqueRoles } = escalations.reduce<{
-      orderedEscalations: TicketEscalation[];
-      uniqueRoles: ImplementerRole[];
-    }>(
-      (acc, escalation, index) => {
-        const escalatedByRole = acc.uniqueRoles[acc.uniqueRoles.length - 1] ?? "FELLOW";
-        if (!isEscalationInitiatorRole(escalatedByRole))
-          throw new Error("The role cannot create escalations");
-        const escalatedToRole =
-          ESCALATION_RECIPIENT_FROM_INITIATOR[escalatedByRole](ticketCategory);
-
-        acc.orderedEscalations.push({
-          ...escalation,
-          escOrder: index + 1,
-          escalatedByName: null,
-          escalatedToName: null,
-          escalatedByRole,
-          escalatedToRole,
-        });
-
-        if (!acc.uniqueRoles.includes(escalatedToRole)) acc.uniqueRoles.push(escalatedToRole);
-
-        return acc;
-      },
-      { orderedEscalations: [], uniqueRoles: ["FELLOW"] },
-    );
-
     const userIds = Array.from(
-      new Set(orderedEscalations.flatMap((e) => [e.escalatedById, e.escalatedToId])),
+      new Set(escalations.flatMap((e) => [e.escalatedById, e.escalatedToId])),
     );
-    const nameMap = await getUserNamesByIdAndRole(userIds, uniqueRoles);
 
-    const mappedEscalations = orderedEscalations.map((escalation) => ({
-      ...escalation,
-      escalatedByName:
-        nameMap.get(`${escalation.escalatedById}:${escalation.escalatedByRole}`) ?? null,
-      escalatedToName:
-        nameMap.get(`${escalation.escalatedToId}:${escalation.escalatedToRole}`) ?? null,
-    }));
+    const nameMap = await getUserNamesAndRolesById(userIds, implementerId);
+
+    const mappedEscalations: TicketEscalation[] = escalations.map(
+      (escalation): TicketEscalation => {
+        const escalatedBy = nameMap.get(escalation.escalatedById);
+        const escalatedTo = nameMap.get(escalation.escalatedToId);
+
+        return {
+          ...escalation,
+          escalatedByName: escalatedBy?.name ?? "",
+          escalatedToName: escalatedTo?.name ?? "",
+          escalatedByRole: escalatedBy?.role as EscalationInitiatorRole,
+          escalatedToRole: escalatedTo?.role as EscalationRecipientRole,
+        };
+      },
+    );
 
     return {
       success: true,
@@ -301,18 +273,19 @@ export async function getTicketEscalationStatus(
       };
     }
 
-    const existingEscalation = await db.ticketEscalations.findFirst({
-      where: { escalatedById: userId, ticketId },
+    const latestEscalation = await db.ticketEscalations.findFirst({
+      where: { ticketId },
+      orderBy: { createdAt: "desc" },
     });
 
-    if (existingEscalation) {
+    if (!latestEscalation || latestEscalation.escalatedToId !== userId) {
       return {
         success: true,
         message: "Ticket escalation status retrieved",
         data: {
           canEscalate: false,
           isResolved: false,
-          reason: "You have already escalated this ticket",
+          reason: "You are not the current recipient of this ticket",
         },
       };
     }
@@ -378,94 +351,63 @@ export async function getTicketResolution(
   }
 }
 
-function isEscalationInitiatorRole(role: ImplementerRole): role is EscalationInitiatorRole {
-  return ESCALATION_INITIATOR_ROLES.includes(role as EscalationInitiatorRole);
-}
-
-const fetchTicketsHandlers: Record<TicketQueryRole, FetchTicketsHandler> = {
-  FELLOW: async (userId, implementerId, filters) => {
-    const rows = await db.$queryRaw<FullTicketPendingTier[]>`
-      SELECT DISTINCT ON (t.id)
-        t.id,
-        t.subject,
-        t.description,
-        t.category,
-        t.status,
-        t.priority,
-        t.created_at AS "createdAt",
-        latest_e.escalated_to AS "currentRecipientId"
-      FROM "tickets" t
-      LEFT JOIN LATERAL (
-        SELECT e.escalated_to
-        FROM "ticket_escalations" e
-        WHERE e.ticket_id = t.id
-        ORDER BY e.created_at DESC
-        LIMIT 1
-      ) latest_e ON true
-      WHERE t.created_by = ${userId}
-      ${filters.status ? Prisma.sql`AND t.status = ${filters.status}` : Prisma.empty}
-      ORDER BY t.id
-    `;
-
-    const roleMap = await getRoleFromUserIdMap(
-      rows.map((r) => r.currentRecipientId).filter((id): id is string => !!id),
-      implementerId,
-    );
-
-    return rows.map((row) => ({
-      ...row,
-      currentTier: row.currentRecipientId ? (roleMap.get(row.currentRecipientId) ?? null) : null,
-    }));
-  },
-
-  NON_FELLOW: async (userId, implementerId, filters) => {
-    const rows = await db.$queryRaw<FullTicketPendingTier[]>`
-      SELECT DISTINCT ON (t.id)
-        t.id,
-        t.subject,
-        t.description,
-        t.category,
-        t.status,
-        t.priority,
-        t.created_at AS "createdAt",
-        latest_e.escalated_to AS "currentRecipientId"
-      FROM "tickets" t
-      JOIN "ticket_escalations" e ON t.id = e.ticket_id
-      JOIN LATERAL (
-        SELECT e2.escalated_to
-        FROM "ticket_escalations" e2
-        WHERE e2.ticket_id = t.id
-        ORDER BY e2.created_at DESC
-        LIMIT 1
-      ) latest_e ON true
-      WHERE e.escalated_to = ${userId}
-      ${filters.status ? Prisma.sql`AND t.status = ${filters.status}` : Prisma.empty}
-      ORDER BY t.id, e.created_at DESC
-    `;
-
-    const roleMap = await getRoleFromUserIdMap(
-      rows.map((r) => r.currentRecipientId).filter((id): id is string => !!id),
-      implementerId,
-    );
-
-    return rows.map((row) => ({
-      ...row,
-      currentTier: row.currentRecipientId ? (roleMap.get(row.currentRecipientId) ?? null) : null,
-    }));
-  },
-};
-
-async function getRoleFromUserIdMap(
-  userIds: string[],
+async function fetchTicketsForUser(
+  userId: string,
   implementerId: string,
-): Promise<Map<string, ImplementerRole>> {
-  if (userIds.length === 0) return new Map();
+  filters: TicketFilters,
+): Promise<FullTicket[]> {
+  const rows = await db.$queryRaw<FullTicketPendingTier[]>`
+    WITH user_tickets AS (
+      SELECT DISTINCT t.id
+      FROM tickets t
+      LEFT JOIN ticket_escalations e ON t.id = e.ticket_id
+      WHERE (
+             t.created_by = ${userId}
+          OR e.escalated_to = ${userId}
+          OR e.escalated_by = ${userId}
+         )
+         ${filters.status ? Prisma.sql`AND t.status = ${filters.status}` : Prisma.empty}
+    ),
+    latest_escalations AS (
+      SELECT
+        ticket_id,
+        escalated_to,
+        ROW_NUMBER() OVER (PARTITION BY ticket_id ORDER BY created_at DESC) AS rn
+      FROM ticket_escalations
+      WHERE ticket_id IN (SELECT id FROM user_tickets)
+    )
+    SELECT
+      t.id,
+      t.subject,
+      t.description,
+      t.category,
+      t.status,
+      t.priority,
+      t.created_at AS "createdAt",
+      le.escalated_to AS "currentRecipientId"
+    FROM user_tickets ut
+    JOIN tickets t ON t.id = ut.id
+    LEFT JOIN latest_escalations le
+      ON t.id = le.ticket_id AND le.rn = 1
+    ORDER BY t.created_at DESC
+  `;
 
-  const rows = await db.implementerMember.findMany({
-    where: { implementerId, userId: { in: userIds } },
-    select: { userId: true, role: true },
+  const currentTierIds = rows.map((r) => r.currentRecipientId).filter((id): id is string => !!id);
+  const roleMap = await getUserNamesAndRolesById(currentTierIds, implementerId);
+
+  const fullTickets: FullTicket[] = rows.map((row): FullTicket => {
+    let currentTier: ImplementerRole | null = null;
+
+    if (!row.currentRecipientId || row.currentRecipientId === undefined) {
+      currentTier = null;
+    } else {
+      currentTier = roleMap.get(row.currentRecipientId)?.role ?? null;
+    }
+
+    return { ...row, currentTier };
   });
-  return new Map(rows.map((row) => [row.userId, row.role]));
+
+  return fullTickets;
 }
 
 const fetchEscalationRecipientHandlers: Record<
@@ -554,8 +496,9 @@ const fetchEscalationRecipientHandlers: Record<
   },
 };
 
-async function getUserNamesByIdAndRole(
+async function getUserNamesAndRolesById(
   userIds: string[],
+  implementerId: string,
   roles: ImplementerRole[] = [],
 ): Promise<UserRoleNameMap> {
   const result: UserRoleNameMap = new Map();
@@ -584,10 +527,11 @@ async function getUserNamesByIdAndRole(
     FROM implementer_members im
     ${Prisma.raw(joinsSql)}
     WHERE im.user_id = ANY(${userIds}::text[])
+      AND im.implementer_id = ${implementerId}
   `;
 
   for (const row of rows) {
-    result.set(`${row.user_id}:${row.role}`, row.name);
+    result.set(`${row.user_id}`, { role: row.role, name: row.name });
   }
 
   return result;

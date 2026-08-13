@@ -17,7 +17,6 @@ export default async function TicketsPage() {
       <TicketsDatatable
         tickets={tickets}
         role={clinicalLead?.session?.user.activeMembership?.role ?? ImplementerRole.CLINICAL_LEAD}
-        showCreateButton={false}
       />
     </div>
   );

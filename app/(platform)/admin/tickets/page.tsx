@@ -17,7 +17,6 @@ export default async function TicketsPage() {
       <TicketsDatatable
         tickets={tickets}
         role={admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN}
-        showCreateButton={false}
       />
     </div>
   );

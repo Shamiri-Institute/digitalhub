@@ -41,7 +41,7 @@ export function ViewTicketDialog({
 
     const fetchEscalations = async () => {
       setLoadingEscalations(true);
-      const result = await getEscalationsPerTicket(ticket.id, ticket.category);
+      const result = await getEscalationsPerTicket(ticket.id);
       if (result.success && result.data) {
         setEscalations(result.data);
       }
@@ -134,7 +134,7 @@ export function ViewTicketDialog({
                             <div className="flex flex-row items-center justify-center gap-2 sm:gap-3">
                               <div className="flex flex-col items-center gap-1">
                                 <Badge variant="default" className="text-xs">
-                                  {escalation.escalatedByRole.toLowerCase()}
+                                  {escalation.escalatedByRole?.toLowerCase() ?? "unknown"}
                                 </Badge>
                                 <span className="text-xs sm:text-sm font-medium">
                                   {escalation.escalatedByName ?? "Unknown"}
@@ -143,7 +143,7 @@ export function ViewTicketDialog({
                               <Icons.chevronRight className="h-4 w-4 text-shamiri-new-blue shrink-0" />
                               <div className="flex flex-col items-center gap-1">
                                 <Badge variant="outline" className="text-xs">
-                                  {escalation.escalatedToRole.toLowerCase()}
+                                  {escalation.escalatedToRole?.toLowerCase() ?? "unknown"}
                                 </Badge>
                                 <span className="text-xs sm:text-sm font-medium">
                                   {escalation.escalatedToName ?? "Unknown"}

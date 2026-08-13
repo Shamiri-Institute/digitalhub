@@ -6,17 +6,16 @@ import {
   buildSkeletonRows,
 } from "#/components/common/build-skeleton-columns";
 import DataTable from "#/components/data-table";
+import { isEscalationInitiatorRole } from "#/lib/actions/ticket/types";
 import { columns, type TicketData } from "./columns";
 import CreateTicketDialog from "./create-ticket-dialog";
 
 export default function TicketsLoading({
   userRole = ImplementerRole.FELLOW,
   rows = 5,
-  showCreateButton = true,
 }: {
   userRole?: ImplementerRole;
   rows?: number;
-  showCreateButton?: boolean;
 }) {
   const loadingColumns = buildSkeletonColumns(
     columns({
@@ -29,7 +28,7 @@ export default function TicketsLoading({
   );
 
   const renderTableActions = () => {
-    if (!showCreateButton) return null;
+    if (!isEscalationInitiatorRole(userRole)) return null;
     return <CreateTicketDialog disabled />;
   };
 

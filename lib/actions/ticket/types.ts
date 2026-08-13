@@ -34,6 +34,10 @@ export const ESCALATION_INITIATOR_ROLES: EscalationInitiatorRole[] = [
   "CLINICAL_LEAD",
 ];
 
+export function isEscalationInitiatorRole(role: ImplementerRole): role is EscalationInitiatorRole {
+  return ESCALATION_INITIATOR_ROLES.includes(role as EscalationInitiatorRole);
+}
+
 export type EscalationRecipientRole = Extract<
   ImplementerRole,
   "SUPERVISOR" | "HUB_COORDINATOR" | "ADMIN" | "CLINICAL_LEAD"
@@ -45,14 +49,6 @@ export const ESCALATION_RECIPIENT_ROLES: EscalationRecipientRole[] = [
   "ADMIN",
   "CLINICAL_LEAD",
 ];
-
-export type TicketQueryRole = "FELLOW" | "NON_FELLOW";
-
-export type FetchTicketsHandler = (
-  userId: string,
-  implementerId: string,
-  filters: TicketFilters,
-) => Promise<FullTicket[]>;
 
 export type FetchEscalationRecipientHandler = (
   userId: string,
@@ -95,9 +91,6 @@ export interface CreateTicketEscalationPayload {
   escalationReason: string;
 }
 
-export type FullTicketPayload = CreateTicketPayload &
-  Omit<CreateTicketEscalationPayload, "ticketId" | "escalatedById">;
-
 export interface TicketFilters {
   status?: TicketStatus;
   page?: number;
@@ -124,10 +117,9 @@ export interface TicketEscalation {
   escalatedById: string;
   escalatedToId: string;
   escalationReason: string;
-  escOrder?: number;
   createdAt: Date;
-  escalatedByName: string | null;
-  escalatedToName: string | null;
+  escalatedByName: string;
+  escalatedToName: string;
   escalatedByRole: EscalationInitiatorRole;
   escalatedToRole: EscalationRecipientRole;
 }
@@ -147,13 +139,7 @@ export interface TicketResolution {
   createdAt: Date;
 }
 
-export interface TicketResolutionPayload {
-  ticketId: string;
-  resolvedById: string;
-  resolutionReason: string;
-}
-
-export type UserRoleNameMap = Map<`${string}:${ImplementerRole}`, string | null>;
+export type UserRoleNameMap = Map<string, { role: ImplementerRole; name: string | null } | null>;
 
 export const ROLE_NAME_CONFIG: { role: ImplementerRole; table: string; column: string }[] = [
   { role: "FELLOW", table: "fellows", column: "fellow_name" },

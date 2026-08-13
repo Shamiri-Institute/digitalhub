@@ -19,7 +19,6 @@ export default async function TicketsPage() {
         role={
           hubCoordinator?.session?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR
         }
-        showCreateButton={false}
       />
     </div>
   );
