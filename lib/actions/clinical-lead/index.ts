@@ -14,9 +14,7 @@ export async function fetchClinicalLeads(
   search?: string,
 ): Promise<ActionResponse<UserSearchResult[]>> {
   try {
-    const { implementerId, identifier } = await requireAuthRole(
-      ImplementerRole.CLINICAL_LEAD,
-    );
+    const { implementerId, identifier } = await requireAuthRole(ImplementerRole.CLINICAL_LEAD);
 
     const validatedData = FetchClinicalLeadsSchema.parse({ hubId });
     const term = search?.trim();

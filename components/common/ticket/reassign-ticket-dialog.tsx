@@ -56,9 +56,7 @@ export function ReassignTicketDialog({
   onOpenChange,
 }: ReassignTicketDialogProps) {
   const router = useRouter();
-  const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(
-    null,
-  );
+  const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
 
   const form = useForm<ReassignFormData>({
     resolver: zodResolver(ReassignFormSchema),
@@ -67,11 +65,7 @@ export function ReassignTicketDialog({
 
   const isAdmin = role === "ADMIN";
   const isHubCoordinator = role === "HUB_COORDINATOR";
-  const searcherLabel = isAdmin
-    ? "Admin"
-    : isHubCoordinator
-      ? "Hub Coordinator"
-      : "Clinical Lead";
+  const searcherLabel = isAdmin ? "Admin" : isHubCoordinator ? "Hub Coordinator" : "Clinical Lead";
   const hubMissing = !isAdmin && !hubId;
 
   const resetForm = () => {
@@ -114,8 +108,7 @@ export function ReassignTicketDialog({
       return (
         <div className="rounded-md border bg-red-bg border-red-border p-3">
           <p className="text-sm text-red-base">
-            Unable to reassign: no hub is assigned to your account. Please
-            contact an administrator.
+            Unable to reassign: no hub is assigned to your account. Please contact an administrator.
           </p>
         </div>
       );
@@ -165,8 +158,7 @@ export function ReassignTicketDialog({
               render={({ fieldState }) => (
                 <FormItem>
                   <FormLabel htmlFor={RECIPIENT_FIELD_ID}>
-                    Select {searcherLabel}{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    Select {searcherLabel} <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   {renderSearcher(fieldState.invalid)}
                   <FormMessage />
@@ -180,8 +172,7 @@ export function ReassignTicketDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Reassignment Reason{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    Reassignment Reason <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <FormControl>
                     <Textarea

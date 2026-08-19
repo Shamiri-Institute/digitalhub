@@ -10,26 +10,16 @@ import {
   CommandInput,
   CommandItem,
 } from "#/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { fetchAdminUsers } from "#/lib/actions/admin";
 import { fetchClinicalLeads } from "#/lib/actions/clinical-lead";
 import { fetchHubCoordinators } from "#/lib/actions/hub-coordinator";
 import { cn } from "#/lib/utils";
 import type { ActionResponse } from "#/types/actions.types";
-import type {
-  SearchableUserRole,
-  UserSearchResult,
-} from "#/types/user-search.types";
+import type { SearchableUserRole, UserSearchResult } from "#/types/user-search.types";
 
 interface RoleConfig {
-  fetch: (
-    hubId: string | undefined,
-    query: string,
-  ) => Promise<ActionResponse<UserSearchResult[]>>;
+  fetch: (hubId: string | undefined, query: string) => Promise<ActionResponse<UserSearchResult[]>>;
   requiresHub: boolean;
   triggerLabel: string;
   noun: string;
@@ -132,21 +122,13 @@ export function UserSearcher({
           className="w-full justify-between bg-white"
           disabled={disabled || hubGated}
         >
-          <span
-            className={cn(
-              "truncate",
-              !selectedLabel && "text-muted-foreground",
-            )}
-          >
+          <span className={cn("truncate", !selectedLabel && "text-muted-foreground")}>
             {selectedLabel ?? config.triggerLabel}
           </span>
           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        className="w-(--radix-popover-trigger-width) min-w-[240px] p-0"
-        align="start"
-      >
+      <PopoverContent className="w-(--radix-popover-trigger-width) min-w-[240px] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
             placeholder={`Search ${config.noun}...`}
@@ -174,9 +156,7 @@ export function UserSearcher({
                 <div className="flex flex-col">
                   <span className="font-medium">{user.name}</span>
                   {user.email && (
-                    <span className="text-xs text-muted-foreground">
-                      {user.email}
-                    </span>
+                    <span className="text-xs text-muted-foreground">{user.email}</span>
                   )}
                   {user.visibleId && (
                     <span className="text-[10px] uppercase tracking-widest text-muted-foreground">

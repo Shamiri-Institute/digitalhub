@@ -12,9 +12,7 @@ export async function fetchAdminUsers(
   search?: string,
 ): Promise<ActionResponse<UserSearchResult[]>> {
   try {
-    const { implementerId, identifier } = await requireAuthRole(
-      ImplementerRole.ADMIN,
-    );
+    const { implementerId, identifier } = await requireAuthRole(ImplementerRole.ADMIN);
 
     const term = search?.trim();
 

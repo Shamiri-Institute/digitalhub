@@ -14,9 +14,7 @@ export async function fetchHubCoordinators(
   search?: string,
 ): Promise<ActionResponse<UserSearchResult[]>> {
   try {
-    const { implementerId, identifier } = await requireAuthRole(
-      ImplementerRole.HUB_COORDINATOR,
-    );
+    const { implementerId, identifier } = await requireAuthRole(ImplementerRole.HUB_COORDINATOR);
 
     const validatedData = FetchHubCoordinatorsSchema.parse({ hubId });
     const term = search?.trim();
