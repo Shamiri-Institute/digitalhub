@@ -15,6 +15,7 @@ export const columns = (state: {
   setViewDialog: Dispatch<SetStateAction<boolean>>;
   setResolutionDialog: Dispatch<SetStateAction<boolean | "view">>;
   setEscalateDialog: Dispatch<SetStateAction<boolean>>;
+  setReassignDialog: Dispatch<SetStateAction<boolean | "view">>;
   role: ImplementerRole;
 }): ColumnDef<TicketData>[] => {
   return [

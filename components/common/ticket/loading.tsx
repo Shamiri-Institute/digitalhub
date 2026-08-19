@@ -23,6 +23,7 @@ export default function TicketsLoading({
       setViewDialog: () => {},
       setResolutionDialog: () => {},
       setEscalateDialog: () => {},
+      setReassignDialog: () => {},
       role: userRole,
     }),
   );
