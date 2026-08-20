@@ -50,6 +50,17 @@ export const ESCALATION_RECIPIENT_ROLES: EscalationRecipientRole[] = [
   "CLINICAL_LEAD",
 ];
 
+export type ReassignmentInitiatorRole = Extract<
+  ImplementerRole,
+  "HUB_COORDINATOR" | "ADMIN" | "CLINICAL_LEAD"
+>;
+
+export const REASSIGNMENT_INITIATOR_ROLES: ReassignmentInitiatorRole[] = [
+  "HUB_COORDINATOR",
+  "ADMIN",
+  "CLINICAL_LEAD",
+];
+
 export type FetchEscalationRecipientHandler = (
   userId: string,
   implementerId: string,
@@ -126,8 +137,10 @@ export interface TicketEscalation {
 
 export interface TicketEscalationStatus {
   canEscalate: boolean;
-  isResolved: boolean;
-  reason?: string;
+  canReassign: boolean;
+  canResolve: boolean;
+  hasReassignment: boolean;
+  hasResolution: boolean;
 }
 
 export interface TicketResolution {
@@ -150,3 +163,38 @@ export const ROLE_NAME_CONFIG: { role: ImplementerRole; table: string; column: s
   { role: "OPERATIONS", table: "ops_users", column: "name" },
   { role: "ADMIN", table: "admin_users", column: "name" },
 ];
+
+export const REASSIGNMENT_REASON_MAX_LENGTH = 1000;
+
+export const CreateTicketReassignmentSchema = z.object({
+  ticketId: stringValidation("Ticket is required"),
+  reassignedTo: stringValidation("A recipient is required"),
+  reassignmentReason: stringValidation("Reassignment Reason is required").max(
+    REASSIGNMENT_REASON_MAX_LENGTH,
+    `Reassignment reason must be at most ${REASSIGNMENT_REASON_MAX_LENGTH} characters`,
+  ),
+});
+
+export interface BaseTicketReassignment {
+  ticketId: string;
+  reassignedFrom: string;
+  reassignedTo: string;
+  reassignmentReason: string;
+  escalationId: string;
+}
+export type CreateTicketReassignmentPayload = BaseTicketReassignment;
+export type CreateTicketReassignmentInput = Omit<
+  CreateTicketReassignmentPayload,
+  "reassignedFrom" | "escalationId"
+>;
+
+export interface FullTicketReassignment extends BaseTicketReassignment {
+  id: string;
+  archivedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  reassignedFromName: string;
+  reassignedToName: string;
+  reassignedFromRole: ReassignmentInitiatorRole | null;
+  reassignedToRole: ReassignmentInitiatorRole | null;
+}

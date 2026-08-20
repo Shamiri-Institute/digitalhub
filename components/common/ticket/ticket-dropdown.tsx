@@ -15,6 +15,8 @@ import {
 import { getTicketEscalationStatus } from "#/lib/actions/ticket";
 import {
   ESCALATION_RECIPIENT_ROLES,
+  REASSIGNMENT_INITIATOR_ROLES,
+  type ReassignmentInitiatorRole,
   type TicketEscalationStatus,
 } from "#/lib/actions/ticket/types";
 
@@ -30,6 +32,7 @@ export function TicketDropdown({
     setViewDialog: Dispatch<SetStateAction<boolean>>;
     setResolutionDialog: Dispatch<SetStateAction<boolean | "view">>;
     setEscalateDialog: Dispatch<SetStateAction<boolean>>;
+    setReassignDialog: Dispatch<SetStateAction<boolean | "view">>;
     role: ImplementerRole;
   };
 }) {
@@ -42,12 +45,18 @@ export function TicketDropdown({
     }
   };
 
-  const isResolved = status?.isResolved ?? false;
+  const canResolve = status?.canResolve ?? false;
   const showEscalate = status?.canEscalate ?? false;
+  const showReassign = status?.canReassign ?? false;
+  const hasReassignment = status?.hasReassignment ?? false;
+  const hasResolution = status?.hasResolution ?? false;
   const isEscalationRecipient = ESCALATION_RECIPIENT_ROLES.includes(
     state.role as (typeof ESCALATION_RECIPIENT_ROLES)[number],
   );
-  const showResolve = !isResolved && isEscalationRecipient && ticket.currentTier === state.role;
+  const showResolve = canResolve && isEscalationRecipient && ticket.currentTier === state.role;
+  const isReassignmentInitiator = REASSIGNMENT_INITIATOR_ROLES.includes(
+    state.role as ReassignmentInitiatorRole,
+  );
 
   return (
     <DropdownMenu
@@ -77,7 +86,7 @@ export function TicketDropdown({
         >
           View ticket
         </DropdownMenuItem>
-        {(showResolve || isResolved) && (
+        {(showResolve || hasResolution) && (
           <DropdownMenuItem
             onClick={() => {
               state.setTicket(ticket);
@@ -85,6 +94,26 @@ export function TicketDropdown({
             }}
           >
             {showResolve ? "Resolve ticket" : "View resolution"}
+          </DropdownMenuItem>
+        )}
+        {showReassign && isReassignmentInitiator && (
+          <DropdownMenuItem
+            onClick={() => {
+              state.setTicket(ticket);
+              state.setReassignDialog(true);
+            }}
+          >
+            Reassign ticket
+          </DropdownMenuItem>
+        )}
+        {!showReassign && hasReassignment && (
+          <DropdownMenuItem
+            onClick={() => {
+              state.setTicket(ticket);
+              state.setReassignDialog("view");
+            }}
+          >
+            View reassignment
           </DropdownMenuItem>
         )}
         {showEscalate && (

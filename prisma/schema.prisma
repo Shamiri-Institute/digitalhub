@@ -46,7 +46,9 @@ model User {
   escalationsMade                         TicketEscalations[]                       @relation("EscalatedByUser")
   escalationsReceived                     TicketEscalations[]                       @relation("EscalatedToUser")
   tickets                                 Tickets[]
-  resolvedTickets                         TicketResolutions[]                   @relation("resolvedByUser")
+  resolvedTickets                         TicketResolutions[]                       @relation("resolvedByUser")
+  reassignmentsMade                       TicketReassignments[]                     @relation("reassignedFromUser")
+  reassignmentsReceived                   TicketReassignments[]                     @relation("reassignedToUser")
 
   @@map("users")
 }
@@ -1960,8 +1962,9 @@ model Tickets {
   createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
 
-  escalations TicketEscalations[]
-  resolutions TicketResolutions[]
+  escalations   TicketEscalations[]
+  resolutions   TicketResolutions[]
+  reassignments TicketReassignments[]
 
   @@map("tickets")
 }
@@ -1979,6 +1982,8 @@ model TicketEscalations {
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
+  reassignments TicketReassignments?
+
   @@map("ticket_escalations")
 }
 
@@ -1994,4 +1999,22 @@ model TicketResolutions {
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@map("ticket_resolutions")
+}
+
+model TicketReassignments {
+  id                 String            @id @default(cuid())
+  ticketId           String            @map("ticket_id") @db.VarChar(255)
+  ticket             Tickets           @relation(fields: [ticketId], references: [id])
+  escalationId       String            @unique @map("escalation_id") @db.VarChar(255)
+  escalation         TicketEscalations @relation(fields: [escalationId], references: [id])
+  reassignedFrom     String            @map("reassigned_from") @db.VarChar(255)
+  reassignedFromUser User              @relation("reassignedFromUser", fields: [reassignedFrom], references: [id])
+  reassignedTo       String            @map("reassigned_to") @db.VarChar(255)
+  reassignedToUser   User              @relation("reassignedToUser", fields: [reassignedTo], references: [id])
+  reassignmentReason String            @map("reassignment_reason") @db.Text()
+  archivedAt         DateTime?         @map("archived_at")
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime          @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("ticket_reassignments")
 }
