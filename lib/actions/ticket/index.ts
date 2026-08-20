@@ -399,11 +399,23 @@ export async function getTicketEscalationStatus(
 
     const hasReassignment = Boolean(existingReassignment);
 
+    const existingResolution = await db.ticketResolutions.findFirst({
+      where: { ticketId },
+    });
+
+    const hasResolution = Boolean(existingResolution);
+
     if (ticket.status === "RESOLVED") {
       return {
         success: true,
         message: "This ticket has already been resolved and is no longer actionable",
-        data: { canEscalate: false, canReassign: false, canResolve: false, hasReassignment },
+        data: {
+          canEscalate: false,
+          canReassign: false,
+          canResolve: false,
+          hasReassignment,
+          hasResolution,
+        },
       };
     }
 
@@ -411,7 +423,13 @@ export async function getTicketEscalationStatus(
       return {
         success: true,
         message: "Ticket escalation status retrieved",
-        data: { canEscalate: false, canReassign: false, canResolve: false, hasReassignment },
+        data: {
+          canEscalate: false,
+          canReassign: false,
+          canResolve: false,
+          hasReassignment,
+          hasResolution,
+        },
       };
     }
 
@@ -424,6 +442,7 @@ export async function getTicketEscalationStatus(
           canReassign: !existingReassignment,
           canResolve: true,
           hasReassignment,
+          hasResolution,
         },
       };
     }
@@ -436,6 +455,7 @@ export async function getTicketEscalationStatus(
         canReassign: !existingReassignment,
         canResolve: true,
         hasReassignment,
+        hasResolution,
       },
     };
   } catch (error) {

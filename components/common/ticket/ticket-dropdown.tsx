@@ -49,6 +49,7 @@ export function TicketDropdown({
   const showEscalate = status?.canEscalate ?? false;
   const showReassign = status?.canReassign ?? false;
   const hasReassignment = status?.hasReassignment ?? false;
+  const hasResolution = status?.hasResolution ?? false;
   const isEscalationRecipient = ESCALATION_RECIPIENT_ROLES.includes(
     state.role as (typeof ESCALATION_RECIPIENT_ROLES)[number],
   );
@@ -85,7 +86,7 @@ export function TicketDropdown({
         >
           View ticket
         </DropdownMenuItem>
-        {showResolve && (
+        {(showResolve || hasResolution) && (
           <DropdownMenuItem
             onClick={() => {
               state.setTicket(ticket);

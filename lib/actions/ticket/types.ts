@@ -140,6 +140,7 @@ export interface TicketEscalationStatus {
   canReassign: boolean;
   canResolve: boolean;
   hasReassignment: boolean;
+  hasResolution: boolean;
 }
 
 export interface TicketResolution {
