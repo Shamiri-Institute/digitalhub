@@ -8,6 +8,9 @@ import {
   type CreateTicketEscalationPayload,
   type CreateTicketInput,
   type CreateTicketPayload,
+  type CreateTicketReassignmentInput,
+  type CreateTicketReassignmentPayload,
+  CreateTicketReassignmentSchema,
   ESCALATION_INITIATOR_ROLES,
   ESCALATION_RECIPIENT_FROM_INITIATOR,
   ESCALATION_RECIPIENT_ROLES,
@@ -16,7 +19,10 @@ import {
   type FetchEscalationRecipientHandler,
   type FullTicket,
   type FullTicketPendingTier,
+  type FullTicketReassignment,
   isEscalationInitiatorRole,
+  REASSIGNMENT_INITIATOR_ROLES,
+  type ReassignmentInitiatorRole,
   ROLE_NAME_CONFIG,
   type TicketCategory,
   type TicketEscalation,
@@ -244,6 +250,127 @@ export async function resolveTicket(
   }
 }
 
+export async function reassignTicket(
+  payload: CreateTicketReassignmentInput,
+): Promise<ActionResponse> {
+  try {
+    const { userId, role, implementerId, identifier } = await requireAuthRole(
+      ...REASSIGNMENT_INITIATOR_ROLES,
+    );
+
+    const { ticketId, reassignedTo, reassignmentReason } =
+      CreateTicketReassignmentSchema.parse(payload);
+
+    if (reassignedTo === userId) {
+      throw new Error("You cannot reassign a ticket to yourself");
+    }
+
+    await db.$transaction(async (tx) => {
+      const escalation = await tx.ticketEscalations.findFirst({
+        where: { ticketId },
+        orderBy: { createdAt: "desc" },
+        include: { ticket: { select: { status: true } } },
+      });
+
+      if (!escalation) throw new Error("No escalation exists for this ticket");
+
+      if (escalation.ticket.status !== "ESCALATED") {
+        throw new Error("This ticket is not escalated and cannot be reassigned");
+      }
+
+      if (escalation.escalatedToId !== userId) {
+        throw new Error("Only the current escalation recipient can reassign this ticket");
+      }
+
+      const existingReassignment = await tx.ticketReassignments.findFirst({
+        where: { escalationId: escalation.id },
+      });
+
+      if (existingReassignment) throw new Error("This ticket has already been reassigned");
+
+      await assertReassignmentEligible(tx, { role, implementerId, identifier }, reassignedTo);
+
+      const reassignmentData: CreateTicketReassignmentPayload = {
+        ticketId,
+        reassignedFrom: userId,
+        reassignedTo,
+        reassignmentReason,
+        escalationId: escalation.id,
+      };
+
+      await tx.ticketReassignments.create({ data: reassignmentData });
+
+      await tx.ticketEscalations.update({
+        where: { id: escalation.id },
+        data: { escalatedToId: reassignedTo },
+      });
+
+      await tx.tickets.update({
+        where: { id: ticketId },
+        data: { status: "ESCALATED" },
+      });
+    });
+
+    return { success: true, message: "Ticket reassigned successfully" };
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { success: false, message: "This ticket has already been reassigned" };
+    }
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+async function assertReassignmentEligible(
+  tx: Prisma.TransactionClient,
+  actor: { role: ImplementerRole; implementerId: string; identifier: string | null },
+  reassignedTo: string,
+): Promise<void> {
+  const { role, implementerId, identifier } = actor;
+
+  const targetMember = await tx.implementerMember.findFirst({
+    where: { userId: reassignedTo, role, implementerId },
+    select: { identifier: true },
+  });
+
+  if (!targetMember?.identifier) {
+    throw new Error("The selected user is not an eligible recipient for this tier");
+  }
+
+  if (role === ImplementerRole.HUB_COORDINATOR) {
+    if (!identifier) throw new Error("Your account is not linked to a hub coordinator profile");
+
+    const target = await tx.hubCoordinator.findFirst({
+      where: {
+        id: targetMember.identifier,
+        archivedAt: null,
+        assignedHub: { coordinators: { some: { id: identifier } } },
+      },
+      select: { id: true },
+    });
+
+    if (!target) {
+      throw new Error("The selected hub coordinator is inactive or not in your hub");
+    }
+    return;
+  }
+
+  if (role === ImplementerRole.CLINICAL_LEAD) {
+    if (!identifier) throw new Error("Your account is not linked to a clinical lead profile");
+
+    const target = await tx.clinicalLead.findFirst({
+      where: {
+        id: targetMember.identifier,
+        assignedHub: { clinicalLeads: { some: { id: identifier } } },
+      },
+      select: { id: true },
+    });
+
+    if (!target) {
+      throw new Error("The selected clinical lead is inactive or not in your hub");
+    }
+  }
+}
+
 export async function getTicketEscalationStatus(
   ticketId: string,
 ): Promise<ActionResponse<TicketEscalationStatus>> {
@@ -257,43 +384,79 @@ export async function getTicketEscalationStatus(
 
     if (!ticket) throw new Error("Ticket not found");
 
+    const latestEscalation = await db.ticketEscalations.findFirst({
+      where: { ticketId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const isCurrentRecipient = latestEscalation?.escalatedToId === userId;
+
+    const existingReassignment = latestEscalation
+      ? await db.ticketReassignments.findFirst({
+          where: { escalationId: latestEscalation.id },
+        })
+      : null;
+
+    const hasReassignment = Boolean(existingReassignment);
+
+    const existingResolution = await db.ticketResolutions.findFirst({
+      where: { ticketId },
+    });
+
+    const hasResolution = Boolean(existingResolution);
+
     if (ticket.status === "RESOLVED") {
       return {
         success: true,
-        message: "Ticket status retrieved",
-        data: { canEscalate: false, isResolved: true, reason: "Ticket has already been resolved" },
+        message: "This ticket has already been resolved and is no longer actionable",
+        data: {
+          canEscalate: false,
+          canReassign: false,
+          canResolve: false,
+          hasReassignment,
+          hasResolution,
+        },
+      };
+    }
+
+    if (!isCurrentRecipient) {
+      return {
+        success: true,
+        message: "Ticket escalation status retrieved",
+        data: {
+          canEscalate: false,
+          canReassign: false,
+          canResolve: false,
+          hasReassignment,
+          hasResolution,
+        },
       };
     }
 
     if (role === ImplementerRole.ADMIN) {
       return {
         success: true,
-        message: "User is admin cannot escalate ticket but only resolve",
-        data: { canEscalate: false, isResolved: false },
-      };
-    }
-
-    const latestEscalation = await db.ticketEscalations.findFirst({
-      where: { ticketId },
-      orderBy: { createdAt: "desc" },
-    });
-
-    if (!latestEscalation || latestEscalation.escalatedToId !== userId) {
-      return {
-        success: true,
-        message: "Ticket escalation status retrieved",
+        message: "You can resolve or reassign this ticket as you are the current recipient",
         data: {
           canEscalate: false,
-          isResolved: false,
-          reason: "You are not the current recipient of this ticket",
+          canReassign: !existingReassignment,
+          canResolve: true,
+          hasReassignment,
+          hasResolution,
         },
       };
     }
 
     return {
       success: true,
-      message: "Ticket escalation status retrieved",
-      data: { canEscalate: true, isResolved: false },
+      message: "You can act on this ticket as you are the current escalation recipient",
+      data: {
+        canEscalate: true,
+        canReassign: !existingReassignment,
+        canResolve: true,
+        hasReassignment,
+        hasResolution,
+      },
     };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
@@ -345,6 +508,92 @@ export async function getTicketResolution(
         resolutionReason: resolution.resolutionReason,
         createdAt: resolution.createdAt,
       },
+    };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function getTicketReassignments(
+  ticketId: string,
+): Promise<ActionResponse<FullTicketReassignment[]>> {
+  try {
+    const { userId, implementerId } = await requireAuthRole(...Object.values(ImplementerRole));
+
+    const ticket = await db.tickets.findUnique({
+      where: { id: ticketId },
+      select: { createdById: true },
+    });
+
+    if (!ticket) throw new Error("Ticket not found");
+
+    const isCreator = ticket.createdById === userId;
+
+    if (!isCreator) {
+      const isReassignmentParty = await db.ticketReassignments.findFirst({
+        where: {
+          ticketId,
+          OR: [{ reassignedFrom: userId }, { reassignedTo: userId }],
+        },
+        select: { id: true },
+      });
+
+      if (!isReassignmentParty) {
+        const escalationParticipant = await db.ticketEscalations.findFirst({
+          where: {
+            ticketId,
+            OR: [{ escalatedById: userId }, { escalatedToId: userId }],
+          },
+          take: 1,
+        });
+
+        if (!escalationParticipant) {
+          throw new Error("You are not authorized to view this ticket's reassignments");
+        }
+      }
+    }
+
+    const reassignments = await db.ticketReassignments.findMany({
+      where: { ticketId },
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (reassignments.length === 0) {
+      throw new Error("No reassignments exist for this ticket");
+    }
+
+    const userIds = Array.from(
+      new Set(
+        reassignments.flatMap((reassignment) => [
+          reassignment.reassignedFrom,
+          reassignment.reassignedTo,
+        ]),
+      ),
+    );
+
+    const nameMap = await getUserNamesAndRolesById(
+      userIds,
+      implementerId,
+      REASSIGNMENT_INITIATOR_ROLES,
+    );
+
+    const mappedReassignments: FullTicketReassignment[] = reassignments.map((reassignment) => {
+      const reassignedFromInfo = nameMap.get(reassignment.reassignedFrom);
+      const reassignedToInfo = nameMap.get(reassignment.reassignedTo);
+
+      return {
+        ...reassignment,
+        reassignedFromName: reassignedFromInfo?.name ?? "",
+        reassignedToName: reassignedToInfo?.name ?? "",
+        reassignedFromRole: (reassignedFromInfo?.role as ReassignmentInitiatorRole) ?? null,
+        reassignedToRole: (reassignedToInfo?.role as ReassignmentInitiatorRole) ?? null,
+      };
+    });
+
+    return {
+      success: true,
+      message: "Reassignments retrieved successfully",
+      data: mappedReassignments,
     };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };

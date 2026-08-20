@@ -16,6 +16,7 @@ export default async function TicketsPage() {
     <div className="px-6 py-5">
       <TicketsDatatable
         tickets={tickets}
+        hubId={clinicalLead.profile.assignedHubId ?? undefined}
         role={clinicalLead?.session?.user.activeMembership?.role ?? ImplementerRole.CLINICAL_LEAD}
       />
     </div>
