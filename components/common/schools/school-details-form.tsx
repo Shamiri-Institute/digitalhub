@@ -109,15 +109,33 @@ export default function SchoolDetailsForm({
     };
     if (open) {
       form.reset(defaultValues);
+      setPointPersonPhone("");
+      setPointPersonPhoneErrors([]);
     }
   }, [open, school, form]);
 
   const onSubmit = async (data: FormData) => {
+    const pendingPointPersonPhone = pointPersonPhone.trim();
+    if (pendingPointPersonPhone !== "") {
+      if (!isValidPhoneNumber(pendingPointPersonPhone, "KE")) {
+        form.setError("pointPersonPhone", {
+          message: "Please enter a valid kenyan number",
+        });
+        return;
+      }
+
+      data.pointPersonPhone = data.pointPersonPhone
+        ? `${data.pointPersonPhone}/${pendingPointPersonPhone}`
+        : pendingPointPersonPhone;
+      form.setValue("pointPersonPhone", data.pointPersonPhone);
+      setPointPersonPhone("");
+    }
+
     if (isEditing && school) {
-      // remove empty strings (removed phone numbers)
+      // remove blanks (removed phone numbers and cleared inputs)
       const pointPersonPhoneNumbers = data.pointPersonPhone
         ?.split("/")
-        .filter((phone: string) => phone !== " ");
+        .filter((phone: string) => phone.trim() !== "");
       data.pointPersonPhone =
         pointPersonPhoneNumbers && pointPersonPhoneNumbers.length > 0
           ? pointPersonPhoneNumbers.join("/")
