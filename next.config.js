@@ -22,9 +22,6 @@ const nextConfig = {
       },
     ],
   },
-  env: {
-    APP_ENV: process.env.APP_ENV,
-  },
   async headers() {
     return [
       {
