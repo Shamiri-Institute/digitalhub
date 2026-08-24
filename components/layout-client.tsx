@@ -209,7 +209,9 @@ export function LayoutClient({
           </div>
         </div>
       </header>
-      <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-hidden">
+      {/* overflow-x-clip (not -hidden): hidden makes <main> a scroll container, which breaks
+          position:sticky for every descendant; clip clips without capturing sticky. */}
+      <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-clip">
         {children}
       </main>
       <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />
