@@ -76,29 +76,6 @@ export function sessionDisplayName(sessionType?: string) {
   }
 }
 
-export function generateFellowVisibleID(lastNumber: number): string {
-  // Get current year
-  const currentYear: number = new Date().getFullYear();
-
-  // Extract last two digits of the current year
-  const yearDigits: string = String(currentYear).slice(-2);
-
-  // First part
-  const part1 = `TFW${yearDigits}`;
-
-  // Second part
-  const part2 = "S";
-
-  // Third part
-  const newNumber = lastNumber + 1;
-  let part3: string = newNumber.toString().padStart(3, "0");
-  if (newNumber >= 1000) {
-    part3 = newNumber.toString().padStart(4, "0");
-  }
-
-  return `${part1}_${part2}_${part3}`;
-}
-
 export function generateStudentVisibleID(groupName: string, lastNumber: number) {
   return `${groupName}_${lastNumber}`;
 }

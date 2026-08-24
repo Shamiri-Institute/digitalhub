@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-export const APP_HOSTNAMES = new Set([
-  "hub.shamiri.institute",
-  "shamiridigitalhub.vercel.app",
-  `localhost:${process.env.PORT}`,
-  "localhost",
-]);
-
 // This function just makes it easier to validate they exist and access them.
 // https://nextjs.org/docs/app/building-your-application/configuring/environment-variables#bundling-environment-variables-for-the-browser
 function validate(value: string | undefined, name: string): string {
@@ -41,7 +34,5 @@ export const constants = (() => {
 })();
 
 export const NEXT_PUBLIC_ENV = validate(constants.NEXT_PUBLIC_ENV, "NEXT_PUBLIC_ENV");
-export const APP_ENV = process.env.APP_ENV || "production";
-export const SHOW_DUPLICATE_ID_CHECKBOX = "show-duplicate-id-checkbox";
 export const GENDER_OPTIONS = ["Male", "Female", "Other"] as const;
 export const ENABLE_PERF_PROFILER = process.env.NEXT_PUBLIC_ENABLE_PERF_PROFILER === "true";
