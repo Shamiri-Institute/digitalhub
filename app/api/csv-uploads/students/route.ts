@@ -1,7 +1,6 @@
-import { Readable } from "node:stream";
 import type { Prisma } from "@prisma/client";
-import * as fastCsv from "fast-csv";
 import { type NextRequest, NextResponse } from "next/server";
+import { parseCsvUpload } from "#/app/api/csv-uploads/parse-csv-upload";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
@@ -15,7 +14,7 @@ const studentsCSVHeaders = [
   "Stream",
   "Gender",
   "DateOfBirth", // age on db
-];
+] as const;
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
@@ -36,12 +35,17 @@ export async function POST(request: NextRequest) {
     const _implementerId = formData.get("implementerId") as string;
     const _projectId = formData.get("projectId") as string;
 
-    const buffer = await file.arrayBuffer();
-    const fileBuffer = Buffer.from(buffer);
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-    const csvStream = Readable.from([fileBuffer]);
-
-    await hasRequiredHeaders(csvStream);
+    let records: Record<(typeof studentsCSVHeaders)[number], string>[];
+    try {
+      records = parseCsvUpload(fileBuffer, studentsCSVHeaders);
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : error },
+        { status: 400 },
+      );
+    }
 
     type StudentRow = Prisma.StudentGetPayload<{
       select: {
@@ -61,32 +65,23 @@ export async function POST(request: NextRequest) {
       };
     }>;
 
-    const rows: StudentRow[] = await new Promise((resolve, reject) => {
-      const parsedRows: StudentRow[] = [];
-      const dataStream = Readable.from([fileBuffer]);
-
-      dataStream
-        .pipe(fastCsv.parse({ headers: true }))
-        .on("data", (row) => {
-          const studentId = objectId("stu");
-          parsedRows.push({
-            id: studentId,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            schoolId: school.id,
-            groupName: row.GroupNumber,
-            studentName: row.StudentName,
-            admissionNumber: row.AdmissionNumber,
-            form: Number.parseInt(row.Form, 10),
-            stream: row.Stream,
-            gender: row.Gender,
-            visibleId: studentId,
-            yearOfImplementation: new Date().getFullYear(),
-            age: null,
-          });
-        })
-        .on("error", (err) => reject(err))
-        .on("end", () => resolve(parsedRows));
+    const rows: StudentRow[] = records.map((row) => {
+      const studentId = objectId("stu");
+      return {
+        id: studentId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        schoolId: school.id,
+        groupName: row.GroupNumber,
+        studentName: row.StudentName,
+        admissionNumber: row.AdmissionNumber,
+        form: Number.parseInt(row.Form, 10),
+        stream: row.Stream,
+        gender: row.Gender,
+        visibleId: studentId,
+        yearOfImplementation: new Date().getFullYear(),
+        age: null,
+      };
     });
 
     await db.$transaction(async (prisma) => {
@@ -101,27 +96,4 @@ export async function POST(request: NextRequest) {
     console.error(error);
     return NextResponse.json({ error }, { status: 500 });
   }
-}
-
-async function hasRequiredHeaders(csvStream: Readable): Promise<boolean> {
-  return new Promise<boolean>((resolve, reject) => {
-    let headersChecked = false;
-    csvStream
-      .pipe(fastCsv.parse({ headers: true }))
-      .on("headers", (headers) => {
-        if (!headersChecked) {
-          const requiredHeaders = studentsCSVHeaders;
-          const missingHeaders = requiredHeaders.filter(
-            (header) => !headers.includes(header.trim()),
-          );
-          if (missingHeaders.length === 0) {
-            headersChecked = true;
-            resolve(true);
-          } else {
-            reject(`Missing required headers: ${missingHeaders.join(", ")}`);
-          }
-        }
-      })
-      .on("error", reject);
-  });
 }

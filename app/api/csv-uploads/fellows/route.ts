@@ -1,7 +1,6 @@
-import { Readable } from "node:stream";
 import type { Fellow } from "@prisma/client";
-import * as fastCsv from "fast-csv";
 import { type NextRequest, NextResponse } from "next/server";
+import { parseCsvUpload } from "#/app/api/csv-uploads/parse-csv-upload";
 import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -16,7 +15,7 @@ const fellowCSVHeaders = [
   "gender",
   "county",
   "sub_county",
-];
+] as const;
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
@@ -32,13 +31,11 @@ export async function POST(request: NextRequest) {
 
     const hubId = hc.profile?.assignedHubId ?? (formData.get("hubId") as string);
     const implementerId = hc.profile?.implementerId ?? (formData.get("implementerId") as string);
-    const buffer = await file.arrayBuffer();
-    const fileBuffer = Buffer.from(buffer);
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-    const csvStream = Readable.from([fileBuffer]);
-
+    let records: Record<(typeof fellowCSVHeaders)[number], string>[];
     try {
-      await hasRequiredHeaders(csvStream);
+      records = parseCsvUpload(fileBuffer, fellowCSVHeaders);
     } catch (error) {
       return NextResponse.json(
         { error: error instanceof Error ? error.message : error },
@@ -59,43 +56,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rows: Fellow[] = await new Promise((resolve, reject) => {
-      const parsedRows: Fellow[] = [];
-      const dataStream = Readable.from([fileBuffer]);
-
-      dataStream
-        .pipe(fastCsv.parse({ headers: true }))
-        .on("data", (row) => {
-          const fellowId = objectId("fellow");
-          parsedRows.push({
-            visibleId: fellowId,
-            id: fellowId,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            fellowName: row.fellow_name,
-            cellNumber: row.cell_no,
-            fellowEmail: row.email,
-            supervisorId: null,
-            hubId,
-            implementerId: implementerId,
-            yearOfImplementation: new Date().getFullYear(),
-            archivedAt: null,
-            mpesaName: row.mpesa_name ?? null,
-            mpesaNumber: row.mpesa_number ?? null,
-            idNumber: row.id_number ?? null,
-            county: row.county ?? null,
-            subCounty: row.sub_county ?? null,
-            dateOfBirth: null,
-            gender: row.gender ?? null,
-            transferred: null,
-            droppedOut: null,
-            droppedOutAt: null,
-            dropOutReason: null,
-          });
-        })
-
-        .on("error", (err) => reject(err))
-        .on("end", () => resolve(parsedRows));
+    const rows: Fellow[] = records.map((row) => {
+      const fellowId = objectId("fellow");
+      return {
+        visibleId: fellowId,
+        id: fellowId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        fellowName: row.fellow_name,
+        cellNumber: row.cell_no,
+        fellowEmail: row.email,
+        supervisorId: null,
+        hubId,
+        implementerId: implementerId,
+        yearOfImplementation: new Date().getFullYear(),
+        archivedAt: null,
+        mpesaName: row.mpesa_name ?? null,
+        mpesaNumber: row.mpesa_number ?? null,
+        idNumber: row.id_number ?? null,
+        county: row.county ?? null,
+        subCounty: row.sub_county ?? null,
+        dateOfBirth: null,
+        gender: row.gender ?? null,
+        transferred: null,
+        droppedOut: null,
+        droppedOutAt: null,
+        dropOutReason: null,
+      };
     });
 
     await db.$transaction(async (prisma) => {
@@ -110,27 +97,4 @@ export async function POST(request: NextRequest) {
     console.error("Error processing file upload:", error);
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
-}
-
-async function hasRequiredHeaders(csvStream: Readable): Promise<boolean> {
-  return new Promise<boolean>((resolve, reject) => {
-    let headersChecked = false;
-    csvStream
-      .pipe(fastCsv.parse({ headers: true }))
-      .on("headers", (headers) => {
-        if (!headersChecked) {
-          const requiredHeaders = fellowCSVHeaders;
-          const missingHeaders = requiredHeaders.filter(
-            (header) => !headers.includes(header.trim()),
-          );
-          if (missingHeaders.length === 0) {
-            headersChecked = true;
-            resolve(true);
-          } else {
-            reject(`Missing required headers: ${missingHeaders.join(", ")}`);
-          }
-        }
-      })
-      .on("error", reject);
-  });
 }
