@@ -1,7 +1,5 @@
-import { useGSAP } from "@gsap/react";
 import { type CalendarDate, isToday } from "@internationalized/date";
 import type { ImplementerRole } from "@prisma/client";
-import gsap from "gsap";
 import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
@@ -9,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip
 import { cn } from "#/lib/utils";
 import { SessionList } from "./session-list";
 import { type Session, useSessions } from "./sessions-provider";
+import { syncScrollLeft } from "./sync-scroll";
 import { useTitle } from "./title-provider";
 
 export function WeekView({
@@ -33,7 +32,8 @@ export function WeekView({
   supervisorId?: string;
   fellowId?: string;
 }) {
-  const headerRowRef = useRef<HTMLTableElement>(null);
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+  const bodyScrollRef = useRef<HTMLDivElement>(null);
   const { gridProps, headerProps } = useCalendarGrid({ weekdayStyle: "long" }, state);
 
   const startDate = state.visibleRange.start;
@@ -65,92 +65,79 @@ export function WeekView({
     return `${hourIn12HourFormat}:00 ${period}`;
   }
 
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
-
-      mm.add("(min-width: 768px)", () => {
-        if (headerRowRef?.current) {
-          gsap.timeline({
-            scrollTrigger: {
-              trigger: headerRowRef.current,
-              start: "top top",
-              end: "+=100%",
-              scrub: true,
-              pin: true,
-              pinSpacing: false,
-              // markers: true,
-            },
-          });
-        }
-      });
-
-      return () => mm.revert(); // Clean up on unmount
-    },
-    { scope: headerRowRef },
-  );
-
   return (
     <div className="relative">
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden" />
-      <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
-        <table ref={headerRowRef} className="schedule-table z-10 rounded-t-[0.4375rem]">
-          <thead {...headerProps}>
-            <tr className="border-b border-grey-border">
-              <th className="time-cell" />
-              {state.getDatesInWeek(0).map((date, i) =>
-                date ? (
-                  <WeekCalendarHeaderCell
-                    key={date.toString()}
-                    colIdx={i}
-                    date={date}
-                    state={state}
-                    dayFormatter={dayFormatter}
-                  />
-                ) : (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed 7-column calendar grid; column index is the stable position
-                  <td key={`empty-header-${state.visibleRange.start.toString()}-${i}`} />
-                ),
-              )}
-            </tr>
-          </thead>
-        </table>
-        <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
-          <tbody className="w-full">
-            {hours.map((hour) => (
-              <tr key={`hour-${hour}`} className="table-row w-full divide-x divide-grey-border">
-                <td
-                  className={cn(
-                    "time-cell truncate",
-                    "h-[85px] xl:h-[112px]",
-                    "w-[103px]",
-                    "bg-background-secondary text-sm",
-                  )}
-                >
-                  <div className="flex">{formatHour(hour)}</div>
-                </td>
-                {state.getDatesInWeek(0).map((date, colIdx) =>
+      <div className="w-full rounded-t-[0.4375rem] border">
+        <div
+          ref={headerScrollRef}
+          onScroll={(e) => syncScrollLeft(e.currentTarget, bodyScrollRef.current)}
+          className="no-scrollbar overflow-x-scroll rounded-t-[0.4375rem] md:sticky md:top-0 md:z-10"
+        >
+          <table className="schedule-table rounded-t-[0.4375rem]">
+            <thead {...headerProps}>
+              <tr className="border-b border-grey-border">
+                <th className="time-cell" />
+                {state.getDatesInWeek(0).map((date, i) =>
                   date ? (
-                    <WeekCalendarCell
-                      key={`${date.toString()}-${hour}`}
-                      colIdx={colIdx}
-                      hour={hour}
+                    <WeekCalendarHeaderCell
+                      key={date.toString()}
+                      colIdx={i}
                       date={date}
                       state={state}
-                      role={role}
-                      dialogState={dialogState}
-                      fellowId={fellowId}
-                      supervisorId={supervisorId}
+                      dayFormatter={dayFormatter}
                     />
                   ) : (
                     // biome-ignore lint/suspicious/noArrayIndexKey: fixed 7-column calendar grid; column index is the stable position
-                    <td key={`empty-${state.visibleRange.start.toString()}-${colIdx}-${hour}`} />
+                    <td key={`empty-header-${state.visibleRange.start.toString()}-${i}`} />
                   ),
                 )}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+          </table>
+        </div>
+        <div
+          ref={bodyScrollRef}
+          onScroll={(e) => syncScrollLeft(e.currentTarget, headerScrollRef.current)}
+          className="no-scrollbar overflow-x-scroll"
+        >
+          <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
+            <tbody className="w-full">
+              {hours.map((hour) => (
+                <tr key={`hour-${hour}`} className="table-row w-full divide-x divide-grey-border">
+                  <td
+                    className={cn(
+                      "time-cell truncate",
+                      "h-[85px] xl:h-[112px]",
+                      "w-[103px]",
+                      "bg-background-secondary text-sm",
+                    )}
+                  >
+                    <div className="flex">{formatHour(hour)}</div>
+                  </td>
+                  {state.getDatesInWeek(0).map((date, colIdx) =>
+                    date ? (
+                      <WeekCalendarCell
+                        key={`${date.toString()}-${hour}`}
+                        colIdx={colIdx}
+                        hour={hour}
+                        date={date}
+                        state={state}
+                        role={role}
+                        dialogState={dialogState}
+                        fellowId={fellowId}
+                        supervisorId={supervisorId}
+                      />
+                    ) : (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: fixed 7-column calendar grid; column index is the stable position
+                      <td key={`empty-${state.visibleRange.start.toString()}-${colIdx}-${hour}`} />
+                    ),
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

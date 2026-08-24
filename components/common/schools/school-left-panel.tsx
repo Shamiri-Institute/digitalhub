@@ -1,10 +1,7 @@
 "use client";
 
-import { useGSAP } from "@gsap/react";
 import type { ImplementerRole } from "@prisma/client";
 import { format } from "date-fns";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,8 +24,6 @@ import LocationIcon from "#/public/icons/location-pin-icon.svg";
 import MailIcon from "#/public/icons/mail-icon.svg";
 import PhoneIcon from "#/public/icons/telephone-icon.svg";
 
-gsap.registerPlugin(useGSAP, ScrollTrigger);
-
 export default function SchoolLeftPanel({
   open = false,
   role,
@@ -36,7 +31,6 @@ export default function SchoolLeftPanel({
   open?: boolean;
   role?: ImplementerRole;
 }) {
-  const panelRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(!role);
   const [school, setSchool] = useState<SchoolData | null>(null);
   const { visibleId } = useParams();
@@ -55,31 +49,6 @@ export default function SchoolLeftPanel({
     void fetchSchoolData();
   }, [visibleId]);
 
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
-
-      mm.add("(min-width: 768px)", () => {
-        if (panelRef?.current) {
-          gsap.timeline({
-            scrollTrigger: {
-              trigger: panelRef.current,
-              start: () => "top top",
-              end: () => "+=100%",
-              scrub: true,
-              pin: true,
-              pinSpacing: false,
-              // markers: true,
-            },
-          });
-        }
-      });
-
-      return () => mm.revert();
-    },
-    { scope: panelRef },
-  );
-
   function renderPhoneNumbers(phone: string) {
     try {
       const phoneNumber = parsePhoneNumberWithError(phone, "KE");
@@ -97,10 +66,7 @@ export default function SchoolLeftPanel({
   }
 
   return (
-    <div
-      ref={panelRef}
-      className="h-auto w-full space-y-6 px-0 py-0 lg:h-screen lg:overflow-y-auto lg:border-r lg:border-solid lg:border-shamiri-light-grey lg:px-6 lg:py-4"
-    >
+    <div className="h-auto w-full space-y-6 px-0 py-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-r lg:border-solid lg:border-shamiri-light-grey lg:px-6 lg:py-4">
       <Accordion type="single" defaultValue={open ? "default" : ""} collapsible={!open}>
         <AccordionItem value="default">
           <AccordionTrigger
