@@ -1,7 +1,6 @@
-import { Readable } from "node:stream";
 import type { School } from "@prisma/client";
-import * as fastCsv from "fast-csv";
 import { type NextRequest, NextResponse } from "next/server";
+import { parseCsvUpload } from "#/app/api/csv-uploads/parse-csv-upload";
 import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -21,7 +20,7 @@ const schoolsCSVHeaders = [
   "latitude",
   "longitude",
   "presession_date",
-];
+] as const;
 
 interface SchoolError {
   schoolName: string;
@@ -152,12 +151,11 @@ export async function POST(request: NextRequest) {
     const hubId = hc.profile?.assignedHubId ?? (formData.get("hubId") as string);
     const implementerId = hc.profile?.implementerId ?? (formData.get("implementerId") as string);
 
-    const buffer = await file.arrayBuffer();
-    const fileBuffer = Buffer.from(buffer);
-    const csvStream = Readable.from([fileBuffer]);
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
 
+    let records: Record<(typeof schoolsCSVHeaders)[number], string>[];
     try {
-      await hasRequiredHeaders(csvStream);
+      records = parseCsvUpload(fileBuffer, schoolsCSVHeaders);
     } catch (error) {
       return NextResponse.json(
         { error: error instanceof Error ? error.message : error },
@@ -165,75 +163,68 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rows: School[] = await new Promise((resolve, reject) => {
-      const parsedRows: School[] = [];
-      const dataStream = Readable.from([fileBuffer]);
-      let rowNumber = 1;
+    const rows: School[] = [];
+    let rowNumber = 1;
 
-      dataStream
-        .pipe(fastCsv.parse({ headers: true }))
-        .on("data", async (row) => {
-          rowNumber++;
+    for (const row of records) {
+      rowNumber++;
 
-          // Validate row
-          const isValid = await validateRow(row, {
-            hubId,
-            rowNumber,
-            errorSchools,
-          });
+      // Validate row
+      const isValid = await validateRow(row, {
+        hubId,
+        rowNumber,
+        errorSchools,
+      });
 
-          if (isValid) {
-            const schoolId = objectId("school");
-            const parsedPreSessionDate = parseDate(row.presession_date) || null;
+      if (isValid) {
+        const schoolId = objectId("school");
+        const parsedPreSessionDate = parseDate(row.presession_date) || null;
 
-            parsedRows.push({
-              id: schoolId,
-              schoolName: row.school_name,
-              numbersExpected: Number.parseInt(row.numbers_expected, 10),
-              schoolDemographics: row.school_demographics,
-              boardingDay: row.boardingorday,
-              schoolType: row.school_type,
-              schoolCounty: row.school_county,
-              schoolSubCounty: row.school_subcounty,
-              principalName: row.principal_name,
-              principalPhone: row.principal_phone,
-              pointPersonName: row.point_person_name,
-              pointPersonPhone: row.point_person_phone,
-              latitude: Number.parseFloat(row.latitude),
-              longitude: Number.parseFloat(row.longitude),
-              hubId: hubId,
-              implementerId: implementerId,
-              preSessionDate: parsedPreSessionDate,
-              visibleId: schoolId,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              archivedAt: null,
-              schoolEmail: null,
-              pointPersonId: null,
-              pointPersonEmail: null,
-              droppedOut: null,
-              droppedOutAt: null,
-              dropoutReason: null,
-              assignedSupervisorId: null,
-              session1Date: null,
-              session2Date: null,
-              session3Date: null,
-              session4Date: null,
-              clinicalFollowup1Date: null,
-              clinicalFollowup2Date: null,
-              clinicalFollowup3Date: null,
-              clinicalFollowup4Date: null,
-              clinicalFollowup5Date: null,
-              clinicalFollowup6Date: null,
-              clinicalFollowup7Date: null,
-              clinicalFollowup8Date: null,
-              dataCollectionFollowup1Date: null,
-            });
-          }
-        })
-        .on("error", (err) => reject(err))
-        .on("end", () => resolve(parsedRows));
-    });
+        rows.push({
+          id: schoolId,
+          schoolName: row.school_name,
+          numbersExpected: Number.parseInt(row.numbers_expected, 10),
+          schoolDemographics: row.school_demographics,
+          boardingDay: row.boardingorday,
+          schoolType: row.school_type,
+          schoolCounty: row.school_county,
+          schoolSubCounty: row.school_subcounty,
+          principalName: row.principal_name,
+          principalPhone: row.principal_phone,
+          pointPersonName: row.point_person_name,
+          pointPersonPhone: row.point_person_phone,
+          latitude: Number.parseFloat(row.latitude),
+          longitude: Number.parseFloat(row.longitude),
+          hubId: hubId,
+          implementerId: implementerId,
+          preSessionDate: parsedPreSessionDate,
+          visibleId: schoolId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          archivedAt: null,
+          schoolEmail: null,
+          pointPersonId: null,
+          pointPersonEmail: null,
+          droppedOut: null,
+          droppedOutAt: null,
+          dropoutReason: null,
+          assignedSupervisorId: null,
+          session1Date: null,
+          session2Date: null,
+          session3Date: null,
+          session4Date: null,
+          clinicalFollowup1Date: null,
+          clinicalFollowup2Date: null,
+          clinicalFollowup3Date: null,
+          clinicalFollowup4Date: null,
+          clinicalFollowup5Date: null,
+          clinicalFollowup6Date: null,
+          clinicalFollowup7Date: null,
+          clinicalFollowup8Date: null,
+          dataCollectionFollowup1Date: null,
+        });
+      }
+    }
 
     await validateExistingSchools(rows, errorSchools);
 
@@ -272,29 +263,6 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-async function hasRequiredHeaders(csvStream: Readable): Promise<boolean> {
-  return new Promise<boolean>((resolve, reject) => {
-    let headersChecked = false;
-    csvStream
-      .pipe(fastCsv.parse({ headers: true }))
-      .on("headers", (headers) => {
-        if (!headersChecked) {
-          const requiredHeaders = schoolsCSVHeaders;
-          const missingHeaders = requiredHeaders.filter(
-            (header) => !headers.includes(header.trim()),
-          );
-          if (missingHeaders.length === 0) {
-            headersChecked = true;
-            resolve(true);
-          } else {
-            reject(`Missing required headers: ${missingHeaders.join(", ")}`);
-          }
-        }
-      })
-      .on("error", reject);
-  });
 }
 
 function parseDate(dateString: string | undefined): Date | null {
