@@ -190,44 +190,6 @@ export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
   }
 }
 
-export async function editWeeklyFellowRating(
-  data: Omit<WeeklyFellowRatingSchema, "week"> & { id: string },
-) {
-  try {
-    const supervisor = await currentSupervisor();
-
-    if (!supervisor) {
-      return {
-        success: false,
-        message: "User is not authorised",
-      };
-    }
-    const result = await db.weeklyFellowRatings.update({
-      where: {
-        id: data.id,
-        fellowId: data.fellowId,
-      },
-      data: {
-        behaviourNotes: data.behaviourNotes,
-        punctualityNotes: data.punctualityNotes,
-        dressingAndGroomingNotes: data.dressingAndGroomingNotes,
-        programDeliveryNotes: data.programDeliveryNotes,
-        behaviourRating: data.behaviourRating,
-        dressingAndGroomingRating: data.dressingAndGroomingRating,
-        programDeliveryRating: data.programDeliveryRating,
-        punctualityRating: data.punctualityRating,
-      },
-    });
-    revalidatePath("/sc/fellows");
-    return { success: true, data: result };
-  } catch (e) {
-    console.error(e);
-    return {
-      error: "Something went wrong during submission, please try again.",
-    };
-  }
-}
-
 export async function dropoutFellowWithReason(
   fellowId: Fellow["id"],
   dropoutReason: Fellow["dropOutReason"],
