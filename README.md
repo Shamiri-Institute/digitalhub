@@ -222,8 +222,6 @@ NEXTAUTH_SECRET="any-random-string-for-dev"
 NEXT_PUBLIC_ENV="development"
 ```
 
-> **Note:** File uploads require S3 credentials. If you need uploads, add the S3 variables from the full configuration above.
-
 #### Error Monitoring (Sentry) — Optional
 
 Sentry is **disabled by default**. The app builds and runs without any Sentry

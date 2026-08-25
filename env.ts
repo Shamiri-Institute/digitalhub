@@ -1,9 +1,10 @@
 import { z } from "zod";
 
 const schema = z.object({
-  // General uploads bucket; S3_UPLOAD_KEY/SECRET are the credentials for ALL buckets
   S3_UPLOAD_KEY: z.string(),
   S3_UPLOAD_SECRET: z.string(),
+
+  // general purpose uploads bucket
   S3_UPLOAD_BUCKET: z.string(),
   S3_UPLOAD_REGION: z.string(),
 
