@@ -1,8 +1,5 @@
-import { useGSAP } from "@gsap/react";
 import { type CalendarDate, getWeeksInMonth, isSameDay, isWeekend } from "@internationalized/date";
 import type { ImplementerRole } from "@prisma/client";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter, useLocale } from "react-aria";
 import type { CalendarGridProps } from "react-aria-components";
@@ -10,9 +7,8 @@ import type { CalendarState } from "react-stately";
 import { cn } from "#/lib/utils";
 import { SessionList } from "./session-list";
 import { type Session, useSessions } from "./sessions-provider";
+import { syncScrollLeft } from "./sync-scroll";
 import { useTitle } from "./title-provider";
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export function MonthView({
   state,
@@ -43,7 +39,8 @@ export function MonthView({
     month: "long",
     year: "numeric",
   });
-  const headerRowRef = useRef<HTMLTableElement>(null);
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+  const bodyScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (state.value) {
@@ -58,77 +55,64 @@ export function MonthView({
     state.visibleRange.end,
   ]);
 
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
-
-      mm.add("(min-width: 768px)", () => {
-        if (headerRowRef?.current) {
-          gsap.timeline({
-            scrollTrigger: {
-              trigger: headerRowRef.current,
-              start: "top top",
-              end: "+=100%",
-              scrub: true,
-              pin: true,
-              pinSpacing: false,
-              // markers: true,
-            },
-          });
-        }
-      });
-
-      return () => mm.revert(); // Clean up on unmount
-    },
-    { scope: headerRowRef },
-  );
-
   return (
     <div className="relative">
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden" />
-      <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
-        <table ref={headerRowRef} className="schedule-table z-20 rounded-t-[0.4375rem] bg-white">
-          <thead {...headerProps}>
-            <tr>
-              {weekDays.map((day, index) => (
-                <th
-                  key={day}
-                  className={cn({
-                    "bg-background-secondary": index === 0 || index === 6,
-                  })}
-                >
-                  {day}
-                </th>
-              ))}
-            </tr>
-          </thead>
-        </table>
-        <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
-          <tbody>
-            {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
-              <tr key={weekIndex}>
-                {state
-                  .getDatesInWeek(weekIndex)
-                  .map((date, i) =>
-                    date ? (
-                      <MonthCalendarCell
-                        key={date.toString()}
-                        state={state}
-                        date={date}
-                        weekend={isWeekend(date, "en-US")}
-                        role={props.role}
-                        dialogState={props.dialogState}
-                        fellowId={props.fellowId}
-                        supervisorId={props.supervisorId}
-                      />
-                    ) : (
-                      <td key={i.toString()} />
-                    ),
-                  )}
+      <div className="w-full rounded-t-[0.4375rem] border">
+        <div
+          ref={headerScrollRef}
+          onScroll={(e) => syncScrollLeft(e.currentTarget, bodyScrollRef.current)}
+          className="no-scrollbar overflow-x-scroll rounded-t-[0.4375rem] sticky top-0 z-20"
+        >
+          <table className="schedule-table rounded-t-[0.4375rem] bg-white">
+            <thead {...headerProps}>
+              <tr>
+                {weekDays.map((day, index) => (
+                  <th
+                    key={day}
+                    className={cn({
+                      "bg-background-secondary": index === 0 || index === 6,
+                    })}
+                  >
+                    {day}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+          </table>
+        </div>
+        <div
+          ref={bodyScrollRef}
+          onScroll={(e) => syncScrollLeft(e.currentTarget, headerScrollRef.current)}
+          className="no-scrollbar overflow-x-scroll"
+        >
+          <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
+            <tbody>
+              {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
+                <tr key={weekIndex}>
+                  {state
+                    .getDatesInWeek(weekIndex)
+                    .map((date, i) =>
+                      date ? (
+                        <MonthCalendarCell
+                          key={date.toString()}
+                          state={state}
+                          date={date}
+                          weekend={isWeekend(date, "en-US")}
+                          role={props.role}
+                          dialogState={props.dialogState}
+                          fellowId={props.fellowId}
+                          supervisorId={props.supervisorId}
+                        />
+                      ) : (
+                        <td key={i.toString()} />
+                      ),
+                    )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
