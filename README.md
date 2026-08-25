@@ -607,7 +607,7 @@ We welcome contributions from the community!
 
 ## Technical Notes
 
-### S3 Recordings Bucket Setup
+### S3 Bucket Setup
 
 #### Creating the S3 Bucket
 
