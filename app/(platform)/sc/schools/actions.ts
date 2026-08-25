@@ -47,29 +47,6 @@ export async function revalidatePageAction(pathname: string, mode?: "layout" | "
   revalidatePath(pathname, mode);
 }
 
-export async function fetchSessionAttendanceData(hubId: string) {
-  const sessionAttendanceData = await db.$queryRaw<{ session_number: number; count: number }[]>`
-    SELECT
-      fa.session_number AS session_number,
-      COUNT(DISTINCT fa.school_id) AS count
-    FROM
-      fellow_attendances fa
-    LEFT JOIN schools ON fa.school_id = schools.id
-    LEFT JOIN hubs ON schools.hub_id = hubs.id AND hubs.id = ${hubId}
-    GROUP BY
-      fa.session_number
-    ORDER BY
-      fa.session_number ASC
-  `;
-
-  sessionAttendanceData.forEach((val) => {
-    val.session_number = Number(val.session_number);
-    val.count = Number(val.count);
-  });
-
-  return sessionAttendanceData;
-}
-
 export async function fetchSchoolDataCompletenessData(hubId: string) {
   // TODO: uncomment the school_sub_county query and adjust division from 6.0 -> 7.0
   const [schoolAttendanceData] = await db.$queryRaw<{ percentage: number }[]>`
