@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { env } from "#/env";
+import { getCachedSession } from "#/lib/auth-options";
 
 const RequestSchema = z.object({
   filename: z.string(),
@@ -44,6 +45,11 @@ function getBucketConfig(bucket: "uploads" | "recordings" | "student-attendance"
 
 export async function POST(request: Request) {
   try {
+    const session = await getCachedSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);
 
