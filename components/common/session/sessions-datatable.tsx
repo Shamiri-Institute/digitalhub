@@ -157,7 +157,6 @@ export default function SessionsDatatable({
             session={session}
             open={rescheduleSessionDialog}
             onOpenChange={setRescheduleSessionDialog}
-            role={role}
           >
             <SessionDetail
               state={{ session }}
@@ -170,7 +169,6 @@ export default function SessionsDatatable({
             sessionId={session.id}
             open={cancelSessionDialog}
             onOpenChange={setCancelSessionDialog}
-            role={role}
           >
             <SessionDetail
               state={{ session }}

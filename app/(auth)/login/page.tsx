@@ -1,12 +1,13 @@
+import type { Metadata } from "next";
 import * as React from "react";
 
 import { LoginForm } from "#/app/(auth)/login/form";
 import { Icons } from "#/components/icons";
-import { constructMetadata } from "#/lib/utils";
 
-export const metadata = constructMetadata({
+export const metadata: Metadata = {
   title: "Log in to SDH",
-});
+  description: "The Shamiri Digital Hub is a platform for managing the Shamiri Intervention.",
+};
 
 export default function LoginPage() {
   return (

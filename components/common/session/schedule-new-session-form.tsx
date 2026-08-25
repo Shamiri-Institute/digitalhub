@@ -468,7 +468,6 @@ export function ScheduleNewSession({
           session={existingSession}
           open={rescheduleDialog}
           onOpenChange={setRescheduleDialog}
-          role={role}
         >
           <SessionDetail
             state={{ session: existingSession }}
