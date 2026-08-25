@@ -1,6 +1,5 @@
 "use server";
 
-import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 
 export type FellowDropoutReasonsGraphData = {
@@ -94,37 +93,4 @@ export async function fetchFellowSessionRatingAverages(hubId: string) {
   });
 
   return ratingAverages;
-}
-
-export async function addUploadedFellowDocs(data: {
-  fileName: string;
-  link: string;
-  fellowId: string;
-  type: string;
-}) {
-  const user = await currentHubCoordinator();
-  const userId = user?.session?.user.id;
-  if (!user || !userId) {
-    throw new Error("The session has not been authenticated");
-  }
-
-  try {
-    await db.fellowDocuments.create({
-      data: {
-        fileName: data.fileName,
-        link: data.link,
-        fellowId: data.fellowId,
-        uploadedBy: userId,
-        type: data.type,
-      },
-    });
-
-    return {
-      success: true,
-      message: "Successfully uploaded the document.",
-    };
-  } catch (error) {
-    console.error(error);
-    return { error: "Something went wrong uploading the document" };
-  }
 }
