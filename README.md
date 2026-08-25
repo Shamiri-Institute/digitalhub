@@ -162,9 +162,7 @@ CASEREPORTS_FILEID="google-drive-folder-id-for-case-reports"
 # ====================================
 # AWS S3 (File Uploads)
 # ====================================
-AWS_REGION="your-aws-region"
-AWS_ACCESS_KEY_ID="your-aws-access-key-id"
-AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
+# S3_UPLOAD_KEY/SECRET are the IAM credentials used for all S3 buckets
 S3_UPLOAD_KEY="your-s3-upload-key"
 S3_UPLOAD_SECRET="your-s3-upload-secret"
 S3_UPLOAD_BUCKET="your-s3-bucket-name"
@@ -223,8 +221,6 @@ NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="any-random-string-for-dev"
 NEXT_PUBLIC_ENV="development"
 ```
-
-> **Note:** File uploads and email sending require AWS credentials. If you need these features, add the AWS S3 variables from the full configuration above.
 
 #### Error Monitoring (Sentry) — Optional
 
@@ -444,16 +440,14 @@ Configure these in your Vercel project settings:
 | `NEXTAUTH_SECRET` | Yes | Authentication secret |
 | `GOOGLE_ID` | Yes | Google OAuth Client ID |
 | `GOOGLE_SECRET` | Yes | Google OAuth Client Secret |
-| `AWS_REGION` | Yes | AWS region |
-| `AWS_ACCESS_KEY_ID` | Yes | AWS credentials for S3 |
-| `AWS_SECRET_ACCESS_KEY` | Yes | AWS credentials for S3 |
-| `S3_UPLOAD_KEY` | Yes | Access key for the uploads bucket |
-| `S3_UPLOAD_SECRET` | Yes | Secret key for the uploads bucket |
+| `S3_UPLOAD_KEY` | Yes | IAM access key used for all S3 buckets |
+| `S3_UPLOAD_SECRET` | Yes | IAM secret key used for all S3 buckets |
 | `S3_UPLOAD_BUCKET` | Yes | S3 bucket for uploads |
 | `S3_UPLOAD_REGION` | Yes | Region of the uploads bucket |
 | `S3_RECORDINGS_BUCKET` | Yes | S3 bucket for session recordings |
 | `S3_RECORDINGS_REGION` | No | Recordings bucket region (defaults to `af-south-1`) |
 | `S3_STUDENT_ATTENDANCE_BUCKET` | No | Bucket for attendance documents |
+| `S3_STUDENT_ATTENDANCE_REGION` | No | Attendance bucket region (defaults to `af-south-1`) |
 | `RECORDINGS_API_KEY` | For fidelity | Shared secret for the recordings/fidelity worker |
 | `METABASE_SECRET_KEY` | For analytics | Metabase JWT signing key |
 | `METABASE_MONITORING_DASHBOARD_ID` | For analytics | Metabase Monitoring and Evaluation dashboard ID (numeric) |
@@ -613,7 +607,7 @@ We welcome contributions from the community!
 
 ## Technical Notes
 
-### S3 Recordings Bucket Setup
+### S3 Bucket Setup
 
 #### Creating the S3 Bucket
 
