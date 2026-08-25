@@ -8,9 +8,6 @@ import { columns, type MainFellowTableData } from "#/app/(platform)/hc/fellows/c
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import FellowDropoutForm from "#/components/common/fellow/fellow-dropout-form";
-import UploadFellowContract from "#/components/common/fellow/upload-contract";
-import UploadFellowID from "#/components/common/fellow/upload-id";
-import UploadFellowQualification from "#/components/common/fellow/upload-qualification";
 import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
 import SubmitComplaint from "#/components/common/submit-complaint";
 import DataTable from "#/components/data-table";
@@ -33,9 +30,6 @@ export default function MainFellowsDatatable({
   const [fellow, setFellow] = useState<MainFellowTableData | null>(null);
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [addDialog, setAddDialog] = useState<boolean>(false);
-  const [uploadIdDialog, setUploadIdDialog] = useState<boolean>(false);
-  const [uploadContractDialog, setUploadContractDialog] = useState<boolean>(false);
-  const [uploadQualificationDialog, setUploadQualificationDialog] = useState<boolean>(false);
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
   const [viewComplaintsDialog, setViewComplaintsDialog] = useState(false);
   const [dropOutDialog, setDropOutDialog] = useState(false);
@@ -70,9 +64,6 @@ export default function MainFellowsDatatable({
           setFellow,
           setEditDialog,
           setWeeklyEvaluationDialog,
-          setUploadContractDialog,
-          setUploadIdDialog,
-          setUploadQualificationDialog,
           setViewComplaintsDialog,
           setDropOutDialog,
           role,
@@ -115,17 +106,6 @@ export default function MainFellowsDatatable({
             open={editDialog}
             onOpenChange={setEditDialog}
             mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
-          />
-          <UploadFellowContract
-            fellow={fellow}
-            open={uploadContractDialog}
-            onOpenChange={setUploadContractDialog}
-          />
-          <UploadFellowID fellow={fellow} open={uploadIdDialog} onOpenChange={setUploadIdDialog} />
-          <UploadFellowQualification
-            fellow={fellow}
-            open={uploadQualificationDialog}
-            onOpenChange={setUploadQualificationDialog}
           />
           <SubmitComplaint
             id={fellow.id}
