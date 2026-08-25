@@ -15,9 +15,6 @@ export default function MainFellowsDatatableMenu({
   fellow,
   setFellow,
   setEditDialog,
-  setUploadContractDialog,
-  setUploadIdDialog,
-  setUploadQualificationDialog,
   setWeeklyEvaluationDialog,
   setViewComplaintsDialog,
   setDropOutDialog,
@@ -26,9 +23,6 @@ export default function MainFellowsDatatableMenu({
   fellow: MainFellowTableData;
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>;
   setEditDialog: Dispatch<SetStateAction<boolean>>;
-  setUploadContractDialog: Dispatch<SetStateAction<boolean>>;
-  setUploadIdDialog: Dispatch<SetStateAction<boolean>>;
-  setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>;
   setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
   setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>;
   setDropOutDialog: Dispatch<SetStateAction<boolean>>;
@@ -75,33 +69,6 @@ export default function MainFellowsDatatableMenu({
             >
               View complaints
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setUploadContractDialog(true);
-              }}
-              disabled={true}
-            >
-              View contract
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setUploadIdDialog(true);
-              }}
-              disabled={true}
-            >
-              View identification document
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setUploadQualificationDialog(true);
-              }}
-              disabled={true}
-            >
-              View qualification document
-            </DropdownMenuItem>
           </>
         ) : (
           <>
@@ -128,39 +95,6 @@ export default function MainFellowsDatatableMenu({
               }}
             >
               View weekly fellow evaluation
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setUploadContractDialog(true);
-              }}
-            >
-              <div className="flex w-full items-center justify-between gap-x-2">
-                Upload Contract
-                <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setUploadIdDialog(true);
-              }}
-            >
-              <div className="flex w-full items-center justify-between gap-x-2">
-                Upload Identification document
-                <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setUploadQualificationDialog(true);
-              }}
-            >
-              <div className="flex w-full items-center justify-between gap-x-2">
-                Upload qualification document
-                <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
-              </div>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
