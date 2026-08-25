@@ -218,39 +218,6 @@ export async function markSupervisorAttendance(
   }
 }
 
-export async function markBatchSupervisorAttendance(
-  sessionId: string,
-  supervisors: string[],
-  attended: boolean | null,
-) {
-  await checkAuth();
-
-  try {
-    await db.supervisorAttendance.updateMany({
-      where: {
-        sessionId,
-        supervisorId: {
-          in: supervisors,
-        },
-      },
-      data: {
-        attended,
-        absenceReason: null,
-        absenceComments: null,
-      },
-    });
-    return {
-      success: true,
-      message: "Successfully marked supervisor attendance.",
-    };
-  } catch (error: unknown) {
-    console.error(error);
-    return {
-      error: "Something went wrong while updating supervisor attendance",
-    };
-  }
-}
-
 export async function updateSupervisorDetails(data: z.infer<typeof EditSupervisorSchema>) {
   try {
     await checkAuth();

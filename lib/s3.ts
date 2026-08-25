@@ -2,9 +2,6 @@ import {
   DeleteObjectCommand,
   type DeleteObjectCommandInput,
   GetObjectCommand,
-  type GetObjectCommandInput,
-  PutObjectCommand,
-  type PutObjectCommandInput,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -45,27 +42,6 @@ function createClient(bucket: S3Bucket): S3Client {
       secretAccessKey: env.S3_UPLOAD_SECRET,
     },
   });
-}
-
-export function getObject(input: Pick<GetObjectCommandInput, "Key">, bucket: S3Bucket = "uploads") {
-  const s3Client = createClient(bucket);
-  const command = new GetObjectCommand({
-    ...input,
-    Bucket: getBucketName(bucket),
-  });
-  return s3Client.send(command);
-}
-
-export function putObject(
-  input: Pick<PutObjectCommandInput, "Body" | "Key" | "ContentType">,
-  bucket: S3Bucket = "uploads",
-) {
-  const s3Client = createClient(bucket);
-  const command = new PutObjectCommand({
-    ...input,
-    Bucket: getBucketName(bucket),
-  });
-  return s3Client.send(command);
 }
 
 export function deleteObject(
