@@ -38,7 +38,16 @@ function getBucketRegion(bucket: S3Bucket): string {
 }
 
 function createClient(bucket: S3Bucket): S3Client {
-  return new S3Client({ region: getBucketRegion(bucket) });
+  // Explicit credentials (same pair the presigned-upload route uses for all
+  // buckets) — previously relied on the SDK's implicit AWS_ACCESS_KEY_ID /
+  // AWS_SECRET_ACCESS_KEY environment lookup.
+  return new S3Client({
+    region: getBucketRegion(bucket),
+    credentials: {
+      accessKeyId: env.S3_UPLOAD_KEY,
+      secretAccessKey: env.S3_UPLOAD_SECRET,
+    },
+  });
 }
 
 export function getObject(input: Pick<GetObjectCommandInput, "Key">, bucket: S3Bucket = "uploads") {
