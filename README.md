@@ -145,9 +145,6 @@ NEXTAUTH_SECRET="your-nextauth-secret"  # Generate with: openssl rand -base64 32
 GOOGLE_ID="your-google-client-id"
 GOOGLE_SECRET="your-google-client-secret"
 
-# Comma-separated emails granted super-admin access
-SUPERADMINS="admin@example.com"
-
 # ====================================
 # GOOGLE DRIVE API (Document Storage)
 # ====================================
