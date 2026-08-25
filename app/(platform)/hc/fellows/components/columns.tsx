@@ -44,9 +44,6 @@ export const columns = (
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>,
   setEditDialog: Dispatch<SetStateAction<boolean>>,
   setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>,
-  setUploadContractDialog: Dispatch<SetStateAction<boolean>>,
-  setUploadIdDialog: Dispatch<SetStateAction<boolean>>,
-  setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>,
   setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>,
   setDropOutDialog: Dispatch<SetStateAction<boolean>>,
   role: ImplementerRole,
@@ -186,9 +183,6 @@ export const columns = (
           setFellow={setFellow}
           setEditDialog={setEditDialog}
           setWeeklyEvaluationDialog={setWeeklyEvaluationDialog}
-          setUploadContractDialog={setUploadContractDialog}
-          setUploadIdDialog={setUploadIdDialog}
-          setUploadQualificationDialog={setUploadQualificationDialog}
           setViewComplaintsDialog={setViewComplaintsDialog}
           setDropOutDialog={setDropOutDialog}
           role={role}
