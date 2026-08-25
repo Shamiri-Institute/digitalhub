@@ -72,7 +72,7 @@ export function WeekView({
         <div
           ref={headerScrollRef}
           onScroll={(e) => syncScrollLeft(e.currentTarget, bodyScrollRef.current)}
-          className="no-scrollbar overflow-x-scroll rounded-t-[0.4375rem] md:sticky md:top-0 md:z-10"
+          className="no-scrollbar overflow-x-scroll rounded-t-[0.4375rem] sticky top-0 z-10"
         >
           <table className="schedule-table rounded-t-[0.4375rem]">
             <thead {...headerProps}>

@@ -62,7 +62,7 @@ export function MonthView({
         <div
           ref={headerScrollRef}
           onScroll={(e) => syncScrollLeft(e.currentTarget, bodyScrollRef.current)}
-          className="no-scrollbar overflow-x-scroll rounded-t-[0.4375rem] md:sticky md:top-0 md:z-20"
+          className="no-scrollbar overflow-x-scroll rounded-t-[0.4375rem] sticky top-0 z-20"
         >
           <table className="schedule-table rounded-t-[0.4375rem] bg-white">
             <thead {...headerProps}>
