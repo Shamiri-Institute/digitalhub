@@ -38,7 +38,13 @@ function getBucketRegion(bucket: S3Bucket): string {
 }
 
 function createClient(bucket: S3Bucket): S3Client {
-  return new S3Client({ region: getBucketRegion(bucket) });
+  return new S3Client({
+    region: getBucketRegion(bucket),
+    credentials: {
+      accessKeyId: env.S3_UPLOAD_KEY,
+      secretAccessKey: env.S3_UPLOAD_SECRET,
+    },
+  });
 }
 
 export function getObject(input: Pick<GetObjectCommandInput, "Key">, bucket: S3Bucket = "uploads") {
