@@ -449,6 +449,7 @@ Configure these in your Vercel project settings:
 | `S3_RECORDINGS_BUCKET` | Yes | S3 bucket for session recordings |
 | `S3_RECORDINGS_REGION` | No | Recordings bucket region (defaults to `af-south-1`) |
 | `S3_STUDENT_ATTENDANCE_BUCKET` | No | Bucket for attendance documents |
+| `S3_STUDENT_ATTENDANCE_REGION` | No | Attendance bucket region (defaults to `af-south-1`) |
 | `RECORDINGS_API_KEY` | For fidelity | Shared secret for the recordings/fidelity worker |
 | `METABASE_SECRET_KEY` | For analytics | Metabase JWT signing key |
 | `METABASE_MONITORING_DASHBOARD_ID` | For analytics | Metabase Monitoring and Evaluation dashboard ID (numeric) |
