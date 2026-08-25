@@ -39,10 +39,7 @@ export default async function FellowComplaintsActionsDropdown({
             </div>
           </ViewFellowComplaint>
         ) : (
-          <ApproveRejectFellowComplaint
-            complaint={complaint}
-            fellows={complaint.allFellowsInHub ?? []}
-          >
+          <ApproveRejectFellowComplaint complaint={complaint}>
             <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
               Approve/reject complaint
             </div>

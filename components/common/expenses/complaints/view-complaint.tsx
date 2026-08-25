@@ -275,7 +275,6 @@ export default function ViewFellowComplaint({
                   Upload Mpesa statement <span className="text-shamiri-light-red">*</span>
                 </div>
                 <FileUploaderWithDrop
-                  label="Upload csv file"
                   onChange={() => {}}
                   files={[]}
                   accept=".csv"

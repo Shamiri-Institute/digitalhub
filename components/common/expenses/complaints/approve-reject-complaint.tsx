@@ -1,5 +1,4 @@
 "use client";
-import type { Fellow } from "@prisma/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -44,11 +43,9 @@ import { ReportFellowComplaintSchema } from "./schema";
 export default function ApproveRejectFellowComplaint({
   children,
   complaint,
-  fellows: _fellows = [],
 }: {
   children: React.ReactNode;
   complaint: ComplaintData;
-  fellows: Fellow[];
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false);
@@ -431,12 +428,7 @@ export default function ApproveRejectFellowComplaint({
                 <div>
                   Upload Mpesa statement <span className="text-shamiri-light-red">*</span>
                 </div>
-                <FileUploaderWithDrop
-                  label="Upload csv file"
-                  onChange={() => {}}
-                  files={[]}
-                  accept=".csv"
-                />
+                <FileUploaderWithDrop onChange={() => {}} files={[]} accept=".csv" />
               </div>
 
               <FormField

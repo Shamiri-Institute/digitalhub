@@ -69,7 +69,7 @@ export const attendanceColumns: ColumnDef<AttendanceRecord>[] = [
   {
     id: "button",
     cell: ({ row }) => {
-      return <HandleSessionAttendanceUpdate row={row} userRole="SUPERVISOR" />;
+      return <HandleSessionAttendanceUpdate row={row} />;
     },
     enableHiding: false,
   },
