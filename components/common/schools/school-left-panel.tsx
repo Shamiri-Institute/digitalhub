@@ -6,7 +6,7 @@ import { parsePhoneNumberWithError } from "libphonenumber-js";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import SessionsOccurredWidget from "#/components/common/schools/sessions-occurred-widget";
 import { Icons } from "#/components/icons";
