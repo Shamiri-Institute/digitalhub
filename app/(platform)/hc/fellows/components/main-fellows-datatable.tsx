@@ -111,7 +111,6 @@ export default function MainFellowsDatatable({
             id={fellow.id}
             open={viewComplaintsDialog}
             onOpenChange={setViewComplaintsDialog}
-            role={role}
             complaints={fellow.complaints?.map((complaint) => {
               return {
                 id: complaint.id,

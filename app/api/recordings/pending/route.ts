@@ -1,22 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "#/lib/db";
+import { verifyRecordingsApiKey } from "#/lib/recordings-api";
 
 export const dynamic = "force-dynamic";
-
-/**
- * Verify the API key from the request headers
- */
-function verifyApiKey(request: NextRequest): boolean {
-  const apiKey = request.headers.get("x-api-key");
-  const expectedKey = process.env.RECORDINGS_API_KEY;
-
-  if (!expectedKey) {
-    console.error("RECORDINGS_API_KEY environment variable not set");
-    return false;
-  }
-
-  return apiKey === expectedKey;
-}
 
 /**
  * GET /api/recordings/pending
@@ -35,7 +21,7 @@ function verifyApiKey(request: NextRequest): boolean {
  */
 export async function GET(request: NextRequest) {
   // Verify API key
-  if (!verifyApiKey(request)) {
+  if (!verifyRecordingsApiKey(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

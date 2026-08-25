@@ -1,6 +1,6 @@
 import { objectId } from "#/lib/crypto";
-import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf";
-import { buildS3Key } from "#/lib/utils/s3-key-builder";
+import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf/images-to-pdf";
+import { buildS3Key, sanitizeForS3Key } from "#/lib/utils/s3-key-builder";
 import type { AttendanceDocS3Key } from "../actions/file/student-attendance/types";
 
 export async function createAttendancePdf(fileUrl: string | null, files: File[]): Promise<File> {
@@ -52,12 +52,7 @@ export function buildAttendanceS3Key(fields: AttendanceDocS3Key): {
   return { fileName: customFileName, s3Key };
 }
 
+// Same rules as sanitizeForS3Key, but uppercase and with hyphens folded into underscores.
 function sanitizeAttendanceKey(name: string): string {
-  return name
-    .toUpperCase()
-    .replace(/[\s-]+/g, "_")
-    .replace(/[^A-Z0-9_]/g, "")
-    .replace(/_+/g, "_")
-    .replace(/^_|_$/g, "")
-    .substring(0, 50);
+  return sanitizeForS3Key(name.replace(/-/g, " ")).toUpperCase();
 }

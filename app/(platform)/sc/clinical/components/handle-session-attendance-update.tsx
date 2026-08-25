@@ -18,13 +18,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { toast } from "#/components/ui/use-toast";
 
-export default function HandleSessionAttendanceUpdate({
-  row,
-  userRole: _userRole = "SUPERVISOR",
-}: {
-  row: Row<AttendanceRecord>;
-  userRole: "CLINICAL_LEAD" | "SUPERVISOR";
-}) {
+export default function HandleSessionAttendanceUpdate({ row }: { row: Row<AttendanceRecord> }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>(
     row.getValue("attendanceStatus") === true
