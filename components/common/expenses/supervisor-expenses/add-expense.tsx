@@ -332,7 +332,7 @@ export default function AddSupervisorExpensesForm({
                 />
               </div>
               <Separator />
-              <ReceiptFileUpload form={form} className="flex flex-col gap-2" />
+              <ReceiptFileUpload form={form} />
 
               <DialogFooter>
                 <Button
@@ -364,10 +364,8 @@ export default function AddSupervisorExpensesForm({
 
 export function ReceiptFileUpload({
   form,
-  className: _className,
 }: {
   form: UseFormReturn<z.infer<typeof AddAddSupervisorExpenseSchema>>;
-  className: string;
 }) {
   const { FileInput, openFileDialog, uploadToS3 } = useS3Upload();
   const [uploading, setUploading] = useState(false);

@@ -187,7 +187,6 @@ export default function FellowSchoolsDatatable({
             id={fellow.id}
             open={complaintsDialog}
             onOpenChange={setComplaintsDialog}
-            role={role}
             complaints={fellow.complaints.map((complaint) => {
               return {
                 id: complaint.id,

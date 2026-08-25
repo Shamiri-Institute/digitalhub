@@ -596,7 +596,6 @@ function CalendarView({
             session={session}
             open={rescheduleSessionDialog}
             onOpenChange={setRescheduleSessionDialog}
-            role={role}
           >
             <SessionDetail
               state={{ session }}
@@ -609,7 +608,6 @@ function CalendarView({
             sessionId={session.id}
             open={cancelSessionDialog}
             onOpenChange={setCancelSessionDialog}
-            role={role}
           >
             <SessionDetail
               state={{ session }}

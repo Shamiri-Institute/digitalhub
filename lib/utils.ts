@@ -1,6 +1,5 @@
 import type { riskStatusOptions } from "@prisma/client";
 import { type ClassValue, clsx } from "clsx";
-import type { Metadata } from "next";
 import { createElement } from "react";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
@@ -25,19 +24,6 @@ export function getSchoolInitials(name: string): string {
       .map((i) => i[0]?.toUpperCase())
       .join("") ?? "N/A"
   );
-}
-
-export function constructMetadata({
-  title = "Shamiri Digital Hub ",
-  description = "The Shamiri Digital Hub is a platform for managing the Shamiri Intervention.",
-}: {
-  title?: string;
-  description?: string;
-} = {}): Metadata {
-  return {
-    title,
-    description,
-  };
 }
 
 export function getHighestValue(data: { [k: string]: string }): riskStatusOptions {

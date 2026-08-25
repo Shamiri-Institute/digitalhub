@@ -7,11 +7,7 @@ import StudentsStats from "#/components/students-stats";
 import PageFooter from "#/components/ui/page-footer";
 import { db } from "#/lib/db";
 
-export default async function SupervisorStudentsPage({
-  searchParams: _searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+export default async function SupervisorStudentsPage() {
   const supervisor = await currentSupervisor();
 
   if (!supervisor) {

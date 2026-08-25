@@ -39,13 +39,6 @@ export const columns: ColumnDef<SupervisorClinicalCasesData>[] = [
     accessorKey: "noOfCaseNotes",
     header: "No. of Case Notes",
   },
-  // {
-  //   id: "button",
-  //   cell: ({ row }) => (
-  //     <SupervisorClinicalCasesDropdownActions clinicalCase={row.original} />
-  //   ),
-  //   enableHiding: false,
-  // },
 ];
 
 type BadgeVariant =

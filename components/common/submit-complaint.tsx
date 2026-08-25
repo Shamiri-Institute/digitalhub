@@ -1,4 +1,4 @@
-import type { ImplementerRole, User } from "@prisma/client";
+import type { User } from "@prisma/client";
 import { format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -45,15 +45,11 @@ export default function SubmitComplaint({
   open,
   onOpenChange,
   complaints,
-  role: _role,
-  mode: _mode = "add",
 }: {
   id?: string;
   children: React.ReactNode;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  role: ImplementerRole;
-  mode?: "view" | "add";
   complaints?: {
     id: string;
     complaint: string;
