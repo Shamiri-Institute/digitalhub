@@ -1,14 +1,6 @@
 import type { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
 import ViewEditStudentGroupEvaluation from "#/components/common/fellow-reports/student-group-evaluation/view-edit-student-group-evaluation";
-import { Icons } from "#/components/icons";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
-import { cn } from "#/lib/utils";
+import ViewEditReportDropdown from "#/components/common/view-edit-report-dropdown";
 
 export default function StudentGroupEvaluationDropdownMenu({
   studentGroupEvaluation,
@@ -16,36 +8,17 @@ export default function StudentGroupEvaluationDropdownMenu({
   studentGroupEvaluation: StudentGroupEvaluationType["session"][number];
 }) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-          </div>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+    <ViewEditReportDropdown
+      viewLabel="View student group evaluation"
+      editLabel="Edit student group evaluation"
+      renderDialog={(action, children) => (
         <ViewEditStudentGroupEvaluation
           studentGroupEvaluation={studentGroupEvaluation}
-          action="view"
+          action={action}
         >
-          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
-            View student group evaluation
-          </div>
+          {children}
         </ViewEditStudentGroupEvaluation>
-        <ViewEditStudentGroupEvaluation
-          studentGroupEvaluation={studentGroupEvaluation}
-          action="edit"
-        >
-          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
-            Edit student group evaluation
-          </div>
-        </ViewEditStudentGroupEvaluation>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      )}
+    />
   );
 }
