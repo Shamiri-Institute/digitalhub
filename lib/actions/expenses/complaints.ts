@@ -72,7 +72,6 @@ export async function loadPaymentComplaints(where: Prisma.FellowWhereInput) {
           comments: complaint.comments,
           reasonForAccepting: complaint.reasonForAcceptance,
           reasonForRejecting: complaint.reasonForRejection,
-          allFellowsInHub: fellows,
         }));
       }),
     };
@@ -116,10 +115,9 @@ export async function resolveComplaint(
           ? { reasonForAcceptance: data.formData.reasonForAccepting }
           : { reasonForRejection: data.formData.reasonForRejecting }),
         confirmedAmountReceived: data.formData.confirmedAmountReceived,
+        differenceInAmount: data.formData.paidAmount - data.formData.confirmedAmountReceived,
         comments: data.formData.comments,
-        reason: data.formData.reasonForComplaint,
-        // TODO: statement should be link to uploaded mpesa statement (defaulting to "mpesa statement" for now) We will need to update this when we know how processed payouts will be stored
-        statement: "mpesa statement",
+        reason: data.formData.reasonForComplaint
       },
     });
     return {
