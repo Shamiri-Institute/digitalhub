@@ -189,7 +189,6 @@ export function useS3Upload() {
     FileInput,
     openFileDialog,
     files,
-    resetFiles,
   };
 }
 
