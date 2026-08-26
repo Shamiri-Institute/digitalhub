@@ -2,7 +2,6 @@ import { currentHubCoordinator } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
 import HubStudentsDetailsCharts from "#/components/charts/students-charts";
-import StudentsFilterTab from "#/components/students-filter-tab";
 import StudentsStats from "#/components/students-stats";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -184,8 +183,6 @@ export default async function StudentsPage() {
       <PageHeading title="Students" />
 
       <Separator />
-
-      <StudentsFilterTab hubCoordinatorId={hubCoordinator.profile?.id ?? ""} />
 
       <StudentsStats
         totalNumberOfStudentsInHub={totalNumberOfStudentsInHub}
