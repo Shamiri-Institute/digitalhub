@@ -1,8 +1,7 @@
 "use client";
 
 import type { ImplementerRole } from "@prisma/client";
-import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import { Filter } from "lucide-react";
+import { Check, ChevronsUpDown, Filter } from "lucide-react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -131,7 +130,7 @@ export function RoleSwitcher({
               )}
             </span>
           </div>
-          <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
@@ -198,7 +197,7 @@ export function RoleSwitcher({
                     </span>
                   </div>
                 </div>
-                <CheckIcon
+                <Check
                   className={cn(
                     "h-4 w-4",
                     member.id === implementerMembers?.activePersonnelId

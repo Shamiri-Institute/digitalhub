@@ -1,7 +1,7 @@
 "use client";
 
 import { ImplementerRole } from "@prisma/client";
-import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
@@ -104,7 +104,7 @@ export function ProjectSwitcher({
                 {loading ? "Loading..." : (activeProject?.name ?? "Select project...")}
               </span>
             </div>
-            <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0" align="start">
@@ -136,7 +136,7 @@ export function ProjectSwitcher({
                       {project.visibleId}
                     </span>
                   </div>
-                  <CheckIcon
+                  <Check
                     className={cn(
                       "h-4 w-4",
                       activeProjectId === project.id ? "opacity-100" : "opacity-0",

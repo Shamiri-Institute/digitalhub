@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretSortIcon } from "@radix-ui/react-icons";
+import { ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";
 import {
@@ -125,7 +125,7 @@ export function UserSearcher({
           <span className={cn("truncate", !selectedLabel && "text-muted-foreground")}>
             {selectedLabel ?? config.triggerLabel}
           </span>
-          <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-(--radix-popover-trigger-width) min-w-[240px] p-0" align="start">
