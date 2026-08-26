@@ -1,8 +1,7 @@
 "use server";
 
 import { currentOpsUser } from "#/app/auth";
-import type { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
-import { loadPaymentComplaints, resolveComplaint } from "#/lib/actions/expenses/complaints";
+import { loadPaymentComplaints } from "#/lib/actions/expenses/complaints";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
 export type OpsHubsReportComplaintsType = Awaited<
@@ -24,23 +23,4 @@ export async function loadOpsHubsPaymentComplaints() {
       projectId,
     },
   });
-}
-
-export async function rejectComplaint(data: { id: string; formData: ReportFellowComplaintSchema }) {
-  const opsUser = await currentOpsUser();
-  if (!opsUser) {
-    throw new Error("Unauthorised user");
-  }
-  return resolveComplaint(data, "REJECTED");
-}
-
-export async function approveComplaint(data: {
-  id: string;
-  formData: ReportFellowComplaintSchema;
-}) {
-  const opsUser = await currentOpsUser();
-  if (!opsUser) {
-    throw new Error("Unauthorised user");
-  }
-  return resolveComplaint(data, "APPROVED");
 }
