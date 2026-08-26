@@ -1,4 +1,4 @@
-import { CaretSortIcon } from "@radix-ui/react-icons";
+import { ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "#/components/ui/button";
@@ -48,7 +48,7 @@ export function Combobox({
                 ? items.find((item) => item.id === activeItemId)?.label
                 : placeholder || "Select item..."}
             </span>
-            <CaretSortIcon className="ml-1.5 size-4 shrink-0 opacity-50" />
+            <ChevronsUpDown className="ml-1.5 size-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[360px] p-0" align="start">
