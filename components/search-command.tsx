@@ -1,7 +1,7 @@
 "use client";
 
 import type { Prisma } from "@prisma/client";
-import { MagnifyingGlassIcon, ResetIcon } from "@radix-ui/react-icons";
+import { Search, Undo2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
@@ -63,7 +63,7 @@ export function SearchCommand({
           }
         }}
       >
-        <MagnifyingGlassIcon className="h-4 w-4 shrink-0 opacity-50" />
+        <Search className="h-4 w-4 shrink-0 opacity-50" />
         <span className="select-none">{selected ?? "Search"}</span>
       </button>
       <CommandDialog open={open} onOpenChange={setOpen}>
@@ -98,7 +98,7 @@ export function SearchCommand({
           <CommandSeparator />
           <CommandGroup heading="Options">
             <CommandItem onSelect={handleReset} className="text-red-500">
-              <ResetIcon className="mr-2 h-4 w-4" />
+              <Undo2 className="mr-2 h-4 w-4" />
               Reset Selection
             </CommandItem>
           </CommandGroup>

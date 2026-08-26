@@ -1,4 +1,3 @@
-import type { riskStatusOptions } from "@prisma/client";
 import { type ClassValue, clsx } from "clsx";
 import { createElement } from "react";
 import { twMerge } from "tailwind-merge";
@@ -24,21 +23,6 @@ export function getSchoolInitials(name: string): string {
       .map((i) => i[0]?.toUpperCase())
       .join("") ?? "N/A"
   );
-}
-
-export function getHighestValue(data: { [k: string]: string }): riskStatusOptions {
-  const values = Object.values(data);
-
-  if (values.includes("High")) {
-    return "High";
-  }
-  if (values.includes("Med")) {
-    return "Medium";
-  }
-  if (values.includes("Low")) {
-    return "Low";
-  }
-  return "No";
 }
 
 export function stringValidation(message: string | undefined = "Required*") {
