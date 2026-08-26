@@ -26,21 +26,6 @@ export function getSchoolInitials(name: string): string {
   );
 }
 
-export function getHighestValue(data: { [k: string]: string }): riskStatusOptions {
-  const values = Object.values(data);
-
-  if (values.includes("High")) {
-    return "High";
-  }
-  if (values.includes("Med")) {
-    return "Medium";
-  }
-  if (values.includes("Low")) {
-    return "Low";
-  }
-  return "No";
-}
-
 export function stringValidation(message: string | undefined = "Required*") {
   return z.string({ error: message }).trim().min(1, { error: message });
 }
