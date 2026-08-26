@@ -1,6 +1,6 @@
 import type { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
 import ViewEditStudentGroupEvaluation from "#/components/common/fellow-reports/student-group-evaluation/view-edit-student-group-evaluation";
-import ReportActionsDropdown from "#/components/common/report-actions-dropdown";
+import ViewEditReportDropdown from "#/components/common/view-edit-report-dropdown";
 
 export default function StudentGroupEvaluationDropdownMenu({
   studentGroupEvaluation,
@@ -8,7 +8,7 @@ export default function StudentGroupEvaluationDropdownMenu({
   studentGroupEvaluation: StudentGroupEvaluationType["session"][number];
 }) {
   return (
-    <ReportActionsDropdown
+    <ViewEditReportDropdown
       viewLabel="View student group evaluation"
       editLabel="Edit student group evaluation"
       renderDialog={(action, children) => (

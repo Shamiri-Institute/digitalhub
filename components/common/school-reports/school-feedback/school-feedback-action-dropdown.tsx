@@ -1,6 +1,6 @@
 import type { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
-import ReportActionsDropdown from "#/components/common/report-actions-dropdown";
 import ViewEditSchoolFeedback from "#/components/common/school-reports/school-feedback/view-edit-school-feedback";
+import ViewEditReportDropdown from "#/components/common/view-edit-report-dropdown";
 
 export default function SchoolFeedbackDropdownMenu({
   feedback,
@@ -8,7 +8,7 @@ export default function SchoolFeedbackDropdownMenu({
   feedback: SchoolFeedbackType["supervisorRatings"][number];
 }) {
   return (
-    <ReportActionsDropdown
+    <ViewEditReportDropdown
       viewLabel="View school feedback"
       editLabel="Edit school feedback"
       renderDialog={(action, children) => (
