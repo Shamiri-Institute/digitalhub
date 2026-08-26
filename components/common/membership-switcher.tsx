@@ -1,7 +1,7 @@
 "use client";
 
 import { ImplementerRole } from "@prisma/client";
-import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
+import { Check, ChevronsUpDown } from "lucide-react";
 import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -87,7 +87,7 @@ export function MembershipSwitcher({
               {activeMembership ? activeMembership.implementerName : "Select implementer..."}
             </span>
           </div>
-          <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
@@ -117,7 +117,7 @@ export function MembershipSwitcher({
                     {membership.role.replace("_", " ")}
                   </span>
                 </div>
-                <CheckIcon
+                <Check
                   className={cn(
                     "h-4 w-4",
                     activeMembership?.id === membership.id ? "opacity-100" : "opacity-0",

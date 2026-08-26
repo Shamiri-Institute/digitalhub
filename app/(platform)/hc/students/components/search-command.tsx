@@ -1,7 +1,7 @@
 "use client";
 
 import type { Student } from "@prisma/client";
-import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { Search } from "lucide-react";
 import { useState } from "react";
 import {
   CommandDialog,
@@ -26,7 +26,7 @@ export function StudentSearchCommand({ data }: { data: Student[] }) {
         }}
         type="button"
       >
-        <MagnifyingGlassIcon className="h-4 w-4 shrink-0 opacity-50" />
+        <Search className="h-4 w-4 shrink-0 opacity-50" />
         <span className="select-none">Search</span>
       </button>
       <CommandDialog open={open} onOpenChange={setOpen}>

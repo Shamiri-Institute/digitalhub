@@ -1,8 +1,8 @@
 "use client";
 
 import type { DialogProps } from "@radix-ui/react-dialog";
-import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { Command as CommandPrimitive } from "cmdk";
+import { Search } from "lucide-react";
 import type * as React from "react";
 
 import { Dialog, DialogContent } from "#/components/ui/dialog";
@@ -41,7 +41,7 @@ function CommandInput({
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div className="flex items-center gap-2 border-b px-3" cmdk-input-wrapper="">
-      <MagnifyingGlassIcon className="h-4 w-4 shrink-0 opacity-50" />
+      <Search className="h-4 w-4 shrink-0 opacity-50" />
       <CommandPrimitive.Input
         data-slot="command-input"
         className={cn(
