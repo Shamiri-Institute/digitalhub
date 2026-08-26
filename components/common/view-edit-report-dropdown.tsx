@@ -13,7 +13,7 @@ import {
  * the Actions menu with a View and an Edit item, each wrapped by the
  * report's own view/edit dialog via renderDialog.
  */
-export default function ReportActionsDropdown({
+export default function ViewEditReportDropdown({
   viewLabel,
   editLabel,
   renderDialog,
