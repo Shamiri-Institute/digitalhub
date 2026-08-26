@@ -1,0 +1,66 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+supervisor-state.json
+hub-coordinator-state.json
+operations-state.json
+app/node_modules/.vitest/results.json
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+.vscode/*
+
+# misc
+.DS_Store
+*.pem
+*.swp
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env.development
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# react-email previews
+.react-email
+
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+.vscode/*
+vscode
+
+# Sentry Config File
+.sentryclirc
+
+# Sentry Config File
+.env.sentry-build-plugin
+
+#.env files
+.env
+.env.*
+.claude/settings.local.json
+
+# piolium audits
+/piolium
