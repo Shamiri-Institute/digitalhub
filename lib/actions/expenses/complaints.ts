@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import type { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
+import type { ComplaintFormSchema } from "#/components/common/expenses/complaints/schema";
 import { db } from "#/lib/db";
 
 /**
@@ -80,14 +80,32 @@ export async function loadPaymentComplaints(where: Prisma.FellowWhereInput) {
 }
 
 /**
- * Approves or rejects a complaint. Callers are responsible for the role
- * auth check; the update itself is identical across roles.
+ * Approves or rejects a complaint. Callers resolve the role auth and pass the
+ * fellow scope they are allowed to act within; the update itself is identical
+ * across roles.
  */
 export async function resolveComplaint(
-  data: { id: string; formData: ReportFellowComplaintSchema },
+  data: { id: string; formData: ComplaintFormSchema; scope: Prisma.FellowWhereInput },
   status: "APPROVED" | "REJECTED",
 ) {
   try {
+    // A complaint id on its own is not proof of access, so confirm the
+    // complaint belongs to a fellow inside the caller's scope before mutating.
+    const complaint = await db.fellowPaymentComplaints.findFirst({
+      where: {
+        id: data.id,
+        fellowAttendance: { fellow: data.scope },
+      },
+      select: { id: true },
+    });
+
+    if (!complaint) {
+      return {
+        success: false,
+        message: "Complaint not found",
+      };
+    }
+
     await db.fellowPaymentComplaints.update({
       where: {
         id: data.id,
