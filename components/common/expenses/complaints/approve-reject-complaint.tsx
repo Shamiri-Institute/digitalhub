@@ -387,10 +387,16 @@ export default function ApproveRejectFellowComplaint({
               />
 
               <div>
-                <div>
-                  Upload Mpesa statement <span className="text-shamiri-light-red">*</span>
-                </div>
-                <FileUploaderWithDrop onChange={() => {}} files={[]} accept=".csv" />
+                <div className="text-shamiri-text-grey">Upload Mpesa statement</div>
+                {/* Not wired up yet: there is no upload pipeline behind this, so
+                    it is inert rather than silently discarding the reviewer's
+                    file. Drop the disabled styling once it writes a statement. */}
+                <FileUploaderWithDrop
+                  onChange={() => {}}
+                  files={[]}
+                  accept=".csv"
+                  className="pointer-events-none cursor-not-allowed opacity-60"
+                />
               </div>
 
               <FormField
