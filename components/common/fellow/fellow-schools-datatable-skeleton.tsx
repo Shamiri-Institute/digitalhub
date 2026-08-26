@@ -1,34 +1,22 @@
 "use client";
 
 import type { ImplementerRole } from "@prisma/client";
-import type { FellowsData } from "#/app/(platform)/sc/actions";
-import {
-  buildSkeletonColumns,
-  buildSkeletonRows,
-} from "#/components/common/build-skeleton-columns";
+import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
 import { fellowSchoolsColumns } from "#/components/common/fellow/fellow-schools-columns";
-import DataTable from "#/components/data-table";
 
 export default function FellowSchoolsDatatableSkeleton({ role }: { role: ImplementerRole }) {
-  const loadingColumns = buildSkeletonColumns(
-    fellowSchoolsColumns({
-      state: {
-        setFellow: () => null,
-        setWeeklyEvaluationDialog: () => false,
-        setEditFellowDialog: () => false,
-        setAttendanceHistoryDialog: () => false,
-        setComplaintsDialog: () => false,
-        role,
-      },
-    }),
-  );
-
   return (
-    <DataTable
-      columns={loadingColumns}
-      data={buildSkeletonRows<FellowsData>()}
-      className="data-table data-table-action lg:mt-4"
-      emptyStateMessage=""
+    <DatatableSkeleton
+      columns={fellowSchoolsColumns({
+        state: {
+          setFellow: () => null,
+          setWeeklyEvaluationDialog: () => false,
+          setEditFellowDialog: () => false,
+          setAttendanceHistoryDialog: () => false,
+          setComplaintsDialog: () => false,
+          role,
+        },
+      })}
       columnVisibilityState={{
         "MPESA Name": false,
         "Average Rating": false,
