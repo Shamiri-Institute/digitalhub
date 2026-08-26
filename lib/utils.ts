@@ -1,4 +1,3 @@
-import type { riskStatusOptions } from "@prisma/client";
 import { type ClassValue, clsx } from "clsx";
 import { createElement } from "react";
 import { twMerge } from "tailwind-merge";
