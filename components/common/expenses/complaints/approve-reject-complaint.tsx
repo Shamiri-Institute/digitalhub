@@ -1,12 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import type { z } from "zod";
-import {
-  approveComplaint,
-  rejectComplaint,
-} from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
 import { FileUploaderWithDrop } from "#/components/file-uploader";
@@ -37,8 +31,9 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
+import { approveComplaint, rejectComplaint } from "#/lib/actions/expenses/complaints-actions";
 import { zodResolver } from "#/lib/zod-resolver";
-import { ReportFellowComplaintSchema } from "./schema";
+import { ApproveComplaintSchema, ComplaintFormSchema, RejectComplaintSchema } from "./schema";
 
 export default function ApproveRejectFellowComplaint({
   children,
@@ -50,9 +45,7 @@ export default function ApproveRejectFellowComplaint({
   const [open, setDialogOpen] = useState<boolean>(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState<boolean>(false);
-  const [formData, setFormData] = useState<z.infer<typeof ReportFellowComplaintSchema>>();
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"reject" | "accept" | "none">("none");
 
   const reasonsForComplaint = [
     {
@@ -69,8 +62,8 @@ export default function ApproveRejectFellowComplaint({
     },
   ];
 
-  const form = useForm<z.infer<typeof ReportFellowComplaintSchema>>({
-    resolver: zodResolver(ReportFellowComplaintSchema),
+  const form = useForm<ComplaintFormSchema>({
+    resolver: zodResolver(ComplaintFormSchema),
     defaultValues: {
       fellow: complaint?.fellowName ?? "",
       mpesaNumber: complaint?.mpesaNumber ?? "",
@@ -89,105 +82,74 @@ export default function ApproveRejectFellowComplaint({
     },
   });
 
-  async function confirmAccept() {
-    setLoading(true);
-    if (formData) {
-      if (Object.keys(form.formState.errors).length) {
+  /**
+   * Runs from the confirm dialogs. The main form does not validate the outcome
+   * reasons (they are typed here, after it has been submitted), so the matching
+   * reason is validated at this point and its error is shown on the field the
+   * reviewer is looking at.
+   */
+  async function submitOutcome(mode: "accept" | "reject") {
+    const schema = mode === "accept" ? ApproveComplaintSchema : RejectComplaintSchema;
+    const reasonField = mode === "accept" ? "reasonForAccepting" : "reasonForRejecting";
+    const parsed = schema.safeParse(form.getValues());
+
+    if (!parsed.success) {
+      const reasonIssue = parsed.error.issues.find((issue) => issue.path[0] === reasonField);
+
+      if (!reasonIssue) {
         toast({
           variant: "destructive",
           title: "Error",
           description: "Please fill all required fields",
         });
-        setLoading(false);
         return;
       }
 
-      const response = await approveComplaint({
-        id: complaint.id,
-        formData,
-      });
+      form.setError(reasonField, { message: reasonIssue.message });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const submit = mode === "accept" ? approveComplaint : rejectComplaint;
+      const response = await submit({ id: complaint.id, formData: parsed.data });
 
       if (!response.success) {
         toast({
+          variant: "destructive",
+          title: "Error",
           description: response.message ?? "Something went wrong, please try again",
         });
         return;
       }
-      void revalidatePageAction("/hc/reporting/complaints");
 
       toast({
         title: "Success",
         variant: "default",
-        description: response.message ?? "Successfully approved complaint",
+        description:
+          response.message ??
+          (mode === "accept"
+            ? "Successfully approved complaint"
+            : "Successfully rejected complaint"),
       });
 
       form.reset();
       setApproveDialogOpen(false);
-      setLoading(false);
-      setDialogOpen(false);
-    }
-  }
-
-  async function confirmReject() {
-    setLoading(true);
-    if (formData) {
-      if (Object.keys(form.formState.errors).length) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Please fill all required fields",
-        });
-        setLoading(false);
-        return;
-      }
-
-      if (formData) {
-        const response = await rejectComplaint({
-          id: complaint.id,
-          formData,
-        });
-        if (!response.success) {
-          toast({
-            description: response.message ?? "Something went wrong, please try again",
-          });
-          return;
-        }
-
-        void revalidatePageAction("/hc/reporting/complaints");
-
-        toast({
-          title: "Success",
-          variant: "default",
-          description: response.message ?? "Successfully rejected complaint",
-        });
-
-        form.reset();
-        setRejectDialogOpen(false);
-        setLoading(false);
-        setDialogOpen(false);
-      }
-    }
-  }
-
-  const onSubmit = (data: z.infer<typeof ReportFellowComplaintSchema>) => {
-    if (Object.keys(form.formState.errors).length) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please fill all required fields",
-      });
-      return;
-    }
-    if (mode === "reject") {
-      setRejectDialogOpen(true);
-      setApproveDialogOpen(false);
-    }
-    if (mode === "accept") {
-      setApproveDialogOpen(true);
       setRejectDialogOpen(false);
+      setDialogOpen(false);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    setFormData(data);
+  /** Opens the confirm dialog for an outcome once the main form is valid. */
+  const openConfirm = (mode: "accept" | "reject") => {
+    // A reason left over from a previous attempt should not greet the reviewer
+    // as an error when the confirm dialog reopens.
+    form.clearErrors(["reasonForAccepting", "reasonForRejecting"]);
+    setRejectDialogOpen(mode === "reject");
+    setApproveDialogOpen(mode === "accept");
   };
 
   return (
@@ -204,7 +166,7 @@ export default function ApproveRejectFellowComplaint({
             variant={complaint.status === "REJECTED" ? "destructive" : "primary"}
           />
           <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
-            <form className="space-y-2" onSubmit={form.handleSubmit(onSubmit)}>
+            <form className="space-y-2" onSubmit={(event) => event.preventDefault()}>
               <FormField
                 control={form.control}
                 name="fellow"
@@ -491,6 +453,7 @@ export default function ApproveRejectFellowComplaint({
 
               <DialogFooter>
                 <Button
+                  type="button"
                   variant="ghost"
                   className="text-base font-semibold leading-6 text-shamiri-red"
                   onClick={() => {
@@ -501,22 +464,16 @@ export default function ApproveRejectFellowComplaint({
                   Cancel
                 </Button>
                 <Button
-                  loading={form.formState.isSubmitting}
-                  disabled={form.formState.isSubmitting}
+                  type="button"
                   variant="destructive"
-                  onClick={() => {
-                    setMode("reject");
-                  }}
+                  onClick={form.handleSubmit(() => openConfirm("reject"))}
                 >
                   Reject
                 </Button>
                 <Button
-                  loading={form.formState.isSubmitting}
-                  disabled={form.formState.isSubmitting}
+                  type="button"
                   variant="brand"
-                  onClick={() => {
-                    setMode("accept");
-                  }}
+                  onClick={form.handleSubmit(() => openConfirm("accept"))}
                 >
                   Accept
                 </Button>
@@ -549,21 +506,7 @@ export default function ApproveRejectFellowComplaint({
                   Reason for rejection <span className="text-shamiri-light-red">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Textarea
-                    placeholder="Inaccurate reporting"
-                    className="resize-none"
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      setFormData(
-                        (prevData) =>
-                          ({
-                            ...prevData,
-                            reasonForRejecting: e.target.value,
-                          }) as z.infer<typeof ReportFellowComplaintSchema>,
-                      );
-                    }}
-                  />
+                  <Textarea placeholder="Inaccurate reporting" className="resize-none" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -573,6 +516,7 @@ export default function ApproveRejectFellowComplaint({
           <Separator />
           <DialogFooter className="flex justify-end">
             <Button
+              type="button"
               className="text-shamiri-light-red"
               variant="ghost"
               onClick={() => {
@@ -582,8 +526,9 @@ export default function ApproveRejectFellowComplaint({
               Cancel
             </Button>
             <Button
+              type="button"
               variant="destructive"
-              onClick={confirmReject}
+              onClick={() => void submitOutcome("reject")}
               disabled={loading}
               loading={loading}
             >
@@ -616,21 +561,7 @@ export default function ApproveRejectFellowComplaint({
                   Reason for acceptance <span className="text-shamiri-light-red">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Textarea
-                    placeholder="Inaccurate reporting"
-                    className="resize-none"
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      setFormData(
-                        (prevData) =>
-                          ({
-                            ...prevData,
-                            reasonForAccepting: e.target.value,
-                          }) as z.infer<typeof ReportFellowComplaintSchema>,
-                      );
-                    }}
-                  />
+                  <Textarea placeholder="Inaccurate reporting" className="resize-none" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -640,6 +571,7 @@ export default function ApproveRejectFellowComplaint({
           <Separator />
           <DialogFooter className="flex justify-end">
             <Button
+              type="button"
               className="text-shamiri-light-red"
               variant="ghost"
               onClick={() => {
@@ -649,8 +581,9 @@ export default function ApproveRejectFellowComplaint({
               Cancel
             </Button>
             <Button
+              type="button"
               variant="destructive"
-              onClick={confirmAccept}
+              onClick={() => void submitOutcome("accept")}
               disabled={loading}
               loading={loading}
             >
