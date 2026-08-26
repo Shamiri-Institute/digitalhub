@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { stringValidation } from "#/lib/utils";
 
-export const ReportFellowComplaintSchema = z.object({
+const ComplaintBaseSchema = z.object({
   fellow: stringValidation("Please select a fellow").optional(),
   mpesaNumber: stringValidation("Please confirm the Mpesa number"),
   mpesaName: stringValidation("Please enter the fellow's MPESA name."),
@@ -16,8 +16,21 @@ export const ReportFellowComplaintSchema = z.object({
   confirmedAmountReceived: z.coerce.number({ error: "Please enter the confirmed amount received" }),
   reasonForComplaint: stringValidation("Please enter the complaint reason"),
   comments: stringValidation("Please enter additional comments"),
+});
+
+export const ComplaintFormSchema = ComplaintBaseSchema.extend({
+  reasonForAccepting: z.string(),
+  reasonForRejecting: z.string(),
+});
+
+export const ApproveComplaintSchema = ComplaintFormSchema.extend({
   reasonForAccepting: stringValidation("Please enter the reason for accepting"),
+});
+
+export const RejectComplaintSchema = ComplaintFormSchema.extend({
   reasonForRejecting: stringValidation("Please enter the reason for rejecting"),
 });
 
-export type ReportFellowComplaintSchema = z.infer<typeof ReportFellowComplaintSchema>;
+export type ComplaintFormSchema = z.infer<typeof ComplaintFormSchema>;
+export type ApproveComplaintSchema = z.infer<typeof ApproveComplaintSchema>;
+export type RejectComplaintSchema = z.infer<typeof RejectComplaintSchema>;
