@@ -1,102 +1,17 @@
 import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentSupervisor } from "#/app/auth";
-import SessionsDatatable from "#/components/common/session/sessions-datatable";
-import { db } from "#/lib/db";
+import SchoolSessionsPage from "#/components/common/schools/school-sessions-page";
 
-export default async function SchoolSessionsPage(props: {
-  params: Promise<{ visibleId: string }>;
-}) {
-  const params = await props.params;
-
-  const { visibleId } = params;
-
+export default async function SessionsPage(props: { params: Promise<{ visibleId: string }> }) {
+  const { visibleId } = await props.params;
   const supervisor = await currentSupervisor();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }
-
-  const data = await Promise.all([
-    await db.interventionSession.findMany({
-      where: {
-        school: {
-          visibleId,
-        },
-      },
-      include: {
-        hub: {
-          select: { visibleId: true },
-        },
-        school: {
-          include: {
-            assignedSupervisor: true,
-            interventionGroups: {
-              include: {
-                students: {
-                  include: {
-                    _count: {
-                      select: {
-                        clinicalCases: true,
-                      },
-                    },
-                    studentAttendances: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        sessionRatings: true,
-        session: true,
-      },
-    }),
-    await db.supervisor.findMany({
-      where: {
-        hubId: supervisor?.profile?.hubId,
-      },
-      include: {
-        supervisorAttendances: {
-          include: {
-            session: true,
-          },
-        },
-        fellows: {
-          include: {
-            fellowAttendances: true,
-            groups: {
-              include: {
-                _count: {
-                  select: {
-                    students: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        assignedSchools: true,
-      },
-    }),
-    await db.$queryRaw<
-      {
-        id: string;
-        averageRating: number;
-      }[]
-    >`SELECT
-    fel.id,
-    (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
-    FROM
-    fellows fel
-    LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${supervisor?.profile?.hubId}
-    GROUP BY fel.id`,
-  ]);
-
   return (
-    <SessionsDatatable
-      sessions={data[0]}
-      supervisors={data[1]}
-      fellowRatings={data[2]}
+    <SchoolSessionsPage
+      visibleId={visibleId}
       role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
       supervisorId={supervisor?.profile?.id}
     />
