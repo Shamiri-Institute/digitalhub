@@ -1,16 +1,6 @@
 import { ImplementerRole } from "@prisma/client";
-import { signOut } from "next-auth/react";
-import { getCurrentUserSession } from "#/app/auth";
-import FellowsDatatableSkeleton from "#/components/common/fellow/fellows-datatable-skeleton";
+import SchoolTabLoading from "#/components/common/schools/school-tab-loading";
 
-export default async function Loading() {
-  const session = await getCurrentUserSession();
-  if (!session) {
-    await signOut({ callbackUrl: "/login" });
-  }
-  return (
-    <FellowsDatatableSkeleton
-      role={session?.user.activeMembership?.role ?? ImplementerRole.ADMIN}
-    />
-  );
+export default function Loading() {
+  return <SchoolTabLoading tab="fellows" fallbackRole={ImplementerRole.ADMIN} />;
 }
