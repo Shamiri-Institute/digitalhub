@@ -2408,7 +2408,7 @@ async function createReportRecords(
           groupCohesion: faker.number.int({ min: 1, max: 5 }),
           climateConcerns: false,
           skillComprehension: faker.number.int({ min: 1, max: 5 }),
-          inSessionTransfer: faker.number.int({ min: 1, max: 5 }),
+          inSessionTransfer: faker.number.int({ min: 1, max: 4 }),
           homePracticeApplicable: true,
           homePracticeEngagement: faker.number.int({ min: 1, max: 5 }),
           fellowGroupRelationship: faker.number.int({ min: 1, max: 5 }),
