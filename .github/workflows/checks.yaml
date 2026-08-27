@@ -1,0 +1,42 @@
+name: Checks
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  formatting_and_lint_checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24" # ensure that we are tracking the current LTS
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format & Lint Check
+        run: npm run biome:ci
+
+      - name: Typechecks
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
+        run: npm run typecheck
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: "./scripts"

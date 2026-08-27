@@ -1,0 +1,34 @@
+name: Linear Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linear-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Find release tag on HEAD
+        id: tag
+        run: |
+          git fetch --tags --force
+          tag=$(git tag --points-at HEAD --list 'v*' | head -n1)
+          if [ -n "$tag" ]; then
+            echo "Found release tag: $tag"
+          else
+            echo "No release tag on HEAD; skipping."
+          fi
+          echo "name=$tag" >> "$GITHUB_OUTPUT"
+
+      - if: steps.tag.outputs.name != ''
+        uses: linear/linear-release-action@v0
+        with:
+          access_key: ${{ secrets.LINEAR_ACCESS_KEY }}
+          version: ${{ steps.tag.outputs.name }}
