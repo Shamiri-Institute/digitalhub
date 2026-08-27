@@ -176,13 +176,16 @@ async function truncateTables() {
 
   const excludedTables = ["_prisma_migrations"];
 
-  const tables = await db.$queryRaw<Array<{ table_name: string }>>`
+  // Exclusion is applied in JS: interpolating a joined string into $queryRaw
+  // binds it as one literal parameter, so a SQL NOT IN never matched and
+  // _prisma_migrations was truncated along with everything else.
+  const allTables = await db.$queryRaw<Array<{ table_name: string }>>`
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
-    AND table_type = 'BASE TABLE'
-    AND table_name NOT IN (${excludedTables.map((table) => `'${table}'`).join(", ")});
+    AND table_type = 'BASE TABLE';
   `;
+  const tables = allTables.filter((t) => !excludedTables.includes(t.table_name));
 
   if (tables.length > 0) {
     const truncateCommand = `TRUNCATE TABLE ${tables.map((t) => `"${t.table_name}"`).join(", ")} CASCADE;`;
@@ -2350,12 +2353,13 @@ async function createDemoRecords(
 }
 
 /**
- * Rows behind the reporting pages that would otherwise render empty:
- * fellow complaints (fellow-reports/complaints), group evaluations
- * (fellow-reports/student-group-evaluation), fellow group reports
+ * fellow complaints (fellow-reports/complaints),
+ * group evaluations
+ * (fellow-reports/student-group-evaluation),
+ * fellow group reports
  * (fellow-reports/group-report; seeded for alternate groups so both the
- * "View report" and "Not yet submitted" states appear), and fellow
- * payment complaints (expenses/complaints).
+ * "View report" and "Not yet submitted" states appear),
+ * fellow payment complaints (expenses/complaints).
  */
 async function createReportRecords(
   schools: DemoSchool[],
