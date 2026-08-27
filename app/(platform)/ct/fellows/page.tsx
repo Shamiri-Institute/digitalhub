@@ -1,4 +1,5 @@
-import FellowClinicalCasesTable from "#/app/(platform)/ct/fellows/components/fellow-clinical-cases-table";
+import { getFellowClinicalCasesData } from "#/app/(platform)/ct/fellows/actions";
+import FellowClinicalCasesTable from "#/components/common/clinical/fellow-clinical-cases-table";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 
@@ -8,7 +9,7 @@ export default function FellowsPage() {
       <div className="container w-full grow space-y-3">
         <PageHeading title="Fellows" />
         <Separator />
-        <FellowClinicalCasesTable />
+        <FellowClinicalCasesTable getData={getFellowClinicalCasesData} />
       </div>
     </div>
   );

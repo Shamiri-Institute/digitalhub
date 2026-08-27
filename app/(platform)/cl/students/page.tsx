@@ -1,7 +1,13 @@
-import ClinicalStatsWrapper from "#/app/(platform)/cl/students/components/clinical-stats-wrapper";
-import OverallStatsWrapper from "#/app/(platform)/cl/students/components/overall-stats-wrapper";
-import StudentsDataWrapper from "#/app/(platform)/cl/students/components/students-data-wrapper";
-import StudentsStatsWrapper from "#/app/(platform)/cl/students/components/students-stats-wrapper";
+import {
+  clinicalSessionsDataBreakdown,
+  getOverallStudentsDataBreakdown,
+  getStudentsDataBreakdown,
+  getStudentsStatsBreakdown,
+} from "#/app/(platform)/cl/students/actions";
+import ClinicalStatsWrapper from "#/components/common/clinical/clinical-stats-wrapper";
+import OverallStatsWrapper from "#/components/common/clinical/overall-stats-wrapper";
+import StudentsDataWrapper from "#/components/common/clinical/students-data-wrapper";
+import StudentsStatsWrapper from "#/components/common/clinical/students-stats-wrapper";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 
@@ -11,10 +17,10 @@ export default function StudentsPage() {
       <div className="container w-full grow space-y-3">
         <PageHeading title="Students" />
         <Separator />
-        <OverallStatsWrapper />
-        <StudentsDataWrapper />
-        <ClinicalStatsWrapper />
-        <StudentsStatsWrapper />
+        <OverallStatsWrapper getData={getOverallStudentsDataBreakdown} />
+        <StudentsDataWrapper getData={getStudentsDataBreakdown} />
+        <ClinicalStatsWrapper getData={clinicalSessionsDataBreakdown} />
+        <StudentsStatsWrapper getData={getStudentsStatsBreakdown} />
       </div>
     </div>
   );
