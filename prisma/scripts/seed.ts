@@ -2352,7 +2352,9 @@ async function createDemoRecords(
 /**
  * Rows behind the reporting pages that would otherwise render empty:
  * fellow complaints (fellow-reports/complaints), group evaluations
- * (fellow-reports/student-group-evaluation and group-report), and fellow
+ * (fellow-reports/student-group-evaluation), fellow group reports
+ * (fellow-reports/group-report; seeded for alternate groups so both the
+ * "View report" and "Not yet submitted" states appear), and fellow
  * payment complaints (expenses/complaints).
  */
 async function createReportRecords(
@@ -2371,13 +2373,15 @@ async function createReportRecords(
   ];
 
   const fellowComplaintData: Prisma.FellowComplaintsCreateManyInput[] = [];
-  const groupReportData: Prisma.InterventionGroupReportCreateManyInput[] = [];
+  const groupEvaluationData: Prisma.InterventionGroupReportCreateManyInput[] = [];
+  const fellowGroupReportData: Prisma.FellowGroupReportCreateManyInput[] = [];
 
   for (const school of schools) {
     const sessions = sessionsBySchool.get(school.id) ?? [];
     const groups = school.interventionGroups.slice(0, DEMO_GROUPS_PER_SCHOOL);
+    const projectId = school.hub?.projectId;
 
-    for (const group of groups) {
+    groups.forEach((group, groupIndex) => {
       fellowComplaintData.push({
         complaint: faker.helpers.arrayElement(complaintReasons),
         comments: faker.lorem.sentence(),
@@ -2386,9 +2390,40 @@ async function createReportRecords(
         createdBy: seederUserId,
       });
 
+      // A submitted fidelity report for every second group, so the
+      // group-report page shows both submitted and not-yet-submitted rows
+      if (projectId && groupIndex % 2 === 0) {
+        fellowGroupReportData.push({
+          id: objectId("fgr"),
+          submittedAt: faker.date.recent({ days: 14 }),
+          fellowId: group.leaderId,
+          groupId: group.id,
+          projectId,
+          structuralFidelity: faker.number.int({ min: 1, max: 5 }),
+          processFidelity: faker.number.int({ min: 1, max: 5 }),
+          adaptationsMade: false,
+          behavioralEngagement: faker.number.int({ min: 1, max: 5 }),
+          reflectiveEngagement: faker.number.int({ min: 1, max: 5 }),
+          psychologicalSafety: faker.number.int({ min: 1, max: 5 }),
+          groupCohesion: faker.number.int({ min: 1, max: 5 }),
+          climateConcerns: false,
+          skillComprehension: faker.number.int({ min: 1, max: 5 }),
+          inSessionTransfer: faker.number.int({ min: 1, max: 5 }),
+          homePracticeApplicable: true,
+          homePracticeEngagement: faker.number.int({ min: 1, max: 5 }),
+          fellowGroupRelationship: faker.number.int({ min: 1, max: 5 }),
+          externalDisruptions: false,
+          facilitatorConfidence: faker.number.int({ min: 1, max: 5 }),
+          hardestAspect: faker.lorem.sentence(),
+          challengeImpact: faker.number.int({ min: 1, max: 5 }),
+          whatWentWell: faker.lorem.sentence(),
+          supportType: "SUFFICIENT",
+        });
+      }
+
       // One evaluation per group per session; [sessionId, groupId] is unique
       for (const session of sessions.slice(0, 2)) {
-        groupReportData.push({
+        groupEvaluationData.push({
           id: objectId("ige"),
           groupId: group.id,
           sessionId: session.id,
@@ -2404,7 +2439,7 @@ async function createReportRecords(
           contentComment: faker.lorem.sentence(),
         });
       }
-    }
+    });
   }
 
   // Payment complaints hang off fellow attendance rows (see expenses/complaints)
@@ -2425,8 +2460,9 @@ async function createReportRecords(
 
   await Promise.all([
     db.fellowComplaints.createMany({ data: fellowComplaintData }),
-    db.interventionGroupReport.createMany({ data: groupReportData }),
+    db.interventionGroupReport.createMany({ data: groupEvaluationData }),
     db.fellowPaymentComplaints.createMany({ data: paymentComplaintData }),
+    db.fellowGroupReport.createMany({ data: fellowGroupReportData }),
   ]);
 }
 
