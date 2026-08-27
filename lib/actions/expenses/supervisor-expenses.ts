@@ -1,26 +1,19 @@
-"use server";
-
-import { signOut } from "next-auth/react";
-import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
+import type { Prisma } from "@prisma/client";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
-export type SupervisorExpensesType = Awaited<ReturnType<typeof loadSupervisorExpenses>>[number];
-
-export async function loadSupervisorExpenses() {
-  const supervisor = await currentSupervisor();
-
-  if (!supervisor) {
-    await signOut({ callbackUrl: "/login" });
-    throw new Error("Unauthorised user");
-  }
-
+/**
+ * Shared core for supervisor reimbursement expenses. Each role's
+ * actions.ts resolves its own auth, passes the request scope it may see,
+ * and chooses the coordinator label shown per row (the HC dashboard shows
+ * the coordinator's own name; ops shows the expense's hub name).
+ */
+export async function loadSupervisorExpenses(
+  where: Prisma.ReimbursementRequestWhereInput,
+  coordinatorLabel: (expense: SupervisorExpenseRecord) => string | null | undefined,
+) {
   const supervisorsExpenses = await db.reimbursementRequest.findMany({
-    where: {
-      supervisor: {
-        hubId: supervisor.profile?.hubId,
-      },
-    },
+    where,
     include: {
       supervisor: {
         select: {
@@ -28,10 +21,15 @@ export async function loadSupervisorExpenses() {
           supervisorName: true,
         },
       },
+      hub: {
+        select: {
+          hubName: true,
+        },
+      },
     },
   });
 
-  return supervisorsExpenses.map((expense: (typeof supervisorsExpenses)[number]) => {
+  return supervisorsExpenses.map((expense) => {
     const details = expense.details;
     const typeOfExpense =
       typeof details === "object" && details !== null && "subtype" in details
@@ -51,29 +49,22 @@ export async function loadSupervisorExpenses() {
       destination: "N/A",
       amount: expense.amount,
       status: expense.status,
-      // TODO: Add hub coordinator name
-      hubCoordinatorName: "N/A",
+      hubCoordinatorName: coordinatorLabel(expense),
       mpesaName: expense.mpesaName,
       mpesaNumber: expense.mpesaNumber,
     };
   });
 }
 
-export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
+export type SupervisorExpenseRecord = Prisma.ReimbursementRequestGetPayload<{
+  include: {
+    supervisor: { select: { id: true; supervisorName: true } };
+    hub: { select: { hubName: true } };
+  };
+}>;
+
+export async function deleteSupervisorExpense(id: string) {
   try {
-    const supervisor = await currentSupervisor();
-
-    if (!supervisor) {
-      await signOut({ callbackUrl: "/login" });
-      throw new Error("Unauthorised user");
-    }
-    if (name !== supervisor.profile?.supervisorName) {
-      return {
-        success: false,
-        message: "Please enter the correct name",
-      };
-    }
-
     await db.reimbursementRequest.delete({
       where: { id },
     });
@@ -91,24 +82,8 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
   }
 }
 
-export async function getSupervisorsInHub() {
-  const hubCoordinator = await currentHubCoordinator();
-  return await db.supervisor.findMany({
-    where: {
-      hubId: hubCoordinator?.profile?.assignedHubId ?? "",
-    },
-  });
-}
-
-export async function approveSupervisorExpense({ id }: { id: string }) {
+export async function approveSupervisorExpenseRequest(id: string) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-
-    if (!hubCoordinator) {
-      await signOut({ callbackUrl: "/login" });
-      throw new Error("Unauthorised user");
-    }
-
     await db.reimbursementRequest.update({
       where: { id },
       data: {
@@ -129,34 +104,28 @@ export async function approveSupervisorExpense({ id }: { id: string }) {
   }
 }
 
-export async function addSupervisorExpense({
-  data,
-}: {
-  data: {
-    expenseType: string;
-    mpesaName: string;
-    mpesaNumber: string;
-    receiptFileKey: string;
-    session: string;
-    totalAmount: string;
-    week: string;
-    supervisor: string;
-  };
-}) {
+export type SupervisorExpenseInput = {
+  expenseType: string;
+  mpesaName: string;
+  mpesaNumber: string;
+  receiptFileKey: string;
+  session: string;
+  totalAmount: string;
+  week: string;
+  supervisor: string;
+};
+
+export async function createSupervisorExpense(
+  data: SupervisorExpenseInput,
+  scope: { hubId: string; hubCoordinatorId: string },
+) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-
-    if (!hubCoordinator) {
-      await signOut({ callbackUrl: "/login" });
-      throw new Error("Unauthorised user");
-    }
-
     await db.reimbursementRequest.create({
       data: {
         id: objectId("reimb"),
         supervisorId: data.supervisor,
-        hubId: hubCoordinator.profile?.assignedHubId ?? "",
-        hubCoordinatorId: hubCoordinator.profile?.id ?? "",
+        hubId: scope.hubId,
+        hubCoordinatorId: scope.hubCoordinatorId,
         incurredAt: new Date(data.week),
         amount: Number.parseInt(data.totalAmount, 10),
         kind: data.expenseType,
@@ -184,28 +153,11 @@ export async function addSupervisorExpense({
   }
 }
 
-export async function updateSupervisorExpense({
-  id,
-  data,
-}: {
-  id: string;
-  data: {
-    expenseType: string;
-    mpesaName: string;
-    mpesaNumber: string;
-    session: string;
-    totalAmount: string;
-    week: string;
-  };
-}) {
+export async function updateSupervisorExpenseRequest(
+  id: string,
+  data: Omit<SupervisorExpenseInput, "receiptFileKey" | "supervisor">,
+) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-
-    if (!hubCoordinator) {
-      await signOut({ callbackUrl: "/login" });
-      throw new Error("Unauthorised user");
-    }
-
     await db.reimbursementRequest.update({
       where: { id },
       data: {
