@@ -176,13 +176,16 @@ async function truncateTables() {
 
   const excludedTables = ["_prisma_migrations"];
 
-  const tables = await db.$queryRaw<Array<{ table_name: string }>>`
+  // Exclusion is applied in JS: interpolating a joined string into $queryRaw
+  // binds it as one literal parameter, so a SQL NOT IN never matched and
+  // _prisma_migrations was truncated along with everything else.
+  const allTables = await db.$queryRaw<Array<{ table_name: string }>>`
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
-    AND table_type = 'BASE TABLE'
-    AND table_name NOT IN (${excludedTables.map((table) => `'${table}'`).join(", ")});
+    AND table_type = 'BASE TABLE';
   `;
+  const tables = allTables.filter((t) => !excludedTables.includes(t.table_name));
 
   if (tables.length > 0) {
     const truncateCommand = `TRUNCATE TABLE ${tables.map((t) => `"${t.table_name}"`).join(", ")} CASCADE;`;
@@ -1520,6 +1523,7 @@ const DEMO_GROUPS_PER_SCHOOL = 6; // cap groups enriched per school
 const DEMO_STUDENTS_PER_SCHOOL = 25; // students given attendance/outcomes per school
 const DEMO_CLINICAL_CASES_PER_SCHOOL = 2; // clinical cases opened per school
 const DEMO_PAYOUT_SAMPLE = 80; // fellow-attendance rows backing payout flows
+const DEMO_PAYMENT_COMPLAINT_SAMPLE = 12; // fellow payment complaints on the expenses report
 const TREATMENT_INTERVENTIONS = [
   "CBT",
   "Behavioural Activation",
@@ -2344,6 +2348,125 @@ async function createDemoRecords(
     ),
     createPayoutRecords(fellowAttendances, hubIdBySchoolId, seederUserId),
     createSessionRecordings(schools, sessionsBySchool, seederUserId),
+    createReportRecords(schools, sessionsBySchool, fellowAttendances, seederUserId),
+  ]);
+}
+
+/**
+ * fellow complaints (fellow-reports/complaints),
+ * group evaluations
+ * (fellow-reports/student-group-evaluation),
+ * fellow group reports
+ * (fellow-reports/group-report; seeded for alternate groups so both the
+ * "View report" and "Not yet submitted" states appear),
+ * fellow payment complaints (expenses/complaints).
+ */
+async function createReportRecords(
+  schools: DemoSchool[],
+  sessionsBySchool: Map<string, DemoSessions>,
+  fellowAttendances: DemoFellowAttendances,
+  seederUserId: string,
+) {
+  console.log("creating report records");
+
+  const complaintReasons = [
+    "Fellow arrived late to the session",
+    "Fellow missed the supervision meeting",
+    "Incomplete session documentation",
+    "Fellow did not follow the session guide",
+  ];
+
+  const fellowComplaintData: Prisma.FellowComplaintsCreateManyInput[] = [];
+  const groupEvaluationData: Prisma.InterventionGroupReportCreateManyInput[] = [];
+  const fellowGroupReportData: Prisma.FellowGroupReportCreateManyInput[] = [];
+
+  for (const school of schools) {
+    const sessions = sessionsBySchool.get(school.id) ?? [];
+    const groups = school.interventionGroups.slice(0, DEMO_GROUPS_PER_SCHOOL);
+    const projectId = school.hub?.projectId;
+
+    groups.forEach((group, groupIndex) => {
+      fellowComplaintData.push({
+        complaint: faker.helpers.arrayElement(complaintReasons),
+        comments: faker.lorem.sentence(),
+        fellowId: group.leaderId,
+        supervisorId: group.leader.supervisorId,
+        createdBy: seederUserId,
+      });
+
+      // A submitted fidelity report for every second group, so the
+      // group-report page shows both submitted and not-yet-submitted rows
+      if (projectId && groupIndex % 2 === 0) {
+        fellowGroupReportData.push({
+          id: objectId("fgr"),
+          submittedAt: faker.date.recent({ days: 14 }),
+          fellowId: group.leaderId,
+          groupId: group.id,
+          projectId,
+          structuralFidelity: faker.number.int({ min: 1, max: 5 }),
+          processFidelity: faker.number.int({ min: 1, max: 5 }),
+          adaptationsMade: false,
+          behavioralEngagement: faker.number.int({ min: 1, max: 5 }),
+          reflectiveEngagement: faker.number.int({ min: 1, max: 5 }),
+          psychologicalSafety: faker.number.int({ min: 1, max: 5 }),
+          groupCohesion: faker.number.int({ min: 1, max: 5 }),
+          climateConcerns: false,
+          skillComprehension: faker.number.int({ min: 1, max: 5 }),
+          inSessionTransfer: faker.number.int({ min: 1, max: 4 }),
+          homePracticeApplicable: true,
+          homePracticeEngagement: faker.number.int({ min: 1, max: 5 }),
+          fellowGroupRelationship: faker.number.int({ min: 1, max: 5 }),
+          externalDisruptions: false,
+          facilitatorConfidence: faker.number.int({ min: 1, max: 5 }),
+          hardestAspect: faker.lorem.sentence(),
+          challengeImpact: faker.number.int({ min: 1, max: 5 }),
+          whatWentWell: faker.lorem.sentence(),
+          supportType: "SUFFICIENT",
+        });
+      }
+
+      // One evaluation per group per session; [sessionId, groupId] is unique
+      for (const session of sessions.slice(0, 2)) {
+        groupEvaluationData.push({
+          id: objectId("ige"),
+          groupId: group.id,
+          sessionId: session.id,
+          engagement1: faker.number.int({ min: 1, max: 5 }),
+          engagement2: faker.number.int({ min: 1, max: 5 }),
+          engagement3: faker.number.int({ min: 1, max: 5 }),
+          engagementComment: faker.lorem.sentence(),
+          cooperation1: faker.number.int({ min: 1, max: 5 }),
+          cooperation2: faker.number.int({ min: 1, max: 5 }),
+          cooperation3: faker.number.int({ min: 1, max: 5 }),
+          cooperationComment: faker.lorem.sentence(),
+          content: faker.number.int({ min: 1, max: 5 }),
+          contentComment: faker.lorem.sentence(),
+        });
+      }
+    });
+  }
+
+  // Payment complaints hang off fellow attendance rows (see expenses/complaints)
+  const paymentComplaintData: Prisma.FellowPaymentComplaintsCreateManyInput[] = fellowAttendances
+    .slice(0, DEMO_PAYMENT_COMPLAINT_SAMPLE)
+    .map((fa, index) => ({
+      reason: faker.helpers.arrayElement(["Received less payment", "Not paid", "Wrong amount"]),
+      statement: "mpesa statement",
+      status: (["PENDING", "APPROVED", "REJECTED"] as const)[index % 3],
+      dateOfComplaint: faker.date.recent({ days: 30 }),
+      differenceInAmount: faker.number.int({ min: 50, max: 500 }),
+      confirmedAmountReceived: faker.number.int({ min: 100, max: 1000 }),
+      comments: faker.lorem.sentence(),
+      reasonForAcceptance: index % 3 === 1 ? "Verified against payout statement" : null,
+      reasonForRejection: index % 3 === 2 ? "Inaccurate reporting" : null,
+      fellowAttendanceId: fa.id,
+    }));
+
+  await Promise.all([
+    db.fellowComplaints.createMany({ data: fellowComplaintData }),
+    db.interventionGroupReport.createMany({ data: groupEvaluationData }),
+    db.fellowPaymentComplaints.createMany({ data: paymentComplaintData }),
+    db.fellowGroupReport.createMany({ data: fellowGroupReportData }),
   ]);
 }
 
