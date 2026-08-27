@@ -17,10 +17,14 @@ export async function loadOpsHubsPaymentComplaints() {
     throw new Error("Unauthorised user");
   }
 
+  const implementerId = opsUser.session.user.activeMembership?.implementerId;
+
+  if (!implementerId) {
+    return [];
+  }
+
   return loadPaymentComplaints({
-    implementerId: opsUser.session.user.activeMembership?.implementerId,
-    hub: {
-      projectId,
-    },
+    implementerId,
+    hub: { projectId },
   });
 }

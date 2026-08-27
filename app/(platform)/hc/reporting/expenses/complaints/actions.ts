@@ -12,7 +12,11 @@ export async function loadHubPaymentComplaints() {
     throw new Error("Unauthorised user");
   }
 
-  return loadPaymentComplaints({
-    hubId: hubCoordinator.profile?.assignedHubId,
-  });
+  const assignedHubId = hubCoordinator.profile?.assignedHubId;
+
+  if (!assignedHubId) {
+    return [];
+  }
+
+  return loadPaymentComplaints({ hubId: assignedHubId });
 }

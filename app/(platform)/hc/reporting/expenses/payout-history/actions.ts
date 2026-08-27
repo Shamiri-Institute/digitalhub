@@ -18,5 +18,5 @@ export async function loadHubPayoutHistory(): Promise<HubPayoutHistoryType[]> {
     throw new Error("Unauthorised user");
   }
 
-  return loadPayoutHistory(Prisma.sql`hub_id = ${hubCoordinator.profile?.assignedHubId}`);
+  return loadPayoutHistory(Prisma.sql`f.hub_id = ${hubCoordinator.profile?.assignedHubId}`);
 }

@@ -14,7 +14,11 @@ export async function loadFellowPaymentComplaints() {
     throw new Error("Unauthorised user");
   }
 
-  return loadPaymentComplaints({
-    supervisorId: supervisor.profile?.id,
-  });
+  const supervisorId = supervisor.profile?.id;
+
+  if (!supervisorId) {
+    return [];
+  }
+
+  return loadPaymentComplaints({ supervisorId });
 }

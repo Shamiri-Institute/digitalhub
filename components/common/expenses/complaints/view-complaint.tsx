@@ -54,7 +54,7 @@ export default function ViewFellowComplaint({
       noOfMainSessions: complaint?.noOfMainSessions ?? 0,
       noOfSpecialSessions: complaint?.noOfSpecialSessions ?? 0,
       paidAmount: complaint?.paidAmount ?? 0,
-      confirmedAmountReceived: complaint?.confirmedTotalReceived ?? 0,
+      confirmedAmountReceived: complaint?.confirmedAmountReceived ?? 0,
       reasonForComplaint: complaint?.reasonForComplaint ?? "",
       comments: complaint?.comments ?? "",
       reasonForAccepting: complaint?.reasonForAccepting ?? "",
@@ -270,9 +270,7 @@ export default function ViewFellowComplaint({
               />
 
               <div>
-                <div>
-                  Upload Mpesa statement <span className="text-shamiri-light-red">*</span>
-                </div>
+                <div className="text-shamiri-text-grey">Upload Mpesa statement</div>
                 <FileUploaderWithDrop
                   onChange={() => {}}
                   files={[]}
