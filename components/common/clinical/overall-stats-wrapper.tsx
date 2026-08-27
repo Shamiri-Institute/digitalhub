@@ -1,11 +1,13 @@
-import { Suspense } from "react";
-import { getOverallStudentsDataBreakdown } from "#/app/(platform)/ct/students/actions";
+import { type ComponentProps, Suspense } from "react";
 import OverallStudentsClinicalStats from "#/components/common/clinical/overall-stats";
 import OverallStatsLoader from "#/components/common/clinical/overall-stats-loader";
 
-export default async function OverallStatsWrapper() {
-  const { totalStudents, groupSessions, clinicalCases, clinicalSessions } =
-    await getOverallStudentsDataBreakdown();
+export default async function OverallStatsWrapper({
+  getData,
+}: {
+  getData: () => Promise<ComponentProps<typeof OverallStudentsClinicalStats>>;
+}) {
+  const { totalStudents, groupSessions, clinicalCases, clinicalSessions } = await getData();
   return (
     <Suspense fallback={<OverallStatsLoader />}>
       <OverallStudentsClinicalStats
