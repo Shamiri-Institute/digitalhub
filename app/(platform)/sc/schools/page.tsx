@@ -1,13 +1,13 @@
 import { ImplementerRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
+import { fetchHubSupervisors, fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import { currentSupervisor } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { getHubScheduleStats } from "#/lib/actions/hub";
-import { fetchHubSupervisors, fetchSchoolData } from "./actions";
 
 export default async function SchoolsPage() {
   const supervisor = await currentSupervisor();
