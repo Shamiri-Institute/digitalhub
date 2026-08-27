@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import type { FellowClinicalCasesData } from "#/app/(platform)/ct/fellows/actions";
-import FellowsClinicalCasesDropdownActions from "#/app/(platform)/ct/fellows/components/fellows-cases-dropdown-actions";
+import FellowsClinicalCasesDropdownActions from "#/components/common/clinical/fellows-cases-dropdown-actions";
 import { Badge } from "#/components/ui/badge";
 
 export const columns: ColumnDef<FellowClinicalCasesData>[] = [
