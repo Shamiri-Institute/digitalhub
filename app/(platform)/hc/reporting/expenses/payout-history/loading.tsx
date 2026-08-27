@@ -11,7 +11,8 @@ export default function PayoutHistoryTableSkeleton() {
     const columnId = typeof column.header === "string" ? column.header : (column.id ?? "unknown");
     return {
       accessorFn: () => null,
-      header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+      header:
+        columnId !== "checkbox" && columnId !== "button" && columnId !== "expand" ? columnId : "",
       id: columnId,
       cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
     };

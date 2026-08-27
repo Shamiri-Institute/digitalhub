@@ -22,7 +22,6 @@ export default function ComplaintsTableSkeleton() {
   });
 
   const emptyData: FellowReportComplaintsType[] = Array.from(Array(10).keys()).map(() => ({
-    id: "",
     fellowName: "",
     hub: "",
     supervisorName: "",

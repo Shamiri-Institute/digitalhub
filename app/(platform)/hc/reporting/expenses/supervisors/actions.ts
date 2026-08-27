@@ -2,7 +2,14 @@
 
 import { signOut } from "next-auth/react";
 import { currentHubCoordinator } from "#/app/auth";
-import { objectId } from "#/lib/crypto";
+import {
+  approveSupervisorExpenseRequest,
+  createSupervisorExpense,
+  deleteSupervisorExpense,
+  loadSupervisorExpenses,
+  type SupervisorExpenseInput,
+  updateSupervisorExpenseRequest,
+} from "#/lib/actions/expenses/supervisor-expenses";
 import { db } from "#/lib/db";
 
 export type HubSupervisorExpensesType = Awaited<
@@ -17,47 +24,14 @@ export async function loadHubSupervisorExpenses() {
     throw new Error("Unauthorised user");
   }
 
-  const supervisorsExpenses = await db.reimbursementRequest.findMany({
-    where: {
+  return loadSupervisorExpenses(
+    {
       supervisor: {
         hubId: hubCoordinator.profile?.assignedHubId,
       },
     },
-    include: {
-      supervisor: {
-        select: {
-          id: true,
-          supervisorName: true,
-        },
-      },
-    },
-  });
-
-  return supervisorsExpenses.map((expense) => {
-    const details = expense.details;
-    const typeOfExpense =
-      typeof details === "object" && details !== null && "subtype" in details
-        ? details.subtype
-        : "N/A";
-    const session =
-      typeof details === "object" && details !== null && "session" in details
-        ? details.session
-        : "N/A";
-    return {
-      id: expense.id,
-      supervisorName: expense.supervisor.supervisorName,
-      dateCreated: expense.createdAt,
-      dateOfExpense: expense.incurredAt,
-      typeOfExpense,
-      session,
-      destination: "N/A",
-      amount: expense.amount,
-      status: expense.status,
-      hubCoordinatorName: hubCoordinator.profile?.coordinatorName,
-      mpesaName: expense.mpesaName,
-      mpesaNumber: expense.mpesaNumber,
-    };
-  });
+    () => hubCoordinator.profile?.coordinatorName,
+  );
 }
 
 export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
@@ -75,14 +49,7 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
       };
     }
 
-    await db.reimbursementRequest.delete({
-      where: { id },
-    });
-
-    return {
-      success: true,
-      message: "Successfully approved expense",
-    };
+    return await deleteSupervisorExpense(id);
   } catch (error) {
     console.error(error);
     return {
@@ -110,17 +77,7 @@ export async function approveSupervisorExpense({ id }: { id: string }) {
       throw new Error("Unauthorised user");
     }
 
-    await db.reimbursementRequest.update({
-      where: { id },
-      data: {
-        status: "APPROVED",
-      },
-    });
-
-    return {
-      success: true,
-      message: "Successfully approved expense",
-    };
+    return await approveSupervisorExpenseRequest(id);
   } catch (error) {
     console.error(error);
     return {
@@ -130,20 +87,7 @@ export async function approveSupervisorExpense({ id }: { id: string }) {
   }
 }
 
-export async function addSupervisorExpense({
-  data,
-}: {
-  data: {
-    expenseType: string;
-    mpesaName: string;
-    mpesaNumber: string;
-    receiptFileKey: string;
-    session: string;
-    totalAmount: string;
-    week: string;
-    supervisor: string;
-  };
-}) {
+export async function addSupervisorExpense({ data }: { data: SupervisorExpenseInput }) {
   try {
     const hubCoordinator = await currentHubCoordinator();
 
@@ -156,30 +100,10 @@ export async function addSupervisorExpense({
       throw new Error("Hub coordinator has no assigned hub");
     }
 
-    await db.reimbursementRequest.create({
-      data: {
-        id: objectId("reimb"),
-        supervisorId: data.supervisor,
-        hubId: hubCoordinator.profile?.assignedHubId,
-        hubCoordinatorId: hubCoordinator.profile?.id,
-        incurredAt: new Date(data.week),
-        amount: Number.parseInt(data.totalAmount, 10),
-        kind: data.expenseType,
-        status: "PENDING",
-        details: {
-          subtype: data.expenseType,
-          receipt_link: data.receiptFileKey,
-          session: data.session,
-        },
-        mpesaName: data.mpesaName,
-        mpesaNumber: data.mpesaNumber,
-      },
+    return await createSupervisorExpense(data, {
+      hubId: hubCoordinator.profile.assignedHubId,
+      hubCoordinatorId: hubCoordinator.profile.id,
     });
-
-    return {
-      success: true,
-      message: "Successfully added expense",
-    };
   } catch (error) {
     console.error(error);
     return {
@@ -194,14 +118,7 @@ export async function updateSupervisorExpense({
   data,
 }: {
   id: string;
-  data: {
-    expenseType: string;
-    mpesaName: string;
-    mpesaNumber: string;
-    session: string;
-    totalAmount: string;
-    week: string;
-  };
+  data: Omit<SupervisorExpenseInput, "receiptFileKey" | "supervisor">;
 }) {
   try {
     const hubCoordinator = await currentHubCoordinator();
@@ -211,25 +128,7 @@ export async function updateSupervisorExpense({
       throw new Error("Unauthorised user");
     }
 
-    await db.reimbursementRequest.update({
-      where: { id },
-      data: {
-        incurredAt: new Date(data.week),
-        amount: Number.parseInt(data.totalAmount, 10),
-        kind: data.expenseType,
-        details: {
-          subtype: data.expenseType,
-          session: data.session,
-        },
-        mpesaName: data.mpesaName,
-        mpesaNumber: data.mpesaNumber,
-      },
-    });
-
-    return {
-      success: true,
-      message: "Successfully updated expense",
-    };
+    return await updateSupervisorExpenseRequest(id, data);
   } catch (error) {
     console.error(error);
     return {
