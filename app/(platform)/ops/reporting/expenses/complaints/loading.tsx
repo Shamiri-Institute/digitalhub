@@ -11,11 +11,10 @@ export default function ComplaintsTableSkeleton() {
     const columnId = typeof column.header === "string" ? column.header : (column.id ?? "unknown");
     return {
       accessorFn: () => null,
-      header:
-        columnId !== "checkbox" && columnId !== "button" && columnId !== "expand" ? columnId : "",
+      header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
       id: columnId,
       cell: () => {
-        return columnId !== "checkbox" && columnId !== "button" && columnId !== "expand" ? (
+        return columnId !== "checkbox" && columnId !== "button" ? (
           <Skeleton className="h-5 w-full bg-gray-200" />
         ) : null;
       },
@@ -23,18 +22,10 @@ export default function ComplaintsTableSkeleton() {
   });
 
   const emptyData: OpsHubsReportComplaintsType[] = Array.from(Array(10).keys()).map(() => ({
-    fellowId: "",
     fellowName: "",
-    mpesaName: "",
-    mpesaNumber: "",
     hub: "",
     supervisorName: "",
     specialSession: 0,
-    noOfSpecialSessions: 0,
-    noOfTrainingSessions: 0,
-    noOfSupervisionSessions: 0,
-    noOfPreSessions: 0,
-    noOfMainSessions: 0,
     preVsMain: "",
     trainingSupervision: "",
     paidAmount: 0,

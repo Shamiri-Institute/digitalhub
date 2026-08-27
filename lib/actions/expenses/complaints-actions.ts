@@ -11,26 +11,33 @@ import {
 import {
   ApproveComplaintSchema,
   type ComplaintFormSchema,
+  CreateComplaintSchema,
   RejectComplaintSchema,
 } from "#/components/common/expenses/complaints/schema";
-import { resolveComplaint } from "#/lib/actions/expenses/complaints";
+import {
+  createPaymentComplaint,
+  loadComplaintContext,
+  resolveComplaint,
+} from "#/lib/actions/expenses/complaints";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
-type ComplaintReviewer = {
-  /** Fellows whose complaints this reviewer may approve or reject. */
+type ComplaintActor = {
+  /** Fellows whose complaints this user may raise, approve or reject. */
   scope: Prisma.FellowWhereInput;
-  /** The reviewer's complaints route, revalidated after a successful review. */
+  /** The user's complaints route, revalidated after a successful write. */
   path: string;
+  /** The user's payout-history route, where complaints are raised from. */
+  payoutPath: string;
 };
 
 /**
- * Hub coordinators, supervisors and ops users all review complaints through the
- * same dialog, so the action resolves the caller's role itself rather than each
- * role re-exporting an identical pair of actions. The scope mirrors the filter
- * each role's loader uses, so a reviewer can only act on complaints they can
- * already see.
+ * Hub coordinators, supervisors and ops users all reach these dialogs from the
+ * same shared table, so the actions resolve the caller's role themselves rather
+ * than each role re-exporting an identical set. The scope mirrors the filter
+ * each role's loader uses, so a user can only act on fellows they can already
+ * see.
  */
-async function currentComplaintReviewer(): Promise<ComplaintReviewer | null> {
+async function currentComplaintActor(): Promise<ComplaintActor | null> {
   const session = await getCurrentUserSession();
   const role = session?.user.activeMembership?.role;
 
@@ -45,6 +52,7 @@ async function currentComplaintReviewer(): Promise<ComplaintReviewer | null> {
     return {
       scope: { hubId: assignedHubId },
       path: "/hc/reporting/expenses/complaints",
+      payoutPath: "/hc/reporting/expenses/payout-history",
     };
   }
 
@@ -59,6 +67,7 @@ async function currentComplaintReviewer(): Promise<ComplaintReviewer | null> {
     return {
       scope: { supervisorId },
       path: "/sc/reporting/expenses/complaints",
+      payoutPath: "/sc/reporting/expenses/payout-history",
     };
   }
 
@@ -76,6 +85,7 @@ async function currentComplaintReviewer(): Promise<ComplaintReviewer | null> {
         hub: { projectId: await getActiveProjectId() },
       },
       path: "/ops/reporting/expenses/complaints",
+      payoutPath: "/ops/reporting/expenses/payout-history",
     };
   }
 
@@ -86,9 +96,9 @@ async function reviewComplaint(
   data: { id: string; formData: ComplaintFormSchema },
   status: "APPROVED" | "REJECTED",
 ) {
-  const reviewer = await currentComplaintReviewer();
+  const actor = await currentComplaintActor();
 
-  if (!reviewer) {
+  if (!actor) {
     return {
       success: false,
       message: "You are not allowed to review complaints",
@@ -103,17 +113,14 @@ async function reviewComplaint(
   if (!parsed.success) {
     return {
       success: false,
-      message:
-        status === "APPROVED"
-          ? "Please enter the reason for accepting"
-          : "Please enter the reason for rejecting",
+      message: parsed.error.issues[0]?.message ?? "Please fill all required fields",
     };
   }
 
-  const result = await resolveComplaint({ ...data, scope: reviewer.scope }, status);
+  const result = await resolveComplaint({ ...data, scope: actor.scope }, status);
 
   if (result.success) {
-    revalidatePath(reviewer.path);
+    revalidatePath(actor.path);
   }
 
   return result;
@@ -125,4 +132,54 @@ export async function approveComplaint(data: { id: string; formData: ComplaintFo
 
 export async function rejectComplaint(data: { id: string; formData: ComplaintFormSchema }) {
   return reviewComplaint(data, "REJECTED");
+}
+
+export async function createComplaint(data: {
+  fellowId: string;
+  payoutDate: Date;
+  formData: ComplaintFormSchema;
+}) {
+  const actor = await currentComplaintActor();
+
+  if (!actor) {
+    return {
+      success: false,
+      message: "You are not allowed to raise complaints",
+    };
+  }
+
+  const parsed = CreateComplaintSchema.safeParse(data.formData);
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: parsed.error.issues[0]?.message ?? "Please fill all required fields",
+    };
+  }
+
+  const result = await createPaymentComplaint({
+    fellowId: data.fellowId,
+    payoutDate: data.payoutDate,
+    formData: parsed.data,
+    scope: actor.scope,
+  });
+
+  if (result.success) {
+    // Raised from payout-history, but it shows up on the complaints report.
+    revalidatePath(actor.path);
+    revalidatePath(actor.payoutPath);
+  }
+
+  return result;
+}
+
+/** Figures for the add-complaint dialog, once a fellow has been chosen. */
+export async function fetchComplaintContext(fellowId: string) {
+  const actor = await currentComplaintActor();
+
+  if (!actor) {
+    return null;
+  }
+
+  return loadComplaintContext({ fellowId, scope: actor.scope });
 }

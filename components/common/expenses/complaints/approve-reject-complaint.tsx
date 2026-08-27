@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import ComplaintFormFields from "#/components/common/expenses/complaints/complaint-form-fields";
 import type { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
 import { FileUploaderWithDrop } from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
@@ -21,13 +22,6 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
@@ -47,21 +41,6 @@ export default function ApproveRejectFellowComplaint({
   const [approveDialogOpen, setApproveDialogOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
 
-  const reasonsForComplaint = [
-    {
-      id: "1",
-      reason: "Received less payment",
-    },
-    {
-      id: "2",
-      reason: "Received more payment",
-    },
-    {
-      id: "3",
-      reason: "Payment not received",
-    },
-  ];
-
   const form = useForm<ComplaintFormSchema>({
     resolver: zodResolver(ComplaintFormSchema),
     defaultValues: {
@@ -77,6 +56,7 @@ export default function ApproveRejectFellowComplaint({
       confirmedAmountReceived: complaint?.confirmedAmountReceived ?? 0,
       reasonForComplaint: complaint?.reasonForComplaint ?? "",
       comments: complaint?.comments ?? "",
+      statement: complaint?.statement ?? "",
       reasonForAccepting: complaint?.reasonForAccepting ?? "",
       reasonForRejecting: complaint?.reasonForRejecting ?? "",
     },
@@ -167,292 +147,46 @@ export default function ApproveRejectFellowComplaint({
           />
           <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
             <form className="space-y-2" onSubmit={(event) => event.preventDefault()}>
-              <FormField
-                control={form.control}
-                name="fellow"
-                render={({ field }) => (
-                  <div className="w-full">
-                    <FormItem>
-                      <FormLabel>
-                        Fellow <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Please select a fellow"
-                          className="w-full flex-1"
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+              <ComplaintFormFields
+                form={form}
+                fellowField={
+                  <FormField
+                    control={form.control}
+                    name="fellow"
+                    render={({ field }) => (
+                      <div className="w-full">
+                        <FormItem>
+                          <FormLabel>
+                            Fellow <span className="text-shamiri-light-red">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Please select a fellow"
+                              className="w-full flex-1"
+                              {...field}
+                              value={field.value || ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      </div>
+                    )}
+                  />
+                }
+                statementUploader={
+                  <div>
+                    <div className="text-shamiri-text-grey">Upload Mpesa statement</div>
+                    {/* Reviewers have no upload pipeline yet, so this is inert
+                        rather than silently discarding their file. The add
+                        dialog is where a statement is supplied. */}
+                    <FileUploaderWithDrop
+                      onChange={() => {}}
+                      files={[]}
+                      accept=".csv"
+                      className="pointer-events-none cursor-not-allowed opacity-60"
+                    />
                   </div>
-                )}
-              />
-
-              <div className="flex w-full space-x-2">
-                <FormField
-                  control={form.control}
-                  name="mpesaName"
-                  render={({ field }) => (
-                    <div className="w-full">
-                      <FormItem>
-                        <FormLabel>
-                          M-Pesa name <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="" className="w-full flex-1" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    </div>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="mpesaNumber"
-                  render={({ field }) => (
-                    <div className="w-full">
-                      <FormItem>
-                        <FormLabel>
-                          M-Pesa number <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="" className="w-full flex-1" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    </div>
-                  )}
-                />
-              </div>
-              <div className="flex w-full space-x-2">
-                <FormField
-                  control={form.control}
-                  name="noOfTrainingSessions"
-                  render={({ field }) => (
-                    <div className="w-full">
-                      <FormItem>
-                        <FormLabel>
-                          No. of training sessions <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            type="number"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    </div>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="noOfSupervisionSessions"
-                  render={({ field }) => (
-                    <div className="w-full">
-                      <FormItem>
-                        <FormLabel>
-                          No. of supervision sessions{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            type="number"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    </div>
-                  )}
-                />
-              </div>
-              <div className="flex w-full space-x-2">
-                <FormField
-                  control={form.control}
-                  name="noOfPreSessions"
-                  render={({ field }) => (
-                    <div className="w-full">
-                      <FormItem>
-                        <FormLabel>
-                          No. of pre sessions <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            type="number"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    </div>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="noOfMainSessions"
-                  render={({ field }) => (
-                    <div className="w-full">
-                      <FormItem>
-                        <FormLabel>
-                          No. of main sessions <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            type="number"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div className="flex w-full space-x-2">
-                <FormField
-                  control={form.control}
-                  name="noOfSpecialSessions"
-                  render={({ field }) => (
-                    <div className="w-full">
-                      <FormItem>
-                        <FormLabel>
-                          No. of special sessions
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            {...field}
-                            type="number"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    </div>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="paidAmount"
-                  render={({ field }) => (
-                    <div className="w-full">
-                      <FormItem>
-                        <FormLabel>
-                          Paid amount (KES) <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder=""
-                            type="number"
-                            className="w-full flex-1"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    </div>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="confirmedAmountReceived"
-                render={({ field }) => (
-                  <div className="w-full">
-                    <FormItem>
-                      <FormLabel>
-                        Confirmed Total amount received from Shamiri (KES){" "}
-                        <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="" className="w-full flex-1" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  </div>
-                )}
-              />
-
-              <div>
-                <div className="text-shamiri-text-grey">Upload Mpesa statement</div>
-                {/* Not wired up yet: there is no upload pipeline behind this, so
-                    it is inert rather than silently discarding the reviewer's
-                    file. Drop the disabled styling once it writes a statement. */}
-                <FileUploaderWithDrop
-                  onChange={() => {}}
-                  files={[]}
-                  accept=".csv"
-                  className="pointer-events-none cursor-not-allowed opacity-60"
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="reasonForComplaint"
-                render={({ field }) => (
-                  <div className="w-full">
-                    <FormItem>
-                      <FormLabel>
-                        Select reason for complaint{" "}
-                        <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          void form.trigger("reasonForComplaint");
-                        }}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a reason" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {reasonsForComplaint.map((reason) => (
-                            <SelectItem key={reason.id} value={reason.reason}>
-                              {reason.reason}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  </div>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="comments"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Additional comments <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Extra transport cost to the school"
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                }
               />
 
               <Separator />

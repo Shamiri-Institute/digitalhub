@@ -18,5 +18,5 @@ export async function loadSupervisorPayoutHistory(): Promise<SupervisorPayoutHis
     throw new Error("Unauthorised user");
   }
 
-  return loadPayoutHistory(Prisma.sql`supervisor_id = ${supervisor.profile?.id}`);
+  return loadPayoutHistory(Prisma.sql`f.supervisor_id = ${supervisor.profile?.id}`);
 }
