@@ -1,6 +1,6 @@
 "use client";
 import type { SessionReportType } from "#/app/(platform)/hc/reporting/school-reports/session/actions";
-import DataTable from "#/components/data-table";
+import ExpandableReportTable from "#/components/common/expandable-report-table";
 
 import { columns, subColumns } from "./columns";
 
@@ -10,22 +10,14 @@ export default function SessionReportDataTable({
   sessionReport: SessionReportType[];
 }) {
   return (
-    <DataTable
+    <ExpandableReportTable
       data={sessionReport}
       columns={columns}
-      className="data-table data-table-action bg-white lg:mt-4"
+      subColumns={subColumns}
+      getSubRows={(row) => row.session}
       emptyStateMessage="No feedback data found"
-      renderSubComponent={({ row }) => (
-        <DataTable
-          data={row.original?.session}
-          editColumns={false}
-          columns={subColumns}
-          className="data-table data-table-action border-0 bg-white"
-          emptyStateMessage="No expenses found for this fellow"
-          disablePagination={true}
-          disableSearch={true}
-        />
-      )}
+      subEmptyStateMessage="No expenses found for this fellow"
+      container={false}
     />
   );
 }
