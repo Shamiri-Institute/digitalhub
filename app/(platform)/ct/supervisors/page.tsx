@@ -1,4 +1,5 @@
-import SupervisorClinicalCasesTable from "#/app/(platform)/ct/supervisors/components/supervisor-clinical-cases-table";
+import { getSupervisorClinicalCasesData } from "#/app/(platform)/ct/supervisors/actions";
+import SupervisorClinicalCasesTable from "#/components/common/clinical/supervisor-clinical-cases-table";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 
@@ -8,7 +9,7 @@ export default function SupervisorsPage() {
       <div className="container w-full grow space-y-3">
         <PageHeading title="Supervisors" />
         <Separator />
-        <SupervisorClinicalCasesTable />
+        <SupervisorClinicalCasesTable getData={getSupervisorClinicalCasesData} />
       </div>
     </div>
   );

@@ -2,8 +2,8 @@ import {
   getAllClinicalCasesData,
   getClinicalCasesInHub,
 } from "#/app/(platform)/ct/clinical/actions";
-import CasesBreakdown from "#/app/(platform)/ct/clinical/components/cases-breakdown";
-import AllHubClinicalCasesTable from "#/app/(platform)/ct/clinical/components/hub-clinical-cases-table";
+import CasesBreakdown from "#/components/common/clinical/cases-breakdown";
+import AllHubClinicalCasesTable from "#/components/common/clinical/hub-clinical-cases-table";
 
 export default async function ClinicalPage() {
   const cases = await getClinicalCasesInHub();
@@ -16,7 +16,11 @@ export default async function ClinicalPage() {
         casesBySession={casesData.casesBySession}
         casesBySupervisor={casesData.casesBySupervisor}
       />
-      <AllHubClinicalCasesTable cases={cases} />
+      <AllHubClinicalCasesTable
+        cases={cases}
+        title="All Clinical Cases"
+        emptyStateMessage="No clinical cases created by supervisors or clinical leads yet"
+      />
     </div>
   );
 }

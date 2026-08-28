@@ -1,7 +1,7 @@
 import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import CaseUnterminateDialog from "#/app/(platform)/cl/clinical/components/case-unterminate-dialog";
-import { ViewTerminationReasons } from "#/app/(platform)/cl/clinical/components/view-termination-reasons";
 import { ViewCaseNotes } from "#/components/common/clinical/view-case-notes";
+import { ViewTerminationReasons } from "#/components/common/clinical/view-termination-reasons";
 import { ViewTreatmentPlan } from "#/components/common/clinical/view-treatment-plan";
 import { Icons } from "#/components/icons";
 import {
