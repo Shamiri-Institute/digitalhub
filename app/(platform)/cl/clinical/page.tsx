@@ -5,10 +5,10 @@ import {
   getClinicalCasesInHub,
   getSchoolsInClinicalLeadHub,
 } from "#/app/(platform)/cl/clinical/actions";
-import CasesBreakdown from "#/app/(platform)/cl/clinical/components/cases-breakdown";
 import ClinicalLeadCases from "#/app/(platform)/cl/clinical/components/clinical-lead-cases";
-import AllHubClinicalCasesTable from "#/app/(platform)/cl/clinical/components/hub-clinical-cases-table";
 import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-clinical-case-form";
+import CasesBreakdown from "#/components/common/clinical/cases-breakdown";
+import AllHubClinicalCasesTable from "#/components/common/clinical/hub-clinical-cases-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 
@@ -48,7 +48,11 @@ export default async function ClinicalPage() {
         casesBySession={casesData.casesBySession}
         casesBySupervisor={casesData.casesBySupervisor}
       />
-      <AllHubClinicalCasesTable cases={cases} />
+      <AllHubClinicalCasesTable
+        cases={cases}
+        title="All Supervisor Cases In This Hub"
+        emptyStateMessage="No clinical cases created by supervisors in this hub yet"
+      />
 
       <ClinicalLeadCases clinicalLeadCases={allClinicalLeadCases} />
     </div>
