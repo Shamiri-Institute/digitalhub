@@ -5,6 +5,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { env } from "#/env";
+import { getCachedSession } from "#/lib/auth-options";
+
+// Mint PutObject URLs only. proxy.ts skips /api/*, so auth must live here.
 
 const RequestSchema = z.object({
   filename: z.string(),
@@ -13,8 +16,66 @@ const RequestSchema = z.object({
   bucket: z.enum(["uploads", "recordings", "student-attendance"]).default("uploads"),
 });
 
+const ALLOWED_CONTENT_TYPES = new Set([
+  "application/pdf",
+  "application/octet-stream",
+  "text/csv",
+  "text/plain",
+  "application/msword",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+
+// Prefixes cover receipts (image/*) and session recordings (audio/*, video/mp4).
+// Exact types above; reject text/html and scripts if S3 later serves this Content-Type.
+const ALLOWED_CONTENT_TYPE_PREFIXES = ["image/", "audio/", "video/"] as const;
+
+function isAllowedContentType(contentType: string): boolean {
+  const normalized = contentType.toLowerCase().split(";")[0]?.trim() ?? "";
+  if (ALLOWED_CONTENT_TYPES.has(normalized)) {
+    return true;
+  }
+  return ALLOWED_CONTENT_TYPE_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+}
+
 function sanitizeKey(key: string): string {
   return key.replace(/[^0-9a-zA-Z!_\\.\\*'\\(\\)\\\-/]/g, "-");
+}
+
+function allowedPrefixesForBucket(bucket: "uploads" | "recordings" | "student-attendance"): string[] {
+  if (bucket === "recordings") {
+    return ["recordings/"];
+  }
+  if (bucket === "student-attendance") {
+    return ["student-attendance/", "uploads/"];
+  }
+  return ["uploads/"];
+}
+
+function resolveObjectKey(opts: {
+  providedKey: string | undefined;
+  filename: string;
+  bucket: "uploads" | "recordings" | "student-attendance";
+  userId: string;
+}): { key: string } | { error: string } {
+  const prefixes = allowedPrefixesForBucket(opts.bucket);
+
+  if (!opts.providedKey) {
+    return {
+      key: `uploads/${opts.userId}/${randomUUID()}/${sanitizeKey(opts.filename)}`,
+    };
+  }
+
+  // Recordings / attendance pass a key they built. Do not take an arbitrary path.
+  const key = sanitizeKey(opts.providedKey);
+  if (!key || key.startsWith("/") || key.includes("..") || key.includes("//")) {
+    return { error: "Invalid key" };
+  }
+  if (!prefixes.some((prefix) => key.startsWith(prefix))) {
+    return { error: "Invalid key" };
+  }
+  return { key };
 }
 
 function getBucketConfig(bucket: "uploads" | "recordings" | "student-attendance") {
@@ -44,6 +105,12 @@ function getBucketConfig(bucket: "uploads" | "recordings" | "student-attendance"
 
 export async function POST(request: Request) {
   try {
+    // Fail closed before parse/sign. An unauthenticated 200 was alllowed  here .
+    const session = await getCachedSession();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);
 
@@ -55,11 +122,22 @@ export async function POST(request: Request) {
     }
 
     const { filename, contentType, key: providedKey, bucket } = parsed.data;
-    const { bucketName, region, accessKeyId, secretAccessKey } = getBucketConfig(bucket);
 
-    // Use provided key directly if given (for recordings with custom paths),
-    // otherwise generate a default key
-    const key = providedKey ?? `uploads/${randomUUID()}/${sanitizeKey(filename)}`;
+    if (!isAllowedContentType(contentType)) {
+      return NextResponse.json({ error: "Unsupported content type" }, { status: 400 });
+    }
+
+    const resolved = resolveObjectKey({
+      providedKey,
+      filename,
+      bucket,
+      userId: session.user.id,
+    });
+    if ("error" in resolved) {
+      return NextResponse.json({ error: resolved.error }, { status: 400 });
+    }
+
+    const { bucketName, region, accessKeyId, secretAccessKey } = getBucketConfig(bucket);
 
     // Create S3 client with checksum disabled to avoid the CRC32 multipart issue
     // See: https://github.com/aws/aws-sdk-js-v3/issues/6810
@@ -75,17 +153,16 @@ export async function POST(request: Request) {
 
     const command = new PutObjectCommand({
       Bucket: bucketName,
-      Key: key,
+      Key: resolved.key,
       ContentType: contentType,
       CacheControl: "max-age=630720000",
     });
 
-    // Generate presigned URL valid for 1 hour
     const url = await getSignedUrl(client, command, { expiresIn: 3600 });
 
     return NextResponse.json({
       url,
-      key,
+      key: resolved.key,
       bucket: bucketName,
       region,
     });
