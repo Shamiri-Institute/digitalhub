@@ -62,6 +62,7 @@ function resolveObjectKey(opts: {
   const prefixes = allowedPrefixesForBucket(opts.bucket);
 
   if (!opts.providedKey) {
+    // New objects only. Existing prod keys stay uploads/<uuid>/<file> — we do not rewrite them.
     return {
       key: `uploads/${opts.userId}/${randomUUID()}/${sanitizeKey(opts.filename)}`,
     };
@@ -158,6 +159,7 @@ export async function POST(request: Request) {
       CacheControl: "max-age=630720000",
     });
 
+    // Generate presigned URL valid for 1 hour
     const url = await getSignedUrl(client, command, { expiresIn: 3600 });
 
     return NextResponse.json({
