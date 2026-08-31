@@ -64,7 +64,6 @@ export default function ReplaceFellow({
 
   const onSubmit = async (data: z.infer<typeof ReplaceGroupLeaderSchema>) => {
     const response = await replaceGroupLeader({
-      oldLeaderId: data.leaderId,
       leaderId: data.newLeaderId,
       groupId,
     });

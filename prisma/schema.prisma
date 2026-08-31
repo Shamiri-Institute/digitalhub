@@ -29,8 +29,6 @@ model User {
   supervisorAttendance                    SupervisorAttendance[]
   fellowAttendance                        FellowAttendance[]
   studentReportingNotes                   StudentReportingNotes[]
-  schoolDocuments                         SchoolDocuments[]
-  fellowDocuments                         FellowDocuments[]
   payoutStatements                        PayoutStatements[]
   sessionComment                          SessionComment[]
   schoolFeedbacks                         SchoolFeedback[]
@@ -46,7 +44,9 @@ model User {
   escalationsMade                         TicketEscalations[]                       @relation("EscalatedByUser")
   escalationsReceived                     TicketEscalations[]                       @relation("EscalatedToUser")
   tickets                                 Tickets[]
-  resolvedTickets                         TicketResolutions[]                   @relation("resolvedByUser")
+  resolvedTickets                         TicketResolutions[]                       @relation("resolvedByUser")
+  reassignmentsMade                       TicketReassignments[]                     @relation("reassignedFromUser")
+  reassignmentsReceived                   TicketReassignments[]                     @relation("reassignedToUser")
 
   @@map("users")
 }
@@ -619,7 +619,6 @@ model Fellow {
   payoutReconciliations   PayoutReconciliation[]
   PayoutStatements        PayoutStatements[]
   studentAttendances      StudentAttendance[]
-  fellowDocuments         FellowDocuments[]
   sessionRecordings       SessionRecording[]
   triageEvents            TriageEvent[]
   fellowGroupReports      FellowGroupReport[]
@@ -852,7 +851,6 @@ model School {
   dataCollectionFollowup1Date DateTime?              @map("data_collection_followup_1_date") // TODO: remove after data migration
   schoolDropoutHistory        SchoolDropoutHistory[]
   studentAttendances          StudentAttendance[]
-  schoolDocuments             SchoolDocuments[]
   schoolFeedbacks             SchoolFeedback[]
   sessionRecordings           SessionRecording[]
 
@@ -1644,36 +1642,6 @@ model SpecialApprovalRequests {
   @@map("special_session_approval_requests")
 }
 
-model SchoolDocuments {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
-  fileName   String   @map("file_name") @db.VarChar(255)
-  type       String   @db.VarChar(255)
-  schoolId   String   @map("school_id") @db.VarChar(255)
-  school     School   @relation(fields: [schoolId], references: [id])
-  uploadedBy String   @map("uploaded_by") @db.VarChar(255)
-  user       User     @relation(fields: [uploadedBy], references: [id])
-  link       String   @db.VarChar(255)
-
-  @@map("school_documents")
-}
-
-model FellowDocuments {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
-  fileName   String   @map("file_name") @db.VarChar(255)
-  type       String   @db.VarChar(255)
-  fellowId   String   @map("fellow_id") @db.VarChar(255)
-  fellow     Fellow   @relation(fields: [fellowId], references: [id])
-  uploadedBy String   @map("uploaded_by") @db.VarChar(255)
-  user       User     @relation(fields: [uploadedBy], references: [id])
-  link       String   @db.VarChar(255)
-
-  @@map("fellow_documents")
-}
-
 model FellowPaymentComplaints {
   id                      String           @id @default(cuid())
   createdAt               DateTime         @default(now()) @map("created_at") @db.Timestamptz()
@@ -1960,8 +1928,9 @@ model Tickets {
   createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
 
-  escalations TicketEscalations[]
-  resolutions TicketResolutions[]
+  escalations   TicketEscalations[]
+  resolutions   TicketResolutions[]
+  reassignments TicketReassignments[]
 
   @@map("tickets")
 }
@@ -1979,6 +1948,8 @@ model TicketEscalations {
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
+  reassignments TicketReassignments?
+
   @@map("ticket_escalations")
 }
 
@@ -1994,4 +1965,22 @@ model TicketResolutions {
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@map("ticket_resolutions")
+}
+
+model TicketReassignments {
+  id                 String            @id @default(cuid())
+  ticketId           String            @map("ticket_id") @db.VarChar(255)
+  ticket             Tickets           @relation(fields: [ticketId], references: [id])
+  escalationId       String            @unique @map("escalation_id") @db.VarChar(255)
+  escalation         TicketEscalations @relation(fields: [escalationId], references: [id])
+  reassignedFrom     String            @map("reassigned_from") @db.VarChar(255)
+  reassignedFromUser User              @relation("reassignedFromUser", fields: [reassignedFrom], references: [id])
+  reassignedTo       String            @map("reassigned_to") @db.VarChar(255)
+  reassignedToUser   User              @relation("reassignedToUser", fields: [reassignedTo], references: [id])
+  reassignmentReason String            @map("reassignment_reason") @db.Text()
+  archivedAt         DateTime?         @map("archived_at")
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime          @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("ticket_reassignments")
 }

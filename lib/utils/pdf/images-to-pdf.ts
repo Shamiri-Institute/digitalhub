@@ -32,7 +32,7 @@ function calculateA4Fit(imgW: number, imgH: number): ScaledImagePosition {
   return { width, height, x, y };
 }
 
-async function embedImage(pdfDoc: PDFDocument, _file: File, img: HTMLImageElement) {
+async function embedImage(pdfDoc: PDFDocument, img: HTMLImageElement) {
   const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;
   canvas.height = img.naturalHeight;
@@ -51,7 +51,7 @@ export async function imagesToPdf(images: File[]): Promise<Blob> {
 
   for (const image of images) {
     const img = await loadImage(image);
-    const embedded = await embedImage(pdfDoc, image, img);
+    const embedded = await embedImage(pdfDoc, img);
     const { width, height, x, y } = calculateA4Fit(img.naturalWidth, img.naturalHeight);
 
     const page = pdfDoc.addPage([A4_WIDTH_PTS, A4_HEIGHT_PTS]);
@@ -67,7 +67,7 @@ export async function appendToPdf(existingPdfBytes: ArrayBuffer, newImages: File
 
   for (const image of newImages) {
     const img = await loadImage(image);
-    const embedded = await embedImage(pdfDoc, image, img);
+    const embedded = await embedImage(pdfDoc, img);
     const { width, height, x, y } = calculateA4Fit(img.naturalWidth, img.naturalHeight);
 
     const page = pdfDoc.addPage([A4_WIDTH_PTS, A4_HEIGHT_PTS]);

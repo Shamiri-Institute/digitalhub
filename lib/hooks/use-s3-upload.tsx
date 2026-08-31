@@ -77,10 +77,6 @@ export function useS3Upload() {
     );
   }, []);
 
-  const resetFiles = useCallback(() => {
-    setFiles([]);
-  }, []);
-
   const openFileDialog = useCallback(() => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -189,7 +185,6 @@ export function useS3Upload() {
     FileInput,
     openFileDialog,
     files,
-    resetFiles,
   };
 }
 

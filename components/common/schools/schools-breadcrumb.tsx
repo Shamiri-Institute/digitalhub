@@ -1,8 +1,7 @@
 "use client";
 
 import { ImplementerRole, type Prisma } from "@prisma/client";
-import { CheckIcon } from "@radix-ui/react-icons";
-import { ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -149,7 +148,7 @@ export default function SchoolsBreadcrumb() {
                             {school.hub?.hubName ?? "No Hub"}
                           </span>
                         </div>
-                        <CheckIcon
+                        <Check
                           className={cn(
                             "h-4 w-4",
                             selectedSchool?.visibleId === school.visibleId

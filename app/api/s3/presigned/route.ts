@@ -109,6 +109,7 @@ export async function POST(request: Request) {
     // Fail closed before parse/sign. An unauthenticated 200 was alllowed  here .
     const session = await getCachedSession();
     if (!session?.user?.id) {
+
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

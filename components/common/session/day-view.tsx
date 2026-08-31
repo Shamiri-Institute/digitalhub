@@ -1,9 +1,7 @@
 "use client";
 
-import { useGSAP } from "@gsap/react";
 import { type CalendarDate, isToday } from "@internationalized/date";
 import type { ImplementerRole } from "@prisma/client";
-import gsap from "gsap";
 import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
@@ -35,7 +33,6 @@ export function DayView({
   supervisorId?: string;
   fellowId?: string;
 }) {
-  const headerRowRef = useRef<HTMLTableElement>(null);
   const dayFormatter = useDateFormatter({ weekday: "long" });
 
   const currentDate = state.visibleRange.start;
@@ -63,28 +60,9 @@ export function DayView({
   const { sessions } = useSessions({ date: currentDate });
   const hasSessions = sessions.length > 0;
 
-  useGSAP(
-    () => {
-      if (headerRowRef.current) {
-        gsap.timeline({
-          scrollTrigger: {
-            trigger: headerRowRef.current,
-            start: () => "top top",
-            end: () => "+=150%",
-            scrub: true,
-            pin: true,
-            pinSpacing: false,
-            // markers: true,
-          },
-        });
-      }
-    },
-    { scope: headerRowRef },
-  );
-
   return (
-    <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
-      <table ref={headerRowRef} className="schedule-table z-10 rounded-t-[0.4375rem] bg-white">
+    <div className="w-full rounded-t-[0.4375rem] border">
+      <table className="schedule-table sticky top-0 z-10 rounded-t-[0.4375rem] bg-white">
         <thead>
           <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
             <th className="time-cell hidden lg:block" />

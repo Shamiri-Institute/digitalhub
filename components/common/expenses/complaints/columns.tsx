@@ -115,11 +115,20 @@ export const subColumns: ColumnDef<HubReportComplaintsType["complaints"][number]
     header: "Reason for complaint",
   },
   {
-    cell: ({ row }) => (
-      <a href={row.original.statement} download className="text-shamiri-new-blue">
-        Download
-      </a>
-    ),
+    cell: ({ row }) =>
+      row.original.statementUrl ? (
+        <a
+          href={row.original.statementUrl}
+          download
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-shamiri-new-blue"
+        >
+          Download
+        </a>
+      ) : (
+        <span className="text-shamiri-text-grey">—</span>
+      ),
     header: "Statement",
     id: "Statement",
   },

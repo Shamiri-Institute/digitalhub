@@ -80,13 +80,13 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
 
     return {
       success: true,
-      message: "Successfully approved expense",
+      message: "Successfully deleted expense",
     };
   } catch (error) {
     console.error(error);
     return {
       success: false,
-      message: "Failed to approve expense",
+      message: "Failed to delete expense",
     };
   }
 }

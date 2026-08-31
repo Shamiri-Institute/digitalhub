@@ -1,10 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import type { z } from "zod";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
-import { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
+import { ComplaintFormSchema } from "#/components/common/expenses/complaints/schema";
 import { FileUploaderWithDrop } from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 import {
@@ -43,8 +42,8 @@ export default function ViewFellowComplaint({
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
-  const form = useForm<z.infer<typeof ReportFellowComplaintSchema>>({
-    resolver: zodResolver(ReportFellowComplaintSchema),
+  const form = useForm<ComplaintFormSchema>({
+    resolver: zodResolver(ComplaintFormSchema),
     defaultValues: {
       fellow: complaint?.fellowName ?? "",
       mpesaNumber: complaint?.mpesaNumber ?? "",
@@ -55,7 +54,7 @@ export default function ViewFellowComplaint({
       noOfMainSessions: complaint?.noOfMainSessions ?? 0,
       noOfSpecialSessions: complaint?.noOfSpecialSessions ?? 0,
       paidAmount: complaint?.paidAmount ?? 0,
-      confirmedAmountReceived: complaint?.confirmedTotalReceived ?? 0,
+      confirmedAmountReceived: complaint?.confirmedAmountReceived ?? 0,
       reasonForComplaint: complaint?.reasonForComplaint ?? "",
       comments: complaint?.comments ?? "",
       reasonForAccepting: complaint?.reasonForAccepting ?? "",
@@ -271,11 +270,8 @@ export default function ViewFellowComplaint({
               />
 
               <div>
-                <div>
-                  Upload Mpesa statement <span className="text-shamiri-light-red">*</span>
-                </div>
+                <div className="text-shamiri-text-grey">Upload Mpesa statement</div>
                 <FileUploaderWithDrop
-                  label="Upload csv file"
                   onChange={() => {}}
                   files={[]}
                   accept=".csv"

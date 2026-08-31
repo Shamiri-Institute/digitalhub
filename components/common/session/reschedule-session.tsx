@@ -1,4 +1,3 @@
-import type { ImplementerRole } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
@@ -38,13 +37,11 @@ export default function RescheduleSession({
   session,
   open,
   onOpenChange,
-  role: _role,
   children,
 }: {
   session: Session;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  role: ImplementerRole;
   children: React.ReactNode;
 }) {
   const { refresh } = useContext(SessionsContext);

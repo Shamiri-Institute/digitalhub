@@ -1,8 +1,8 @@
 "use client";
 
 import type { FellowGroupReport } from "@prisma/client";
-import { CheckCircledIcon, EyeOpenIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
+import { CheckCircle2, Eye } from "lucide-react";
 import { useState } from "react";
 import FellowGroupReportForm from "#/components/common/group/fellow-group-report-form";
 import FellowGroupReportView from "#/components/common/group/fellow-group-report-view";
@@ -30,7 +30,7 @@ export default function FellowGroupReportTrigger({
     return (
       <div className="flex flex-col gap-3 rounded-2xl border border-green-border bg-green-bg p-4">
         <div className="flex items-center gap-2 text-green-base">
-          <CheckCircledIcon className="h-5 w-5 shrink-0" />
+          <CheckCircle2 className="h-5 w-5 shrink-0" />
           <span className="font-semibold">Group Report submitted</span>
         </div>
         <span className="text-sm text-shamiri-text-grey">
@@ -43,7 +43,7 @@ export default function FellowGroupReportTrigger({
           className="w-fit gap-2 bg-white"
           onClick={() => setViewOpen(true)}
         >
-          <EyeOpenIcon className="h-4 w-4" />
+          <Eye className="h-4 w-4" />
           View report
         </Button>
         <FellowGroupReportView

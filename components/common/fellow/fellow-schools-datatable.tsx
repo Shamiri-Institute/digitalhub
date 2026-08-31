@@ -7,9 +7,6 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import type { FellowGroupData } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
-import UploadFellowContract from "#/components/common/fellow/upload-contract";
-import UploadFellowID from "#/components/common/fellow/upload-id";
-import UploadFellowQualification from "#/components/common/fellow/upload-qualification";
 import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
 import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
 import { MarkAttendance } from "#/components/common/mark-attendance";
@@ -39,9 +36,6 @@ export default function FellowSchoolsDatatable({
   const [addFellowDialog, setAddFellowDialog] = useState(false);
   const [editFellowDialog, setEditFellowDialog] = useState(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
-  const [uploadContractDialog, setUploadContractDialog] = useState(false);
-  const [uploadIdDialog, setUploadIdDialog] = useState(false);
-  const [uploadQualificationDialog, setUploadQualificationDialog] = useState(false);
   const [complaintsDialog, setComplaintsDialog] = useState(false);
   const [attendanceDialog, setAttendanceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
@@ -53,9 +47,6 @@ export default function FellowSchoolsDatatable({
       setWeeklyEvaluationDialog,
       setEditFellowDialog,
       setAttendanceHistoryDialog,
-      setUploadContractDialog,
-      setUploadIdDialog,
-      setUploadQualificationDialog,
       setComplaintsDialog,
       role,
     };
@@ -192,22 +183,10 @@ export default function FellowSchoolsDatatable({
           >
             {renderFellowDialogAlert(fellow)}
           </AttendanceHistory>
-          <UploadFellowContract
-            fellow={fellow}
-            open={uploadContractDialog}
-            onOpenChange={setUploadContractDialog}
-          />
-          <UploadFellowID fellow={fellow} open={uploadIdDialog} onOpenChange={setUploadIdDialog} />
-          <UploadFellowQualification
-            fellow={fellow}
-            open={uploadQualificationDialog}
-            onOpenChange={setUploadQualificationDialog}
-          />
           <SubmitComplaint
             id={fellow.id}
             open={complaintsDialog}
             onOpenChange={setComplaintsDialog}
-            role={role}
             complaints={fellow.complaints.map((complaint) => {
               return {
                 id: complaint.id,

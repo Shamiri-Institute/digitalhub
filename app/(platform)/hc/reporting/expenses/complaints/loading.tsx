@@ -22,9 +22,9 @@ export default function ComplaintsTableSkeleton() {
   });
 
   const emptyData: HubReportComplaintsType[] = Array.from(Array(10).keys()).map(() => ({
-    fellowName: null,
-    hub: undefined,
-    supervisorName: null,
+    fellowName: "",
+    hub: "",
+    supervisorName: "",
     specialSession: 0,
     preVsMain: "",
     trainingSupervision: "",

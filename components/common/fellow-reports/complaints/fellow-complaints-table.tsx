@@ -1,7 +1,7 @@
 "use client";
 
+import ExpandableReportTable from "#/components/common/expandable-report-table";
 import type { FellowComplaintsType } from "#/components/common/fellow-reports/complaints/actions";
-import DataTable from "#/components/data-table";
 import { columns, subColumns } from "./columns";
 
 export default function FellowComplaintsTable({
@@ -10,24 +10,13 @@ export default function FellowComplaintsTable({
   fellowComplaints: FellowComplaintsType[];
 }) {
   return (
-    <div className="container w-full grow space-y-3">
-      <DataTable
-        data={fellowComplaints}
-        columns={columns}
-        className="data-table data-table-action bg-white lg:mt-4"
-        emptyStateMessage="No complaints found"
-        renderSubComponent={({ row }) => (
-          <DataTable
-            data={row.original?.complaints}
-            editColumns={false}
-            columns={subColumns}
-            className="data-table data-table-action border-0 bg-white"
-            emptyStateMessage="No complaints found for this fellow"
-            disablePagination={true}
-            disableSearch={true}
-          />
-        )}
-      />
-    </div>
+    <ExpandableReportTable
+      data={fellowComplaints}
+      columns={columns}
+      subColumns={subColumns}
+      getSubRows={(row) => row.complaints}
+      emptyStateMessage="No complaints found"
+      subEmptyStateMessage="No complaints found for this fellow"
+    />
   );
 }

@@ -1,6 +1,6 @@
 "use client";
+import ExpandableReportTable from "#/components/common/expandable-report-table";
 import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
-import DataTable from "#/components/data-table";
 import { columns, subColumns } from "./columns";
 
 export default function WeeklyFellowEvaluationTable({
@@ -9,24 +9,13 @@ export default function WeeklyFellowEvaluationTable({
   weeklyFellowEvaluation: WeeklyFellowEvaluation[];
 }) {
   return (
-    <div className="container w-full grow space-y-3">
-      <DataTable
-        data={weeklyFellowEvaluation}
-        columns={columns}
-        className="data-table data-table-action bg-white lg:mt-4"
-        emptyStateMessage="No fellow evaluation data found"
-        renderSubComponent={({ row }) => (
-          <DataTable
-            data={row.original?.week}
-            editColumns={false}
-            columns={subColumns}
-            className="data-table data-table-action border-0 bg-white"
-            emptyStateMessage="No weekly evaluation found for this fellow"
-            disablePagination={true}
-            disableSearch={true}
-          />
-        )}
-      />
-    </div>
+    <ExpandableReportTable
+      data={weeklyFellowEvaluation}
+      columns={columns}
+      subColumns={subColumns}
+      getSubRows={(row) => row.week}
+      emptyStateMessage="No fellow evaluation data found"
+      subEmptyStateMessage="No weekly evaluation found for this fellow"
+    />
   );
 }

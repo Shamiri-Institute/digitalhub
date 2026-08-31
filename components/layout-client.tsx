@@ -33,7 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 
-import { cn } from "#/lib/utils";
+import { cn, getInitials } from "#/lib/utils";
 import ArrowDropdown from "#/public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
@@ -79,6 +79,7 @@ export function LayoutClient({
   const [loading, setLoading] = useState(false);
 
   const userName = session?.user?.name ?? "N/A";
+  const userInitials = userName === "N/A" ? "N/A" : getInitials(userName);
   const avatarUrl = session?.user?.image ?? null;
 
   const renderNavigationLinks = (className?: string) => {
@@ -103,7 +104,7 @@ export function LayoutClient({
                 <div className="flex items-center space-x-2">
                   <Avatar className="h-8 w-8">
                     {avatarUrl ? <AvatarImage src={avatarUrl} width={32} height={32} /> : null}
-                    <AvatarFallback>{getInitials(userName)}</AvatarFallback>
+                    <AvatarFallback>{userInitials}</AvatarFallback>
                   </Avatar>
                   <p>{userName}</p>
                 </div>
@@ -171,7 +172,7 @@ export function LayoutClient({
                             {avatarUrl ? (
                               <AvatarImage src={avatarUrl} width={32} height={32} />
                             ) : null}
-                            <AvatarFallback>{getInitials(userName)}</AvatarFallback>
+                            <AvatarFallback>{userInitials}</AvatarFallback>
                           </Avatar>
                           <p className="text-muted-foreground text-base">{userName}</p>
                         </div>
@@ -209,31 +210,14 @@ export function LayoutClient({
           </div>
         </div>
       </header>
-      <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-hidden">
+      {/* overflow-x-clip (not -hidden): hidden makes <main> a scroll container, which breaks
+          position:sticky for every descendant; clip clips without capturing sticky. */}
+      <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-clip">
         {children}
       </main>
       <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />
     </div>
   );
-}
-
-function getInitials(name: string) {
-  if (name === "N/A") {
-    return "N/A";
-  }
-  const nameArray = name.split(" ");
-  const firstNameIn = nameArray[0]?.charAt(0).toUpperCase();
-  const lastNameIn = nameArray[nameArray.length - 1]?.charAt(0).toUpperCase();
-
-  if (firstNameIn && lastNameIn) {
-    return firstNameIn + lastNameIn;
-  }
-
-  if (firstNameIn) {
-    return firstNameIn;
-  }
-
-  return "N/A";
 }
 
 function ReportingDropdown({

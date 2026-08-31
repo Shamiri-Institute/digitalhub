@@ -1,0 +1,91 @@
+import type { Prisma } from "@prisma/client";
+import { db } from "#/lib/db";
+
+export type FellowPayoutDetail = {
+  fellowId: string;
+  fellowName: string;
+  hub: string;
+  supervisorName: string;
+  mpesaNumber: string;
+  totalAmount: number;
+  fellowMpesaName: string;
+};
+
+export type PayoutHistoryEntry = {
+  dateAdded: Date;
+  duration: string;
+  totalPayoutAmount: number;
+  fellowDetails: FellowPayoutDetail[];
+};
+
+/**
+ * Shared core for the fellow payout-history report. `fellowScope` is a SQL
+ * fragment restricting the fellows the caller may see, qualified against the
+ * `fellows f` alias, e.g. Prisma.sql`f.hub_id = ${hubId}`. It must be qualified
+ * because the second query joins fellows to supervisors, which also has a
+ * hub_id, so an unqualified column would be ambiguous.
+ */
+export async function loadPayoutHistory(fellowScope: Prisma.Sql): Promise<PayoutHistoryEntry[]> {
+  const payoutDates = await db.$queryRaw<
+    Array<{
+      dateAdded: Date;
+      duration: string;
+      totalPayoutAmount: number;
+    }>
+  >`
+    WITH payout_groups AS (
+      SELECT
+        executed_at as payout_date,
+        LEAD(executed_at) OVER (ORDER BY executed_at) as next_payout_date,
+        SUM(amount) as total_amount
+      FROM payout_statements ps
+      WHERE fellow_id IN (
+        SELECT f.id FROM fellows f WHERE ${fellowScope}
+      )
+      AND executed_at IS NOT NULL
+      GROUP BY executed_at
+      ORDER BY executed_at DESC
+    )
+    SELECT
+      payout_date as "dateAdded",
+      CONCAT(
+        TO_CHAR(payout_date, 'DD/MM/YYYY'),
+        ' - ',
+        COALESCE(TO_CHAR(next_payout_date, 'DD/MM/YYYY'), 'N/A')
+      ) as "duration",
+      total_amount as "totalPayoutAmount"
+    FROM payout_groups;
+  `;
+
+  const result = await Promise.all(
+    payoutDates.map(async (payout) => {
+      const fellowDetails = await db.$queryRaw<FellowPayoutDetail[]>`
+        SELECT
+          f.id as "fellowId",
+          f.fellow_name as "fellowName",
+          f.mpesa_name as "fellowMpesaName",
+          h.hub_name as "hub",
+          s.supervisor_name as "supervisorName",
+          MAX(ps.mpesa_number) as "mpesaNumber",
+          SUM(ps.amount) as "totalAmount"
+        FROM payout_statements ps
+        INNER JOIN fellows f ON f.id = ps.fellow_id
+        INNER JOIN hubs h ON h.id = f.hub_id
+        INNER JOIN supervisors s ON s.id = f.supervisor_id
+        WHERE ps.executed_at = ${payout.dateAdded}
+        AND ${fellowScope}
+        -- One row per fellow: mpesa_number is nullable and can differ between
+        -- two statements in the same payout, which would split the fellow.
+        GROUP BY f.id, f.fellow_name, f.mpesa_name, h.hub_name, s.supervisor_name
+        ORDER BY f.fellow_name ASC;
+      `;
+
+      return {
+        ...payout,
+        fellowDetails,
+      } as PayoutHistoryEntry;
+    }),
+  );
+
+  return result;
+}

@@ -1,6 +1,4 @@
-import type { riskStatusOptions } from "@prisma/client";
 import { type ClassValue, clsx } from "clsx";
-import type { Metadata } from "next";
 import { createElement } from "react";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
@@ -27,34 +25,6 @@ export function getSchoolInitials(name: string): string {
   );
 }
 
-export function constructMetadata({
-  title = "Shamiri Digital Hub ",
-  description = "The Shamiri Digital Hub is a platform for managing the Shamiri Intervention.",
-}: {
-  title?: string;
-  description?: string;
-} = {}): Metadata {
-  return {
-    title,
-    description,
-  };
-}
-
-export function getHighestValue(data: { [k: string]: string }): riskStatusOptions {
-  const values = Object.values(data);
-
-  if (values.includes("High")) {
-    return "High";
-  }
-  if (values.includes("Med")) {
-    return "Medium";
-  }
-  if (values.includes("Low")) {
-    return "Low";
-  }
-  return "No";
-}
-
 export function stringValidation(message: string | undefined = "Required*") {
   return z.string({ error: message }).trim().min(1, { error: message });
 }
@@ -74,29 +44,6 @@ export function sessionDisplayName(sessionType?: string) {
     default:
       return sessionType?.toUpperCase();
   }
-}
-
-export function generateFellowVisibleID(lastNumber: number): string {
-  // Get current year
-  const currentYear: number = new Date().getFullYear();
-
-  // Extract last two digits of the current year
-  const yearDigits: string = String(currentYear).slice(-2);
-
-  // First part
-  const part1 = `TFW${yearDigits}`;
-
-  // Second part
-  const part2 = "S";
-
-  // Third part
-  const newNumber = lastNumber + 1;
-  let part3: string = newNumber.toString().padStart(3, "0");
-  if (newNumber >= 1000) {
-    part3 = newNumber.toString().padStart(4, "0");
-  }
-
-  return `${part1}_${part2}_${part3}`;
 }
 
 export function generateStudentVisibleID(groupName: string, lastNumber: number) {

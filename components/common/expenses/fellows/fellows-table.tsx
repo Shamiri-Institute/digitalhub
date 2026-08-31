@@ -1,8 +1,8 @@
 "use client";
 import type { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
 import type { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
+import ExpandableReportTable from "#/components/common/expandable-report-table";
 import { columns, subColumns } from "#/components/common/expenses/fellows/columns";
-import DataTable from "#/components/data-table";
 
 export default function FellowsReportingDataTable({
   fellowAttendanceExpenses,
@@ -10,21 +10,15 @@ export default function FellowsReportingDataTable({
   fellowAttendanceExpenses: HubFellowsAttendancesType[] | SupervisorFellowsAttendancesType[];
 }) {
   return (
-    <DataTable
-      data={fellowAttendanceExpenses}
+    <ExpandableReportTable
+      data={fellowAttendanceExpenses as HubFellowsAttendancesType[]}
       columns={columns}
-      className="data-table data-table-action bg-white lg:mt-4"
-      renderSubComponent={({ row }) => (
-        <DataTable
-          data={row.original?.attendances}
-          editColumns={false}
-          columns={subColumns}
-          className="data-table data-table-action border-0 bg-white"
-          emptyStateMessage="No expenses found for this fellow"
-          disableSearch={true}
-        />
-      )}
+      subColumns={subColumns}
+      getSubRows={(row) => row.attendances}
       emptyStateMessage="No fellow expenses found"
+      subEmptyStateMessage="No expenses found for this fellow"
+      container={false}
+      subDisablePagination={false}
     />
   );
 }

@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { submitWeeklyTeamMeeting } from "#/app/(platform)/hc/supervisors/actions";
-import RatingStars from "#/components/rating-stars";
+import RatingStarsInput from "#/components/common/rating-stars-input";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -152,7 +152,7 @@ export default function WeeklyHubReportButtonAndForm({
                           control={form.control}
                           name="logisticsRelatedIssuesRating"
                           render={({ field }) => (
-                            <RatingStars rating={field.value} onSelect={field.onChange} />
+                            <RatingStarsInput value={field.value} onChange={field.onChange} />
                           )}
                         />
                       </FormLabel>
@@ -175,7 +175,7 @@ export default function WeeklyHubReportButtonAndForm({
                         control={form.control}
                         name="relationshipManagementRating"
                         render={({ field }) => (
-                          <RatingStars rating={field.value} onSelect={field.onChange} />
+                          <RatingStarsInput value={field.value} onChange={field.onChange} />
                         )}
                       />
                     </FormLabel>
@@ -197,7 +197,7 @@ export default function WeeklyHubReportButtonAndForm({
                         control={form.control}
                         name="digitalHubIssuesRating"
                         render={({ field }) => (
-                          <RatingStars rating={field.value} onSelect={field.onChange} />
+                          <RatingStarsInput value={field.value} onChange={field.onChange} />
                         )}
                       />
                     </FormLabel>
@@ -219,7 +219,7 @@ export default function WeeklyHubReportButtonAndForm({
                         control={form.control}
                         name="anyOtherChallengesRating"
                         render={({ field }) => (
-                          <RatingStars rating={field.value} onSelect={field.onChange} />
+                          <RatingStarsInput value={field.value} onChange={field.onChange} />
                         )}
                       />
                     </FormLabel>

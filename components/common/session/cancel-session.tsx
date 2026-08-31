@@ -1,6 +1,5 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
 import { type Dispatch, type SetStateAction, useContext, useState } from "react";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
@@ -20,13 +19,11 @@ export default function CancelSession({
   sessionId,
   open,
   onOpenChange,
-  role: _role,
   children,
 }: {
   sessionId: string;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  role: ImplementerRole;
   children: React.ReactNode;
 }) {
   const { refresh } = useContext(SessionsContext);
