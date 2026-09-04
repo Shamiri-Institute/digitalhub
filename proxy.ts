@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 import AppMiddleware from "#/lib/middleware/app";
 
@@ -15,14 +15,6 @@ export const config = {
   ],
 };
 
-export default async function proxy(request: NextRequest) {
-  // ensure we allow /monitoring endpoint used by vercel and we bypass /<role>/reporting/monitoring-and-evaluation for other authenticated functions
-  if (
-    request.nextUrl.pathname.includes("monitoring") &&
-    !request.nextUrl.pathname.includes("monitoring-and-evaluation")
-  ) {
-    return NextResponse.next();
-  }
-
+export default function proxy(request: NextRequest) {
   return AppMiddleware(request);
 }

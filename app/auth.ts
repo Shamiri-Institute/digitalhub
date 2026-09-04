@@ -1,4 +1,5 @@
 import { ImplementerRole } from "@prisma/client";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { getCachedSession } from "#/lib/auth-options";
@@ -393,4 +394,15 @@ export async function getCurrentPersonnel(): Promise<
   }
 
   return null;
+}
+
+/**
+ * Role layouts call this on every render. A session whose active membership is another role, or
+ * no session at all, goes back to "/", which routes it to the right dashboard or to login.
+ */
+export async function requireLayoutRole(role: ImplementerRole): Promise<void> {
+  const session = await getCachedSession();
+  if (session?.user.activeMembership?.role !== role) {
+    redirect("/");
+  }
 }
