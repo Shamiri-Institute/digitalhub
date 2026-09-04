@@ -33,9 +33,7 @@ async function globalSetup() {
     console.log(`Adding session token for ${userEmail} to browser`);
 
     const sessionToken = await generateSessionToken(userEmail);
-    const context = await browser.newContext({
-      storageState: stateFile,
-    });
+    const context = await browser.newContext();
 
     const futureDate = new Date();
     futureDate.setFullYear(futureDate.getFullYear() + 1);
