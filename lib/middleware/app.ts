@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 const SESSION_COOKIES = ["__Secure-next-auth.session-token", "next-auth.session-token"];
-const PUBLIC_PATHS = new Set(["/login", "/register", "/monitoring"]);
+const PUBLIC_PATHS = new Set(["/login", "/register"]);
 
 export default function AppMiddleware(req: NextRequest) {
   const path = req.nextUrl.pathname;

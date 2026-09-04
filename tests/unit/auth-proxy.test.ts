@@ -32,14 +32,15 @@ describe("AppMiddleware", () => {
   });
 
   it("leaves the public paths open", () => {
-    for (const path of ["/login", "/register", "/monitoring"]) {
+    for (const path of ["/login", "/register"]) {
       expect(AppMiddleware(request(path)).headers.get("x-middleware-next")).toBe("1");
     }
   });
 
-  it("does not open other paths that merely contain 'monitoring'", () => {
-    const res = AppMiddleware(request("/hc/reporting/monitoring-and-evaluation"));
-    expect(res.status).toBe(307);
+  it("protects paths that contain 'monitoring'", () => {
+    for (const path of ["/monitoring", "/hc/reporting/monitoring-and-evaluation"]) {
+      expect(AppMiddleware(request(path)).status).toBe(307);
+    }
   });
 });
 
