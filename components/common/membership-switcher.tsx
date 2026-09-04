@@ -3,7 +3,6 @@
 import { ImplementerRole } from "@prisma/client";
 import { Check, ChevronsUpDown } from "lucide-react";
 import type { Session } from "next-auth";
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";
 import {
@@ -15,6 +14,7 @@ import {
   CommandSeparator,
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { setActiveMembership } from "#/lib/actions/active-membership";
 import { isAdminUserByEmail } from "#/lib/actions/fetch-personnel";
 import { cn } from "#/lib/utils";
 
@@ -35,7 +35,6 @@ export function MembershipSwitcher({
   setLoading: (loading: boolean) => void;
   session: Session | null;
 }) {
-  const { update } = useSession();
   const [open, setOpen] = useState(false);
   const activeMembership = session?.user?.activeMembership ?? null;
   const memberships = session?.user?.memberships ?? [];
@@ -60,11 +59,7 @@ export function MembershipSwitcher({
 
     setLoading(true);
     try {
-      await update({
-        user: {
-          activeMembership: membership,
-        },
-      });
+      await setActiveMembership(membership.id);
       window.location.reload();
     } catch (error) {
       console.error("Failed to switch membership:", error);
