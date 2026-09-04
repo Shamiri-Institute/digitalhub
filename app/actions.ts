@@ -14,8 +14,7 @@ export async function selectPersonnel({
   identifier: string;
   role: ImplementerRole;
 }) {
-  // Development tooling for the role switcher. The client hides the switcher outside development,
-  // but an exported server action is a public endpoint in every build, so the gate lives here.
+  // An exported server action is a public endpoint in every build; the UI check is not a gate.
   if (constants.NEXT_PUBLIC_ENV !== "development") {
     throw new Error("Role switching is only available in development");
   }

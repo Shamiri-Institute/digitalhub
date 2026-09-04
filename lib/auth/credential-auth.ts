@@ -1,10 +1,6 @@
 import { CREDENTIAL_AUTH_ALLOWED_ENVS } from "#/lib/auth/client-credential-auth";
 import { constants } from "#/lib/constants";
 
-/**
- * The email test login needs an allowed environment AND a per-environment password.
- * The password comes from TEST_USER_PASSWORD and is never stored in source.
- */
 export function isCredentialAuthAllowed() {
   return (
     CREDENTIAL_AUTH_ALLOWED_ENVS.includes(constants.NEXT_PUBLIC_ENV) &&
@@ -12,9 +8,6 @@ export function isCredentialAuthAllowed() {
   );
 }
 
-/**
- * Seeded users allowed to use the email test login. They must exist in the database.
- */
 export const TEST_USER_EMAILS: ReadonlySet<string> = new Set([
   // Core development users
   "shadrack.lilan@shamiri.institute",
