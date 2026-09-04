@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { env } from "#/env";
 import { isCredentialAuthAllowed } from "#/lib/auth/credential-auth";
+import { sessionCookie } from "#/lib/auth/session";
 import { db } from "#/lib/db";
 import { getDefaultProjectId } from "#/lib/default-project-id";
 
@@ -70,6 +71,7 @@ export const authOptions: AuthOptions = {
     maxAge: 7 * 24 * 60 * 60,
     updateAge: 24 * 60 * 60,
   },
+  cookies: { sessionToken: sessionCookie() },
   providers: googleConfig.success
     ? [
         GoogleProvider({

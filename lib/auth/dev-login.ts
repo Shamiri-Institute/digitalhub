@@ -24,13 +24,7 @@ export async function devLogin(email: string, password: string): Promise<{ error
     return INVALID;
   }
 
-  const { name, value, expires } = await createSession(user.id);
-  (await cookies()).set(name, value, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: name.startsWith("__Secure-"),
-    path: "/",
-    expires,
-  });
+  const { name, options, value, expires } = await createSession(user.id);
+  (await cookies()).set(name, value, { ...options, expires });
   return {};
 }

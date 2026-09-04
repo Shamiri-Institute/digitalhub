@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+import { sessionCookie } from "#/lib/auth/session";
 import { db } from "#/lib/db";
 
-const SESSION_COOKIES = ["__Secure-next-auth.session-token", "next-auth.session-token"];
 const PUBLIC_PATHS = new Set(["/login", "/register"]);
 
 export const config = {
@@ -26,21 +26,16 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const cookie = SESSION_COOKIES.map((name) => request.cookies.get(name)).find(Boolean);
-  if (cookie && (await isLiveSession(cookie.value))) {
+  const { name, options } = sessionCookie();
+  const token = request.cookies.get(name)?.value;
+  if (token && (await isLiveSession(token))) {
     return NextResponse.next();
   }
 
   const next = path !== "/" ? `?next=${encodeURIComponent(path)}` : "";
   const response = NextResponse.redirect(new URL(`/login${next}`, request.url));
-  if (cookie) {
-    response.cookies.set(cookie.name, "", {
-      expires: new Date(0),
-      path: "/",
-      httpOnly: true,
-      sameSite: "lax",
-      secure: cookie.name.startsWith("__Secure-"),
-    });
+  if (token) {
+    response.cookies.set(name, "", { ...options, expires: new Date(0) });
   }
   return response;
 }
