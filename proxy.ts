@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { sessionCookie } from "#/lib/auth/session";
-import { db } from "#/lib/db";
+import { getSessionAndUser, sessionCookie } from "#/lib/auth/session";
 
 const PUBLIC_PATHS = new Set(["/login", "/register"]);
 
@@ -41,9 +40,6 @@ export default async function proxy(request: NextRequest) {
 }
 
 async function isLiveSession(sessionToken: string): Promise<boolean> {
-  const session = await db.session.findUnique({
-    where: { sessionToken },
-    select: { expires: true },
-  });
-  return session !== null && session.expires > new Date();
+  const found = await getSessionAndUser(sessionToken);
+  return found !== null && found.session.expires > new Date();
 }
