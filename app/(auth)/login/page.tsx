@@ -12,8 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage() {
-  const session = await getCachedSession();
-  if (session?.user.activeMembership) {
+  if (await getCachedSession()) {
     redirect("/");
   }
 
