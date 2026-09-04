@@ -26,10 +26,6 @@ export const PersonnelFixtures = {
   },
 };
 
-/**
- * Creates a database session for a seeded user and returns the session cookie's value.
- * No signing secret is involved: the value only means something because the row exists.
- */
 export async function generateSessionToken(email: string) {
   const user = await db.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
   return (await createSession(user.id)).value;

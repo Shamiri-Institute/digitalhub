@@ -3,12 +3,7 @@
 import { getCachedSession } from "#/lib/auth-options";
 import { db } from "#/lib/db";
 
-/**
- * The session callback treats the caller's most recently updated membership as active, so
- * switching is a timestamp bump on a row the caller owns. A membership id that is not theirs
- * matches nothing and Prisma throws.
- */
-// ponytail: updatedAt doubles as "last activated"; add User.activeMembershipId if that overload bites.
+// The session callback treats the most recently updated membership as the active one.
 export async function setActiveMembership(membershipId: number): Promise<void> {
   const userId = (await getCachedSession())?.user.id;
   if (!userId) {

@@ -12,7 +12,6 @@ import { isCredentialAuthAllowed } from "#/lib/auth/credential-auth";
 import { db } from "#/lib/db";
 import { getDefaultProjectId } from "#/lib/default-project-id";
 
-// Google OAuth credentials are optional when the email test login is enabled (dev/test/training).
 const googleConfigSchema = z.object({
   GOOGLE_ID: z.string(),
   GOOGLE_SECRET: z.string(),
@@ -64,10 +63,6 @@ function parseMembershipsForJWT(userWithMemberships: {
 export const authOptions: AuthOptions = {
   secret: env.NEXTAUTH_SECRET,
   debug: process.env.DEBUG === "1" && process.env.NODE_ENV !== "production",
-  // Database sessions: the cookie is a random token that points at a `sessions` row. Nothing about
-  // the user lives in the cookie, so there is no signing secret that can mint a session, and a
-  // session is revoked by deleting its row. The email test login (lib/auth/dev-login.ts) creates
-  // the same kind of row, so every environment uses this one strategy.
   session: {
     strategy: "database",
     maxAge: 7 * 24 * 60 * 60,
@@ -78,8 +73,6 @@ export const authOptions: AuthOptions = {
         GoogleProvider({
           clientId: googleConfig.data.GOOGLE_ID,
           clientSecret: googleConfig.data.GOOGLE_SECRET,
-          // signIn below links the Google account to the pre-provisioned user itself, after
-          // checking the address is verified; no implicit linking by email.
           allowDangerousEmailAccountLinking: false,
         }),
       ]
@@ -95,7 +88,6 @@ export const authOptions: AuthOptions = {
         return false;
       }
 
-      // Only pre-provisioned, non-archived users may sign in.
       const userExists = await db.user.findUnique({
         where: { email: user.email, archivedAt: null },
         select: { id: true },
@@ -176,7 +168,6 @@ export const authOptions: AuthOptions = {
       ]);
 
       if (!dbUser) {
-        // Archived or deleted since login: revoke every session this user still holds.
         await db.session.deleteMany({ where: { userId: user.id } });
         addBreadcrumb({ message: "Session user not found", data: { userId: user.id } });
         session.user = { id: null, email: null, name: null, image: null };
@@ -197,8 +188,7 @@ export const authOptions: AuthOptions = {
         console.warn(`User ${dbUser.email} has no memberships`);
       }
 
-      // The active membership is the most recently updated one; setActiveMembership bumps the
-      // timestamp on a row the caller owns. The client never chooses the role.
+      // setActiveMembership bumps updatedAt, so the newest row is the active one.
       const sortedMemberships = [...memberships].sort(
         (a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0),
       );

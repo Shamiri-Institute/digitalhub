@@ -8,10 +8,6 @@ import { db } from "#/lib/db";
 
 const INVALID = { error: "Invalid email or password" } as const;
 
-/**
- * Email test login for development, testing and training. Writes the same database session that
- * Google sign-in creates, so there is no separate token path to secure.
- */
 export async function devLogin(email: string, password: string): Promise<{ error?: string }> {
   if (!isCredentialAuthAllowed()) {
     return { error: "Email login is not available in this environment" };
