@@ -92,16 +92,18 @@ export function useS3Upload() {
       // Use application/octet-stream as fallback for files with unknown MIME types
       const contentType = file.type || "application/octet-stream";
 
-      // Determine which bucket to use based on the request body or URL
-      // Check if key starts with "recordings/" or if there's a bucket specified
-      const providedKey = (requestBody as { key?: string }).key;
+      const providedKey = typeof requestBody.key === "string" ? requestBody.key : undefined;
+      const requestedBucket = requestBody.bucket;
       const bucket =
-        providedKey?.startsWith("recordings/") ||
-        providedKey?.startsWith("student-attendance/") ||
-        (requestBody as { bucket?: string }).bucket === "recordings" ||
-        (requestBody as { bucket?: string }).bucket === "student-attendance"
-          ? (requestBody as { bucket?: string }).bucket || "uploads"
-          : "uploads";
+        requestedBucket === "recordings" ||
+        requestedBucket === "student-attendance" ||
+        requestedBucket === "uploads"
+          ? requestedBucket
+          : providedKey?.startsWith("recordings/")
+            ? "recordings"
+            : providedKey?.startsWith("student-attendance/")
+              ? "student-attendance"
+              : "uploads";
 
       // Get presigned URL from our unified API
       const presignedResponse = await fetch("/api/s3/presigned", {
@@ -111,11 +113,11 @@ export function useS3Upload() {
           ...requestHeaders,
         },
         body: JSON.stringify({
+          ...requestBody,
           filename: file.name,
           contentType,
           bucket,
           key: providedKey,
-          ...requestBody,
         }),
       });
 
@@ -164,6 +166,7 @@ export function useS3Upload() {
         xhr.open("PUT", url, true);
         xhr.setRequestHeader("Content-Type", contentType);
         xhr.setRequestHeader("Cache-Control", "max-age=630720000");
+        xhr.setRequestHeader("If-None-Match", "*");
         xhr.send(file);
       });
 

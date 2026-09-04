@@ -11,6 +11,15 @@ env:
   GOOGLE_SECRET: mock-google-secret
   AWS_ACCESS_KEY_ID: mock-aws-access-key-id
   AWS_SECRET_ACCESS_KEY: mock-aws-secret-access-key
+  AWS_REGION: af-south-1
+  S3_UPLOAD_KEY: mock-s3-upload-key
+  S3_UPLOAD_SECRET: mock-s3-upload-secret
+  S3_UPLOAD_BUCKET: mock-s3-upload-bucket
+  S3_UPLOAD_REGION: af-south-1
+  S3_RECORDINGS_BUCKET: mock-s3-recordings-bucket
+  S3_RECORDINGS_REGION: af-south-1
+  S3_STUDENT_ATTENDANCE_BUCKET: mock-s3-attendance-bucket
+  S3_STUDENT_ATTENDANCE_REGION: af-south-1
   NEXTAUTH_URL: http://localhost:3000
   NEXTAUTH_SECRET: test-auth-secret
   PLAYWRIGHT_VERSION: ""
