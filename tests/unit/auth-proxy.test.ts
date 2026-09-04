@@ -47,7 +47,7 @@ describe("proxy", () => {
     expect(res.headers.get("x-middleware-next")).toBe("1");
     expect(findUnique).toHaveBeenCalledWith({
       where: { sessionToken: "abc" },
-      select: { expires: true },
+      include: { user: true },
     });
   });
 

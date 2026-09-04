@@ -1,4 +1,3 @@
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import type { ImplementerRole } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
 import type { AuthOptions } from "next-auth";
@@ -9,7 +8,7 @@ import { z } from "zod";
 
 import { env } from "#/env";
 import { isCredentialAuthAllowed } from "#/lib/auth/credential-auth";
-import { sessionCookie } from "#/lib/auth/session";
+import { adapter, sessionCookie } from "#/lib/auth/session";
 import { db } from "#/lib/db";
 import { getDefaultProjectId } from "#/lib/default-project-id";
 
@@ -77,11 +76,12 @@ export const authOptions: AuthOptions = {
         GoogleProvider({
           clientId: googleConfig.data.GOOGLE_ID,
           clientSecret: googleConfig.data.GOOGLE_SECRET,
-          allowDangerousEmailAccountLinking: false,
+          // Google verifies the address, and signIn refuses unverified profiles.
+          allowDangerousEmailAccountLinking: true,
         }),
       ]
     : [],
-  adapter: PrismaAdapter(db),
+  adapter,
   callbacks: {
     signIn: async ({ user, account, profile }) => {
       if (account?.provider !== "google" || !user.email) {
@@ -102,41 +102,7 @@ export const authOptions: AuthOptions = {
 
       await db.user.update({
         where: { email: user.email },
-        data: {
-          name: profile?.name ?? user.name,
-          image: profile?.image ?? user.image,
-          accounts: {
-            upsert: {
-              where: {
-                provider_providerAccountId: {
-                  provider: "google",
-                  providerAccountId: account.providerAccountId,
-                },
-              },
-              create: {
-                provider: "google",
-                type: "oauth",
-                providerAccountId: account.providerAccountId,
-                refresh_token: account.refresh_token,
-                access_token: account.access_token,
-                expires_at: account.expires_at,
-                token_type: account.token_type,
-                scope: account.scope,
-                id_token: account.id_token,
-                session_state: account.session_state,
-              },
-              update: {
-                refresh_token: account.refresh_token,
-                access_token: account.access_token,
-                expires_at: account.expires_at,
-                token_type: account.token_type,
-                scope: account.scope,
-                id_token: account.id_token,
-                session_state: account.session_state,
-              },
-            },
-          },
-        },
+        data: { name: profile?.name ?? user.name, image: profile?.image ?? user.image },
       });
       return true;
     },
