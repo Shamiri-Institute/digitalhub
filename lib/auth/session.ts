@@ -4,13 +4,15 @@ import { db } from "#/lib/db";
 
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-export function sessionCookieName(): string {
+export function sessionCookie() {
   const url =
     process.env.NEXTAUTH_URL ??
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  return url.startsWith("https://")
-    ? "__Secure-next-auth.session-token"
-    : "next-auth.session-token";
+  const secure = url.startsWith("https://");
+  return {
+    name: secure ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+    options: { httpOnly: true, sameSite: "lax" as const, path: "/", secure },
+  };
 }
 
 export async function createSession(userId: string) {
@@ -19,5 +21,5 @@ export async function createSession(userId: string) {
     data: { sessionToken: randomBytes(32).toString("hex"), userId, expires },
     select: { sessionToken: true },
   });
-  return { name: sessionCookieName(), value: sessionToken, expires };
+  return { ...sessionCookie(), value: sessionToken, expires };
 }
