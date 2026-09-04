@@ -19,7 +19,9 @@ const googleConfigSchema = z.object({
 
 const googleConfig = googleConfigSchema.safeParse(process.env);
 if (!googleConfig.success && !isCredentialAuthAllowed()) {
-  throw new Error("Google OAuth credentials are required in production");
+  throw new Error(
+    "No sign-in method is configured: set GOOGLE_ID and GOOGLE_SECRET, or set TEST_USER_PASSWORD in development, testing or training",
+  );
 }
 
 export interface JWTMembership {
