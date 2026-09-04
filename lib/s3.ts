@@ -25,14 +25,38 @@ const BUCKETS: Record<S3Bucket, { bucket: string; region: string }> = {
   },
 };
 
+const clients = new Map<S3Bucket, S3Client>();
+
+export function getBucketName(bucket: S3Bucket): string {
+  return BUCKETS[bucket].bucket;
+}
+
+export function getBucketRegion(bucket: S3Bucket): string {
+  return BUCKETS[bucket].region;
+}
+
 function createClient(bucket: S3Bucket): S3Client {
-  return new S3Client({
-    region: BUCKETS[bucket].region,
+  const existing = clients.get(bucket);
+  if (existing) {
+    return existing;
+  }
+
+  // Checksum disabled to avoid the CRC32 multipart issue.
+  // See: https://github.com/aws/aws-sdk-js-v3/issues/6810
+  const client = new S3Client({
+    region: getBucketRegion(bucket),
     credentials: {
       accessKeyId: env.S3_UPLOAD_KEY,
       secretAccessKey: env.S3_UPLOAD_SECRET,
     },
+    requestChecksumCalculation: "WHEN_REQUIRED",
   });
+  clients.set(bucket, client);
+  return client;
+}
+
+export function getS3Client(bucket: S3Bucket): S3Client {
+  return createClient(bucket);
 }
 
 export function deleteObject(
@@ -42,7 +66,7 @@ export function deleteObject(
   const s3Client = createClient(bucket);
   const command = new DeleteObjectCommand({
     ...input,
-    Bucket: BUCKETS[bucket].bucket,
+    Bucket: getBucketName(bucket),
   });
   return s3Client.send(command);
 }
@@ -54,7 +78,7 @@ export async function getPresignedUrl(
 ): Promise<string> {
   const s3Client = createClient(bucket);
   const command = new GetObjectCommand({
-    Bucket: BUCKETS[bucket].bucket,
+    Bucket: getBucketName(bucket),
     Key: key,
   });
   return getSignedUrl(s3Client, command, { expiresIn });

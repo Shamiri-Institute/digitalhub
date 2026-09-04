@@ -382,6 +382,11 @@ export function ReceiptFileUpload({
         }
       } catch (error) {
         console.error("File upload error:", error);
+        toast({
+          title: "Upload failed",
+          description: error instanceof Error ? error.message : "Could not upload this receipt",
+          variant: "destructive",
+        });
       } finally {
         setUploading(false);
       }
