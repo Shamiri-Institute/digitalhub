@@ -9,6 +9,7 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { useToast } from "#/components/ui/use-toast";
 import { isCredentialAuthAllowedClient } from "#/lib/auth/client-credential-auth";
+import { devLogin } from "#/lib/auth/dev-login";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -36,11 +37,12 @@ export function LoginForm() {
     }
     setIsCredentialLogin(true);
     try {
-      await signIn("credentials", {
-        email,
-        password,
-        callbackUrl: "/?login=1",
-      });
+      const result = await devLogin(email, password);
+      if (result.error) {
+        toast({ title: result.error, variant: "destructive" });
+        return;
+      }
+      window.location.assign("/?login=1");
     } finally {
       setIsCredentialLogin(false);
     }

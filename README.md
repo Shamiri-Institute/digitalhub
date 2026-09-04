@@ -109,7 +109,7 @@ npm run dev
 1. Open [http://localhost:3000](http://localhost:3000) in your browser
 2. Log in with test credentials:
    - **Email**: `martin.odegaard@test.com`
-   - **Password**: `TestPassword123!`
+   - **Password**: the value of `TEST_USER_PASSWORD` in your `.env.local`
 
 ---
 
@@ -259,9 +259,9 @@ npm run db:seed
 
 **Option 1: Email/Password (Recommended for Development)**
 
-When `NEXT_PUBLIC_ENV=development`, use test credentials from seed data:
+When `NEXT_PUBLIC_ENV=development` and `TEST_USER_PASSWORD` is set, sign in as a seeded user:
 - Email: `martin.odegaard@test.com`
-- Password: `TestPassword123!`
+- Password: the value of `TEST_USER_PASSWORD`
 
 **Option 2: Google OAuth**
 
