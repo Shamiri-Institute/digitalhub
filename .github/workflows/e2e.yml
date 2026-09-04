@@ -12,7 +12,8 @@ env:
   AWS_ACCESS_KEY_ID: mock-aws-access-key-id
   AWS_SECRET_ACCESS_KEY: mock-aws-secret-access-key
   NEXTAUTH_URL: http://localhost:3000
-  NEXTAUTH_SECRET: test-auth-secret
+  # CSRF/callback cookie signing only; sessions are database rows.
+  NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-only-csrf-secret-not-a-session-key-00000000' }}
   PLAYWRIGHT_VERSION: ""
   DATABASE_URL: postgres://youth:thriving@localhost:5432/shamiri_db?pool_timeout=30
   NEXT_PUBLIC_APP_URL: http://localhost:3000

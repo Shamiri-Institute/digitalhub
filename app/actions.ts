@@ -1,9 +1,10 @@
 "use server";
 
-import type { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { getCurrentUserSession } from "#/app/auth";
+import { constants } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export async function selectPersonnel({
@@ -13,6 +14,13 @@ export async function selectPersonnel({
   identifier: string;
   role: ImplementerRole;
 }) {
+  // An exported server action is a public endpoint in every build; the UI check is not a gate.
+  if (constants.NEXT_PUBLIC_ENV !== "development") {
+    throw new Error("Role switching is only available in development");
+  }
+  if (!Object.values(ImplementerRole).includes(role)) {
+    throw new Error("Invalid role");
+  }
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -22,7 +30,7 @@ export async function selectPersonnel({
     return null;
   }
   await db.implementerMember.update({
-    where: { id: activeMembership.id, implementerId: activeMembership.implementerId },
+    where: { id: activeMembership.id, userId: session.user.id ?? "" },
     data: { identifier, role },
   });
   return { success: true };

@@ -1,4 +1,5 @@
 import { ImplementerRole } from "@prisma/client";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { getCachedSession } from "#/lib/auth-options";
@@ -393,4 +394,11 @@ export async function getCurrentPersonnel(): Promise<
   }
 
   return null;
+}
+
+export async function requireLayoutRole(role: ImplementerRole): Promise<void> {
+  const session = await getCachedSession();
+  if (session?.user.activeMembership?.role !== role) {
+    redirect("/");
+  }
 }
