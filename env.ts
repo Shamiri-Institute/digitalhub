@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 const schema = z.object({
+  // Signs the CSRF and callback cookies only; sessions live in the database.
+  NEXTAUTH_SECRET: z.string().min(32),
+  // Enables the email test login in development, testing and training. Unset in production.
+  TEST_USER_PASSWORD: z.string().min(12).optional(),
+
   S3_UPLOAD_KEY: z.string(),
   S3_UPLOAD_SECRET: z.string(),
 

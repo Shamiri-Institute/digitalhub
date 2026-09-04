@@ -1,44 +1,40 @@
+import { CREDENTIAL_AUTH_ALLOWED_ENVS } from "#/lib/auth/client-credential-auth";
 import { constants } from "#/lib/constants";
 
-// Shared constant - single source of truth for environments that allow credential auth
-export const CREDENTIAL_AUTH_ALLOWED_ENVS = ["development", "testing", "training"];
-
 /**
- * Check if credential authentication is allowed in the current environment.
- * Only enabled for development, testing, and training environments.
- * Production always uses Google OAuth only.
+ * The email test login needs an allowed environment AND a per-environment password.
+ * The password comes from TEST_USER_PASSWORD and is never stored in source.
  */
 export function isCredentialAuthAllowed() {
-  return CREDENTIAL_AUTH_ALLOWED_ENVS.includes(constants.NEXT_PUBLIC_ENV);
+  return (
+    CREDENTIAL_AUTH_ALLOWED_ENVS.includes(constants.NEXT_PUBLIC_ENV) &&
+    !!process.env.TEST_USER_PASSWORD
+  );
 }
 
 /**
- * Hardcoded test credentials - ONLY used in non-production environments.
- * All test users share the same password for simplicity.
- *
- * These users must exist in the database (created by seed script).
- * Password validation is done against this map, not the database.
+ * Seeded users allowed to use the email test login. They must exist in the database.
  */
-export const TEST_CREDENTIALS: Record<string, string> = {
+export const TEST_USER_EMAILS: ReadonlySet<string> = new Set([
   // Core development users
-  "shadrack.lilan@shamiri.institute": "TestPassword123!",
-  "wambugu.davis@shamiri.institute": "TestPassword123!",
-  "stanley.george@shamiri.institute": "TestPassword123!",
-  "benny@shamiri.institute": "TestPassword123!",
-  "mmbone@shamiri.institute": "TestPassword123!",
-  "nickson.mugambi@shamiri.institute": "TestPassword123!",
-  "marie.odhiambo@shamiri.institute": "TestPassword123!",
+  "shadrack.lilan@shamiri.institute",
+  "wambugu.davis@shamiri.institute",
+  "stanley.george@shamiri.institute",
+  "benny@shamiri.institute",
+  "mmbone@shamiri.institute",
+  "nickson.mugambi@shamiri.institute",
+  "marie.odhiambo@shamiri.institute",
   // Static test users from seed script
-  "martin.odegaard@test.com": "TestPassword123!",
-  "declan.rice@test.com": "TestPassword123!",
-  "william.saliba@test.com": "TestPassword123!",
-  "bukayo.saka@test.com": "TestPassword123!",
-  "gabriel.martinelli@test.com": "TestPassword123!",
-  "gabriel.jesus@test.com": "TestPassword123!",
-  "mikel.arteta@test.com": "TestPassword123!",
-  "edu.gaspar@test.com": "TestPassword123!",
-  "ben.white@test.com": "TestPassword123!",
-  "kai.havertz@test.com": "TestPassword123!",
-  "takehiro.tomiyasu@test.com": "TestPassword123!",
-  "admin@shamiri.institute": "TestPassword123!",
-};
+  "martin.odegaard@test.com",
+  "declan.rice@test.com",
+  "william.saliba@test.com",
+  "bukayo.saka@test.com",
+  "gabriel.martinelli@test.com",
+  "gabriel.jesus@test.com",
+  "mikel.arteta@test.com",
+  "edu.gaspar@test.com",
+  "ben.white@test.com",
+  "kai.havertz@test.com",
+  "takehiro.tomiyasu@test.com",
+  "admin@shamiri.institute",
+]);

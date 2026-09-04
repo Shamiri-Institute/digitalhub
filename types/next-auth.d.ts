@@ -1,6 +1,6 @@
 import "next-auth";
 
-import type { JWTMembership, SessionUser } from "#/lib/auth-options";
+import type { SessionUser } from "#/lib/auth-options";
 
 declare module "next-auth" {
   /**
@@ -8,12 +8,5 @@ declare module "next-auth" {
    */
   interface Session {
     user: SessionUser;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT extends DefaultJWT {
-    activeMembership?: JWTMembership;
-    memberships?: JWTMembership[];
   }
 }
