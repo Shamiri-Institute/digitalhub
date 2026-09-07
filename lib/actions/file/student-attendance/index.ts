@@ -72,7 +72,6 @@ export async function getAttendanceDocument(
 
 export async function createAttendanceDocument(
   payload: CreateStudentAttendanceDocPayload,
-  oldS3Key: string | null,
 ): Promise<ActionResponse> {
   try {
     const session = await getCurrentUserSession();
@@ -82,6 +81,9 @@ export async function createAttendanceDocument(
 
     if (!payload.groupId || !payload.sessionId)
       throw new Error("No groupId or sessionId was provided");
+
+    if (!payload.link.startsWith("student-attendance/"))
+      throw new Error("Attendance documents must be stored under student-attendance/");
 
     const userId = session.user.id;
 
@@ -96,53 +98,70 @@ export async function createAttendanceDocument(
       throw new Error("At least 2 students must have attendance marked before uploading");
     }
 
-    await db.$transaction(async (tx) => {
+    const replaced = await db.$transaction(async (tx) => {
+      const where = {
+        sessionId: payload.sessionId,
+        groupId: payload.groupId,
+        archivedAt: null,
+      };
+      const previous = await tx.attendanceDocuments.findMany({
+        where,
+        select: { link: true },
+      });
+
       await tx.attendanceDocuments.updateMany({
-        where: {
-          sessionId: payload.sessionId,
-          groupId: payload.groupId,
-          archivedAt: null,
-        },
+        where,
         data: { archivedAt: new Date() },
       });
 
       await tx.attendanceDocuments.create({
         data: { ...payload, uploadedBy: userId },
       });
+
+      return previous;
     });
 
-    if (oldS3Key) {
-      const bucket = oldS3Key.startsWith("student-attendance/")
+    for (const { link } of replaced) {
+      const bucket = link.startsWith("student-attendance/")
         ? ("student-attendance" as const)
         : ("uploads" as const);
-      await deleteObject({ Key: oldS3Key }, bucket);
+      await deleteObject({ Key: link }, bucket);
     }
 
-    return { success: true, message: "Successfully created attendance document" };
+    return {
+      success: true,
+      message: "Successfully created attendance document",
+    };
   } catch (error: unknown) {
-    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
-export async function deleteAttendanceFile(
-  documentId: string,
-  key: string,
-): Promise<ActionResponse> {
+export async function deleteAttendanceFile(documentId: string): Promise<ActionResponse> {
   try {
     const session = await getCurrentUserSession();
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
       throw new Error("The session has not been authenticated");
 
+    const doc = await db.attendanceDocuments.findFirst({
+      where: { id: documentId, uploadedBy: session.user.id, archivedAt: null },
+      select: { id: true, link: true },
+    });
+    if (!doc) throw new Error("Attendance document not found");
+
     await db.attendanceDocuments.update({
-      where: { id: documentId },
+      where: { id: doc.id },
       data: { archivedAt: new Date() },
     });
 
-    const bucket = key.startsWith("student-attendance/")
+    const bucket = doc.link.startsWith("student-attendance/")
       ? ("student-attendance" as const)
       : ("uploads" as const);
 
-    await deleteObject({ Key: key }, bucket);
+    await deleteObject({ Key: doc.link }, bucket);
     const response: ActionResponse = {
       success: true,
       message: "Successfully deleted the attendance file.",
