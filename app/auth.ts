@@ -1,9 +1,25 @@
 import { ImplementerRole } from "@prisma/client";
 import { redirect } from "next/navigation";
+import type { Session } from "next-auth";
 import { cache } from "react";
 import { getActiveProjectId } from "#/lib/active-project-id";
+import { roleHome } from "#/lib/auth/role-home";
 import { getCachedSession } from "#/lib/auth-options";
 import { db } from "#/lib/db";
+
+/**
+ * Role check in the data access layer, as Next.js recommends over layouts
+ * (layouts do not re-render on client navigation). Every page and action
+ * reaches its data through a current* helper, so another role that lands on
+ * this role's routes is sent to its own home, as the old middleware did.
+ */
+function requireRole(session: Session, role: ImplementerRole) {
+  const membership = session.user.activeMembership;
+  if (membership && membership.role !== role) {
+    redirect(roleHome[membership.role]);
+  }
+  return membership;
+}
 
 export type CurrentHubCoordinator = Awaited<ReturnType<typeof currentHubCoordinator>>;
 
@@ -12,7 +28,7 @@ export const currentHubCoordinator = cache(async () => {
   if (!session) {
     return null;
   }
-  const membership = session.user.activeMembership;
+  const membership = requireRole(session, ImplementerRole.HUB_COORDINATOR);
   if (!membership) {
     return null;
   }
@@ -47,7 +63,7 @@ export const currentSupervisor = cache(async () => {
   if (!session) {
     return null;
   }
-  const membership = session.user.activeMembership;
+  const membership = requireRole(session, ImplementerRole.SUPERVISOR);
   if (!membership) {
     return null;
   }
@@ -155,7 +171,7 @@ export const currentSupervisorLite = cache(async () => {
   if (!session) {
     return null;
   }
-  const membership = session.user.activeMembership;
+  const membership = requireRole(session, ImplementerRole.SUPERVISOR);
   if (!membership?.identifier) {
     return null;
   }
@@ -183,7 +199,7 @@ export const currentFellow = cache(async () => {
   if (!session) {
     return null;
   }
-  const membership = session.user.activeMembership;
+  const membership = requireRole(session, ImplementerRole.FELLOW);
   if (!membership?.identifier) {
     return null;
   }
@@ -207,7 +223,7 @@ export const currentClinicalLead = cache(async () => {
   if (!session) {
     return null;
   }
-  const membership = session.user.activeMembership;
+  const membership = requireRole(session, ImplementerRole.CLINICAL_LEAD);
   if (!membership) {
     return null;
   }
@@ -240,7 +256,7 @@ export const currentClinicalTeam = cache(async () => {
     return null;
   }
 
-  const membership = session.user.activeMembership;
+  const membership = requireRole(session, ImplementerRole.CLINICAL_TEAM);
   if (!membership) {
     return null;
   }
@@ -276,7 +292,7 @@ export const currentOpsUser = cache(async () => {
     return null;
   }
 
-  const membership = session.user.activeMembership;
+  const membership = requireRole(session, ImplementerRole.OPERATIONS);
   if (!membership) {
     return null;
   }
@@ -309,7 +325,7 @@ export const currentAdminUser = cache(async () => {
     return null;
   }
 
-  const membership = session.user.activeMembership;
+  const membership = requireRole(session, ImplementerRole.ADMIN);
   if (!membership) {
     return null;
   }
