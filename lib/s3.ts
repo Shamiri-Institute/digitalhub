@@ -10,7 +10,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "#/env";
 import { S3_BUCKETS, type S3Bucket } from "#/lib/s3-buckets";
 
-const BUCKETS: Record<S3Bucket, { bucket: string; region: string }> = {
+// Every name in S3_BUCKETS must have an entry here, and nothing else may.
+// Add a bucket by extending S3_BUCKETS; the compiler then points here.
+const BUCKETS = {
   recordings: {
     bucket: env.S3_RECORDINGS_BUCKET,
     region: env.S3_RECORDINGS_REGION,
@@ -19,7 +21,7 @@ const BUCKETS: Record<S3Bucket, { bucket: string; region: string }> = {
     bucket: env.S3_STUDENT_ATTENDANCE_BUCKET,
     region: env.S3_STUDENT_ATTENDANCE_REGION,
   },
-};
+} satisfies Record<S3Bucket, { bucket: string; region: string }>;
 
 function requireBucket(bucket: S3Bucket) {
   const config = BUCKETS[bucket];
