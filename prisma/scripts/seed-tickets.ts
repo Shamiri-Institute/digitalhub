@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { TicketCategory, TicketPriorityLevel, TicketStatus } from "@prisma/client";
 import { parse } from "csv-parse/sync";
-import { TEST_CREDENTIALS } from "#/lib/auth/credential-auth";
+import { TEST_USER_EMAILS } from "#/lib/auth/credential-auth";
 import { db } from "#/lib/db";
 
 interface TicketCSVRow {
@@ -25,7 +25,7 @@ async function validateFellowAndSupervisor(
   fellowEmail: string,
   supervisorEmail: string,
 ): Promise<UserIds | null> {
-  if (!TEST_CREDENTIALS[fellowEmail] || !TEST_CREDENTIALS[supervisorEmail]) {
+  if (!TEST_USER_EMAILS.has(fellowEmail) || !TEST_USER_EMAILS.has(supervisorEmail)) {
     return null;
   }
 

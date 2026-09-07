@@ -1,394 +1,84 @@
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import type { ImplementerRole } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
 import type { AuthOptions } from "next-auth";
 import { getServerSession } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { cache } from "react";
 import { z } from "zod";
-import { isCredentialAuthAllowed, TEST_CREDENTIALS } from "#/lib/auth/credential-auth";
-import { db } from "#/lib/db";
-import { getDefaultProjectId } from "#/lib/default-project-id";
 
-// Google OAuth credentials are optional when credential auth is allowed (dev/test environments)
+import { env } from "#/env";
+import { isCredentialAuthAllowed } from "#/lib/auth/credential-auth";
+import { adapter, sessionCookie } from "#/lib/auth/session";
+import { loadSessionUser } from "#/lib/auth/session-user";
+import { db } from "#/lib/db";
+
+export type { JWTMembership, SessionUser } from "#/lib/auth/session-user";
+
 const googleConfigSchema = z.object({
   GOOGLE_ID: z.string(),
   GOOGLE_SECRET: z.string(),
 });
 
-// In production, Google OAuth is required. In dev/test environments, it's optional.
 const googleConfig = googleConfigSchema.safeParse(process.env);
 if (!googleConfig.success && !isCredentialAuthAllowed()) {
-  // Only throw if we're in production and Google config is missing
-  throw new Error("Google OAuth credentials are required in production");
-}
-
-export interface JWTMembership {
-  id: number;
-  implementerId: string;
-  implementerName: string;
-  role: ImplementerRole;
-  identifier: string | null;
-  updatedAt?: Date;
-}
-
-export type SessionUser = {
-  id: string | null;
-  email: string | null;
-  name: string | null;
-  image: string | null;
-  activeMembership?: JWTMembership;
-  memberships?: JWTMembership[];
-  activeProjectId?: string | null;
-};
-
-function parseMembershipsForJWT(userWithMemberships: {
-  memberships: Array<{
-    id: number;
-    role: ImplementerRole;
-    identifier: string | null;
-    updatedAt: Date | null;
-    implementer: { id: string; implementerName: string };
-  }>;
-}): JWTMembership[] {
-  return userWithMemberships.memberships.map((m) => ({
-    id: m.id,
-    implementerId: m.implementer.id,
-    implementerName: m.implementer.implementerName,
-    role: m.role,
-    identifier: m.identifier,
-    updatedAt: m.updatedAt ?? undefined,
-  }));
-}
-
-// Build providers array based on environment and available credentials
-function buildProviders(): AuthOptions["providers"] {
-  const providers: AuthOptions["providers"] = [];
-
-  // Add Google OAuth provider if credentials are available
-  if (googleConfig.success) {
-    providers.push(
-      GoogleProvider({
-        clientId: googleConfig.data.GOOGLE_ID,
-        clientSecret: googleConfig.data.GOOGLE_SECRET,
-        allowDangerousEmailAccountLinking: true,
-      }),
-    );
-  }
-
-  // Add Credentials provider only in allowed environments (development, testing, training)
-  if (isCredentialAuthAllowed()) {
-    providers.push(
-      CredentialsProvider({
-        id: "credentials",
-        name: "Email",
-        credentials: {
-          email: { label: "Email", type: "email" },
-          password: { label: "Password", type: "password" },
-        },
-        async authorize(credentials) {
-          // Double-check environment at runtime for safety
-          if (!isCredentialAuthAllowed()) {
-            console.error("Credential auth attempted in disallowed environment");
-            return null;
-          }
-
-          if (!credentials?.email || !credentials?.password) {
-            return null;
-          }
-
-          // Check if email exists in test credentials map
-          const expectedPassword = TEST_CREDENTIALS[credentials.email];
-          if (!expectedPassword) {
-            return null;
-          }
-
-          // Validate password
-          if (credentials.password !== expectedPassword) {
-            return null;
-          }
-
-          // Look up user in database
-          const user = await db.user.findUnique({
-            where: { email: credentials.email },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              image: true,
-            },
-          });
-
-          if (!user) {
-            return null;
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            image: user.image,
-          };
-        },
-      }),
-    );
-  }
-
-  return providers;
+  throw new Error(
+    "No sign-in method is configured: set GOOGLE_ID and GOOGLE_SECRET, or set TEST_USER_PASSWORD in development, testing or training",
+  );
 }
 
 export const authOptions: AuthOptions = {
-  debug: process.env.DEBUG === "1",
+  secret: env.NEXTAUTH_SECRET,
+  debug: process.env.DEBUG === "1" && process.env.NODE_ENV !== "production",
   session: {
-    strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60, // 7 days
+    strategy: "database",
+    maxAge: 7 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
   },
-  providers: buildProviders(),
-  adapter: PrismaAdapter(db),
+  cookies: { sessionToken: sessionCookie() },
+  providers: googleConfig.success
+    ? [
+        GoogleProvider({
+          clientId: googleConfig.data.GOOGLE_ID,
+          clientSecret: googleConfig.data.GOOGLE_SECRET,
+          // Google verifies the address, and signIn refuses unverified profiles.
+          allowDangerousEmailAccountLinking: true,
+        }),
+      ]
+    : [],
+  adapter,
   callbacks: {
     signIn: async ({ user, account, profile }) => {
-      if (!user.email) {
+      if (account?.provider !== "google" || !user.email) {
+        return false;
+      }
+      const emailVerified = (profile as { email_verified?: boolean } | undefined)?.email_verified;
+      if (emailVerified !== true) {
         return false;
       }
 
-      // Handle credentials provider
-      if (account?.provider === "credentials") {
-        // Double-check environment for safety
-        if (!isCredentialAuthAllowed()) {
-          console.error("Credential sign-in attempted in disallowed environment");
-          return false;
-        }
-        // User validation already done in authorize function
-        const userExists = await db.user.findUnique({
-          where: { email: user.email },
-          select: { id: true },
-        });
-        return !!userExists;
-      }
-
-      if (account?.provider === "google") {
-        const userExists = await db.user.findUnique({
-          where: { email: user.email },
-          select: {
-            id: true,
-            name: true,
-            image: true,
-          },
-        });
-
-        // Only allow sign in if user exists
-        if (!userExists) {
-          return false;
-        }
-
-        await db.user.update({
-          where: { email: user.email },
-          data: {
-            name: profile?.name ?? user.name,
-            image: profile?.image ?? user.image,
-            accounts: {
-              upsert: {
-                where: {
-                  provider_providerAccountId: {
-                    provider: "google",
-                    providerAccountId: account.providerAccountId,
-                  },
-                },
-                create: {
-                  provider: "google",
-                  type: "oauth",
-                  providerAccountId: account.providerAccountId,
-                  refresh_token: account.refresh_token,
-                  access_token: account.access_token,
-                  expires_at: account.expires_at,
-                  token_type: account.token_type,
-                  scope: account.scope,
-                  id_token: account.id_token,
-                  session_state: account.session_state,
-                },
-                update: {
-                  refresh_token: account.refresh_token,
-                  access_token: account.access_token,
-                  expires_at: account.expires_at,
-                  token_type: account.token_type,
-                  scope: account.scope,
-                  id_token: account.id_token,
-                  session_state: account.session_state,
-                },
-              },
-            },
-          },
-        });
-        return true;
-      }
-      return false;
-    },
-    session: async ({ session, token }) => {
-      const defaultProjectId = await getDefaultProjectId();
-      const user = await db.user.findUnique({
-        where: { id: token.sub ?? "" },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          image: true,
-          activeProjectId: true,
-          avatar: { select: { file: true } },
-          memberships: {
-            select: {
-              id: true,
-              role: true,
-              identifier: true,
-              updatedAt: true,
-              implementer: {
-                select: {
-                  id: true,
-                  implementerName: true,
-                  hubs: { select: { projectId: true } },
-                },
-              },
-            },
-            orderBy: { updatedAt: "desc" },
-          },
-        },
+      const userExists = await db.user.findUnique({
+        where: { email: user.email, archivedAt: null },
+        select: { id: true },
       });
+      if (!userExists) {
+        return false;
+      }
 
-      if (!user) {
-        addBreadcrumb({
-          message: "User not found",
-          data: { token },
-        });
+      await db.user.update({
+        where: { email: user.email },
+        data: { name: profile?.name ?? user.name, image: profile?.image ?? user.image },
+      });
+      return true;
+    },
+    session: async ({ session, user }) => {
+      const sessionUser = await loadSessionUser(user.id);
+      if (!sessionUser) {
+        await db.session.deleteMany({ where: { userId: user.id } });
+        addBreadcrumb({ message: "Session user not found", data: { userId: user.id } });
+        session.user = { id: null, email: null, name: null, image: null };
         return session;
       }
-
-      const activeProjectId = user.activeProjectId ?? defaultProjectId;
-
-      let filtered = user.memberships.filter((m) =>
-        m.implementer.hubs.some((h) => h.projectId === activeProjectId),
-      );
-      if (filtered.length === 0 && user.email) {
-        filtered = user.memberships.filter((m) => m.role === "ADMIN");
-      }
-      const memberships: JWTMembership[] = parseMembershipsForJWT({
-        ...user,
-        memberships: filtered,
-      });
-
-      if (memberships.length === 0) {
-        console.warn(`User ${user.email} has no memberships`);
-      }
-
-      const sortedMemberships = [...memberships].sort(
-        (a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0),
-      );
-      const activeMembership: JWTMembership | undefined =
-        token.activeMembership && memberships.some((m) => m.id === token.activeMembership?.id)
-          ? token.activeMembership
-          : sortedMemberships[0];
-
-      const sessionUser: SessionUser = {
-        id: token.sub || null,
-        email: user.email,
-        name: user.name,
-        image: user.image,
-        activeMembership,
-        memberships,
-        activeProjectId,
-      };
-
       session.user = sessionUser;
       return session;
-    },
-    jwt: async ({ token, user, account: _account, trigger, session }) => {
-      if (trigger === "signIn" && user?.email) {
-        const [defaultProjectId, currentUser] = await Promise.all([
-          getDefaultProjectId(),
-          db.user.findUnique({
-            where: { email: user.email },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              image: true,
-              activeProjectId: true,
-            },
-          }),
-        ]);
-
-        if (!currentUser) {
-          console.error("User not found in database");
-          return token;
-        }
-
-        token.sub = currentUser.id;
-
-        const projectId = currentUser.activeProjectId ?? defaultProjectId;
-
-        let memberships = await db.implementerMember.findMany({
-          where: {
-            userId: currentUser.id,
-            implementer: {
-              hubs: {
-                some: {
-                  projectId,
-                },
-              },
-            },
-          },
-          include: {
-            implementer: {
-              select: {
-                id: true,
-                implementerName: true,
-              },
-            },
-          },
-          orderBy: {
-            updatedAt: "desc",
-          },
-        });
-
-        if (memberships.length === 0 && currentUser.email) {
-          memberships = await db.implementerMember.findMany({
-            where: {
-              userId: currentUser.id,
-              role: "ADMIN",
-            },
-            include: {
-              implementer: {
-                select: {
-                  id: true,
-                  implementerName: true,
-                },
-              },
-            },
-            orderBy: {
-              updatedAt: "desc",
-            },
-          });
-        }
-
-        if (memberships.length > 0) {
-          const processedMemberships = memberships.map((m) => ({
-            id: m.id,
-            implementerId: m.implementer.id,
-            implementerName: m.implementer.implementerName,
-            role: m.role,
-            identifier: m.identifier,
-            updatedAt: m.updatedAt ?? undefined,
-          }));
-
-          token.memberships = processedMemberships;
-          token.activeMembership =
-            token.activeMembership ||
-            (processedMemberships.length > 0 ? processedMemberships[0] : undefined);
-        }
-      } else if (trigger === "update" && session?.user) {
-        token.activeMembership = session.user.activeMembership;
-      }
-
-      return token;
     },
   },
 };

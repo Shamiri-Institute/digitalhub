@@ -3,6 +3,7 @@
 import { ImplementerRole, type SessionStatus } from "@prisma/client";
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { getActiveProjectId } from "#/lib/active-project-id";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { getDefaultSessionDateRange } from "#/lib/date-utils";
 import { db } from "#/lib/db";
 
@@ -25,6 +26,7 @@ export async function fetchInterventionSessions({
   filters?: Filters;
   fellowId?: string;
 }) {
+  await requireAuthRole();
   let projectId: string;
   if (role === ImplementerRole.ADMIN) {
     if (!implementerId) {

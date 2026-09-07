@@ -1,6 +1,6 @@
 import path from "node:path";
-import { encode, type JWT } from "next-auth/jwt";
 
+import { createSession } from "#/lib/auth/session";
 import { db } from "#/lib/db";
 
 export const PersonnelFixtures = {
@@ -27,46 +27,6 @@ export const PersonnelFixtures = {
 };
 
 export async function generateSessionToken(email: string) {
-  const user = await db.user.findUniqueOrThrow({
-    where: { email },
-    include: {
-      memberships: {
-        include: {
-          implementer: {
-            select: {
-              id: true,
-              implementerName: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  const processedMemberships = user.memberships.map((m) => ({
-    id: m.id,
-    implementerId: m.implementerId,
-    implementerName: m.implementer.implementerName,
-    role: m.role,
-    identifier: m.identifier,
-    updatedAt: m.updatedAt ?? undefined,
-  }));
-
-  const jwtPayload: JWT = {
-    name: user.name,
-    email: user.email,
-    picture: null,
-    sub: user.id,
-    activeMembership: processedMemberships[0],
-    memberships: processedMemberships,
-  };
-
-  const secret = process.env.NEXTAUTH_SECRET;
-  if (!secret) {
-    throw new Error("NEXTAUTH_SECRET is not set");
-  }
-  return await encode({
-    token: jwtPayload,
-    secret,
-  });
+  const user = await db.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
+  return (await createSession(user.id)).value;
 }

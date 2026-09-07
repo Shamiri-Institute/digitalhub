@@ -3,9 +3,11 @@
 import { Prisma } from "@prisma/client";
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import type { FellowAttendancesTableData } from "#/components/common/fellow/fellow-attendance";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { db } from "#/lib/db";
 
 export async function fetchSessionFellowAttendances({ sessionId }: { sessionId?: string }) {
+  await requireAuthRole();
   return await db.$queryRaw<FellowAttendancesTableData[]>`
   SELECT
     f.id AS "fellowId", f.fellow_name AS "fellowName", f.cell_number AS "cellNumber", 
@@ -34,6 +36,7 @@ export async function fetchDayFellowAttendances({
   end: Date;
   filters: Filters;
 }) {
+  await requireAuthRole();
   const sessionTypes = Object.keys(filters.sessionTypes).filter((sessionType) => {
     return filters.sessionTypes[sessionType];
   });
