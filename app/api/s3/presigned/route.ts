@@ -21,12 +21,15 @@ function getBucketConfig(bucket: "recordings" | "student-attendance") {
       secretAccessKey: env.S3_UPLOAD_SECRET,
     };
   }
-  return {
-    bucketName: env.S3_STUDENT_ATTENDANCE_BUCKET,
-    region: env.S3_STUDENT_ATTENDANCE_REGION,
-    accessKeyId: env.S3_UPLOAD_KEY,
-    secretAccessKey: env.S3_UPLOAD_SECRET,
-  };
+  if (bucket === "student-attendance") {
+    return {
+      bucketName: env.S3_STUDENT_ATTENDANCE_BUCKET,
+      region: env.S3_STUDENT_ATTENDANCE_REGION,
+      accessKeyId: env.S3_UPLOAD_KEY,
+      secretAccessKey: env.S3_UPLOAD_SECRET,
+    };
+  }
+  throw new Error(`Unknown S3 bucket: ${String(bucket)}`);
 }
 
 export async function POST(request: Request) {
