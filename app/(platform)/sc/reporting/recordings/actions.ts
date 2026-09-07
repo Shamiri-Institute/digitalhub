@@ -293,11 +293,7 @@ export async function createSessionRecording(input: {
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       try {
-        const owner = await db.sessionRecording.findFirst({
-          where: { s3Key: input.s3Key },
-          select: { id: true },
-        });
-        if (!owner) await deleteObject({ Key: input.s3Key }, "recordings");
+        await deleteObject({ Key: input.s3Key }, "recordings");
       } catch (cleanupError) {
         console.error("Failed to clean up orphaned S3 file:", input.s3Key, cleanupError);
       }
