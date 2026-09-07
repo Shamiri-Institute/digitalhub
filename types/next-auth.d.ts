@@ -1,6 +1,6 @@
 import "next-auth";
 
-import type { SessionUser } from "#/lib/auth-options";
+import type { SessionUser } from "#/lib/auth/session-user";
 
 declare module "next-auth" {
   /**
