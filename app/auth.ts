@@ -332,13 +332,13 @@ export const currentAdminUser = cache(async () => {
 
 export async function getCurrentUserSession() {
   const session = await getCachedSession();
-  if (!session) {
+  if (!session?.user.id) {
     return null;
   }
 
-  const { memberships } = session.user;
-  if (!memberships || memberships.length === 0) {
-    throw new Error("No memberships");
+  if (!session.user.activeMembership) {
+    await db.session.deleteMany({ where: { userId: session.user.id } });
+    redirect(`/login?error=${encodeURIComponent("No active membership for this account")}`);
   }
 
   return session;
@@ -394,11 +394,4 @@ export async function getCurrentPersonnel(): Promise<
   }
 
   return null;
-}
-
-export async function requireLayoutRole(role: ImplementerRole): Promise<void> {
-  const session = await getCachedSession();
-  if (session?.user.activeMembership?.role !== role) {
-    redirect("/");
-  }
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import type { FellowGroupReport } from "@prisma/client";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { db } from "#/lib/db";
 
 export type FellowGroupReportRow = {
@@ -18,6 +19,7 @@ export type LoadFellowGroupReportsOptions =
   | { scope?: "all" };
 
 export async function loadFellowGroupReports(options?: LoadFellowGroupReportsOptions) {
+  await requireAuthRole();
   try {
     const where =
       options?.scope === "supervisor"

@@ -4,6 +4,7 @@ import { ImplementerRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { getCurrentUserSession } from "#/app/auth";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { constants } from "#/lib/constants";
 import { db } from "#/lib/db";
 
@@ -41,6 +42,7 @@ export async function AcceptRefferedClinicalCase(
   _referredToSupervisorId: string | null,
   caseId: string,
 ) {
+  await requireAuthRole();
   try {
     const caseHistory = await db.clinicalCaseTransferTrail.findFirst({
       where: {
@@ -86,6 +88,7 @@ export async function AcceptRefferedClinicalCase(
 }
 
 export async function RejectRefferedClinicalCase(caseId: string) {
+  await requireAuthRole();
   try {
     const caseHistory = await db.clinicalCaseTransferTrail.findFirst({
       where: {
@@ -132,6 +135,7 @@ export async function flagClinicalCaseForFollowUp(data: {
   reason: string;
   role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
+  await requireAuthRole();
   try {
     await db.clinicalScreeningInfo.update({
       where: {

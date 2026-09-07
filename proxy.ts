@@ -27,7 +27,7 @@ export default async function proxy(request: NextRequest) {
 
   const { name, options } = sessionCookie();
   const token = request.cookies.get(name)?.value;
-  if (token && (await isLiveSession(token))) {
+  if (token && (request.method === "GET" || (await isLiveSession(token)))) {
     return NextResponse.next();
   }
 
