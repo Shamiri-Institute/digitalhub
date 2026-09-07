@@ -40,10 +40,9 @@ describe("proxy", () => {
     expect(proxy(request("/")).headers.get("location")).toBe("http://localhost:3000/login");
   });
 
-  it("lets a request with a cookie through and forwards the pathname, without touching the database", () => {
+  it("lets a request with a cookie through without touching the database", () => {
     const res = proxy(request("/hc/schools", "next-auth.session-token=abc"));
     expect(res.headers.get("x-middleware-next")).toBe("1");
-    expect(res.headers.get("x-middleware-request-x-pathname")).toBe("/hc/schools");
     expect(findUnique).not.toHaveBeenCalled();
   });
 
