@@ -19,12 +19,6 @@ export const config = {
   ],
 };
 
-/**
- * Routing Middleware runs at the edge, outside the static egress IPs that the
- * RDS security group allows, so it must never touch the database. It only
- * checks that a session cookie exists. The current* helpers in app/auth.ts
- * validate the session and enforce the role home close to the data.
- */
 export default function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   if (PUBLIC_PATHS.has(path)) {
