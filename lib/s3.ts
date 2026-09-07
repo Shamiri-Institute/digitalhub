@@ -21,9 +21,24 @@ const BUCKETS: Record<S3Bucket, { bucket: string; region: string }> = {
   },
 };
 
+/**
+ * Every caller must name the bucket. The type makes that a compile error, this
+ * makes it a clear runtime error for anything that slips past (JS callers,
+ * `as` casts, a value read from a form).
+ */
+function requireBucket(bucket: S3Bucket) {
+  const config = BUCKETS[bucket];
+  if (!config) {
+    throw new Error(
+      `S3 bucket must be one of ${Object.keys(BUCKETS).join(", ")}; received ${String(bucket)}`,
+    );
+  }
+  return config;
+}
+
 function createClient(bucket: S3Bucket): S3Client {
   return new S3Client({
-    region: BUCKETS[bucket].region,
+    region: requireBucket(bucket).region,
     credentials: {
       accessKeyId: env.S3_UPLOAD_KEY,
       secretAccessKey: env.S3_UPLOAD_SECRET,
@@ -35,7 +50,7 @@ export function deleteObject(input: Pick<DeleteObjectCommandInput, "Key">, bucke
   const s3Client = createClient(bucket);
   const command = new DeleteObjectCommand({
     ...input,
-    Bucket: BUCKETS[bucket].bucket,
+    Bucket: requireBucket(bucket).bucket,
   });
   return s3Client.send(command);
 }
@@ -47,7 +62,7 @@ export async function getPresignedUrl(
 ): Promise<string> {
   const s3Client = createClient(bucket);
   const command = new GetObjectCommand({
-    Bucket: BUCKETS[bucket].bucket,
+    Bucket: requireBucket(bucket).bucket,
     Key: key,
   });
   return getSignedUrl(s3Client, command, { expiresIn });
