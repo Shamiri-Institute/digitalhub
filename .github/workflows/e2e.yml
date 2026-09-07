@@ -18,6 +18,7 @@ env:
   NEXT_PUBLIC_APP_URL: http://localhost:3000
   NEXT_PUBLIC_ENV: development
   TEST_USER_PASSWORD: TestPassword123!
+  S3_STUDENT_ATTENDANCE_BUCKET: mock-s3-attendance-bucket
   
 jobs:
   e2e-tests:
