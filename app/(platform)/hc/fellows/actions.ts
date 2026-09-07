@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { db } from "#/lib/db";
 
 export type FellowDropoutReasonsGraphData = {
@@ -8,6 +9,7 @@ export type FellowDropoutReasonsGraphData = {
 };
 
 export async function fetchFellowDropoutReasons(hudId: string) {
+  await requireAuthRole();
   const dropoutData = await db.$queryRaw<FellowDropoutReasonsGraphData[]>`
     SELECT
       COUNT(*) AS value,
@@ -29,6 +31,7 @@ export async function fetchFellowDropoutReasons(hudId: string) {
 }
 
 export async function fetchFellowDataCompletenessData(hubId: string) {
+  await requireAuthRole();
   const [fellowData] = await db.$queryRaw<{ percentage: number }[]>`
     SELECT
       AVG((
@@ -64,6 +67,7 @@ export type FellowSessionRatingAverages = {
 };
 
 export async function fetchFellowSessionRatingAverages(hubId: string) {
+  await requireAuthRole();
   const ratingAverages = await db.$queryRaw<FellowSessionRatingAverages[]>`
     SELECT
       CONCAT(TRIM(TO_CHAR(wfr.week, 'Month')), ' Week ', EXTRACT(WEEK FROM wfr.week)) AS session_date,

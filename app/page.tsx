@@ -1,8 +1,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 
-import { getCachedSession } from "#/lib/auth-options";
-import { db } from "#/lib/db";
+import { getCurrentUserSession } from "#/app/auth";
 
 const HOME: Record<ImplementerRole, string> = {
   [ImplementerRole.HUB_COORDINATOR]: "/hc",
@@ -15,16 +14,9 @@ const HOME: Record<ImplementerRole, string> = {
 };
 
 export default async function RootPage() {
-  const session = await getCachedSession();
-  if (!session?.user.id) {
+  const session = await getCurrentUserSession();
+  if (!session?.user.activeMembership) {
     redirect("/login");
   }
-
-  const role = session.user.activeMembership?.role;
-  if (!role) {
-    await db.session.deleteMany({ where: { userId: session.user.id } });
-    redirect(`/login?error=${encodeURIComponent("No active membership for this account")}`);
-  }
-
-  redirect(HOME[role]);
+  redirect(HOME[session.user.activeMembership.role]);
 }

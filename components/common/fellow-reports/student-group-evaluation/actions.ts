@@ -1,6 +1,7 @@
 "use server";
 
 import type { Prisma } from "@prisma/client";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { db } from "#/lib/db";
 
 type InterventionGroupReportWithRelations = Prisma.InterventionGroupReportGetPayload<{
@@ -85,6 +86,7 @@ export type LoadStudentGroupEvaluationsOptions =
   | { scope?: "all" };
 
 export async function loadStudentGroupEvaluations(options?: LoadStudentGroupEvaluationsOptions) {
+  await requireAuthRole();
   try {
     const where =
       options?.scope === "supervisor"
@@ -116,6 +118,7 @@ export async function editStudentGroupEvaluation(
   evaluationId: string,
   data: Prisma.InterventionGroupReportUpdateInput,
 ) {
+  await requireAuthRole();
   try {
     await db.interventionGroupReport.update({
       where: { id: evaluationId },

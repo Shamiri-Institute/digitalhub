@@ -60,7 +60,7 @@ export function MembershipSwitcher({
     setLoading(true);
     try {
       await setActiveMembership(membership.id);
-      window.location.reload();
+      window.location.assign("/");
     } catch (error) {
       console.error("Failed to switch membership:", error);
     } finally {

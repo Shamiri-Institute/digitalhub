@@ -13,9 +13,9 @@ const inOneHour = () => new Date(Date.now() + 60 * 60 * 1000);
 const oneHourAgo = () => new Date(Date.now() - 60 * 60 * 1000);
 const original = { NEXTAUTH_URL: process.env.NEXTAUTH_URL, VERCEL_URL: process.env.VERCEL_URL };
 
-function request(path: string, cookie?: string) {
+function request(path: string, cookie?: string, method = "GET") {
   const headers = cookie ? { cookie } : undefined;
-  return new NextRequest(new URL(path, "http://localhost:3000"), { headers });
+  return new NextRequest(new URL(path, "http://localhost:3000"), { headers, method });
 }
 
 afterEach(() => {
@@ -41,9 +41,15 @@ describe("proxy", () => {
     expect(res.headers.get("location")).toBe("http://localhost:3000/login");
   });
 
-  it("lets a request through when the cookie maps to a live session row", async () => {
-    findUnique.mockResolvedValue({ expires: inOneHour() } as never);
+  it("lets a GET through on cookie presence alone, without touching the database", async () => {
     const res = await proxy(request("/hc/schools", "next-auth.session-token=abc"));
+    expect(res.headers.get("x-middleware-next")).toBe("1");
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it("verifies the session row for a POST", async () => {
+    findUnique.mockResolvedValue({ expires: inOneHour() } as never);
+    const res = await proxy(request("/hc/schools", "next-auth.session-token=abc", "POST"));
     expect(res.headers.get("x-middleware-next")).toBe("1");
     expect(findUnique).toHaveBeenCalledWith({
       where: { sessionToken: "abc" },
@@ -53,21 +59,20 @@ describe("proxy", () => {
 
   it("reads the secure-prefixed cookie when the site is served over https", async () => {
     process.env.NEXTAUTH_URL = "https://hub.example.org";
-    findUnique.mockResolvedValue({ expires: inOneHour() } as never);
     const res = await proxy(request("/hc/schools", "__Secure-next-auth.session-token=abc"));
     expect(res.headers.get("x-middleware-next")).toBe("1");
   });
 
-  it("rejects a cookie with no session row and clears it", async () => {
+  it("rejects a POST whose cookie has no session row and clears the cookie", async () => {
     findUnique.mockResolvedValue(null);
-    const res = await proxy(request("/hc/schools", "next-auth.session-token=forged"));
+    const res = await proxy(request("/hc/schools", "next-auth.session-token=forged", "POST"));
     expect(res.status).toBe(307);
     expect(res.headers.get("set-cookie")).toContain("next-auth.session-token=;");
   });
 
-  it("rejects an expired session row", async () => {
+  it("rejects a POST whose session row has expired", async () => {
     findUnique.mockResolvedValue({ expires: oneHourAgo() } as never);
-    const res = await proxy(request("/hc/schools", "next-auth.session-token=old"));
+    const res = await proxy(request("/hc/schools", "next-auth.session-token=old", "POST"));
     expect(res.status).toBe(307);
   });
 
