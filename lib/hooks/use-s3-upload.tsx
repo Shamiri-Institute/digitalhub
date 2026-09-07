@@ -8,7 +8,6 @@ import type { S3Bucket } from "#/lib/s3";
 const BUCKETS: readonly S3Bucket[] = ["recordings", "student-attendance"];
 
 export interface UploadTarget {
-  /** Object key inside the bucket. The caller builds it; nothing is generated here. */
   key: string;
   bucket: S3Bucket;
 }
@@ -86,7 +85,6 @@ export function useS3Upload() {
 
   const uploadToS3 = useCallback(
     async (file: File, target: UploadTarget): Promise<UploadResult> => {
-      // Fail before any network call if the caller did not say where the file goes.
       if (!BUCKETS.includes(target?.bucket)) {
         throw new Error(
           `uploadToS3 requires an explicit bucket (${BUCKETS.join(" or ")}); received ${String(target?.bucket)}`,
