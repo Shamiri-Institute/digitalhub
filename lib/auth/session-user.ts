@@ -43,7 +43,7 @@ export async function loadSessionUser(userId: string): Promise<SessionUser | nul
               select: { id: true, implementerName: true, hubs: { select: { projectId: true } } },
             },
           },
-          orderBy: { updatedAt: "desc" },
+          orderBy: { updatedAt: { sort: "desc", nulls: "last" } },
         },
       },
     }),
