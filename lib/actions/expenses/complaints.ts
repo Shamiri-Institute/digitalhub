@@ -1,11 +1,9 @@
 import type { Prisma } from "@prisma/client";
-import {
-  type ComplaintFormSchema,
-  type CreateComplaintSchema,
-  hasDownloadableStatement,
+import type {
+  ComplaintFormSchema,
+  CreateComplaintSchema,
 } from "#/components/common/expenses/complaints/schema";
 import { db } from "#/lib/db";
-import { getPresignedUrl } from "#/lib/s3";
 
 /**
  * Shared core for the fellow payment-complaints report. Each role's
@@ -66,9 +64,6 @@ export async function loadPaymentComplaints(where: Prisma.FellowWhereInput) {
               dateOfComplaint: complaint?.dateOfComplaint,
               reasonForComplaint: complaint.reason,
               statement: complaint?.statement,
-              // Statements live in a private bucket, so the download link is a
-              // presigned URL. Signing is local, so it costs no round trip.
-              statementUrl: await presignStatement(complaint.statement),
               difference: complaint?.differenceInAmount,
               confirmedAmountReceived: complaint?.confirmedAmountReceived,
               status: complaint?.status,
@@ -95,23 +90,6 @@ export async function loadPaymentComplaints(where: Prisma.FellowWhereInput) {
       };
     }),
   );
-}
-
-/**
- * A signing failure should cost the row its download link, not take the whole
- * complaints report down with it. This report never touched S3 before.
- */
-async function presignStatement(statement: string) {
-  if (!hasDownloadableStatement(statement)) {
-    return null;
-  }
-
-  try {
-    return await getPresignedUrl(statement, "uploads");
-  } catch (error) {
-    console.error("Could not presign complaint statement", error);
-    return null;
-  }
 }
 
 /**

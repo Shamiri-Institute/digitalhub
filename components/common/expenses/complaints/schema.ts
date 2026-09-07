@@ -70,16 +70,3 @@ export type ComplaintFormSchema = z.infer<typeof ComplaintFormSchema>;
 export type CreateComplaintSchema = z.infer<typeof CreateComplaintSchema>;
 export type ApproveComplaintSchema = z.infer<typeof ApproveComplaintSchema>;
 export type RejectComplaintSchema = z.infer<typeof RejectComplaintSchema>;
-
-/**
- * Statements are stored as S3 keys in a private bucket, so downloading one
- * needs a presigned URL. Complaints reviewed before statements could be
- * uploaded hold the literal "mpesa statement" placeholder the old actions
- * wrote, and ones raised without a statement hold an empty string; neither is
- * downloadable.
- */
-export const STATEMENT_KEY_PREFIX = "uploads/";
-
-export function hasDownloadableStatement(statement: string | null | undefined) {
-  return Boolean(statement?.startsWith(STATEMENT_KEY_PREFIX));
-}

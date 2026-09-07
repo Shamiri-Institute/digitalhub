@@ -136,7 +136,6 @@ export async function addSupervisorExpense({
     expenseType: string;
     mpesaName: string;
     mpesaNumber: string;
-    receiptFileKey: string;
     session: string;
     totalAmount: string;
     week: string;
@@ -163,7 +162,6 @@ export async function addSupervisorExpense({
         status: "PENDING",
         details: {
           subtype: data.expenseType,
-          receipt_link: data.receiptFileKey,
           session: data.session,
         },
         mpesaName: data.mpesaName,

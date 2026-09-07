@@ -92,18 +92,8 @@ export function useS3Upload() {
       // Use application/octet-stream as fallback for files with unknown MIME types
       const contentType = file.type || "application/octet-stream";
 
-      // Determine which bucket to use based on the request body or URL
-      // Check if key starts with "recordings/" or if there's a bucket specified
-      const providedKey = (requestBody as { key?: string }).key;
-      const bucket =
-        providedKey?.startsWith("recordings/") ||
-        providedKey?.startsWith("student-attendance/") ||
-        (requestBody as { bucket?: string }).bucket === "recordings" ||
-        (requestBody as { bucket?: string }).bucket === "student-attendance"
-          ? (requestBody as { bucket?: string }).bucket || "uploads"
-          : "uploads";
-
-      // Get presigned URL from our unified API
+      // Get presigned URL from our unified API. The caller supplies `key` and
+      // `bucket` in the request body; the route rejects a request without them.
       const presignedResponse = await fetch("/api/s3/presigned", {
         method: "POST",
         headers: {
@@ -113,8 +103,6 @@ export function useS3Upload() {
         body: JSON.stringify({
           filename: file.name,
           contentType,
-          bucket,
-          key: providedKey,
           ...requestBody,
         }),
       });
