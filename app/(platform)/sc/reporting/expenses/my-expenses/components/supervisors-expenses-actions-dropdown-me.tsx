@@ -33,9 +33,6 @@ export default function SupervisorExpenseDropdownMenu({
           <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">Edit Request</div>
         </HCEditSupervisorExpense>
 
-        <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-          Download receipt(s)
-        </div>
         <DropdownMenuSeparator />
 
         <HCDeleteExpenseRequest expense={expense}>
