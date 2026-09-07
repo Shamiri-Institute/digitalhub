@@ -121,12 +121,14 @@ export async function createAttendanceDocument(
       return previous;
     });
 
-    for (const { link } of replaced) {
-      const bucket = link.startsWith("student-attendance/")
-        ? ("student-attendance" as const)
-        : ("uploads" as const);
-      await deleteObject({ Key: link }, bucket);
-    }
+    await Promise.all(
+      replaced.map(({ link }) =>
+        deleteObject(
+          { Key: link },
+          link.startsWith("student-attendance/") ? "student-attendance" : "uploads",
+        ),
+      ),
+    );
 
     return {
       success: true,
