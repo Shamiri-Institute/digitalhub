@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.36.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.35.4...v1.36.0) (2026-09-07)
+
+
+### Features
+
+* **auth:** move to use database sessions over JWT membership ([#812](https://github.com/Shamiri-Institute/digitalhub/issues/812)) ([e58f76b](https://github.com/Shamiri-Institute/digitalhub/commit/e58f76bd7ceca2557b55392d6ed63a7b487376bd))
+* **seed:** create report records for the empty reporting pages ([#802](https://github.com/Shamiri-Institute/digitalhub/issues/802)) ([4bbc88f](https://github.com/Shamiri-Institute/digitalhub/commit/4bbc88f552152d4178b1e9503b2ea8c52b2d8867))
+
+
+### Bug Fixes
+
+* **api:** require authenticated session for S3 presigned URL route ([#789](https://github.com/Shamiri-Institute/digitalhub/issues/789)) ([b34f605](https://github.com/Shamiri-Institute/digitalhub/commit/b34f605751fcf804a4cc31a8a47e22208f698fe8))
+
 ## [1.35.4](https://github.com/Shamiri-Institute/digitalhub/compare/v1.35.3...v1.35.4) (2026-08-24)
 
 ## [1.35.3](https://github.com/Shamiri-Institute/digitalhub/compare/v1.35.2...v1.35.3) (2026-08-14)
