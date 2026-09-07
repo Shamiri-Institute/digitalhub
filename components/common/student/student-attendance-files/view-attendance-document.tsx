@@ -58,9 +58,9 @@ export default function ViewAttendanceDocument({
   }, [sessionId, groupId]);
 
   const handleDelete = async () => {
-    if (!state.id || !state.link) return;
+    if (!state.id) return;
     setState((prev) => ({ ...prev, archiving: true }));
-    const result = await deleteAttendanceFile(state.id, state.link);
+    const result = await deleteAttendanceFile(state.id);
     if (result.success) {
       setState({ loading: false, archived: true, archiving: false });
       onDeleteSuccess?.();
