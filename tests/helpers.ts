@@ -13,7 +13,7 @@ export const PersonnelFixtures = {
     stateFile: path.join(__dirname, "./fixtures/hub-coordinator-state.json"),
   },
   fellow: {
-    email: "wambugu.davis@shamiri.institute",
+    email: "bukayo.saka@test.com",
     stateFile: path.join(__dirname, "./fixtures/fellow-state.json"),
   },
   clinicalLead: {
@@ -27,6 +27,9 @@ export const PersonnelFixtures = {
 };
 
 export async function generateSessionToken(email: string) {
-  const user = await db.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
+  const user = await db.user.findUniqueOrThrow({
+    where: { email },
+    select: { id: true },
+  });
   return (await createSession(user.id)).value;
 }
