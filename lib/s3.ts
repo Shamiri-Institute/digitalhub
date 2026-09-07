@@ -2,13 +2,13 @@ import {
   DeleteObjectCommand,
   type DeleteObjectCommandInput,
   GetObjectCommand,
+  PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { env } from "#/env";
-
-export type S3Bucket = "recordings" | "student-attendance";
+import { S3_BUCKETS, type S3Bucket } from "#/lib/s3-buckets";
 
 const BUCKETS: Record<S3Bucket, { bucket: string; region: string }> = {
   recordings: {
@@ -25,7 +25,7 @@ function requireBucket(bucket: S3Bucket) {
   const config = BUCKETS[bucket];
   if (!config) {
     throw new Error(
-      `S3 bucket must be one of ${Object.keys(BUCKETS).join(", ")}; received ${String(bucket)}`,
+      `S3 bucket must be one of ${S3_BUCKETS.join(", ")}; received ${String(bucket)}`,
     );
   }
   return config;
@@ -38,6 +38,9 @@ function createClient(bucket: S3Bucket): S3Client {
       accessKeyId: env.S3_UPLOAD_KEY,
       secretAccessKey: env.S3_UPLOAD_SECRET,
     },
+    // Disable automatic CRC32 checksum calculation (SDK v3.729.0+ default)
+    // See: https://github.com/aws/aws-sdk-js-v3/issues/6810
+    requestChecksumCalculation: "WHEN_REQUIRED",
   });
 }
 
@@ -61,4 +64,21 @@ export async function getPresignedUrl(
     Key: key,
   });
   return getSignedUrl(s3Client, command, { expiresIn });
+}
+
+export async function getPresignedUploadUrl(
+  key: string,
+  bucket: S3Bucket,
+  contentType: string,
+  expiresIn = 3600,
+): Promise<{ url: string; bucket: string }> {
+  const bucketName = requireBucket(bucket).bucket;
+  const command = new PutObjectCommand({
+    Bucket: bucketName,
+    Key: key,
+    ContentType: contentType,
+    CacheControl: "max-age=630720000",
+  });
+  const url = await getSignedUrl(createClient(bucket), command, { expiresIn });
+  return { url, bucket: bucketName };
 }

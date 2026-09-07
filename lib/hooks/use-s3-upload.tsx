@@ -3,9 +3,7 @@
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 
-import type { S3Bucket } from "#/lib/s3";
-
-const BUCKETS: readonly S3Bucket[] = ["recordings", "student-attendance"];
+import { S3_BUCKETS, type S3Bucket } from "#/lib/s3-buckets";
 
 export interface UploadTarget {
   key: string;
@@ -85,9 +83,9 @@ export function useS3Upload() {
 
   const uploadToS3 = useCallback(
     async (file: File, target: UploadTarget): Promise<UploadResult> => {
-      if (!BUCKETS.includes(target?.bucket)) {
+      if (!S3_BUCKETS.includes(target?.bucket)) {
         throw new Error(
-          `uploadToS3 requires an explicit bucket (${BUCKETS.join(" or ")}); received ${String(target?.bucket)}`,
+          `uploadToS3 requires an explicit bucket (${S3_BUCKETS.join(" or ")}); received ${String(target?.bucket)}`,
         );
       }
       if (!target.key) {
