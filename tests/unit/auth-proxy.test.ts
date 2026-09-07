@@ -1,10 +1,11 @@
 // @vitest-environment node
+import { pathToRegexp } from "next/dist/compiled/path-to-regexp";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { sessionCookie } from "#/lib/auth/session";
 import { db } from "#/lib/db";
-import proxy from "#/proxy";
+import proxy, { config } from "#/proxy";
 
 vi.mock("#/lib/db", () => ({ db: { session: { findUnique: vi.fn() } } }));
 
@@ -84,10 +85,29 @@ describe("proxy", () => {
     expect(findUnique).not.toHaveBeenCalled();
   });
 
-  it("protects paths that contain 'monitoring'", async () => {
-    for (const path of ["/monitoring", "/hc/reporting/monitoring-and-evaluation"]) {
-      const res = await proxy(request(path));
-      expect(res.status).toBe(307);
+  it("protects the monitoring-and-evaluation page", async () => {
+    const res = await proxy(request("/hc/reporting/monitoring-and-evaluation"));
+    expect(res.status).toBe(307);
+  });
+});
+
+describe("matcher", () => {
+  const matcher = pathToRegexp(config.matcher[0] ?? "");
+
+  it("skips API routes, Vercel telemetry and the Sentry tunnel", () => {
+    for (const path of [
+      "/api/s3/presigned",
+      "/_vercel/speed-insights/vitals",
+      "/monitoring",
+      "/_next/static/chunk.js",
+    ]) {
+      expect(matcher.test(path)).toBe(false);
+    }
+  });
+
+  it("covers pages, including paths that merely contain 'monitoring'", () => {
+    for (const path of ["/", "/login", "/hc/schools", "/hc/reporting/monitoring-and-evaluation"]) {
+      expect(matcher.test(path)).toBe(true);
     }
   });
 });

@@ -12,9 +12,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - _vercel (Speed Insights and other Vercel telemetry routes)
+     * - monitoring (Sentry tunnel route, see tunnelRoute in next.config.js)
      * - favicon.ico (favicon file)
      */
-    "/((?!api|_next/static|_next/image|_vercel|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|_vercel|monitoring|favicon.ico).*)",
   ],
 };
 
