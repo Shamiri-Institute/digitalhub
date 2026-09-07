@@ -21,11 +21,6 @@ const BUCKETS: Record<S3Bucket, { bucket: string; region: string }> = {
   },
 };
 
-/**
- * Every caller must name the bucket. The type makes that a compile error, this
- * makes it a clear runtime error for anything that slips past (JS callers,
- * `as` casts, a value read from a form).
- */
 function requireBucket(bucket: S3Bucket) {
   const config = BUCKETS[bucket];
   if (!config) {
