@@ -2,7 +2,7 @@
 
 import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
-import type { JWTMembership } from "#/lib/auth-options";
+import type { JWTMembership } from "#/lib/auth/session-user";
 import { db } from "#/lib/db";
 import type { Personnel } from "#/lib/types/personnel";
 

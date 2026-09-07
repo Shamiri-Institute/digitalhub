@@ -1,4 +1,3 @@
-import type { ImplementerRole } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
 import type { AuthOptions } from "next-auth";
 import { getServerSession } from "next-auth";
@@ -9,8 +8,10 @@ import { z } from "zod";
 import { env } from "#/env";
 import { isCredentialAuthAllowed } from "#/lib/auth/credential-auth";
 import { adapter, sessionCookie } from "#/lib/auth/session";
+import { loadSessionUser } from "#/lib/auth/session-user";
 import { db } from "#/lib/db";
-import { getDefaultProjectId } from "#/lib/default-project-id";
+
+export type { JWTMembership, SessionUser } from "#/lib/auth/session-user";
 
 const googleConfigSchema = z.object({
   GOOGLE_ID: z.string(),
@@ -22,44 +23,6 @@ if (!googleConfig.success && !isCredentialAuthAllowed()) {
   throw new Error(
     "No sign-in method is configured: set GOOGLE_ID and GOOGLE_SECRET, or set TEST_USER_PASSWORD in development, testing or training",
   );
-}
-
-export interface JWTMembership {
-  id: number;
-  implementerId: string;
-  implementerName: string;
-  role: ImplementerRole;
-  identifier: string | null;
-  updatedAt?: Date;
-}
-
-export type SessionUser = {
-  id: string | null;
-  email: string | null;
-  name: string | null;
-  image: string | null;
-  activeMembership?: JWTMembership;
-  memberships?: JWTMembership[];
-  activeProjectId?: string | null;
-};
-
-function parseMembershipsForJWT(userWithMemberships: {
-  memberships: Array<{
-    id: number;
-    role: ImplementerRole;
-    identifier: string | null;
-    updatedAt: Date | null;
-    implementer: { id: string; implementerName: string };
-  }>;
-}): JWTMembership[] {
-  return userWithMemberships.memberships.map((m) => ({
-    id: m.id,
-    implementerId: m.implementer.id,
-    implementerName: m.implementer.implementerName,
-    role: m.role,
-    identifier: m.identifier,
-    updatedAt: m.updatedAt ?? undefined,
-  }));
 }
 
 export const authOptions: AuthOptions = {
@@ -107,72 +70,13 @@ export const authOptions: AuthOptions = {
       return true;
     },
     session: async ({ session, user }) => {
-      const [defaultProjectId, dbUser] = await Promise.all([
-        getDefaultProjectId(),
-        db.user.findUnique({
-          where: { id: user.id, archivedAt: null },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            image: true,
-            activeProjectId: true,
-            memberships: {
-              select: {
-                id: true,
-                role: true,
-                identifier: true,
-                updatedAt: true,
-                implementer: {
-                  select: {
-                    id: true,
-                    implementerName: true,
-                    hubs: { select: { projectId: true } },
-                  },
-                },
-              },
-              orderBy: { updatedAt: "desc" },
-            },
-          },
-        }),
-      ]);
-
-      if (!dbUser) {
+      const sessionUser = await loadSessionUser(user.id);
+      if (!sessionUser) {
         await db.session.deleteMany({ where: { userId: user.id } });
         addBreadcrumb({ message: "Session user not found", data: { userId: user.id } });
         session.user = { id: null, email: null, name: null, image: null };
         return session;
       }
-
-      const activeProjectId = dbUser.activeProjectId ?? defaultProjectId;
-
-      let filtered = dbUser.memberships.filter((m) =>
-        m.implementer.hubs.some((h) => h.projectId === activeProjectId),
-      );
-      if (filtered.length === 0) {
-        filtered = dbUser.memberships.filter((m) => m.role === "ADMIN");
-      }
-      const memberships = parseMembershipsForJWT({ memberships: filtered });
-
-      if (memberships.length === 0) {
-        console.warn(`User ${dbUser.email} has no memberships`);
-      }
-
-      // setActiveMembership bumps updatedAt, so the newest row is the active one.
-      const sortedMemberships = [...memberships].sort(
-        (a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0),
-      );
-
-      const sessionUser: SessionUser = {
-        id: dbUser.id,
-        email: dbUser.email,
-        name: dbUser.name,
-        image: dbUser.image,
-        activeMembership: sortedMemberships[0],
-        memberships,
-        activeProjectId,
-      };
-
       session.user = sessionUser;
       return session;
     },
