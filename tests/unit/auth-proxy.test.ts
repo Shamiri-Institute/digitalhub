@@ -7,7 +7,6 @@ import { sessionCookie } from "#/lib/auth/session";
 import { db } from "#/lib/db";
 import proxy, { config } from "#/proxy";
 
-// The proxy runs at the edge, outside the RDS allowlist: it must never query.
 vi.mock("#/lib/db", () => ({ db: { session: { findUnique: vi.fn(), deleteMany: vi.fn() } } }));
 
 const findUnique = vi.mocked(db.session.findUnique);

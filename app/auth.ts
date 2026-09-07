@@ -7,12 +7,6 @@ import { roleHome } from "#/lib/auth/role-home";
 import { getCachedSession } from "#/lib/auth-options";
 import { db } from "#/lib/db";
 
-/**
- * Role check in the data access layer, as Next.js recommends over layouts
- * (layouts do not re-render on client navigation). Every page and action
- * reaches its data through a current* helper, so another role that lands on
- * this role's routes is sent to its own home, as the old middleware did.
- */
 function requireRole(session: Session, role: ImplementerRole) {
   const membership = session.user.activeMembership;
   if (membership && membership.role !== role) {
