@@ -41,11 +41,7 @@ export async function getAttendanceDocument(
 
     if (!doc) throw new Error("No attendance document found for this session");
 
-    const bucket = doc.link.startsWith("student-attendance/")
-      ? ("student-attendance" as const)
-      : ("uploads" as const);
-
-    const presignedUrl = await getPresignedUrl(doc.link, bucket);
+    const presignedUrl = await getPresignedUrl(doc.link, "student-attendance");
 
     const data: AttendanceDoc = {
       id: doc.id,
@@ -112,10 +108,7 @@ export async function createAttendanceDocument(
     });
 
     if (oldS3Key) {
-      const bucket = oldS3Key.startsWith("student-attendance/")
-        ? ("student-attendance" as const)
-        : ("uploads" as const);
-      await deleteObject({ Key: oldS3Key }, bucket);
+      await deleteObject({ Key: oldS3Key }, "student-attendance");
     }
 
     return { success: true, message: "Successfully created attendance document" };
@@ -138,11 +131,7 @@ export async function deleteAttendanceFile(
       data: { archivedAt: new Date() },
     });
 
-    const bucket = key.startsWith("student-attendance/")
-      ? ("student-attendance" as const)
-      : ("uploads" as const);
-
-    await deleteObject({ Key: key }, bucket);
+    await deleteObject({ Key: key }, "student-attendance");
     const response: ActionResponse = {
       success: true,
       message: "Successfully deleted the attendance file.",

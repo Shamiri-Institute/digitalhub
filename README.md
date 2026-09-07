@@ -162,8 +162,6 @@ CASEREPORTS_FILEID="google-drive-folder-id-for-case-reports"
 # S3_UPLOAD_KEY/SECRET are the IAM credentials used for all S3 buckets
 S3_UPLOAD_KEY="your-s3-upload-key"
 S3_UPLOAD_SECRET="your-s3-upload-secret"
-S3_UPLOAD_BUCKET="your-s3-bucket-name"
-S3_UPLOAD_REGION="your-aws-region"
 
 # S3 Recordings Bucket (Session Recordings)
 S3_RECORDINGS_BUCKET="your-recordings-bucket"
@@ -439,8 +437,6 @@ Configure these in your Vercel project settings:
 | `GOOGLE_SECRET` | Yes | Google OAuth Client Secret |
 | `S3_UPLOAD_KEY` | Yes | IAM access key used for all S3 buckets |
 | `S3_UPLOAD_SECRET` | Yes | IAM secret key used for all S3 buckets |
-| `S3_UPLOAD_BUCKET` | Yes | S3 bucket for uploads |
-| `S3_UPLOAD_REGION` | Yes | Region of the uploads bucket |
 | `S3_RECORDINGS_BUCKET` | Yes | S3 bucket for session recordings |
 | `S3_RECORDINGS_REGION` | No | Recordings bucket region (defaults to `af-south-1`) |
 | `S3_STUDENT_ATTENDANCE_BUCKET` | No | Bucket for attendance documents |

@@ -2,13 +2,11 @@
 
 import type { Supervisor } from "@prisma/client";
 import { format, startOfWeek, subWeeks } from "date-fns";
-import { Loader2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { type UseFormReturn, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { addSupervisorExpense } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -35,8 +33,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { useS3Upload } from "#/lib/hooks/use-s3-upload";
-import { formatBytes, stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export const AddAddSupervisorExpenseSchema = z.object({
@@ -46,7 +43,6 @@ export const AddAddSupervisorExpenseSchema = z.object({
   totalAmount: stringValidation("Please enter the total amount"),
   mpesaName: stringValidation("Please enter the M-Pesa name"),
   mpesaNumber: stringValidation("Please enter the M-Pesa number"),
-  receiptFileKey: stringValidation("Please upload a receipt"),
   supervisor: stringValidation("Please select a supervisor"),
 });
 
@@ -85,7 +81,6 @@ export default function AddSupervisorExpensesForm({
       totalAmount: "",
       mpesaName: "",
       mpesaNumber: "",
-      receiptFileKey: "",
       supervisor: "",
     },
   });
@@ -331,8 +326,6 @@ export default function AddSupervisorExpensesForm({
                   )}
                 />
               </div>
-              <Separator />
-              <ReceiptFileUpload form={form} />
 
               <DialogFooter>
                 <Button
@@ -359,79 +352,5 @@ export default function AddSupervisorExpensesForm({
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-export function ReceiptFileUpload({
-  form,
-}: {
-  form: UseFormReturn<z.infer<typeof AddAddSupervisorExpenseSchema>>;
-}) {
-  const { FileInput, openFileDialog, uploadToS3 } = useS3Upload();
-  const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-
-  const handleFileChange = useCallback(
-    async (file: File) => {
-      try {
-        setUploading(true);
-        const { key } = await uploadToS3(file);
-        if (key) {
-          form.setValue("receiptFileKey", key);
-          setFile(file);
-        }
-      } catch (error) {
-        console.error("File upload error:", error);
-      } finally {
-        setUploading(false);
-      }
-    },
-    [form, uploadToS3],
-  );
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={openFileDialog}
-        disabled={uploading}
-        className="flex w-full items-center space-x-6 rounded-lg  border-2 border-dashed border-secondary p-3"
-      >
-        <div className="cursor-pointer rounded-lg border border-gray-200 p-2">
-          <span className="text-normal cursor-pointer text-center">
-            {uploading ? "Uploading receipt..." : "Upload receipt"}
-          </span>
-        </div>
-
-        <div className="flex space-x-2">
-          {uploading ? (
-            <Loader2 className="h-6 w-6 animate-spin" />
-          ) : (
-            <Icons.uploadCloudIcon className="h-6 w-6" />
-          )}
-        </div>
-      </button>
-      <FileInput onChange={handleFileChange} />
-
-      {form.formState.errors.receiptFileKey && (
-        <p className="text-shamiri-light-red">{form.formState.errors.receiptFileKey.message}</p>
-      )}
-
-      {file && (
-        <div>
-          <span>
-            {file.name} ({formatBytes(file.size)})
-          </span>
-        </div>
-      )}
-      <Input
-        id="receiptFileKey"
-        type="text"
-        {...form.register("receiptFileKey", {
-          required: "Please upload the receipt",
-        })}
-        className="hidden h-10 py-2"
-      />
-    </div>
   );
 }

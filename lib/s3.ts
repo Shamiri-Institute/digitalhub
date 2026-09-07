@@ -8,13 +8,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { env } from "#/env";
 
-export type S3Bucket = "uploads" | "recordings" | "student-attendance";
+export type S3Bucket = "recordings" | "student-attendance";
 
 const BUCKETS: Record<S3Bucket, { bucket: string; region: string }> = {
-  uploads: {
-    bucket: env.S3_UPLOAD_BUCKET,
-    region: env.S3_UPLOAD_REGION,
-  },
   recordings: {
     bucket: env.S3_RECORDINGS_BUCKET,
     region: env.S3_RECORDINGS_REGION,
@@ -35,10 +31,7 @@ function createClient(bucket: S3Bucket): S3Client {
   });
 }
 
-export function deleteObject(
-  input: Pick<DeleteObjectCommandInput, "Key">,
-  bucket: S3Bucket = "uploads",
-) {
+export function deleteObject(input: Pick<DeleteObjectCommandInput, "Key">, bucket: S3Bucket) {
   const s3Client = createClient(bucket);
   const command = new DeleteObjectCommand({
     ...input,
@@ -49,7 +42,7 @@ export function deleteObject(
 
 export async function getPresignedUrl(
   key: string,
-  bucket: S3Bucket = "uploads",
+  bucket: S3Bucket,
   expiresIn = 3600,
 ): Promise<string> {
   const s3Client = createClient(bucket);
