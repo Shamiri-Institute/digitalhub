@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.36.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.1...v1.36.2) (2026-09-08)
+
 ## [1.36.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.0...v1.36.1) (2026-09-07)
 
 
