@@ -108,7 +108,6 @@ export type SupervisorExpenseInput = {
   expenseType: string;
   mpesaName: string;
   mpesaNumber: string;
-  receiptFileKey: string;
   session: string;
   totalAmount: string;
   week: string;
@@ -132,7 +131,6 @@ export async function createSupervisorExpense(
         status: "PENDING",
         details: {
           subtype: data.expenseType,
-          receipt_link: data.receiptFileKey,
           session: data.session,
         },
         mpesaName: data.mpesaName,
@@ -155,7 +153,7 @@ export async function createSupervisorExpense(
 
 export async function updateSupervisorExpenseRequest(
   id: string,
-  data: Omit<SupervisorExpenseInput, "receiptFileKey" | "supervisor">,
+  data: Omit<SupervisorExpenseInput, "supervisor">,
 ) {
   try {
     await db.reimbursementRequest.update({

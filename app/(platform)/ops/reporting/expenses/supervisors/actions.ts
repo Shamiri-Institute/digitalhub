@@ -117,7 +117,7 @@ export async function updateSupervisorExpense({
   data,
 }: {
   id: string;
-  data: Omit<SupervisorExpenseInput, "receiptFileKey" | "supervisor">;
+  data: Omit<SupervisorExpenseInput, "supervisor">;
 }) {
   try {
     const opsUser = await currentOpsUser();

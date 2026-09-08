@@ -3,14 +3,11 @@
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 
-export interface UploadOptions {
-  endpoint?: {
-    request?: {
-      url?: string;
-      body?: Record<string, unknown>;
-      headers?: Record<string, string>;
-    };
-  };
+import { S3_BUCKETS, type S3Bucket } from "#/lib/s3-buckets";
+
+export interface UploadTarget {
+  key: string;
+  bucket: S3Bucket;
 }
 
 export interface UploadResult {
@@ -85,38 +82,23 @@ export function useS3Upload() {
   }, []);
 
   const uploadToS3 = useCallback(
-    async (file: File, options?: UploadOptions): Promise<UploadResult> => {
-      const requestBody = options?.endpoint?.request?.body ?? {};
-      const requestHeaders = options?.endpoint?.request?.headers ?? {};
+    async (file: File, target: UploadTarget): Promise<UploadResult> => {
+      if (!S3_BUCKETS.includes(target?.bucket)) {
+        throw new Error(
+          `uploadToS3 requires an explicit bucket (${S3_BUCKETS.join(" or ")}); received ${String(target?.bucket)}`,
+        );
+      }
+      if (!target.key) {
+        throw new Error("uploadToS3 requires an explicit object key");
+      }
 
       // Use application/octet-stream as fallback for files with unknown MIME types
       const contentType = file.type || "application/octet-stream";
 
-      // Determine which bucket to use based on the request body or URL
-      // Check if key starts with "recordings/" or if there's a bucket specified
-      const providedKey = (requestBody as { key?: string }).key;
-      const bucket =
-        providedKey?.startsWith("recordings/") ||
-        providedKey?.startsWith("student-attendance/") ||
-        (requestBody as { bucket?: string }).bucket === "recordings" ||
-        (requestBody as { bucket?: string }).bucket === "student-attendance"
-          ? (requestBody as { bucket?: string }).bucket || "uploads"
-          : "uploads";
-
-      // Get presigned URL from our unified API
       const presignedResponse = await fetch("/api/s3/presigned", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...requestHeaders,
-        },
-        body: JSON.stringify({
-          filename: file.name,
-          contentType,
-          bucket,
-          key: providedKey,
-          ...requestBody,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentType, key: target.key, bucket: target.bucket }),
       });
 
       if (!presignedResponse.ok) {

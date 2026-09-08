@@ -302,16 +302,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         extension,
       });
 
-      const { key } = await uploadToS3(selectedFile, {
-        endpoint: {
-          request: {
-            body: {
-              key: s3Key,
-              bucket: "recordings",
-            },
-          },
-        },
-      });
+      const { key } = await uploadToS3(selectedFile, { key: s3Key, bucket: "recordings" });
 
       if (!key) {
         throw new Error("Upload failed - no key returned");
