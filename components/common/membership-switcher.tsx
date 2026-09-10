@@ -15,7 +15,7 @@ import {
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { setActiveMembership } from "#/lib/actions/active-membership";
-import { isAdminUserByEmail } from "#/lib/actions/fetch-personnel";
+import { isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
 import { cn } from "#/lib/utils";
 
 interface JWTMembership {
@@ -42,7 +42,7 @@ export function MembershipSwitcher({
 
   useEffect(() => {
     const checkIsAdminUser = async () => {
-      const checkIsAdminUser = await isAdminUserByEmail(session?.user?.email ?? "");
+      const checkIsAdminUser = await isCurrentUserAdmin();
       if (checkIsAdminUser) {
         setIsAdminUser(true);
       }
