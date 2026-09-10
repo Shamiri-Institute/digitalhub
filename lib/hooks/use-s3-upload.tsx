@@ -40,6 +40,30 @@ function FileInputComponent({ onChange, ...props }: FileInputProps) {
   return <input {...props} type="file" onChange={handleInputChange} />;
 }
 
+// The route allowlist is exact MIME. Empty / octet-stream is common for audio
+// picked from disk; map the extension so a valid recording still mints.
+const EXTENSION_CONTENT_TYPES: Record<string, string> = {
+  mp3: "audio/mpeg",
+  wav: "audio/wav",
+  wave: "audio/wav",
+  m4a: "audio/x-m4a",
+  mp4: "audio/mp4",
+  aac: "audio/aac",
+  pdf: "application/pdf",
+};
+
+function resolveUploadContentType(file: File): string {
+  const declared = file.type.toLowerCase().split(";")[0]?.trim() ?? "";
+  if (declared && declared !== "application/octet-stream") {
+    return declared;
+  }
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (ext && EXTENSION_CONTENT_TYPES[ext]) {
+    return EXTENSION_CONTENT_TYPES[ext];
+  }
+  return declared || "application/octet-stream";
+}
+
 /**
  * S3 upload hook using presigned URLs with progress tracking.
  */
@@ -92,13 +116,21 @@ export function useS3Upload() {
         throw new Error("uploadToS3 requires an explicit object key");
       }
 
-      // Use application/octet-stream as fallback for files with unknown MIME types
-      const contentType = file.type || "application/octet-stream";
+      // Browsers often send an empty type (or octet-stream) for a valid .mp3.
+      // The route allowlist is exact MIME, so infer from the extension rather
+      // than minting a URL that S3 / the route will then reject.
+      const contentType = resolveUploadContentType(file);
 
+      // size is signed into the URL, so the PUT body must be exactly this long.
       const presignedResponse = await fetch("/api/s3/presigned", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contentType, key: target.key, bucket: target.bucket }),
+        body: JSON.stringify({
+          contentType,
+          key: target.key,
+          bucket: target.bucket,
+          size: file.size,
+        }),
       });
 
       if (!presignedResponse.ok) {
@@ -146,6 +178,7 @@ export function useS3Upload() {
         xhr.open("PUT", url, true);
         xhr.setRequestHeader("Content-Type", contentType);
         xhr.setRequestHeader("Cache-Control", "max-age=630720000");
+        xhr.setRequestHeader("If-None-Match", "*");
         xhr.send(file);
       });
 

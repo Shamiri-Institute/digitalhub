@@ -101,16 +101,10 @@ export function buildS3Key(params: S3KeyParams): string {
     ? `${customFileName}.${cleanExtension}`
     : `${sanitizeForS3Key(sessionType)}_${recordingId}.${cleanExtension}`;
 
-  // Build the key
-  const key = [
-    prefix,
-    year,
-    month,
-    sanitizedSchool,
-    sanitizedFellow,
-    sanitizedGroup,
-    filename,
-  ].join("/");
+  // Skip empty segments so a punctuation-only school name does not produce "//".
+  const key = [prefix, year, month, sanitizedSchool, sanitizedFellow, sanitizedGroup, filename]
+    .filter(Boolean)
+    .join("/");
 
   return key;
 }
