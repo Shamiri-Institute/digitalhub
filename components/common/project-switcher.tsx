@@ -16,7 +16,7 @@ import {
   CommandSeparator,
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
-import { isAdminUserByEmail } from "#/lib/actions/fetch-personnel";
+import { isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
 import { fetchProjects, type ProjectOption, setActiveProject } from "#/lib/actions/project";
 import { cn } from "#/lib/utils";
 
@@ -42,7 +42,7 @@ export function ProjectSwitcher({
 
   useEffect(() => {
     const checkIsAdminUser = async () => {
-      const isAdmin = await isAdminUserByEmail(session?.user?.email ?? "");
+      const isAdmin = await isCurrentUserAdmin();
       if (isAdmin) {
         setIsAdminUser(true);
       }
