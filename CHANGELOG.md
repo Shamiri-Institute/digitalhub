@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.36.3](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.2...v1.36.3) (2026-09-11)
+
+
+### Bug Fixes
+
+* **auth:** stop personnel over-fetch leaking the org roster ([#825](https://github.com/Shamiri-Institute/digitalhub/issues/825)) ([d791ff7](https://github.com/Shamiri-Institute/digitalhub/commit/d791ff743130ef48950da95d47a0a2050f8f68e6))
+* fix issue where users could spoof the session and upload files to s3 bucket. Also fixes permissions for s3 operations ([#808](https://github.com/Shamiri-Institute/digitalhub/issues/808)) ([8a36ea3](https://github.com/Shamiri-Institute/digitalhub/commit/8a36ea35a5ff0ae4ad76420c02ee7a72e2923c3a))
+
 ## [1.36.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.1...v1.36.2) (2026-09-08)
 
 ## [1.36.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.0...v1.36.1) (2026-09-07)
