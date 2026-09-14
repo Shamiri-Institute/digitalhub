@@ -3,7 +3,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
-import { deleteObject, getPresignedUrl } from "#/lib/s3";
+import { deleteObject, getPresignedUrl } from "#/lib/s3/s3.service";
 import type { ActionResponse } from "#/types/actions.types";
 import type {
   AttendanceDoc,
@@ -11,9 +11,9 @@ import type {
   StudentAttendanceDocsFilters,
 } from "./types";
 
+export type { AttendanceS3KeyParams } from "#/lib/s3/s3.types";
 export type {
   AttendanceDoc,
-  AttendanceDocS3Key,
   CreateStudentAttendanceDocPayload,
   StudentAttendanceDocsFilters,
 } from "./types";
@@ -33,6 +33,32 @@ export async function getAttendanceDocument(
       throw new Error("The session has not been authenticated");
 
     const { sessionId, groupId } = filters;
+    const role = session.user.activeMembership?.role;
+    const identifier = session.user.activeMembership?.identifier;
+
+    const group = await db.interventionGroup.findFirst({
+      where: { id: groupId },
+      select: {
+        leaderId: true,
+        school: {
+          select: {
+            assignedSupervisorId: true,
+            hub: { select: { coordinators: { select: { id: true } } } },
+          },
+        },
+      },
+    });
+
+    const inScope =
+      role === ImplementerRole.ADMIN ||
+      (Boolean(identifier) &&
+        ((role === ImplementerRole.FELLOW && group?.leaderId === identifier) ||
+          (role === ImplementerRole.SUPERVISOR &&
+            group?.school?.assignedSupervisorId === identifier) ||
+          (role === ImplementerRole.HUB_COORDINATOR &&
+            (group?.school?.hub?.coordinators.some((c) => c.id === identifier) ?? false))));
+
+    if (!group || !inScope) throw new Error("Forbidden");
 
     const doc = await db.attendanceDocuments.findFirst({
       where: { sessionId, groupId, archivedAt: null },
@@ -68,7 +94,6 @@ export async function getAttendanceDocument(
 
 export async function createAttendanceDocument(
   payload: CreateStudentAttendanceDocPayload,
-  oldS3Key: string | null,
 ): Promise<ActionResponse> {
   try {
     const session = await getCurrentUserSession();
@@ -81,6 +106,22 @@ export async function createAttendanceDocument(
 
     const userId = session.user.id;
 
+    const ticket = await db.s3UploadPermit.findFirst({
+      where: {
+        bucket: "student-attendance",
+        key: payload.link,
+        issuedTo: userId,
+        status: "PENDING",
+        expiresAt: { gt: new Date() },
+      },
+    });
+    if (!ticket) throw new Error("Upload not authorized");
+
+    const ctx = ticket.context as { groupId: string; sessionId: string };
+    if (ctx.groupId !== payload.groupId || ctx.sessionId !== payload.sessionId) {
+      throw new Error("Upload does not match authorized scope");
+    }
+
     const markedStudentCount = await db.studentAttendance.count({
       where: {
         sessionId: payload.sessionId,
@@ -91,6 +132,15 @@ export async function createAttendanceDocument(
     if (markedStudentCount < 2) {
       throw new Error("At least 2 students must have attendance marked before uploading");
     }
+
+    const supersededDocs = await db.attendanceDocuments.findMany({
+      where: {
+        sessionId: payload.sessionId,
+        groupId: payload.groupId,
+        archivedAt: null,
+      },
+      select: { link: true },
+    });
 
     await db.$transaction(async (tx) => {
       await tx.attendanceDocuments.updateMany({
@@ -105,33 +155,62 @@ export async function createAttendanceDocument(
       await tx.attendanceDocuments.create({
         data: { ...payload, uploadedBy: userId },
       });
+
+      const consumed = await tx.s3UploadPermit.updateMany({
+        where: { id: ticket.id, status: "PENDING" },
+        data: { status: "USED", usedAt: new Date() },
+      });
+      if (consumed.count === 0) {
+        throw new Error("Upload permit already consumed");
+      }
     });
 
-    if (oldS3Key) {
-      await deleteObject({ Key: oldS3Key }, "student-attendance");
-    }
+    await Promise.all(
+      supersededDocs
+        .map((doc) => doc.link)
+        .filter((link): link is string => Boolean(link) && link !== payload.link)
+        .map((link) =>
+          deleteObject({ Key: link }, "student-attendance").catch((error) => {
+            console.error("Failed to delete superseded attendance file:", link, error);
+          }),
+        ),
+    );
 
-    return { success: true, message: "Successfully created attendance document" };
+    return {
+      success: true,
+      message: "Successfully created attendance document",
+    };
   } catch (error: unknown) {
-    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
-export async function deleteAttendanceFile(
-  documentId: string,
-  key: string,
-): Promise<ActionResponse> {
+export async function deleteAttendanceFile(documentId: string): Promise<ActionResponse> {
   try {
     const session = await getCurrentUserSession();
     if (!session?.user.id || session.user.activeMembership?.role !== ImplementerRole.FELLOW)
       throw new Error("The session has not been authenticated");
 
+    const fellowId = session.user.activeMembership?.identifier;
+    if (!fellowId) throw new Error("Forbidden");
+
+    const doc = await db.attendanceDocuments.findFirst({
+      where: { id: documentId, group: { leaderId: fellowId } },
+      select: { id: true, link: true },
+    });
+    if (!doc) throw new Error("Forbidden");
+
     await db.attendanceDocuments.update({
-      where: { id: documentId },
+      where: { id: doc.id },
       data: { archivedAt: new Date() },
     });
 
-    await deleteObject({ Key: key }, "student-attendance");
+    if (doc.link) {
+      await deleteObject({ Key: doc.link }, "student-attendance");
+    }
     const response: ActionResponse = {
       success: true,
       message: "Successfully deleted the attendance file.",

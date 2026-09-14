@@ -1,7 +1,6 @@
 "use client";
 
 import type { ImplementerRole } from "@prisma/client";
-import { format } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useState } from "react";
 import { SessionDetail } from "#/components/common/session/session-list";
@@ -35,13 +34,6 @@ export default function AttendanceDocumentDialog({
     setRefreshKey((k) => k + 1);
   }, []);
   if (!session || !groupId) return null;
-
-  const group = session.school?.interventionGroups?.find((g) => g.id === groupId);
-  const schoolName = session.school?.schoolName;
-  const fellowName = group?.leader?.fellowName ?? undefined;
-  const groupName = group?.groupName;
-  const sessionDate = format(session.sessionDate, "yyyy-MM-dd");
-  const sessionType = session.session?.sessionName ?? session.sessionType ?? undefined;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -80,11 +72,6 @@ export default function AttendanceDocumentDialog({
             <UploadStudentAttendanceDocument
               groupId={groupId}
               sessionId={session.id}
-              schoolName={schoolName}
-              fellowName={fellowName}
-              groupName={groupName}
-              sessionDate={sessionDate}
-              sessionType={sessionType}
               onClose={onOpenChange}
               onUploadSuccess={handleRefresh}
             />

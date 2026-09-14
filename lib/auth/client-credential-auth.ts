@@ -1,6 +1,6 @@
 "use client";
 
-export const CREDENTIAL_AUTH_ALLOWED_ENVS = ["development", "testing", "training"];
+import { CREDENTIAL_AUTH_ALLOWED_ENVS } from "#/lib/auth/credential-auth-envs";
 
 export function isCredentialAuthAllowedClient() {
   const env = process.env.NEXT_PUBLIC_ENV;
