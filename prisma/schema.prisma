@@ -1887,6 +1887,32 @@ model AttendanceDocuments {
   @@map("attendance_documents")
 }
 
+model S3UploadPermit {
+  id          String             @id @default(cuid())
+  bucket      String             @db.VarChar(100)
+  key         String             @db.VarChar(500)
+  contentType String             @map("content_type") @db.VarChar(100)
+  size        Int
+  context     Json
+  issuedTo    String             @map("issued_to") @db.VarChar(255)
+  status      UploadTicketStatus @default(PENDING)
+  expiresAt   DateTime           @map("expires_at") @db.Timestamptz()
+  usedAt      DateTime?          @map("used_at") @db.Timestamptz()
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@unique([bucket, key])
+  @@index([issuedTo, status])
+  @@map("s3_upload_permits")
+}
+
+enum UploadTicketStatus {
+  PENDING
+  USED
+  EXPIRED
+
+  @@map("upload_ticket_status")
+}
+
 enum TicketPriorityLevel {
   LOW
   MEDIUM

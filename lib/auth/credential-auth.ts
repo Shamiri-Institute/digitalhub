@@ -1,4 +1,4 @@
-import { CREDENTIAL_AUTH_ALLOWED_ENVS } from "#/lib/auth/client-credential-auth";
+import { CREDENTIAL_AUTH_ALLOWED_ENVS } from "#/lib/auth/credential-auth-envs";
 import { constants } from "#/lib/constants";
 
 export function isCredentialAuthAllowed() {

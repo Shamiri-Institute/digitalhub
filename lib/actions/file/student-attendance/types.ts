@@ -17,11 +17,3 @@ export interface CreateStudentAttendanceDocPayload {
   sessionId: string;
   link: string;
 }
-
-export interface AttendanceDocS3Key {
-  schoolName: string;
-  fellowName: string;
-  groupName: string;
-  sessionDate: Date;
-  sessionType: string;
-}

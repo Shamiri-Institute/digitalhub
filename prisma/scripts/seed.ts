@@ -27,7 +27,10 @@ import { fromZonedTime } from "date-fns-tz";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
+import {
+  buildRecordingsS3Key,
+  generateRecordingFilename,
+} from "#/lib/s3/key-builders/build-recordings-s3-key";
 import { hubSessionTypes } from "#/prisma/scripts/hub-session-types";
 import { createTickets } from "#/prisma/scripts/seed-tickets";
 
@@ -2240,7 +2243,7 @@ async function createSessionRecordings(
 
         // Synthetic key: looks real, points at no real object. The bucket is
         // resolved from env at runtime, so staging never touches prod audio.
-        const s3Key = buildS3Key({
+        const s3Key = buildRecordingsS3Key({
           schoolName: school.schoolName,
           fellowName: group.leader.fellowName ?? "fellow",
           groupName: group.groupName,

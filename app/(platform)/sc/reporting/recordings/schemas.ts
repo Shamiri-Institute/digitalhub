@@ -12,19 +12,20 @@ export const RecordingUploadSchema = z.object({
 
 export type RecordingUploadFormData = z.infer<typeof RecordingUploadSchema>;
 
-/**
- * Allowed audio MIME types
- */
-export const ALLOWED_AUDIO_TYPES = [
-  "audio/mpeg", // mp3
-  "audio/wav", // wav
-  "audio/wave", // wav alternate
-  "audio/x-wav", // wav alternate
-  "audio/x-m4a", // m4a
-  "audio/mp4", // m4a/mp4
-  "video/mp4", // mp4 (can contain audio)
-  "audio/aac", // aac
-] as const;
+export const RECORDINGS_ALLOWED_CONTENT_TYPES = {
+  "audio/mpeg": ["mp3"],
+  "audio/wav": ["wav"],
+  "audio/wave": ["wav"],
+  "audio/x-wav": ["wav"],
+  "audio/x-m4a": ["m4a"],
+  "audio/mp4": ["m4a", "mp4"],
+  "video/mp4": ["mp4"],
+  "audio/aac": ["aac", "m4a"],
+} as const satisfies Record<string, readonly string[]>;
+
+export const ALLOWED_AUDIO_TYPES = Object.keys(
+  RECORDINGS_ALLOWED_CONTENT_TYPES,
+) as (keyof typeof RECORDINGS_ALLOWED_CONTENT_TYPES)[];
 
 /**
  * Allowed file extensions
@@ -225,12 +226,3 @@ export const RecordingEditSchema = z.object({
 });
 
 export type RecordingEditFormData = z.infer<typeof RecordingEditSchema>;
-
-/**
- * Get file extension from filename
- */
-export function getFileExtension(filename: string): string {
-  const parts = filename.split(".");
-  const lastPart = parts[parts.length - 1];
-  return parts.length > 1 && lastPart ? lastPart.toLowerCase() : "";
-}

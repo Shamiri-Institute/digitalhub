@@ -3,19 +3,24 @@
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 
-import { S3_BUCKETS, type S3Bucket } from "#/lib/s3-buckets";
+import { S3_BUCKETS, type S3ApiRequest } from "#/lib/s3/s3.types";
 
-type PresignedUrl = { url: string; key: string; bucket: string };
-
-export interface UploadTarget {
+type PresignedUrl = {
+  url: string;
   key: string;
-  bucket: S3Bucket;
-}
+  bucket: string;
+  fileName?: string;
+  recordingId?: string;
+};
+
+export type UploadTarget = Omit<S3ApiRequest, "contentType" | "size" | "uploaderId">;
 
 export interface UploadResult {
   url: string;
   key: string;
   bucket: string;
+  fileName?: string;
+  recordingId?: string;
 }
 
 export interface FileProgress {
@@ -113,33 +118,34 @@ export function useS3Upload() {
         `uploadToS3 requires an explicit bucket (${S3_BUCKETS.join(" or ")}); received ${String(target?.bucket)}`,
       );
     }
-    if (!target.key) {
-      throw new Error("uploadToS3 requires an explicit object key");
-    }
 
     // Browsers often send an empty type (or octet-stream) for a valid .mp3.
     // The route allowlist is exact MIME, so infer from the extension rather
     // than minting a URL that S3 / the route will then reject.
     const contentType = resolveUploadContentType(file);
 
-    // size is signed into the URL, so the PUT body must be exactly this long.
     const presignedResponse = await fetch("/api/s3/presigned", {
       method: "POST",
+      redirect: "manual",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        ...target,
         contentType,
-        key: target.key,
-        bucket: target.bucket,
         size: file.size,
       }),
     });
 
-    if (!presignedResponse.ok) {
+    if (!presignedResponse.ok || presignedResponse.type === "opaqueredirect") {
       const error: { error?: string } = await presignedResponse.json().catch(() => ({}));
       throw new Error(error.error ?? "Failed to get presigned URL");
     }
 
-    const { url, key, bucket: bucketName } = (await presignedResponse.json()) as PresignedUrl;
+    const presigned = (await presignedResponse.json().catch(() => null)) as PresignedUrl | null;
+    if (!presigned) {
+      throw new Error("Failed to get presigned URL");
+    }
+
+    const { url, key, bucket: bucketName, fileName, recordingId } = presigned;
 
     // Track this file
     addFile(file);
@@ -187,6 +193,8 @@ export function useS3Upload() {
       url: `https://${bucketName}.s3.amazonaws.com/${key}`,
       key,
       bucket: bucketName,
+      fileName,
+      recordingId,
     };
   };
 
