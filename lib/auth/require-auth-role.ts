@@ -1,6 +1,20 @@
 import type { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 
+export class UnauthenticatedError extends Error {
+  constructor(message = "The session has not been authenticated") {
+    super(message);
+    this.name = "UnauthenticatedError";
+  }
+}
+
+export class ForbiddenRoleError extends Error {
+  constructor(message = "Forbidden") {
+    super(message);
+    this.name = "ForbiddenRoleError";
+  }
+}
+
 export interface AuthOnlyContext {
   userId: string;
 }
@@ -19,7 +33,7 @@ export async function requireAuthRole(
   const session = await getCurrentUserSession();
   const userId = session?.user.id;
   if (!userId) {
-    throw new Error("The session has not been authenticated");
+    throw new UnauthenticatedError();
   }
 
   if (allowedRoles.length === 0) {
@@ -28,11 +42,11 @@ export async function requireAuthRole(
 
   const membership = session.user.activeMembership;
   if (!membership?.role || !membership.implementerId) {
-    throw new Error("No active implementer membership found for user");
+    throw new ForbiddenRoleError("No active implementer membership found for user");
   }
 
   if (!allowedRoles.includes(membership.role)) {
-    throw new Error(
+    throw new ForbiddenRoleError(
       `Forbidden: this action requires one of [${allowedRoles.join(", ")}], but current role is ${membership.role}`,
     );
   }

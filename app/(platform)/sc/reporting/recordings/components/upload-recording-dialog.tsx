@@ -31,10 +31,8 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { objectId } from "#/lib/crypto";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { cn, formatBytes, sessionDisplayName } from "#/lib/utils";
-import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
 import { zodResolver } from "#/lib/zod-resolver";
 import {
   checkRecordingExists,
@@ -48,7 +46,6 @@ import {
 } from "../actions";
 import {
   ALLOWED_EXTENSIONS,
-  getFileExtension,
   type RecordingUploadFormData,
   RecordingUploadSchema,
   validateAudioFile,
@@ -277,34 +274,13 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     setUploadProgress(0);
 
     try {
-      const selectedGroup = groups.find((g) => g.id === data.groupId);
-      const selectedSession = sessions.find((s) => s.id === data.sessionId);
-      const selectedFellow = fellows.find((f) => f.id === data.fellowId);
-
-      if (!selectedGroup || !selectedSession || !selectedFellow) {
-        throw new Error("Missing selection data");
-      }
-
-      const recordingId = objectId("rec");
-      const extension = getFileExtension(selectedFile.name);
-      const fileName = generateRecordingFilename(
-        selectedSession.sessionType ?? "session",
-        recordingId,
-        extension,
-      );
-
-      const s3Key = buildS3Key({
-        schoolName: selectedGroup.school.schoolName,
-        fellowName: selectedFellow.fellowName ?? "unknown",
-        groupName: selectedGroup.groupName,
-        sessionType: selectedSession.sessionType ?? "session",
-        recordingId,
-        extension,
+      const { key, token } = await uploadToS3(selectedFile, {
+        bucket: "recordings",
+        groupId: data.groupId,
+        sessionId: data.sessionId,
       });
 
-      const { key } = await uploadToS3(selectedFile, { key: s3Key, bucket: "recordings" });
-
-      if (!key) {
+      if (!key || !token) {
         throw new Error("Upload failed - no key returned");
       }
 
@@ -313,11 +289,9 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         schoolId: data.schoolId,
         groupId: data.groupId,
         sessionId: data.sessionId,
-        fileName,
         originalFileName: selectedFile.name,
         s3Key: key,
-        contentType: selectedFile.type,
-        fileSize: selectedFile.size,
+        token,
       });
 
       setUploadProgress(100);
