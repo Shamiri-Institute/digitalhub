@@ -1,7 +1,4 @@
-import {
-  RecordingsS3KeySchema,
-  type RecordingsS3KeyParams,
-} from "#/lib/s3/s3.types";
+import { type RecordingsS3KeyParams, RecordingsS3KeySchema } from "#/lib/s3/s3.types";
 import { buildStorageKey } from "#/lib/s3/utils/build-storage-key";
 import { sanitizeS3Key } from "#/lib/s3/utils/sanitize-s3-key";
 

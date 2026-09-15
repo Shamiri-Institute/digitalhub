@@ -1,9 +1,6 @@
 import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf/images-to-pdf";
 
-export async function createAttendancePdf(
-  fileUrl: string | null,
-  files: File[],
-): Promise<File> {
+export async function createAttendancePdf(fileUrl: string | null, files: File[]): Promise<File> {
   let pdfBlob: Blob;
   if (fileUrl) {
     const res = await fetch(fileUrl);
