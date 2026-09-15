@@ -1,12 +1,8 @@
 import "server-only";
 
 import { ImplementerRole } from "@prisma/client";
-import {
-  MAX_FILE_SIZE,
-  RECORDINGS_ALLOWED_CONTENT_TYPES,
-} from "#/app/(platform)/sc/reporting/recordings/schemas";
 import { currentSupervisorLite } from "#/app/auth";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import {
@@ -14,24 +10,27 @@ import {
   generateRecordingFilename,
 } from "#/lib/s3/key-builders/build-recordings-s3-key";
 import { UploadAuthorizationError } from "#/lib/s3/s3.errors";
-import type { S3AuthParams, UploadTarget } from "#/lib/s3/s3.types";
+import {
+  extensionForRecordingContentType,
+  MAX_FILE_SIZE,
+  type S3AuthParams,
+  type UploadTarget,
+} from "#/lib/s3/s3.types";
 import { normalizeContentType } from "#/lib/s3/utils/normalize-content-type";
 
 export async function authorizeRecordingUpload(
   params: S3AuthParams,
 ): Promise<Extract<UploadTarget, { bucket: "recordings" }>> {
-  await requireAuthRole(ImplementerRole.SUPERVISOR).catch(() => {
-    throw new UploadAuthorizationError("Forbidden");
+  await requireAuthRole(ImplementerRole.SUPERVISOR).catch((error: unknown) => {
+    if (error instanceof ForbiddenRoleError) throw new UploadAuthorizationError("Forbidden", 403);
+    throw error;
   });
 
   const supervisor = await currentSupervisorLite();
-  if (!supervisor?.profile?.id) throw new UploadAuthorizationError("Forbidden");
+  if (!supervisor?.profile?.id) throw new UploadAuthorizationError("Forbidden", 403);
 
   const normalized = normalizeContentType(params.contentType);
-  const extension =
-    RECORDINGS_ALLOWED_CONTENT_TYPES[
-      normalized as keyof typeof RECORDINGS_ALLOWED_CONTENT_TYPES
-    ]?.[0];
+  const extension = extensionForRecordingContentType(normalized);
   if (!extension) throw new UploadAuthorizationError("Unsupported content type");
   if (params.size > MAX_FILE_SIZE) throw new UploadAuthorizationError("File too large");
 
@@ -51,7 +50,7 @@ export async function authorizeRecordingUpload(
       leader: { select: { id: true, fellowName: true } },
     },
   });
-  if (!group) throw new UploadAuthorizationError("Forbidden");
+  if (!group) throw new UploadAuthorizationError("Forbidden", 403);
 
   const fellow = group.leader;
 
@@ -59,7 +58,7 @@ export async function authorizeRecordingUpload(
     where: { id: params.sessionId, schoolId: group.schoolId, occurred: true },
     select: { id: true, sessionType: true },
   });
-  if (!session) throw new UploadAuthorizationError("Forbidden");
+  if (!session) throw new UploadAuthorizationError("Forbidden", 403);
 
   const existing = await db.sessionRecording.findUnique({
     where: {
@@ -72,14 +71,15 @@ export async function authorizeRecordingUpload(
     },
     select: { id: true },
   });
-  if (existing) throw new UploadAuthorizationError("A recording already exists for this session");
+  if (existing)
+    throw new UploadAuthorizationError("A recording already exists for this session", 409);
 
   const recordingId = objectId("rec");
   const sessionType = session.sessionType ?? "session";
   const fileName = generateRecordingFilename(sessionType, recordingId, extension);
   const key = buildRecordingsS3Key({
     schoolName: group.school.schoolName,
-    fellowName: fellow.fellowName ?? "unknown",
+    fellowName: fellow.fellowName?.trim() || "unknown",
     groupName: group.groupName,
     sessionType,
     recordingId,
@@ -91,12 +91,14 @@ export async function authorizeRecordingUpload(
     key,
     recordingId,
     fileName,
+    contentType: normalized,
     context: {
       recordingId,
       fellowId: fellow.id,
       groupId: group.id,
       sessionId: session.id,
       schoolId: group.schoolId,
+      fileName,
     },
   };
 }

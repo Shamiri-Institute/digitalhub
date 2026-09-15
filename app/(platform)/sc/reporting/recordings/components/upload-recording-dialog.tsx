@@ -273,13 +273,13 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     setUploadProgress(0);
 
     try {
-      const { key, fileName } = await uploadToS3(selectedFile, {
+      const { key, token } = await uploadToS3(selectedFile, {
         bucket: "recordings",
         groupId: data.groupId,
         sessionId: data.sessionId,
       });
 
-      if (!key || !fileName) {
+      if (!key || !token) {
         throw new Error("Upload failed - no key returned");
       }
 
@@ -288,9 +288,9 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         schoolId: data.schoolId,
         groupId: data.groupId,
         sessionId: data.sessionId,
-        fileName,
         originalFileName: selectedFile.name,
         s3Key: key,
+        token,
       });
 
       setUploadProgress(100);

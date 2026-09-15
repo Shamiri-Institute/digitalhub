@@ -47,6 +47,7 @@ async function postPresign(request: APIRequestContext, data: unknown, token?: st
 async function emailForProfile(identifier: string, role: "FELLOW" | "SUPERVISOR") {
   const member = await db.implementerMember.findFirst({
     where: { identifier, role },
+    orderBy: { id: "asc" },
     select: { userId: true },
   });
   if (!member) return null;
@@ -60,6 +61,7 @@ async function emailForProfile(identifier: string, role: "FELLOW" | "SUPERVISOR"
 async function anyEmailForRole(role: "FELLOW" | "SUPERVISOR" | "HUB_COORDINATOR" | "ADMIN") {
   const member = await db.implementerMember.findFirst({
     where: { role },
+    orderBy: { id: "asc" },
     select: { userId: true },
   });
   if (!member) return null;
@@ -76,12 +78,14 @@ async function findFellowUploadTarget(): Promise<UploadTarget | null> {
       leader: { OR: [{ droppedOut: false }, { droppedOut: null }] },
       school: { interventionSessions: { some: { occurred: true } } },
     },
+    orderBy: { id: "asc" },
     select: { id: true, schoolId: true, leaderId: true },
   });
   if (!group) return null;
 
   const session = await db.interventionSession.findFirst({
     where: { schoolId: group.schoolId, occurred: true },
+    orderBy: { id: "asc" },
     select: { id: true },
   });
   if (!session) return null;
@@ -91,6 +95,7 @@ async function findFellowUploadTarget(): Promise<UploadTarget | null> {
 
   const foreign = await db.interventionGroup.findFirst({
     where: { leaderId: { not: group.leaderId } },
+    orderBy: { id: "asc" },
     select: { id: true },
   });
 
@@ -111,6 +116,7 @@ async function findRecordingUploadTarget(): Promise<UploadTarget | null> {
         OR: [{ droppedOut: false }, { droppedOut: null }],
       },
     },
+    orderBy: { id: "asc" },
     select: {
       id: true,
       schoolId: true,
@@ -126,6 +132,7 @@ async function findRecordingUploadTarget(): Promise<UploadTarget | null> {
 
     const sessions = await db.interventionSession.findMany({
       where: { schoolId: group.schoolId, occurred: true },
+      orderBy: { id: "asc" },
       select: { id: true },
       take: 25,
     });
@@ -149,6 +156,7 @@ async function findRecordingUploadTarget(): Promise<UploadTarget | null> {
 
       const foreign = await db.interventionGroup.findFirst({
         where: { leader: { supervisorId: { not: supervisorId } } },
+        orderBy: { id: "asc" },
         select: { id: true },
       });
 

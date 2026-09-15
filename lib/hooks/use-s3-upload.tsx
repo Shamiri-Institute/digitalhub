@@ -9,6 +9,7 @@ type PresignedUrl = {
   url: string;
   key: string;
   bucket: string;
+  token: string;
   fileName?: string;
   recordingId?: string;
 };
@@ -19,6 +20,7 @@ export interface UploadResult {
   url: string;
   key: string;
   bucket: string;
+  token: string;
   fileName?: string;
   recordingId?: string;
 }
@@ -145,7 +147,7 @@ export function useS3Upload() {
       throw new Error("Failed to get presigned URL");
     }
 
-    const { url, key, bucket: bucketName, fileName, recordingId } = presigned;
+    const { url, key, bucket: bucketName, token, fileName, recordingId } = presigned;
 
     // Track this file
     addFile(file);
@@ -193,6 +195,7 @@ export function useS3Upload() {
       url: `https://${bucketName}.s3.amazonaws.com/${key}`,
       key,
       bucket: bucketName,
+      token,
       fileName,
       recordingId,
     };

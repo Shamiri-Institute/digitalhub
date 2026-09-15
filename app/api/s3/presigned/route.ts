@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       url: issued.url,
       key: issued.key,
       bucket: issued.s3Bucket,
+      token: issued.token,
       ...(issued.bucket === "recordings" ? { recordingId: issued.recordingId } : {}),
       fileName: issued.fileName,
     });
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
       throw error;
     }
     if (error instanceof UploadAuthorizationError) {
-      return jsonError(error.message === "Forbidden" ? 403 : 400, error.message);
+      return jsonError(error.status, error.message);
     }
     console.error("Error generating presigned URL:", error);
     return jsonError(500, "Internal server error");

@@ -10,7 +10,25 @@ function requireEnv(name: string, value: string | undefined): string {
 }
 
 let credentialsCache: S3Credentials | null = null;
-let bucketsCache: Record<S3Bucket, BucketConfig> | null = null;
+const bucketCache = new Map<S3Bucket, BucketConfig>();
+
+const BUCKET_ENV: Record<
+  S3Bucket,
+  { bucketVar: string; bucketValue: string; regionVar: string; regionValue: string }
+> = {
+  recordings: {
+    bucketVar: "S3_RECORDINGS_BUCKET",
+    bucketValue: env.S3_RECORDINGS_BUCKET,
+    regionVar: "S3_RECORDINGS_REGION",
+    regionValue: env.S3_RECORDINGS_REGION,
+  },
+  "student-attendance": {
+    bucketVar: "S3_STUDENT_ATTENDANCE_BUCKET",
+    bucketValue: env.S3_STUDENT_ATTENDANCE_BUCKET,
+    regionVar: "S3_STUDENT_ATTENDANCE_REGION",
+    regionValue: env.S3_STUDENT_ATTENDANCE_REGION,
+  },
+};
 
 export const getS3Credentials = (): S3Credentials => {
   if (credentialsCache) return credentialsCache;
@@ -24,20 +42,16 @@ export const getS3Credentials = (): S3Credentials => {
   return config;
 };
 
-export const getBuckets = (): Record<S3Bucket, BucketConfig> => {
-  if (bucketsCache) return bucketsCache;
+export const getBucket = (bucket: S3Bucket): BucketConfig => {
+  const cached = bucketCache.get(bucket);
+  if (cached) return cached;
 
-  const config = {
-    recordings: {
-      bucket: requireEnv("S3_RECORDINGS_BUCKET", env.S3_RECORDINGS_BUCKET),
-      region: requireEnv("S3_RECORDINGS_REGION", env.S3_RECORDINGS_REGION),
-    },
-    "student-attendance": {
-      bucket: requireEnv("S3_STUDENT_ATTENDANCE_BUCKET", env.S3_STUDENT_ATTENDANCE_BUCKET),
-      region: requireEnv("S3_STUDENT_ATTENDANCE_REGION", env.S3_STUDENT_ATTENDANCE_REGION),
-    },
-  } satisfies Record<S3Bucket, BucketConfig>;
+  const entry = BUCKET_ENV[bucket];
+  const config: BucketConfig = {
+    bucket: requireEnv(entry.bucketVar, entry.bucketValue),
+    region: requireEnv(entry.regionVar, entry.regionValue),
+  };
 
-  bucketsCache = config;
+  bucketCache.set(bucket, config);
   return config;
 };

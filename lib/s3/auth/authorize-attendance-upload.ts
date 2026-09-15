@@ -1,24 +1,24 @@
 import "server-only";
 
 import { ImplementerRole } from "@prisma/client";
-import { MAX_FILE_SIZE } from "#/app/(platform)/sc/reporting/recordings/schemas";
 import { currentFellow } from "#/app/auth";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
 import { db } from "#/lib/db";
 import { buildAttendanceS3Key } from "#/lib/s3/key-builders/build-attendance-s3-key";
 import { UploadAuthorizationError } from "#/lib/s3/s3.errors";
-import type { S3AuthParams, UploadTarget } from "#/lib/s3/s3.types";
+import { MAX_FILE_SIZE, type S3AuthParams, type UploadTarget } from "#/lib/s3/s3.types";
 import { normalizeContentType } from "#/lib/s3/utils/normalize-content-type";
 
 export async function authorizeAttendanceUpload(
   params: S3AuthParams,
 ): Promise<Extract<UploadTarget, { bucket: "student-attendance" }>> {
-  await requireAuthRole(ImplementerRole.FELLOW).catch(() => {
-    throw new UploadAuthorizationError("Forbidden");
+  await requireAuthRole(ImplementerRole.FELLOW).catch((error: unknown) => {
+    if (error instanceof ForbiddenRoleError) throw new UploadAuthorizationError("Forbidden", 403);
+    throw error;
   });
 
   const fellow = await currentFellow();
-  if (!fellow?.profile?.id) throw new UploadAuthorizationError("Forbidden");
+  if (!fellow?.profile?.id) throw new UploadAuthorizationError("Forbidden", 403);
   const { profile } = fellow;
 
   if (normalizeContentType(params.contentType) !== "application/pdf")
@@ -34,17 +34,17 @@ export async function authorizeAttendanceUpload(
       school: { select: { schoolName: true } },
     },
   });
-  if (!group) throw new UploadAuthorizationError("Forbidden");
+  if (!group) throw new UploadAuthorizationError("Forbidden", 403);
 
   const session = await db.interventionSession.findFirst({
     where: { id: params.sessionId, schoolId: group.schoolId, occurred: true },
     select: { id: true, sessionType: true, sessionDate: true },
   });
-  if (!session) throw new UploadAuthorizationError("Forbidden");
+  if (!session) throw new UploadAuthorizationError("Forbidden", 403);
 
   const { fileName, s3Key: key } = buildAttendanceS3Key({
     schoolName: group.school.schoolName,
-    fellowName: profile.fellowName ?? "unknown",
+    fellowName: profile.fellowName?.trim() || "unknown",
     groupName: group.groupName,
     sessionDate: session.sessionDate,
     sessionType: session.sessionType ?? "session",
@@ -54,6 +54,7 @@ export async function authorizeAttendanceUpload(
     bucket: "student-attendance",
     key,
     fileName,
+    contentType: "application/pdf",
     context: {
       groupId: group.id,
       sessionId: session.id,

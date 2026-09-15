@@ -15,8 +15,18 @@ export class MissingS3EnvError extends Error {
 }
 
 export class UploadAuthorizationError extends Error {
-  constructor(message: string) {
+  readonly status: number;
+
+  constructor(message: string, status = 400) {
     super(message);
     this.name = "UploadAuthorizationError";
+    this.status = status;
+  }
+}
+
+export class UploadTokenError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UploadTokenError";
   }
 }
