@@ -32,10 +32,7 @@ export function getS3Client(bucket: S3Bucket): S3Client {
   return createClient(bucket);
 }
 
-export function deleteObject(
-  input: Pick<DeleteObjectCommandInput, "Key">,
-  bucket: S3Bucket,
-) {
+export function deleteObject(input: Pick<DeleteObjectCommandInput, "Key">, bucket: S3Bucket) {
   const s3Client = getS3Client(bucket);
   const command = new DeleteObjectCommand({
     ...input,
