@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  ALLOWED_EXTENSIONS,
+  MAX_FILE_SIZE,
+  RECORDINGS_ALLOWED_CONTENT_TYPES,
+} from "#/lib/s3/s3.types";
+
+export { ALLOWED_EXTENSIONS, MAX_FILE_SIZE, RECORDINGS_ALLOWED_CONTENT_TYPES };
 
 /**
  * Zod schema for recording upload form validation
@@ -12,30 +19,7 @@ export const RecordingUploadSchema = z.object({
 
 export type RecordingUploadFormData = z.infer<typeof RecordingUploadSchema>;
 
-export const RECORDINGS_ALLOWED_CONTENT_TYPES = {
-  "audio/mpeg": ["mp3"],
-  "audio/wav": ["wav"],
-  "audio/wave": ["wav"],
-  "audio/x-wav": ["wav"],
-  "audio/x-m4a": ["m4a"],
-  "audio/mp4": ["m4a", "mp4"],
-  "video/mp4": ["mp4"],
-  "audio/aac": ["aac", "m4a"],
-} as const satisfies Record<string, readonly string[]>;
-
-export const ALLOWED_AUDIO_TYPES = Object.keys(
-  RECORDINGS_ALLOWED_CONTENT_TYPES,
-) as (keyof typeof RECORDINGS_ALLOWED_CONTENT_TYPES)[];
-
-/**
- * Allowed file extensions
- */
-export const ALLOWED_EXTENSIONS = [".mp3", ".wav", ".m4a", ".mp4"] as const;
-
-/**
- * Maximum file size in bytes (500MB)
- */
-export const MAX_FILE_SIZE = 500 * 1024 * 1024;
+export const ALLOWED_AUDIO_TYPES = RECORDINGS_ALLOWED_CONTENT_TYPES;
 
 /**
  * Magic bytes patterns for audio file validation

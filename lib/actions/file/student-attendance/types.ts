@@ -1,3 +1,5 @@
+export const NO_ATTENDANCE_DOCUMENT_MESSAGE = "No attendance document found for this session";
+
 export interface StudentAttendanceDocsFilters {
   sessionId?: string;
   groupId?: string;
@@ -12,8 +14,8 @@ export interface AttendanceDoc {
 }
 
 export interface CreateStudentAttendanceDocPayload {
-  fileName: string;
   groupId: string;
   sessionId: string;
   link: string;
+  token: string;
 }

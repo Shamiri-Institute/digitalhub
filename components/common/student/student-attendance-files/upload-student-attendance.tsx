@@ -10,6 +10,7 @@ import {
   createAttendanceDocument,
   getAttendanceDocument,
 } from "#/lib/actions/file/student-attendance";
+import { NO_ATTENDANCE_DOCUMENT_MESSAGE } from "#/lib/actions/file/student-attendance/types";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { createAttendancePdf } from "#/lib/utils/attendance-upload";
 
@@ -89,24 +90,34 @@ export default function UploadStudentAttendanceDocument({
 
       const existing = await getAttendanceDocument(filters);
 
-      const existingPdfUrl = existing.data?.presignedUrl ?? null;
+      let existingPdfUrl: string | null;
+      if (existing.success) {
+        existingPdfUrl = existing.data?.presignedUrl ?? null;
+      } else if (existing.message === NO_ATTENDANCE_DOCUMENT_MESSAGE) {
+        existingPdfUrl = null;
+      } else {
+        throw new Error(
+          existing.message ??
+            "Could not verify the existing attendance document. Please try again.",
+        );
+      }
 
       const pdfFile = await createAttendancePdf(existingPdfUrl, selectedFiles);
-      const { key, fileName } = await uploadToS3(pdfFile, {
+      const { key, token } = await uploadToS3(pdfFile, {
         bucket: "student-attendance",
         groupId,
         sessionId,
       });
 
-      if (!key || !fileName) {
+      if (!key || !token) {
         throw new Error("Upload failed - no key returned");
       }
 
       const result = await createAttendanceDocument({
         groupId,
         sessionId,
-        fileName,
         link: key,
+        token,
       });
 
       if (result.success) {

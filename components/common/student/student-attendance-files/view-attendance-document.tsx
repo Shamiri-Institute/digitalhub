@@ -8,6 +8,7 @@ import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useToast } from "#/components/ui/use-toast";
 import { deleteAttendanceFile, getAttendanceDocument } from "#/lib/actions/file/student-attendance";
+import { NO_ATTENDANCE_DOCUMENT_MESSAGE } from "#/lib/actions/file/student-attendance/types";
 import PdfViewerModal from "#/lib/utils/pdf/pdf-viewer-modal";
 
 export default function ViewAttendanceDocument({
@@ -84,7 +85,7 @@ export default function ViewAttendanceDocument({
     );
   }
 
-  if (state.error === "No attendance document found for this session") {
+  if (state.error === NO_ATTENDANCE_DOCUMENT_MESSAGE) {
     return (
       <div className="flex items-center justify-center p-4">
         <Alert variant="primary">

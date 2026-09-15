@@ -1,14 +1,16 @@
 "use server";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
-import { deleteObject, getPresignedUrl } from "#/lib/s3/s3.service";
+import { deleteObject, getPresignedUrl, headObject } from "#/lib/s3/s3.service";
+import { verifyUploadToken } from "#/lib/s3/utils/upload-token";
 import type { ActionResponse } from "#/types/actions.types";
-import type {
-  AttendanceDoc,
-  CreateStudentAttendanceDocPayload,
-  StudentAttendanceDocsFilters,
+import {
+  type AttendanceDoc,
+  type CreateStudentAttendanceDocPayload,
+  NO_ATTENDANCE_DOCUMENT_MESSAGE,
+  type StudentAttendanceDocsFilters,
 } from "./types";
 
 export type { AttendanceS3KeyParams } from "#/lib/s3/s3.types";
@@ -33,6 +35,9 @@ export async function getAttendanceDocument(
       throw new Error("The session has not been authenticated");
 
     const { sessionId, groupId } = filters;
+    if (!sessionId?.trim() || !groupId?.trim())
+      throw new Error("A sessionId and groupId are required");
+
     const role = session.user.activeMembership?.role;
     const identifier = session.user.activeMembership?.identifier;
 
@@ -42,21 +47,26 @@ export async function getAttendanceDocument(
         leaderId: true,
         school: {
           select: {
-            assignedSupervisorId: true,
-            hub: { select: { coordinators: { select: { id: true } } } },
+            hub: {
+              select: {
+                supervisors: { select: { id: true } },
+                coordinators: { select: { id: true } },
+              },
+            },
           },
         },
       },
     });
 
+    const hub = group?.school?.hub;
     const inScope =
       role === ImplementerRole.ADMIN ||
       (Boolean(identifier) &&
         ((role === ImplementerRole.FELLOW && group?.leaderId === identifier) ||
           (role === ImplementerRole.SUPERVISOR &&
-            group?.school?.assignedSupervisorId === identifier) ||
+            (hub?.supervisors.some((s) => s.id === identifier) ?? false)) ||
           (role === ImplementerRole.HUB_COORDINATOR &&
-            (group?.school?.hub?.coordinators.some((c) => c.id === identifier) ?? false))));
+            (hub?.coordinators.some((c) => c.id === identifier) ?? false))));
 
     if (!group || !inScope) throw new Error("Forbidden");
 
@@ -65,7 +75,7 @@ export async function getAttendanceDocument(
       orderBy: { createdAt: "desc" },
     });
 
-    if (!doc) throw new Error("No attendance document found for this session");
+    if (!doc) throw new Error(NO_ATTENDANCE_DOCUMENT_MESSAGE);
 
     const presignedUrl = await getPresignedUrl(doc.link, "student-attendance");
 
@@ -92,6 +102,12 @@ export async function getAttendanceDocument(
   }
 }
 
+async function discardOrphanedAttendanceUpload(link: string): Promise<void> {
+  await deleteObject({ Key: link }, "student-attendance").catch((error) => {
+    console.error("Failed to delete orphaned attendance upload:", link, error);
+  });
+}
+
 export async function createAttendanceDocument(
   payload: CreateStudentAttendanceDocPayload,
 ): Promise<ActionResponse> {
@@ -106,19 +122,24 @@ export async function createAttendanceDocument(
 
     const userId = session.user.id;
 
-    const ticket = await db.s3UploadPermit.findFirst({
-      where: {
-        bucket: "student-attendance",
-        key: payload.link,
-        issuedTo: userId,
-        status: "PENDING",
-        expiresAt: { gt: new Date() },
-      },
-    });
-    if (!ticket) throw new Error("Upload not authorized");
+    let claim: ReturnType<typeof verifyUploadToken>;
+    try {
+      claim = verifyUploadToken(payload.token);
+    } catch {
+      throw new Error("Upload not authorized");
+    }
 
-    const ctx = ticket.context as { groupId: string; sessionId: string };
+    if (
+      claim.bucket !== "student-attendance" ||
+      claim.uploaderId !== userId ||
+      claim.key !== payload.link
+    ) {
+      throw new Error("Upload not authorized");
+    }
+
+    const ctx = claim.context;
     if (ctx.groupId !== payload.groupId || ctx.sessionId !== payload.sessionId) {
+      await discardOrphanedAttendanceUpload(payload.link);
       throw new Error("Upload does not match authorized scope");
     }
 
@@ -130,45 +151,56 @@ export async function createAttendanceDocument(
     });
 
     if (markedStudentCount < 2) {
+      await discardOrphanedAttendanceUpload(payload.link);
       throw new Error("At least 2 students must have attendance marked before uploading");
     }
 
-    const supersededDocs = await db.attendanceDocuments.findMany({
-      where: {
-        sessionId: payload.sessionId,
-        groupId: payload.groupId,
-        archivedAt: null,
-      },
-      select: { link: true },
-    });
+    try {
+      await headObject(payload.link, "student-attendance");
+    } catch {
+      throw new Error("Uploaded file not found");
+    }
 
-    await db.$transaction(async (tx) => {
-      await tx.attendanceDocuments.updateMany({
-        where: {
-          sessionId: payload.sessionId,
-          groupId: payload.groupId,
-          archivedAt: null,
+    const { token: _token, ...docData } = payload;
+
+    const supersededLinks: string[] = [];
+
+    try {
+      await db.$transaction(
+        async (tx) => {
+          const active = await tx.attendanceDocuments.findMany({
+            where: {
+              sessionId: payload.sessionId,
+              groupId: payload.groupId,
+              archivedAt: null,
+            },
+            select: { link: true },
+          });
+          for (const doc of active) supersededLinks.push(doc.link);
+
+          await tx.attendanceDocuments.updateMany({
+            where: {
+              sessionId: payload.sessionId,
+              groupId: payload.groupId,
+              archivedAt: null,
+            },
+            data: { archivedAt: new Date() },
+          });
+
+          await tx.attendanceDocuments.create({
+            data: { ...docData, fileName: claim.fileName, uploadedBy: userId },
+          });
         },
-        data: { archivedAt: new Date() },
-      });
-
-      await tx.attendanceDocuments.create({
-        data: { ...payload, uploadedBy: userId },
-      });
-
-      const consumed = await tx.s3UploadPermit.updateMany({
-        where: { id: ticket.id, status: "PENDING" },
-        data: { status: "USED", usedAt: new Date() },
-      });
-      if (consumed.count === 0) {
-        throw new Error("Upload permit already consumed");
-      }
-    });
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+    } catch (txError) {
+      await discardOrphanedAttendanceUpload(payload.link);
+      throw txError;
+    }
 
     await Promise.all(
-      supersededDocs
-        .map((doc) => doc.link)
-        .filter((link): link is string => Boolean(link) && link !== payload.link)
+      supersededLinks
+        .filter((link) => Boolean(link) && link !== payload.link)
         .map((link) =>
           deleteObject({ Key: link }, "student-attendance").catch((error) => {
             console.error("Failed to delete superseded attendance file:", link, error);
@@ -181,6 +213,12 @@ export async function createAttendanceDocument(
       message: "Successfully created attendance document",
     };
   } catch (error: unknown) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
+      return {
+        success: false,
+        message: "Another upload for this session is in progress. Please try again.",
+      };
+    }
     return {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",

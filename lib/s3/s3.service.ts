@@ -2,6 +2,7 @@ import {
   DeleteObjectCommand,
   type DeleteObjectCommandInput,
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -39,6 +40,22 @@ export function deleteObject(input: Pick<DeleteObjectCommandInput, "Key">, bucke
     Bucket: requireBucket(bucket).bucket,
   });
   return s3Client.send(command);
+}
+
+export async function headObject(
+  key: string,
+  bucket: S3Bucket,
+): Promise<{ contentLength: number | undefined; contentType: string | undefined }> {
+  const s3Client = getS3Client(bucket);
+  const command = new HeadObjectCommand({
+    Bucket: requireBucket(bucket).bucket,
+    Key: key,
+  });
+  const response = await s3Client.send(command);
+  return {
+    contentLength: response.ContentLength,
+    contentType: response.ContentType,
+  };
 }
 
 export async function getPresignedUrl(

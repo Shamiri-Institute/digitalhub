@@ -7,7 +7,14 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import { createJob } from "#/lib/fidelity-ratings-api";
-import { deleteObject } from "#/lib/s3/s3.service";
+import { deleteObject, headObject } from "#/lib/s3/s3.service";
+import { verifyUploadToken } from "#/lib/s3/utils/upload-token";
+
+async function discardOrphanedUpload(s3Key: string): Promise<void> {
+  await deleteObject({ Key: s3Key }, "recordings").catch((error) => {
+    console.error("Failed to delete orphaned upload:", s3Key, error);
+  });
+}
 
 export type SupervisorFellow = Awaited<ReturnType<typeof loadSupervisorFellows>>[number];
 export type FellowGroup = Awaited<ReturnType<typeof loadFellowGroups>>[number];
@@ -225,9 +232,9 @@ export async function createSessionRecording(input: {
   schoolId: string;
   groupId: string;
   sessionId: string;
-  fileName: string;
   originalFileName: string;
   s3Key: string;
+  token: string;
 }) {
   const supervisor = await currentSupervisor();
 
@@ -246,67 +253,65 @@ export async function createSessionRecording(input: {
     };
   }
 
-  const ticket = await db.s3UploadPermit.findFirst({
-    where: {
-      bucket: "recordings",
-      key: input.s3Key,
-      issuedTo: supervisor.session.user.id,
-      status: "PENDING",
-      expiresAt: { gt: new Date() },
-    },
-  });
-  if (!ticket) {
+  let claim: ReturnType<typeof verifyUploadToken>;
+  try {
+    claim = verifyUploadToken(input.token);
+  } catch {
     return { success: false, message: "Upload not authorized" };
   }
 
-  const ctx = ticket.context as {
-    recordingId?: string;
-    fellowId: string;
-    groupId: string;
-    sessionId: string;
-    schoolId: string;
-  };
+  if (
+    claim.bucket !== "recordings" ||
+    claim.uploaderId !== supervisor.session.user.id ||
+    claim.key !== input.s3Key
+  ) {
+    return { success: false, message: "Upload not authorized" };
+  }
+
+  const ctx = claim.context;
   if (
     ctx.fellowId !== input.fellowId ||
     ctx.groupId !== input.groupId ||
     ctx.sessionId !== input.sessionId ||
     ctx.schoolId !== input.schoolId
   ) {
+    await discardOrphanedUpload(input.s3Key);
     return { success: false, message: "Upload does not match authorized scope" };
+  }
+
+  let head: Awaited<ReturnType<typeof headObject>>;
+  try {
+    head = await headObject(input.s3Key, "recordings");
+  } catch {
+    await discardOrphanedUpload(input.s3Key);
+    return { success: false, message: "Uploaded file not found" };
+  }
+
+  if (head.contentLength === undefined) {
+    await discardOrphanedUpload(input.s3Key);
+    return { success: false, message: "Uploaded file could not be verified" };
   }
 
   const uploadedBy = supervisor.session.user.id;
   const supervisorId = supervisor.profile.id;
 
   try {
-    const recording = await db.$transaction(async (tx) => {
-      const created = await tx.sessionRecording.create({
-        data: {
-          id: ctx.recordingId ?? objectId("rec"),
-          fileName: input.fileName,
-          originalFileName: input.originalFileName,
-          s3Key: input.s3Key,
-          contentType: ticket.contentType,
-          fileSize: ticket.size,
-          fellowId: input.fellowId,
-          schoolId: input.schoolId,
-          groupId: input.groupId,
-          sessionId: input.sessionId,
-          uploadedBy,
-          supervisorId,
-          status: "PENDING",
-        },
-      });
-
-      const consumed = await tx.s3UploadPermit.updateMany({
-        where: { id: ticket.id, status: "PENDING" },
-        data: { status: "USED", usedAt: new Date() },
-      });
-      if (consumed.count === 0) {
-        throw new Error("Upload permit already consumed");
-      }
-
-      return created;
+    const recording = await db.sessionRecording.create({
+      data: {
+        id: ctx.recordingId ?? objectId("rec"),
+        fileName: ctx.fileName,
+        originalFileName: input.originalFileName,
+        s3Key: input.s3Key,
+        contentType: head.contentType ?? claim.contentType,
+        fileSize: head.contentLength,
+        fellowId: input.fellowId,
+        schoolId: input.schoolId,
+        groupId: input.groupId,
+        sessionId: input.sessionId,
+        uploadedBy,
+        supervisorId,
+        status: "PENDING",
+      },
     });
 
     if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
@@ -334,17 +339,7 @@ export async function createSessionRecording(input: {
     };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      try {
-        await deleteObject({ Key: input.s3Key }, "recordings");
-      } catch (cleanupError) {
-        console.error("Failed to clean up orphaned S3 file:", input.s3Key, cleanupError);
-      }
-
-      await db.s3UploadPermit
-        .update({ where: { id: ticket.id }, data: { status: "EXPIRED", usedAt: new Date() } })
-        .catch((permitError) => {
-          console.error("Failed to expire upload permit:", ticket.id, permitError);
-        });
+      await discardOrphanedUpload(input.s3Key);
 
       return {
         success: false,
@@ -352,6 +347,7 @@ export async function createSessionRecording(input: {
       };
     }
 
+    await discardOrphanedUpload(input.s3Key);
     console.error("Error creating session recording:", error);
     return {
       success: false,
