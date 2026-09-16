@@ -75,12 +75,12 @@ export async function authorizeRecordingUpload(
     throw new UploadAuthorizationError("A recording already exists for this session", 409);
 
   const recordingId = objectId("rec");
-  const sessionType = session.sessionType ?? "session";
+  const sessionType = session.sessionType?.trim() || "session";
   const fileName = generateRecordingFilename(sessionType, recordingId, extension);
   const key = buildRecordingsS3Key({
-    schoolName: group.school.schoolName,
+    schoolName: group.school.schoolName.trim() || "unknown-school",
     fellowName: fellow.fellowName?.trim() || "unknown",
-    groupName: group.groupName,
+    groupName: group.groupName.trim() || "unknown-group",
     sessionType,
     recordingId,
     extension,

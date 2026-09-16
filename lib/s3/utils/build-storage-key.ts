@@ -8,7 +8,7 @@ export function buildStorageKey(params: StorageKeyParams): string {
   const hasExtension = /\.[^/.]+$/.test(fileName);
   const extension = hasExtension ? sanitizeS3Key(fileName.split(".").pop() ?? "") : "";
   const baseName = sanitizeS3Key(fileName.replace(/\.[^/.]+$/, ""));
-  const suffix = sanitizeS3Key(objectId("key").split("_").at(-1) ?? "");
+  const suffix = sanitizeS3Key(objectId("key").split("_").at(-1) ?? "").slice(-10);
 
   const finalFileName = extension ? `${baseName}_${suffix}.${extension}` : `${baseName}_${suffix}`;
 

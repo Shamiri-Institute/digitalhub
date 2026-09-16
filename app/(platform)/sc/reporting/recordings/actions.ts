@@ -2,19 +2,15 @@
 
 import { Prisma, type RecordingProcessingStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { currentSupervisor } from "#/app/auth";
-import { objectId } from "#/lib/crypto";
+import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
 import { db } from "#/lib/db";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import { createJob } from "#/lib/fidelity-ratings-api";
-import { deleteObject, headObject } from "#/lib/s3/s3.service";
-import { verifyUploadToken } from "#/lib/s3/utils/upload-token";
-
-async function discardOrphanedUpload(s3Key: string): Promise<void> {
-  await deleteObject({ Key: s3Key }, "recordings").catch((error) => {
-    console.error("Failed to delete orphaned upload:", s3Key, error);
-  });
-}
+import {
+  discardOrphanedUpload,
+  verifyUploadClaim,
+  verifyUploadedObject,
+} from "#/lib/s3/utils/verify-upload";
 
 export type SupervisorFellow = Awaited<ReturnType<typeof loadSupervisorFellows>>[number];
 export type FellowGroup = Awaited<ReturnType<typeof loadFellowGroups>>[number];
@@ -236,7 +232,7 @@ export async function createSessionRecording(input: {
   s3Key: string;
   token: string;
 }) {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor?.profile?.id || !supervisor.session?.user?.id) {
     return {
@@ -245,26 +241,12 @@ export async function createSessionRecording(input: {
     };
   }
 
-  const fellow = supervisor.profile.fellows.find((f) => f.id === input.fellowId);
-  if (!fellow) {
-    return {
-      success: false,
-      message: "Fellow not found or unauthorized",
-    };
-  }
-
-  let claim: ReturnType<typeof verifyUploadToken>;
-  try {
-    claim = verifyUploadToken(input.token);
-  } catch {
-    return { success: false, message: "Upload not authorized" };
-  }
-
-  if (
-    claim.bucket !== "recordings" ||
-    claim.uploaderId !== supervisor.session.user.id ||
-    claim.key !== input.s3Key
-  ) {
+  const claim = verifyUploadClaim(input.token, {
+    bucket: "recordings",
+    uploaderId: supervisor.session.user.id,
+    key: input.s3Key,
+  });
+  if (!claim || claim.bucket !== "recordings") {
     return { success: false, message: "Upload not authorized" };
   }
 
@@ -275,35 +257,34 @@ export async function createSessionRecording(input: {
     ctx.sessionId !== input.sessionId ||
     ctx.schoolId !== input.schoolId
   ) {
-    await discardOrphanedUpload(input.s3Key);
+    await discardOrphanedUpload(input.s3Key, "recordings");
     return { success: false, message: "Upload does not match authorized scope" };
   }
 
-  let head: Awaited<ReturnType<typeof headObject>>;
-  try {
-    head = await headObject(input.s3Key, "recordings");
-  } catch {
-    await discardOrphanedUpload(input.s3Key);
+  const verified = await verifyUploadedObject(input.s3Key, "recordings");
+  if (verified.status === "not-found") {
     return { success: false, message: "Uploaded file not found" };
   }
-
-  if (head.contentLength === undefined) {
-    await discardOrphanedUpload(input.s3Key);
-    return { success: false, message: "Uploaded file could not be verified" };
+  if (verified.status === "error") {
+    return {
+      success: false,
+      message: "Could not verify the uploaded file. Please try again.",
+    };
   }
 
   const uploadedBy = supervisor.session.user.id;
   const supervisorId = supervisor.profile.id;
 
+  let recording: Awaited<ReturnType<typeof db.sessionRecording.create>>;
   try {
-    const recording = await db.sessionRecording.create({
+    recording = await db.sessionRecording.create({
       data: {
-        id: ctx.recordingId ?? objectId("rec"),
+        id: ctx.recordingId,
         fileName: ctx.fileName,
         originalFileName: input.originalFileName,
         s3Key: input.s3Key,
-        contentType: head.contentType ?? claim.contentType,
-        fileSize: head.contentLength,
+        contentType: verified.contentType ?? claim.contentType,
+        fileSize: verified.contentLength,
         fellowId: input.fellowId,
         schoolId: input.schoolId,
         groupId: input.groupId,
@@ -313,47 +294,56 @@ export async function createSessionRecording(input: {
         status: "PENDING",
       },
     });
-
-    if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
-      revalidatePath("/sc/reporting/recordings");
-      return {
-        success: true,
-        message: "Recording uploaded successfully",
-        data: recording,
-      };
-    }
-
-    await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
-      console.error(
-        `Non-blocking Fidelity submission failed for recording ${recording.id}:`,
-        error,
-      );
-    });
-
-    revalidatePath("/sc/reporting/recordings");
-
-    return {
-      success: true,
-      message: "Recording uploaded successfully",
-      data: recording,
-    };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      await discardOrphanedUpload(input.s3Key);
-
+      const conflicting = await db.sessionRecording.findUnique({
+        where: {
+          unique_recording_per_session: {
+            fellowId: input.fellowId,
+            schoolId: input.schoolId,
+            groupId: input.groupId,
+            sessionId: input.sessionId,
+          },
+        },
+        select: { s3Key: true },
+      });
+      if (conflicting?.s3Key !== input.s3Key) {
+        await discardOrphanedUpload(input.s3Key, "recordings");
+      }
       return {
         success: false,
         message: "A recording already exists for this session",
       };
     }
 
-    await discardOrphanedUpload(input.s3Key);
+    await discardOrphanedUpload(input.s3Key, "recordings");
     console.error("Error creating session recording:", error);
     return {
       success: false,
       message: "Failed to save recording metadata",
     };
   }
+
+  if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
+    revalidatePath("/sc/reporting/recordings");
+    return {
+      success: true,
+      message: "Recording uploaded successfully",
+      data: recording,
+    };
+  }
+
+  await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
+    console.error(`Non-blocking Fidelity submission failed for recording ${recording.id}:`, error);
+  });
+
+  revalidatePath("/sc/reporting/recordings");
+
+  return {
+    success: true,
+    message: "Recording uploaded successfully",
+    data: recording,
+  };
 }
 
 export async function loadSupervisorRecordings() {

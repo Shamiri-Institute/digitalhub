@@ -43,11 +43,11 @@ export async function authorizeAttendanceUpload(
   if (!session) throw new UploadAuthorizationError("Forbidden", 403);
 
   const { fileName, s3Key: key } = buildAttendanceS3Key({
-    schoolName: group.school.schoolName,
+    schoolName: group.school.schoolName.trim() || "unknown-school",
     fellowName: profile.fellowName?.trim() || "unknown",
-    groupName: group.groupName,
+    groupName: group.groupName.trim() || "unknown-group",
     sessionDate: session.sessionDate,
-    sessionType: session.sessionType ?? "session",
+    sessionType: session.sessionType?.trim() || "session",
   });
 
   return {

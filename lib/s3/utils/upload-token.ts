@@ -2,22 +2,53 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+import { z } from "zod";
 import { env } from "#/env";
 import { UploadTokenError } from "#/lib/s3/s3.errors";
-import { UPLOAD_TOKEN_TTL_SECONDS, type UploadTarget } from "#/lib/s3/s3.types";
+import { UPLOAD_TOKEN_TTL_SECONDS } from "#/lib/s3/s3.types";
 
-export type UploadClaim = {
-  [B in UploadTarget["bucket"]]: {
-    bucket: B;
-    key: string;
-    uploaderId: string;
-    contentType: string;
-    fileName: string;
-    context: Extract<UploadTarget, { bucket: B }>["context"];
-  };
-}[UploadTarget["bucket"]];
+const RecordingsClaimSchema = z.object({
+  bucket: z.literal("recordings"),
+  key: z.string().min(1),
+  uploaderId: z.string().min(1),
+  contentType: z.string().min(1),
+  fileName: z.string().min(1),
+  context: z.object({
+    recordingId: z.string().min(1),
+    fellowId: z.string().min(1),
+    groupId: z.string().min(1),
+    sessionId: z.string().min(1),
+    schoolId: z.string().min(1),
+    fileName: z.string().min(1),
+  }),
+});
 
-type SignedClaim = UploadClaim & { exp: number };
+const AttendanceClaimSchema = z.object({
+  bucket: z.literal("student-attendance"),
+  key: z.string().min(1),
+  uploaderId: z.string().min(1),
+  contentType: z.string().min(1),
+  fileName: z.string().min(1),
+  context: z.object({
+    groupId: z.string().min(1),
+    sessionId: z.string().min(1),
+    fellowId: z.string().min(1),
+  }),
+});
+
+const UploadClaimSchema = z.discriminatedUnion("bucket", [
+  RecordingsClaimSchema,
+  AttendanceClaimSchema,
+]);
+
+const SignedClaimSchema = z.discriminatedUnion("bucket", [
+  RecordingsClaimSchema.extend({ exp: z.number() }),
+  AttendanceClaimSchema.extend({ exp: z.number() }),
+]);
+
+export type UploadClaim = z.infer<typeof UploadClaimSchema>;
+
+type SignedClaim = z.infer<typeof SignedClaimSchema>;
 
 function base64url(input: Buffer): string {
   return input.toString("base64url");
@@ -49,14 +80,20 @@ export function verifyUploadToken(token: string): UploadClaim {
     throw new UploadTokenError("Invalid upload token signature");
   }
 
-  let signed: SignedClaim;
+  let decoded: unknown;
   try {
-    signed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as SignedClaim;
+    decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
   } catch {
     throw new UploadTokenError("Malformed upload token payload");
   }
 
-  if (typeof signed.exp !== "number" || signed.exp <= Math.floor(Date.now() / 1000)) {
+  const parsed = SignedClaimSchema.safeParse(decoded);
+  if (!parsed.success) {
+    throw new UploadTokenError("Malformed upload token payload");
+  }
+
+  const signed = parsed.data;
+  if (signed.exp <= Math.floor(Date.now() / 1000)) {
     throw new UploadTokenError("Upload token expired");
   }
 

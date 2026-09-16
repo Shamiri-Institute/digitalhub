@@ -18,4 +18,5 @@ export interface CreateStudentAttendanceDocPayload {
   sessionId: string;
   link: string;
   token: string;
+  expectedActiveDocId: string | null;
 }

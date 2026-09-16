@@ -113,7 +113,7 @@ export const MAX_SEGMENT_LENGTH = 50;
 
 export const PRESIGNED_UPLOAD_TTL_SECONDS = 15 * 60;
 
-export const UPLOAD_TOKEN_TTL_SECONDS = 60 * 60;
+export const UPLOAD_TOKEN_TTL_SECONDS = 24 * 60 * 60;
 
 export type StorageKeyParams = z.infer<typeof StorageKeySchema>;
 
@@ -127,7 +127,6 @@ export const RECORDINGS_CONTENT_TYPE_EXTENSION = {
   "audio/x-m4a": "m4a",
   "audio/mp4": "m4a",
   "video/mp4": "mp4",
-  "audio/aac": "m4a",
 } as const satisfies Record<string, string>;
 
 export type RecordingContentType = keyof typeof RECORDINGS_CONTENT_TYPE_EXTENSION;
@@ -141,5 +140,8 @@ export const ALLOWED_EXTENSIONS = Array.from(
 ).map((extension) => `.${extension}`);
 
 export function extensionForRecordingContentType(contentType: string): string | null {
-  return RECORDINGS_CONTENT_TYPE_EXTENSION[contentType as RecordingContentType] ?? null;
+  if (!Object.hasOwn(RECORDINGS_CONTENT_TYPE_EXTENSION, contentType)) {
+    return null;
+  }
+  return RECORDINGS_CONTENT_TYPE_EXTENSION[contentType as RecordingContentType];
 }

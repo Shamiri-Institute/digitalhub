@@ -4,6 +4,7 @@ import type React from "react";
 import { useCallback, useRef, useState } from "react";
 
 import { S3_BUCKETS, type S3ApiRequest } from "#/lib/s3/s3.types";
+import { normalizeContentType } from "#/lib/s3/utils/normalize-content-type";
 
 type PresignedUrl = {
   url: string;
@@ -57,12 +58,11 @@ const EXTENSION_CONTENT_TYPES: Record<string, string> = {
   wave: "audio/wav",
   m4a: "audio/x-m4a",
   mp4: "audio/mp4",
-  aac: "audio/aac",
   pdf: "application/pdf",
 };
 
 function resolveUploadContentType(file: File): string {
-  const declared = file.type.toLowerCase().split(";")[0]?.trim() ?? "";
+  const declared = normalizeContentType(file.type);
   if (declared && declared !== "application/octet-stream") {
     return declared;
   }

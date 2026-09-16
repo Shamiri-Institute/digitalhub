@@ -89,10 +89,13 @@ export default function UploadStudentAttendanceDocument({
       const existing = await getAttendanceDocument(filters);
 
       let existingPdfUrl: string | null;
+      let expectedActiveDocId: string | null;
       if (existing.success) {
         existingPdfUrl = existing.data?.presignedUrl ?? null;
+        expectedActiveDocId = existing.data?.id ?? null;
       } else if (existing.message === NO_ATTENDANCE_DOCUMENT_MESSAGE) {
         existingPdfUrl = null;
+        expectedActiveDocId = null;
       } else {
         throw new Error(
           existing.message ??
@@ -116,6 +119,7 @@ export default function UploadStudentAttendanceDocument({
         sessionId,
         link: key,
         token,
+        expectedActiveDocId,
       });
 
       if (result.success) {
