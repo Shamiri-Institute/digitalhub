@@ -29,7 +29,7 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { buildS3Key, generateRecordingFilename } from "#/lib/utils/s3-key-builder";
 import { hubSessionTypes } from "#/prisma/scripts/hub-session-types";
-import { createTicketsFromCSV } from "#/prisma/scripts/seed-tickets";
+import { createTickets } from "#/prisma/scripts/seed-tickets";
 
 // GETTING STARTED WITH SEEDING
 // ===========================
@@ -2489,7 +2489,7 @@ async function main() {
   const operations = await createOperations(hubs, userEmailSet);
   const fellows = await createFellows(supervisors, userEmailSet);
 
-  await createTicketsFromCSV();
+  await createTickets();
 
   await createCoreUsers(
     implementers,
