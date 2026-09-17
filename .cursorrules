@@ -575,6 +575,17 @@ refactor(components): extract reusable form validation
 - Implements TypeScript strict mode
 - Uses consistent import aliasing with `#/` prefix
 
+### React Hooks Policy
+
+**`useEffect` is considered harmful unless there is a proper justification.**
+
+- Do not add a `useEffect` for work that a user event starts. Put it in the handler: `onClick`, `onOpenChange`, `onSubmit`.
+- Do not add a `useEffect` to derive state from props or other state. Compute the value during render.
+- Do not add a `useEffect` to fetch data that a Server Component or a server action can supply.
+- A `useEffect` is acceptable only for a real external subscription: a DOM listener, a timer, a third-party widget, or a sync with something outside React. Put a one-line comment directly above it that states the reason.
+- Do not add `useMemo` or `useCallback` unless a measurement or an obvious hot path shows a benefit. Say why in the PR. A lint rule whose only remedy is memoization is not enforced.
+- Enforcement in oxlint is tracked in ENG-2140.
+
 ### Testing
 
 - E2E tests use Playwright with role-based fixtures
