@@ -369,6 +369,7 @@ export default function MonthlySupervisorEvaluation({
                     <SelectContent>
                       {months.map((month, index) => {
                         return (
+                          // oxlint-disable-next-line react/no-array-index-key -- static month list
                           <SelectItem key={index.toString()} value={format(month, "yyyy-MM-dd")}>
                             Month {index + 1} - {format(month, "MMM yyyy")}
                           </SelectItem>

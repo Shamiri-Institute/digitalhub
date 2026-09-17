@@ -186,7 +186,7 @@ export default function UploadStudentAttendanceDocument({
                 className="overflow-hidden rounded-lg border w-full"
                 onClick={() => setLightboxIndex(i)}
               >
-                {/* biome-ignore lint/performance/noImgElement: blob URL previews cannot use next/image */}
+                {/* oxlint-disable-next-line nextjs/no-img-element -- blob URL previews cannot use next/image */}
                 <img src={previewUrls[i]} alt={file.name} className="h-20 w-full object-cover" />
               </button>
               <span className="absolute bottom-0 left-0 right-0 truncate bg-black/50 px-1 text-xs text-white pointer-events-none">
@@ -220,7 +220,7 @@ export default function UploadStudentAttendanceDocument({
           tabIndex={-1}
         >
           <div className="relative">
-            {/* biome-ignore lint/performance/noImgElement: blob URL previews cannot use next/image */}
+            {/* oxlint-disable-next-line nextjs/no-img-element -- blob URL previews cannot use next/image */}
             <img
               src={previewUrls[lightboxIndex]}
               alt={selectedFiles[lightboxIndex]?.name}

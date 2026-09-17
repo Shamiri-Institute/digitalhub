@@ -88,7 +88,7 @@ export function WeekView({
                       dayFormatter={dayFormatter}
                     />
                   ) : (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: fixed 7-column calendar grid; column index is the stable position
+                    // oxlint-disable-next-line react/no-array-index-key -- fixed 7-column calendar grid; column index is the stable position
                     <td key={`empty-header-${state.visibleRange.start.toString()}-${i}`} />
                   ),
                 )}
@@ -129,7 +129,7 @@ export function WeekView({
                         supervisorId={supervisorId}
                       />
                     ) : (
-                      // biome-ignore lint/suspicious/noArrayIndexKey: fixed 7-column calendar grid; column index is the stable position
+                      // oxlint-disable-next-line react/no-array-index-key -- fixed 7-column calendar grid; column index is the stable position
                       <td key={`empty-${state.visibleRange.start.toString()}-${colIdx}-${hour}`} />
                     ),
                   )}

@@ -17,7 +17,7 @@ export default async function FellowPage() {
     return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
   const data = await Promise.all([
-    await db.$queryRaw<Omit<MainFellowTableData, "complaints">[]>`
+    db.$queryRaw<Omit<MainFellowTableData, "complaints">[]>`
       SELECT
         f.id,
         f.fellow_name AS "fellowName",
@@ -44,7 +44,7 @@ export default async function FellowPage() {
       GROUP BY
         f.id
   `,
-    await db.fellowComplaints.findMany({
+    db.fellowComplaints.findMany({
       where: {
         fellow: {
           hubId: hc.profile?.assignedHubId,
@@ -54,7 +54,7 @@ export default async function FellowPage() {
         user: true,
       },
     }),
-    await db.interventionGroup.findMany({
+    db.interventionGroup.findMany({
       where: {
         leader: {
           hubId: hc.profile?.assignedHubId,

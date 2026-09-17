@@ -75,7 +75,7 @@ export function SafetyFlagsSection({ flags }: { flags: SafetyFlag[] }) {
       <div className="space-y-3">
         {flags.map((flag, idx) => (
           <div
-            // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; idx disambiguates duplicate type+severity combos
+            // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; idx disambiguates duplicate type+severity combos
             key={`${flag.type}-${flag.severity ?? ""}-${idx}`}
             className="rounded-md border border-red-200 bg-red-50 p-4"
           >

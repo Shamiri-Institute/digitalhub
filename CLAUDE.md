@@ -448,8 +448,8 @@ function ComplexForm() {
 
 - `npm run lint` - Run ESLint (MANDATORY before task completion)
 - `npm run typecheck` - Run TypeScript type checking (MANDATORY before task completion)
-- `npm run format` - Format code with Prettier
-- `npm run stylecheck` - Check code formatting (MANDATORY before task completion)
+- `npm run format` - Format code with oxfmt
+- `npm run stylecheck` - Check formatting (oxfmt) and lint (oxlint, type-aware) (MANDATORY before task completion)
 
 ### Testing
 
@@ -570,7 +570,7 @@ refactor(components): extract reusable form validation
 
 ### Code Style
 
-- Uses Prettier with Tailwind CSS plugin
+- Uses oxfmt for formatting and oxlint (type-aware) for linting, with ESLint kept for Next.js rules
 - Follows Next.js 14 App Router conventions
 - Implements TypeScript strict mode
 - Uses consistent import aliasing with `#/` prefix

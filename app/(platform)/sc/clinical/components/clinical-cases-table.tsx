@@ -54,23 +54,21 @@ export default function ClinicalCasesTable({
   }>[];
 }) {
   const renderTableActions = (
-    <>
-      <AddNewClinicalCaseForm
-        schools={schools}
-        fellowsInProject={fellowsInProject}
-        supervisorsInHub={supervisorsInHub}
-        creatorId={currentSupervisorId}
-        userRole="SUPERVISOR"
-        hubs={hubs}
-      >
-        <DialogTrigger asChild={true}>
-          <Button variant="brand">
-            <Plus className="mr-2 h-4 w-4" />
-            New case
-          </Button>
-        </DialogTrigger>
-      </AddNewClinicalCaseForm>
-    </>
+    <AddNewClinicalCaseForm
+      schools={schools}
+      fellowsInProject={fellowsInProject}
+      supervisorsInHub={supervisorsInHub}
+      creatorId={currentSupervisorId}
+      userRole="SUPERVISOR"
+      hubs={hubs}
+    >
+      <DialogTrigger asChild={true}>
+        <Button variant="brand">
+          <Plus className="mr-2 h-4 w-4" />
+          New case
+        </Button>
+      </DialogTrigger>
+    </AddNewClinicalCaseForm>
   );
 
   return (

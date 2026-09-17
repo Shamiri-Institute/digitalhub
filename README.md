@@ -366,8 +366,8 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 |---------|-------------|
 | `npm run lint` | Run ESLint |
 | `npm run typecheck` | Run TypeScript type checking |
-| `npm run format` | Format code with Biome |
-| `npm run stylecheck` | Check code formatting |
+| `npm run format` | Format code with oxfmt |
+| `npm run stylecheck` | Check formatting (oxfmt) and lint (oxlint, type-aware) |
 
 #### Testing
 
@@ -385,7 +385,7 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 ```bash
 npm run typecheck   # TypeScript type checking
 npm run lint        # ESLint code quality
-npm run stylecheck  # Biome formatting
+npm run stylecheck  # oxfmt formatting + oxlint
 npm run test:unit   # Unit tests
 ```
 

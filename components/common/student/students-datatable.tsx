@@ -39,10 +39,7 @@ export default function StudentsDatatable({
   const [selectedSession, setSelectedSession] = useState<string>();
 
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
-    const [res] = await Promise.all([
-      await markStudentAttendance(data),
-      await revalidatePageAction(pathname),
-    ]);
+    const [res] = await Promise.all([markStudentAttendance(data), revalidatePageAction(pathname)]);
     return res;
   };
 

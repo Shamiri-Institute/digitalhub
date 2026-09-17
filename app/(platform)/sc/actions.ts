@@ -155,7 +155,7 @@ export async function loadFellowsData() {
         attendances: attendancesByGroupId.get(group.id) ?? [],
       })),
       complaints: fellow.fellowComplaints,
-      averageRating: Number(averageRatingById.get(fellow.id)) ?? 0,
+      averageRating: Number(averageRatingById.get(fellow.id) ?? 0),
     };
   });
 }

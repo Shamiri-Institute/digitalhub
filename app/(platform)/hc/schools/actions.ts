@@ -370,7 +370,7 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
       ${schoolId ? Prisma.sql`AND id = ${schoolId}` : Prisma.sql``}
   `;
 
-  const numSchools = Number(schoolCount?.count) ?? 0;
+  const numSchools = Number(schoolCount?.count ?? 0);
 
   const schoolAttendances = await db.$queryRaw<
     {

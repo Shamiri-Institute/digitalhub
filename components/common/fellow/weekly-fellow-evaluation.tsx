@@ -201,6 +201,7 @@ export default function WeeklyFellowEvaluation({
                       <SelectContent className="max-h-[200px]">
                         {weeks.map((week, index) => {
                           return (
+                            // oxlint-disable-next-line react/no-array-index-key -- static month list
                             <SelectItem key={index.toString()} value={format(week, "yyyy-MM-dd")}>
                               Week {index + 1} - {format(week, "dd MMM yyyy")} to{" "}
                               {format(addDays(week, 6), "dd MMM yyyy")}

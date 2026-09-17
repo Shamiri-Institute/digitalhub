@@ -43,12 +43,12 @@ export default async function SchoolsPage(props: {
     schoolAttendanceData,
     supervisors,
   ] = await Promise.all([
-    await fetchSchoolData(assignedHubId),
-    await fetchDropoutReasons(assignedHubId, queryAsSchoolId),
-    await fetchSchoolDataCompletenessData(assignedHubId, queryAsSchoolId),
-    await fetchSessionRatingAverages(assignedHubId, queryAsSchoolId),
-    await fetchSchoolAttendances(assignedHubId, queryAsSchoolId),
-    await fetchHubSupervisors({
+    fetchSchoolData(assignedHubId),
+    fetchDropoutReasons(assignedHubId, queryAsSchoolId),
+    fetchSchoolDataCompletenessData(assignedHubId, queryAsSchoolId),
+    fetchSessionRatingAverages(assignedHubId, queryAsSchoolId),
+    fetchSchoolAttendances(assignedHubId, queryAsSchoolId),
+    fetchHubSupervisors({
       where: {
         hubId: assignedHubId,
       },

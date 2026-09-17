@@ -88,26 +88,25 @@ export function MonthView({
         >
           <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
             <tbody>
-              {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
+              {Array.from({ length: weeksInMonth }, (_, index) => index).map((weekIndex) => (
                 <tr key={weekIndex}>
-                  {state
-                    .getDatesInWeek(weekIndex)
-                    .map((date, i) =>
-                      date ? (
-                        <MonthCalendarCell
-                          key={date.toString()}
-                          state={state}
-                          date={date}
-                          weekend={isWeekend(date, "en-US")}
-                          role={props.role}
-                          dialogState={props.dialogState}
-                          fellowId={props.fellowId}
-                          supervisorId={props.supervisorId}
-                        />
-                      ) : (
-                        <td key={i.toString()} />
-                      ),
-                    )}
+                  {state.getDatesInWeek(weekIndex).map((date, i) =>
+                    date ? (
+                      <MonthCalendarCell
+                        key={date.toString()}
+                        state={state}
+                        date={date}
+                        weekend={isWeekend(date, "en-US")}
+                        role={props.role}
+                        dialogState={props.dialogState}
+                        fellowId={props.fellowId}
+                        supervisorId={props.supervisorId}
+                      />
+                    ) : (
+                      // oxlint-disable-next-line react/no-array-index-key -- empty calendar cell
+                      <td key={i.toString()} />
+                    ),
+                  )}
                 </tr>
               ))}
             </tbody>

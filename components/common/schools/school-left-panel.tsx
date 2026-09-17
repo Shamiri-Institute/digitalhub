@@ -182,12 +182,7 @@ export default function SchoolLeftPanel({
                       </p>
                       {school?.latitude !== null && school?.longitude !== null ? (
                         <a
-                          href={
-                            "https://maps.google.com?q=" +
-                            school?.latitude +
-                            "," +
-                            school?.longitude
-                          }
+                          href={`https://maps.google.com?q=${school?.latitude},${school?.longitude}`}
                           className="text-shamiri-new-blue"
                         >
                           Get directions
