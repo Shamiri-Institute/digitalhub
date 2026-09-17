@@ -1,0 +1,55 @@
+{
+  "label": "after",
+  "email": "martin.odegaard@test.com",
+  "pseudonym": "lime-gorilla",
+  "optionText": "Clinical Session 1 - 08 Sep 2026(View only)",
+  "loadMs": 1183,
+  "documentBytes": 972432,
+  "other": [
+    {
+      "url": "/sc/clinical",
+      "bytes": 71,
+      "type": "text/x-component"
+    },
+    {
+      "url": "/sc/clinical",
+      "bytes": 72475,
+      "type": "text/x-component"
+    },
+    {
+      "url": "/sc/clinical",
+      "bytes": 71,
+      "type": "text/x-component"
+    },
+    {
+      "url": "/sc/clinical",
+      "bytes": 71,
+      "type": "text/x-component"
+    },
+    {
+      "url": "/sc/clinical",
+      "bytes": 72475,
+      "type": "text/x-component"
+    },
+    {
+      "url": "/sc/clinical",
+      "bytes": 71,
+      "type": "text/x-component"
+    },
+    {
+      "url": "/sc/clinical",
+      "bytes": 320,
+      "type": "text/x-component"
+    },
+    {
+      "url": "/sc/clinical",
+      "bytes": 320,
+      "type": "text/x-component"
+    },
+    {
+      "url": "/sc/clinical",
+      "bytes": 2895,
+      "type": "text/x-component"
+    }
+  ]
+}
