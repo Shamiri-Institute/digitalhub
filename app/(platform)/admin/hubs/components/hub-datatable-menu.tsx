@@ -18,7 +18,7 @@ interface HubDatatableMenuProps {
 
 export default function HubDatatableMenu({ row }: HubDatatableMenuProps) {
   const [showProfile, setShowProfile] = useState(false);
-  const firstCoordinator = [...row.coordinators].toSorted(
+  const firstCoordinator = row.coordinators.toSorted(
     (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
   )[0];
 

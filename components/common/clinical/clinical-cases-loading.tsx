@@ -32,7 +32,7 @@ export default function ClinicalTableSkeleton({ showNewCase }: { showNewCase?: b
   }));
 
   function renderTableActions() {
-    if (!showNewCase) return null;
+    if (!showNewCase) return;
     return (
       <Button variant="brand" disabled>
         New Case
