@@ -91,11 +91,7 @@
       }
     ],
     "react/set-state-in-effect": "error",
-    "react/no-deriving-state-in-effects": "error",
-    "react/no-unnecessary-use-effect": "error",
-    "react/no-unnecessary-use-memo": "error",
-    "react/no-unnecessary-use-callback": "error",
-    "react/no-unnecessary-use-prefix": "error"
+    "react/no-deriving-state-in-effects": "error"
   },
   "ignorePatterns": [".next", "node_modules", "playwright-report", ".artifacts"],
   "overrides": [

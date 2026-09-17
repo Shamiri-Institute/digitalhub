@@ -3,7 +3,7 @@ import { addHours, addMinutes, format } from "date-fns";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type * as React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
