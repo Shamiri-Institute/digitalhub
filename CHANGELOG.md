@@ -12,33 +12,29 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## [1.36.3](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.2...v1.36.3) (2026-09-11)
 
-
 ### Bug Fixes
 
-* **auth:** stop personnel over-fetch leaking the org roster ([#825](https://github.com/Shamiri-Institute/digitalhub/issues/825)) ([d791ff7](https://github.com/Shamiri-Institute/digitalhub/commit/d791ff743130ef48950da95d47a0a2050f8f68e6))
-* fix issue where users could spoof the session and upload files to s3 bucket. Also fixes permissions for s3 operations ([#808](https://github.com/Shamiri-Institute/digitalhub/issues/808)) ([8a36ea3](https://github.com/Shamiri-Institute/digitalhub/commit/8a36ea35a5ff0ae4ad76420c02ee7a72e2923c3a))
+- **auth:** stop personnel over-fetch leaking the org roster ([#825](https://github.com/Shamiri-Institute/digitalhub/issues/825)) ([d791ff7](https://github.com/Shamiri-Institute/digitalhub/commit/d791ff743130ef48950da95d47a0a2050f8f68e6))
+- fix issue where users could spoof the session and upload files to s3 bucket. Also fixes permissions for s3 operations ([#808](https://github.com/Shamiri-Institute/digitalhub/issues/808)) ([8a36ea3](https://github.com/Shamiri-Institute/digitalhub/commit/8a36ea35a5ff0ae4ad76420c02ee7a72e2923c3a))
 
 ## [1.36.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.1...v1.36.2) (2026-09-08)
 
 ## [1.36.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.0...v1.36.1) (2026-09-07)
 
-
 ### Bug Fixes
 
-* **auth:** keep database access out of the proxy ([#814](https://github.com/Shamiri-Institute/digitalhub/issues/814)) ([e7b6ec6](https://github.com/Shamiri-Institute/digitalhub/commit/e7b6ec62c5d5dc949a80036bd3388a2cbc6c641b))
+- **auth:** keep database access out of the proxy ([#814](https://github.com/Shamiri-Institute/digitalhub/issues/814)) ([e7b6ec6](https://github.com/Shamiri-Institute/digitalhub/commit/e7b6ec62c5d5dc949a80036bd3388a2cbc6c641b))
 
 ## [1.36.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.35.4...v1.36.0) (2026-09-07)
 
-
 ### Features
 
-* **auth:** move to use database sessions over JWT membership ([#812](https://github.com/Shamiri-Institute/digitalhub/issues/812)) ([e58f76b](https://github.com/Shamiri-Institute/digitalhub/commit/e58f76bd7ceca2557b55392d6ed63a7b487376bd))
-* **seed:** create report records for the empty reporting pages ([#802](https://github.com/Shamiri-Institute/digitalhub/issues/802)) ([4bbc88f](https://github.com/Shamiri-Institute/digitalhub/commit/4bbc88f552152d4178b1e9503b2ea8c52b2d8867))
-
+- **auth:** move to use database sessions over JWT membership ([#812](https://github.com/Shamiri-Institute/digitalhub/issues/812)) ([e58f76b](https://github.com/Shamiri-Institute/digitalhub/commit/e58f76bd7ceca2557b55392d6ed63a7b487376bd))
+- **seed:** create report records for the empty reporting pages ([#802](https://github.com/Shamiri-Institute/digitalhub/issues/802)) ([4bbc88f](https://github.com/Shamiri-Institute/digitalhub/commit/4bbc88f552152d4178b1e9503b2ea8c52b2d8867))
 
 ### Bug Fixes
 
-* **api:** require authenticated session for S3 presigned URL route ([#789](https://github.com/Shamiri-Institute/digitalhub/issues/789)) ([b34f605](https://github.com/Shamiri-Institute/digitalhub/commit/b34f605751fcf804a4cc31a8a47e22208f698fe8))
+- **api:** require authenticated session for S3 presigned URL route ([#789](https://github.com/Shamiri-Institute/digitalhub/issues/789)) ([b34f605](https://github.com/Shamiri-Institute/digitalhub/commit/b34f605751fcf804a4cc31a8a47e22208f698fe8))
 
 ## [1.35.4](https://github.com/Shamiri-Institute/digitalhub/compare/v1.35.3...v1.35.4) (2026-08-24)
 
@@ -50,239 +46,207 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## [1.35.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.34.2...v1.35.0) (2026-07-21)
 
-
 ### Features
 
-* **migration:** add additional Supervision sessions (sv8, sv9) ([#761](https://github.com/Shamiri-Institute/digitalhub/issues/761)) ([3572eef](https://github.com/Shamiri-Institute/digitalhub/commit/3572eefb824377b7c9bfebf352a05984116f7a4a))
+- **migration:** add additional Supervision sessions (sv8, sv9) ([#761](https://github.com/Shamiri-Institute/digitalhub/issues/761)) ([3572eef](https://github.com/Shamiri-Institute/digitalhub/commit/3572eefb824377b7c9bfebf352a05984116f7a4a))
 
 ## [1.34.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.34.1...v1.34.2) (2026-07-10)
 
 ## [1.34.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.34.0...v1.34.1) (2026-07-08)
 
-
 ### Bug Fixes
 
-* **cleanup:** remove references to deleted shamiridigitalhub-public S3 bucket ([#757](https://github.com/Shamiri-Institute/digitalhub/issues/757)) ([c85056b](https://github.com/Shamiri-Institute/digitalhub/commit/c85056bcda49e0e3166172caa59dda73ccd5d5ed))
-* **schools-nav:** hide "Files" tab under schools for fellows ([#758](https://github.com/Shamiri-Institute/digitalhub/issues/758)) ([53f4f57](https://github.com/Shamiri-Institute/digitalhub/commit/53f4f577b6983a895180d22afb66f78bb6a5a770))
+- **cleanup:** remove references to deleted shamiridigitalhub-public S3 bucket ([#757](https://github.com/Shamiri-Institute/digitalhub/issues/757)) ([c85056b](https://github.com/Shamiri-Institute/digitalhub/commit/c85056bcda49e0e3166172caa59dda73ccd5d5ed))
+- **schools-nav:** hide "Files" tab under schools for fellows ([#758](https://github.com/Shamiri-Institute/digitalhub/issues/758)) ([53f4f57](https://github.com/Shamiri-Institute/digitalhub/commit/53f4f577b6983a895180d22afb66f78bb6a5a770))
 
 ## [1.34.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.33.0...v1.34.0) (2026-07-06)
 
-
 ### Features
 
-* **group:** fellow final group report ([#746](https://github.com/Shamiri-Institute/digitalhub/issues/746)) ([75a594f](https://github.com/Shamiri-Institute/digitalhub/commit/75a594f5d6000a0c98709ac2e7f6dcc3540f5608))
+- **group:** fellow final group report ([#746](https://github.com/Shamiri-Institute/digitalhub/issues/746)) ([75a594f](https://github.com/Shamiri-Institute/digitalhub/commit/75a594f5d6000a0c98709ac2e7f6dcc3540f5608))
 
 ## [1.33.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.32.1...v1.33.0) (2026-07-01)
 
-
 ### Features
 
-* **migrations:** seed session names for JSS Program v2 ([#751](https://github.com/Shamiri-Institute/digitalhub/issues/751)) ([4ac81b9](https://github.com/Shamiri-Institute/digitalhub/commit/4ac81b92a7894d32eea6d80170de1ae8ebfcf276))
+- **migrations:** seed session names for JSS Program v2 ([#751](https://github.com/Shamiri-Institute/digitalhub/issues/751)) ([4ac81b9](https://github.com/Shamiri-Institute/digitalhub/commit/4ac81b92a7894d32eea6d80170de1ae8ebfcf276))
 
 ## [1.33.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.32.1...v1.33.0) (2026-07-01)
 
-
 ### Features
 
-* **migrations:** seed session names for JSS Program v2 ([#751](https://github.com/Shamiri-Institute/digitalhub/issues/751)) ([4ac81b9](https://github.com/Shamiri-Institute/digitalhub/commit/4ac81b92a7894d32eea6d80170de1ae8ebfcf276))
+- **migrations:** seed session names for JSS Program v2 ([#751](https://github.com/Shamiri-Institute/digitalhub/issues/751)) ([4ac81b9](https://github.com/Shamiri-Institute/digitalhub/commit/4ac81b92a7894d32eea6d80170de1ae8ebfcf276))
 
 ## [1.32.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.32.0...v1.32.1) (2026-06-30)
 
 ## [1.32.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.31.0...v1.32.0) (2026-06-29)
 
-
 ### Features
 
-* **sentry:** enable free deploy/release tracking ([#748](https://github.com/Shamiri-Institute/digitalhub/issues/748)) ([7273a17](https://github.com/Shamiri-Institute/digitalhub/commit/7273a177043efc98bc8f4518e3f20ef62b2296b8))
+- **sentry:** enable free deploy/release tracking ([#748](https://github.com/Shamiri-Institute/digitalhub/issues/748)) ([7273a17](https://github.com/Shamiri-Institute/digitalhub/commit/7273a177043efc98bc8f4518e3f20ef62b2296b8))
 
 ## [1.31.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.30.0...v1.31.0) (2026-06-25)
 
-
 ### Features
 
-* **sc/triage:** allow supervisors to view triage event details ([#747](https://github.com/Shamiri-Institute/digitalhub/issues/747)) ([c2a88e8](https://github.com/Shamiri-Institute/digitalhub/commit/c2a88e828f63d49f7d0c0549f4b4b35e43f68819))
+- **sc/triage:** allow supervisors to view triage event details ([#747](https://github.com/Shamiri-Institute/digitalhub/issues/747)) ([c2a88e8](https://github.com/Shamiri-Institute/digitalhub/commit/c2a88e828f63d49f7d0c0549f4b4b35e43f68819))
 
 ## [1.30.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.29.0...v1.30.0) (2026-06-11)
 
-
 ### Features
 
-* **ai:** add v2 fidelity feedback rendering support ([#727](https://github.com/Shamiri-Institute/digitalhub/issues/727)) ([3c842ca](https://github.com/Shamiri-Institute/digitalhub/commit/3c842ca81d96a260ebd2ddfc1af7cef5b030902e))
+- **ai:** add v2 fidelity feedback rendering support ([#727](https://github.com/Shamiri-Institute/digitalhub/issues/727)) ([3c842ca](https://github.com/Shamiri-Institute/digitalhub/commit/3c842ca81d96a260ebd2ddfc1af7cef5b030902e))
 
 ## [1.29.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.28.1...v1.29.0) (2026-06-10)
 
-
 ### Features
 
-* **recordings:** add prompt_version column to session_recordings ([#725](https://github.com/Shamiri-Institute/digitalhub/issues/725)) ([344c5cc](https://github.com/Shamiri-Institute/digitalhub/commit/344c5ccc2f31fc0a4648d72dd178f456e700e48a))
-* **student-transfer:** implement student move to another school ([#720](https://github.com/Shamiri-Institute/digitalhub/issues/720)) ([21c8d3b](https://github.com/Shamiri-Institute/digitalhub/commit/21c8d3bff48fe68bc899a9d1137c800c0a54bc13))
+- **recordings:** add prompt_version column to session_recordings ([#725](https://github.com/Shamiri-Institute/digitalhub/issues/725)) ([344c5cc](https://github.com/Shamiri-Institute/digitalhub/commit/344c5ccc2f31fc0a4648d72dd178f456e700e48a))
+- **student-transfer:** implement student move to another school ([#720](https://github.com/Shamiri-Institute/digitalhub/issues/720)) ([21c8d3b](https://github.com/Shamiri-Institute/digitalhub/commit/21c8d3bff48fe68bc899a9d1137c800c0a54bc13))
 
 ## [1.28.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.28.0...v1.28.1) (2026-06-05)
 
-
 ### Bug Fixes
 
-* **attendance-uploads:** correct image orientation in attendance PDFs ([#716](https://github.com/Shamiri-Institute/digitalhub/issues/716)) ([e82f72e](https://github.com/Shamiri-Institute/digitalhub/commit/e82f72e07c371b88604a10b4e4634aa0bcd313d9))
-* **fellows-datatable:** eliminate cascading renders causing hook lint errors ([#715](https://github.com/Shamiri-Institute/digitalhub/issues/715)) ([9e5cfcc](https://github.com/Shamiri-Institute/digitalhub/commit/9e5cfcc0bfcfeb89bc3697b94f194e0a31a8702f))
-* **s3:** prevent ZodError when S3_STUDENT_ATTENDANCE_BUCKET is unset ([#717](https://github.com/Shamiri-Institute/digitalhub/issues/717)) ([94714e2](https://github.com/Shamiri-Institute/digitalhub/commit/94714e2f1a72071cfedee441f8ea6d1bd7f41b7f))
+- **attendance-uploads:** correct image orientation in attendance PDFs ([#716](https://github.com/Shamiri-Institute/digitalhub/issues/716)) ([e82f72e](https://github.com/Shamiri-Institute/digitalhub/commit/e82f72e07c371b88604a10b4e4634aa0bcd313d9))
+- **fellows-datatable:** eliminate cascading renders causing hook lint errors ([#715](https://github.com/Shamiri-Institute/digitalhub/issues/715)) ([9e5cfcc](https://github.com/Shamiri-Institute/digitalhub/commit/9e5cfcc0bfcfeb89bc3697b94f194e0a31a8702f))
+- **s3:** prevent ZodError when S3_STUDENT_ATTENDANCE_BUCKET is unset ([#717](https://github.com/Shamiri-Institute/digitalhub/issues/717)) ([94714e2](https://github.com/Shamiri-Institute/digitalhub/commit/94714e2f1a72071cfedee441f8ea6d1bd7f41b7f))
 
 ## [1.28.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.27.0...v1.28.0) (2026-05-28)
 
-
 ### Features
 
-* **fellow-dropout:** add group archiving option ([#714](https://github.com/Shamiri-Institute/digitalhub/issues/714)) ([3ba5afb](https://github.com/Shamiri-Institute/digitalhub/commit/3ba5afb79aa04585d123a51fd9b2cf9375ebe77c))
-* **speed-insights:** integrate Vercel Speed Insights for performance monitoring ([#713](https://github.com/Shamiri-Institute/digitalhub/issues/713)) ([9309571](https://github.com/Shamiri-Institute/digitalhub/commit/9309571cd237e58f00b08ebebac9f6ffdf140857))
+- **fellow-dropout:** add group archiving option ([#714](https://github.com/Shamiri-Institute/digitalhub/issues/714)) ([3ba5afb](https://github.com/Shamiri-Institute/digitalhub/commit/3ba5afb79aa04585d123a51fd9b2cf9375ebe77c))
+- **speed-insights:** integrate Vercel Speed Insights for performance monitoring ([#713](https://github.com/Shamiri-Institute/digitalhub/issues/713)) ([9309571](https://github.com/Shamiri-Institute/digitalhub/commit/9309571cd237e58f00b08ebebac9f6ffdf140857))
 
 ## [1.27.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.26.1...v1.27.0) (2026-05-26)
 
-
 ### Features
 
-* **ai:** enable supervisors to edit session recording details ([#707](https://github.com/Shamiri-Institute/digitalhub/issues/707)) ([bb0314f](https://github.com/Shamiri-Institute/digitalhub/commit/bb0314f5efbf2bb7a7e9b11bafdef71bde68dc83))
-* **attendance-upload:** implement attendance sheet upload for fellows  ([12afdda](https://github.com/Shamiri-Institute/digitalhub/commit/12afdda64a0a4ef02cd5d42f795cafd6957e936e))
+- **ai:** enable supervisors to edit session recording details ([#707](https://github.com/Shamiri-Institute/digitalhub/issues/707)) ([bb0314f](https://github.com/Shamiri-Institute/digitalhub/commit/bb0314f5efbf2bb7a7e9b11bafdef71bde68dc83))
+- **attendance-upload:** implement attendance sheet upload for fellows ([12afdda](https://github.com/Shamiri-Institute/digitalhub/commit/12afdda64a0a4ef02cd5d42f795cafd6957e936e))
 
 ## [1.26.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.26.0...v1.26.1) (2026-05-25)
 
-
 ### Bug Fixes
 
-* **fellows:** implement stable fellow ordering in supervisor SC view ([#709](https://github.com/Shamiri-Institute/digitalhub/issues/709)) ([7e098dc](https://github.com/Shamiri-Institute/digitalhub/commit/7e098dc128897c0eaee72eefa54a0220797c3cd4))
+- **fellows:** implement stable fellow ordering in supervisor SC view ([#709](https://github.com/Shamiri-Institute/digitalhub/issues/709)) ([7e098dc](https://github.com/Shamiri-Institute/digitalhub/commit/7e098dc128897c0eaee72eefa54a0220797c3cd4))
 
 ## [1.26.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.25.0...v1.26.0) (2026-05-20)
 
-
 ### Features
 
-* **triage:** triage functionality for key users ([#687](https://github.com/Shamiri-Institute/digitalhub/issues/687)) ([c931e94](https://github.com/Shamiri-Institute/digitalhub/commit/c931e94e56abc1e582e54ca365a35968258ddb57))
-
+- **triage:** triage functionality for key users ([#687](https://github.com/Shamiri-Institute/digitalhub/issues/687)) ([c931e94](https://github.com/Shamiri-Institute/digitalhub/commit/c931e94e56abc1e582e54ca365a35968258ddb57))
 
 ### Bug Fixes
 
-* **datatable:** memoize columns and action cells to prevent cascading re-renders  ([f29c0e6](https://github.com/Shamiri-Institute/digitalhub/commit/f29c0e6c296a94a96fe9ffd93e20f0290c28744c))
+- **datatable:** memoize columns and action cells to prevent cascading re-renders ([f29c0e6](https://github.com/Shamiri-Institute/digitalhub/commit/f29c0e6c296a94a96fe9ffd93e20f0290c28744c))
 
 ## [1.25.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.24.1...v1.25.0) (2026-05-14)
 
-
 ### Features
 
-* **fellows:** warn when fellow group has no students during attendance marking ([#703](https://github.com/Shamiri-Institute/digitalhub/issues/703)) ([cabad3f](https://github.com/Shamiri-Institute/digitalhub/commit/cabad3fe39678528b98664bb4558d5d7f2110602))
+- **fellows:** warn when fellow group has no students during attendance marking ([#703](https://github.com/Shamiri-Institute/digitalhub/issues/703)) ([cabad3f](https://github.com/Shamiri-Institute/digitalhub/commit/cabad3fe39678528b98664bb4558d5d7f2110602))
 
 ## [1.24.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.24.0...v1.24.1) (2026-05-13)
 
-
 ### Bug Fixes
 
-* **students:** restrict fellows from editing questionnaire type visibility in student info form ([#701](https://github.com/Shamiri-Institute/digitalhub/issues/701)) ([1c80a30](https://github.com/Shamiri-Institute/digitalhub/commit/1c80a307976aaadd00beb9c7d8c8443dbd7cceb9))
-* **students:** update admission number field to restrict editing for fellows in student details form ([#702](https://github.com/Shamiri-Institute/digitalhub/issues/702)) ([d4d3564](https://github.com/Shamiri-Institute/digitalhub/commit/d4d356467e348443f7edf1c4067d7033190e20bd))
+- **students:** restrict fellows from editing questionnaire type visibility in student info form ([#701](https://github.com/Shamiri-Institute/digitalhub/issues/701)) ([1c80a30](https://github.com/Shamiri-Institute/digitalhub/commit/1c80a307976aaadd00beb9c7d8c8443dbd7cceb9))
+- **students:** update admission number field to restrict editing for fellows in student details form ([#702](https://github.com/Shamiri-Institute/digitalhub/issues/702)) ([d4d3564](https://github.com/Shamiri-Institute/digitalhub/commit/d4d356467e348443f7edf1c4067d7033190e20bd))
 
 ## [1.24.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.23.1...v1.24.0) (2026-05-12)
 
-
 ### Features
 
-* **migrations:** add session names for Lifeskills Intervention ([#693](https://github.com/Shamiri-Institute/digitalhub/issues/693)) ([c7ec49a](https://github.com/Shamiri-Institute/digitalhub/commit/c7ec49a671f38789a8ebc902d862ac874d645a33))
-* **students:** enforce age restrictions (9–35 years) on year of birth fields ([#690](https://github.com/Shamiri-Institute/digitalhub/issues/690)) ([a3d7b29](https://github.com/Shamiri-Institute/digitalhub/commit/a3d7b29b70c01082744fd9964529a625af0d0910))
-
+- **migrations:** add session names for Lifeskills Intervention ([#693](https://github.com/Shamiri-Institute/digitalhub/issues/693)) ([c7ec49a](https://github.com/Shamiri-Institute/digitalhub/commit/c7ec49a671f38789a8ebc902d862ac874d645a33))
+- **students:** enforce age restrictions (9–35 years) on year of birth fields ([#690](https://github.com/Shamiri-Institute/digitalhub/issues/690)) ([a3d7b29](https://github.com/Shamiri-Institute/digitalhub/commit/a3d7b29b70c01082744fd9964529a625af0d0910))
 
 ### Bug Fixes
 
-* **student:** restrict fellows to creating only new student questionnaire types ([#694](https://github.com/Shamiri-Institute/digitalhub/issues/694)) ([a8555b1](https://github.com/Shamiri-Institute/digitalhub/commit/a8555b14b7807e91e97bc66b6f6c19f4908aa072))
+- **student:** restrict fellows to creating only new student questionnaire types ([#694](https://github.com/Shamiri-Institute/digitalhub/issues/694)) ([a8555b1](https://github.com/Shamiri-Institute/digitalhub/commit/a8555b14b7807e91e97bc66b6f6c19f4908aa072))
 
 ## [1.23.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.23.0...v1.23.1) (2026-05-08)
 
 ## [1.23.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.22.0...v1.23.0) (2026-05-05)
 
-
 ### Features
 
-* **migrations:** seed session names for 2026_Project_2 across all hubs ([#684](https://github.com/Shamiri-Institute/digitalhub/issues/684)) ([32b1348](https://github.com/Shamiri-Institute/digitalhub/commit/32b1348ed59adfa0d9ca0f12e2b394a2dd061f3d))
+- **migrations:** seed session names for 2026_Project_2 across all hubs ([#684](https://github.com/Shamiri-Institute/digitalhub/issues/684)) ([32b1348](https://github.com/Shamiri-Institute/digitalhub/commit/32b1348ed59adfa0d9ca0f12e2b394a2dd061f3d))
 
 ## [1.22.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.21.0...v1.22.0) (2026-04-28)
 
-
 ### Features
 
-* **clinical:** allow clinical leads to un-terminate cases ([#675](https://github.com/Shamiri-Institute/digitalhub/issues/675)) ([a54edcc](https://github.com/Shamiri-Institute/digitalhub/commit/a54edcc07121886f84af3c27ff9c98095c27fc41))
+- **clinical:** allow clinical leads to un-terminate cases ([#675](https://github.com/Shamiri-Institute/digitalhub/issues/675)) ([a54edcc](https://github.com/Shamiri-Institute/digitalhub/commit/a54edcc07121886f84af3c27ff9c98095c27fc41))
 
 ## [1.21.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.20.0...v1.21.0) (2026-04-27)
 
-
 ### Features
 
-* **migrations:** add extra supervision session names for all hubs ([#663](https://github.com/Shamiri-Institute/digitalhub/issues/663)) ([7bdbbbf](https://github.com/Shamiri-Institute/digitalhub/commit/7bdbbbf4f85a50e0cff811e126aab68191faf973))
-
+- **migrations:** add extra supervision session names for all hubs ([#663](https://github.com/Shamiri-Institute/digitalhub/issues/663)) ([7bdbbbf](https://github.com/Shamiri-Institute/digitalhub/commit/7bdbbbf4f85a50e0cff811e126aab68191faf973))
 
 ### Bug Fixes
 
-* **admin-students:** show accurate student stats and charts ([#673](https://github.com/Shamiri-Institute/digitalhub/issues/673)) ([3dc6275](https://github.com/Shamiri-Institute/digitalhub/commit/3dc6275f2176a5e42ae9b50b35f74f46a1bd6a50))
-* **schedule:** sync list view date range with previous mode ([#676](https://github.com/Shamiri-Institute/digitalhub/issues/676)) ([b829126](https://github.com/Shamiri-Institute/digitalhub/commit/b82912655a9f24ff4784e88d40724201a31abf99))
+- **admin-students:** show accurate student stats and charts ([#673](https://github.com/Shamiri-Institute/digitalhub/issues/673)) ([3dc6275](https://github.com/Shamiri-Institute/digitalhub/commit/3dc6275f2176a5e42ae9b50b35f74f46a1bd6a50))
+- **schedule:** sync list view date range with previous mode ([#676](https://github.com/Shamiri-Institute/digitalhub/issues/676)) ([b829126](https://github.com/Shamiri-Institute/digitalhub/commit/b82912655a9f24ff4784e88d40724201a31abf99))
 
 ## [1.20.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.19.0...v1.20.0) (2026-03-25)
 
-
 ### Features
 
-* **security:** add security headers ([#655](https://github.com/Shamiri-Institute/digitalhub/issues/655)) ([c25a3ef](https://github.com/Shamiri-Institute/digitalhub/commit/c25a3ef84384189bfdb27e2232f891e0f320604d))
-* **student:** add attendance history column and integrate session history widget in student datatable ([#659](https://github.com/Shamiri-Institute/digitalhub/issues/659)) ([7016e06](https://github.com/Shamiri-Institute/digitalhub/commit/7016e066bed10aa1be8f8bb41decb79041ca6087))
+- **security:** add security headers ([#655](https://github.com/Shamiri-Institute/digitalhub/issues/655)) ([c25a3ef](https://github.com/Shamiri-Institute/digitalhub/commit/c25a3ef84384189bfdb27e2232f891e0f320604d))
+- **student:** add attendance history column and integrate session history widget in student datatable ([#659](https://github.com/Shamiri-Institute/digitalhub/issues/659)) ([7016e06](https://github.com/Shamiri-Institute/digitalhub/commit/7016e066bed10aa1be8f8bb41decb79041ca6087))
 
 ## [1.19.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.18.3...v1.19.0) (2026-03-10)
 
-
 ### Features
 
-* **ai:** add A/B test gating for supervisors in control group ([#637](https://github.com/Shamiri-Institute/digitalhub/issues/637)) ([832a208](https://github.com/Shamiri-Institute/digitalhub/commit/832a208a7ff4f1623bc2f06f82f9618fa05ec157))
-* **groups:** add unarchive functionality for intervention groups for HC ([#648](https://github.com/Shamiri-Institute/digitalhub/issues/648)) ([de1d872](https://github.com/Shamiri-Institute/digitalhub/commit/de1d8729e3ea2766d7946c71fd629f0c624a78f4))
-
+- **ai:** add A/B test gating for supervisors in control group ([#637](https://github.com/Shamiri-Institute/digitalhub/issues/637)) ([832a208](https://github.com/Shamiri-Institute/digitalhub/commit/832a208a7ff4f1623bc2f06f82f9618fa05ec157))
+- **groups:** add unarchive functionality for intervention groups for HC ([#648](https://github.com/Shamiri-Institute/digitalhub/issues/648)) ([de1d872](https://github.com/Shamiri-Institute/digitalhub/commit/de1d8729e3ea2766d7946c71fd629f0c624a78f4))
 
 ### Bug Fixes
 
-* **fellow-evaluation:** correct fellow ID on submit and reset form when dialog opens ([#645](https://github.com/Shamiri-Institute/digitalhub/issues/645)) ([61462b2](https://github.com/Shamiri-Institute/digitalhub/commit/61462b2eae9d1bb0fd44c54d9b31db42768dbaf0))
+- **fellow-evaluation:** correct fellow ID on submit and reset form when dialog opens ([#645](https://github.com/Shamiri-Institute/digitalhub/issues/645)) ([61462b2](https://github.com/Shamiri-Institute/digitalhub/commit/61462b2eae9d1bb0fd44c54d9b31db42768dbaf0))
 
 ## [1.18.3](https://github.com/Shamiri-Institute/digitalhub/compare/v1.18.2...v1.18.3) (2026-02-26)
 
-
 ### Bug Fixes
 
-* filter supervisor expenses by active project (ops) ([#642](https://github.com/Shamiri-Institute/digitalhub/issues/642)) ([152b4d4](https://github.com/Shamiri-Institute/digitalhub/commit/152b4d4b2d8266d40ffcedead2fb2e4a244452da))
+- filter supervisor expenses by active project (ops) ([#642](https://github.com/Shamiri-Institute/digitalhub/issues/642)) ([152b4d4](https://github.com/Shamiri-Institute/digitalhub/commit/152b4d4b2d8266d40ffcedead2fb2e4a244452da))
 
 ## [1.18.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.18.1...v1.18.2) (2026-02-25)
 
-
 ### Bug Fixes
 
-* **fellow-reports:** improve student group evaluation fetch ([#641](https://github.com/Shamiri-Institute/digitalhub/issues/641)) ([530189b](https://github.com/Shamiri-Institute/digitalhub/commit/530189b7c6d1e4d1b74deec33be727174d2a1ba1))
+- **fellow-reports:** improve student group evaluation fetch ([#641](https://github.com/Shamiri-Institute/digitalhub/issues/641)) ([530189b](https://github.com/Shamiri-Institute/digitalhub/commit/530189b7c6d1e4d1b74deec33be727174d2a1ba1))
 
 ## [1.18.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.18.0...v1.18.1) (2026-02-20)
 
-
 ### Bug Fixes
 
-* **admin:** display weekly session report; set view mode; minor styling changes ([#635](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/635)) ([26b7658](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/26b7658bd603711f8b460dc788f561a49cb46c02))
-* refresh sessions after canceling and rescheduling ([#634](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/634)) ([8639cf9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/8639cf9bbd1563a2350ce053f6be3f9d106b0a68))
+- **admin:** display weekly session report; set view mode; minor styling changes ([#635](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/635)) ([26b7658](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/26b7658bd603711f8b460dc788f561a49cb46c02))
+- refresh sessions after canceling and rescheduling ([#634](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/634)) ([8639cf9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/8639cf9bbd1563a2350ce053f6be3f9d106b0a68))
 
 ## [1.18.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.17.3...v1.18.0) (2026-02-19)
 
-
 ### Features
 
-* **student:** implement student archiving functionality and update queries to exclude archived students ([#628](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/628)) ([a16b44c](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/a16b44c273bd3e4a0597e60afd92e3fcb25c231c))
-
+- **student:** implement student archiving functionality and update queries to exclude archived students ([#628](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/628)) ([a16b44c](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/a16b44c273bd3e4a0597e60afd92e3fcb25c231c))
 
 ### Bug Fixes
 
-* **admin:** exclude data leads from hub managers list (ENG-1401) ([#631](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/631)) ([75b1384](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/75b1384a7d82f52b01daf644377b34e3486a5325))
-* **recordings:** fellow select input height on upload recording form (ENG-1402) ([#632](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/632)) ([c9f94a1](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c9f94a1ed5e9acbd377f3dde7e96477d2718d512))
-* **sc:** restore missing session actions for supervisors (ENG-1386 + ENG-1390) ([#630](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/630)) ([555a7d0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/555a7d0b13b50289fa5b1ef1e2e882b7680f2f56))
+- **admin:** exclude data leads from hub managers list (ENG-1401) ([#631](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/631)) ([75b1384](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/75b1384a7d82f52b01daf644377b34e3486a5325))
+- **recordings:** fellow select input height on upload recording form (ENG-1402) ([#632](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/632)) ([c9f94a1](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c9f94a1ed5e9acbd377f3dde7e96477d2718d512))
+- **sc:** restore missing session actions for supervisors (ENG-1386 + ENG-1390) ([#630](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/630)) ([555a7d0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/555a7d0b13b50289fa5b1ef1e2e882b7680f2f56))
 
 ## [1.17.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.17.2...v1.17.3) (2026-02-17)
 
-
 ### Bug Fixes
 
-* **auth:** resolve N+1 queries for session and default project ([#627](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/627)) ([222c39b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/222c39b0fee2eca264b26768f9e2d6ee6831a019))
-* **sessions:** refresh sessions when switching projects (ENG-1380) ([#629](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/629)) ([01670c8](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/01670c82a21c62a07488754234cfdce5f13e4179))
-* **student:** handle questionnaireType default value ([#623](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/623)) ([cb196d9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/cb196d94c564be41e846a4ebd44dd856f454ef7a))
+- **auth:** resolve N+1 queries for session and default project ([#627](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/627)) ([222c39b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/222c39b0fee2eca264b26768f9e2d6ee6831a019))
+- **sessions:** refresh sessions when switching projects (ENG-1380) ([#629](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/629)) ([01670c8](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/01670c82a21c62a07488754234cfdce5f13e4179))
+- **student:** handle questionnaireType default value ([#623](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/623)) ([cb196d9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/cb196d94c564be41e846a4ebd44dd856f454ef7a))
 
 ## [1.17.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.17.1...v1.17.2) (2026-02-17)
 
@@ -290,82 +254,71 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## [1.17.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.15.2...v1.17.0) (2026-02-17)
 
-
 ### Features
 
-* **admin:** track current project on database + ENG-1175 ([#619](https://github.com/Shamiri-Institute/digitalhub/issues/619)) ([add2def](https://github.com/Shamiri-Institute/digitalhub/commit/add2def8f856d6f773a4c531a7cbe2e721e8060e))
-* **ai:** implement job submissions to fidelity API and asynchronous results handling ([#617](https://github.com/Shamiri-Institute/digitalhub/issues/617)) ([4c78a4c](https://github.com/Shamiri-Institute/digitalhub/commit/4c78a4c846eca21142af06bf7cbfc3e149d036d2))
-* fellow triage documentation workflow ([#610](https://github.com/Shamiri-Institute/digitalhub/issues/610)) ([59d1d33](https://github.com/Shamiri-Institute/digitalhub/commit/59d1d33e5ed1d75fc35820232ba69188fd180479))
-* **reporting:** add monitoring and evaluation page on hc view ([#615](https://github.com/Shamiri-Institute/digitalhub/issues/615)) ([1195529](https://github.com/Shamiri-Institute/digitalhub/commit/11955296a078a437fb96c0c333658a6bc47c83b0))
-
+- **admin:** track current project on database + ENG-1175 ([#619](https://github.com/Shamiri-Institute/digitalhub/issues/619)) ([add2def](https://github.com/Shamiri-Institute/digitalhub/commit/add2def8f856d6f773a4c531a7cbe2e721e8060e))
+- **ai:** implement job submissions to fidelity API and asynchronous results handling ([#617](https://github.com/Shamiri-Institute/digitalhub/issues/617)) ([4c78a4c](https://github.com/Shamiri-Institute/digitalhub/commit/4c78a4c846eca21142af06bf7cbfc3e149d036d2))
+- fellow triage documentation workflow ([#610](https://github.com/Shamiri-Institute/digitalhub/issues/610)) ([59d1d33](https://github.com/Shamiri-Institute/digitalhub/commit/59d1d33e5ed1d75fc35820232ba69188fd180479))
+- **reporting:** add monitoring and evaluation page on hc view ([#615](https://github.com/Shamiri-Institute/digitalhub/issues/615)) ([1195529](https://github.com/Shamiri-Institute/digitalhub/commit/11955296a078a437fb96c0c333658a6bc47c83b0))
 
 ### Bug Fixes
 
-* **schedule:** use visible range for calendar session refetch (ENG-1367) ([#622](https://github.com/Shamiri-Institute/digitalhub/issues/622)) ([9228b1e](https://github.com/Shamiri-Institute/digitalhub/commit/9228b1ec217e042e0fc6592a777a33d3066441f1))
+- **schedule:** use visible range for calendar session refetch (ENG-1367) ([#622](https://github.com/Shamiri-Institute/digitalhub/issues/622)) ([9228b1e](https://github.com/Shamiri-Institute/digitalhub/commit/9228b1ec217e042e0fc6592a777a33d3066441f1))
 
 ## [1.16.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.15.2...v1.16.0) (2026-02-17)
 
-
 ### Features
 
-* **admin:** track current project on database + ENG-1175 ([#619](https://github.com/Shamiri-Institute/digitalhub/issues/619)) ([add2def](https://github.com/Shamiri-Institute/digitalhub/commit/add2def8f856d6f773a4c531a7cbe2e721e8060e))
-* **ai:** implement job submissions to fidelity API and asynchronous results handling ([#617](https://github.com/Shamiri-Institute/digitalhub/issues/617)) ([4c78a4c](https://github.com/Shamiri-Institute/digitalhub/commit/4c78a4c846eca21142af06bf7cbfc3e149d036d2))
-* fellow triage documentation workflow ([#610](https://github.com/Shamiri-Institute/digitalhub/issues/610)) ([59d1d33](https://github.com/Shamiri-Institute/digitalhub/commit/59d1d33e5ed1d75fc35820232ba69188fd180479))
-* **reporting:** add monitoring and evaluation page on hc view ([#615](https://github.com/Shamiri-Institute/digitalhub/issues/615)) ([1195529](https://github.com/Shamiri-Institute/digitalhub/commit/11955296a078a437fb96c0c333658a6bc47c83b0))
+- **admin:** track current project on database + ENG-1175 ([#619](https://github.com/Shamiri-Institute/digitalhub/issues/619)) ([add2def](https://github.com/Shamiri-Institute/digitalhub/commit/add2def8f856d6f773a4c531a7cbe2e721e8060e))
+- **ai:** implement job submissions to fidelity API and asynchronous results handling ([#617](https://github.com/Shamiri-Institute/digitalhub/issues/617)) ([4c78a4c](https://github.com/Shamiri-Institute/digitalhub/commit/4c78a4c846eca21142af06bf7cbfc3e149d036d2))
+- fellow triage documentation workflow ([#610](https://github.com/Shamiri-Institute/digitalhub/issues/610)) ([59d1d33](https://github.com/Shamiri-Institute/digitalhub/commit/59d1d33e5ed1d75fc35820232ba69188fd180479))
+- **reporting:** add monitoring and evaluation page on hc view ([#615](https://github.com/Shamiri-Institute/digitalhub/issues/615)) ([1195529](https://github.com/Shamiri-Institute/digitalhub/commit/11955296a078a437fb96c0c333658a6bc47c83b0))
 
 ## [1.15.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.15.1...v1.15.2) (2026-02-11)
 
-
 ### Bug Fixes
 
-* **perf:** remove unnecessary studentAttendances include from currentFellow() ([#613](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/613)) ([500c79d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/500c79d08e06db8cf4ad511519d40153bc3615df))
+- **perf:** remove unnecessary studentAttendances include from currentFellow() ([#613](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/613)) ([500c79d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/500c79d08e06db8cf4ad511519d40153bc3615df))
 
 ## [1.15.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.15.0...v1.15.1) (2026-02-10)
 
 ## [1.15.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.14.0...v1.15.0) (2026-02-10)
 
-
 ### Features
 
-* **migrations:** seed session names for 2026_Project_1 across all hubs and update session amounts ([#607](https://github.com/Shamiri-Institute/digitalhub/issues/607)) ([969a131](https://github.com/Shamiri-Institute/digitalhub/commit/969a1313f150b0e1ae6cfee2f1c6044acb9db9ed))
-
+- **migrations:** seed session names for 2026_Project_1 across all hubs and update session amounts ([#607](https://github.com/Shamiri-Institute/digitalhub/issues/607)) ([969a131](https://github.com/Shamiri-Institute/digitalhub/commit/969a1313f150b0e1ae6cfee2f1c6044acb9db9ed))
 
 ### Bug Fixes
 
-* **bug:**  forms not having validations and resolve infinite loading on submit ([#608](https://github.com/Shamiri-Institute/digitalhub/issues/608)) ([d1f4ac8](https://github.com/Shamiri-Institute/digitalhub/commit/d1f4ac860bb663321c58f7e57699cf371357fc82))
+- **bug:** forms not having validations and resolve infinite loading on submit ([#608](https://github.com/Shamiri-Institute/digitalhub/issues/608)) ([d1f4ac8](https://github.com/Shamiri-Institute/digitalhub/commit/d1f4ac860bb663321c58f7e57699cf371357fc82))
 
 ## [1.14.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.13.0...v1.14.0) (2026-02-05)
 
-
 ### Features
 
-* **calendar:** add captionLayout prop to Calendar component ([#601](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/601)) ([44f609b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/44f609b5ceba535ac44c57cbed537f37068bc870))
-* **student:** add questionnaire type field to student table and add student form ([#603](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/603)) ([1a38ed0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1a38ed04b346750ca081993dfc8e98aa6fa28fd3))
+- **calendar:** add captionLayout prop to Calendar component ([#601](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/601)) ([44f609b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/44f609b5ceba535ac44c57cbed537f37068bc870))
+- **student:** add questionnaire type field to student table and add student form ([#603](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/603)) ([1a38ed0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1a38ed04b346750ca081993dfc8e98aa6fa28fd3))
 
 ## [1.13.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.12.0...v1.13.0) (2026-01-27)
 
-
 ### Features
 
-* **ai:** add feedback page ([#596](https://github.com/Shamiri-Institute/digitalhub/issues/596)) ([70f62a3](https://github.com/Shamiri-Institute/digitalhub/commit/70f62a3219da7e07222ce4df7871c7001f6b7992))
-
+- **ai:** add feedback page ([#596](https://github.com/Shamiri-Institute/digitalhub/issues/596)) ([70f62a3](https://github.com/Shamiri-Institute/digitalhub/commit/70f62a3219da7e07222ce4df7871c7001f6b7992))
 
 ### Bug Fixes
 
-* **constants:** update CURRENT_PROJECT_ID ([#599](https://github.com/Shamiri-Institute/digitalhub/issues/599)) ([fba3e65](https://github.com/Shamiri-Institute/digitalhub/commit/fba3e650b56d6f573579d4d69a4e1c1d669ce745))
+- **constants:** update CURRENT_PROJECT_ID ([#599](https://github.com/Shamiri-Institute/digitalhub/issues/599)) ([fba3e65](https://github.com/Shamiri-Institute/digitalhub/commit/fba3e650b56d6f573579d4d69a4e1c1d669ce745))
 
 ## [1.12.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.11.3...v1.12.0) (2026-01-25)
 
-
 ### Features
 
-* **api:** add batch PATCH endpoint for session recordings ([#598](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/598)) ([1e23eeb](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1e23eeb73ee6b64e13517e926ca7082faffb1577))
-
+- **api:** add batch PATCH endpoint for session recordings ([#598](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/598)) ([1e23eeb](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1e23eeb73ee6b64e13517e926ca7082faffb1577))
 
 ### Bug Fixes
 
-* adding reactmemo to chartarea component ([#595](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/595)) ([1989696](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/19896960f3c37ccb35f3a76de854c6a05db7513f))
-* **ci:** skip AWS env validation in CI environment ([#597](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/597)) ([ab1c020](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ab1c0200eb1871ee4ee70f5c9ba8b4935da3690b))
+- adding reactmemo to chartarea component ([#595](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/595)) ([1989696](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/19896960f3c37ccb35f3a76de854c6a05db7513f))
+- **ci:** skip AWS env validation in CI environment ([#597](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/597)) ([ab1c020](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ab1c0200eb1871ee4ee70f5c9ba8b4935da3690b))
 
 ## [1.11.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.11.2...v1.11.3) (2026-01-20)
 
@@ -375,158 +328,140 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## [1.11.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.10.0...v1.11.0) (2026-01-19)
 
-
 ### Features
 
-* **api:** add recordings API routes for cron job integration ([#578](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/578)) ([80643a6](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/80643a6611de3bf77255bf97734a41d6a7be3e63))
-* **database:** add SessionRecording model for fidelity recordings ([#572](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/572)) ([094b204](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/094b2047ec42cd1fe0d03476f40808fd82e73562))
-* **recordings:** add dedicated S3 bucket for session recordings ([#581](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/581)) ([d59eee5](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d59eee53bbf8d73e7fd815cdb9a57536aee22d24))
-* **recordings:** add retry and feedback components ([#577](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/577)) ([4a275ec](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/4a275ec4bd24d7232388d4baf0a928eb091a25cc))
-* **recordings:** add upload recording dialog with cascading selects ([#576](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/576)) ([e72d049](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/e72d049d4cc345c6764fe873f06ffaecbf901008))
-* **recordings:** add validation schemas and S3 utilities ([#574](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/574)) ([7b2b657](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7b2b657639c2088cf5ef2b67e43e484cf97abf77))
-* **recordings:** build recordings page and DataTable ([#575](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/575)) ([5d1b233](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/5d1b233096eab636c5b9e525b6f4090833468b64))
-* **recordings:** implement server actions for session recordings ([#573](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/573)) ([9f39a2b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/9f39a2be70e3bf4369e15515e7cdfc5a7f67b10f))
-
+- **api:** add recordings API routes for cron job integration ([#578](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/578)) ([80643a6](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/80643a6611de3bf77255bf97734a41d6a7be3e63))
+- **database:** add SessionRecording model for fidelity recordings ([#572](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/572)) ([094b204](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/094b2047ec42cd1fe0d03476f40808fd82e73562))
+- **recordings:** add dedicated S3 bucket for session recordings ([#581](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/581)) ([d59eee5](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d59eee53bbf8d73e7fd815cdb9a57536aee22d24))
+- **recordings:** add retry and feedback components ([#577](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/577)) ([4a275ec](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/4a275ec4bd24d7232388d4baf0a928eb091a25cc))
+- **recordings:** add upload recording dialog with cascading selects ([#576](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/576)) ([e72d049](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/e72d049d4cc345c6764fe873f06ffaecbf901008))
+- **recordings:** add validation schemas and S3 utilities ([#574](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/574)) ([7b2b657](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7b2b657639c2088cf5ef2b67e43e484cf97abf77))
+- **recordings:** build recordings page and DataTable ([#575](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/575)) ([5d1b233](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/5d1b233096eab636c5b9e525b6f4090833468b64))
+- **recordings:** implement server actions for session recordings ([#573](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/573)) ([9f39a2b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/9f39a2be70e3bf4369e15515e7cdfc5a7f67b10f))
 
 ### Bug Fixes
 
-* **s3:** replace next-s3-upload with custom presigned URL implementation ([#582](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/582)) ([3a6c1a5](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/3a6c1a5fbbad6dfc29dae46c55cf4c07cbd1e230))
-* **upload:** add missing imports to the upload record button and view feedback button ([b7e438c](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/b7e438cd1a42efe137d53b1f9cfc1e3756901055))
+- **s3:** replace next-s3-upload with custom presigned URL implementation ([#582](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/582)) ([3a6c1a5](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/3a6c1a5fbbad6dfc29dae46c55cf4c07cbd1e230))
+- **upload:** add missing imports to the upload record button and view feedback button ([b7e438c](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/b7e438cd1a42efe137d53b1f9cfc1e3756901055))
 
 ## [1.10.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.3...v1.10.0) (2026-01-08)
 
-
 ### Features
 
-* **auth:** add email+password login for non-production environments ([#569](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/569)) ([0ec09cc](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/0ec09cced94ff7c7ca2fcc59e5d06d6c85560792))
-
+- **auth:** add email+password login for non-production environments ([#569](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/569)) ([0ec09cc](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/0ec09cced94ff7c7ca2fcc59e5d06d6c85560792))
 
 ### Bug Fixes
 
-* **lint:** enforce noFloatingPromises biome rule ([#571](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/571)) ([917349e](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/917349e2b4b556d1881e8c2b140853c81532d9aa))
+- **lint:** enforce noFloatingPromises biome rule ([#571](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/571)) ([917349e](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/917349e2b4b556d1881e8c2b140853c81532d9aa))
 
 ## [1.9.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.2...v1.9.3) (2026-01-08)
 
-
 ### Bug Fixes
 
-* **api:** resolve race condition in students CSV upload route ([#562](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/562)) ([4a82396](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/4a8239638235ecf098e352a15594d7bc044fbdbc))
-* **lint:** add explicit radix parameter to parseInt calls ([#567](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/567)) ([b12a6c3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/b12a6c3b055eab7fa4380427b8c88d2d7f796f40))
-* **lint:** enforce noAccumulatingSpread biome rule ([#555](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/555)) ([d44846b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d44846baec2605dafa8fef8789c65d86ef83866e))
-* **lint:** enforce noUnusedFunctionParameters biome rule ([#553](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/553)) ([3530692](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/35306926e74224610da2b20b84f9798dea083204))
-* **lint:** enforce noUselessFragments biome rule ([#561](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/561)) ([33b4878](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/33b48780ea5f28a206efbdbee505b82a3e3967c2))
-* **lint:** enforce noUselessTernary biome rule ([#554](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/554)) ([bcff6fb](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/bcff6fb48e19d146482f399030026b9ac0c63ca5))
-* **lint:** enforce useDateNow biome rule ([#559](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/559)) ([45521f3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/45521f31d71be016b7777fe57696d9c5d7dd5ce2))
-* **lint:** enforce useIterableCallbackReturn biome rule ([#553](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/553)) ([#564](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/564)) ([bb1db44](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/bb1db4451ce9377bb7f2e7274b86b2e46ec06398))
-* **lint:** enforce useOptionalChain biome rule ([#557](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/557)) ([0d3b3cf](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/0d3b3cfb62179e8250a00237c31f1c516c862c2a))
-* **lint:** enforce useTemplate biome rule ([#560](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/560)) ([83062b2](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/83062b2326255b4bb509857961ae6774e7447939))
-* **lint:** remove redundant cookie clearing, rely on NextAuth signOut ([#556](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/556)) ([7f708f2](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7f708f2110bc1e361540172e1558086b68a27b6f))
-* **lint:** replace findIndex with indexOf for simple equality check ([#568](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/568)) ([14282be](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/14282bee34b6e35399b39dcf463f7d0fca25e41d))
+- **api:** resolve race condition in students CSV upload route ([#562](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/562)) ([4a82396](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/4a8239638235ecf098e352a15594d7bc044fbdbc))
+- **lint:** add explicit radix parameter to parseInt calls ([#567](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/567)) ([b12a6c3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/b12a6c3b055eab7fa4380427b8c88d2d7f796f40))
+- **lint:** enforce noAccumulatingSpread biome rule ([#555](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/555)) ([d44846b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d44846baec2605dafa8fef8789c65d86ef83866e))
+- **lint:** enforce noUnusedFunctionParameters biome rule ([#553](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/553)) ([3530692](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/35306926e74224610da2b20b84f9798dea083204))
+- **lint:** enforce noUselessFragments biome rule ([#561](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/561)) ([33b4878](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/33b48780ea5f28a206efbdbee505b82a3e3967c2))
+- **lint:** enforce noUselessTernary biome rule ([#554](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/554)) ([bcff6fb](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/bcff6fb48e19d146482f399030026b9ac0c63ca5))
+- **lint:** enforce useDateNow biome rule ([#559](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/559)) ([45521f3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/45521f31d71be016b7777fe57696d9c5d7dd5ce2))
+- **lint:** enforce useIterableCallbackReturn biome rule ([#553](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/553)) ([#564](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/564)) ([bb1db44](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/bb1db4451ce9377bb7f2e7274b86b2e46ec06398))
+- **lint:** enforce useOptionalChain biome rule ([#557](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/557)) ([0d3b3cf](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/0d3b3cfb62179e8250a00237c31f1c516c862c2a))
+- **lint:** enforce useTemplate biome rule ([#560](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/560)) ([83062b2](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/83062b2326255b4bb509857961ae6774e7447939))
+- **lint:** remove redundant cookie clearing, rely on NextAuth signOut ([#556](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/556)) ([7f708f2](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7f708f2110bc1e361540172e1558086b68a27b6f))
+- **lint:** replace findIndex with indexOf for simple equality check ([#568](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/568)) ([14282be](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/14282bee34b6e35399b39dcf463f7d0fca25e41d))
 
 ## [1.9.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.1...v1.9.2) (2026-01-06)
 
-
 ### Bug Fixes
 
-* **lint): enforce noBannedTypes and noExplicitAny biome rules; fix(deps:** update vitest to v4 ([#551](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/551)) ([1d48261](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1d48261d8611d345cf205c6346c7ba3a410068c3))
-* **lint:** enforce noGlobalIsNan rule and replace isNaN with Number.i… ([#549](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/549)) ([06cbd98](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/06cbd985a63300d7f4797e3b5fb2388acd0fdb59))
-* **lint:** remove all non-null assertion operators (!) for runtime safety ([#548](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/548)) ([c26d0e9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c26d0e9191fae2bca540de190eb31a3c269234f5))
+- **lint): enforce noBannedTypes and noExplicitAny biome rules; fix(deps:** update vitest to v4 ([#551](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/551)) ([1d48261](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1d48261d8611d345cf205c6346c7ba3a410068c3))
+- **lint:** enforce noGlobalIsNan rule and replace isNaN with Number.i… ([#549](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/549)) ([06cbd98](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/06cbd985a63300d7f4797e3b5fb2388acd0fdb59))
+- **lint:** remove all non-null assertion operators (!) for runtime safety ([#548](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/548)) ([c26d0e9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c26d0e9191fae2bca540de190eb31a3c269234f5))
 
 ## [1.9.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.9.0...v1.9.1) (2026-01-05)
 
 ## [1.9.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.8.0...v1.9.0) (2026-01-05)
 
-
 ### Features
 
-* admin platform ([#530](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/530)) ([04cc50d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/04cc50de838cff906e2babd81dd91c6d1ba1cbd9))
-
+- admin platform ([#530](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/530)) ([04cc50d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/04cc50de838cff906e2babd81dd91c6d1ba1cbd9))
 
 ### Bug Fixes
 
-* display role switcher only on DEV; display membership switcher for admins only ([#531](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/531)) ([0c9c3bd](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/0c9c3bd3dec78bff179e3b840eeabd98fe2f557a))
-* remove usage of the Decimal type ([#537](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/537)) ([c71c1f3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c71c1f3c65b13e5697675bd2f3a52d428d4740d5))
+- display role switcher only on DEV; display membership switcher for admins only ([#531](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/531)) ([0c9c3bd](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/0c9c3bd3dec78bff179e3b840eeabd98fe2f557a))
+- remove usage of the Decimal type ([#537](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/537)) ([c71c1f3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c71c1f3c65b13e5697675bd2f3a52d428d4740d5))
 
 ## [1.8.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.7.3...v1.8.0) (2025-09-24)
 
-
 ### Features
 
-* add metabase monitoring and evaluation dashboard into supervisor reporting platform ([#522](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/522)) ([cf74520](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/cf74520ed099c21217499a9dfbe641117147fe7e))
+- add metabase monitoring and evaluation dashboard into supervisor reporting platform ([#522](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/522)) ([cf74520](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/cf74520ed099c21217499a9dfbe641117147fe7e))
 
 ## [1.7.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.7.2...v1.7.3) (2025-07-25)
 
-
 ### Bug Fixes
 
-* bug fixes and improvements ([#515](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/515)) ([dcc69ec](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/dcc69ec595dac25cb7462d0fd9c510e171482a84))
-* correct disabled state handling in CommandItem component ([#516](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/516)) ([33fc3e3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/33fc3e3d5f6333e6063a54d99c0e9d8f1a93fad2))
-* handle undefined and correct equality check ([#512](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/512)) ([88ad70a](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/88ad70a6156edf7b7d57d5023c5c93417f09ee9a))
+- bug fixes and improvements ([#515](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/515)) ([dcc69ec](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/dcc69ec595dac25cb7462d0fd9c510e171482a84))
+- correct disabled state handling in CommandItem component ([#516](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/516)) ([33fc3e3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/33fc3e3d5f6333e6063a54d99c0e9d8f1a93fad2))
+- handle undefined and correct equality check ([#512](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/512)) ([88ad70a](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/88ad70a6156edf7b7d57d5023c5c93417f09ee9a))
 
 ## [1.7.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.7.1...v1.7.2) (2025-07-23)
 
 ## [1.7.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.7.0...v1.7.1) (2025-07-15)
 
-
 ### Bug Fixes
 
-* issue submitting group evaluations ([#509](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/509)) ([7f561d0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7f561d0c38fab692ac2a2e712cf246e551e019c1))
+- issue submitting group evaluations ([#509](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/509)) ([7f561d0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7f561d0c38fab692ac2a2e712cf246e551e019c1))
 
 ## [1.7.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.6.0...v1.7.0) (2025-07-15)
 
-
 ### Features
 
-* allow hub coordinators to edit student admission numbers ([#508](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/508)) ([1c48804](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1c4880486b66f9c628530370f74a72fe893112c5))
+- allow hub coordinators to edit student admission numbers ([#508](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/508)) ([1c48804](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1c4880486b66f9c628530370f74a72fe893112c5))
 
 ## [1.6.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.4...v1.6.0) (2025-07-14)
 
-
 ### Features
 
-* allow hcs to edit expected student number ([#506](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/506)) ([84c7404](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/84c74040cca0e2a4a79054de39c4872cfec96bef))
-
+- allow hcs to edit expected student number ([#506](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/506)) ([84c7404](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/84c74040cca0e2a4a79054de39c4872cfec96bef))
 
 ### Bug Fixes
 
-* correct email address in error component and update clinical case treatment plan disabled state ([#502](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/502)) ([ae18455](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ae184559dc55d5940ddd8754a928431e034bfb9f))
-* invalid aria role violations in component props ([#503](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/503)) ([70a6cec](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/70a6cec0b3944701364bbccad1e9fcce5029a8a5))
+- correct email address in error component and update clinical case treatment plan disabled state ([#502](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/502)) ([ae18455](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ae184559dc55d5940ddd8754a928431e034bfb9f))
+- invalid aria role violations in component props ([#503](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/503)) ([70a6cec](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/70a6cec0b3944701364bbccad1e9fcce5029a8a5))
 
 ## [1.5.4](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.3...v1.5.4) (2025-07-03)
 
-
 ### Bug Fixes
 
-* marking attendance response ([#501](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/501)) ([ae59686](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ae596863b980af668e2a509a842513648d641790))
-* remove unecessary fragments from JSX components ([#497](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/497)) ([9ad6d9b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/9ad6d9b79a3b080d0578ee8a70c8c45295c9f628))
+- marking attendance response ([#501](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/501)) ([ae59686](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ae596863b980af668e2a509a842513648d641790))
+- remove unecessary fragments from JSX components ([#497](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/497)) ([9ad6d9b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/9ad6d9b79a3b080d0578ee8a70c8c45295c9f628))
 
 ## [1.5.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.2...v1.5.3) (2025-07-03)
 
-
 ### Bug Fixes
 
-* use === instead of == and !== instead of == when doing non null/undefined comparisons ([#496](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/496)) ([9dfa350](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/9dfa350549afdf28bd78c3659612678db917727b))
-* useButtonType accessibility violations across codebase ([#495](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/495)) ([36978c9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/36978c9239c83d75f6c2f0cf3acb3910519e0b25))
+- use === instead of == and !== instead of == when doing non null/undefined comparisons ([#496](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/496)) ([9dfa350](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/9dfa350549afdf28bd78c3659612678db917727b))
+- useButtonType accessibility violations across codebase ([#495](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/495)) ([36978c9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/36978c9239c83d75f6c2f0cf3acb3910519e0b25))
 
 ## [1.5.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.1...v1.5.2) (2025-07-03)
 
 ## [1.5.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.0...v1.5.1) (2025-07-02)
 
-
 ### Bug Fixes
 
-* correct type issue and runtime safety if the clinical lead is not found ([d93e197](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d93e19775a40b0348e55b024f99f5ddc5d9a45d5))
-* Replace clickable div with button([#493](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/493)) ([cd1387a](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/cd1387ada72bf4c27541e10d68dbf907aee60263))
+- correct type issue and runtime safety if the clinical lead is not found ([d93e197](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d93e19775a40b0348e55b024f99f5ddc5d9a45d5))
+- Replace clickable div with button([#493](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/493)) ([cd1387a](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/cd1387ada72bf4c27541e10d68dbf907aee60263))
 
 ## [1.5.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.4.0...v1.5.0) (2025-07-01)
 
-
 ### Features
 
-* add more clinical session options and cl view followup notes ([#487](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/487)) ([9773968](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/97739687dad2c7848a69533a0559c72a8c56f953))
-* make ors score optional and add more fields on view casenote ([#485](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/485)) ([c1bccc1](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c1bccc19180df4078d150e6d5e0442c4f8ed299a))
-* update clinical case creation to reflect fellow movement across hubs ([#484](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/484)) ([510136b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/510136ba9be9e2c8bbb04793227bd3ca5e58303b))
-* update role for handling case referral ([#486](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/486)) ([beafcc1](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/beafcc19a7022c92c8a9829a953fb5ab9c77c78f))
+- add more clinical session options and cl view followup notes ([#487](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/487)) ([9773968](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/97739687dad2c7848a69533a0559c72a8c56f953))
+- make ors score optional and add more fields on view casenote ([#485](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/485)) ([c1bccc1](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c1bccc19180df4078d150e6d5e0442c4f8ed299a))
+- update clinical case creation to reflect fellow movement across hubs ([#484](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/484)) ([510136b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/510136ba9be9e2c8bbb04793227bd3ca5e58303b))
+- update role for handling case referral ([#486](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/486)) ([beafcc1](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/beafcc19a7022c92c8a9829a953fb5ab9c77c78f))
 
 ## [1.4.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.3.0...v1.4.0) (2025-06-19)
 

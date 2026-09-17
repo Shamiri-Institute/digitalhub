@@ -13,5 +13,5 @@
   "bracketSpacing": true,
   "singleAttributePerLine": false,
   "sortPackageJson": false,
-  "ignorePatterns": ["CHANGELOG.md"]
+  "ignorePatterns": []
 }
