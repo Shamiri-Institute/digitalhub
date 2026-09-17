@@ -13,5 +13,5 @@
   "bracketSpacing": true,
   "singleAttributePerLine": false,
   "sortPackageJson": false,
-  "ignorePatterns": ["**/*.md", "**/*.yml", "**/*.yaml"]
+  "ignorePatterns": ["CHANGELOG.md"]
 }

@@ -37,7 +37,7 @@ type ComplaintFormValues = z.infer<typeof ComplaintSchema>;
 export default function ViewEditFellowComplaints({
   children,
   fellowComplaints,
-  action = "view",
+  action,
 }: {
   children: React.ReactNode;
   fellowComplaints: FellowComplaintsType["complaints"][number];

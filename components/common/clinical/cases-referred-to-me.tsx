@@ -11,7 +11,7 @@ type CasesType = ClinicalScreeningInfo & {
 };
 
 export function CasesReferredToMe({
-  cases = [],
+  cases,
   currentSupervisorId,
 }: {
   cases: CasesType[];
@@ -35,11 +35,11 @@ export function CasesReferredToMe({
 }
 
 export function RefferedCasesTab({
-  name = "",
-  caseId = "",
-  currentSupervisorId = "",
-  referredToSupervisorId = "",
-  referralNotes = "",
+  name,
+  caseId,
+  currentSupervisorId,
+  referredToSupervisorId,
+  referralNotes,
 }: {
   name: string | null;
   caseId: string;

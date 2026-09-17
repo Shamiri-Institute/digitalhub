@@ -38,12 +38,7 @@ export default function ClinicalStats({
     }[];
   };
 }) {
-  const {
-    casesByStatus = [],
-    casesBySession = [],
-    casesBySupervisor = [],
-    casesByInitialContact = [],
-  } = clinicalData;
+  const { casesByStatus, casesBySession, casesBySupervisor, casesByInitialContact } = clinicalData;
 
   return (
     <div className="grid grid-cols-1 gap-5 py-2 sm:grid-cols-2 xl:grid-cols-4">

@@ -19,7 +19,7 @@ export default async function SupervisorChartsWrapper({
       return null;
     }
 
-    const dropoutData = await fetchSupervisorDropoutReasons(coordinator.assignedHubId);
+    const dropoutData = fetchSupervisorDropoutReasons(coordinator.assignedHubId);
 
     const supervisorDataCompletenessPercentage = fetchSupervisorDataCompletenessData(
       coordinator?.assignedHubId,

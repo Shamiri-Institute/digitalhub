@@ -30,10 +30,10 @@ const RISK_STATUS_COLORS = {
 };
 
 export default function CasesBreakdown({
-  casesByStatus = [],
-  casesByRiskStatus = [],
-  casesBySession = [],
-  casesBySupervisor = [],
+  casesByStatus,
+  casesByRiskStatus,
+  casesBySession,
+  casesBySupervisor,
 }: {
   casesByStatus: {
     name: string;

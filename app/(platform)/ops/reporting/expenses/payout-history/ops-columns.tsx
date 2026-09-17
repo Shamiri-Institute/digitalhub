@@ -85,16 +85,17 @@ export const opsColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
         ];
         const csvContent = [
           headers.join(","),
-          ...fellowDetails.map((fellow) =>
-            [
+          ...fellowDetails.map((fellow) => {
+            const phone = RenderParsedPhoneNumber(fellow.mpesaNumber);
+            return [
               `"${fellow.fellowName}"`,
               `"${fellow.hub}"`,
               `"${fellow.supervisorName}"`,
-              `"${RenderParsedPhoneNumber(fellow.mpesaNumber)}"`,
+              `"${typeof phone === "string" ? phone : (fellow.mpesaNumber ?? "")}"`,
               `"${fellow.fellowMpesaName}"`,
               fellow.totalAmount,
-            ].join(","),
-          ),
+            ].join(",");
+          }),
         ].join("\n");
 
         const blob = new Blob([csvContent], {

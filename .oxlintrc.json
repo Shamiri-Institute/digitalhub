@@ -4,14 +4,25 @@
   "categories": {
     "correctness": "error"
   },
-  "env": { "builtin": true, "browser": true, "node": true },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "node": true
+  },
   "settings": {
-    "react": { "version": "19" }
+    "react": {
+      "version": "19"
+    }
   },
   "rules": {
     "react/exhaustive-deps": "warn",
     "react/rules-of-hooks": "error",
-    "react/jsx-no-useless-fragment": ["error", { "allowExpressions": true }],
+    "react/jsx-no-useless-fragment": [
+      "error",
+      {
+        "allowExpressions": true
+      }
+    ],
     "react/self-closing-comp": "error",
     "react/no-array-index-key": "error",
     "react/set-state-in-effect": "off",
@@ -34,14 +45,7 @@
     "typescript/no-wrapper-object-types": "error",
     "typescript/no-floating-promises": "error",
     "typescript/prefer-optional-chain": "error",
-    "typescript/no-deprecated": "off",
-    "typescript/no-redundant-type-constituents": "off",
-    "typescript/no-duplicate-type-constituents": "off",
-    "typescript/no-base-to-string": "off",
-    "typescript/no-useless-default-assignment": "off",
-    "typescript/restrict-template-expressions": "off",
-    "typescript/unbound-method": "off",
-    "typescript/await-thenable": "off",
+    "typescript/no-deprecated": "warn",
     "unicorn/no-useless-undefined": "error",
     "unicorn/prefer-date-now": "error",
     "unicorn/prefer-number-properties": "error",
@@ -52,7 +56,22 @@
     "jsx-a11y/no-noninteractive-element-interactions": "off",
     "jsx-a11y/prefer-tag-over-role": "off",
     "jsx-a11y/heading-has-content": "off",
-    "jsx-a11y/role-has-required-aria-props": "off"
+    "jsx-a11y/role-has-required-aria-props": "off",
+    "typescript/restrict-template-expressions": [
+      "error",
+      {
+        "allowArray": true,
+        "allowNever": true
+      }
+    ]
   },
-  "ignorePatterns": [".next", "node_modules", "playwright-report", ".artifacts"]
+  "ignorePatterns": [".next", "node_modules", "playwright-report", ".artifacts"],
+  "overrides": [
+    {
+      "files": ["tests/**"],
+      "rules": {
+        "typescript/unbound-method": "off"
+      }
+    }
+  ]
 }
