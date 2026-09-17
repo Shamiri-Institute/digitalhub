@@ -84,12 +84,14 @@ export default function CaseNotesForm({
   const [hasExistingNotes, setHasExistingNotes] = useState(false);
   const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>>>([]);
 
-  useEffect(() => {
-    if (!open) return;
-    getClinicalCaseNotes(clinicalCase.id)
-      .then(setNotes)
-      .catch(() => toast({ title: "Failed to load case notes", variant: "destructive" }));
-  }, [open, clinicalCase.id]);
+  const onOpenChange = (nextOpen: boolean) => {
+    setDialogOpen(nextOpen);
+    if (nextOpen) {
+      getClinicalCaseNotes(clinicalCase.id)
+        .then(setNotes)
+        .catch(() => toast({ title: "Failed to load case notes", variant: "destructive" }));
+    }
+  };
 
   const form = useForm<CaseReportFormValues>({
     resolver: zodResolver(CaseReportSchema),
@@ -202,7 +204,7 @@ export default function CaseNotesForm({
   }, [watchRiskLevel]);
 
   return (
-    <Dialog open={open} onOpenChange={setDialogOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
