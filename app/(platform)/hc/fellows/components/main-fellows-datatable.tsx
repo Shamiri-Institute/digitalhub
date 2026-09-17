@@ -3,7 +3,7 @@
 import { ImplementerRole, type Prisma, type WeeklyFellowRatings } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { columns, type MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
@@ -27,7 +27,9 @@ export default function MainFellowsDatatable({
   weeklyEvaluations: WeeklyFellowRatings[];
   role: ImplementerRole;
 }) {
-  const [fellow, setFellow] = useState<MainFellowTableData | null>(null);
+  const [selectedFellow, setFellow] = useState<MainFellowTableData | null>(null);
+  // Read the selected fellow from the latest server data so dialogs show fresh values after a revalidate.
+  const fellow = fellows.find((f) => f.id === selectedFellow?.id) ?? selectedFellow;
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [addDialog, setAddDialog] = useState<boolean>(false);
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
@@ -48,13 +50,6 @@ export default function MainFellowsDatatable({
       </div>
     );
   };
-
-  useEffect(() => {
-    const updatedFellow = fellows.find((f) => f.id === fellow?.id);
-    if (updatedFellow) {
-      setFellow(updatedFellow);
-    }
-  }, [fellows]);
 
   return (
     <>

@@ -120,6 +120,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- resyncs filter state when the hub session types arrive from the server
     setFilters((prev) => ({
       ...prev,
       sessionTypes,
@@ -188,6 +189,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   useEffect(() => {
     if (!visibleStart) return;
     const dateRange = getDateRangeForCalendar(visibleStart, rangeType);
+    // oxlint-disable-next-line react/set-state-in-effect -- mirrors the react-aria calendar visible range into the shared filters
     setFilters((prev) => ({ ...prev, dateRange }));
   }, [visibleStart?.toString(), rangeType, mode]);
 
@@ -746,6 +748,7 @@ function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[
   ];
   const [dates, setDates] = useState(filters.dates);
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- keeps the date filter in step with the calendar mode chosen elsewhere
     setDates(["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week");
   }, [mode]);
 
@@ -756,6 +759,7 @@ function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[
     const statusTypes = Object.keys(filters.statusTypes).filter((key) => !filters.statusTypes[key]);
 
     if (sessionTypes.length > 0 || statusTypes.length > 0) {
+      // oxlint-disable-next-line react/set-state-in-effect -- derives the active-filter flag and resets local toggles when filters return to defaults
       setFilterIsActive(true);
     } else {
       setFilterIsActive(false);

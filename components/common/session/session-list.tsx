@@ -151,25 +151,12 @@ export function SessionDetail({
   fellowId?: string;
   supervisorId?: string;
 }) {
-  const [timeLabels, setTimeLabels] = useState({
-    startTimeLabel: "",
-    durationLabel: "",
-  });
-
   const { session } = state;
-
-  useEffect(() => {
-    const startTimeLabel = format(session.sessionDate, "h:mma");
-    const durationLabel = `${format(session.sessionDate, "h:mm")} - ${format(
-      session.sessionEndTime ?? addHours(addMinutes(session.sessionDate, 30), 1),
-      "h:mma",
-    )}`;
-
-    setTimeLabels({
-      startTimeLabel,
-      durationLabel,
-    });
-  }, [state.session.sessionDate, state.session.sessionEndTime]);
+  const startTimeLabel = format(session.sessionDate, "h:mma");
+  const durationLabel = `${format(session.sessionDate, "h:mm")} - ${format(
+    session.sessionEndTime ?? addHours(addMinutes(session.sessionDate, 30), 1),
+    "h:mma",
+  )}`;
 
   const schoolName = session.school?.schoolName ?? session.venue;
   const completed = session.occurred;
@@ -236,7 +223,7 @@ export function SessionDetail({
               {isExpanded && <div>{sessionDisplayName(session.session?.sessionName)}</div>}
               {isCompact && (
                 <div className="flex gap-1 truncate">
-                  {sessionDisplayName(session.session?.sessionName)} - {timeLabels.startTimeLabel}
+                  {sessionDisplayName(session.session?.sessionName)} - {startTimeLabel}
                   <div className="truncate group-hover:text-foreground">- {schoolName}</div>
                 </div>
               )}
@@ -245,7 +232,7 @@ export function SessionDetail({
               <div className="text-left">
                 <div className="truncate">{schoolName}</div>
                 <div>
-                  {timeLabels.durationLabel}
+                  {durationLabel}
                   <span className="invisible">t</span>
                 </div>
                 {session.status === "Rescheduled" && (

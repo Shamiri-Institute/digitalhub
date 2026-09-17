@@ -101,6 +101,7 @@ export function SessionsProvider({
     : null;
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- fetches sessions whenever the filters change; server-side loading is a separate change
     void fetchSessions();
   }, [
     activeProjectId,

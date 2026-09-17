@@ -93,41 +93,34 @@ export default function WeeklyFellowEvaluation({
     },
   });
 
-  useEffect(() => {
-    if (!open) {
-      setExistingEvaluation(undefined);
-    } else {
-      setExistingEvaluation(_evaluation);
-    }
-  }, [fellowId, open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const values = {
+  function selectEvaluation(evaluation: WeeklyFellowRatings | undefined) {
+    setExistingEvaluation(evaluation);
+    form.reset({
       fellowId,
       mode,
-      week:
-        mode === "add" && existingEvaluation === undefined
-          ? form.getValues("week")
-          : existingEvaluation?.week,
-      behaviourNotes: existingEvaluation?.behaviourNotes ?? "",
-      behaviourRating: existingEvaluation?.behaviourRating ?? 0,
-      programDeliveryNotes: existingEvaluation?.programDeliveryNotes ?? "",
-      programDeliveryRating: existingEvaluation?.programDeliveryRating ?? 0,
-      dressingAndGroomingNotes: existingEvaluation?.dressingAndGroomingNotes ?? "",
-      dressingAndGroomingRating: existingEvaluation?.dressingAndGroomingRating ?? 0,
-      punctualityNotes: existingEvaluation?.punctualityNotes ?? "",
-      punctualityRating: existingEvaluation?.punctualityRating ?? 0,
-    };
-    form.reset(values);
-
-    if (existingEvaluation) {
-      setUpdateWindowDuration(
-        differenceInSeconds(addDays(existingEvaluation.createdAt, 14), new Date()),
-      );
+      week: mode === "add" && evaluation === undefined ? form.getValues("week") : evaluation?.week,
+      behaviourNotes: evaluation?.behaviourNotes ?? "",
+      behaviourRating: evaluation?.behaviourRating ?? 0,
+      programDeliveryNotes: evaluation?.programDeliveryNotes ?? "",
+      programDeliveryRating: evaluation?.programDeliveryRating ?? 0,
+      dressingAndGroomingNotes: evaluation?.dressingAndGroomingNotes ?? "",
+      dressingAndGroomingRating: evaluation?.dressingAndGroomingRating ?? 0,
+      punctualityNotes: evaluation?.punctualityNotes ?? "",
+      punctualityRating: evaluation?.punctualityRating ?? 0,
+    });
+    if (evaluation) {
+      setUpdateWindowDuration(differenceInSeconds(addDays(evaluation.createdAt, 14), new Date()));
     }
-  }, [open, fellowId, existingEvaluation]);
+  }
+
+  useEffect(() => {
+    if (!open) {
+      // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the reset cannot live in an open handler here
+      setExistingEvaluation(undefined);
+    } else {
+      selectEvaluation(_evaluation);
+    }
+  }, [fellowId, open]);
 
   const onSubmit = async (data: z.infer<typeof WeeklyFellowEvaluationSchema>) => {
     const response = await submitWeeklyFellowEvaluation(data);
@@ -190,7 +183,7 @@ export default function WeeklyFellowEvaluation({
                           isEqual(new Date(evaluation.week), new Date(value)),
                         );
 
-                        setExistingEvaluation(match);
+                        selectEvaluation(match);
                       }}
                     >
                       <FormControl>
