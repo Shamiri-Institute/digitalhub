@@ -132,7 +132,7 @@ export async function createJob(request: CreateJobRequest): Promise<JobResponse>
     return (await response.json()) as JobResponse;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Failed to submit job to Fidelity API: ${error.message}`);
+      throw new Error(`Failed to submit job to Fidelity API: ${error.message}`, { cause: error });
     }
     throw error;
   }
@@ -168,7 +168,7 @@ export async function getJobStatus(jobId: string): Promise<JobResponse> {
     return (await response.json()) as JobResponse;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Failed to get job status: ${error.message}`);
+      throw new Error(`Failed to get job status: ${error.message}`, { cause: error });
     }
     throw error;
   }

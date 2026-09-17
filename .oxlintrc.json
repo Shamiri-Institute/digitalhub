@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "unicorn", "oxc", "import", "react", "jsx-a11y", "nextjs"],
+  "plugins": ["typescript", "unicorn", "oxc", "import", "react", "jsx-a11y", "nextjs", "promise"],
   "categories": {
     "correctness": "error"
   },
@@ -27,7 +27,6 @@
     "react/no-array-index-key": "error",
     "react/set-state-in-effect": "off",
     "react/incompatible-library": "off",
-    "react/immutability": "off",
     "radix": "error",
     "no-unused-vars": "error",
     "no-unneeded-ternary": "error",
@@ -52,16 +51,44 @@
     "import/no-cycle": "error",
     "import/namespace": "off",
     "nextjs/no-img-element": "error",
-    "jsx-a11y/control-has-associated-label": "off",
-    "jsx-a11y/no-noninteractive-element-interactions": "off",
-    "jsx-a11y/prefer-tag-over-role": "off",
-    "jsx-a11y/heading-has-content": "off",
-    "jsx-a11y/role-has-required-aria-props": "off",
     "typescript/restrict-template-expressions": [
       "error",
       {
         "allowArray": true,
         "allowNever": true
+      }
+    ],
+    "typescript/switch-exhaustiveness-check": [
+      "error",
+      {
+        "considerDefaultExhaustiveForUnions": true
+      }
+    ],
+    "typescript/no-unsafe-argument": "error",
+    "typescript/no-unsafe-call": "error",
+    "typescript/no-unsafe-return": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "promise/catch-or-return": [
+      "error",
+      {
+        "allowFinally": true
+      }
+    ],
+    "promise/always-return": [
+      "error",
+      {
+        "ignoreLastCallback": true
+      }
+    ],
+    "promise/no-nesting": "error",
+    "unicorn/no-array-sort": "error",
+    "preserve-caught-error": "error",
+    "react/button-has-type": "error",
+    "react/no-unknown-property": "error",
+    "jsx-a11y/control-has-associated-label": [
+      "error",
+      {
+        "ignoreElements": ["td", "th", "tr"]
       }
     ]
   },

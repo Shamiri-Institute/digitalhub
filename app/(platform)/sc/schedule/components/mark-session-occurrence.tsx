@@ -59,7 +59,7 @@ export function MarkSessionOccurrence({
           session.session?.sessionType === activeSession.session?.sessionType
         );
       })
-      .sort((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
+      .toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
   })();
 
   useEffect(() => {

@@ -79,7 +79,7 @@ export function RoleSwitcher({
   };
 
   const availableRoles: ImplementerRole[] = implementerMembers?.personnel
-    ? Array.from(new Set(implementerMembers.personnel.map((member) => member.role))).sort()
+    ? Array.from(new Set(implementerMembers.personnel.map((member) => member.role))).toSorted()
     : [];
 
   const filteredPersonnel = implementerMembers?.personnel

@@ -53,7 +53,7 @@ export default function StudentsInGroup({
           {children}
           <DataTable
             columns={columns}
-            data={students.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())}
+            data={students.toSorted((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())}
             emptyStateMessage={"No students associated to this group"}
             columnVisibilityState={{
               "Shamiri ID": false,

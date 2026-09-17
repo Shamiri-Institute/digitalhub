@@ -206,7 +206,7 @@ export function MarkAttendance({
                       </FormControl>
                       <SelectContent>
                         {sessions
-                          ?.sort((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime())
+                          ?.toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime())
                           .filter((session) => session.occurred)
                           .map((session) => {
                             const time = `${format(session.sessionDate, "h:mm")} - ${format(

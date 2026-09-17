@@ -114,24 +114,22 @@ export default function EditRecordingDialog({
       form.setValue("sessionId", "");
     }
 
+    const loadOriginalSessions = async () => {
+      setLoadingSessions(true);
+      try {
+        setSessions(await loadGroupSessions(recording.groupId));
+      } catch {
+        toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
+      } finally {
+        setLoadingSessions(false);
+      }
+    };
+
     loadFellowGroups(fellowId)
       .then((loadedGroups) => {
         setGroups(loadedGroups);
-        if (isInitialValue) {
-          const originalGroup = loadedGroups.find((g) => g.id === recording.groupId);
-          if (originalGroup) {
-            setLoadingSessions(true);
-            loadGroupSessions(recording.groupId)
-              .then(setSessions)
-              .catch(() =>
-                toast({
-                  title: "Error",
-                  description: "Failed to load sessions",
-                  variant: "destructive",
-                }),
-              )
-              .finally(() => setLoadingSessions(false));
-          }
+        if (isInitialValue && loadedGroups.some((g) => g.id === recording.groupId)) {
+          void loadOriginalSessions();
         }
       })
       .catch(() =>

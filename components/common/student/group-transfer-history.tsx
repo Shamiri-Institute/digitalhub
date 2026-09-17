@@ -38,7 +38,7 @@ export default function GroupTransferHistory({
           currentGroupId: "",
           fromGroupId: student.assignedGroupId,
           fromGroup: student.assignedGroup,
-        } as SchoolStudentTableData["studentGroupTransferTrail"][number],
+        },
         ...student.studentGroupTransferTrail,
       ]
     : [];
@@ -108,7 +108,7 @@ const columns = (
         .filter((session) => {
           return isBefore(session.sessionDate, props.row.original.createdAt);
         })
-        .sort((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
+        .toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
       const session = previousSessions[0];
       return <span>{sessionDisplayName(session?.session?.sessionName)}</span>;
     },

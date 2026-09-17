@@ -18,11 +18,11 @@ export default async function HubCoordinatorSchedulePage() {
   }
 
   const values = await Promise.all([
-    fetchSchoolData(coordinator?.profile?.assignedHubId as string),
-    getHubScheduleStats(coordinator?.profile?.assignedHubId as string),
+    fetchSchoolData(coordinator?.profile?.assignedHubId),
+    getHubScheduleStats(coordinator?.profile?.assignedHubId),
     db.supervisor.findMany({
       where: {
-        hubId: coordinator?.profile?.assignedHubId as string,
+        hubId: coordinator?.profile?.assignedHubId,
       },
       include: {
         supervisorAttendances: {
@@ -62,7 +62,7 @@ export default async function HubCoordinatorSchedulePage() {
     GROUP BY fel.id`,
     db.sessionName.findMany({
       where: {
-        hubId: coordinator?.profile?.assignedHubId as string,
+        hubId: coordinator?.profile?.assignedHubId,
       },
     }),
   ]);

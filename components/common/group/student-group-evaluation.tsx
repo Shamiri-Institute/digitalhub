@@ -137,7 +137,7 @@ export default function StudentGroupEvaluation({
       ): evaluation is typeof evaluation & { session: NonNullable<typeof evaluation.session> } =>
         evaluation.session !== undefined && evaluation.session !== null,
     )
-    .sort((a, b) => {
+    .toSorted((a, b) => {
       return b.session.sessionDate.getTime() - a.session.sessionDate.getTime();
     })[0];
   const [existingEvaluation, setExistingEvaluation] = useState<

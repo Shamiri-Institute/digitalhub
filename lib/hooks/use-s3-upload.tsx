@@ -134,11 +134,15 @@ export function useS3Upload() {
       });
 
       if (!presignedResponse.ok) {
-        const error = await presignedResponse.json().catch(() => ({}));
+        const error: { error?: string } = await presignedResponse.json().catch(() => ({}));
         throw new Error(error.error ?? "Failed to get presigned URL");
       }
 
-      const { url, key, bucket: bucketName } = await presignedResponse.json();
+      const {
+        url,
+        key,
+        bucket: bucketName,
+      }: { url: string; key: string; bucket: string } = await presignedResponse.json();
 
       // Track this file
       addFile(file);

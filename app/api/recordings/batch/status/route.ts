@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       console.error("Invalid webhook payload: unrecognized format", {
         hasResult: !!body.result,
         hasRecordings: !!body.recordings,
-        keys: Object.keys(body),
+        keys: Object.keys(body as object),
       });
       return NextResponse.json(
         { error: "Invalid request: expected Fidelity API format" },

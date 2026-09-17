@@ -59,7 +59,7 @@ export default function WeeklyFellowEvaluation({
   mode: "view" | "add";
   children: React.ReactNode;
 }) {
-  const _evaluation = evaluations.sort((a, b) => b.week.getTime() - a.week.getTime())[0];
+  const _evaluation = evaluations.toSorted((a, b) => b.week.getTime() - a.week.getTime())[0];
   const [existingEvaluation, setExistingEvaluation] = useState<WeeklyFellowRatings | undefined>(
     _evaluation,
   );
@@ -68,7 +68,7 @@ export default function WeeklyFellowEvaluation({
 
   const weeks =
     mode === "view"
-      ? evaluations.map((x) => x.week).sort((a, b) => a.getTime() - b.getTime())
+      ? evaluations.map((x) => x.week).toSorted((a, b) => a.getTime() - b.getTime())
       : project && project.actualStartDate !== null
         ? eachWeekOfInterval({
             start: project.actualStartDate,

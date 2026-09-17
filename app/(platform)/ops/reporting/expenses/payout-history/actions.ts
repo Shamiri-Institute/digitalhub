@@ -95,7 +95,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryTy
       return {
         ...payout,
         fellowDetails,
-      } as OpsHubsPayoutHistoryType;
+      };
     }),
   );
 
@@ -204,6 +204,7 @@ export async function triggerPayoutAction() {
     console.error("Error in triggerPayoutAction:", error);
     throw new Error(
       "Failed to process payouts. Please try again or contact support if the issue persists.",
+      { cause: error },
     );
   }
 }
@@ -253,6 +254,7 @@ export async function confirmPayoutAction(executedAt: Date) {
     console.error("Error in confirmPayoutAction:", error);
     throw new Error(
       "Failed to confirm payouts. Please try again or contact support if the issue persists.",
+      { cause: error },
     );
   }
 }

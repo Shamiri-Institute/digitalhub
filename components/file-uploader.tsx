@@ -56,6 +56,7 @@ export function FileUploaderWithDrop({
 
   return (
     <div className={clsx(className || "")}>
+      {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- drag-and-drop */}
       <label
         id="drop_zone"
         onDrop={handleDrop}
@@ -81,7 +82,7 @@ export function FileUploaderWithDrop({
           <div className="flex space-x-2">
             {files?.length === 0 && <Icons.uploadCloudIcon className="h-6 w-6" />}
             <span className="text-normal text-center">Drop files here...</span>
-            <input type="file" accept={accept} hidden onChange={handleUpload} />
+            <input type="file" aria-label="File" accept={accept} hidden onChange={handleUpload} />
           </div>
         </div>
         <div className="mt-3 flex w-full border-t border-gray-500 ">

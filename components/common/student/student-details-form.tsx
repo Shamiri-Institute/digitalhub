@@ -100,6 +100,7 @@ export default function StudentDetailsForm({
       studentName: student?.studentName ?? "",
       admissionNumber: student?.admissionNumber ?? "",
       gender: student?.gender ?? "",
+      // oxlint-disable-next-line typescript/no-unnecessary-type-assertion -- tsc still needs the literal union here
       questionnaireType: (student?.questionnaireType ?? "none") as "none" | "QA" | "JSS",
       yearOfBirth: student?.yearOfBirth?.toString() ?? "",
       form: student?.form?.toString() ?? "",

@@ -63,7 +63,7 @@ const initializeIssues = (
     issues.forEach((issue) => {
       const value = (presentingIssues as Record<string, Severity>)[issue.name];
       if (value) {
-        initialState[issue.id.toString()] = value as Severity;
+        initialState[issue.id.toString()] = value;
       }
     });
   }
