@@ -46,7 +46,7 @@ type StudentGroupEvaluationFormValues = z.infer<typeof StudentGroupEvaluationSch
 export default function ViewEditStudentGroupEvaluation({
   children,
   studentGroupEvaluation,
-  action = "view",
+  action,
 }: {
   children: React.ReactNode;
   studentGroupEvaluation: StudentGroupEvaluationType["session"][number];

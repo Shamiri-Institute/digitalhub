@@ -89,8 +89,9 @@ test.describe("S3 presign auth gate (unauthenticated)", () => {
 
 test.describe("S3 presign student-attendance (Fellow session)", () => {
   test.use({
-    // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructuring pattern here
+    // oxlint-disable-next-line no-empty-pattern -- Playwright requires a destructuring pattern here
     storageState: async ({}, use) => {
+      // oxlint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture use()
       await use(await fellowStorageState());
     },
   });

@@ -38,7 +38,7 @@ export const CLINICAL_SESSION_TYPES = [
 
 export default function ViewMarkClinicalSessions({
   currentcase,
-  userRole = "SUPERVISOR",
+  userRole,
 }: {
   currentcase: ClinicalCases;
   userRole: "CLINICAL_LEAD" | "SUPERVISOR";

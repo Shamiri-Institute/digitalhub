@@ -3,10 +3,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 
 export default function OverallStudentsClinicalStats({
-  totalStudents = 0,
-  groupSessions = 0,
-  clinicalCases = 0,
-  clinicalSessions = 0,
+  totalStudents,
+  groupSessions,
+  clinicalCases,
+  clinicalSessions,
 }: {
   totalStudents: number;
   groupSessions: number;

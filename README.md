@@ -64,6 +64,7 @@ https://github.com/Shamiri-Institute/digitalhub
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 The MIT License allows you to:
+
 - Use the software for commercial purposes
 - Modify the source code
 - Distribute the software
@@ -117,12 +118,12 @@ npm run dev
 
 ### System Requirements
 
-| Requirement | Version | Notes |
-|------------|---------|-------|
-| Node.js | >=22.x | Required for Next.js 16 |
-| npm | >=10.x | Comes with Node.js |
-| Docker | >=20.x | For local PostgreSQL |
-| PostgreSQL | >=14.x | If not using Docker |
+| Requirement | Version | Notes                   |
+| ----------- | ------- | ----------------------- |
+| Node.js     | >=22.x  | Required for Next.js 16 |
+| npm         | >=10.x  | Comes with Node.js      |
+| Docker      | >=20.x  | For local PostgreSQL    |
+| PostgreSQL  | >=14.x  | If not using Docker     |
 
 ### Environment Setup
 
@@ -258,6 +259,7 @@ npm run db:seed
 **Option 1: Email/Password (Recommended for Development)**
 
 When `NEXT_PUBLIC_ENV=development` and `TEST_USER_PASSWORD` is set, sign in as a seeded user:
+
 - Email: `martin.odegaard@test.com`
 - Password: the value of `TEST_USER_PASSWORD`
 
@@ -301,15 +303,15 @@ When `NEXT_PUBLIC_ENV=development` and `TEST_USER_PASSWORD` is set, sign in as a
 
 The platform implements role-specific dashboards and data access:
 
-| Role | Route | Description |
-|------|-------|-------------|
-| **Hub Coordinator** | `/hc/*` | Oversees operations across multiple schools in a hub |
-| **Supervisor** | `/sc/*` | Manages fellows and student groups within assigned schools |
-| **Fellow** | `/fel/*` | Conducts intervention sessions with student groups |
-| **Clinical Lead** | `/cl/*` | Handles clinical cases and high-risk screenings |
-| **Clinical Team** | `/ct/*` | Supports clinical operations and case management |
-| **Operations** | `/ops/*` | Administrative oversight and system management |
-| **Admin** | `/admin/*` | System administration and configuration |
+| Role                | Route      | Description                                                |
+| ------------------- | ---------- | ---------------------------------------------------------- |
+| **Hub Coordinator** | `/hc/*`    | Oversees operations across multiple schools in a hub       |
+| **Supervisor**      | `/sc/*`    | Manages fellows and student groups within assigned schools |
+| **Fellow**          | `/fel/*`   | Conducts intervention sessions with student groups         |
+| **Clinical Lead**   | `/cl/*`    | Handles clinical cases and high-risk screenings            |
+| **Clinical Team**   | `/ct/*`    | Supports clinical operations and case management           |
+| **Operations**      | `/ops/*`   | Administrative oversight and system management             |
+| **Admin**           | `/admin/*` | System administration and configuration                    |
 
 ### Key Entities
 
@@ -344,39 +346,39 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 
 #### Development
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
+| Command         | Description              |
+| --------------- | ------------------------ |
+| `npm run dev`   | Start development server |
+| `npm run build` | Build for production     |
+| `npm run start` | Start production server  |
 
 #### Database
 
-| Command | Description |
-|---------|-------------|
-| `npm run db:dev:up` | Start local PostgreSQL (Docker) |
-| `npm run db:dev:migrate` | Run Prisma migrations |
-| `npm run db:dev:migrate:reset` | Reset and reapply all migrations |
-| `npm run db:seed` | Seed with faker-generated test data |
-| `npm run db:dev:generate` | Generate Prisma client types |
+| Command                        | Description                         |
+| ------------------------------ | ----------------------------------- |
+| `npm run db:dev:up`            | Start local PostgreSQL (Docker)     |
+| `npm run db:dev:migrate`       | Run Prisma migrations               |
+| `npm run db:dev:migrate:reset` | Reset and reapply all migrations    |
+| `npm run db:seed`              | Seed with faker-generated test data |
+| `npm run db:dev:generate`      | Generate Prisma client types        |
 
 #### Code Quality
 
-| Command | Description |
-|---------|-------------|
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run TypeScript type checking |
-| `npm run format` | Format code with Biome |
-| `npm run stylecheck` | Check code formatting |
+| Command              | Description                                            |
+| -------------------- | ------------------------------------------------------ |
+| `npm run lint`       | Run ESLint                                             |
+| `npm run typecheck`  | Run TypeScript type checking                           |
+| `npm run format`     | Format code with oxfmt                                 |
+| `npm run stylecheck` | Check formatting (oxfmt) and lint (oxlint, type-aware) |
 
 #### Testing
 
-| Command | Description |
-|---------|-------------|
-| `npm run test:unit` | Run Vitest unit tests |
-| `npm run test:dev` | Run Playwright E2E tests |
-| `npm run test:dev:ui` | Run Playwright with UI |
-| `npm run test:ci` | Run tests in CI mode |
+| Command               | Description              |
+| --------------------- | ------------------------ |
+| `npm run test:unit`   | Run Vitest unit tests    |
+| `npm run test:dev`    | Run Playwright E2E tests |
+| `npm run test:dev:ui` | Run Playwright with UI   |
+| `npm run test:ci`     | Run tests in CI mode     |
 
 ### Code Quality Gates
 
@@ -385,7 +387,7 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 ```bash
 npm run typecheck   # TypeScript type checking
 npm run lint        # ESLint code quality
-npm run stylecheck  # Biome formatting
+npm run stylecheck  # oxfmt formatting + oxlint
 npm run test:unit   # Unit tests
 ```
 
@@ -428,30 +430,30 @@ This project is optimized for [Vercel](https://vercel.com/) deployment.
 
 Configure these in your Vercel project settings:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `NEXTAUTH_URL` | Yes | Production URL |
-| `NEXTAUTH_SECRET` | Yes | Authentication secret |
-| `GOOGLE_ID` | Yes | Google OAuth Client ID |
-| `GOOGLE_SECRET` | Yes | Google OAuth Client Secret |
-| `S3_UPLOAD_KEY` | Yes | IAM access key used for all S3 buckets |
-| `S3_UPLOAD_SECRET` | Yes | IAM secret key used for all S3 buckets |
-| `S3_RECORDINGS_BUCKET` | Yes | S3 bucket for session recordings |
-| `S3_RECORDINGS_REGION` | No | Recordings bucket region (defaults to `af-south-1`) |
-| `S3_STUDENT_ATTENDANCE_BUCKET` | No | Bucket for attendance documents |
-| `S3_STUDENT_ATTENDANCE_REGION` | No | Attendance bucket region (defaults to `af-south-1`) |
-| `RECORDINGS_API_KEY` | For fidelity | Shared secret for the recordings/fidelity worker |
-| `METABASE_SECRET_KEY` | For analytics | Metabase JWT signing key |
+| Variable                           | Required      | Description                                               |
+| ---------------------------------- | ------------- | --------------------------------------------------------- |
+| `DATABASE_URL`                     | Yes           | PostgreSQL connection string                              |
+| `NEXTAUTH_URL`                     | Yes           | Production URL                                            |
+| `NEXTAUTH_SECRET`                  | Yes           | Authentication secret                                     |
+| `GOOGLE_ID`                        | Yes           | Google OAuth Client ID                                    |
+| `GOOGLE_SECRET`                    | Yes           | Google OAuth Client Secret                                |
+| `S3_UPLOAD_KEY`                    | Yes           | IAM access key used for all S3 buckets                    |
+| `S3_UPLOAD_SECRET`                 | Yes           | IAM secret key used for all S3 buckets                    |
+| `S3_RECORDINGS_BUCKET`             | Yes           | S3 bucket for session recordings                          |
+| `S3_RECORDINGS_REGION`             | No            | Recordings bucket region (defaults to `af-south-1`)       |
+| `S3_STUDENT_ATTENDANCE_BUCKET`     | No            | Bucket for attendance documents                           |
+| `S3_STUDENT_ATTENDANCE_REGION`     | No            | Attendance bucket region (defaults to `af-south-1`)       |
+| `RECORDINGS_API_KEY`               | For fidelity  | Shared secret for the recordings/fidelity worker          |
+| `METABASE_SECRET_KEY`              | For analytics | Metabase JWT signing key                                  |
 | `METABASE_MONITORING_DASHBOARD_ID` | For analytics | Metabase Monitoring and Evaluation dashboard ID (numeric) |
 
 #### Deployment Environments
 
-| Environment | Branch | Database |
-|-------------|--------|----------|
-| Production | `main` | Production DB |
+| Environment       | Branch      | Database                                                       |
+| ----------------- | ----------- | -------------------------------------------------------------- |
+| Production        | `main`      | Production DB                                                  |
 | Preview / Staging | `dev` / PRs | Dedicated DB rebuilt from faker seed data (no production data) |
-| Development | local | Local DB |
+| Development       | local       | Local DB                                                       |
 
 ### Database per Environment
 
@@ -495,6 +497,7 @@ curl -H "x-api-key: your-api-key" \
 ```
 
 **Response:**
+
 ```json
 {
   "recordings": [
@@ -544,13 +547,13 @@ This platform can be adapted for similar intervention programs:
 
 ### Configuration Options
 
-| Feature | Configuration | Description |
-|---------|--------------|-------------|
-| Debug Mode | `DEBUG=1` | Enable verbose Prisma query logging |
-| Perf Profiler | `NEXT_PUBLIC_ENABLE_PERF_PROFILER=1` | Enable the performance profiler |
-| OAuth | `GOOGLE_ID/SECRET` | Google authentication |
-| File Storage | `S3_*` variables | AWS S3 configuration |
-| Analytics | `METABASE_SECRET_KEY`, `METABASE_MONITORING_DASHBOARD_ID` | Embedded Metabase dashboards |
+| Feature       | Configuration                                             | Description                         |
+| ------------- | --------------------------------------------------------- | ----------------------------------- |
+| Debug Mode    | `DEBUG=1`                                                 | Enable verbose Prisma query logging |
+| Perf Profiler | `NEXT_PUBLIC_ENABLE_PERF_PROFILER=1`                      | Enable the performance profiler     |
+| OAuth         | `GOOGLE_ID/SECRET`                                        | Google authentication               |
+| File Storage  | `S3_*` variables                                          | AWS S3 configuration                |
+| Analytics     | `METABASE_SECRET_KEY`, `METABASE_MONITORING_DASHBOARD_ID` | Embedded Metabase dashboards        |
 
 ### Scaling Considerations
 
@@ -611,6 +614,7 @@ We welcome contributions from the community!
    - **Default encryption**: SSE-S3 (AES-256)
 
 2. **Create IAM Policy** named `ShamiriRecordingsBucketPolicy`:
+
    ```json
    {
      "Version": "2012-10-17",
@@ -631,12 +635,17 @@ We welcome contributions from the community!
    ```
 
 3. **Configure CORS** (Permissions > CORS):
+
    ```json
    [
      {
        "AllowedHeaders": ["*"],
        "AllowedMethods": ["PUT", "POST", "GET"],
-       "AllowedOrigins": ["http://localhost:3000", "https://your-production-domain.com", "https://*.vercel.app"],
+       "AllowedOrigins": [
+         "http://localhost:3000",
+         "https://your-production-domain.com",
+         "https://*.vercel.app"
+       ],
        "ExposeHeaders": ["ETag"],
        "MaxAgeSeconds": 3600
      }

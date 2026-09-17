@@ -41,14 +41,14 @@ export function SearchCommand({
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const pathname = usePathname();
-  const { replace } = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const handleReset = () => {
     setSelected(null);
     const params = new URLSearchParams(searchParams);
     params.delete("query");
-    replace(`${pathname}?${params.toString()}`);
+    router.replace(`${pathname}?${params.toString()}`);
     setOpen(false);
   };
 
@@ -87,7 +87,7 @@ export function SearchCommand({
                     } else {
                       params.delete("query");
                     }
-                    replace(`${pathname}?${params.toString()}`);
+                    router.replace(`${pathname}?${params.toString()}`);
                     setOpen(false);
                   }}
                 >

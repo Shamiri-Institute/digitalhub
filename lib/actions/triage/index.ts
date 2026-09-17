@@ -221,7 +221,7 @@ export async function updateTriageEvent(
             studentAttendanceId: studentAttendanceId ?? null,
           }),
           metadata: {
-            ...((existing.metadata as Prisma.JsonObject) ?? {}),
+            ...(existing.metadata as Prisma.JsonObject),
             lastEditedBy: userId,
           } as Prisma.JsonObject,
         },

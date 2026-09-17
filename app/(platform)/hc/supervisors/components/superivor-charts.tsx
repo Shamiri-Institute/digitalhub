@@ -113,8 +113,7 @@ export default function SupervisorCharts({
                   className="text text-2xl font-semibold leading-8"
                   fill="#fffff"
                 >
-                  {supervisorDataCompletenessPercentage.find((d) => d.name === "actual")?.value +
-                    "%"}
+                  {`${supervisorDataCompletenessPercentage.find((d) => d.name === "actual")?.value}%`}
                 </Label>
                 {supervisorDataCompletenessPercentage.map(({ name }) => (
                   <Cell

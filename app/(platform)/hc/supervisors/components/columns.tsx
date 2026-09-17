@@ -103,6 +103,7 @@ export const columns = ({
                 <DropdownMenuContent>
                   <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
                     {schools.slice(1).map((school, index) => {
+                      // oxlint-disable-next-line react/no-array-index-key -- static display list
                       return <span key={index.toString()}>{school.schoolName}</span>;
                     })}
                   </div>

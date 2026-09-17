@@ -216,11 +216,10 @@ export const subColumns = ({
 
       const firstUpcoming = upcomingSessions[0];
       if (firstUpcoming) {
-        return (
-          sessionDisplayName(firstUpcoming.session?.sessionName) +
-          " - " +
-          format(firstUpcoming.sessionDate, "dd MMM yyyy")
-        );
+        return `${sessionDisplayName(firstUpcoming.session?.sessionName)} - ${format(
+          firstUpcoming.sessionDate,
+          "dd MMM yyyy",
+        )}`;
       }
       return null;
     },

@@ -18,7 +18,7 @@ export interface V1QuestionScore {
 export interface V1FidelityScores {
   overall_score: string;
   overall_assessment: string;
-  [key: string]: string | V1QuestionScore | unknown;
+  [key: string]: unknown;
 }
 
 export interface V1QualitativeFeedback {
@@ -53,7 +53,7 @@ export interface V2QuestionScore {
 export interface V2FidelityScores {
   overall_fidelity_score: string;
   overall_fidelity_summary: string;
-  [key: string]: string | V2QuestionScore | unknown;
+  [key: string]: unknown;
 }
 
 export interface V2CompetencyItem {
@@ -72,7 +72,7 @@ export interface V2RedFlagCheck {
 
 export interface V2CompetencyProfile {
   red_flag_check: V2RedFlagCheck;
-  [key: string]: V2CompetencyItem | V2RedFlagCheck | unknown;
+  [key: string]: unknown;
 }
 
 export interface V2StrengthItem {

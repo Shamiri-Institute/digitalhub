@@ -26,7 +26,7 @@ jobs:
         run: npm ci
 
       - name: Format & Lint Check
-        run: npm run biome:ci
+        run: npm run stylecheck
 
       - name: Typechecks
         env:

@@ -71,10 +71,7 @@ export default function SupervisorAttendance({
           pointSchools: supervisor.assignedSchools.map((school) => school.schoolName),
           attendance: attendance?.attended,
           phoneNumber: supervisor.cellNumber ?? "",
-          fellows:
-            supervisor.fellows.filter((fellow) => fellow.droppedOut !== true).length +
-            "/" +
-            supervisor.fellows.length,
+          fellows: `${supervisor.fellows.filter((fellow) => fellow.droppedOut !== true).length}/${supervisor.fellows.length}`,
           sessionId: attendance?.sessionId,
           schoolId: attendance?.schoolId,
           absenceReason: attendance?.absenceReason ?? "",
@@ -367,6 +364,7 @@ const columns = (state: {
                 <DropdownMenuContent>
                   <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
                     {schools.slice(1).map((school, index) => {
+                      // oxlint-disable-next-line react/no-array-index-key -- static display list
                       return <span key={index.toString()}>{school}</span>;
                     })}
                   </div>

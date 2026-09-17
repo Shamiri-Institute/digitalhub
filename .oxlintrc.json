@@ -1,0 +1,77 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "react", "jsx-a11y", "nextjs"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "node": true
+  },
+  "settings": {
+    "react": {
+      "version": "19"
+    }
+  },
+  "rules": {
+    "react/exhaustive-deps": "warn",
+    "react/rules-of-hooks": "error",
+    "react/jsx-no-useless-fragment": [
+      "error",
+      {
+        "allowExpressions": true
+      }
+    ],
+    "react/self-closing-comp": "error",
+    "react/no-array-index-key": "error",
+    "react/set-state-in-effect": "off",
+    "react/incompatible-library": "off",
+    "react/immutability": "off",
+    "radix": "error",
+    "no-unused-vars": "error",
+    "no-unneeded-ternary": "error",
+    "no-param-reassign": "error",
+    "no-else-return": "error",
+    "default-param-last": "error",
+    "prefer-template": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/no-inferrable-types": "error",
+    "typescript/prefer-as-const": "error",
+    "typescript/prefer-enum-initializers": "error",
+    "typescript/no-empty-object-type": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "typescript/no-wrapper-object-types": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/prefer-optional-chain": "error",
+    "typescript/no-deprecated": "warn",
+    "unicorn/no-useless-undefined": "error",
+    "unicorn/prefer-date-now": "error",
+    "unicorn/prefer-number-properties": "error",
+    "import/no-cycle": "error",
+    "import/namespace": "off",
+    "nextjs/no-img-element": "error",
+    "jsx-a11y/control-has-associated-label": "off",
+    "jsx-a11y/no-noninteractive-element-interactions": "off",
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "jsx-a11y/heading-has-content": "off",
+    "jsx-a11y/role-has-required-aria-props": "off",
+    "typescript/restrict-template-expressions": [
+      "error",
+      {
+        "allowArray": true,
+        "allowNever": true
+      }
+    ]
+  },
+  "ignorePatterns": [".next", "node_modules", "playwright-report", ".artifacts"],
+  "overrides": [
+    {
+      "files": ["tests/**"],
+      "rules": {
+        "typescript/unbound-method": "off"
+      }
+    }
+  ]
+}

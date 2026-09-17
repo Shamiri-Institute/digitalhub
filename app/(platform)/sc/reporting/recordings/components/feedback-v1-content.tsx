@@ -51,7 +51,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
         <FeedbackSection title="Recommendations">
           <ul className="space-y-2">
             {feedback.recommendations.map((rec, idx) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; composite key disambiguates potential duplicate text
+              // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
               <li key={`${idx}-${rec.slice(0, 40)}`} className="flex gap-2 text-sm">
                 <span className="font-semibold text-blue-600 mt-0.5">{idx + 1}.</span>
                 <span>
@@ -71,7 +71,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
                 <h5 className="font-medium text-green-700 mb-2">Strengths</h5>
                 <ul className="list-disc pl-5 space-y-1">
                   {feedback.qualitative_feedback.strengths.map((strength, idx) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; composite key disambiguates potential duplicate text
+                    // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
                     <li key={`${idx}-${strength.slice(0, 40)}`} className="text-sm">
                       <MarkdownText>{strength}</MarkdownText>
                     </li>
@@ -94,7 +94,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
                 <h5 className="font-medium text-amber-700 mb-2">Areas for Improvement</h5>
                 <ul className="list-disc pl-5 space-y-1">
                   {feedback.qualitative_feedback.areas_for_improvement.map((area, idx) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; composite key disambiguates potential duplicate text
+                    // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
                     <li key={`${idx}-${area.slice(0, 40)}`} className="text-sm">
                       <MarkdownText>{area}</MarkdownText>
                     </li>

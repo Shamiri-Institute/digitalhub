@@ -175,6 +175,7 @@ export function MarkSessionOccurrence({
               <div className="flex flex-col gap-2 py-2">
                 {previousUnmarkedSessions.map((session, index) => (
                   <div
+                    // oxlint-disable-next-line react/no-array-index-key -- static display list
                     key={index.toString()}
                     className="flex items-center gap-x-2 rounded-lg border bg-background-secondary px-4 py-3"
                   >

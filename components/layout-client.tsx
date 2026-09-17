@@ -10,7 +10,7 @@ import {
   PeopleIconAlternate,
   SchoolIcon,
   SignOutIcon,
-} from "components/icons";
+} from "#/components/icons";
 import { Building2, Menu, ShieldAlert } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

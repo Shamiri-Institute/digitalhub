@@ -483,9 +483,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
 
       if (!session.occurred) {
         throw new Error(
-          "An error occurred while marking attendance for " +
-            fellow.fellowName +
-            ". Session has not occurred.",
+          `An error occurred while marking attendance for ${fellow.fellowName}. Session has not occurred.`,
         );
       }
 
@@ -506,10 +504,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
       if (attendance) {
         if (attendance.processedAt !== null) {
           throw new Error(
-            "An error occurred while marking attendance for " +
-              fellow.fellowName +
-              ". Attendance already processed on " +
-              format(attendance.processedAt, "dd-MM-yyyy."),
+            `An error occurred while marking attendance for ${fellow.fellowName}. Attendance already processed on ${format(attendance.processedAt, "dd-MM-yyyy.")}`,
           );
         }
 
@@ -588,26 +583,20 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
         if (group) {
           if (group.groupType !== "TREATMENT" && session.session?.sessionType === "INTERVENTION") {
             throw new Error(
-              "An error occurred while marking attendance. " +
-                fellow.fellowName +
-                "'s group is not a treatment group.",
+              `An error occurred while marking attendance. ${fellow.fellowName}'s group is not a treatment group.`,
             );
           }
           groupId = group.id;
         } else {
           throw new Error(
-            "An error occurred while marking attendance. " +
-              fellow.fellowName +
-              " has no assigned group",
+            `An error occurred while marking attendance. ${fellow.fellowName} has no assigned group`,
           );
         }
       }
 
       if (session.session?.amount === undefined || session.session?.amount === null) {
         throw new Error(
-          "An error occurred while marking attendance for " +
-            fellow.fellowName +
-            ". Session payout amount not found.",
+          `An error occurred while marking attendance for ${fellow.fellowName}. Session payout amount not found.`,
         );
       }
 
@@ -735,10 +724,10 @@ export async function markManyFellowAttendance(
       attendances.forEach((attendance) => {
         if (attendance.processedAt !== null) {
           throw new Error(
-            "An error occurred while marking attendances. " +
-              attendance.fellow.fellowName +
-              "'s attendance has already been processed on " +
-              format(attendance.processedAt, "dd-MM-yyyy."),
+            `An error occurred while marking attendances. ${attendance.fellow.fellowName}'s attendance has already been processed on ${format(
+              attendance.processedAt,
+              "dd-MM-yyyy.",
+            )}`,
           );
         }
 
@@ -832,17 +821,13 @@ export async function markManyFellowAttendance(
 
           if (!group) {
             throw new Error(
-              "An error occurred while marking attendance. " +
-                fellow.fellowName +
-                " has no assigned group",
+              `An error occurred while marking attendance. ${fellow.fellowName} has no assigned group`,
             );
           }
 
           if (group.groupType !== "TREATMENT" && session.session?.sessionType === "INTERVENTION") {
             throw new Error(
-              "An error occurred while marking attendance. " +
-                fellow.fellowName +
-                "'s group is not a treatment group.",
+              `An error occurred while marking attendance. ${fellow.fellowName}'s group is not a treatment group.`,
             );
           }
 

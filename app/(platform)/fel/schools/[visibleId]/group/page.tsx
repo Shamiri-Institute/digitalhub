@@ -19,7 +19,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
   }
 
   const data = await Promise.all([
-    await db.$queryRaw<Omit<SchoolGroupDataTableData, "students">[]>`
+    db.$queryRaw<Omit<SchoolGroupDataTableData, "students">[]>`
   SELECT
 	intg.id,
 	intg.group_name AS "groupName",

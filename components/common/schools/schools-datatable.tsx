@@ -31,7 +31,7 @@ const schoolsCSVHeaders = [
 ];
 
 export const handleSchoolsCSVTemplateDownload = () => {
-  // biome-ignore lint/style/useTemplate: need for proper formatting for csv data type download
+  // oxlint-disable-next-line prefer-template -- need for proper formatting for csv data type download
   const csvContent = "data:text/csv;charset=utf-8," + schoolsCSVHeaders.join(",") + "\n";
   const encodedUri = encodeURI(csvContent);
 
@@ -108,15 +108,13 @@ export default function SchoolsDatatable({
         className={cn("data-table bg-white lg:mt-4", className)}
         columnVisibilityState={{
           ...columnVisibilityState,
-          ...{
-            "School ID": false,
-            "Sub - county": false,
-            "Point teacher": false,
-            "Point teacher phone no.": false,
-            "Point teacher email": false,
-            "Point supervisor phone no.": false,
-            "Point supervisor email": false,
-          },
+          "School ID": false,
+          "Sub - county": false,
+          "Point teacher": false,
+          "Point teacher phone no.": false,
+          "Point teacher email": false,
+          "Point supervisor phone no.": false,
+          "Point supervisor email": false,
         }}
         renderTableActions={renderTableActions()}
         disablePagination={disablePagination}

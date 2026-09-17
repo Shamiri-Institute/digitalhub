@@ -36,7 +36,7 @@ export const QualitativeFeedbackSchema = z.object({
 export default function ViewEditQualitativeFeedback({
   children,
   sessionReport,
-  action = "view",
+  action,
 }: {
   children: React.ReactNode;
   sessionReport: SessionReportType["session"][number];

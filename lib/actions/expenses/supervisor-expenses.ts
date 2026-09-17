@@ -32,11 +32,17 @@ export async function loadSupervisorExpenses(
   return supervisorsExpenses.map((expense) => {
     const details = expense.details;
     const typeOfExpense =
-      typeof details === "object" && details !== null && "subtype" in details
+      typeof details === "object" &&
+      details !== null &&
+      "subtype" in details &&
+      typeof details.subtype === "string"
         ? details.subtype
         : "N/A";
     const session =
-      typeof details === "object" && details !== null && "session" in details
+      typeof details === "object" &&
+      details !== null &&
+      "session" in details &&
+      typeof details.session === "string"
         ? details.session
         : "N/A";
     return {

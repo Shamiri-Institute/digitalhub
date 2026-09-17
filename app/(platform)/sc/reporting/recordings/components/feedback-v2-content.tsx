@@ -224,7 +224,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
                 <h5 className="font-medium text-amber-700 mb-2">Areas for Growth</h5>
                 <div className="space-y-3">
                   {supervisionBrief.areas_for_growth.map((item, idx) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; composite key disambiguates potential duplicate text
+                    // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
                     <div key={`${idx}-${item.area.slice(0, 40)}`} className="rounded-md border p-4">
                       <p className="font-medium text-sm">{item.area}</p>
                       <p className="text-sm text-muted-foreground mt-1">
@@ -256,7 +256,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
                 <h5 className="font-medium mb-2">Reflective Questions for Supervision</h5>
                 <ul className="space-y-2">
                   {supervisionBrief.reflective_questions_for_supervision.map((question, idx) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: read-only server feedback list; composite key disambiguates potential duplicate text
+                    // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
                     <li key={`${idx}-${question.slice(0, 40)}`} className="flex gap-2 text-sm">
                       <span className="font-semibold text-blue-600 mt-0.5">{idx + 1}.</span>
                       <span className="text-muted-foreground">

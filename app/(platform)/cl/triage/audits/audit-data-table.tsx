@@ -35,7 +35,7 @@ const VALUE_LABELS: Record<string, string> = {
 
 function formatValue(val: unknown): string {
   if (val === null || val === undefined) return "—";
-  const str = String(val);
+  const str = typeof val === "string" ? val : JSON.stringify(val);
   return VALUE_LABELS[str] ?? str;
 }
 

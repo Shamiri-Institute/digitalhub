@@ -102,12 +102,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function AddNewClinicalCaseForm({
   children,
-  schools = [],
-  fellowsInProject = [],
-  supervisorsInHub = [],
+  schools,
+  fellowsInProject,
+  supervisorsInHub,
   creatorId,
   userRole,
-  hubs = [],
+  hubs,
 }: {
   children?: React.ReactNode;
   schools: Prisma.SchoolGetPayload<{

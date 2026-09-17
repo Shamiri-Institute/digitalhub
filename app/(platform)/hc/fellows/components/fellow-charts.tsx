@@ -29,7 +29,7 @@ import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/cons
 export default function FellowsCharts({
   attendanceData,
   dropoutData,
-  fellowsDataCompletenessPercentage = [],
+  fellowsDataCompletenessPercentage,
   fellowsSessionRatings,
 }: {
   attendanceData: (Prisma.PickEnumerable<

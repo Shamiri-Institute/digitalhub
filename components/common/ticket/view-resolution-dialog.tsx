@@ -25,7 +25,7 @@ export function ViewResolutionDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [resolution, setResolution] = useState<TicketResolution | null | undefined>(undefined);
+  const [resolution, setResolution] = useState<TicketResolution | null>();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

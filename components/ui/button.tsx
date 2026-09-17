@@ -41,8 +41,7 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   loading?: boolean;
 }
@@ -57,16 +56,16 @@ function Button({
   ref,
   ...props
 }: ButtonProps & { ref?: React.Ref<HTMLButtonElement> }) {
-  // biome-ignore lint/correctness/noUnusedVariables: shadcn library code - keeping original structure
+  // oxlint-disable-next-line no-unused-vars -- shadcn library code - keeping original structure
   const Comp = asChild ? Slot : "button";
 
   if (asChild) {
     return (
       <Slot ref={ref} {...props}>
         {React.Children.map(
-          // biome-ignore lint/suspicious/noExplicitAny: React.Children.map requires ReactElement<any> for proper child iteration
+          // oxlint-disable-next-line typescript/no-explicit-any -- React.Children.map requires ReactElement<any> for proper child iteration
           children as React.ReactElement<any>,
-          // biome-ignore lint/suspicious/noExplicitAny: cloneElement requires any for props access
+          // oxlint-disable-next-line typescript/no-explicit-any -- cloneElement requires any for props access
           (child: React.ReactElement<any>) => {
             return React.cloneElement(child, {
               className: cn(buttonVariants({ variant, size }), className),
