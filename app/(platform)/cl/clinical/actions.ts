@@ -129,7 +129,11 @@ export async function getClinicalCasesCreatedByClinicalLead() {
         },
       },
       sessions: true,
-      clinicalCaseNotes: true,
+      clinicalCaseNotes: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { riskLevel: true },
+      },
       followUptreatmentPlan: true,
     },
   });
@@ -144,10 +148,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       attendanceStatus: session.attendanceStatus,
     }));
 
-    const latestCaseNote = caseInfo.clinicalCaseNotes.toSorted(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )[0];
-    const riskLevel = latestCaseNote?.riskLevel || "N/A";
+    const riskLevel = caseInfo.clinicalCaseNotes[0]?.riskLevel || "N/A";
 
     return {
       id: caseInfo.id,
@@ -173,7 +174,6 @@ export async function getClinicalCasesCreatedByClinicalLead() {
         caseInfo.generalPresentingIssuesOtherSpecifiedEndpoint,
       clinicalSessionAttendance: caseInfo.sessions,
       currentSupervisorId: caseInfo.currentSupervisorId,
-      clinicalCaseNotes: caseInfo.clinicalCaseNotes,
       clinicalLeadId: caseInfo.clinicalLeadId,
       role: "CLINICAL_LEAD",
       treatmentPlanUploaded: !!caseInfo.followUptreatmentPlan,
