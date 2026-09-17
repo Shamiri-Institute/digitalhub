@@ -91,7 +91,13 @@
       }
     ],
     "react/set-state-in-effect": "error",
-    "react/no-deriving-state-in-effects": "error"
+    "react/no-deriving-state-in-effects": "error",
+    "hooks-policy/justify": [
+      "error",
+      {
+        "hooks": ["useMemo", "useCallback"]
+      }
+    ]
   },
   "ignorePatterns": [".next", "node_modules", "playwright-report", ".artifacts"],
   "overrides": [
@@ -101,5 +107,6 @@
         "typescript/unbound-method": "off"
       }
     }
-  ]
+  ],
+  "jsPlugins": ["./lint/hooks-policy.mjs"]
 }

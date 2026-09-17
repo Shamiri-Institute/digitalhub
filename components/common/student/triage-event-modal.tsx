@@ -1,7 +1,7 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
@@ -122,7 +122,7 @@ export default function TriageEventModal({
   const showSupervisorSelect = actionTaken === "REFERRED" || actionTaken === "ESCALATED";
   const forceEscalated = riskScreenOutcome === "ANY_YES";
 
-  const loadSupervisors = useCallback(async () => {
+  const loadSupervisors = async () => {
     try {
       const supervisors = hubId
         ? await getSupervisorsInFellowHub(hubId, { useAsHubId: true })
@@ -131,13 +131,13 @@ export default function TriageEventModal({
     } catch {
       setSupervisorsInHub([]);
     }
-  }, [sessionId, hubId]);
+  };
 
   useEffect(() => {
     if (isOpen) {
       void loadSupervisors();
     }
-  }, [isOpen, loadSupervisors]);
+  }, [isOpen, sessionId, hubId]);
 
   useEffect(() => {
     if (forceEscalated) {

@@ -5,7 +5,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -50,7 +50,7 @@ export function ProjectSwitcher({
     void checkIsAdminUser();
   }, [session?.user?.email]);
 
-  const loadProjects = useCallback(async () => {
+  const loadProjects = async () => {
     if (!session?.user?.email) return;
     setProjectsLoading(true);
     try {
@@ -59,13 +59,13 @@ export function ProjectSwitcher({
     } finally {
       setProjectsLoading(false);
     }
-  }, [session?.user?.email]);
+  };
 
   useEffect(() => {
     if (!isAdminUser) return;
     // oxlint-disable-next-line react/set-state-in-effect -- loads the admin project list on mount; server-side loading is a separate change
     void loadProjects();
-  }, [isAdminUser, loadProjects]);
+  }, [isAdminUser, session?.user?.email]);
 
   if (!isAdminUser) {
     return null;

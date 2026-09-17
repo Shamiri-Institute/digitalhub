@@ -3,7 +3,7 @@
 import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -47,21 +47,19 @@ export default function SupervisorsDataTable({
   const [selectedSession] = useState<string>();
   const [selectedSupervisor, setSelectedSupervisor] = useState<SupervisorsData | null>(null);
 
-  const supervisor = useMemo(() => {
+  const supervisor = (() => {
     if (supervisors.length > 0 && selectedSupervisor) {
       return supervisors.find((s) => s.id === selectedSupervisor?.id) ?? null;
     }
     return selectedSupervisor;
-  }, [supervisors, selectedSupervisor]);
+  })();
 
-  const memoizedColumns = useMemo(() => {
-    return columns({
-      setMarkAttendanceDialog,
-      sessions: school?.interventionSessions ?? [],
-      setSupervisor: setSelectedSupervisor,
-      role,
-    });
-  }, [role, school?.interventionSessions]);
+  const memoizedColumns = columns({
+    setMarkAttendanceDialog,
+    sessions: school?.interventionSessions ?? [],
+    setSupervisor: setSelectedSupervisor,
+    role,
+  });
 
   const renderTableActions = () => {
     return (

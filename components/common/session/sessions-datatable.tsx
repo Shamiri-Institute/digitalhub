@@ -2,7 +2,7 @@
 
 import { ImplementerRole, type Prisma } from "@prisma/client";
 import * as React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
@@ -67,27 +67,25 @@ export default function SessionsDatatable({
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
   const [attendanceDocumentDialog, setAttendanceDocumentDialog] = React.useState(false);
 
-  const session = useMemo(() => {
+  const session = (() => {
     if (!selectedSession) return null;
     return sessions.find((s) => s.id === selectedSession.id) ?? null;
-  }, [selectedSession, sessions]);
+  })();
 
-  const memoizedColumns = useMemo(() => {
-    return columns({
-      setSession: setSelectedSession,
-      setRatingsDialog,
-      setFellowAttendanceDialog,
-      setSupervisorAttendanceDialog,
-      setStudentAttendanceDialog,
-      setSessionOccurrenceDialog,
-      setRescheduleSessionDialog,
-      setCancelSessionDialog,
-      setAttendanceDocumentDialog,
-      role,
-      fellowId,
-      supervisorId,
-    });
-  }, [role, fellowId, supervisorId]);
+  const memoizedColumns = columns({
+    setSession: setSelectedSession,
+    setRatingsDialog,
+    setFellowAttendanceDialog,
+    setSupervisorAttendanceDialog,
+    setStudentAttendanceDialog,
+    setSessionOccurrenceDialog,
+    setRescheduleSessionDialog,
+    setCancelSessionDialog,
+    setAttendanceDocumentDialog,
+    role,
+    fellowId,
+    supervisorId,
+  });
 
   const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
 

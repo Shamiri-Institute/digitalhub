@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   type ClinicalCases,
   updateClinicalCaseEmergencyPresentingIssue,
@@ -120,7 +120,7 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
   const [otherIssues, setOtherIssues] = useState(initialOtherIssues);
   const [isSaving, setIsSaving] = useState(false);
 
-  const hasChanges = useMemo(() => {
+  const hasChanges = (() => {
     const currentEmergencyData = Object.entries(emergencyIssues).reduce(
       (acc, [id, severity]) => {
         const issueName = emergency_presenting_issues.find((i) => i.id.toString() === id)?.name;
@@ -150,14 +150,7 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
     const otherIssuesChanged = otherIssues !== initialOtherIssues;
 
     return emergencyChanged || generalChanged || otherIssuesChanged;
-  }, [
-    emergencyIssues,
-    generalIssues,
-    otherIssues,
-    initialEmergencyState,
-    initialGeneralState,
-    initialOtherIssues,
-  ]);
+  })();
 
   const handleSaveAll = async () => {
     setIsSaving(true);

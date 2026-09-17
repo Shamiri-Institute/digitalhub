@@ -73,7 +73,7 @@ export function useS3Upload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<FileProgress[]>([]);
 
-  const addFile = useCallback((file: File) => {
+  const addFile = (file: File) => {
     setFiles((prev) => [
       ...prev,
       {
@@ -84,9 +84,9 @@ export function useS3Upload() {
         id: crypto.randomUUID(),
       },
     ]);
-  }, []);
+  };
 
-  const updateFileProgress = useCallback((file: File, uploaded: number) => {
+  const updateFileProgress = (file: File, uploaded: number) => {
     setFiles((prev) =>
       prev.map((f) =>
         f.file === file
@@ -98,101 +98,99 @@ export function useS3Upload() {
           : f,
       ),
     );
-  }, []);
+  };
 
-  const openFileDialog = useCallback(() => {
+  const openFileDialog = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
       fileInputRef.current.click();
     }
-  }, []);
+  };
 
-  const uploadToS3 = useCallback(
-    async (file: File, target: UploadTarget): Promise<UploadResult> => {
-      if (!S3_BUCKETS.includes(target?.bucket)) {
-        throw new Error(
-          `uploadToS3 requires an explicit bucket (${S3_BUCKETS.join(" or ")}); received ${String(target?.bucket)}`,
-        );
-      }
-      if (!target.key) {
-        throw new Error("uploadToS3 requires an explicit object key");
-      }
+  const uploadToS3 = async (file: File, target: UploadTarget): Promise<UploadResult> => {
+    if (!S3_BUCKETS.includes(target?.bucket)) {
+      throw new Error(
+        `uploadToS3 requires an explicit bucket (${S3_BUCKETS.join(" or ")}); received ${String(target?.bucket)}`,
+      );
+    }
+    if (!target.key) {
+      throw new Error("uploadToS3 requires an explicit object key");
+    }
 
-      // Browsers often send an empty type (or octet-stream) for a valid .mp3.
-      // The route allowlist is exact MIME, so infer from the extension rather
-      // than minting a URL that S3 / the route will then reject.
-      const contentType = resolveUploadContentType(file);
+    // Browsers often send an empty type (or octet-stream) for a valid .mp3.
+    // The route allowlist is exact MIME, so infer from the extension rather
+    // than minting a URL that S3 / the route will then reject.
+    const contentType = resolveUploadContentType(file);
 
-      // size is signed into the URL, so the PUT body must be exactly this long.
-      const presignedResponse = await fetch("/api/s3/presigned", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contentType,
-          key: target.key,
-          bucket: target.bucket,
-          size: file.size,
-        }),
-      });
+    // size is signed into the URL, so the PUT body must be exactly this long.
+    const presignedResponse = await fetch("/api/s3/presigned", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contentType,
+        key: target.key,
+        bucket: target.bucket,
+        size: file.size,
+      }),
+    });
 
-      if (!presignedResponse.ok) {
-        const error: { error?: string } = await presignedResponse.json().catch(() => ({}));
-        throw new Error(error.error ?? "Failed to get presigned URL");
-      }
+    if (!presignedResponse.ok) {
+      const error: { error?: string } = await presignedResponse.json().catch(() => ({}));
+      throw new Error(error.error ?? "Failed to get presigned URL");
+    }
 
-      const { url, key, bucket: bucketName } = (await presignedResponse.json()) as PresignedUrl;
+    const { url, key, bucket: bucketName } = (await presignedResponse.json()) as PresignedUrl;
 
-      // Track this file
-      addFile(file);
+    // Track this file
+    addFile(file);
 
-      // Upload to S3 using presigned URL with progress tracking
-      // Send File directly (not ArrayBuffer) to allow streaming without loading into memory
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
+    // Upload to S3 using presigned URL with progress tracking
+    // Send File directly (not ArrayBuffer) to allow streaming without loading into memory
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
 
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            updateFileProgress(file, event.loaded);
-          }
-        };
-
-        xhr.onreadystatechange = () => {
-          if (xhr.readyState === 4) {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              updateFileProgress(file, file.size);
-              resolve();
-            } else {
-              console.error("Upload failed:", {
-                status: xhr.status,
-                statusText: xhr.statusText,
-                response: xhr.responseText,
-              });
-              reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
-            }
-          }
-        };
-
-        xhr.onerror = () => {
-          console.error("XHR Error:", xhr.status, xhr.statusText);
-          reject(new Error(`Network error: ${xhr.status} ${xhr.statusText}`));
-        };
-
-        xhr.open("PUT", url, true);
-        xhr.setRequestHeader("Content-Type", contentType);
-        xhr.setRequestHeader("Cache-Control", "max-age=630720000");
-        xhr.setRequestHeader("If-None-Match", "*");
-        xhr.send(file);
-      });
-
-      return {
-        url: `https://${bucketName}.s3.amazonaws.com/${key}`,
-        key,
-        bucket: bucketName,
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          updateFileProgress(file, event.loaded);
+        }
       };
-    },
-    [addFile, updateFileProgress],
-  );
 
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            updateFileProgress(file, file.size);
+            resolve();
+          } else {
+            console.error("Upload failed:", {
+              status: xhr.status,
+              statusText: xhr.statusText,
+              response: xhr.responseText,
+            });
+            reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
+          }
+        }
+      };
+
+      xhr.onerror = () => {
+        console.error("XHR Error:", xhr.status, xhr.statusText);
+        reject(new Error(`Network error: ${xhr.status} ${xhr.statusText}`));
+      };
+
+      xhr.open("PUT", url, true);
+      xhr.setRequestHeader("Content-Type", contentType);
+      xhr.setRequestHeader("Cache-Control", "max-age=630720000");
+      xhr.setRequestHeader("If-None-Match", "*");
+      xhr.send(file);
+    });
+
+    return {
+      url: `https://${bucketName}.s3.amazonaws.com/${key}`,
+      key,
+      bucket: bucketName,
+    };
+  };
+
+  // callback: FileInput is rendered as a component; a new identity per render would remount the input and drop the chosen file
   const FileInput = useCallback((props: Omit<FileInputProps, "ref">) => {
     return <FileInputComponent {...props} ref={fileInputRef} style={{ display: "none" }} />;
   }, []);

@@ -1,7 +1,7 @@
 "use client";
 
 import { ImplementerRole, type Prisma } from "@prisma/client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import ArchiveGroup from "#/components/common/group/archive-group";
@@ -42,24 +42,22 @@ export default function GroupsDataTable({
   const [archiveDialog, setArchiveDialog] = useState(false);
   const [unarchiveDialog, setUnarchiveDialog] = useState(false);
 
-  const group = useMemo(() => {
+  const group = (() => {
     if (selectedGroup) {
       return data.find((g) => g.id === selectedGroup.id);
     }
     return selectedGroup;
-  }, [data, selectedGroup]);
+  })();
 
-  const memoizedColumns = useMemo(() => {
-    return columns({
-      setGroup: setSelectedGroup,
-      setStudentsDialog,
-      setEvaluationDialog,
-      setLeaderDialog,
-      setArchiveDialog,
-      setUnarchiveDialog,
-      role,
-    });
-  }, [role]);
+  const memoizedColumns = columns({
+    setGroup: setSelectedGroup,
+    setStudentsDialog,
+    setEvaluationDialog,
+    setLeaderDialog,
+    setArchiveDialog,
+    setUnarchiveDialog,
+    role,
+  });
 
   const renderTableActions = () => {
     return (

@@ -2,14 +2,7 @@ import type { CalendarDate } from "@internationalized/date";
 import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
-import {
-  type Dispatch,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
@@ -308,7 +301,7 @@ export function TableView({
   const { filters } = useContext(FiltersContext);
   const { sessions } = useContext(SessionsContext);
 
-  const selectedDay = useMemo(() => {
+  const selectedDay = (() => {
     const today = getCalendarDate(new Date());
     const rangeStart = state.visibleRange.start.toDate(state.timeZone);
     const rangeEnd = addDays(rangeStart, 7);
@@ -325,9 +318,9 @@ export function TableView({
       return state.visibleRange.start;
     }
     return today;
-  }, [state.timeZone, state.visibleRange.start, userSelectedDay]);
+  })();
 
-  const { supervisorAttendances, fellowAttendances } = useMemo(() => {
+  const { supervisorAttendances, fellowAttendances } = (() => {
     if (!selectedDay) {
       return { supervisorAttendances: [], fellowAttendances: [] };
     }
@@ -411,7 +404,7 @@ export function TableView({
       });
     });
     return { supervisorAttendances: attendances, fellowAttendances: _fellowAttendances };
-  }, [selectedDay, filters, sessions, supervisors, state.timeZone]);
+  })();
 
   useEffect(() => {
     setTitle(
@@ -422,17 +415,15 @@ export function TableView({
     );
   }, [state.visibleRange.start, state.visibleRange.end, dateFormatter, setTitle, state.timeZone]);
 
-  const enableRowSelection = useMemo(() => {
-    return (row: Row<FellowAttendancesTableData>) => {
-      return (
-        !(row.original.sessionType === "INTERVENTION" && row.original.groupId === undefined) &&
-        row.original.groupType === "TREATMENT" &&
-        (row.original.supervisorId === supervisorId || role === "HUB_COORDINATOR") &&
-        !row.original.droppedOut &&
-        row.original.processedAt === null
-      );
-    };
-  }, [supervisorId, role]);
+  const enableRowSelection = (row: Row<FellowAttendancesTableData>) => {
+    return (
+      !(row.original.sessionType === "INTERVENTION" && row.original.groupId === undefined) &&
+      row.original.groupType === "TREATMENT" &&
+      (row.original.supervisorId === supervisorId || role === "HUB_COORDINATOR") &&
+      !row.original.droppedOut &&
+      row.original.processedAt === null
+    );
+  };
 
   return (
     <div className="flex flex-col gap-3 py-3">
