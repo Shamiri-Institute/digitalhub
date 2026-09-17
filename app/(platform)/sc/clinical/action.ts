@@ -48,7 +48,7 @@ export async function getClinicalCases() {
       attendanceStatus: session.attendanceStatus,
     }));
 
-    const latestCaseNote = caseInfo.clinicalCaseNotes.sort(
+    const latestCaseNote = caseInfo.clinicalCaseNotes.toSorted(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )[0];
     const riskLevel = latestCaseNote?.riskLevel || "N/A";

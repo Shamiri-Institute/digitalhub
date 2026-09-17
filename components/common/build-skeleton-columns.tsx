@@ -38,7 +38,7 @@ export function buildSkeletonColumns<TData>(columns: ColumnDef<TData>[]): Column
       id,
       header: renderSkeleton ? id : "",
       cell: () => (renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null),
-    } as ColumnDef<TData>;
+    };
   });
 }
 

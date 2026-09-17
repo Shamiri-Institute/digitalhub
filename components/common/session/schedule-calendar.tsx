@@ -52,7 +52,7 @@ import { getDateRangeForCalendar } from "#/lib/date-utils";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
-import { type Mode, ModeProvider, useMode } from "./mode-provider";
+import { ModeProvider, useMode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import { type Session, SessionsContext, SessionsProvider, useSessions } from "./sessions-provider";
@@ -278,7 +278,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       role={props.role}
       fellowId={props.fellowId}
     >
-      <ModeProvider defaultMode={mode as Mode}>
+      <ModeProvider defaultMode={mode}>
         <TitleProvider>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
@@ -708,6 +708,7 @@ function NavigationButton({ children, ...props }: { children: React.ReactNode })
   const { focusProps, isFocusVisible } = useFocusRing();
 
   return (
+    // oxlint-disable-next-line react/button-has-type -- react-aria useButton supplies type
     <button
       {...mergeProps(buttonProps, focusProps)}
       ref={ref}

@@ -279,7 +279,7 @@ export default function MonthlySupervisorEvaluation({
     }
   }, [existingEvaluation]);
 
-  const updateFormValues = (value: string) => {
+  function updateFormValues(value: string) {
     const match = evaluations.find((evaluation) =>
       isEqual(new Date(evaluation.month), new Date(value)),
     );
@@ -333,7 +333,7 @@ export default function MonthlySupervisorEvaluation({
       form.reset({ month: new Date(value), ...defaultValues });
       setExistingEvaluation(undefined);
     }
-  };
+  }
 
   return (
     <Form {...form}>

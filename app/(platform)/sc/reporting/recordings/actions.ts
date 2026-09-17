@@ -24,7 +24,7 @@ export async function loadSupervisorFellows() {
   return supervisor.profile.fellows
     .filter((f) => !f.droppedOut)
     .map((f) => ({ id: f.id, fellowName: f.fellowName }))
-    .sort((a, b) => (a.fellowName ?? "").localeCompare(b.fellowName ?? ""));
+    .toSorted((a, b) => (a.fellowName ?? "").localeCompare(b.fellowName ?? ""));
 }
 
 export async function loadFellowGroups(fellowId: string) {

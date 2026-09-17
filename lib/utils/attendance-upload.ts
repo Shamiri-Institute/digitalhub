@@ -39,10 +39,10 @@ export function buildAttendanceS3Key(fields: AttendanceDocS3Key): {
   const customFileName = `${sanitizedSession}_${sanitizedDate}_${sanitizedGroup}_${sanitizedName}_${docId}`;
 
   const s3Key = buildS3Key({
-    schoolName: schoolName as string,
-    fellowName: fellowName as string,
-    groupName: groupName as string,
-    sessionType: sessionType as string,
+    schoolName,
+    fellowName,
+    groupName,
+    sessionType,
     recordingId: docId,
     extension,
     prefix: "student-attendance",

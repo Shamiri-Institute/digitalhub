@@ -12,7 +12,7 @@ export default function MetabaseDashboardEmbed({
 }: MetabaseDashboardEmbedProps) {
   return (
     <div className={className ?? "h-full w-full"}>
-      <iframe src={iframeUrl} className="h-full w-full border-0" allowTransparency title={title} />
+      <iframe src={iframeUrl} className="h-full w-full border-0" title={title} />
     </div>
   );
 }

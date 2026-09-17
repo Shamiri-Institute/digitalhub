@@ -120,7 +120,7 @@ export const columns = ({
           .filter((session) => {
             return isAfter(session.sessionDate, new Date());
           })
-          .sort((a, b) => {
+          .toSorted((a, b) => {
             return a.sessionDate.getTime() - b.sessionDate.getTime();
           });
 
@@ -142,7 +142,7 @@ export const columns = ({
           .filter((session) => {
             return session.occurred;
           })
-          .sort((a, b) => {
+          .toSorted((a, b) => {
             return a.sessionDate.getTime() - b.sessionDate.getTime();
           });
 

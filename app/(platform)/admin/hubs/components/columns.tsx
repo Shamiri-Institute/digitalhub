@@ -80,7 +80,7 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
     header: "Hub coordinator",
     id: "Hub coordinator",
     cell: ({ row }) => {
-      const first = [...row.original.coordinators].sort(
+      const first = row.original.coordinators.toSorted(
         (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
       )[0];
       return first?.coordinatorName ?? "";
@@ -91,7 +91,7 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
     header: "Hub coordinator phone number",
     id: "Hub coordinator phone number",
     cell: ({ row }) => {
-      const first = [...row.original.coordinators].sort(
+      const first = row.original.coordinators.toSorted(
         (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
       )[0];
       return first ? RenderParsedPhoneNumber(first.cellNumber ?? undefined) : "";

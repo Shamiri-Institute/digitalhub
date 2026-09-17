@@ -166,7 +166,7 @@ export async function createTriageEvent(
         referredSupervisorId: parsed.referredSupervisorId ?? null,
         supervisorHandoffStatus: parsed.supervisorHandoffStatus ?? null,
         note: parsed.note ?? null,
-        metadata: { createdBy: userId } as Prisma.JsonObject,
+        metadata: { createdBy: userId },
       },
       include: {
         session: true,
@@ -223,7 +223,7 @@ export async function updateTriageEvent(
           metadata: {
             ...(existing.metadata as Prisma.JsonObject),
             lastEditedBy: userId,
-          } as Prisma.JsonObject,
+          },
         },
         include: {
           session: true,
@@ -245,7 +245,7 @@ export async function updateTriageEvent(
             referredSupervisorId: updated.referredSupervisorId ?? undefined,
             supervisorHandoffStatus: updated.supervisorHandoffStatus ?? undefined,
             note: updated.note ?? undefined,
-          } as Prisma.JsonObject,
+          },
         },
       });
 

@@ -162,6 +162,7 @@ export default function UploadStudentAttendanceDocument({
             <Icons.camera className="h-8 w-8 text-shamiri-new-blue" />
             <span className="mt-2 text-sm font-medium text-shamiri-new-blue">Take Photo</span>
             <input
+              aria-label="Attendance photos"
               type="file"
               accept="image/*"
               capture="environment"
@@ -210,12 +211,14 @@ export default function UploadStudentAttendanceDocument({
       )}
 
       {lightboxIndex !== null && previewUrls[lightboxIndex] && (
+        // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- click-away backdrop
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
           onClick={() => setLightboxIndex(null)}
           onKeyDown={(e) => {
             if (e.key === "Escape") setLightboxIndex(null);
           }}
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- native <dialog> UA styles conflict with the overlay
           role="dialog"
           tabIndex={-1}
         >

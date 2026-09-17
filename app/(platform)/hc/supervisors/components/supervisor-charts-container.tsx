@@ -26,12 +26,10 @@ export default async function SupervisorChartsWrapper({
     );
 
     const supervisorsSessionRatings = fetchSupervisorSessionRatingAverages(
-      coordinator?.assignedHubId as string,
+      coordinator?.assignedHubId,
     );
 
-    const supervisorAttendanceData = fetchSupervisorAttendanceData(
-      coordinator?.assignedHubId as string,
-    );
+    const supervisorAttendanceData = fetchSupervisorAttendanceData(coordinator?.assignedHubId);
 
     const data = await Promise.all([
       dropoutData,

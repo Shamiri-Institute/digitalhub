@@ -159,10 +159,7 @@ export default function HubStudentClinicalDataCharts({
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="supervisorName" tick={false} axisLine={false} />
             <YAxis dataKey="count" tick={{ fontSize: 12 }} width={35} />
-            <Tooltip
-              formatter={(value) => [`${value} cases`, "Cases"]}
-              labelFormatter={(label) => label}
-            />
+            <Tooltip formatter={(value) => [`${value} cases`, "Cases"]} />
             <Bar dataKey="count" fill="#E92C9D" name="Cases" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>

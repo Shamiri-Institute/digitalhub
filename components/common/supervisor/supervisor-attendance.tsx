@@ -168,10 +168,10 @@ export function SupervisorAttendanceDataTable({
           setAttendance,
           setMarkAttendanceDialog,
         })
-      : (columns({
+      : columns({
           setAttendance,
           setMarkAttendanceDialog,
-        }) as ColumnDef<SupervisorAttendanceTableData>[]);
+        });
   }, [overrideColumns, setAttendance, setMarkAttendanceDialog]);
 
   return (

@@ -738,7 +738,7 @@ export async function markManyFellowAttendance(
           reason = "UNMARK_SESSION_ATTENDANCE";
         }
 
-        const existingPayouts = attendance.PayoutStatements.sort((a, b) => {
+        const existingPayouts = attendance.PayoutStatements.toSorted((a, b) => {
           return b.createdAt.getTime() - a.createdAt.getTime();
         });
 

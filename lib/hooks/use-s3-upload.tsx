@@ -5,6 +5,8 @@ import { useCallback, useRef, useState } from "react";
 
 import { S3_BUCKETS, type S3Bucket } from "#/lib/s3-buckets";
 
+type PresignedUrl = { url: string; key: string; bucket: string };
+
 export interface UploadTarget {
   key: string;
   bucket: S3Bucket;
@@ -134,11 +136,11 @@ export function useS3Upload() {
       });
 
       if (!presignedResponse.ok) {
-        const error = await presignedResponse.json().catch(() => ({}));
+        const error: { error?: string } = await presignedResponse.json().catch(() => ({}));
         throw new Error(error.error ?? "Failed to get presigned URL");
       }
 
-      const { url, key, bucket: bucketName } = await presignedResponse.json();
+      const { url, key, bucket: bucketName } = (await presignedResponse.json()) as PresignedUrl;
 
       // Track this file
       addFile(file);

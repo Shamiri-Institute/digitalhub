@@ -157,7 +157,7 @@ export default function SchoolDetailsForm({
         description: response.message,
       });
     } else {
-      const response = await addSchool(data as z.infer<typeof AddSchoolSchema>);
+      const response = await addSchool(data);
 
       if (!response.success) {
         toast({

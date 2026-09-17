@@ -493,6 +493,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                   <FormLabel>
                     Audio File <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
+                  {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- drag-and-drop target; the wrapped file input stays keyboard accessible */}
                   <label
                     onDrop={handleDrop}
                     onDragOver={(e) => e.preventDefault()}
@@ -523,6 +524,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                       </div>
                     )}
                     <input
+                      aria-label="Audio file"
                       type="file"
                       accept={ALLOWED_EXTENSIONS.join(",")}
                       onChange={handleFileInputChange}

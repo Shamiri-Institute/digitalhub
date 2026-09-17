@@ -85,6 +85,7 @@ function Button({
   }
 
   return (
+    // oxlint-disable-next-line react/button-has-type -- type is forwarded through props; defaulting it would break submit buttons
     <button
       className={cn(buttonVariants({ variant, size, className }))}
       disabled={loading}

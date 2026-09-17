@@ -32,9 +32,11 @@ function Alert({
   );
 }
 
-function AlertTitle({ className, ...props }: React.ComponentProps<"h5">) {
+function AlertTitle({ className, children, ...props }: React.ComponentProps<"h5">) {
   return (
-    <h5 data-slot="alert-title" className={cn("font-medium leading-5", className)} {...props} />
+    <h5 data-slot="alert-title" className={cn("font-medium leading-5", className)} {...props}>
+      {children}
+    </h5>
   );
 }
 

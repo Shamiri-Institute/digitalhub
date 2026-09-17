@@ -11,7 +11,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
   const sortedQuestions = feedback.fidelity_scores
     ? Object.entries(feedback.fidelity_scores)
         .filter(([key]) => key.startsWith("question_"))
-        .sort(([keyA], [keyB]) => {
+        .toSorted(([keyA], [keyB]) => {
           const numA = Number.parseInt(keyA.match(/question_(\d+)/)?.[1] || "0", 10);
           const numB = Number.parseInt(keyB.match(/question_(\d+)/)?.[1] || "0", 10);
           return numA - numB;

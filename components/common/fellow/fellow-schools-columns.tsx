@@ -210,7 +210,7 @@ export const subColumns = ({
         .filter((session) => {
           return isAfter(session.sessionDate, new Date());
         })
-        .sort((a, b) => {
+        .toSorted((a, b) => {
           return a.sessionDate.getTime() - b.sessionDate.getTime();
         });
 

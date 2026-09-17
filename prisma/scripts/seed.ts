@@ -1273,7 +1273,7 @@ async function createInterventionGroups(schools: SchoolCreationResult, fellows: 
           id: fellow.id,
           count: fellowSchoolCount.get(fellow.id) ?? 0,
         }))
-        .sort((a, b) => a.count - b.count);
+        .toSorted((a, b) => a.count - b.count);
 
       const leader = sortedFellows[0]?.id; // Pick the fellow with the least assignments
 

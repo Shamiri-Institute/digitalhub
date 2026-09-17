@@ -172,7 +172,7 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
       throw new Error("The session has not been authenticated");
     }
 
-    const userId = hubCoordinator.session.user.id as string;
+    const userId = hubCoordinator.session.user.id;
 
     const data = DropoutSchoolSchema.parse({ schoolId, dropoutReason });
     const result = await db.school.update({

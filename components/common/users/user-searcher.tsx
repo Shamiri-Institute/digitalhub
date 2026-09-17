@@ -116,6 +116,7 @@ export function UserSearcher({
         <Button
           id={id}
           variant="outline"
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role, jsx-a11y/role-has-required-aria-props -- shadcn popover combobox trigger
           role="combobox"
           aria-expanded={open}
           aria-invalid={invalid}

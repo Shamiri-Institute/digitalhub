@@ -27,6 +27,7 @@ export const constants = (() => {
       const missingVars = error.issues.map((issue: z.ZodIssue) => issue.path.join(".")).join(", ");
       throw new Error(
         `Missing or invalid required environment variables: ${missingVars}. Please check your .env.development file.`,
+        { cause: error },
       );
     }
     throw error;

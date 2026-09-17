@@ -11,7 +11,7 @@ export default function FellowsReportingDataTable({
 }) {
   return (
     <ExpandableReportTable
-      data={fellowAttendanceExpenses as HubFellowsAttendancesType[]}
+      data={fellowAttendanceExpenses}
       columns={columns}
       subColumns={subColumns}
       getSubRows={(row) => row.attendances}

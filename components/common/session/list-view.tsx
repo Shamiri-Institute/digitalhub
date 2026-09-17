@@ -90,7 +90,7 @@ export function ListView({
       ) {
         groupedSessions[today] = [];
       }
-      setSessionGroups(Object.keys(groupedSessions).sort());
+      setSessionGroups(Object.keys(groupedSessions).toSorted());
     };
     void fetchSessions();
   }, [filters, sessions, state.timeZone, state.visibleRange.end, state.visibleRange.start, today]);

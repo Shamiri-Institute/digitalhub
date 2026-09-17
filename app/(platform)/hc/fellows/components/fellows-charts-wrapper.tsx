@@ -25,9 +25,7 @@ export default async function FellowsChartsWrapper({
       coordinator?.assignedHubId,
     );
 
-    const fellowsSessionRatings = fetchFellowSessionRatingAverages(
-      coordinator?.assignedHubId as string,
-    );
+    const fellowsSessionRatings = fetchFellowSessionRatingAverages(coordinator?.assignedHubId);
 
     const fellowAttendanceData = db.interventionSession.groupBy({
       by: ["sessionType"],

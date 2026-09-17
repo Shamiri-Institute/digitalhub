@@ -83,7 +83,7 @@ export async function loadPayoutHistory(fellowScope: Prisma.Sql): Promise<Payout
       return {
         ...payout,
         fellowDetails,
-      } as PayoutHistoryEntry;
+      };
     }),
   );
 

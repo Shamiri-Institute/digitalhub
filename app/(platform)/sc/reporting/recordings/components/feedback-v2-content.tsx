@@ -13,7 +13,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
   const sortedQuestions = feedback.fidelity_scores
     ? Object.entries(feedback.fidelity_scores)
         .filter(([key]) => key.startsWith("question_"))
-        .sort(([keyA], [keyB]) => {
+        .toSorted(([keyA], [keyB]) => {
           const numA = Number.parseInt(keyA.match(/question_(\d+)/)?.[1] || "0", 10);
           const numB = Number.parseInt(keyB.match(/question_(\d+)/)?.[1] || "0", 10);
           return numA - numB;
@@ -23,7 +23,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
   const sortedCompetencies = feedback.competency_profile
     ? Object.entries(feedback.competency_profile)
         .filter(([key]) => key.startsWith("B"))
-        .sort(([keyA], [keyB]) => {
+        .toSorted(([keyA], [keyB]) => {
           const numA = Number.parseInt(keyA.match(/B(\d+)/)?.[1] || "0", 10);
           const numB = Number.parseInt(keyB.match(/B(\d+)/)?.[1] || "0", 10);
           return numA - numB;
