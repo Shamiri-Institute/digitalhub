@@ -182,6 +182,7 @@ export default function StudentGroupEvaluation({
       const match = evaluations.find((evaluation) => {
         return evaluation.sessionId === selectedSessionId;
       });
+      // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the sync cannot live in an open handler here
       setExistingEvaluation(match);
       form.reset(getDefaultValues());
     }

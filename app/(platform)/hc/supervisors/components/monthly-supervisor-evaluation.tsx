@@ -260,6 +260,7 @@ export default function MonthlySupervisorEvaluation({
 
   useEffect(() => {
     if (!isOpen) {
+      // oxlint-disable-next-line react/set-state-in-effect -- isOpen is controlled by the parent, which opens this dialog from a row menu; the reset cannot live in an open handler here
       setExistingEvaluation(undefined);
       form.reset(defaultValues);
     } else if (isOpen && isViewMode && evaluations.length > 0) {
@@ -271,14 +272,6 @@ export default function MonthlySupervisorEvaluation({
     }
   }, [supervisorId, isOpen, isViewMode, evaluations]);
 
-  useEffect(() => {
-    if (existingEvaluation) {
-      setUpdateWindowDuration(
-        differenceInSeconds(addDays(existingEvaluation.createdAt, 14), new Date()),
-      );
-    }
-  }, [existingEvaluation]);
-
   function updateFormValues(value: string) {
     const match = evaluations.find((evaluation) =>
       isEqual(new Date(evaluation.month), new Date(value)),
@@ -286,6 +279,7 @@ export default function MonthlySupervisorEvaluation({
 
     if (match) {
       setExistingEvaluation(match);
+      setUpdateWindowDuration(differenceInSeconds(addDays(match.createdAt, 14), new Date()));
       const {
         respectfulness,
         attitude,

@@ -82,6 +82,7 @@ export default function FellowDropoutForm({
 
   useEffect(() => {
     if (activeGroups.length === 0 && replaceDialog) {
+      // oxlint-disable-next-line react/set-state-in-effect -- reacts to the group list shrinking after a replacement is saved; the dialog switch is not a user event in this component
       setConfirmDialog(true);
       setReplaceDialog(false);
     }

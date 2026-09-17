@@ -73,6 +73,10 @@ export default function StudentDetailsForm({
   const pathname = usePathname();
   const [transferDialog, setTransferDialog] = useState(false);
   const [transferOption, setTransferOption] = useState<number | undefined>();
+  const closeTransferDialog = () => {
+    setTransferDialog(false);
+    setTransferOption(undefined);
+  };
   const [loading, setLoading] = useState(false);
   const [matchedStudents, setMatchedStudents] = useState<
     Prisma.StudentGetPayload<{
@@ -113,12 +117,6 @@ export default function StudentDetailsForm({
     form.reset(getDefaultValues());
   }, [open, student, mode, assignedGroupId]);
 
-  useEffect(() => {
-    if (!transferDialog) {
-      setTransferOption(undefined);
-    }
-  }, [transferDialog]);
-
   const checkMatchingAdmissions = async (values: z.infer<typeof StudentDetailsSchema>) => {
     if (schoolId !== null && values.admissionNumber !== undefined) {
       const students = await checkExistingStudents(values.admissionNumber, schoolId);
@@ -140,7 +138,7 @@ export default function StudentDetailsForm({
     setLoading(true);
     if (transferOption === -1) {
       await onSubmit(form.getValues()).then(() => {
-        setTransferDialog(false);
+        closeTransferDialog();
       });
     } else if (
       transferOption !== undefined &&
@@ -166,7 +164,7 @@ export default function StudentDetailsForm({
         description: response.message,
       });
       form.reset();
-      setTransferDialog(false);
+      closeTransferDialog();
       onOpenChange(false);
     }
     setLoading(false);
@@ -420,7 +418,10 @@ export default function StudentDetailsForm({
           </Form>
         </DialogContent>
       </Dialog>
-      <Dialog open={transferDialog} onOpenChange={setTransferDialog}>
+      <Dialog
+        open={transferDialog}
+        onOpenChange={(next) => (next ? setTransferDialog(true) : closeTransferDialog())}
+      >
         <DialogContent className="lg:w-3/5 lg:max-w-none">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Confirm transfer student</DialogTitle>
@@ -514,7 +515,7 @@ export default function StudentDetailsForm({
                     : "text-shamiri-light-red hover:bg-red-bg",
               )}
               onClick={() => {
-                setTransferDialog(false);
+                closeTransferDialog();
               }}
             >
               Cancel

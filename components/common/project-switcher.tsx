@@ -63,6 +63,7 @@ export function ProjectSwitcher({
 
   useEffect(() => {
     if (!isAdminUser) return;
+    // oxlint-disable-next-line react/set-state-in-effect -- loads the admin project list on mount; server-side loading is a separate change
     void loadProjects();
   }, [isAdminUser, loadProjects]);
 

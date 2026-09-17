@@ -96,35 +96,35 @@ export default function SessionRatings({
 
   const form = useForm<z.infer<typeof SessionRatingsSchema>>({
     resolver: zodResolver(SessionRatingsSchema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues(existingRating),
   });
 
-  function getDefaultValues() {
+  function getDefaultValues(current: InterventionSessionRating | undefined) {
     return {
       mode,
       ratingId: rating?.id,
       sessionId: selectedSession.id,
-      studentBehaviorRating: existingRating?.studentBehaviorRating ?? undefined,
-      adminSupportRating: existingRating?.adminSupportRating ?? undefined,
-      workloadRating: existingRating?.workloadRating ?? undefined,
-      recommendations: existingRating?.recommendations ?? "",
-      challenges: existingRating?.challenges ?? "",
-      positiveHighlights: existingRating?.positiveHighlights ?? "",
-      headcount: existingRating?.headcount ?? undefined,
+      studentBehaviorRating: current?.studentBehaviorRating ?? undefined,
+      adminSupportRating: current?.adminSupportRating ?? undefined,
+      workloadRating: current?.workloadRating ?? undefined,
+      recommendations: current?.recommendations ?? "",
+      challenges: current?.challenges ?? "",
+      positiveHighlights: current?.positiveHighlights ?? "",
+      headcount: current?.headcount ?? undefined,
     };
   }
 
-  useEffect(() => {
-    form.reset(getDefaultValues());
-    if (existingRating) {
-      setUpdateWindowDuration(
-        differenceInSeconds(addDays(existingRating.createdAt, 14), new Date()),
-      );
+  function selectRating(next: InterventionSessionRating | undefined) {
+    setExistingRating(next);
+    form.reset(getDefaultValues(next));
+    if (next) {
+      setUpdateWindowDuration(differenceInSeconds(addDays(next.createdAt, 14), new Date()));
     }
-  }, [existingRating, open, form]);
+  }
 
   useEffect(() => {
-    setExistingRating(rating);
+    // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the sync cannot live in an open handler here
+    selectRating(rating);
   }, [open, rating]);
 
   const onSubmit = async (data: z.infer<typeof SessionRatingsSchema>) => {
@@ -194,7 +194,7 @@ export default function SessionRatings({
                           const match = sessionRatings.find((_rating) => {
                             return _rating.id === value;
                           });
-                          setExistingRating(match);
+                          selectRating(match);
                         }}
                       >
                         <FormControl>

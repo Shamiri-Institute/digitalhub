@@ -5,11 +5,15 @@ import { useEffect, useState } from "react";
 export default function CountdownTimer({ duration }: { duration: number }) {
   // countdown duration in seconds
   const [timeRemaining, setTimeRemaining] = useState(duration);
-
-  useEffect(() => {
+  // Reset the countdown when the parent passes a new duration. Adjusting state during
+  // render is the documented replacement for a prop-sync effect.
+  const [lastDuration, setLastDuration] = useState(duration);
+  if (lastDuration !== duration) {
+    setLastDuration(duration);
     setTimeRemaining(duration);
-  }, [duration]);
+  }
 
+  // effect: setInterval is an external subscription; cleared on unmount or when duration changes
   useEffect(() => {
     const timerInterval = setInterval(() => {
       setTimeRemaining((prevTime) => {

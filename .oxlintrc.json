@@ -25,7 +25,6 @@
     ],
     "react/self-closing-comp": "error",
     "react/no-array-index-key": "error",
-    "react/set-state-in-effect": "off",
     "react/incompatible-library": "off",
     "radix": "error",
     "no-unused-vars": "error",
@@ -90,7 +89,9 @@
       {
         "ignoreElements": ["td", "th", "tr"]
       }
-    ]
+    ],
+    "react/set-state-in-effect": "error",
+    "react/no-deriving-state-in-effects": "error"
   },
   "ignorePatterns": [".next", "node_modules", "playwright-report", ".artifacts"],
   "overrides": [
