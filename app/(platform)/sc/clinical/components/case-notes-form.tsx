@@ -4,7 +4,11 @@ import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { type ClinicalCases, createClinicalCaseNotes } from "#/app/(platform)/sc/clinical/action";
+import {
+  type ClinicalCases,
+  createClinicalCaseNotes,
+  getClinicalCaseNotes,
+} from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -78,6 +82,14 @@ export default function CaseNotesForm({
   const [showOtherInput, setShowOtherInput] = useState(false);
   const [showNecessaryConditions, setShowNecessaryConditions] = useState(false);
   const [hasExistingNotes, setHasExistingNotes] = useState(false);
+  const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>>>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    getClinicalCaseNotes(clinicalCase.id)
+      .then(setNotes)
+      .catch(() => toast({ title: "Failed to load case notes", variant: "destructive" }));
+  }, [open, clinicalCase.id]);
 
   const form = useForm<CaseReportFormValues>({
     resolver: zodResolver(CaseReportSchema),
@@ -102,9 +114,7 @@ export default function CaseNotesForm({
     const sessionId = form.watch("sessionId");
     if (!sessionId) return;
 
-    const existingNote = clinicalCase.clinicalCaseNotes?.find(
-      (note) => note.sessionId === sessionId,
-    );
+    const existingNote = notes.find((note) => note.sessionId === sessionId);
 
     setHasExistingNotes(!!existingNote);
 
@@ -146,7 +156,7 @@ export default function CaseNotesForm({
       setShowOtherInput(false);
       setShowNecessaryConditions(false);
     }
-  }, [form.watch("sessionId"), clinicalCase.clinicalCaseNotes]);
+  }, [form.watch("sessionId"), notes]);
 
   const onSubmit = async (data: CaseReportFormValues) => {
     try {
@@ -227,9 +237,7 @@ export default function CaseNotesForm({
                     </FormControl>
                     <SelectContent>
                       {clinicalCase.clinicalSessionAttendance?.map((session) => {
-                        const hasNotes = clinicalCase.clinicalCaseNotes?.some(
-                          (note) => note.sessionId === session.id,
-                        );
+                        const hasNotes = notes.some((note) => note.sessionId === session.id);
                         return (
                           <SelectItem key={session.id} value={session.id}>
                             <div className="flex w-full items-center justify-between">

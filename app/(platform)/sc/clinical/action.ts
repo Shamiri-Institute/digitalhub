@@ -33,7 +33,11 @@ export async function getClinicalCases() {
         },
       },
       sessions: true,
-      clinicalCaseNotes: true,
+      clinicalCaseNotes: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { riskLevel: true },
+      },
       followUptreatmentPlan: true,
     },
   });
@@ -48,10 +52,7 @@ export async function getClinicalCases() {
       attendanceStatus: session.attendanceStatus,
     }));
 
-    const latestCaseNote = caseInfo.clinicalCaseNotes.toSorted(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )[0];
-    const riskLevel = latestCaseNote?.riskLevel || "N/A";
+    const riskLevel = caseInfo.clinicalCaseNotes[0]?.riskLevel || "N/A";
 
     return {
       id: caseInfo.id,
@@ -77,7 +78,6 @@ export async function getClinicalCases() {
         caseInfo.generalPresentingIssuesOtherSpecifiedEndpoint,
       clinicalSessionAttendance: caseInfo.sessions,
       currentSupervisorId: caseInfo.currentSupervisorId,
-      clinicalCaseNotes: caseInfo.clinicalCaseNotes,
       clinicalLeadId: caseInfo.clinicalLeadId,
       role: "SUPERVISOR",
       treatmentPlanUploaded: !!caseInfo.followUptreatmentPlan,
@@ -717,6 +717,19 @@ export async function unterminateClinicalCase(data: { caseId: string }) {
     console.error(error);
     return { success: false };
   }
+}
+
+export async function getClinicalCaseNotes(caseId: string) {
+  const user = await getCurrentPersonnel();
+  const role = user?.session?.user.activeMembership?.role;
+  if (!role || (role !== ImplementerRole.CLINICAL_LEAD && role !== ImplementerRole.SUPERVISOR)) {
+    throw new Error("You are not authorized to view clinical case notes");
+  }
+
+  return db.clinicalCaseNotes.findMany({
+    where: { caseId },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 export async function createClinicalCaseNotes(data: {
