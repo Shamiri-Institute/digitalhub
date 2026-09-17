@@ -92,6 +92,12 @@ export function MarkAttendance({
 }) {
   const pathname = usePathname();
 
+  // Only occurred sessions are selectable. The default is the latest of those by date,
+  // whatever order the caller passed them in.
+  const selectableSessions = (sessions ?? [])
+    .filter((session) => session.occurred)
+    .toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
+
   const form = useForm<z.infer<typeof MarkAttendanceSchema>>({
     resolver: zodResolver(MarkAttendanceSchema),
     defaultValues: getDefaultValues(),
@@ -101,11 +107,7 @@ export function MarkAttendance({
   const sessionIdWatcher = form.watch("sessionId");
 
   function getDefaultValues(sessionId?: string) {
-    const defaultSession = sessionId
-      ? sessionId
-      : sessions
-        ? sessions[sessions.length - 1]?.id
-        : undefined;
+    const defaultSession = sessionId || selectableSessions.at(-1)?.id;
     const defaultAttendance = attendances.find((attendance) => {
       return attendance.sessionId === defaultSession;
     });
@@ -205,30 +207,25 @@ export function MarkAttendance({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {sessions
-                          ?.toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime())
-                          .filter((session) => session.occurred)
-                          .map((session) => {
-                            const time = `${format(session.sessionDate, "h:mm")} - ${format(
-                              session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
-                              "h:mm a",
-                            )}`;
-                            return (
-                              <SelectItem key={session.id} value={session.id}>
-                                <div className="flex items-center gap-2">
-                                  <span>
-                                    {sessionDisplayName(session.session?.sessionName ?? "")}
-                                  </span>
-                                  <span>-</span>
-                                  <span>
-                                    {format(new Date(session.sessionDate), "dd MMM yyyy")}
-                                  </span>
-                                  <span className="h-1 w-1 rounded-full bg-black" />
-                                  <span>{time}</span>
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
+                        {selectableSessions.map((session) => {
+                          const time = `${format(session.sessionDate, "h:mm")} - ${format(
+                            session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
+                            "h:mm a",
+                          )}`;
+                          return (
+                            <SelectItem key={session.id} value={session.id}>
+                              <div className="flex items-center gap-2">
+                                <span>
+                                  {sessionDisplayName(session.session?.sessionName ?? "")}
+                                </span>
+                                <span>-</span>
+                                <span>{format(new Date(session.sessionDate), "dd MMM yyyy")}</span>
+                                <span className="h-1 w-1 rounded-full bg-black" />
+                                <span>{time}</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                     <FormMessage />
