@@ -62,3 +62,6 @@ vscode
 
 # piolium audits
 /piolium
+
+# operational seed exports must never be committed (see #827)
+/prisma/scripts/data/
