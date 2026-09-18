@@ -93,6 +93,7 @@
     ],
     "react/set-state-in-effect": "error",
     "react/no-deriving-state-in-effects": "error",
+    "react/no-unstable-nested-components": "error",
     "hooks-policy/justify": [
       "error",
       {

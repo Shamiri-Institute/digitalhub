@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import { opsColumns } from "#/app/(platform)/ops/reporting/expenses/payout-history/ops-columns";
 import DataTable from "#/components/data-table";
-import { Skeleton } from "#/components/ui/skeleton";
+import { SkeletonCell } from "#/components/ui/skeleton";
 
 export default function PayoutHistoryTableSkeleton() {
   const loadingColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = opsColumns.map((column) => {
@@ -13,11 +13,7 @@ export default function PayoutHistoryTableSkeleton() {
       accessorFn: () => null,
       header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
       id: columnId,
-      cell: () => {
-        return columnId !== "checkbox" && columnId !== "button" ? (
-          <Skeleton className="h-5 w-full bg-gray-200" />
-        ) : null;
-      },
+      cell: columnId !== "checkbox" && columnId !== "button" ? SkeletonCell : undefined,
     };
   });
 

@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { SupervisorPayoutHistoryType } from "#/app/(platform)/sc/reporting/expenses/payout-history/actions";
 import { columns } from "#/components/common/expenses/payout-history/columns";
 import DataTable from "#/components/data-table";
-import { Skeleton } from "#/components/ui/skeleton";
+import { SkeletonCell } from "#/components/ui/skeleton";
 
 export default function PayoutHistoryTableSkeleton() {
   const loadingColumns: ColumnDef<SupervisorPayoutHistoryType>[] = columns.map((column) => {
@@ -14,11 +14,10 @@ export default function PayoutHistoryTableSkeleton() {
       header:
         columnId !== "checkbox" && columnId !== "button" && columnId !== "expand" ? columnId : "",
       id: columnId,
-      cell: () => {
-        return columnId !== "checkbox" && columnId !== "button" && columnId !== "expand" ? (
-          <Skeleton className="h-5 w-full bg-gray-200" />
-        ) : null;
-      },
+      cell:
+        columnId !== "checkbox" && columnId !== "button" && columnId !== "expand"
+          ? SkeletonCell
+          : undefined,
     };
   });
 

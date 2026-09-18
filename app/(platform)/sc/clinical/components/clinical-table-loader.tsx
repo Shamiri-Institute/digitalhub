@@ -1,7 +1,7 @@
 "use client";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
-import { Skeleton } from "#/components/ui/skeleton";
+import { SkeletonCell } from "#/components/ui/skeleton";
 
 export default function ClinicalTableLoader() {
   const loadingColumns = [
@@ -15,7 +15,7 @@ export default function ClinicalTableLoader() {
   ].map((column) => ({
     header: column.header,
     id: column.id,
-    cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+    cell: SkeletonCell,
   }));
 
   function renderTableActions() {

@@ -5,7 +5,7 @@ import ChartSkeleton from "#/components/charts/chart-skeleton";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { Separator } from "#/components/ui/separator";
-import { Skeleton } from "#/components/ui/skeleton";
+import { SkeletonCell } from "#/components/ui/skeleton";
 
 export default function ClinicalTableSkeleton({ showNewCase }: { showNewCase?: boolean }) {
   function renderChartWidgets(num: number) {
@@ -28,7 +28,7 @@ export default function ClinicalTableSkeleton({ showNewCase }: { showNewCase?: b
   ].map((column) => ({
     header: column.header,
     id: column.id,
-    cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+    cell: SkeletonCell,
   }));
 
   function renderTableActions() {
