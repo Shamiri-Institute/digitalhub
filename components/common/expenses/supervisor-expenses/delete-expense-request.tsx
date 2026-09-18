@@ -79,7 +79,7 @@ export default function HCDeleteExpenseRequest({
     if (!open) {
       form.reset();
     }
-  }, [open]);
+  }, [open, form]);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>

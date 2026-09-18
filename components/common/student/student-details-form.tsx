@@ -2,7 +2,7 @@
 
 import { ImplementerRole, type Prisma, QuestionnaireType } from "@prisma/client";
 import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
@@ -113,9 +113,13 @@ export default function StudentDetailsForm({
     };
   }
 
+  const resetFormForStudent = useEffectEvent(() => {
+    form.reset(getDefaultValues());
+  });
+
   // effect: loads the selected student into the form when the parent opens the dialog or changes the student
   useEffect(() => {
-    form.reset(getDefaultValues());
+    resetFormForStudent();
   }, [open, student, mode, assignedGroupId]);
 
   const checkMatchingAdmissions = async (values: z.infer<typeof StudentDetailsSchema>) => {

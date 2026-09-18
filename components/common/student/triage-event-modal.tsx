@@ -1,7 +1,7 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
@@ -133,11 +133,15 @@ export default function TriageEventModal({
     }
   };
 
-  // effect: loads the hub's supervisors when the parent opens the modal
-  useEffect(() => {
+  const loadSupervisorsOnOpen = useEffectEvent(() => {
     if (isOpen) {
       void loadSupervisors();
     }
+  });
+
+  // effect: loads the hub's supervisors when the parent opens the modal
+  useEffect(() => {
+    loadSupervisorsOnOpen();
   }, [isOpen, sessionId, hubId]);
 
   // effect: forces the action to ESCALATED when the risk screen outcome requires it

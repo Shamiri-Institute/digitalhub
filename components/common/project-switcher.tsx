@@ -5,7 +5,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -62,11 +62,15 @@ export function ProjectSwitcher({
     }
   };
 
+  const loadProjectsForAdmin = useEffectEvent(() => {
+    if (!isAdminUser) return;
+    void loadProjects();
+  });
+
   // effect: loads the admin project list once admin status is known
   useEffect(() => {
-    if (!isAdminUser) return;
     // oxlint-disable-next-line react/set-state-in-effect -- loads the admin project list on mount; server-side loading is a separate change
-    void loadProjects();
+    loadProjectsForAdmin();
   }, [isAdminUser, session?.user?.email]);
 
   if (!isAdminUser) {

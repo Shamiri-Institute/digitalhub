@@ -4,7 +4,7 @@ import type { Project, WeeklyFellowRatings } from "@prisma/client";
 import { addDays, differenceInSeconds, eachWeekOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -113,14 +113,18 @@ export default function WeeklyFellowEvaluation({
     }
   }
 
-  // effect: open is set by the parent from a row menu; selects the latest evaluation on open
-  useEffect(() => {
+  const syncOpenState = useEffectEvent(() => {
     if (!open) {
-      // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the reset cannot live in an open handler here
       setExistingEvaluation(undefined);
     } else {
       selectEvaluation(_evaluation);
     }
+  });
+
+  // effect: open is set by the parent from a row menu; selects the latest evaluation on open
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the reset cannot live in an open handler here
+    syncOpenState();
   }, [fellowId, open]);
 
   const onSubmit = async (data: z.infer<typeof WeeklyFellowEvaluationSchema>) => {

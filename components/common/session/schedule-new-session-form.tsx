@@ -92,7 +92,7 @@ export function ScheduleNewSession({
         setMode("school");
       }
     }
-  }, [hubSessionTypes, sessionIdWatcher]);
+  }, [hubSessionTypes, sessionIdWatcher, form]);
 
   const onSubmit = async (data: z.infer<typeof ScheduleNewSessionSchema>) => {
     const combinedDateTime = new Date(
