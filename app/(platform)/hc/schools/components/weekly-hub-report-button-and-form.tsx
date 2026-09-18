@@ -112,7 +112,7 @@ export default function WeeklyHubReportButtonAndForm({
     if (!open) {
       form.reset();
     }
-  }, [open]);
+  }, [open, form]);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>

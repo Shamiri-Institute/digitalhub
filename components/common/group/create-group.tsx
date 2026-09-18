@@ -67,7 +67,7 @@ export default function CreateGroup({
     if (!open) {
       form.reset();
     }
-  }, [open]);
+  }, [open, form]);
 
   const onSubmit = async (data: z.infer<typeof CreateGroupSchema>) => {
     const response = await createInterventionGroup(data);

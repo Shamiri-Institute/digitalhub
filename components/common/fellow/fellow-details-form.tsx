@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useEffectEvent } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
@@ -89,8 +89,7 @@ export default function FellowDetailsForm({
     }
   }, [countyWatcher, form]);
 
-  // effect: loads the selected fellow into the form when the parent opens the dialog
-  useEffect(() => {
+  const loadFellowIntoForm = useEffectEvent(() => {
     if (open) {
       let defaultValues = {};
       if (mode !== "add" && fellow) {
@@ -102,6 +101,11 @@ export default function FellowDetailsForm({
       }
       form.reset(defaultValues);
     }
+  });
+
+  // effect: loads the selected fellow into the form when the parent opens the dialog
+  useEffect(() => {
+    loadFellowIntoForm();
   }, [open, fellow, form, mode]);
 
   const onSubmit = async (data: z.infer<typeof FellowDetailsSchema>) => {

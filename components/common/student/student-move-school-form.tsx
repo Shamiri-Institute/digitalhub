@@ -80,7 +80,7 @@ export default function StudentMoveSchoolForm({
         setSchools(data.filter((school) => school.id !== student.schoolId));
       })
       .finally(() => setLoadingSchools(false));
-  }, [isOpen, student.id, student.schoolId]);
+  }, [isOpen, student.id, student.schoolId, form]);
 
   // effect: loads the groups when the watched school field changes
   useEffect(() => {

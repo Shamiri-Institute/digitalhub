@@ -111,9 +111,11 @@ export default function CaseNotesForm({
     },
   });
 
+  const sessionIdWatcher = form.watch("sessionId");
+
   // effect: prefills the form from the loaded notes when the watched session changes or the notes arrive
   useEffect(() => {
-    const sessionId = form.watch("sessionId");
+    const sessionId = sessionIdWatcher;
     if (!sessionId) return;
 
     const existingNote = notes.find((note) => note.sessionId === sessionId);
@@ -156,7 +158,7 @@ export default function CaseNotesForm({
       });
       setShowOtherInput(false);
     }
-  }, [form.watch("sessionId"), notes]);
+  }, [sessionIdWatcher, notes, form]);
 
   const onSubmit = async (data: CaseReportFormValues) => {
     try {

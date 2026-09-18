@@ -142,7 +142,7 @@ export default function EditRecordingDialog({
         }),
       )
       .finally(() => setLoadingGroups(false));
-  }, [fellowId, recording.fellowId, recording.groupId, form.setValue]);
+  }, [fellowId, recording.fellowId, recording.groupId, form]);
 
   // effect: reloads sessions when the watched group field changes
   useEffect(() => {
@@ -158,7 +158,7 @@ export default function EditRecordingDialog({
         toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" }),
       )
       .finally(() => setLoadingSessions(false));
-  }, [groupId, recording.groupId, form.setValue]);
+  }, [groupId, recording.groupId, form]);
 
   const onSubmit = async (data: RecordingEditFormData) => {
     setSaving(true);

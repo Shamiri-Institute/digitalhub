@@ -2,7 +2,7 @@
 
 import type { Supervisor } from "@prisma/client";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
@@ -30,8 +30,7 @@ export default function AssignFellowSupervisorSelect({
   const [selectedSupervisor, setSelectedSupervisor] = useState(supervisorId);
   const [loading, setLoading] = useState(false);
 
-  // effect: runs the assignment server action when the controlled select value changes
-  useEffect(() => {
+  const assignSelectedSupervisor = useEffectEvent(() => {
     try {
       const assignSupervisor = async () => {
         if (selectedSupervisor !== supervisorId && selectedSupervisor !== null) {
@@ -56,6 +55,11 @@ export default function AssignFellowSupervisorSelect({
     } catch (error: unknown) {
       console.log(error);
     }
+  });
+
+  // effect: runs the assignment server action when the controlled select value changes
+  useEffect(() => {
+    assignSelectedSupervisor();
   }, [selectedSupervisor]);
 
   return (

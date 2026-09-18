@@ -68,7 +68,7 @@ export default function SubmitComplaint({
     form.reset({
       supervisorId,
     });
-  }, [supervisorId, isOpen]);
+  }, [supervisorId, isOpen, form]);
 
   return (
     <Form {...form}>

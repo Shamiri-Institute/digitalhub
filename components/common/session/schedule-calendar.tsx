@@ -10,7 +10,15 @@ import {
 } from "@prisma/client";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useRef, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useContext,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from "react";
 import {
   type AriaButtonProps,
   mergeProps,
@@ -119,15 +127,19 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   });
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
-  // effect: resyncs filter state when the hub session types arrive from the server
-  useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- resyncs filter state when the hub session types arrive from the server
+  const syncFiltersFromProps = useEffectEvent(() => {
     setFilters((prev) => ({
       ...prev,
       sessionTypes,
       statusTypes: statusFilterOptions,
       dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
     }));
+  });
+
+  // effect: resyncs filter state when the hub session types arrive from the server
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- resyncs filter state when the hub session types arrive from the server
+    syncFiltersFromProps();
   }, [props.hubSessionTypes]);
 
   const monthState = useCalendarState({
@@ -187,17 +199,21 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       : ["day", "week", "month"].includes(mode)
         ? (mode as DateRangeType)
         : "week";
-  // effect: mirrors the react-aria calendar visible range into the shared filters
-  useEffect(() => {
+  const visibleStartKey = visibleStart?.toString();
+  const syncDateRange = useEffectEvent(() => {
     if (!visibleStart) return;
     const dateRange = getDateRangeForCalendar(visibleStart, rangeType);
-    // oxlint-disable-next-line react/set-state-in-effect -- mirrors the react-aria calendar visible range into the shared filters
     setFilters((prev) => ({ ...prev, dateRange }));
-  }, [visibleStart?.toString(), rangeType, mode]);
+  });
+
+  // effect: mirrors the react-aria calendar visible range into the shared filters
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- mirrors the react-aria calendar visible range into the shared filters
+    syncDateRange();
+  }, [visibleStartKey, rangeType, mode]);
 
   const prevModeRef = useRef<string>(mode);
-  // effect: carries the previous view's visible range over when switching to list mode
-  useEffect(() => {
+  const syncListMode = useEffectEvent(() => {
     const prevMode = prevModeRef.current;
     prevModeRef.current = mode;
     if (mode !== "list" || prevMode === "list") return;
@@ -229,6 +245,11 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     if (syncStart) {
       listState.setFocusedDate(syncStart);
     }
+  });
+
+  // effect: carries the previous view's visible range over when switching to list mode
+  useEffect(() => {
+    syncListMode();
   }, [mode]);
 
   const month = useCalendar(calendarStateProps, monthState);
@@ -756,21 +777,25 @@ function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[
     setDates(["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week");
   }, [mode]);
 
-  // effect: derives the active-filter flag and resets local toggles when filters return to defaults
-  useEffect(() => {
+  const syncActiveFilter = useEffectEvent(() => {
     const sessionTypes = Object.keys(filters.sessionTypes).filter(
       (key) => !filters.sessionTypes[key],
     );
     const statusTypes = Object.keys(filters.statusTypes).filter((key) => !filters.statusTypes[key]);
 
     if (sessionTypes.length > 0 || statusTypes.length > 0) {
-      // oxlint-disable-next-line react/set-state-in-effect -- derives the active-filter flag and resets local toggles when filters return to defaults
       setFilterIsActive(true);
     } else {
       setFilterIsActive(false);
       setSessionTypes(defaultFilterSettings.sessionTypes);
       setStatusTypes(defaultFilterSettings.statusTypes);
     }
+  });
+
+  // effect: derives the active-filter flag and resets local toggles when filters return to defaults
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- derives the active-filter flag and resets local toggles when filters return to defaults
+    syncActiveFilter();
   }, [filters]);
 
   return (

@@ -4,7 +4,14 @@ import type { ImplementerRole, InterventionSessionRating, Prisma } from "@prisma
 import { addDays, addHours, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useContext,
+  useEffect,
+  useEffectEvent,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -122,10 +129,14 @@ export default function SessionRatings({
     }
   }
 
+  const syncRating = useEffectEvent(() => {
+    selectRating(rating);
+  });
+
   // effect: open is set by the parent from a row menu; selects the rating on open
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the sync cannot live in an open handler here
-    selectRating(rating);
+    syncRating();
   }, [open, rating]);
 
   const onSubmit = async (data: z.infer<typeof SessionRatingsSchema>) => {

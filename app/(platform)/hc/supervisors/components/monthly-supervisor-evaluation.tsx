@@ -5,7 +5,7 @@ import type {
 import { addDays, differenceInSeconds, eachMonthOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -258,10 +258,8 @@ export default function MonthlySupervisorEvaluation({
     });
   };
 
-  // effect: isOpen is set by the parent from a row menu; initialises or clears the form when it changes
-  useEffect(() => {
+  const syncOpenState = useEffectEvent(() => {
     if (!isOpen) {
-      // oxlint-disable-next-line react/set-state-in-effect -- isOpen is controlled by the parent, which opens this dialog from a row menu; the reset cannot live in an open handler here
       setExistingEvaluation(undefined);
       form.reset(defaultValues);
     } else if (isOpen && isViewMode && evaluations.length > 0) {
@@ -271,6 +269,12 @@ export default function MonthlySupervisorEvaluation({
         updateFormValues(format(firstEvaluation.month, "yyyy-MM-dd"));
       }
     }
+  });
+
+  // effect: isOpen is set by the parent from a row menu; initialises or clears the form when it changes
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- isOpen is controlled by the parent, which opens this dialog from a row menu; the reset cannot live in an open handler here
+    syncOpenState();
   }, [supervisorId, isOpen, isViewMode, evaluations]);
 
   function updateFormValues(value: string) {

@@ -20,9 +20,10 @@ function DevProfiler({ id, children }: { id: string; children: React.ReactNode }
 
   // effect: clears the pending stats timer on unmount
   React.useEffect(() => {
+    const stats = statsRef.current;
     return () => {
-      if (statsRef.current.timeoutId) {
-        clearTimeout(statsRef.current.timeoutId);
+      if (stats.timeoutId) {
+        clearTimeout(stats.timeoutId);
       }
     };
   }, []);

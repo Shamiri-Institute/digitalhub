@@ -7,6 +7,7 @@ import {
   type SetStateAction,
   useContext,
   useEffect,
+  useEffectEvent,
   useState,
 } from "react";
 
@@ -100,10 +101,14 @@ export function SessionsProvider({
     ? `${filters.dateRange.start.toISOString()}-${filters.dateRange.end.toISOString()}`
     : null;
 
+  const fetchForFilters = useEffectEvent(() => {
+    void fetchSessions();
+  });
+
   // effect: fetches sessions whenever the filters change; server-side loading is a separate change
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- fetches sessions whenever the filters change; server-side loading is a separate change
-    void fetchSessions();
+    fetchForFilters();
   }, [
     activeProjectId,
     hubId,

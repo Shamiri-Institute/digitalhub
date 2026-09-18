@@ -68,7 +68,7 @@ export default function StudentDropoutForm({
         mode: student.droppedOut ? "undo" : "dropout",
       });
     }
-  }, [student, isOpen]);
+  }, [student, isOpen, form]);
 
   async function confirmSubmit() {
     setLoading(true);

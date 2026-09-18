@@ -4,7 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { addHours, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useEffectEvent } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
@@ -121,24 +121,32 @@ export function MarkAttendance({
     };
   }
 
-  // effect: resets the form when the parent changes sessions, attendances or open state, or the watched session changes
-  useEffect(() => {
+  const resetForOpenState = useEffectEvent(() => {
     form.reset(getDefaultValues(sessionIdWatcher));
     if (!isOpen) {
       setBulkMode?.(false);
     }
+  });
+
+  // effect: resets the form when the parent changes sessions, attendances or open state, or the watched session changes
+  useEffect(() => {
+    resetForOpenState();
   }, [sessions, id, form, isOpen, attendances, sessionIdWatcher]);
+
+  const resetForSelectedSession = useEffectEvent(() => {
+    form.reset(getDefaultValues(selectedSessionId));
+  });
 
   // effect: resets the form when the parent preselects a session
   useEffect(() => {
-    form.reset(getDefaultValues(selectedSessionId));
+    resetForSelectedSession();
   }, [selectedSessionId]);
 
   // effect: clears the reason and comments when the watched attendance status changes
   useEffect(() => {
     form.setValue("comments", undefined);
     form.setValue("absenceReason", undefined);
-  }, [statusWatcher]);
+  }, [statusWatcher, form]);
 
   const onSubmit = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     let response:

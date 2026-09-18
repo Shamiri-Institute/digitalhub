@@ -4,7 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { addDays, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -177,13 +177,11 @@ export default function StudentGroupEvaluation({
     defaultValues: getDefaultValues(),
   });
 
-  // effect: open is set by the parent from a row menu; selects the evaluation for the chosen session on open
-  useEffect(() => {
+  const syncOpenState = useEffectEvent(() => {
     if (open) {
       const match = evaluations.find((evaluation) => {
         return evaluation.sessionId === selectedSessionId;
       });
-      // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the sync cannot live in an open handler here
       setExistingEvaluation(match);
       form.reset(getDefaultValues());
     }
@@ -193,6 +191,12 @@ export default function StudentGroupEvaluation({
         differenceInSeconds(addDays(existingEvaluation.createdAt, 14), new Date()),
       );
     }
+  });
+
+  // effect: open is set by the parent from a row menu; selects the evaluation for the chosen session on open
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the sync cannot live in an open handler here
+    syncOpenState();
   }, [selectedSessionId, open, existingEvaluation, form, evaluations]);
 
   const onSubmit = async (data: z.infer<typeof StudentGroupEvaluationSchema>) => {

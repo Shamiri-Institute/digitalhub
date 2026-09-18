@@ -60,12 +60,12 @@ export default function AddNewSupervisor() {
   // effect: clears the sub-county when the watched county field changes
   useEffect(() => {
     form.setValue("subCounty", "");
-  }, [countyWatcher]);
+  }, [countyWatcher, form]);
 
   // effect: resets the form whenever the parent opens or closes the dialog through isOpen
   useEffect(() => {
     form.reset();
-  }, [isOpen]);
+  }, [isOpen, form]);
 
   const onSubmit = async (data: z.infer<typeof AddNewSupervisorSchema>) => {
     const response = await createNewSupervisor(data);
