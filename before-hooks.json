@@ -1,0 +1,50 @@
+{
+  "monthlyOpened": {
+    "fields": {
+      "combobox:Select a month": "Select a month",
+      "supervisorId": "",
+      "workplaceDemeanorComments": "",
+      "managementStyleComments": "",
+      "programExecutionComments": ""
+    },
+    "countdown": "",
+    "disabledInputs": 0,
+    "text": "Monthly supervisor evaluationDeclan Rice0723 456789Select month *Select a monthMonth 1 - Aug 2026Workplace demeanor *Respectfulness (1-unacceptable to 5-outstanding) *Assesses the supervisor's respect level in interactions with team members, recognizing individual contributions and perspectives.Attitude (1-unacceptable to 5-outstanding) *Assesses the supervisor's respect level in interactions with"
+  },
+  "monthlySelected": {
+    "fields": {
+      "combobox:Month 1 - Aug 2026": "Month 1 - Aug 2026",
+      "supervisorId": "supervisor_01m20jmzaxfq98qjrrjk5hnjdv",
+      "workplaceDemeanorComments": "BENCH workplace demeanor comment",
+      "managementStyleComments": "BENCH management style comment",
+      "programExecutionComments": "BENCH program execution comment"
+    },
+    "countdown": "11d 23h 51m Ns",
+    "disabledInputs": 0,
+    "text": "Monthly supervisor evaluationDeclan Rice0723 456789Select month *Month 1 - Aug 2026Month 1 - Aug 2026Update ratings by 30-09-2026 (11d 23h 51m 12s)Workplace demeanor *Respectfulness (1-unacceptable to 5-outstanding) *Assesses the supervisor's respect level in interactions with team members, recognizing individual contributions and perspectives.Attitude (1-unacceptable to 5-outstanding) *Assesses t"
+  },
+  "weeklyOpened": {
+    "fields": {
+      "combobox:Week 1 - 07 Sep 2026 to 13 Sep 2026": "Week 1 - 07 Sep 2026 to 13 Sep 2026"
+    },
+    "countdown": "",
+    "disabledInputs": 0,
+    "text": "Weekly fellow evaluationBukayo Saka0712 345678Select week * Week 1 - 07 Sep 2026 to 13 Sep 2026Week 1 - 07 Sep 2026 to 13 Sep 2026Rate behaviour (1-unacceptable to 5-outstanding) *BENCH behaviour noteRate program delivery (1-unacceptable to 5-outstanding) *BENCH delivery noteRate dressing and grooming (1-very bad to 5-very good) *BENCH grooming noteRate session attendance and punctuality (1-very b"
+  },
+  "listView": {
+    "hasTimes": [],
+    "sample": "ScheduleSessions18Fellows3Cases413–19 September 2026DayWeekMonthListFilter bySchedule a session15TuesdaySeptember9:00 - 10:30 AMS2Sobha AcademyNot marked4:00 - 5:30 PMS1Emirates AcademyNot marked18FridaySeptemberNo sessions today.© Copyright 2026 Shamiri Institute Inc.Terms of UsePrivacy Policy"
+  },
+  "sessionReport": {
+    "fields": {
+      "combobox:Pre - 08 Sep 2026 - 4:00 PM - 5:00 PM - ": "Pre - 08 Sep 2026 - 4:00 PM - 5:00 PM - Martin Ødegaard",
+      "headcount": "12",
+      "positiveHighlights": "BENCH highlights",
+      "challenges": "BENCH challenges",
+      "recommendations": "BENCH recommendations"
+    },
+    "countdown": "",
+    "disabledInputs": 4,
+    "text": "Weekly session report Pre - 4:00PM- Emirates AcademySelect session report* Pre - 08 Sep 2026 - 4:00 PM - 5:00 PM - Martin ØdegaardPre - 08 Sep 2026 - 4:00 PM - 5:00 PM - Martin ØdegaardStudent headcountStudent behaviour (1-unacceptable to 5-outstanding) *Admin support (1-unacceptable to 5-outstanding) *Workload (1-unacceptable to 5-outstanding) *BENCH highlightsBENCH challengesBENCH recommendation"
+  }
+}

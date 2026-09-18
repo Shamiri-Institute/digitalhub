@@ -1,0 +1,97 @@
+{
+  "sc-group-evaluation": {
+    "fields": {
+      "combobox:": "",
+      "engagementComment": "Decipio verto benigne tenuis paens voluptatem varius cibus civitas.",
+      "cooperationComment": "Adulatio cometes colo sodalitas tunc vorax pectus.",
+      "contentComment": "Admoveo arcus cernuus."
+    },
+    "disabled": 3,
+    "text": "Student group evaluationGroup Group 1Select session * Pre - 08 Sep 2026 - 4:00 PM Group Engagement & Participation *On a scale of 1-5 where 1 means none of them and 5 means all of them please rate the proportion of students who:Expressed themselves openly during group discussions *Showed noticeable effort in completing assignments *Collaborated effectively with their peers *Decipio verto benigne tenuis paens voluptatem varius cibus civitas.Group Discipline & Cooperation *On a scale of 1-5 where ",
+    "pageErrors": []
+  },
+  "hc-edit-fellow": {
+    "opened": {
+      "fields": {
+        "fellowName": "Bukayo Saka",
+        "cellNumber": "254712345678",
+        "fellowEmail": "bukayo.saka@test.com",
+        "idNumber": "12345678",
+        "combobox:Male": "Male",
+        "combobox:Nairobi": "Nairobi",
+        "combobox:": "",
+        "mpesaName": "Bukayo Saka",
+        "mpesaNumber": "254712345678"
+      },
+      "disabled": 0,
+      "text": "Edit fellow informationBukayo Saka0712 345678Personal InformationFull name *Phone number *Email address *National ID *Gender *MaleMaleFemaleOtherDate of birth *04/09/2001County *NairobiBaringoBometBungomaBusiaElgeyo-MarakwetEmbuGarissaHoma BayIsioloKajiadoKakamegaKerichoKiambuKilifiKirinyagaKisiiKisumuKituiKwaleLaikipiaLamuMachakosMakueniManderaMarsabitMeruMigoriMombasaMurang'aNairobiNakuruNandiNarokNyamiraNyandaruaNyeriSamburuSiayaTaita-TavetaTana RiverTharaka-NithiTrans-NzoiaTurkanaUasin Gishu"
+    },
+    "afterCountyChange": {
+      "fields": {
+        "fellowName": "Bukayo Saka",
+        "cellNumber": "254712345678",
+        "fellowEmail": "bukayo.saka@test.com",
+        "idNumber": "12345678",
+        "combobox:Male": "Male",
+        "combobox:Baringo": "Baringo",
+        "combobox:Select sub-county": "Select sub-county",
+        "mpesaName": "Bukayo Saka",
+        "mpesaNumber": "254712345678"
+      },
+      "disabled": 0,
+      "text": "Edit fellow informationBukayo Saka0712 345678Personal InformationFull name *Phone number *Email address *National ID *Gender *MaleMaleFemaleOtherDate of birth *04/09/2001County *BaringoBaringoBometBungomaBusiaElgeyo-MarakwetEmbuGarissaHoma BayIsioloKajiadoKakamegaKerichoKiambuKilifiKirinyagaKisiiKisumuKituiKwaleLaikipiaLamuMachakosMakueniManderaMarsabitMeruMigoriMombasaMurang'aNairobiNakuruNandiNarokNyamiraNyandaruaNyeriSamburuSiayaTaita-TavetaTana RiverTharaka-NithiTrans-NzoiaTurkanaUasin Gishu"
+    },
+    "pageErrors": []
+  },
+  "sc-edit-student": {
+    "fields": {
+      "studentName": "Student 1.1",
+      "phoneNumber": "",
+      "combobox:Male": "Male",
+      "yearOfBirth": "2008",
+      "admissionNumber": "ADM_1_1",
+      "combobox:None": "None",
+      "form": "",
+      "stream": ""
+    },
+    "disabled": 0,
+    "text": "Edit student informationstudent 1.1Group 1ADM_1_1Student name *Contact numberGender *MaleMaleFemaleOtherYear of birth *Admission number *Type of questionnaireNoneNoneQAGrade/Form *Stream *CancelUpdate & saveClose",
+    "pageErrors": []
+  },
+  "hc-weekly-report-reopen": {
+    "first": {
+      "fields": {
+        "combobox:Select week": "Select week",
+        "hubRelatedIssuesAndObservations": "",
+        "schoolRelatedIssuesAndObservations": "",
+        "supervisorRelatedIssuesAndObservations": "",
+        "fellowRelatedIssuesAndObservations": "",
+        "successes": "",
+        "challenges": "",
+        "recommendations": ""
+      },
+      "disabled": 0,
+      "text": "Submit weekly hub reportSelect weekSelect weekWeek 1 - 17/08/2026Week 2 - 24/08/2026Week 3 - 31/08/2026Week 4 - 07/09/2026Week 5 - 14/09/2026Hub Related Issues and Observations School Related Issues and ObservationsSupervisor Related Issues and ObservationsFellow Related Issues and ObservationsSuccessesChallengesRecommendationsCancelSubmitClose"
+    },
+    "reopened": {
+      "fields": {
+        "combobox:Select week": "Select week",
+        "hubRelatedIssuesAndObservations": "",
+        "schoolRelatedIssuesAndObservations": "",
+        "supervisorRelatedIssuesAndObservations": "",
+        "fellowRelatedIssuesAndObservations": "",
+        "successes": "",
+        "challenges": "",
+        "recommendations": ""
+      },
+      "disabled": 0,
+      "text": "Submit weekly hub reportSelect weekSelect weekWeek 1 - 17/08/2026Week 2 - 24/08/2026Week 3 - 31/08/2026Week 4 - 07/09/2026Week 5 - 14/09/2026Hub Related Issues and Observations School Related Issues and ObservationsSupervisor Related Issues and ObservationsFellow Related Issues and ObservationsSuccessesChallengesRecommendationsCancelSubmitClose"
+    },
+    "pageErrors": []
+  },
+  "sc-schedule-list": {
+    "text": "Shamiri Hub Martin Ødegaard - SUPERVISOR N/A N/A Schedule Schools Fellows Students Clinical cases Triage Tickets Reporting Schedule Sessions 18 Fellows 3 Cases 4 13–19 September 2026 Day Week Month List Filter by Schedule a session 15 Tuesday September 9:00 - 10:30 AM S2 Sobha Academy Not marked 4:00 - 5:30 PM S1 Emirates Academy Not marked 18 Friday September No sessions today. © Copyright 2026 Shamiri Institute Inc. Terms of Use Privacy Policy",
+    "afterToggle": "Shamiri Hub Martin Ødegaard - SUPERVISOR N/A N/A Schedule Schools Fellows Students Clinical cases Triage Tickets Reporting Schedule Sessions 18 Fellows 3 Cases 4 13–19 September 2026 Day Week Month List Filter by Schedule a session 15 Tuesday September 9:00 - 10:30 AM S2 Sobha Academy Not marked 4:00 - 5:30 PM S1 Emirates Academy Not marked 18 Friday September No sessions today. © Copyright 2026 Shamiri Institute Inc. Terms of Use Privacy Policy",
+    "pageErrors": []
+  }
+}
