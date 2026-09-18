@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import DataTable from "#/components/data-table";
-import { Skeleton } from "#/components/ui/skeleton";
+import { SkeletonCell } from "#/components/ui/skeleton";
 import { columns } from "./components/columns";
 
 export default function SupervisorsTableSkeleton() {
@@ -13,7 +13,7 @@ export default function SupervisorsTableSkeleton() {
       accessorFn: () => null,
       header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
       id: columnId,
-      cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+      cell: SkeletonCell,
     };
   });
 

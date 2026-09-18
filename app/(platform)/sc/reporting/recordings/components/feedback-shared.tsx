@@ -1,6 +1,6 @@
 "use client";
 
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 import { Badge } from "#/components/ui/badge";
 import { cn } from "#/lib/utils";
 import type { SafetyFlag } from "./feedback-types";
@@ -24,17 +24,13 @@ export function FeedbackSection({ title, children }: { title: string; children: 
   );
 }
 
+const markdownComponents: Components = {
+  p: ({ children }) => <>{children}</>,
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+};
+
 export function MarkdownText({ children }: { children: string }) {
-  return (
-    <ReactMarkdown
-      components={{
-        p: ({ children }) => <>{children}</>,
-        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-      }}
-    >
-      {children}
-    </ReactMarkdown>
-  );
+  return <ReactMarkdown components={markdownComponents}>{children}</ReactMarkdown>;
 }
 
 interface ScoreCardProps {
