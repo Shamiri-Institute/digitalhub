@@ -13,7 +13,7 @@ export default defineConfig({
   webServer: {
     command: "npm run dev",
     timeout: 480 * 1000, // 2 minutes
-    port: 3000,
+    port: Number(process.env.PORT ?? 3000),
     stdout: showServerLogs,
     stderr: showServerLogs,
   },

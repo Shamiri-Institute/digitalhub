@@ -60,7 +60,7 @@ import { getDateRangeForCalendar } from "#/lib/date-utils";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
-import { ModeProvider, useMode } from "./mode-provider";
+import { type Mode, ModeProvider, useMode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import { type Session, SessionsContext, SessionsProvider, useSessions } from "./sessions-provider";
@@ -111,7 +111,13 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const { activeProjectId, hubId, implementerId, schools, ...calendarStateProps } = props;
   const { locale } = useLocale();
   const searchParams = useSearchParams();
-  const mode = searchParams.get("mode") ?? "month";
+  // The URL can name a mode the role cannot use (only hub coordinators get "table"), so
+  // fall back to the default view instead of throwing in the mode switch.
+  const allowedModes: Mode[] = ["day", "week", "month", "list"];
+  if (props.role === ImplementerRole.HUB_COORDINATOR) allowedModes.push("table");
+  const requestedMode = searchParams.get("mode") as Mode | null;
+  const mode: Mode =
+    requestedMode && allowedModes.includes(requestedMode) ? requestedMode : "month";
 
   const sessionTypes: { [key: string]: boolean } = {};
 
