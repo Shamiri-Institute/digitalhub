@@ -1,0 +1,92 @@
+app/(auth)/login/form.tsx:24|shows the sign-in error carried in the URL query once the page has loaded
+app/(platform)/hc/fellows/components/assign-fellow-supervisor-select.tsx:33|runs the assignment server action when the controlled select value changes
+app/(platform)/hc/schools/components/weekly-hub-report-button-and-form.tsx:110|clears the form when the dialog closes; open is shared with the trigger
+app/(platform)/hc/supervisors/components/add-new-supervisor.tsx:60|clears the sub-county when the watched county field changes
+app/(platform)/hc/supervisors/components/add-new-supervisor.tsx:64|resets the form whenever the parent opens or closes the dialog through isOpen
+app/(platform)/hc/supervisors/components/dropout-supervisor-form.tsx:86|resets the form to the supervisor the parent selected when the dialog opens
+app/(platform)/hc/supervisors/components/monthly-supervisor-evaluation.tsx:261|isOpen is set by the parent from a row menu; initialises or clears the form when it changes
+app/(platform)/hc/supervisors/components/submit-complaint.tsx:66|resets the form to the supervisor the parent selected when the dialog opens
+app/(platform)/hc/supervisors/components/supervisor-details-form.tsx:69|clears the sub-county when the user changes the watched county field
+app/(platform)/hc/supervisors/components/supervisor-details-form.tsx:75|loads the selected supervisor into the form when the parent opens the dialog
+app/(platform)/sc/clinical/components/case-notes-form.tsx:115|prefills the form from the loaded notes when the watched session changes or the notes arrive
+app/(platform)/sc/clinical/components/refer-clinical-case.tsx:85|loads the hub's supervisors on mount; server-side loading is a separate change
+app/(platform)/sc/clinical/components/refer-clinical-case.tsx:94|loads clinical leads when the watched referral target switches to Clinical Lead
+app/(platform)/sc/reporting/recordings/components/edit-recording-dialog.tsx:81|open is set by the parent; resets the form and loads fellows when it opens
+app/(platform)/sc/reporting/recordings/components/edit-recording-dialog.tsx:103|reloads groups when the watched fellow field changes
+app/(platform)/sc/reporting/recordings/components/edit-recording-dialog.tsx:145|reloads sessions when the watched group field changes
+app/(platform)/sc/reporting/recordings/components/upload-recording-dialog.tsx:93|mirrors the S3 hook's upload progress into the dialog's progress bar
+app/(platform)/sc/reporting/recordings/components/upload-recording-dialog.tsx:107|open is set by the parent; loads fellows when it opens
+app/(platform)/sc/reporting/recordings/components/upload-recording-dialog.tsx:124|resets dependent fields and reloads groups when the watched fellow field changes
+app/(platform)/sc/reporting/recordings/components/upload-recording-dialog.tsx:150|resets dependent fields and reloads sessions when the watched group field changes
+app/(platform)/sc/reporting/recordings/components/upload-recording-dialog.tsx:178|checks for a duplicate recording once all four watched fields are set
+app/(platform)/sc/schedule/components/mark-session-occurrence.tsx:65|resets the form to the session the parent selected when the dialog opens
+app/error.tsx:17|reports the caught render error to Sentry or the console once per error instance
+app/global-error.tsx:8|reports the caught render error to Sentry once per error instance
+components/common/expenses/supervisor-expenses/add-expense.tsx:115|clears the form when the dialog closes; open is shared with the trigger
+components/common/expenses/supervisor-expenses/delete-expense-request.tsx:77|clears the form when the dialog closes; open is shared with the trigger
+components/common/expenses/supervisor-expenses/edit-expense.tsx:115|clears the form when the dialog closes; open is shared with the trigger
+components/common/fellow/fellow-attendance.tsx:102|rebuilds the attendance rows when the watched supervisor field changes
+components/common/fellow/fellow-details-form.tsx:85|clears the sub-county when the user changes the watched county field
+components/common/fellow/fellow-details-form.tsx:91|loads the selected fellow into the form when the parent opens the dialog
+components/common/fellow/fellow-dropout-form.tsx:74|resets the form to the fellow the parent selected when the dialog opens
+components/common/fellow/fellow-dropout-form.tsx:83|reacts to the group list shrinking after a replacement is saved
+components/common/fellow/replace-fellow.tsx:56|resets the form to the selected group when the parent opens the dialog
+components/common/fellow/weekly-fellow-evaluation.tsx:116|open is set by the parent from a row menu; selects the latest evaluation on open
+components/common/group/create-group.tsx:65|clears the form when the dialog closes; open is shared with the trigger
+components/common/group/student-group-evaluation.tsx:180|open is set by the parent from a row menu; selects the evaluation for the chosen session on open
+components/common/mark-attendance.tsx:124|resets the form when the parent changes sessions, attendances or open state, or the watched session changes
+components/common/mark-attendance.tsx:131|resets the form when the parent preselects a session
+components/common/mark-attendance.tsx:135|clears the reason and comments when the watched attendance status changes
+components/common/membership-switcher.tsx:43|checks admin status with a server action after the session loads
+components/common/profile/profile-dialog.tsx:129|clears the sub-county when the user changes the watched county field
+components/common/project-switcher.tsx:43|checks admin status with a server action after the session loads
+components/common/project-switcher.tsx:64|loads the admin project list once admin status is known
+components/common/role-switcher.tsx:47|loads the implementer's personnel when the active membership changes
+components/common/schools/assign-point-supervisor.tsx:52|resets the form to the school the parent selected when the dialog opens
+components/common/schools/dropout-school-form.tsx:89|resets the form to the school the parent selected when the dialog opens
+components/common/schools/school-details-form.tsx:91|loads the selected school into the form when the parent opens the dialog
+components/common/schools/school-left-panel.tsx:38|loads the school for the route's visibleId; server-side loading is a separate change
+components/common/schools/schools-breadcrumb.tsx:48|loads the school list the breadcrumb navigates through for the current role
+components/common/schools/schools-breadcrumb.tsx:78|revalidates the page cache on every route change
+components/common/session/admin-schedule-calendar.tsx:25|loads session types, supervisors and ratings for the admin's implementer
+components/common/session/admin-schedule-header.tsx:23|loads implementer stats once the admin user is known
+components/common/session/day-view.tsx:56|publishes the visible date to the shared title context
+components/common/session/list-view.tsx:53|publishes the visible range to the shared title context
+components/common/session/list-view.tsx:62|groups the sessions in the visible range by day
+components/common/session/month-view.tsx:45|publishes the visible month to the shared title context
+components/common/session/schedule-calendar.tsx:122|resyncs filter state when the hub session types arrive from the server
+components/common/session/schedule-calendar.tsx:189|mirrors the react-aria calendar visible range into the shared filters
+components/common/session/schedule-calendar.tsx:197|carries the previous view's visible range over when switching to list mode
+components/common/session/schedule-calendar.tsx:750|keeps the date filter in step with the calendar mode chosen elsewhere
+components/common/session/schedule-calendar.tsx:755|derives the active-filter flag and resets local toggles when filters return to defaults
+components/common/session/schedule-new-session-form.tsx:76|sets the session type and clears venue or school when the watched session select changes
+components/common/session/session-ratings.tsx:125|open is set by the parent from a row menu; selects the rating on open
+components/common/session/sessions-provider.tsx:103|fetches sessions whenever the filters change; server-side loading is a separate change
+components/common/session/table-view.tsx:409|publishes the visible range to the shared title context
+components/common/session/week-view.tsx:50|publishes the visible range to the shared title context
+components/common/student/add-reporting-note.tsx:63|clears the form whenever the parent opens or closes the dialog
+components/common/student/attendance-history.tsx:43|clears the parent's selected session when the dialog closes
+components/common/student/student-attendance-files/upload-student-attendance.tsx:45|revokes preview object URLs on unmount
+components/common/student/student-attendance-files/view-attendance-document.tsx:37|loads the presigned document URL on mount
+components/common/student/student-attendance.tsx:94|loads the session's attendances when the parent opens the dialog
+components/common/student/student-attendance.tsx:149|loads the existing triage event when the triage modal opens for a student
+components/common/student/student-attendance.tsx:174|loads the session's triage events for the fellow view
+components/common/student/student-details-form.tsx:116|loads the selected student into the form when the parent opens the dialog or changes the student
+components/common/student/student-dropout-form.tsx:63|resets the form to the student the parent selected when the dialog opens
+components/common/student/student-move-school-form.tsx:71|resets the form and loads the transfer schools when the parent opens the dialog
+components/common/student/student-move-school-form.tsx:84|loads the groups when the watched school field changes
+components/common/student/student-triage-history-modal.tsx:101|isOpen is set by the parent; loads the history when it opens
+components/common/student/triage-event-modal.tsx:136|loads the hub's supervisors when the parent opens the modal
+components/common/student/triage-event-modal.tsx:142|forces the action to ESCALATED when the risk screen outcome requires it
+components/common/student/triage-event-modal.tsx:148|loads the existing triage event into the form when the parent opens the modal
+components/common/tabs/tab-navigation.tsx:17|redirects to the first tab when the route matches none of the options
+components/common/ticket/view-reassignment-dialog.tsx:38|loads the ticket's reassignments when the parent opens the dialog
+components/common/ticket/view-resolution-dialog.tsx:31|loads the ticket's resolution when the parent opens the dialog
+components/common/ticket/view-ticket-dialog.tsx:39|loads the ticket's escalations when the parent opens the dialog
+components/common/users/user-searcher.tsx:81|debounced server search as the query changes; the timer is cleaned up
+components/data-table.tsx:120|notifies the parent when the table's row selection changes
+components/data-table.tsx:127|clears the row selection when the data prop changes
+components/performance-profiler.tsx:21|clears the pending stats timer on unmount
+components/ui/calendar.tsx:147|moves DOM focus to the day the picker marks as focused
+components/ui/use-toast.ts:170|subscribes this hook instance to the toast store
+lib/utils/pdf/pdf-viewer-inner.tsx:20|measures the container and subscribes to window resize
