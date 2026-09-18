@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
@@ -129,7 +129,7 @@ export default function AddSupervisorExpensesForm({
         <Separator />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-2">
               <FormField
                 control={form.control}
                 name="week"

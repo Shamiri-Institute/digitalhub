@@ -39,7 +39,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import {
   checkExistingStudents,
   submitStudentDetails,
@@ -212,7 +212,9 @@ export default function StudentDetailsForm({
           {children}
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(mode === "edit" ? onSubmit : checkMatchingAdmissions)}
+              onSubmit={toastOnError(
+                form.handleSubmit(mode === "edit" ? onSubmit : checkMatchingAdmissions),
+              )}
             >
               <div className="space-y-6">
                 <div className="flex flex-col">

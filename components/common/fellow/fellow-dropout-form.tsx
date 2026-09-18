@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { dropoutFellow } from "#/lib/actions/fellow";
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
@@ -159,7 +159,7 @@ export default function FellowDropoutForm({
             )}
           </DialogHeader>
           {renderAlertWidget()}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
             {!fellow.droppedOut && (
               <FormField
                 control={form.control}

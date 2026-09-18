@@ -185,4 +185,18 @@ function useToast() {
   };
 }
 
-export { toast, useToast };
+/**
+ * Wraps an async event handler so React gets a handler that returns void.
+ * A rejection shows a destructive toast and is rethrown, so it still reaches the
+ * console in development and Sentry in production as an unhandled rejection.
+ */
+function toastOnError<A extends unknown[]>(fn: (...args: A) => Promise<unknown>) {
+  return (...args: A): void => {
+    void fn(...args).catch((error: unknown) => {
+      toast({ title: "Something went wrong, please try again", variant: "destructive" });
+      throw error;
+    });
+  };
+}
+
+export { toast, toastOnError, useToast };

@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -114,7 +114,7 @@ export default function ViewEditClinicalCaseStudentInfo({
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
               <FormField
                 control={form.control}
                 name="studentName"

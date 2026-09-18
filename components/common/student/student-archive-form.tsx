@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { Form } from "#/components/ui/form";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { archiveStudent } from "#/lib/actions/student";
 import { zodResolver } from "#/lib/zod-resolver";
 
@@ -61,7 +61,7 @@ export default function StudentArchiveForm({
             <DialogTitle className="text-lg font-bold">Archive student</DialogTitle>
           </DialogHeader>
           {children}
-          <form onSubmit={form.handleSubmit(() => void onSubmit())} className="space-y-5">
+          <form onSubmit={toastOnError(form.handleSubmit(() => onSubmit()))} className="space-y-5">
             <p className="text-sm text-shamiri-text-grey">
               This student will be deactivated and removed from active lists, but their records will
               remain in the system. Only an administrator or support team member can restore them.

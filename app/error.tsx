@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import * as React from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import { toastOnError } from "#/components/ui/use-toast";
 
 export default function AppError({
   error,
@@ -54,7 +55,7 @@ export default function AppError({
           <Button onClick={() => reset()} variant="outline">
             Try again
           </Button>
-          <Button onClick={handleRedirectToLogin} variant="brand">
+          <Button onClick={toastOnError(handleRedirectToLogin)} variant="brand">
             Go to login
           </Button>
         </div>

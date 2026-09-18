@@ -20,7 +20,7 @@ import {
 import { Input } from "#/components/ui/input";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitStudentReportingNotes } from "#/lib/actions/student";
 import { zodResolver } from "#/lib/zod-resolver";
 
@@ -73,7 +73,7 @@ export function AddReportingNote({
             <h2 className="text-lg font-bold">Add reporting note</h2>
           </DialogHeader>
           {children}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
             <FormField
               control={form.control}
               name="notes"

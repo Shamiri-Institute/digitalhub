@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { createComplaint, fetchComplaintContext } from "#/lib/actions/expenses/complaints-actions";
 import type { PayoutHistoryEntry } from "#/lib/actions/expenses/payout-history";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -179,15 +179,17 @@ export default function AddFellowComplaint({
           <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
             <form
               className="space-y-2"
-              onSubmit={form.handleSubmit(onSubmit, () => {
-                // The invalid field can be scrolled out of view in this dialog,
-                // so say something rather than appearing to do nothing.
-                toast({
-                  variant: "destructive",
-                  title: "Error",
-                  description: "Please fill all required fields",
-                });
-              })}
+              onSubmit={toastOnError(
+                form.handleSubmit(onSubmit, () => {
+                  // The invalid field can be scrolled out of view in this dialog,
+                  // so say something rather than appearing to do nothing.
+                  toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Please fill all required fields",
+                  });
+                }),
+              )}
             >
               <ComplaintFormFields
                 form={form}

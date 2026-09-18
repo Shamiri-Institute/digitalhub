@@ -39,7 +39,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import {
   updateClinicalLeadProfile,
   updateFellowProfile,
@@ -190,7 +190,7 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-none lg:w-2/5">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <DialogHeader>
               <DialogTitle className="text-xl">
                 {isFellow ? "View profile" : "Edit profile"}

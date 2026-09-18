@@ -82,7 +82,7 @@ export function UserSearcher({
   useEffect(() => {
     if (hubGated) return;
     let active = true;
-    const timeout = setTimeout(async () => {
+    const search = async () => {
       setLoading(true);
       setError(false);
       try {
@@ -103,7 +103,8 @@ export function UserSearcher({
       } finally {
         if (active) setLoading(false);
       }
-    }, 250);
+    };
+    const timeout = setTimeout(() => void search(), 250);
 
     return () => {
       active = false;

@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { objectId } from "#/lib/crypto";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
 import { cn, formatBytes, sessionDisplayName } from "#/lib/utils";
@@ -367,7 +367,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
             <FormField
               control={form.control}
               name="fellowId"

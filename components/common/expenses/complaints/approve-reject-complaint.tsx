@@ -24,7 +24,7 @@ import {
 import { Input } from "#/components/ui/input";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { approveComplaint, rejectComplaint } from "#/lib/actions/expenses/complaints-actions";
 import { zodResolver } from "#/lib/zod-resolver";
 import { ApproveComplaintSchema, ComplaintFormSchema, RejectComplaintSchema } from "./schema";
@@ -206,14 +206,14 @@ export default function ApproveRejectFellowComplaint({
                 <Button
                   type="button"
                   variant="destructive"
-                  onClick={form.handleSubmit(() => openConfirm("reject"))}
+                  onClick={toastOnError(form.handleSubmit(() => openConfirm("reject")))}
                 >
                   Reject
                 </Button>
                 <Button
                   type="button"
                   variant="brand"
-                  onClick={form.handleSubmit(() => openConfirm("accept"))}
+                  onClick={toastOnError(form.handleSubmit(() => openConfirm("accept")))}
                 >
                   Accept
                 </Button>

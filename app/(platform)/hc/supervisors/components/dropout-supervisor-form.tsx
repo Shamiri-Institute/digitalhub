@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { SUPERVISOR_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { zodResolver } from "#/lib/zod-resolver";
 
@@ -98,7 +98,7 @@ export default function DropoutSupervisor({
             <DialogTitle className="text-lg font-bold">Drop out supervisor</DialogTitle>
           </DialogHeader>
           {children}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
             <FormField
               control={form.control}
               name="dropoutReason"

@@ -25,7 +25,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { zodResolver } from "#/lib/zod-resolver";
 
 const ComplaintSchema = z.object({
@@ -101,7 +101,7 @@ export default function ViewEditFellowComplaints({
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
               <FormField
                 control={form.control}
                 name="complaint"

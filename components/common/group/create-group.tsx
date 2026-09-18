@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { createInterventionGroup } from "#/lib/actions/group";
 import { getSchoolInitials } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -98,7 +98,7 @@ export default function CreateGroup({
       </DialogTrigger>
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <DialogHeader className="mb-4">
               <span className="text-xl">Create new group</span>
             </DialogHeader>

@@ -6,7 +6,7 @@ import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 
 export default function TriageReviewModal({
   triageEventId,
@@ -73,7 +73,11 @@ export default function TriageReviewModal({
           >
             Cancel
           </Button>
-          <Button type="button" disabled={!note.trim() || submitting} onClick={handleSubmit}>
+          <Button
+            type="button"
+            disabled={!note.trim() || submitting}
+            onClick={toastOnError(handleSubmit)}
+          >
             {submitting ? "Saving…" : "Confirm review"}
           </Button>
         </div>

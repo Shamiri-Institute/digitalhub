@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { zodResolver } from "#/lib/zod-resolver";
 
 const ComplaintSchema = z.object({
@@ -104,7 +104,7 @@ export default function ConsultClinicalExpert({
         <DialogAlertWidget label={`${clinicalCase.pseudonym}`} separator={true} />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
               <FormField
                 control={form.control}
                 name="consultant"

@@ -37,7 +37,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitGroupEvaluation } from "#/lib/actions/group";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -246,7 +246,7 @@ export default function StudentGroupEvaluation({
             </div>
           ) : (
             <form
-              onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
               className={cn("space-y-5", mode === "view" ? "form-view-mode" : "")}
             >
               <FormField

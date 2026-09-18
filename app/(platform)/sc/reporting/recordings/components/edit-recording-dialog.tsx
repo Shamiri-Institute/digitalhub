@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import {
@@ -194,7 +194,7 @@ export default function EditRecordingDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
             <FormField
               control={form.control}
               name="fellowId"

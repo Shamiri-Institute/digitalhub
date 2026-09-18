@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export default function AssignFellowSupervisorDialog({
@@ -88,7 +88,7 @@ export default function AssignFellowSupervisorDialog({
         </DialogHeader>
         {children}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <div className="space-y-6">
               <FormField
                 control={form.control}

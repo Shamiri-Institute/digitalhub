@@ -6,7 +6,7 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { unarchiveInterventionGroup } from "#/lib/actions/group";
 
 export default function UnarchiveGroup({
@@ -69,7 +69,7 @@ export default function UnarchiveGroup({
               variant="brand"
               disabled={isSubmitting}
               loading={isSubmitting}
-              onClick={onConfirm}
+              onClick={toastOnError(onConfirm)}
             >
               Unarchive
             </Button>

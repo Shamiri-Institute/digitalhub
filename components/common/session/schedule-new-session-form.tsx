@@ -30,7 +30,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { ToastAction } from "#/components/ui/toast";
-import { useToast } from "#/components/ui/use-toast";
+import { toastOnError, useToast } from "#/components/ui/use-toast";
 import { createNewSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -152,7 +152,7 @@ export function ScheduleNewSession({
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
           <FormField
             control={form.control}
             name="sessionId"

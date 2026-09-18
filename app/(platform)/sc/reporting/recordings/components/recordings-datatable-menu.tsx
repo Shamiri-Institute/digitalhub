@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { retryRecordingProcessing } from "../actions";
 import type { ColumnState, RecordingTableData } from "./columns";
 
@@ -79,7 +79,7 @@ export default function RecordingsDataTableMenu({
           <DropdownMenuItem onClick={handleViewFeedback}>View Feedback</DropdownMenuItem>
         ) : null}
         {canRetry && (
-          <DropdownMenuItem onClick={handleRetry} disabled={isRetrying}>
+          <DropdownMenuItem onClick={toastOnError(handleRetry)} disabled={isRetrying}>
             {isRetrying ? "Retrying..." : "Retry Processing"}
           </DropdownMenuItem>
         )}

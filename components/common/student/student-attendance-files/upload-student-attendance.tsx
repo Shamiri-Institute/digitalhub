@@ -5,7 +5,7 @@ import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { useToast } from "#/components/ui/use-toast";
+import { toastOnError, useToast } from "#/components/ui/use-toast";
 import {
   createAttendanceDocument,
   getAttendanceDocument,
@@ -251,7 +251,7 @@ export default function UploadStudentAttendanceDocument({
           type="button"
           disabled={selectedFiles.length === 0 || uploading}
           variant="brand"
-          onClick={handleUpload}
+          onClick={toastOnError(handleUpload)}
           className="bg-shamiri-new-blue"
           loading={uploading}
         >

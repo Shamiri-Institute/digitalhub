@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { useToast } from "#/components/ui/use-toast";
+import { toastOnError, useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { retryRecordingProcessing } from "../actions";
 
@@ -54,7 +54,7 @@ export default function RetryProcessingButton({
     <Button
       variant="outline"
       size="sm"
-      onClick={handleRetry}
+      onClick={toastOnError(handleRetry)}
       disabled={disabled || isLoading}
       className={cn("gap-2", className)}
     >
