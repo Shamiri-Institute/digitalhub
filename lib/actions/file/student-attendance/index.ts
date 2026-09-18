@@ -139,7 +139,7 @@ export async function createAttendanceDocument(
       uploaderId: userId,
       key: payload.link,
     });
-    if (!claim || claim.bucket !== "student-attendance") {
+    if (claim?.bucket !== "student-attendance") {
       throw new Error("Upload not authorized");
     }
 

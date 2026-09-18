@@ -246,7 +246,7 @@ export async function createSessionRecording(input: {
     uploaderId: supervisor.session.user.id,
     key: input.s3Key,
   });
-  if (!claim || claim.bucket !== "recordings") {
+  if (claim?.bucket !== "recordings") {
     return { success: false, message: "Upload not authorized" };
   }
 

@@ -48,7 +48,10 @@ function sign(payload: string): string {
 
 function tamperPayload(token: string, mutate: (claim: Record<string, unknown>) => void): string {
   const [payload = ""] = token.split(".");
-  const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+  const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Record<
+    string,
+    unknown
+  >;
   mutate(decoded);
   const repacked = Buffer.from(JSON.stringify(decoded), "utf8").toString("base64url");
   return `${repacked}.${sign(repacked)}`;
@@ -72,7 +75,10 @@ describe("upload token", () => {
   it("rejects a token whose payload was tampered with but not re-signed", () => {
     const token = signUploadToken(attendanceClaim);
     const [payload = "", signature = ""] = token.split(".");
-    const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Record<
+      string,
+      unknown
+    >;
     decoded.uploaderId = "attacker";
     const repacked = Buffer.from(JSON.stringify(decoded), "utf8").toString("base64url");
     expect(() => verifyUploadToken(`${repacked}.${signature}`)).toThrow(UploadTokenError);
