@@ -45,6 +45,7 @@ export default function SchoolsBreadcrumb() {
   const role = session?.user?.activeMembership?.role;
   const implementerId = session?.user?.activeMembership?.implementerId;
 
+  // effect: loads the school list the breadcrumb navigates through for the current role
   useEffect(() => {
     const fetchSchools = async () => {
       setLoading(true);
@@ -75,6 +76,7 @@ export default function SchoolsBreadcrumb() {
     router.replace(routeArray.join("/"));
   };
 
+  // effect: revalidates the page cache on every route change
   useEffect(() => {
     void revalidatePageAction(pathname);
   }, [pathname]);

@@ -82,6 +82,7 @@ export default function ReferClinicalCase({
     name?: string | null;
   } | null>(null);
 
+  // effect: loads the hub's supervisors on mount; server-side loading is a separate change
   useEffect(() => {
     const fetchSupervisorsInHub = async () => {
       const data = await getSupervisorsInHub();
@@ -91,6 +92,7 @@ export default function ReferClinicalCase({
     void fetchSupervisorsInHub();
   }, []);
 
+  // effect: loads clinical leads when the watched referral target switches to Clinical Lead
   useEffect(() => {
     const fetchClinicalLeads = async () => {
       if (selectedReferTo === "Clinical Lead") {

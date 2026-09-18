@@ -63,6 +63,7 @@ export default function SubmitComplaint({
     setIsOpen(false);
   };
 
+  // effect: resets the form to the supervisor the parent selected when the dialog opens
   useEffect(() => {
     form.reset({
       supervisorId,

@@ -11,7 +11,7 @@ Instructions for coding agents working in this repository. The full project guid
 - Do not add a `useEffect` to fetch data that a Server Component or a server action can supply.
 - A `useEffect` is acceptable only for a real external subscription: a DOM listener, a timer, a third-party widget, or a sync with something outside React. Put a one-line comment directly above it that states the reason.
 - Do not add `useMemo` or `useCallback` unless a measurement or an obvious hot path shows a benefit. Say why in the PR. A lint rule whose only remedy is memoization is not enforced.
-- oxlint enforces this through the `hooks-policy/justify` rule in `lint/hooks-policy.mjs`. Every `useMemo` and `useCallback` needs a comment on the line directly above it that starts with `memo:` or `callback:` and states the reason. `useEffect` gets the same treatment with `effect:` when ENG-2140 finishes. The lint fails otherwise, so prefer removing the hook to inventing a reason.
+- oxlint enforces this through the `hooks-policy/justify` rule in `lint/hooks-policy.mjs`. Every `useEffect`, `useLayoutEffect`, `useMemo` and `useCallback` needs a comment on the line directly above it that starts with `effect:`, `memo:` or `callback:` and states the reason. The lint fails otherwise, so prefer a handler or a derived value to inventing a reason.
 
 ## Quality gates
 

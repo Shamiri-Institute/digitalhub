@@ -258,6 +258,7 @@ export default function MonthlySupervisorEvaluation({
     });
   };
 
+  // effect: isOpen is set by the parent from a row menu; initialises or clears the form when it changes
   useEffect(() => {
     if (!isOpen) {
       // oxlint-disable-next-line react/set-state-in-effect -- isOpen is controlled by the parent, which opens this dialog from a row menu; the reset cannot live in an open handler here

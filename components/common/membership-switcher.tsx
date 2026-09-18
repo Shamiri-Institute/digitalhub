@@ -40,6 +40,7 @@ export function MembershipSwitcher({
   const memberships = session?.user?.memberships ?? [];
   const [isAdminUser, setIsAdminUser] = useState(activeMembership?.role === ImplementerRole.ADMIN);
 
+  // effect: checks admin status with a server action after the session loads
   useEffect(() => {
     const checkIsAdminUser = async () => {
       const checkIsAdminUser = await isCurrentUserAdmin();

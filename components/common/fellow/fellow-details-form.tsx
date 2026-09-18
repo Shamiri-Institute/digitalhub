@@ -82,12 +82,14 @@ export default function FellowDetailsForm({
   }
   const countyWatcher = form.watch("county");
 
+  // effect: clears the sub-county when the user changes the watched county field
   useEffect(() => {
     if (form.formState.dirtyFields.county) {
       form.setValue("subCounty", "");
     }
   }, [countyWatcher, form]);
 
+  // effect: loads the selected fellow into the form when the parent opens the dialog
   useEffect(() => {
     if (open) {
       let defaultValues = {};

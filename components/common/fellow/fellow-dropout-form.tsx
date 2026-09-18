@@ -71,6 +71,7 @@ export default function FellowDropoutForm({
     },
   });
 
+  // effect: resets the form to the fellow the parent selected when the dialog opens
   useEffect(() => {
     if (isOpen) {
       form.reset({
@@ -80,6 +81,7 @@ export default function FellowDropoutForm({
     }
   }, [fellow, isOpen, form]);
 
+  // effect: reacts to the group list shrinking after a replacement is saved
   useEffect(() => {
     if (activeGroups.length === 0 && replaceDialog) {
       // oxlint-disable-next-line react/set-state-in-effect -- reacts to the group list shrinking after a replacement is saved; the dialog switch is not a user event in this component

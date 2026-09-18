@@ -42,6 +42,7 @@ export default function UploadStudentAttendanceDocument({
   const { toast } = useToast();
   const { uploadToS3 } = useS3Upload();
 
+  // effect: revokes preview object URLs on unmount
   useEffect(() => {
     return () => {
       previewUrls.forEach((url) => {

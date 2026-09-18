@@ -14,6 +14,7 @@ export default function TabToggleNavigation({ options }: { options: TabType[] })
 
   const currentTab = options.find((tab) => tab.href === pathname) || options[0];
 
+  // effect: redirects to the first tab when the route matches none of the options
   useEffect(() => {
     const firstOption = options[0];
     if (!options.find((tab) => tab.href === pathname) && firstOption) {

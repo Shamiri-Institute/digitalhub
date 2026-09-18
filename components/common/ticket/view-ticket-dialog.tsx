@@ -36,6 +36,7 @@ export function ViewTicketDialog({
   const [escalations, setEscalations] = useState<TicketEscalation[]>([]);
   const [loadingEscalations, setLoadingEscalations] = useState(false);
 
+  // effect: loads the ticket's escalations when the parent opens the dialog
   useEffect(() => {
     if (!open || !ticket?.id) return;
 

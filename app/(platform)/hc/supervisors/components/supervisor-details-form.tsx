@@ -66,12 +66,14 @@ export default function SupervisorDetailsForm({
   const countyWatcher = form.watch("county");
   const isViewMode = mode === "view";
 
+  // effect: clears the sub-county when the user changes the watched county field
   useEffect(() => {
     if (form.formState.dirtyFields.county && !isViewMode) {
       form.setValue("subCounty", "");
     }
   }, [countyWatcher, form, isViewMode]);
 
+  // effect: loads the selected supervisor into the form when the parent opens the dialog
   useEffect(() => {
     if (open && supervisor) {
       const defaultValues = {

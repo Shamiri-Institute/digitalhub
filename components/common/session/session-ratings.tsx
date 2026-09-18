@@ -122,6 +122,7 @@ export default function SessionRatings({
     }
   }
 
+  // effect: open is set by the parent from a row menu; selects the rating on open
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the sync cannot live in an open handler here
     selectRating(rating);

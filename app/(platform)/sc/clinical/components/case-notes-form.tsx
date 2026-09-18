@@ -80,7 +80,6 @@ export default function CaseNotesForm({
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [showOtherInput, setShowOtherInput] = useState(false);
-  const [showNecessaryConditions, setShowNecessaryConditions] = useState(false);
   const [hasExistingNotes, setHasExistingNotes] = useState(false);
   const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>>>([]);
 
@@ -112,6 +111,7 @@ export default function CaseNotesForm({
     },
   });
 
+  // effect: prefills the form from the loaded notes when the watched session changes or the notes arrive
   useEffect(() => {
     const sessionId = form.watch("sessionId");
     if (!sessionId) return;
@@ -138,7 +138,6 @@ export default function CaseNotesForm({
       });
 
       setShowOtherInput(existingNote.treatmentInterventions.includes("Other"));
-      setShowNecessaryConditions(existingNote.riskLevel !== "no");
     } else {
       form.reset({
         sessionId,
@@ -156,7 +155,6 @@ export default function CaseNotesForm({
         },
       });
       setShowOtherInput(false);
-      setShowNecessaryConditions(false);
     }
   }, [form.watch("sessionId"), notes]);
 
@@ -197,11 +195,7 @@ export default function CaseNotesForm({
     }
   };
 
-  const watchRiskLevel = form.watch("riskLevel");
-
-  useEffect(() => {
-    setShowNecessaryConditions(watchRiskLevel !== "no");
-  }, [watchRiskLevel]);
+  const showNecessaryConditions = form.watch("riskLevel") !== "no";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

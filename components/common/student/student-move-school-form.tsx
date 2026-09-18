@@ -68,6 +68,7 @@ export default function StudentMoveSchoolForm({
 
   const selectedSchoolId = form.watch("schoolId");
 
+  // effect: resets the form and loads the transfer schools when the parent opens the dialog
   useEffect(() => {
     if (!isOpen) return;
 
@@ -81,6 +82,7 @@ export default function StudentMoveSchoolForm({
       .finally(() => setLoadingSchools(false));
   }, [isOpen, student.id, student.schoolId]);
 
+  // effect: loads the groups when the watched school field changes
   useEffect(() => {
     if (!selectedSchoolId) {
       setGroups([]);

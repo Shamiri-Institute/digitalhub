@@ -34,6 +34,7 @@ export default function ViewAttendanceDocument({
     archiving?: boolean;
   }>({ loading: true });
 
+  // effect: loads the presigned document URL on mount
   useEffect(() => {
     async function loadDocument() {
       try {

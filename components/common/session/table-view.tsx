@@ -406,6 +406,7 @@ export function TableView({
     return { supervisorAttendances: attendances, fellowAttendances: _fellowAttendances };
   })();
 
+  // effect: publishes the visible range to the shared title context
   useEffect(() => {
     setTitle(
       dateFormatter.formatRange(

@@ -78,6 +78,7 @@ export default function EditRecordingDialog({
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
 
+  // effect: open is set by the parent; resets the form and loads fellows when it opens
   useEffect(() => {
     if (!open) return;
 
@@ -100,6 +101,7 @@ export default function EditRecordingDialog({
   // When fellowId changes, reload groups.
   // On initial load (fellowId matches the recording's original value), also
   // pre-load the sessions for the original group so all fields are pre-selected.
+  // effect: reloads groups when the watched fellow field changes
   useEffect(() => {
     if (!fellowId) return;
 
@@ -142,6 +144,7 @@ export default function EditRecordingDialog({
       .finally(() => setLoadingGroups(false));
   }, [fellowId, recording.fellowId, recording.groupId, form.setValue]);
 
+  // effect: reloads sessions when the watched group field changes
   useEffect(() => {
     if (!groupId || groupId === recording.groupId) return;
 

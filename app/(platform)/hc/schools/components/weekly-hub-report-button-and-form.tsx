@@ -107,6 +107,7 @@ export default function WeeklyHubReportButtonAndForm({
     setDialogOpen(false);
   };
 
+  // effect: clears the form when the dialog closes; open is shared with the trigger
   useEffect(() => {
     if (!open) {
       form.reset();

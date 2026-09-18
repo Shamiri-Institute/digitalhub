@@ -14,6 +14,7 @@ export default function AppError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // effect: reports the caught render error to Sentry or the console once per error instance
   React.useEffect(() => {
     if (process.env.NEXT_PUBLIC_ENV !== "production") {
       console.error(error);

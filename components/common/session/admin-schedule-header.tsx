@@ -20,6 +20,7 @@ export function AdminScheduleHeader({ adminUser }: { adminUser: CurrentAdminUser
   });
   const [loading, setLoading] = useState(adminUser === null);
 
+  // effect: loads implementer stats once the admin user is known
   useEffect(() => {
     const implementerId = adminUser?.session.user.activeMembership?.implementerId;
     if (!implementerId || adminUser === null) return;

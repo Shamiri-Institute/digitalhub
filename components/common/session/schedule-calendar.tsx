@@ -119,6 +119,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   });
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
+  // effect: resyncs filter state when the hub session types arrive from the server
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- resyncs filter state when the hub session types arrive from the server
     setFilters((prev) => ({
@@ -186,6 +187,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       : ["day", "week", "month"].includes(mode)
         ? (mode as DateRangeType)
         : "week";
+  // effect: mirrors the react-aria calendar visible range into the shared filters
   useEffect(() => {
     if (!visibleStart) return;
     const dateRange = getDateRangeForCalendar(visibleStart, rangeType);
@@ -194,6 +196,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   }, [visibleStart?.toString(), rangeType, mode]);
 
   const prevModeRef = useRef<string>(mode);
+  // effect: carries the previous view's visible range over when switching to list mode
   useEffect(() => {
     const prevMode = prevModeRef.current;
     prevModeRef.current = mode;
@@ -747,11 +750,13 @@ function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[
     { label: "This month", value: "month" },
   ];
   const [dates, setDates] = useState(filters.dates);
+  // effect: keeps the date filter in step with the calendar mode chosen elsewhere
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- keeps the date filter in step with the calendar mode chosen elsewhere
     setDates(["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week");
   }, [mode]);
 
+  // effect: derives the active-filter flag and resets local toggles when filters return to defaults
   useEffect(() => {
     const sessionTypes = Object.keys(filters.sessionTypes).filter(
       (key) => !filters.sessionTypes[key],

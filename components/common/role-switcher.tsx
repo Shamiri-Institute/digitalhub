@@ -44,6 +44,7 @@ export function RoleSwitcher({
 
   const activeMembership = session?.user?.activeMembership ?? null;
 
+  // effect: loads the implementer's personnel when the active membership changes
   useEffect(() => {
     const fetchImplementerMembers = async () => {
       if (!activeMembership) {

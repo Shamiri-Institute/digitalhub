@@ -86,6 +86,7 @@ export function DropoutSchool({
 
   const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
 
+  // effect: resets the form to the school the parent selected when the dialog opens
   useEffect(() => {
     form.reset({
       schoolId: school?.id,

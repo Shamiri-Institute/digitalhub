@@ -47,6 +47,7 @@ export function WeekView({
   });
 
   const { setTitle } = useTitle();
+  // effect: publishes the visible range to the shared title context
   useEffect(() => {
     setTitle(
       dateFormatter.formatRange(

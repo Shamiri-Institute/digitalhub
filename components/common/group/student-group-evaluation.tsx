@@ -177,6 +177,7 @@ export default function StudentGroupEvaluation({
     defaultValues: getDefaultValues(),
   });
 
+  // effect: open is set by the parent from a row menu; selects the evaluation for the chosen session on open
   useEffect(() => {
     if (open) {
       const match = evaluations.find((evaluation) => {

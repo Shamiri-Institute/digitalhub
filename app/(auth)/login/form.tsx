@@ -21,6 +21,7 @@ export function LoginForm() {
 
   const showCredentialAuth = isCredentialAuthAllowedClient();
 
+  // effect: shows the sign-in error carried in the URL query once the page has loaded
   useEffect(() => {
     const error = searchParams?.get("error");
     if (error) {

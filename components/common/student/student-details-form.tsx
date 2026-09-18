@@ -113,6 +113,7 @@ export default function StudentDetailsForm({
     };
   }
 
+  // effect: loads the selected student into the form when the parent opens the dialog or changes the student
   useEffect(() => {
     form.reset(getDefaultValues());
   }, [open, student, mode, assignedGroupId]);

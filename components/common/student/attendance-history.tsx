@@ -40,6 +40,7 @@ export default function AttendanceHistory({
   setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>;
   children: React.ReactNode;
 }) {
+  // effect: clears the parent's selected session when the dialog closes
   useEffect(() => {
     if (!open) {
       setSelectedSessionId(undefined);

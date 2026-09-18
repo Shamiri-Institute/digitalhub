@@ -113,6 +113,7 @@ export default function WeeklyFellowEvaluation({
     }
   }
 
+  // effect: open is set by the parent from a row menu; selects the latest evaluation on open
   useEffect(() => {
     if (!open) {
       // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the reset cannot live in an open handler here

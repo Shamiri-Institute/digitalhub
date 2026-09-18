@@ -74,6 +74,7 @@ export default function HCDeleteExpenseRequest({
     setDialogOpen(false);
   };
 
+  // effect: clears the form when the dialog closes; open is shared with the trigger
   useEffect(() => {
     if (!open) {
       form.reset();

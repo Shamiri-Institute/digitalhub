@@ -73,6 +73,7 @@ export function ScheduleNewSession({
 
   const sessionIdWatcher = form.watch("sessionId");
 
+  // effect: sets the session type and clears venue or school when the watched session select changes
   useEffect(() => {
     const sessionType = hubSessionTypes.find((x) => x.id === sessionIdWatcher);
     if (sessionType) {

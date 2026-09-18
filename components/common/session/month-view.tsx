@@ -42,6 +42,7 @@ export function MonthView({
   const headerScrollRef = useRef<HTMLDivElement>(null);
   const bodyScrollRef = useRef<HTMLDivElement>(null);
 
+  // effect: publishes the visible month to the shared title context
   useEffect(() => {
     if (state.value) {
       setTitle(`${titleFormatter.format(state.visibleRange.start.toDate(state.timeZone))}`);

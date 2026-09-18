@@ -88,6 +88,7 @@ export default function SchoolDetailsForm({
 
   const pointPersonPhoneWatcher = form.watch("pointPersonPhone");
 
+  // effect: loads the selected school into the form when the parent opens the dialog
   useEffect(() => {
     const defaultValues: Partial<FormData> = {
       numbersExpected: school?.numbersExpected ?? 0,
