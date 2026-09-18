@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import {
   getHubSchoolsForStudentTransfer,
   getSchoolGroupsForStudentTransfer,
@@ -118,7 +118,7 @@ export default function StudentMoveSchoolForm({
             <DialogTitle className="text-lg font-bold">Move student to another school</DialogTitle>
           </DialogHeader>
           {children}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
             <div className="flex items-start gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-sm text-red-base">
               <Icons.info className="mt-0.5 h-5 w-5 shrink-0" />
               <span>

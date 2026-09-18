@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "#/components/ui/table";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 
 export const emergency_presenting_issues = [
@@ -280,7 +280,7 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
             </Button>
             <Button
               variant="brand"
-              onClick={handleSaveAll}
+              onClick={toastOnError(handleSaveAll)}
               disabled={!hasChanges || isSaving}
               loading={isSaving}
             >

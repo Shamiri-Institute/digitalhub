@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "#/components/ui/table";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 
 export const CLINICAL_SESSION_TYPES = [
@@ -187,14 +187,14 @@ export default function ViewMarkClinicalSessions({
                   <div className="grid h-full grid-cols-2">
                     <button
                       type="button"
-                      onClick={() => handleAttendance(sessionType.key, true)}
+                      onClick={toastOnError(() => handleAttendance(sessionType.key, true))}
                       className="flex items-center justify-center border-r p-3 text-green-600 transition-colors hover:bg-green-50"
                     >
                       <Check className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleAttendance(sessionType.key, false)}
+                      onClick={toastOnError(() => handleAttendance(sessionType.key, false))}
                       className="flex items-center justify-center p-3 text-red-600 transition-colors hover:bg-red-50"
                     >
                       <X className="h-4 w-4" />

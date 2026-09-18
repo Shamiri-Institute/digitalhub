@@ -24,7 +24,7 @@ import {
 } from "#/components/ui/form";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitQualitativeFeedback } from "#/lib/actions/session/session";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -112,7 +112,7 @@ export default function ViewEditQualitativeFeedback({
         <Separator />
         <p className="text-shamiri-black"> Notes</p>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <div className="space-y-4">
               <FormField
                 control={form.control}

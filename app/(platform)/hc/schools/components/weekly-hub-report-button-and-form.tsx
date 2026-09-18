@@ -33,7 +33,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import AddCircleOutlined from "#/public/icons/add-circle-outline.svg";
@@ -140,7 +140,7 @@ export default function WeeklyHubReportButtonAndForm({
         </DialogHeader>
         <Separator />
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <div className="space-y-4">
               <FormField
                 control={form.control}

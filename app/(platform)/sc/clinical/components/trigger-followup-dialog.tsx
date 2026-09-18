@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 
 interface TriggerFollowupDialogProps {
   children: React.ReactNode;
@@ -60,7 +60,7 @@ export default function TriggerFollowupDialog({ children, caseId }: TriggerFollo
           <Button variant="ghost" onClick={() => setDialogOpen(false)}>
             Cancel
           </Button>
-          <Button variant="brand" onClick={handleConfirm}>
+          <Button variant="brand" onClick={toastOnError(handleConfirm)}>
             Confirm
           </Button>
         </DialogFooter>

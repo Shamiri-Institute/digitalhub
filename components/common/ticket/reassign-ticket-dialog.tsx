@@ -23,7 +23,7 @@ import {
 } from "#/components/ui/form";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { reassignTicket } from "#/lib/actions/ticket";
 import {
   CreateTicketReassignmentSchema,
@@ -151,7 +151,7 @@ export function ReassignTicketDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-6">
             <FormField
               control={form.control}
               name="reassignedTo"

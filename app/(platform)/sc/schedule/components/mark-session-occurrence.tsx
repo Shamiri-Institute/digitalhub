@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "#/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { markSessionOccurrence } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -108,7 +108,7 @@ export function MarkSessionOccurrence({
           </DialogHeader>
           {children}
           {previousUnmarkedSessions.length === 0 ? (
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
               <FormField
                 control={form.control}
                 name="occurrence"

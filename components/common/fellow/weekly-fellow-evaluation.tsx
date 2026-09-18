@@ -37,7 +37,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitWeeklyFellowEvaluation } from "#/lib/actions/fellow";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -170,7 +170,7 @@ export default function WeeklyFellowEvaluation({
               </DialogFooter>
             </div>
           ) : (
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
               <FormField
                 control={form.control}
                 name="week"

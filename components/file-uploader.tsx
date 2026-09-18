@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { useState } from "react";
 import { Icons } from "#/components/icons";
+import { toastOnError } from "#/components/ui/use-toast";
 
 export function FileUploaderWithDrop({
   onChange,
@@ -59,7 +60,7 @@ export function FileUploaderWithDrop({
       {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- drag-and-drop */}
       <label
         id="drop_zone"
-        onDrop={handleDrop}
+        onDrop={toastOnError(handleDrop)}
         onDragOver={handleDragOver}
         onDragEnter={(e) => {
           e.preventDefault();
@@ -82,7 +83,13 @@ export function FileUploaderWithDrop({
           <div className="flex space-x-2">
             {files?.length === 0 && <Icons.uploadCloudIcon className="h-6 w-6" />}
             <span className="text-normal text-center">Drop files here...</span>
-            <input type="file" aria-label="File" accept={accept} hidden onChange={handleUpload} />
+            <input
+              type="file"
+              aria-label="File"
+              accept={accept}
+              hidden
+              onChange={toastOnError(handleUpload)}
+            />
           </div>
         </div>
         <div className="mt-3 flex w-full border-t border-gray-500 ">

@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { useToast } from "#/components/ui/use-toast";
+import { toastOnError, useToast } from "#/components/ui/use-toast";
 
 interface TriggerConfirmPayoutProps {
   dateAdded: Date;
@@ -72,7 +72,12 @@ export default function TriggerConfirmPayout({ dateAdded, disabled }: TriggerCon
           <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button variant="brand" onClick={handleConfirm} disabled={loading} loading={loading}>
+          <Button
+            variant="brand"
+            onClick={toastOnError(handleConfirm)}
+            disabled={loading}
+            loading={loading}
+          >
             Confirm Payout
           </Button>
         </DialogFooter>

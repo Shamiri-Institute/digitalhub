@@ -36,6 +36,7 @@ import {
 import { cn, getInitials } from "#/lib/utils";
 import ArrowDropdown from "#/public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { toastOnError } from "#/components/ui/use-toast";
 
 interface NavigationLinkProps {
   scheduleActive: boolean;
@@ -131,7 +132,7 @@ export function LayoutClient({
 
               <DropdownMenuItem
                 className="flex items-center gap-2"
-                onClick={() => signOut({ callbackUrl: "/login" })}
+                onClick={toastOnError(() => signOut({ callbackUrl: "/login" }))}
               >
                 <SignOutIcon fill="#969696" />
                 <p>Sign out</p>

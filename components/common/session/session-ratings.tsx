@@ -46,7 +46,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitSessionRatings } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -186,7 +186,7 @@ export default function SessionRatings({
         ) : (
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
               className={cn("space-y-5", mode === "view" ? "form-view-mode" : "")}
             >
               {mode === "view" && (

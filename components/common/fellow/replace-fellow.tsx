@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { replaceGroupLeader } from "#/lib/actions/fellow";
 import { zodResolver } from "#/lib/zod-resolver";
 
@@ -88,7 +88,7 @@ export default function ReplaceFellow({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <DialogHeader className="mb-4">
               <span className="text-xl">Replace fellow</span>
             </DialogHeader>

@@ -48,7 +48,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitFellowGroupReport } from "#/lib/actions/group";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -304,7 +304,10 @@ export default function FellowGroupReportForm({
               </div>
             </DialogHeader>
 
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <form
+              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+              className="flex min-h-0 flex-1 flex-col"
+            >
               <div
                 onScroll={handleScroll}
                 className="relative flex-1 divide-y overflow-y-auto px-6"

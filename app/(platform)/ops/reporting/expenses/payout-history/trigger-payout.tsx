@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { useToast } from "#/components/ui/use-toast";
+import { toastOnError, useToast } from "#/components/ui/use-toast";
 
 export default function TriggerPayout() {
   const [open, setOpen] = useState(false);
@@ -68,7 +68,7 @@ export default function TriggerPayout() {
             </Button>
             <Button
               variant="destructive"
-              onClick={handleConfirm}
+              onClick={toastOnError(handleConfirm)}
               disabled={loading}
               loading={loading}
             >

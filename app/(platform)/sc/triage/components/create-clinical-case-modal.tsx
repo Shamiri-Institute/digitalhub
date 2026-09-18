@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/u
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 
 export default function CreateClinicalCaseModal({
   triageEventId,
@@ -73,7 +73,11 @@ export default function CreateClinicalCaseModal({
           >
             Cancel
           </Button>
-          <Button type="button" disabled={!pseudonym.trim() || submitting} onClick={handleSubmit}>
+          <Button
+            type="button"
+            disabled={!pseudonym.trim() || submitting}
+            onClick={toastOnError(handleSubmit)}
+          >
             {submitting ? "Creating…" : "Create case"}
           </Button>
         </div>

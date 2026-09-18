@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { cancelSession } from "#/lib/actions/session/session";
 
 export default function CancelSession({
@@ -84,9 +84,7 @@ export default function CancelSession({
                 variant="destructive"
                 loading={loading}
                 disabled={loading}
-                onClick={async () => {
-                  await cancelSelectedSession();
-                }}
+                onClick={toastOnError(cancelSelectedSession)}
               >
                 Confirm
               </Button>

@@ -28,7 +28,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { createEscalation } from "#/lib/actions/ticket";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -101,7 +101,7 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-6">
             <div className="flex flex-col">
               <div className="grid grid-cols-2 gap-3">
                 <FormField

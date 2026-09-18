@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -311,7 +311,7 @@ export function AddNewClinicalCaseForm({
       {children}
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <DialogHeader>
               <DialogTitle className="text-xl">Add clinical case</DialogTitle>
             </DialogHeader>

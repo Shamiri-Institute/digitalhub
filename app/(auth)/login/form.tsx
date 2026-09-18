@@ -7,7 +7,7 @@ import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
-import { useToast } from "#/components/ui/use-toast";
+import { toastOnError, useToast } from "#/components/ui/use-toast";
 import { isCredentialAuthAllowedClient } from "#/lib/auth/client-credential-auth";
 import { devLogin } from "#/lib/auth/dev-login";
 
@@ -78,7 +78,7 @@ export function LoginForm() {
             </div>
           </div>
 
-          <form onSubmit={handleCredentialSubmit} className="space-y-4">
+          <form onSubmit={toastOnError(handleCredentialSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

@@ -32,7 +32,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { createTicket } from "#/lib/actions/ticket";
 import { CreateTicketSchema } from "#/lib/actions/ticket/types";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -87,7 +87,7 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <DialogHeader className="mb-4">
               <span className="text-xl">Create new ticket</span>
             </DialogHeader>

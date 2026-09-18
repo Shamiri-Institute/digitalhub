@@ -6,7 +6,7 @@ import { Icons } from "#/components/icons";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
-import { useToast } from "#/components/ui/use-toast";
+import { toastOnError, useToast } from "#/components/ui/use-toast";
 import { deleteAttendanceFile, getAttendanceDocument } from "#/lib/actions/file/student-attendance";
 import PdfViewerModal from "#/lib/utils/pdf/pdf-viewer-modal";
 
@@ -131,7 +131,7 @@ export default function ViewAttendanceDocument({
             <Button
               variant="destructive"
               size="sm"
-              onClick={handleDelete}
+              onClick={toastOnError(handleDelete)}
               loading={state.archiving}
               className="mt-2 w-fit hover:bg-shamiri-light-red/90"
             >

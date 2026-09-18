@@ -33,7 +33,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitFellowComplaint } from "#/lib/actions/fellow";
 import { COMPLAINT_TYPES } from "#/lib/app-constants/constants";
 import { getInitials } from "#/lib/utils";
@@ -91,7 +91,7 @@ export default function SubmitComplaint({
             <DialogTitle className="text-lg font-bold">Submit complaint</DialogTitle>
           </DialogHeader>
           {children}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
             <FormField
               control={form.control}
               name="complaint"

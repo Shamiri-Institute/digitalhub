@@ -73,7 +73,7 @@ export function Combobox({
                 <CommandItem
                   key={item.id}
                   value={item.id}
-                  onSelect={async (_currentValue) => {
+                  onSelect={() => {
                     onSelectItem(item.id);
                     setOpen(false);
                   }}

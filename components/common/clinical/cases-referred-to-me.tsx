@@ -4,7 +4,7 @@ import type { ClinicalScreeningInfo, Student } from "@prisma/client";
 import { AcceptRefferedClinicalCase, RejectRefferedClinicalCase } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
-import { useToast } from "#/components/ui/use-toast";
+import { toastOnError, useToast } from "#/components/ui/use-toast";
 
 type CasesType = ClinicalScreeningInfo & {
   student: Student;
@@ -96,10 +96,18 @@ export function RefferedCasesTab({
         {handleWordLimit(referralNotes, 50)}
       </span>
       <div className="flex items-center justify-between">
-        <button type="button" onClick={handleAcceptReferredCase} className="cursor-pointer">
+        <button
+          type="button"
+          onClick={toastOnError(handleAcceptReferredCase)}
+          className="cursor-pointer"
+        >
           <Icons.check className="mx-2 h-6 w-6 align-baseline text-muted-green xl:h-7 xl:w-7" />
         </button>
-        <button type="button" onClick={handleRejectReferredCase} className="cursor-pointer">
+        <button
+          type="button"
+          onClick={toastOnError(handleRejectReferredCase)}
+          className="cursor-pointer"
+        >
           <Icons.xIcon className="mx-2 h-6 w-6 align-baseline text-shamiri-red xl:h-7 xl:w-7" />
         </button>
       </div>

@@ -16,7 +16,7 @@ import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { useToast } from "#/components/ui/use-toast";
+import { toastOnError, useToast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
@@ -81,9 +81,11 @@ export default function MarkCaseAsSpecial({
         <Form {...form}>
           <form
             id="modifyFlagAction"
-            onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.error({ errors });
-            })}
+            onSubmit={toastOnError(
+              form.handleSubmit(onSubmit, (errors) => {
+                console.error({ errors });
+              }),
+            )}
             className="overflow-hidden text-ellipsis"
           >
             <DialogHeader className="space-y-0 px-6 py-4">

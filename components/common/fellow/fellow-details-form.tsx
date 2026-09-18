@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitFellowDetails } from "#/lib/actions/fellow";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
@@ -131,7 +131,7 @@ export default function FellowDetailsForm({
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
             className={cn(mode === "view" ? "form-view-mode" : "")}
           >
             <DialogHeader>

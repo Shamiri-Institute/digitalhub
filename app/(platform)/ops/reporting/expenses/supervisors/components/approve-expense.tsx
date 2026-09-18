@@ -25,7 +25,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export const ConfirmReversalSchema = z.object({
@@ -94,7 +94,7 @@ export default function HCApproveSupervisorExpense({
         />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-2">
               <FormField
                 control={form.control}
                 name="amount"

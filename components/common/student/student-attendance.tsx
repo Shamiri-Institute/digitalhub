@@ -36,7 +36,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { fetchSessionAttendances } from "#/lib/actions/session/session";
 import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
@@ -412,10 +412,10 @@ export default function StudentAttendance({
             hubId={session.hubId ?? undefined}
             existingEvent={triageExistingEvent ?? undefined}
             readOnly={triageReadOnly}
-            onSuccess={async () => {
+            onSuccess={toastOnError(async () => {
               await refresh();
               await loadTriageEventsForSession();
-            }}
+            })}
           />
         )}
         {historyStudent && (

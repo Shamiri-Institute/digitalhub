@@ -39,7 +39,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
@@ -129,7 +129,7 @@ export default function SupervisorDetailsForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <DialogHeader>
               <DialogTitle className="text-xl">
                 {isViewMode ? "View supervisor information" : "Edit supervisor information"}

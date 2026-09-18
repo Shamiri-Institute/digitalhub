@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import {
   BOARDING_DAY_TYPES,
   KENYAN_COUNTIES,
@@ -193,7 +193,7 @@ export default function SchoolDetailsForm({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="w-1/2 max-w-none">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <DialogHeader>
               <DialogTitle className="text-xl">
                 {isEditing ? "Edit school information" : "Add new school"}
