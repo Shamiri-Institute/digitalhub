@@ -90,6 +90,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
   const [uploadProgress, setUploadProgress] = useState(0);
   const { uploadToS3, files } = useS3Upload();
 
+  // effect: mirrors the S3 hook's upload progress into the dialog's progress bar
   useEffect(() => {
     if (files.length > 0 && uploading) {
       const lastFile = files[files.length - 1];
@@ -104,6 +105,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
   const sessionId = form.watch("sessionId");
   const schoolId = form.watch("schoolId");
 
+  // effect: open is set by the parent; loads fellows when it opens
   useEffect(() => {
     if (open) {
       setLoadingFellows(true);
@@ -121,6 +123,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [open]);
 
+  // effect: resets dependent fields and reloads groups when the watched fellow field changes
   useEffect(() => {
     if (fellowId) {
       setLoadingGroups(true);
@@ -147,6 +150,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [fellowId, form]);
 
+  // effect: resets dependent fields and reloads sessions when the watched group field changes
   useEffect(() => {
     if (groupId) {
       setLoadingSessions(true);
@@ -175,6 +179,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [groupId, groups, form]);
 
+  // effect: checks for a duplicate recording once all four watched fields are set
   useEffect(() => {
     if (fellowId && groupId && sessionId && schoolId) {
       setCheckingDuplicate(true);

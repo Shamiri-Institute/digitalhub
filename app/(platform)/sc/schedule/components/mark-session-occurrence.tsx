@@ -62,6 +62,7 @@ export function MarkSessionOccurrence({
       .toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
   })();
 
+  // effect: resets the form to the session the parent selected when the dialog opens
   useEffect(() => {
     if (isOpen && id) {
       form.reset({

@@ -17,6 +17,7 @@ export default function PdfViewerInner({ url, className }: PdfViewerInnerProps) 
   const contentRef = useRef<HTMLDivElement>(null);
   const [loadError, setLoadError] = useState(false);
 
+  // effect: measures the container and subscribes to window resize
   useEffect(() => {
     const updateWidth = () => {
       if (contentRef.current) {

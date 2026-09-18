@@ -28,6 +28,7 @@ export function ViewResolutionDialog({
   const [resolution, setResolution] = useState<TicketResolution | null>();
   const [loading, setLoading] = useState(false);
 
+  // effect: loads the ticket's resolution when the parent opens the dialog
   useEffect(() => {
     if (!open || !ticket?.id) return;
 

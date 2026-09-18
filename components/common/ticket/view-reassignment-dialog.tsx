@@ -35,6 +35,7 @@ export function ViewReassignmentDialog({
   const [errorKind, setErrorKind] = useState<"none" | "unauthorized" | "not-found">("none");
   const [loading, setLoading] = useState(false);
 
+  // effect: loads the ticket's reassignments when the parent opens the dialog
   useEffect(() => {
     if (!open || !ticket?.id) return;
 

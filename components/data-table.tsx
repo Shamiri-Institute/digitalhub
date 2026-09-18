@@ -117,6 +117,7 @@ export default function DataTable<TData, TValue>({
     globalFilterFn: fuzzyFilter,
   });
 
+  // effect: notifies the parent when the table's row selection changes
   useEffect(() => {
     const rows = table.getSelectedRowModel().rows;
     if (onRowSelectionChange) {
@@ -124,6 +125,7 @@ export default function DataTable<TData, TValue>({
     }
   }, [onRowSelectionChange, rowSelection, table]);
 
+  // effect: clears the row selection when the data prop changes
   useEffect(() => {
     table.resetRowSelection();
   }, [data, table]);

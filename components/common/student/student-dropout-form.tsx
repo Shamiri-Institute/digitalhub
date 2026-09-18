@@ -60,6 +60,7 @@ export default function StudentDropoutForm({
     },
   });
 
+  // effect: resets the form to the student the parent selected when the dialog opens
   useEffect(() => {
     if (isOpen) {
       form.reset({

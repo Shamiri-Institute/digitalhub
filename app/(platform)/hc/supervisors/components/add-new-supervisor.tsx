@@ -57,10 +57,12 @@ export default function AddNewSupervisor() {
 
   const countyWatcher = form.watch("county");
 
+  // effect: clears the sub-county when the watched county field changes
   useEffect(() => {
     form.setValue("subCounty", "");
   }, [countyWatcher]);
 
+  // effect: resets the form whenever the parent opens or closes the dialog through isOpen
   useEffect(() => {
     form.reset();
   }, [isOpen]);

@@ -121,6 +121,7 @@ export function MarkAttendance({
     };
   }
 
+  // effect: resets the form when the parent changes sessions, attendances or open state, or the watched session changes
   useEffect(() => {
     form.reset(getDefaultValues(sessionIdWatcher));
     if (!isOpen) {
@@ -128,10 +129,12 @@ export function MarkAttendance({
     }
   }, [sessions, id, form, isOpen, attendances, sessionIdWatcher]);
 
+  // effect: resets the form when the parent preselects a session
   useEffect(() => {
     form.reset(getDefaultValues(selectedSessionId));
   }, [selectedSessionId]);
 
+  // effect: clears the reason and comments when the watched attendance status changes
   useEffect(() => {
     form.setValue("comments", undefined);
     form.setValue("absenceReason", undefined);

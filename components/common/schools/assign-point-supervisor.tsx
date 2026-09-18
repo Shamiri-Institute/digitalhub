@@ -49,6 +49,7 @@ export default function AssignPointSupervisor({
     resolver: zodResolver(AssignPointSupervisorSchema),
   });
 
+  // effect: resets the form to the school the parent selected when the dialog opens
   useEffect(() => {
     form.reset({
       assignedSupervisorId: school?.assignedSupervisorId ?? undefined,

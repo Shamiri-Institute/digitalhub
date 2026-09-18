@@ -167,6 +167,7 @@ function toast({ ...props }: Toast) {
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);
 
+  // effect: subscribes this hook instance to the toast store
   React.useEffect(() => {
     listeners.push(setState);
     return () => {

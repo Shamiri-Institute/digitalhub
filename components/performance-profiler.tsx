@@ -18,6 +18,7 @@ function DevProfiler({ id, children }: { id: string; children: React.ReactNode }
     timeoutId: null as ReturnType<typeof setTimeout> | null,
   });
 
+  // effect: clears the pending stats timer on unmount
   React.useEffect(() => {
     return () => {
       if (statsRef.current.timeoutId) {

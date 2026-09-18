@@ -53,6 +53,7 @@ export default function ReplaceFellow({
   });
   const supervisorWatcher = form.watch("supervisorId");
 
+  // effect: resets the form to the selected group when the parent opens the dialog
   useEffect(() => {
     if (open) {
       form.reset({

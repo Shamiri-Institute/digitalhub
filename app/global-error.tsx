@@ -5,6 +5,7 @@ import NextError from "next/error";
 import { useEffect } from "react";
 
 export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
+  // effect: reports the caught render error to Sentry once per error instance
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);

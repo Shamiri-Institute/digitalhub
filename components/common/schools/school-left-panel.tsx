@@ -35,6 +35,7 @@ export default function SchoolLeftPanel({
   const [school, setSchool] = useState<SchoolData | null>(null);
   const { visibleId } = useParams();
 
+  // effect: loads the school for the route's visibleId; server-side loading is a separate change
   useEffect(() => {
     const fetchSchoolData = async () => {
       setLoading(true);

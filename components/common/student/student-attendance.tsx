@@ -91,6 +91,7 @@ export default function StudentAttendance({
       ? Object.fromEntries(sessionAttendances.map((a) => [a.studentId, a]))
       : {};
 
+  // effect: loads the session's attendances when the parent opens the dialog
   useEffect(() => {
     if (!isOpen || !session?.id) return;
     const targetSessionId = session.id;
@@ -146,6 +147,7 @@ export default function StudentAttendance({
     role,
   });
 
+  // effect: loads the existing triage event when the triage modal opens for a student
   useEffect(() => {
     if (!isFellow || !triageModalOpen || !triageStudent?.id || !session?.id) {
       return;
@@ -171,6 +173,7 @@ export default function StudentAttendance({
     }
   };
 
+  // effect: loads the session's triage events for the fellow view
   useEffect(() => {
     if (!isFellow || !session?.id) return;
 

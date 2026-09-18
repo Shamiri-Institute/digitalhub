@@ -30,6 +30,7 @@ export default function AssignFellowSupervisorSelect({
   const [selectedSupervisor, setSelectedSupervisor] = useState(supervisorId);
   const [loading, setLoading] = useState(false);
 
+  // effect: runs the assignment server action when the controlled select value changes
   useEffect(() => {
     try {
       const assignSupervisor = async () => {

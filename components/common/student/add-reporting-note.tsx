@@ -60,6 +60,7 @@ export function AddReportingNote({
     setIsOpen(false);
   };
 
+  // effect: clears the form whenever the parent opens or closes the dialog
   useEffect(() => {
     form.reset();
   }, [isOpen, form]);

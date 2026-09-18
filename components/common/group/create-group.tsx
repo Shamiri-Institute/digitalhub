@@ -62,6 +62,7 @@ export default function CreateGroup({
   });
   const supervisorWatcher = form.watch("supervisorId");
 
+  // effect: clears the form when the dialog closes; open is shared with the trigger
   useEffect(() => {
     if (!open) {
       form.reset();

@@ -78,6 +78,7 @@ export function UserSearcher({
   const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
 
+  // effect: debounced server search as the query changes; the timer is cleaned up
   useEffect(() => {
     if (hubGated) return;
     let active = true;

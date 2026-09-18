@@ -22,6 +22,7 @@ export function AdminScheduleCalendar({ adminUser }: { adminUser: CurrentAdminUs
   const [supervisors, setSupervisors] = useState<ImplementerSupervisor[]>([]);
   const [fellowRatings, setFellowRatings] = useState<ImplementerFellowRating[]>([]);
 
+  // effect: loads session types, supervisors and ratings for the admin's implementer
   useEffect(() => {
     const fetchSessionTypes = async () => {
       if (!implementerId || !role || adminUser === null) return;

@@ -50,6 +50,7 @@ export function ListView({
 
   const { filters } = useContext(FiltersContext);
 
+  // effect: publishes the visible range to the shared title context
   useEffect(() => {
     setTitle(
       dateFormatter.formatRange(
@@ -59,6 +60,7 @@ export function ListView({
     );
   }, [state.visibleRange.start, state.visibleRange.end, dateFormatter, setTitle, state.timeZone]);
 
+  // effect: groups the sessions in the visible range by day
   useEffect(() => {
     const fetchSessions = async () => {
       const start = state.visibleRange.start.toDate(state.timeZone);

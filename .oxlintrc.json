@@ -95,7 +95,7 @@
     "hooks-policy/justify": [
       "error",
       {
-        "hooks": ["useMemo", "useCallback"]
+        "hooks": ["useEffect", "useLayoutEffect", "useMemo", "useCallback"]
       }
     ]
   },

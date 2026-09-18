@@ -40,6 +40,7 @@ export function ProjectSwitcher({
   const [isAdminUser, setIsAdminUser] = useState(activeMembership?.role === ImplementerRole.ADMIN);
   const activeProjectId = session?.user?.activeProjectId ?? null;
 
+  // effect: checks admin status with a server action after the session loads
   useEffect(() => {
     const checkIsAdminUser = async () => {
       const isAdmin = await isCurrentUserAdmin();
@@ -61,6 +62,7 @@ export function ProjectSwitcher({
     }
   };
 
+  // effect: loads the admin project list once admin status is known
   useEffect(() => {
     if (!isAdminUser) return;
     // oxlint-disable-next-line react/set-state-in-effect -- loads the admin project list on mount; server-side loading is a separate change

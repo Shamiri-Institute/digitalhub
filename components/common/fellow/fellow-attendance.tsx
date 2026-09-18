@@ -99,6 +99,7 @@ export default function FellowAttendance({
   });
   const watcher = form.watch("supervisor");
 
+  // effect: rebuilds the attendance rows when the watched supervisor field changes
   useEffect(() => {
     const supervisor = supervisors?.find((supervisor) => supervisor.id === watcher);
     if (supervisor) {

@@ -53,6 +53,7 @@ export function DayView({
     day: "numeric",
     month: "long",
   });
+  // effect: publishes the visible date to the shared title context
   useEffect(() => {
     setTitle(`${titleFormatter.format(currentDate.toDate(state.timeZone))}`);
   }, [currentDate, setTitle, state.timeZone, titleFormatter]);

@@ -126,6 +126,7 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
 
   const countyWatcher = form.watch("county");
 
+  // effect: clears the sub-county when the user changes the watched county field
   useEffect(() => {
     if (form.formState.dirtyFields.county) {
       form.setValue("subCounty", "");

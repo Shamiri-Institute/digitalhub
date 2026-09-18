@@ -98,6 +98,7 @@ export default function StudentTriageHistoryModal({
   const [history, setHistory] = useState<HistoryEvent[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // effect: isOpen is set by the parent; loads the history when it opens
   useEffect(() => {
     if (!isOpen || !studentId) return;
     // oxlint-disable-next-line react/set-state-in-effect -- isOpen is controlled by the parent, so the fetch cannot live in an open handler here

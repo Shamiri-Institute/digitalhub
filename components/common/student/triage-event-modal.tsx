@@ -133,18 +133,21 @@ export default function TriageEventModal({
     }
   };
 
+  // effect: loads the hub's supervisors when the parent opens the modal
   useEffect(() => {
     if (isOpen) {
       void loadSupervisors();
     }
   }, [isOpen, sessionId, hubId]);
 
+  // effect: forces the action to ESCALATED when the risk screen outcome requires it
   useEffect(() => {
     if (forceEscalated) {
       form.setValue("actionTaken", "ESCALATED");
     }
   }, [forceEscalated, form]);
 
+  // effect: loads the existing triage event into the form when the parent opens the modal
   useEffect(() => {
     if (!isOpen) return;
     if (existingEvent) {
