@@ -1,7 +1,7 @@
 "use client";
 
 import type { ImplementerRole } from "@prisma/client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { columns, type TicketData } from "#/components/common/ticket/columns";
 import CreateTicketDialog from "#/components/common/ticket/create-ticket-dialog";
 import { EscalateTicketDialog } from "#/components/common/ticket/escalate-ticket-dialog";
@@ -31,23 +31,21 @@ export default function TicketsDatatable({
   const [escalateDialog, setEscalateDialog] = useState(false);
   const [reassignDialog, setReassignDialog] = useState<boolean | "view">(false);
 
-  const ticket = useMemo(() => {
+  const ticket = (() => {
     if (selectedTicket) {
       return tickets.find((t) => t.id === selectedTicket.id);
     }
     return selectedTicket;
-  }, [tickets, selectedTicket]);
+  })();
 
-  const memoizedColumns = useMemo(() => {
-    return columns({
-      setTicket: setSelectedTicket,
-      setViewDialog,
-      setResolutionDialog,
-      setEscalateDialog,
-      setReassignDialog,
-      role,
-    });
-  }, [role]);
+  const memoizedColumns = columns({
+    setTicket: setSelectedTicket,
+    setViewDialog,
+    setResolutionDialog,
+    setEscalateDialog,
+    setReassignDialog,
+    role,
+  });
 
   const renderTableActions = () => {
     if (!isEscalationInitiatorRole(role)) return null;

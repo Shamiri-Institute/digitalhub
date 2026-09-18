@@ -4,7 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { addDays, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useCallback, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -154,7 +154,7 @@ export default function StudentGroupEvaluation({
   );
   const pathname = usePathname();
 
-  const getDefaultValues = useCallback(() => {
+  const getDefaultValues = () => {
     return {
       mode,
       groupId,
@@ -170,7 +170,7 @@ export default function StudentGroupEvaluation({
       content: existingEvaluation?.content ?? 0,
       sessionId: selectedSessionId ?? existingEvaluation?.sessionId ?? undefined,
     };
-  }, [mode, groupId, existingEvaluation, selectedSessionId]);
+  };
 
   const form = useForm<z.infer<typeof StudentGroupEvaluationSchema>>({
     resolver: zodResolver(StudentGroupEvaluationSchema),
@@ -192,7 +192,7 @@ export default function StudentGroupEvaluation({
         differenceInSeconds(addDays(existingEvaluation.createdAt, 14), new Date()),
       );
     }
-  }, [selectedSessionId, open, existingEvaluation, form, evaluations, getDefaultValues]);
+  }, [selectedSessionId, open, existingEvaluation, form, evaluations]);
 
   const onSubmit = async (data: z.infer<typeof StudentGroupEvaluationSchema>) => {
     const response = await submitGroupEvaluation(data);

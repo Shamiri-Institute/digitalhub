@@ -1,7 +1,7 @@
 "use client";
 
 import { ImplementerRole, Prisma } from "@prisma/client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
@@ -49,7 +49,7 @@ export default function FellowsDatatable({
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
   const [assignSupervisorDialog, setAssignSupervisorDialog] = useState(false);
 
-  const fellow = useMemo(() => {
+  const fellow = (() => {
     if (selectedFellow) {
       const updatedFellow = fellows.find((f) => {
         return f.id === selectedFellow.id;
@@ -57,21 +57,19 @@ export default function FellowsDatatable({
       return updatedFellow;
     }
     return selectedFellow;
-  }, [fellows, selectedFellow]);
+  })();
 
-  const memoizedColumns = useMemo(() => {
-    return columns({
-      state: {
-        setFellow: setSelectedFellow,
-        setDetailsDialog,
-        setReplaceDialog,
-        setStudentsDialog,
-        setAttendanceHistoryDialog,
-        setAssignSupervisorDialog,
-      },
-      role,
-    });
-  }, [role]);
+  const memoizedColumns = columns({
+    state: {
+      setFellow: setSelectedFellow,
+      setDetailsDialog,
+      setReplaceDialog,
+      setStudentsDialog,
+      setAttendanceHistoryDialog,
+      setAssignSupervisorDialog,
+    },
+    role,
+  });
 
   return (
     <>

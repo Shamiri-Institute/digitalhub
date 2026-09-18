@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -199,7 +199,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     }
   }, [fellowId, groupId, sessionId, schoolId]);
 
-  const handleFileSelect = useCallback(async (file: File) => {
+  const handleFileSelect = async (file: File) => {
     setFileError(null);
     setValidatingFile(true);
 
@@ -226,37 +226,31 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     } finally {
       setValidatingFile(false);
     }
-  }, []);
+  };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLLabelElement>) => {
-      e.preventDefault();
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
 
-      let files: File[] = [];
-      if (e.dataTransfer.items) {
-        files = Array.from(e.dataTransfer.items)
-          .map((item) => item.getAsFile())
-          .filter((file): file is File => file !== null);
-      } else {
-        files = Array.from(e.dataTransfer.files);
-      }
+    let files: File[] = [];
+    if (e.dataTransfer.items) {
+      files = Array.from(e.dataTransfer.items)
+        .map((item) => item.getAsFile())
+        .filter((file): file is File => file !== null);
+    } else {
+      files = Array.from(e.dataTransfer.files);
+    }
 
-      if (files.length > 0 && files[0]) {
-        void handleFileSelect(files[0]);
-      }
-    },
-    [handleFileSelect],
-  );
+    if (files.length > 0 && files[0]) {
+      void handleFileSelect(files[0]);
+    }
+  };
 
-  const handleFileInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        void handleFileSelect(file);
-      }
-    },
-    [handleFileSelect],
-  );
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      void handleFileSelect(file);
+    }
+  };
 
   const onSubmit = async (data: RecordingUploadFormData) => {
     if (!selectedFile) {

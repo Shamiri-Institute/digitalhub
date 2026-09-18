@@ -1,14 +1,7 @@
 import { type Fellow, ImplementerRole, type Prisma } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { usePathname } from "next/navigation";
-import {
-  type Dispatch,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
@@ -93,13 +86,10 @@ export default function StudentAttendance({
 
   const loadingAttendances = isOpen && !!session?.id && attendanceFetchId !== session.id;
 
-  const attendanceByStudentId = useMemo(
-    () =>
-      attendanceFetchId === session?.id
-        ? Object.fromEntries(sessionAttendances.map((a) => [a.studentId, a]))
-        : {},
-    [attendanceFetchId, session?.id, sessionAttendances],
-  );
+  const attendanceByStudentId =
+    attendanceFetchId === session?.id
+      ? Object.fromEntries(sessionAttendances.map((a) => [a.studentId, a]))
+      : {};
 
   useEffect(() => {
     if (!isOpen || !session?.id) return;
@@ -133,34 +123,17 @@ export default function StudentAttendance({
     },
   });
 
-  const groups = useMemo(() => {
-    return fellows.map((fellow) => {
-      const _session = sessions.length > 0 ? sessions.find((x) => x.id === session?.id) : session;
-      const group = _session?.school?.interventionGroups.find(
-        (group) => group.leaderId === fellow.id,
-      );
-      return { fellow, group };
-    });
-  }, [fellows, session, sessions]);
+  const groups = fellows.map((fellow) => {
+    const _session = sessions.length > 0 ? sessions.find((x) => x.id === session?.id) : session;
+    const group = _session?.school?.interventionGroups.find(
+      (group) => group.leaderId === fellow.id,
+    );
+    return { fellow, group };
+  });
 
-  const memoizedColumns = useMemo(() => {
-    return columns({
-      setAttendance,
-      setAttendanceDialog: setMarkAttendanceDialog,
-      setTriageStudent,
-      setTriageModalOpen,
-      setTriageReadOnly,
-      setHistoryStudent,
-      setHistoryModalOpen,
-      triageEventsByStudent,
-      attendanceByStudentId,
-      loadingAttendances,
-      session,
-      role,
-    });
-  }, [
+  const memoizedColumns = columns({
     setAttendance,
-    setMarkAttendanceDialog,
+    setAttendanceDialog: setMarkAttendanceDialog,
     setTriageStudent,
     setTriageModalOpen,
     setTriageReadOnly,
@@ -171,7 +144,7 @@ export default function StudentAttendance({
     loadingAttendances,
     session,
     role,
-  ]);
+  });
 
   useEffect(() => {
     if (!isFellow || !triageModalOpen || !triageStudent?.id || !session?.id) {

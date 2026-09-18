@@ -3,7 +3,7 @@
 import type { ImplementerRole } from "@prisma/client";
 import { format } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { SessionDetail } from "#/components/common/session/session-list";
 import type { Session } from "#/components/common/session/sessions-provider";
 import UploadStudentAttendanceDocument from "#/components/common/student/student-attendance-files/upload-student-attendance";
@@ -31,9 +31,9 @@ export default function AttendanceDocumentDialog({
 }) {
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = () => {
     setRefreshKey((k) => k + 1);
-  }, []);
+  };
   if (!session || !groupId) return null;
 
   const group = session.school?.interventionGroups?.find((g) => g.id === groupId);

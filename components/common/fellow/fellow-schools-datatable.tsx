@@ -2,7 +2,7 @@
 import type { ImplementerRole, Project } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
@@ -41,7 +41,7 @@ export default function FellowSchoolsDatatable({
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
 
-  const mainColumns = useMemo(() => {
+  const mainColumns = (() => {
     const columns = {
       setFellow: setSelectedFellow,
       setWeeklyEvaluationDialog,
@@ -52,9 +52,9 @@ export default function FellowSchoolsDatatable({
     };
 
     return fellowSchoolsColumns({ state: columns });
-  }, [role]);
+  })();
 
-  const subColumnsMemo = useMemo(() => {
+  const subColumnsMemo = (() => {
     const columns = {
       setFellowGroup: setSelectedFellowGroup,
       setAttendanceDialog,
@@ -64,7 +64,7 @@ export default function FellowSchoolsDatatable({
     };
 
     return subColumns({ state: columns });
-  }, [role]);
+  })();
 
   function renderTableActions() {
     return role !== "FELLOW" ? (
@@ -105,21 +105,21 @@ export default function FellowSchoolsDatatable({
     );
   }
 
-  const fellow = useMemo(() => {
+  const fellow = (() => {
     if (selectedFellowGroup) {
       return fellows.find((f) => f.id === selectedFellowGroup.leaderId) ?? null;
     }
     return selectedFellow;
-  }, [selectedFellow, selectedFellowGroup, fellows]);
+  })();
 
-  const fellowGroup = useMemo(() => {
+  const fellowGroup = (() => {
     if (!selectedFellowGroup) {
       return;
     }
     return fellows
       .find((f) => f.id === selectedFellowGroup.leaderId)
       ?.groups.find((g) => g.id === selectedFellowGroup.id);
-  }, [selectedFellowGroup, fellows]);
+  })();
 
   return (
     <>

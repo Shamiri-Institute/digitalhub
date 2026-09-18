@@ -1,7 +1,7 @@
 import { ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
@@ -58,31 +58,28 @@ export default function SupervisorAttendance({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   session: Session | null;
 }) {
-  const attendances = useMemo(() => {
-    return (
-      supervisors?.map((supervisor) => {
-        const attendance = supervisor.supervisorAttendances.find(
-          (_attendance) => _attendance.sessionId === session?.id,
-        );
-        return {
-          id: attendance?.id,
-          supervisorId: supervisor.id,
-          supervisorName: supervisor.supervisorName ?? "",
-          pointSchools: supervisor.assignedSchools.map((school) => school.schoolName),
-          attendance: attendance?.attended,
-          phoneNumber: supervisor.cellNumber ?? "",
-          fellows: `${supervisor.fellows.filter((fellow) => fellow.droppedOut !== true).length}/${supervisor.fellows.length}`,
-          sessionId: attendance?.sessionId,
-          schoolId: attendance?.schoolId,
-          absenceReason: attendance?.absenceReason ?? "",
-          absenceComments: attendance?.absenceComments ?? "",
-          schoolName: session?.school?.schoolName ?? session?.venue ?? undefined,
-          sessionType: session?.session?.sessionName,
-          sessionStatus: session?.status,
-        };
-      }) ?? []
-    );
-  }, [supervisors, session]);
+  const attendances =
+    supervisors?.map((supervisor) => {
+      const attendance = supervisor.supervisorAttendances.find(
+        (_attendance) => _attendance.sessionId === session?.id,
+      );
+      return {
+        id: attendance?.id,
+        supervisorId: supervisor.id,
+        supervisorName: supervisor.supervisorName ?? "",
+        pointSchools: supervisor.assignedSchools.map((school) => school.schoolName),
+        attendance: attendance?.attended,
+        phoneNumber: supervisor.cellNumber ?? "",
+        fellows: `${supervisor.fellows.filter((fellow) => fellow.droppedOut !== true).length}/${supervisor.fellows.length}`,
+        sessionId: attendance?.sessionId,
+        schoolId: attendance?.schoolId,
+        absenceReason: attendance?.absenceReason ?? "",
+        absenceComments: attendance?.absenceComments ?? "",
+        schoolName: session?.school?.schoolName ?? session?.venue ?? undefined,
+        sessionType: session?.session?.sessionName,
+        sessionStatus: session?.status,
+      };
+    }) ?? [];
 
   return (
     <div>
@@ -162,17 +159,15 @@ export function SupervisorAttendanceDataTable({
     );
   };
 
-  const memoizedColumns = useMemo(() => {
-    return overrideColumns
-      ? overrideColumns({
-          setAttendance,
-          setMarkAttendanceDialog,
-        })
-      : columns({
-          setAttendance,
-          setMarkAttendanceDialog,
-        });
-  }, [overrideColumns, setAttendance, setMarkAttendanceDialog]);
+  const memoizedColumns = overrideColumns
+    ? overrideColumns({
+        setAttendance,
+        setMarkAttendanceDialog,
+      })
+    : columns({
+        setAttendance,
+        setMarkAttendanceDialog,
+      });
 
   return (
     <div className="space-y-4 pt-2">

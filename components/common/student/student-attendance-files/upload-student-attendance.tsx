@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
@@ -50,30 +50,27 @@ export default function UploadStudentAttendanceDocument({
     };
   }, [previewUrls]);
 
-  const addFiles = useCallback((files: File[]) => {
+  const addFiles = (files: File[]) => {
     setSelectedFiles((prev) => [...prev, ...files]);
     const newUrls = files.map((file) => URL.createObjectURL(file));
     setPreviewUrls((prev) => [...prev, ...newUrls]);
-  }, []);
+  };
 
-  const removeFile = useCallback((index: number) => {
+  const removeFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
     setPreviewUrls((prev) => {
       if (prev[index]) URL.revokeObjectURL(prev[index]);
       return prev.filter((_, i) => i !== index);
     });
-  }, []);
+  };
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files || []);
-      if (files.length > 0) {
-        addFiles(files);
-      }
-      e.target.value = "";
-    },
-    [addFiles],
-  );
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      addFiles(files);
+    }
+    e.target.value = "";
+  };
 
   const handleUpload = async () => {
     if (selectedFiles.length === 0) {
