@@ -10,28 +10,18 @@ import {
   createAttendanceDocument,
   getAttendanceDocument,
 } from "#/lib/actions/file/student-attendance";
-import type { AttendanceDocS3Key } from "#/lib/actions/file/student-attendance/types";
+import { NO_ATTENDANCE_DOCUMENT_MESSAGE } from "#/lib/actions/file/student-attendance/types";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
-import { buildAttendanceS3Key, createAttendancePdf } from "#/lib/utils/attendance-upload";
+import { createAttendancePdf } from "#/lib/utils/attendance-upload";
 
 export default function UploadStudentAttendanceDocument({
   groupId,
   sessionId,
-  schoolName,
-  fellowName,
-  groupName,
-  sessionDate,
-  sessionType,
   onClose,
   onUploadSuccess,
 }: {
   groupId: string;
   sessionId: string;
-  schoolName?: string;
-  fellowName?: string;
-  groupName?: string;
-  sessionDate?: string;
-  sessionType?: string;
   onClose: (val: boolean) => void;
   onUploadSuccess?: () => void;
 }) {
@@ -80,11 +70,6 @@ export default function UploadStudentAttendanceDocument({
     }
 
     const missing: string[] = [];
-    if (!schoolName) missing.push("schoolName");
-    if (!fellowName) missing.push("fellowName");
-    if (!groupName) missing.push("groupName");
-    if (!sessionDate) missing.push("sessionDate");
-    if (!sessionType) missing.push("sessionType");
     if (!groupId) missing.push("groupId");
     if (!sessionId) missing.push("sessionId");
     if (missing.length > 0) {
@@ -101,32 +86,41 @@ export default function UploadStudentAttendanceDocument({
     try {
       const filters = { sessionId, groupId };
 
-      const s3KeyFields: AttendanceDocS3Key = {
-        schoolName: schoolName as string,
-        fellowName: fellowName as string,
-        groupName: groupName as string,
-        sessionDate: new Date(sessionDate as string),
-        sessionType: sessionType as string,
-      };
-
       const existing = await getAttendanceDocument(filters);
 
-      const oldS3Key = existing.data?.link ?? null;
-      const existingPdfUrl = existing.data?.presignedUrl ?? null;
+      let existingPdfUrl: string | null;
+      let expectedActiveDocId: string | null;
+      if (existing.success) {
+        existingPdfUrl = existing.data?.presignedUrl ?? null;
+        expectedActiveDocId = existing.data?.id ?? null;
+      } else if (existing.message === NO_ATTENDANCE_DOCUMENT_MESSAGE) {
+        existingPdfUrl = null;
+        expectedActiveDocId = null;
+      } else {
+        throw new Error(
+          existing.message ??
+            "Could not verify the existing attendance document. Please try again.",
+        );
+      }
 
       const pdfFile = await createAttendancePdf(existingPdfUrl, selectedFiles);
-      const { fileName, s3Key } = buildAttendanceS3Key(s3KeyFields);
-      const { key } = await uploadToS3(pdfFile, { key: s3Key, bucket: "student-attendance" });
+      const { key, token } = await uploadToS3(pdfFile, {
+        bucket: "student-attendance",
+        groupId,
+        sessionId,
+      });
 
-      const result = await createAttendanceDocument(
-        {
-          groupId,
-          sessionId,
-          fileName,
-          link: key,
-        },
-        oldS3Key,
-      );
+      if (!key || !token) {
+        throw new Error("Upload failed - no key returned");
+      }
+
+      const result = await createAttendanceDocument({
+        groupId,
+        sessionId,
+        link: key,
+        token,
+        expectedActiveDocId,
+      });
 
       if (result.success) {
         onUploadSuccess?.();

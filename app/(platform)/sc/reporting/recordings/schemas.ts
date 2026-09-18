@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  ALLOWED_EXTENSIONS,
+  MAX_FILE_SIZE,
+  RECORDINGS_ALLOWED_CONTENT_TYPES,
+} from "#/lib/s3/s3.types";
+
+export { ALLOWED_EXTENSIONS, MAX_FILE_SIZE, RECORDINGS_ALLOWED_CONTENT_TYPES };
 
 /**
  * Zod schema for recording upload form validation
@@ -12,29 +19,7 @@ export const RecordingUploadSchema = z.object({
 
 export type RecordingUploadFormData = z.infer<typeof RecordingUploadSchema>;
 
-/**
- * Allowed audio MIME types
- */
-export const ALLOWED_AUDIO_TYPES = [
-  "audio/mpeg", // mp3
-  "audio/wav", // wav
-  "audio/wave", // wav alternate
-  "audio/x-wav", // wav alternate
-  "audio/x-m4a", // m4a
-  "audio/mp4", // m4a/mp4
-  "video/mp4", // mp4 (can contain audio)
-  "audio/aac", // aac
-] as const;
-
-/**
- * Allowed file extensions
- */
-export const ALLOWED_EXTENSIONS = [".mp3", ".wav", ".m4a", ".mp4"] as const;
-
-/**
- * Maximum file size in bytes (500MB)
- */
-export const MAX_FILE_SIZE = 500 * 1024 * 1024;
+export const ALLOWED_AUDIO_TYPES = RECORDINGS_ALLOWED_CONTENT_TYPES;
 
 /**
  * Magic bytes patterns for audio file validation
@@ -225,12 +210,3 @@ export const RecordingEditSchema = z.object({
 });
 
 export type RecordingEditFormData = z.infer<typeof RecordingEditSchema>;
-
-/**
- * Get file extension from filename
- */
-export function getFileExtension(filename: string): string {
-  const parts = filename.split(".");
-  const lastPart = parts[parts.length - 1];
-  return parts.length > 1 && lastPart ? lastPart.toLowerCase() : "";
-}

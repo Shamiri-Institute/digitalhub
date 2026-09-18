@@ -8,6 +8,7 @@ import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { toastOnError, useToast } from "#/components/ui/use-toast";
 import { deleteAttendanceFile, getAttendanceDocument } from "#/lib/actions/file/student-attendance";
+import { NO_ATTENDANCE_DOCUMENT_MESSAGE } from "#/lib/actions/file/student-attendance/types";
 import PdfViewerModal from "#/lib/utils/pdf/pdf-viewer-modal";
 
 export default function ViewAttendanceDocument({
@@ -59,9 +60,9 @@ export default function ViewAttendanceDocument({
   }, [sessionId, groupId]);
 
   const handleDelete = async () => {
-    if (!state.id || !state.link) return;
+    if (!state.id) return;
     setState((prev) => ({ ...prev, archiving: true }));
-    const result = await deleteAttendanceFile(state.id, state.link);
+    const result = await deleteAttendanceFile(state.id);
     if (result.success) {
       setState({ loading: false, archived: true, archiving: false });
       onDeleteSuccess?.();
@@ -85,7 +86,7 @@ export default function ViewAttendanceDocument({
     );
   }
 
-  if (state.error === "No attendance document found for this session") {
+  if (state.error === NO_ATTENDANCE_DOCUMENT_MESSAGE) {
     return (
       <div className="flex items-center justify-center p-4">
         <Alert variant="primary">
