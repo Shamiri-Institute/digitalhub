@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
 import { columns } from "#/components/common/expenses/fellows/columns";
 import DataTable from "#/components/data-table";
-import { Skeleton } from "#/components/ui/skeleton";
+import { SkeletonCell } from "#/components/ui/skeleton";
 
 export default function FellowsTableSkeleton() {
   const loadingColumns: ColumnDef<HubFellowsAttendancesType>[] = columns.map((column) => {
@@ -13,11 +13,7 @@ export default function FellowsTableSkeleton() {
       accessorFn: () => null,
       header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
       id: columnId,
-      cell: () => {
-        return columnId !== "checkbox" && columnId !== "button" ? (
-          <Skeleton className="h-5 w-full bg-gray-200" />
-        ) : null;
-      },
+      cell: columnId !== "checkbox" && columnId !== "button" ? SkeletonCell : undefined,
     };
   });
 
