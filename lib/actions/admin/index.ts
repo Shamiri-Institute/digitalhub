@@ -1,9 +1,8 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
+import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { db } from "#/lib/db";
 import type { ActionResponse } from "#/types/actions.types";
 import type { UserSearchResult } from "#/types/user-search.types";
 
@@ -17,9 +16,10 @@ export async function fetchAdminUsers(
 
     const term = search?.trim();
 
-    const memberships = await db.implementerMember.findMany({
-      where: { role: ImplementerRole.ADMIN, implementerId },
-      select: { identifier: true, userId: true },
+    const memberships = await db.query.implementerMember.findMany({
+      where: (m, { and, eq }) =>
+        and(eq(m.role, ImplementerRole.ADMIN), eq(m.implementerId, implementerId)),
+      columns: { identifier: true, userId: true },
     });
 
     const identifierToUserId = new Map(
@@ -32,30 +32,15 @@ export async function fetchAdminUsers(
       return { success: true, message: "Admin users fetched", data: [] };
     }
 
-    const adminUsers = await db.adminUser.findMany({
-      where: {
-        id: {
-          in: Array.from(identifierToUserId.keys()),
-          ...(identifier ? { not: identifier } : {}),
-        },
-        ...(term
-          ? {
-              OR: [
-                {
-                  adminName: {
-                    contains: term,
-                    mode: Prisma.QueryMode.insensitive,
-                  },
-                },
-                {
-                  email: { contains: term, mode: Prisma.QueryMode.insensitive },
-                },
-              ],
-            }
-          : {}),
-      },
-      orderBy: { adminName: "asc" },
-      take: RESULT_LIMIT,
+    const adminUsers = await db.query.adminUser.findMany({
+      where: (a, { and, inArray, ne, or, ilike }) =>
+        and(
+          inArray(a.id, Array.from(identifierToUserId.keys())),
+          identifier ? ne(a.id, identifier) : undefined,
+          term ? or(ilike(a.adminName, `%${term}%`), ilike(a.email, `%${term}%`)) : undefined,
+        ),
+      orderBy: (a, { asc }) => asc(a.adminName),
+      limit: RESULT_LIMIT,
     });
 
     const results: UserSearchResult[] = adminUsers

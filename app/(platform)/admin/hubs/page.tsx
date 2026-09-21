@@ -1,12 +1,13 @@
-import { ImplementerRole } from "#/db/enums";
 import { signOut } from "next-auth/react";
+
 import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { ImplementerRole } from "#/db/enums";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { db } from "#/lib/db";
 import HubsDataTable from "./components/hubs-datatable";
+import { fetchAdminHubs } from "./queries";
 
 export default async function HubsPage() {
   const admin = await currentAdminUser();
@@ -18,54 +19,7 @@ export default async function HubsPage() {
   const projectId = await getActiveProjectId();
   const role = admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN;
 
-  const hubs =
-    implementerId != null
-      ? await db.hub.findMany({
-          where: {
-            implementerId,
-            projectId,
-          },
-          include: {
-            schools: {
-              include: {
-                assignedSupervisor: true,
-                interventionSessions: {
-                  include: {
-                    sessionRatings: true,
-                    session: true,
-                  },
-                },
-                students: {
-                  include: {
-                    assignedGroup: true,
-                    _count: {
-                      select: {
-                        clinicalCases: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            implementer: true,
-            coordinators: true,
-            _count: {
-              select: {
-                fellows: {
-                  where: {
-                    OR: [{ droppedOut: false }, { droppedOut: null }],
-                  },
-                },
-                supervisors: {
-                  where: {
-                    OR: [{ droppedOut: false }, { droppedOut: null }],
-                  },
-                },
-              },
-            },
-          },
-        })
-      : [];
+  const hubs = implementerId != null ? await fetchAdminHubs(implementerId, projectId) : [];
 
   return (
     <div className="flex h-full flex-col bg-white">

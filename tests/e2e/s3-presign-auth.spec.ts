@@ -1,6 +1,9 @@
 import { type APIRequestContext, expect, test } from "@playwright/test";
 
-import { db } from "#/lib/db";
+import { and, asc, eq, inArray, isNotNull, isNull, ne, or } from "drizzle-orm";
+
+import { db } from "#/db/client";
+import { fellow, interventionGroup, interventionSession } from "#/db/schema";
 import { generateSessionToken } from "#/tests/helpers";
 
 const PRESIGN = "/api/s3/presigned";
@@ -44,59 +47,76 @@ async function postPresign(request: APIRequestContext, data: unknown, token?: st
   return { res, body };
 }
 
-async function emailForProfile(identifier: string, role: "FELLOW" | "SUPERVISOR") {
-  const member = await db.implementerMember.findFirst({
-    where: { identifier, role },
-    orderBy: { id: "asc" },
-    select: { userId: true },
-  });
-  if (!member) return null;
-  const user = await db.user.findUnique({
-    where: { id: member.userId },
-    select: { email: true },
+async function emailForUser(userId: string) {
+  const user = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.id, userId),
+    columns: { email: true },
   });
   return user?.email ?? null;
+}
+
+async function emailForProfile(identifier: string, role: "FELLOW" | "SUPERVISOR") {
+  const member = await db.query.implementerMember.findFirst({
+    where: (m, { and, eq }) => and(eq(m.identifier, identifier), eq(m.role, role)),
+    orderBy: (m, { asc }) => asc(m.id),
+    columns: { userId: true },
+  });
+  return member ? emailForUser(member.userId) : null;
 }
 
 async function anyEmailForRole(role: "FELLOW" | "SUPERVISOR" | "HUB_COORDINATOR" | "ADMIN") {
-  const member = await db.implementerMember.findFirst({
-    where: { role },
-    orderBy: { id: "asc" },
-    select: { userId: true },
+  const member = await db.query.implementerMember.findFirst({
+    where: (m, { eq }) => eq(m.role, role),
+    orderBy: (m, { asc }) => asc(m.id),
+    columns: { userId: true },
   });
-  if (!member) return null;
-  const user = await db.user.findUnique({
-    where: { id: member.userId },
-    select: { email: true },
-  });
-  return user?.email ?? null;
+  return member ? emailForUser(member.userId) : null;
 }
 
+/** Fellows who have not dropped out, as a subquery for `inArray(group.leaderId, …)`. */
+const activeFellowIds = db
+  .select({ id: fellow.id })
+  .from(fellow)
+  .where(or(eq(fellow.droppedOut, false), isNull(fellow.droppedOut)));
+
+/** Schools with at least one session that occurred. */
+const schoolsWithOccurredSessions = db
+  .select({ schoolId: interventionSession.schoolId })
+  .from(interventionSession)
+  .where(eq(interventionSession.occurred, true));
+
 async function findFellowUploadTarget(): Promise<UploadTarget | null> {
-  const group = await db.interventionGroup.findFirst({
-    where: {
-      leader: { OR: [{ droppedOut: false }, { droppedOut: null }] },
-      school: { interventionSessions: { some: { occurred: true } } },
-    },
-    orderBy: { id: "asc" },
-    select: { id: true, schoolId: true, leaderId: true },
-  });
+  const [group] = await db
+    .select({
+      id: interventionGroup.id,
+      schoolId: interventionGroup.schoolId,
+      leaderId: interventionGroup.leaderId,
+    })
+    .from(interventionGroup)
+    .where(
+      and(
+        inArray(interventionGroup.leaderId, activeFellowIds),
+        inArray(interventionGroup.schoolId, schoolsWithOccurredSessions),
+      ),
+    )
+    .orderBy(asc(interventionGroup.id))
+    .limit(1);
   if (!group) return null;
 
-  const session = await db.interventionSession.findFirst({
-    where: { schoolId: group.schoolId, occurred: true },
-    orderBy: { id: "asc" },
-    select: { id: true },
+  const session = await db.query.interventionSession.findFirst({
+    where: (s, { and, eq }) => and(eq(s.schoolId, group.schoolId), eq(s.occurred, true)),
+    orderBy: (s, { asc }) => asc(s.id),
+    columns: { id: true },
   });
   if (!session) return null;
 
   const email = await emailForProfile(group.leaderId, "FELLOW");
   if (!email) return null;
 
-  const foreign = await db.interventionGroup.findFirst({
-    where: { leaderId: { not: group.leaderId } },
-    orderBy: { id: "asc" },
-    select: { id: true },
+  const foreign = await db.query.interventionGroup.findFirst({
+    where: (g, { ne }) => ne(g.leaderId, group.leaderId),
+    orderBy: (g, { asc }) => asc(g.id),
+    columns: { id: true },
   });
 
   return {
@@ -109,55 +129,58 @@ async function findFellowUploadTarget(): Promise<UploadTarget | null> {
 }
 
 async function findRecordingUploadTarget(): Promise<UploadTarget | null> {
-  const groups = await db.interventionGroup.findMany({
-    where: {
-      leader: {
-        supervisorId: { not: null },
-        OR: [{ droppedOut: false }, { droppedOut: null }],
-      },
-    },
-    orderBy: { id: "asc" },
-    select: {
-      id: true,
-      schoolId: true,
-      leaderId: true,
-      leader: { select: { supervisorId: true } },
-    },
-    take: 25,
+  const supervisedActiveFellowIds = db
+    .select({ id: fellow.id })
+    .from(fellow)
+    .where(
+      and(
+        isNotNull(fellow.supervisorId),
+        or(eq(fellow.droppedOut, false), isNull(fellow.droppedOut)),
+      ),
+    );
+  const groups = await db.query.interventionGroup.findMany({
+    where: (g, { inArray }) => inArray(g.leaderId, supervisedActiveFellowIds),
+    orderBy: (g, { asc }) => asc(g.id),
+    columns: { id: true, schoolId: true, leaderId: true },
+    with: { leader: { columns: { supervisorId: true } } },
+    limit: 25,
   });
 
   for (const group of groups) {
     const supervisorId = group.leader.supervisorId;
     if (!supervisorId) continue;
 
-    const sessions = await db.interventionSession.findMany({
-      where: { schoolId: group.schoolId, occurred: true },
-      orderBy: { id: "asc" },
-      select: { id: true },
-      take: 25,
+    const sessions = await db.query.interventionSession.findMany({
+      where: (s, { and, eq }) => and(eq(s.schoolId, group.schoolId), eq(s.occurred, true)),
+      orderBy: (s, { asc }) => asc(s.id),
+      columns: { id: true },
+      limit: 25,
     });
 
     for (const session of sessions) {
-      const existing = await db.sessionRecording.findUnique({
-        where: {
-          unique_recording_per_session: {
-            fellowId: group.leaderId,
-            schoolId: group.schoolId,
-            groupId: group.id,
-            sessionId: session.id,
-          },
-        },
-        select: { id: true },
+      const existing = await db.query.sessionRecording.findFirst({
+        where: (r, { and, eq }) =>
+          and(
+            eq(r.fellowId, group.leaderId),
+            eq(r.schoolId, group.schoolId),
+            eq(r.groupId, group.id),
+            eq(r.sessionId, session.id),
+          ),
+        columns: { id: true },
       });
       if (existing) continue;
 
       const email = await emailForProfile(supervisorId, "SUPERVISOR");
       if (!email) continue;
 
-      const foreign = await db.interventionGroup.findFirst({
-        where: { leader: { supervisorId: { not: supervisorId } } },
-        orderBy: { id: "asc" },
-        select: { id: true },
+      const otherSupervisorsFellows = db
+        .select({ id: fellow.id })
+        .from(fellow)
+        .where(ne(fellow.supervisorId, supervisorId));
+      const foreign = await db.query.interventionGroup.findFirst({
+        where: (g, { inArray }) => inArray(g.leaderId, otherSupervisorsFellows),
+        orderBy: (g, { asc }) => asc(g.id),
+        columns: { id: true },
       });
 
       return {
