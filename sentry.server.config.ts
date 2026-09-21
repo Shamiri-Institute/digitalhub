@@ -8,8 +8,9 @@ Sentry.init({
   // Configured via env so forks use their own project; unset = Sentry disabled.
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  // Trace only production and preview builds. Local dev measures the network to the
+  // remote database, not the code, and pollutes performance issues with 2s spans.
+  tracesSampleRate: process.env.NODE_ENV === "production" ? 1 : 0,
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
