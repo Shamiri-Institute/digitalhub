@@ -1,6 +1,6 @@
 "use client";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { z } from "zod";

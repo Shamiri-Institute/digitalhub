@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 
 export const roleHome: Record<ImplementerRole, string> = {
   [ImplementerRole.HUB_COORDINATOR]: "/hc",

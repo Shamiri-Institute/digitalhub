@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecordingProcessingStatus } from "@prisma/client";
+import type { RecordingProcessingStatus } from "#/db/enums";
 import { Badge, type BadgeProps } from "#/components/ui/badge";
 
 interface RecordingStatusBadgeProps {

@@ -1,6 +1,7 @@
 "use client";
 
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import * as React from "react";
 import { useState } from "react";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";

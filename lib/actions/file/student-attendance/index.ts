@@ -1,6 +1,7 @@
 "use server";
 
-import { ImplementerRole, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
 import { deleteObject, getPresignedUrl } from "#/lib/s3/s3.service";

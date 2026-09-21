@@ -1,6 +1,6 @@
 "use server";
 
-import type { FellowGroupReport } from "@prisma/client";
+import type { FellowGroupReport } from "#/db/types";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { db } from "#/lib/db";
 

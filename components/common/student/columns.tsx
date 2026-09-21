@@ -1,6 +1,8 @@
 "use client";
 
-import type { ImplementerRole, InterventionSession, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
+import type { InterventionSession } from "#/db/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { parsePhoneNumberWithError } from "libphonenumber-js";

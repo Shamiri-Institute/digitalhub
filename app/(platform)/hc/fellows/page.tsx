@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { Suspense } from "react";
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";

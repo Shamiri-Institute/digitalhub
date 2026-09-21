@@ -1,6 +1,6 @@
 "use client";
 
-import { TicketCategory, TicketPriorityLevel } from "@prisma/client";
+import { TicketCategory, TicketPriorityLevel } from "#/db/enums";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

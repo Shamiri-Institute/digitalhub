@@ -1,6 +1,7 @@
 "use client";
 
-import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";

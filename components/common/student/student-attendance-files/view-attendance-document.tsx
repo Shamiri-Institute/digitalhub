@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Alert, AlertDescription } from "#/components/ui/alert";

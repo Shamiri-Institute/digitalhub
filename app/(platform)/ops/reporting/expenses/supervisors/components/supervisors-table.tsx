@@ -1,5 +1,5 @@
 "use client";
-import type { Supervisor } from "@prisma/client";
+import type { Supervisor } from "#/db/types";
 
 import type { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import SupervisorsFilterTab from "#/app/(platform)/hc/reporting/expenses/supervisors/components/supervisor-filter";

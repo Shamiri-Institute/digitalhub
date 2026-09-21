@@ -1,6 +1,7 @@
 "use client";
 
-import type { Fellow, Prisma, Student, Supervisor } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import type { Fellow, Student, Supervisor } from "#/db/types";
 import { format } from "date-fns";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

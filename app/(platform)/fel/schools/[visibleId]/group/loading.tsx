@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import GroupsDatatableSkeleton from "#/components/common/group/groups-datatable-skeleton";
 
 export default function Loading() {

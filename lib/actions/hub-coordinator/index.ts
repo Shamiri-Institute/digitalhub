@@ -1,6 +1,7 @@
 "use server";
 
-import { ImplementerRole, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { db } from "#/lib/db";
 import type { ActionResponse } from "#/types/actions.types";

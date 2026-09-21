@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 
 interface Fixtures {
   users: {

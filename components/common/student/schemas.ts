@@ -1,4 +1,4 @@
-import type { QuestionnaireType } from "@prisma/client";
+import type { QuestionnaireType } from "#/db/enums";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 import { stringValidation } from "#/lib/utils";

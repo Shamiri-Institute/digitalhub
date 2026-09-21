@@ -1,6 +1,6 @@
 "use server";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { getCurrentPersonnel } from "#/app/auth";
 import type { WeeklyEvaluationFormValues } from "#/components/common/fellow-reports/weekly-fellow-evaluation/view-edit-weekly-fellow-evaluation";

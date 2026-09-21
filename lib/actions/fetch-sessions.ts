@@ -1,6 +1,6 @@
 "use server";
 
-import { ImplementerRole, type SessionStatus } from "@prisma/client";
+import { ImplementerRole, type SessionStatus } from "#/db/enums";
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";

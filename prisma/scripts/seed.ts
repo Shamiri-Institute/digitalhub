@@ -1,27 +1,29 @@
 import { faker } from "@faker-js/faker";
+import type { Prisma } from "@prisma/client";
 import {
-  type AdminUser,
-  type ClinicalLead,
-  type ClinicalTeam,
   caseStatusOptions,
-  type Fellow,
   FollowUpPlanOptions,
-  type Hub,
-  type HubCoordinator,
-  type Implementer,
   ImplementerRole,
-  type OpsUser,
-  type Prisma,
-  type Project,
   RecordingProcessingStatus,
   RiskScreenOutcome,
   referralStatusOptions,
   riskStatusOptions,
-  type SessionName,
-  type Supervisor,
   sessionTypes,
   TriageActionTaken,
-} from "@prisma/client";
+} from "#/db/enums";
+import type {
+  AdminUser,
+  ClinicalLead,
+  ClinicalTeam,
+  Fellow,
+  Hub,
+  HubCoordinator,
+  Implementer,
+  OpsUser,
+  Project,
+  SessionName,
+  Supervisor,
+} from "#/db/types";
 import { isBefore, startOfMonth } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";

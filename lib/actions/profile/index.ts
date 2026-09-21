@@ -1,6 +1,6 @@
 "use server";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import type { z } from "zod";
 import { getCurrentUserSession } from "#/app/auth";
 import type { ProfileSchema } from "#/components/profile/schema";

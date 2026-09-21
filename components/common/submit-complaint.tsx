@@ -1,4 +1,4 @@
-import type { User } from "@prisma/client";
+import type { User } from "#/db/types";
 import { format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";

@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { signOut } from "next-auth/react";
 import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";

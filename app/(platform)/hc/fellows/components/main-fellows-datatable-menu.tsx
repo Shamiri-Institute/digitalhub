@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import type { Dispatch, SetStateAction } from "react";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { Icons } from "#/components/icons";

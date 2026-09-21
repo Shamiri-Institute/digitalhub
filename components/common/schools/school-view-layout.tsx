@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import type React from "react";
 import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
 import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";

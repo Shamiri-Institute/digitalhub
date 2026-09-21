@@ -1,7 +1,7 @@
 import type {
   MonthlySupervisorEvaluation as MonthlySupervisorEvaluationType,
   Project,
-} from "@prisma/client";
+} from "#/db/types";
 import { addDays, differenceInSeconds, eachMonthOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";

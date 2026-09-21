@@ -1,6 +1,6 @@
 "use server";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { revalidatePath } from "next/cache";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";

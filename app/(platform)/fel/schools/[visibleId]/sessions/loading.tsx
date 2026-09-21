@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import SessionsDatatableSkeleton from "#/components/common/session/sessions-datatable-skeleton";
 
 export default function Loading() {

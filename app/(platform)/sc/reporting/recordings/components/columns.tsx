@@ -1,7 +1,7 @@
 "use client";
 
-import type { RecordingProcessingStatus } from "@prisma/client";
-import type { JsonValue } from "@prisma/client/runtime/library";
+import type { RecordingProcessingStatus } from "#/db/enums";
+import type { JsonValue } from "#/db/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Dispatch, SetStateAction } from "react";
 import RecordingStatusBadge from "./recording-status-badge";

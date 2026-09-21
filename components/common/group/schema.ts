@@ -1,4 +1,4 @@
-import { AdaptationType, SupportType } from "@prisma/client";
+import { AdaptationType, SupportType } from "#/db/enums";
 import { z } from "zod";
 import { stringValidation } from "#/lib/utils";
 

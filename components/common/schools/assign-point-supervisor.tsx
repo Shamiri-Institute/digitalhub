@@ -1,6 +1,6 @@
 "use client";
 
-import type { Supervisor } from "@prisma/client";
+import type { Supervisor } from "#/db/types";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";

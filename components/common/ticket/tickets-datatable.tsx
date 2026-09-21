@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import { useState } from "react";
 import { columns, type TicketData } from "#/components/common/ticket/columns";
 import CreateTicketDialog from "#/components/common/ticket/create-ticket-dialog";

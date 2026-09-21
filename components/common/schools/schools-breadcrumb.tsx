@@ -1,6 +1,7 @@
 "use client";
 
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { Check, ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";

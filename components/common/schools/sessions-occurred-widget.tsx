@@ -1,6 +1,7 @@
 "use client";
 
-import type { Prisma, SessionName } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import type { SessionName } from "#/db/types";
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 

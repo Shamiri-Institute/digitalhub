@@ -1,4 +1,4 @@
-import type { TicketCategory, TicketPriorityLevel } from "@prisma/client";
+import type { TicketCategory, TicketPriorityLevel } from "#/db/enums";
 import { db } from "#/lib/db";
 
 interface SeedTicket {

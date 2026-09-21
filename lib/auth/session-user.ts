@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 
 import { db } from "#/lib/db";
 import { getDefaultProjectId } from "#/lib/default-project-id";

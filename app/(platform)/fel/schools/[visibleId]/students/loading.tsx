@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import StudentsDatatableSkeleton from "#/components/common/student/students-datatable-skeleton";
 
 export default function Loading() {

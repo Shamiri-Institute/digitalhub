@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import { Check, ChevronsUpDown, Filter } from "lucide-react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";

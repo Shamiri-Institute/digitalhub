@@ -1,6 +1,6 @@
 import "server-only";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { currentFellow } from "#/app/auth";
 import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
 import { db } from "#/lib/db";

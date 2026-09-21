@@ -1,4 +1,4 @@
-import { ImplementerRole, SessionStatus } from "@prisma/client";
+import { ImplementerRole, SessionStatus } from "#/db/enums";
 import { addHours, addMinutes, format } from "date-fns";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

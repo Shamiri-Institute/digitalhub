@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import type { Dispatch, SetStateAction } from "react";
 import { memo } from "react";
 import { Icons } from "#/components/icons";

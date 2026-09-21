@@ -1,4 +1,4 @@
-import type { ClinicalScreeningInfo, ClinicalSessionAttendance } from "@prisma/client";
+import type { ClinicalScreeningInfo, ClinicalSessionAttendance } from "#/db/types";
 import InfoCard from "#/app/(platform)/hc/students/components/info-card";
 
 export default function StudentsStats({

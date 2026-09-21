@@ -1,6 +1,6 @@
 "use server";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentPersonnel } from "#/app/auth";

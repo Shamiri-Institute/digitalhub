@@ -1,6 +1,7 @@
 "use client";
 
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";

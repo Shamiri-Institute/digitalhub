@@ -1,6 +1,6 @@
 "use client";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import Image from "next/image";

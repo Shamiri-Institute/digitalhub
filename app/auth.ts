@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { redirect } from "next/navigation";
 import type { Session } from "next-auth";
 import { cache } from "react";

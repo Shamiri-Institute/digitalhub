@@ -1,6 +1,7 @@
 "use client";
 
-import { ImplementerRole, type Prisma, QuestionnaireType } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole, QuestionnaireType } from "#/db/enums";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
 import { useForm } from "react-hook-form";

@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 import { GENDER_OPTIONS } from "#/lib/constants";

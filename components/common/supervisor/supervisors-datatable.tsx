@@ -1,6 +1,7 @@
 "use client";
 
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import type { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useState } from "react";

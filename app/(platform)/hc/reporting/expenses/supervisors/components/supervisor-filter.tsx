@@ -1,4 +1,4 @@
-import type { Supervisor } from "@prisma/client";
+import type { Supervisor } from "#/db/types";
 import SupervisorFilterToggle from "#/app/(platform)/hc/reporting/expenses/supervisors/components/supervisor-expense-toggle";
 import AddSupervisorExpensesForm from "#/components/common/expenses/supervisor-expenses/add-expense";
 import { Icons } from "#/components/icons";

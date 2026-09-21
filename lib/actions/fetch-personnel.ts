@@ -1,6 +1,6 @@
 "use server";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { getCurrentUserSession } from "#/app/auth";
 import type { JWTMembership } from "#/lib/auth/session-user";
 import { constants } from "#/lib/constants";

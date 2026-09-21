@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import DataTable from "#/components/data-table";
 import { columns, type HubsWithSchools } from "./columns";

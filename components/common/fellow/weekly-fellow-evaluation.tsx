@@ -1,6 +1,6 @@
 "use client";
 
-import type { Project, WeeklyFellowRatings } from "@prisma/client";
+import type { Project, WeeklyFellowRatings } from "#/db/types";
 import { addDays, differenceInSeconds, eachWeekOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";

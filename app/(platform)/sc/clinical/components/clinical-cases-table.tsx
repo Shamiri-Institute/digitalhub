@@ -1,5 +1,6 @@
 "use client";
-import type { Prisma, Supervisor } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import type { Supervisor } from "#/db/types";
 import { Plus } from "lucide-react";
 import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import { columns } from "#/app/(platform)/sc/clinical/columns";

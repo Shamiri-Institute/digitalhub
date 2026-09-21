@@ -1,13 +1,9 @@
 "use client";
 
 import { createCalendar, type DateValue, getLocalTimeZone, today } from "@internationalized/date";
-import {
-  ImplementerRole,
-  type Prisma,
-  type School,
-  type SessionName,
-  SessionStatus,
-} from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole, SessionStatus } from "#/db/enums";
+import type { School, SessionName } from "#/db/types";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import {

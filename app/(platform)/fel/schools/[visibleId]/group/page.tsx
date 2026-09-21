@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { signOut } from "next-auth/react";
 import { currentFellow } from "#/app/auth";
 import type { SchoolGroupDataTableData } from "#/components/common/group/columns";

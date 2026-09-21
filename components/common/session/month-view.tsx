@@ -1,5 +1,5 @@
 import { type CalendarDate, getWeeksInMonth, isSameDay, isWeekend } from "@internationalized/date";
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter, useLocale } from "react-aria";
 import type { CalendarGridProps } from "react-aria-components";
