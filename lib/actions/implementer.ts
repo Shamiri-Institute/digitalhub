@@ -120,13 +120,33 @@ export async function fetchImplementerSupervisors(implementerId: string) {
         fellows: {
           with: {
             fellowAttendances: true,
-            groups: true,
+            groups: {
+              // The counted table is written as SQL text on purpose: drizzle 0.45 rewrites every
+              // column reference inside `extras` to the current relation's alias.
+              extras: (g, { sql }) => ({
+                studentsCount:
+                  sql<number>`(select count(*)::int from students s where s.assigned_group_id = ${g.id})`.as(
+                    "students_count",
+                  ),
+              }),
+            },
           },
         },
         assignedSchools: true,
       },
     });
-    return { success: true, data: supervisors };
+    // The fellow-attendance dialog reads `group._count.students`; keep Prisma's shape.
+    const data = supervisors.map((supervisor) => ({
+      ...supervisor,
+      fellows: supervisor.fellows.map((fellow) => ({
+        ...fellow,
+        groups: fellow.groups.map(({ studentsCount, ...group }) => ({
+          ...group,
+          _count: { students: studentsCount },
+        })),
+      })),
+    }));
+    return { success: true, data };
   } catch (error) {
     console.error("Error fetching implementer supervisors:", error);
     return {
