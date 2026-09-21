@@ -1,7 +1,9 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import { currentClinicalLead } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { triageEvent } from "#/db/schema";
 
 export type AuditRow = Awaited<ReturnType<typeof getTriageAuditTrail>>[number];
 
@@ -11,21 +13,24 @@ export async function getTriageAuditTrail() {
 
   const hubId = clinicalLead.profile.assignedHubId;
 
-  const audits = await db.triageEventAudit.findMany({
-    where: {
-      triageEvent: { hubId },
-    },
-    include: {
+  const audits = await db.query.triageEventAudit.findMany({
+    where: (a, { inArray }) =>
+      inArray(
+        a.triageEventId,
+        db.select({ id: triageEvent.id }).from(triageEvent).where(eq(triageEvent.hubId, hubId)),
+      ),
+    with: {
       triageEvent: {
-        select: {
-          fellow: { select: { fellowName: true } },
-          session: { select: { sessionDate: true, sessionName: true, sessionType: true } },
+        columns: {},
+        with: {
+          fellow: { columns: { fellowName: true } },
+          session: { columns: { sessionDate: true, sessionName: true, sessionType: true } },
         },
       },
-      editedBy: { select: { name: true } },
+      editedBy: { columns: { name: true } },
     },
-    orderBy: { createdAt: "desc" },
-    take: 200,
+    orderBy: (a, { desc }) => desc(a.createdAt),
+    limit: 200,
   });
 
   return audits.map((audit) => {

@@ -1,9 +1,26 @@
 "use server";
 
+import { and, eq, notExists } from "drizzle-orm";
 import { currentClinicalLead } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { clinicalScreeningInfo, triageEvent } from "#/db/schema";
 
 export type EscalationGap = Awaited<ReturnType<typeof getEscalationGaps>>[number];
+
+type TriageEventColumns = typeof triageEvent._.columns;
+
+/** Risk-positive triage events in the hub whose student has no clinical case (Prisma `none`). */
+const escalationGapsWhere = (hubId: string) => (t: TriageEventColumns) =>
+  and(
+    eq(t.riskScreenOutcome, "ANY_YES"),
+    eq(t.hubId, hubId),
+    notExists(
+      db
+        .select({ id: clinicalScreeningInfo.id })
+        .from(clinicalScreeningInfo)
+        .where(eq(clinicalScreeningInfo.studentId, t.studentId)),
+    ),
+  );
 
 export async function getEscalationGaps() {
   const clinicalLead = await currentClinicalLead();
@@ -11,24 +28,17 @@ export async function getEscalationGaps() {
 
   const hubId = clinicalLead.profile.assignedHubId;
 
-  const gaps = await db.triageEvent.findMany({
-    where: {
-      riskScreenOutcome: "ANY_YES",
-      hubId,
-      student: { clinicalCases: { none: {} } },
-    },
-    include: {
+  const gaps = await db.query.triageEvent.findMany({
+    where: escalationGapsWhere(hubId),
+    with: {
       student: {
-        select: {
-          visibleId: true,
-          studentName: true,
-          school: { select: { schoolName: true } },
-        },
+        columns: { visibleId: true, studentName: true },
+        with: { school: { columns: { schoolName: true } } },
       },
-      fellow: { select: { fellowName: true } },
-      referredSupervisor: { select: { supervisorName: true } },
+      fellow: { columns: { fellowName: true } },
+      referredSupervisor: { columns: { supervisorName: true } },
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: (t, { asc }) => asc(t.createdAt),
   });
 
   return gaps.map((g) => ({
@@ -44,16 +54,13 @@ export async function getGapReportStats() {
   const hubId = clinicalLead.profile.assignedHubId;
 
   const [totalEscalations, gaps] = await Promise.all([
-    db.triageEvent.count({
-      where: { riskScreenOutcome: "ANY_YES", hubId },
-    }),
-    db.triageEvent.findMany({
-      where: {
-        riskScreenOutcome: "ANY_YES",
-        hubId,
-        student: { clinicalCases: { none: {} } },
-      },
-      select: { createdAt: true },
+    db.$count(
+      triageEvent,
+      and(eq(triageEvent.riskScreenOutcome, "ANY_YES"), eq(triageEvent.hubId, hubId)),
+    ),
+    db.query.triageEvent.findMany({
+      where: escalationGapsWhere(hubId),
+      columns: { createdAt: true },
     }),
   ]);
 

@@ -1,9 +1,8 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
+import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { db } from "#/lib/db";
 import type { ActionResponse } from "#/types/actions.types";
 import type { UserSearchResult } from "#/types/user-search.types";
 import { FetchClinicalLeadsSchema } from "./types";
@@ -20,13 +19,14 @@ export async function fetchClinicalLeads(
     const validatedData = FetchClinicalLeadsSchema.parse({ hubId });
     const term = search?.trim();
 
-    const actorInHub = await db.clinicalLead.findFirst({
-      where: {
-        id: identifier ?? "",
-        assignedHubId: validatedData.hubId,
-        implementerId,
-      },
-      select: { id: true },
+    const actorInHub = await db.query.clinicalLead.findFirst({
+      where: (cl, { and, eq }) =>
+        and(
+          eq(cl.id, identifier ?? ""),
+          eq(cl.assignedHubId, validatedData.hubId),
+          eq(cl.implementerId, implementerId),
+        ),
+      columns: { id: true },
     });
 
     if (!actorInHub) {
@@ -36,47 +36,34 @@ export async function fetchClinicalLeads(
       };
     }
 
-    const clinicalLeads = await db.clinicalLead.findMany({
-      where: {
-        assignedHubId: validatedData.hubId,
-        implementerId,
-        ...(identifier ? { id: { not: identifier } } : {}),
-        ...(term
-          ? {
-              OR: [
-                {
-                  clinicalLeadName: {
-                    contains: term,
-                    mode: Prisma.QueryMode.insensitive,
-                  },
-                },
-                {
-                  clinicalLeadEmail: {
-                    contains: term,
-                    mode: Prisma.QueryMode.insensitive,
-                  },
-                },
-              ],
-            }
-          : {}),
-      },
-      orderBy: { clinicalLeadName: "asc" },
-      take: RESULT_LIMIT,
+    const clinicalLeads = await db.query.clinicalLead.findMany({
+      where: (cl, { and, eq, ne, or, ilike }) =>
+        and(
+          eq(cl.assignedHubId, validatedData.hubId),
+          eq(cl.implementerId, implementerId),
+          identifier ? ne(cl.id, identifier) : undefined,
+          term
+            ? or(ilike(cl.clinicalLeadName, `%${term}%`), ilike(cl.clinicalLeadEmail, `%${term}%`))
+            : undefined,
+        ),
+      orderBy: (cl, { asc }) => asc(cl.clinicalLeadName),
+      limit: RESULT_LIMIT,
     });
 
     const clinicalLeadIds = clinicalLeads.map((cl) => cl.id);
 
-    const implementerMembers = await db.implementerMember.findMany({
-      where: {
-        role: ImplementerRole.CLINICAL_LEAD,
-        implementerId,
-        identifier: { in: clinicalLeadIds },
-      },
-      select: {
-        identifier: true,
-        userId: true,
-      },
-    });
+    const implementerMembers =
+      clinicalLeadIds.length === 0
+        ? []
+        : await db.query.implementerMember.findMany({
+            where: (m, { and, eq, inArray }) =>
+              and(
+                eq(m.role, ImplementerRole.CLINICAL_LEAD),
+                eq(m.implementerId, implementerId),
+                inArray(m.identifier, clinicalLeadIds),
+              ),
+            columns: { identifier: true, userId: true },
+          });
 
     const memberMap = new Map(
       implementerMembers.map((member) => [member.identifier, member.userId]),

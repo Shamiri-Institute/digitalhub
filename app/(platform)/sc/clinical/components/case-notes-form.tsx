@@ -129,7 +129,7 @@ export default function CaseNotesForm({
         orsAssessment: existingNote.orsAssessment.toString(),
         riskLevel: existingNote.riskLevel as (typeof riskLevels)[number],
         necessaryConditions: existingNote.necessaryConditions,
-        treatmentInterventions: existingNote.treatmentInterventions,
+        treatmentInterventions: existingNote.treatmentInterventions ?? [],
         otherIntervention: existingNote.otherIntervention,
         interventionExplanation: existingNote.interventionExplanation,
         studentResponseExplanation: existingNote.studentResponseExplanations,
@@ -139,7 +139,7 @@ export default function CaseNotesForm({
         },
       });
 
-      setShowOtherInput(existingNote.treatmentInterventions.includes("Other"));
+      setShowOtherInput((existingNote.treatmentInterventions ?? []).includes("Other"));
     } else {
       form.reset({
         sessionId,

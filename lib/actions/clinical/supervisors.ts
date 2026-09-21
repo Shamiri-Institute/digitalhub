@@ -1,4 +1,5 @@
-import { db } from "#/lib/db";
+import { sql } from "drizzle-orm";
+import { queryRaw } from "#/db/client";
 import { type ClinicalScope, hubScope } from "./scope";
 
 export type SupervisorClinicalCasesData = {
@@ -13,7 +14,7 @@ export type SupervisorClinicalCasesData = {
 export async function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
   const s = hubScope(scope, "s");
 
-  return await db.$queryRaw<SupervisorClinicalCasesData[]>`
+  return await queryRaw<SupervisorClinicalCasesData>(sql`
     WITH supervisor_stats AS (
       SELECT
         s.id AS supervisor_id,
@@ -51,5 +52,5 @@ export async function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
       supervisor_stats
     ORDER BY
       supervisor_name
-  `;
+  `);
 }

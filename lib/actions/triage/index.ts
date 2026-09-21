@@ -1,18 +1,30 @@
 "use server";
 
-import type { Prisma } from "@prisma/client";
+import { and, eq } from "drizzle-orm";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
 import { currentFellow, getCurrentPersonnel } from "#/app/auth";
-import { db } from "#/lib/db";
+import { type DatabaseCursor, db } from "#/db/client";
+import { type JsonValue, triageEvent, triageEventAudit } from "#/db/schema";
 
-export type TriageEventWithRelations = Prisma.TriageEventGetPayload<{
-  include: {
-    session: true;
-    student: true;
-    fellow: true;
-    referredSupervisor: true;
-  };
-}>;
+const triageEventWith = {
+  session: true,
+  student: true,
+  fellow: true,
+  referredSupervisor: true,
+} as const;
+
+type JsonObject = { [key: string]: JsonValue | undefined };
+
+export type TriageEventWithRelations = NonNullable<
+  Awaited<ReturnType<typeof getTriageEventByStudentAndSession>>
+>;
+
+function loadTriageEvent(cursor: DatabaseCursor, id: string) {
+  return cursor.query.triageEvent.findFirst({
+    where: (t, { eq }) => eq(t.id, id),
+    with: triageEventWith,
+  });
+}
 
 async function getFellowContext() {
   const user = await getCurrentPersonnel();
@@ -53,9 +65,9 @@ export async function getSupervisorsInFellowHub(
     }
 
     if (!hubId && sessionIdOrHubId) {
-      const session = await db.interventionSession.findUnique({
-        where: { id: sessionIdOrHubId },
-        select: { hubId: true },
+      const session = await db.query.interventionSession.findFirst({
+        where: (s, { eq }) => eq(s.id, sessionIdOrHubId),
+        columns: { hubId: true },
       });
       hubId = session?.hubId ?? undefined;
     }
@@ -64,11 +76,12 @@ export async function getSupervisorsInFellowHub(
   if (!hubId) {
     return [];
   }
+  const resolvedHubId = hubId;
 
-  const supervisors = await db.supervisor.findMany({
-    where: { hubId },
-    select: { id: true, supervisorName: true },
-    orderBy: { supervisorName: "asc" },
+  const supervisors = await db.query.supervisor.findMany({
+    where: (s, { eq }) => eq(s.hubId, resolvedHubId),
+    columns: { id: true, supervisorName: true },
+    orderBy: (s, { asc }) => asc(s.supervisorName),
   });
   return supervisors.map((s) => ({
     id: s.id,
@@ -78,49 +91,33 @@ export async function getSupervisorsInFellowHub(
 
 export async function getTriageEventByStudentAndSession(studentId: string, sessionId: string) {
   await getFellowContext();
-  const event = await db.triageEvent.findUnique({
-    where: {
-      studentId_sessionId: { studentId, sessionId },
-    },
-    include: {
-      session: true,
-      student: true,
-      fellow: true,
-      referredSupervisor: true,
-    },
+  const event = await db.query.triageEvent.findFirst({
+    where: (t, { and, eq }) => and(eq(t.studentId, studentId), eq(t.sessionId, sessionId)),
+    with: triageEventWith,
   });
-  return event;
+  return event ?? null;
 }
 
 export async function getTriageEventsForSession(sessionId: string) {
   await getFellowContext();
-  const events = await db.triageEvent.findMany({
-    where: { sessionId },
-    include: {
-      session: true,
-      student: true,
-      fellow: true,
-      referredSupervisor: true,
-    },
+  const events = await db.query.triageEvent.findMany({
+    where: (t, { eq }) => eq(t.sessionId, sessionId),
+    with: triageEventWith,
   });
   return events;
 }
 
 export async function getStudentTriageHistory(studentId: string) {
   const { fellowId } = await getFellowContext();
-  return db.triageEvent.findMany({
-    where: { studentId, fellowId },
-    include: {
+  return db.query.triageEvent.findMany({
+    where: (t, { and, eq }) => and(eq(t.studentId, studentId), eq(t.fellowId, fellowId)),
+    with: {
       session: {
-        select: {
-          sessionDate: true,
-          sessionName: true,
-          sessionType: true,
-          session: { select: { sessionLabel: true } },
-        },
+        columns: { sessionDate: true, sessionName: true, sessionType: true },
+        with: { session: { columns: { sessionLabel: true } } },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: (t, { desc }) => desc(t.createdAt),
   });
 }
 
@@ -132,16 +129,20 @@ export async function createTriageEvent(
     const { fellowId, hubId, userId } = await getFellowContext();
     const parsed = TriageEventSchema.parse(data);
 
-    const session = await db.interventionSession.findUniqueOrThrow({
-      where: { id: parsed.sessionId },
-      select: { occurred: true, hubId: true },
+    const session = await db.query.interventionSession.findFirst({
+      where: (s, { eq }) => eq(s.id, parsed.sessionId),
+      columns: { occurred: true, hubId: true },
     });
+    if (!session) {
+      throw new Error("Intervention session not found.");
+    }
     if (!session.occurred) {
       return { success: false, message: "This session has not occurred yet." };
     }
 
-    const existing = await db.triageEvent.findUnique({
-      where: { studentId_sessionId: { studentId: parsed.studentId, sessionId: parsed.sessionId } },
+    const existing = await db.query.triageEvent.findFirst({
+      where: (t, { and, eq }) =>
+        and(eq(t.studentId, parsed.studentId), eq(t.sessionId, parsed.sessionId)),
     });
     if (existing) {
       return updateTriageEvent(
@@ -152,8 +153,9 @@ export async function createTriageEvent(
 
     const effectiveHubId = hubId ?? session.hubId;
 
-    const event = await db.triageEvent.create({
-      data: {
+    const [created] = await db
+      .insert(triageEvent)
+      .values({
         studentId: parsed.studentId,
         sessionId: parsed.sessionId,
         fellowId,
@@ -167,14 +169,15 @@ export async function createTriageEvent(
         supervisorHandoffStatus: parsed.supervisorHandoffStatus ?? null,
         note: parsed.note ?? null,
         metadata: { createdBy: userId },
-      },
-      include: {
-        session: true,
-        student: true,
-        fellow: true,
-        referredSupervisor: true,
-      },
-    });
+      })
+      .returning({ id: triageEvent.id });
+    if (!created) {
+      throw new Error("Failed to save triage event.");
+    }
+    const event = await loadTriageEvent(db, created.id);
+    if (!event) {
+      throw new Error("Failed to save triage event.");
+    }
 
     return { success: true, message: "Triage documented.", data: event };
   } catch (err) {
@@ -194,23 +197,26 @@ export async function updateTriageEvent(
       return { success: false, message: "Triage event ID is required for update." };
     }
 
-    const existing = await db.triageEvent.findUniqueOrThrow({
-      where: { id: data.id },
+    const existing = await db.query.triageEvent.findFirst({
+      where: (t, { eq }) => eq(t.id, data.id),
     });
+    if (!existing) {
+      throw new Error("Triage event not found.");
+    }
 
-    const beforeData = {
+    const beforeData: JsonObject = {
       riskScreenOutcome: existing.riskScreenOutcome,
       riskNotCompletedReason: existing.riskNotCompletedReason,
       actionTaken: existing.actionTaken,
       referredSupervisorId: existing.referredSupervisorId ?? undefined,
       supervisorHandoffStatus: existing.supervisorHandoffStatus,
       note: existing.note,
-    } as Prisma.JsonObject;
+    };
 
-    const event = await db.$transaction(async (tx) => {
-      const updated = await tx.triageEvent.update({
-        where: { id: data.id },
-        data: {
+    const event = await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(triageEvent)
+        .set({
           riskScreenOutcome: parsed.riskScreenOutcome,
           riskNotCompletedReason: parsed.riskNotCompletedReason ?? null,
           actionTaken: parsed.actionTaken,
@@ -221,35 +227,35 @@ export async function updateTriageEvent(
             studentAttendanceId: studentAttendanceId ?? null,
           }),
           metadata: {
-            ...(existing.metadata as Prisma.JsonObject),
+            ...(existing.metadata as JsonObject),
             lastEditedBy: userId,
           },
-        },
-        include: {
-          session: true,
-          student: true,
-          fellow: true,
-          referredSupervisor: true,
+        })
+        .where(eq(triageEvent.id, data.id))
+        .returning();
+      if (!updated) {
+        throw new Error("Triage event not found.");
+      }
+
+      await tx.insert(triageEventAudit).values({
+        triageEventId: data.id,
+        editedById: userId,
+        beforeData,
+        afterData: {
+          riskScreenOutcome: updated.riskScreenOutcome ?? undefined,
+          riskNotCompletedReason: updated.riskNotCompletedReason ?? undefined,
+          actionTaken: updated.actionTaken ?? undefined,
+          referredSupervisorId: updated.referredSupervisorId ?? undefined,
+          supervisorHandoffStatus: updated.supervisorHandoffStatus ?? undefined,
+          note: updated.note ?? undefined,
         },
       });
 
-      await tx.triageEventAudit.create({
-        data: {
-          triageEventId: data.id,
-          editedById: userId,
-          beforeData,
-          afterData: {
-            riskScreenOutcome: updated.riskScreenOutcome ?? undefined,
-            riskNotCompletedReason: updated.riskNotCompletedReason ?? undefined,
-            actionTaken: updated.actionTaken ?? undefined,
-            referredSupervisorId: updated.referredSupervisorId ?? undefined,
-            supervisorHandoffStatus: updated.supervisorHandoffStatus ?? undefined,
-            note: updated.note ?? undefined,
-          },
-        },
-      });
-
-      return updated;
+      const withRelations = await loadTriageEvent(tx, data.id);
+      if (!withRelations) {
+        throw new Error("Triage event not found.");
+      }
+      return withRelations;
     });
 
     return { success: true, message: "Triage updated.", data: event };
@@ -267,8 +273,8 @@ export async function requireTriageCompleteForSubmission(
   if (!triageOccurred) {
     return { valid: true };
   }
-  const event = await db.triageEvent.findUnique({
-    where: { studentId_sessionId: { studentId, sessionId } },
+  const event = await db.query.triageEvent.findFirst({
+    where: and(eq(triageEvent.studentId, studentId), eq(triageEvent.sessionId, sessionId)),
   });
   if (!event) {
     return { valid: false, message: "Please document triage before submitting attendance." };
