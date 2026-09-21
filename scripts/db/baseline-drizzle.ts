@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { Pool } from "pg";
+import { pool } from "#/db/client";
 
 const MIGRATIONS_DIR = path.join(process.cwd(), "drizzle");
 
@@ -24,7 +24,6 @@ async function main() {
   // Same hash drizzle-kit records: sha256 of the migration file content.
   const hash = createHash("sha256").update(sql).digest("hex");
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   try {
     const hasSchema = await pool.query<{ ok: boolean }>(
       "select to_regclass('public.users') is not null as ok",

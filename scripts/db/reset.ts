@@ -2,7 +2,7 @@
 // scratch. Used by the seeded preview build and `npm run db:dev:migrate:reset`.
 //
 //   dotenv -c development -- tsx scripts/db/reset.ts
-import { Pool } from "pg";
+import { pool } from "#/db/client";
 
 async function main() {
   const url = new URL(process.env.DATABASE_URL ?? "");
@@ -13,7 +13,6 @@ async function main() {
   ) {
     throw new Error("refusing to reset a production database");
   }
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   console.log(`reset: dropping schema public on ${url.hostname}${url.pathname}`);
   try {
     await pool.query("drop schema if exists public cascade");

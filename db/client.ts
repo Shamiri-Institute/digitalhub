@@ -5,6 +5,7 @@ import { DatabaseError, Pool, types } from "pg";
 
 import * as relations from "./relations";
 import * as schema from "./schema";
+import { databaseUrl } from "./url";
 
 // Raw query results follow Prisma's conventions: int8 as number (the schema has no
 // BigInt column), `timestamp` without time zone read as UTC, `date` as UTC midnight.
@@ -13,17 +14,11 @@ types.setTypeParser(types.builtins.TIMESTAMP, (value) => new Date(`${value.repla
 types.setTypeParser(types.builtins.DATE, (value) => new Date(`${value}T00:00:00Z`));
 
 function createPool() {
-  const connectionString = process.env.DATABASE_URL ?? "";
-  const url = new URL(connectionString);
-  const local = url.hostname === "localhost" || url.hostname === "127.0.0.1";
   return new Pool({
-    connectionString,
+    connectionString: databaseUrl(),
     // ponytail: fixed pool per instance; tune when RDS connection counts say so.
     max: 5,
     idleTimeoutMillis: 20_000,
-    // Prisma defaulted to sslmode=prefer (encrypted, no CA check). pg needs that spelled out
-    // for RDS unless the URL sets sslmode itself.
-    ssl: local || url.searchParams.has("sslmode") ? undefined : { rejectUnauthorized: false },
   });
 }
 
