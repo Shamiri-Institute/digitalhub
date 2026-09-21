@@ -104,6 +104,12 @@
   "ignorePatterns": [".next", "node_modules", "playwright-report", ".artifacts"],
   "overrides": [
     {
+      "files": ["app/**", "lib/**"],
+      "rules": {
+        "eslint/no-await-in-loop": "error"
+      }
+    },
+    {
       "files": ["tests/**"],
       "rules": {
         "typescript/unbound-method": "off"
