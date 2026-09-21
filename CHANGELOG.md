@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.37.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.7...v1.37.0) (2026-09-21)
+
+### Features
+
+- **lint:** require a justification comment on every useEffect ([#836](https://github.com/Shamiri-Institute/digitalhub/issues/836)) ([4138e3e](https://github.com/Shamiri-Institute/digitalhub/commit/4138e3e329f1993744c219c7b346284ad692b926))
+- **lint:** require a justification comment on useMemo and useCallback ([#835](https://github.com/Shamiri-Institute/digitalhub/issues/835)) ([1de697c](https://github.com/Shamiri-Institute/digitalhub/commit/1de697cb5be09b18e987b7d2c7b8740ab41c0ae9))
+
+### Bug Fixes
+
+- **attendance:** pick the default session from the date-sorted selectable list ([#833](https://github.com/Shamiri-Institute/digitalhub/issues/833)) ([7906b77](https://github.com/Shamiri-Institute/digitalhub/commit/7906b7784167f0f6c6a72890fec1673ad69450e0))
+- **auth:** stop RoleSwitcher effect firing outside development ([#844](https://github.com/Shamiri-Institute/digitalhub/issues/844)) ([3762c34](https://github.com/Shamiri-Institute/digitalhub/commit/3762c34551591bcf18c7b658f380d10fe699f5bb))
+- **deps:** replace deprecated recharts, react-day-picker, Sentry and zod APIs ([#842](https://github.com/Shamiri-Institute/digitalhub/issues/842)) ([cd896c5](https://github.com/Shamiri-Institute/digitalhub/commit/cd896c51ea47c7054788595b364294b8372ed480))
+- **forms:** wrap async event handlers so a rejection shows a toast ([#839](https://github.com/Shamiri-Institute/digitalhub/issues/839)) ([7390273](https://github.com/Shamiri-Institute/digitalhub/commit/7390273b09e1650a4ebaa198ff094aa52cc7e37d))
+- **hooks:** enforce react/set-state-in-effect and the no-unnecessary-use rules ([#834](https://github.com/Shamiri-Institute/digitalhub/issues/834)) ([0f7b865](https://github.com/Shamiri-Institute/digitalhub/commit/0f7b865b0df37b24d7d4f27afcc5ee805076d304))
+- **hooks:** promote react/exhaustive-deps to an error ([#837](https://github.com/Shamiri-Institute/digitalhub/issues/837)) ([3aff880](https://github.com/Shamiri-Institute/digitalhub/commit/3aff880e7723f9292bc95e72727b7f9d32463cf3))
+- **lint:** enforce additional oxlint correctness rules ([#830](https://github.com/Shamiri-Institute/digitalhub/issues/830)) ([7c779eb](https://github.com/Shamiri-Institute/digitalhub/commit/7c779eb39f415cf2cf8ec7ec3b1727aa4d9cdba0))
+- **react:** move components defined during render to module scope ([#840](https://github.com/Shamiri-Institute/digitalhub/issues/840)) ([cea186e](https://github.com/Shamiri-Institute/digitalhub/commit/cea186eb3e728bbb646a1f0b4fb9e7eb01348b7d))
+- **schedule:** fall back to the month view when the URL names a mode the role cannot use ([#838](https://github.com/Shamiri-Institute/digitalhub/issues/838)) ([b4a1ef1](https://github.com/Shamiri-Institute/digitalhub/commit/b4a1ef1dfa2842d7d939de1830d5a97abfb9b1f9))
+- **sentry:** disable tracing outside production builds ([#843](https://github.com/Shamiri-Institute/digitalhub/issues/843)) ([e4ce691](https://github.com/Shamiri-Institute/digitalhub/commit/e4ce6919c121194fbca19c23cc9ddde07c49378d))
+
 ## [1.36.7](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.6...v1.36.7) (2026-09-17)
 
 ## [1.36.6](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.5...v1.36.6) (2026-09-17)
