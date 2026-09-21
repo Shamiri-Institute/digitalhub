@@ -25,6 +25,7 @@
     "next-auth:session": "dotenv -c development -- tsx scripts/auth/get-next-session.ts",
     "bench": "dotenv -c development -- tsx scripts/bench/run.ts",
     "bench:compare": "tsx scripts/bench/compare.ts",
+    "bench:diff": "tsx scripts/bench/diff.ts",
     "bench:cold": "dotenv -c development -- tsx scripts/bench/cold.ts",
     "db:dev:up": "docker-compose down && docker-compose up db",
     "db:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",

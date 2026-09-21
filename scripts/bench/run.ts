@@ -2,8 +2,12 @@
 // production server and records TTFB and full-body time per page.
 //
 //   npm run build && npm start            (in another terminal)
-//   npm run bench -- --label prisma-baseline [--runs 20] [--warmup 3] [--base-url http://localhost:3000]
-import { writeFileSync } from "node:fs";
+//   npm run bench -- --label prisma-baseline [--runs 20] [--warmup 3] [--base-url http://localhost:3000] [--dump DIR]
+//
+// --dump saves each page's first response body to DIR so two runs can be compared with
+// `npm run bench:diff -- DIR_A DIR_B` to prove the rendered data did not change.
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import { parseArgs } from "node:util";
 
 import { createSession } from "#/lib/auth/session";
@@ -32,6 +36,7 @@ const { values: args } = parseArgs({
     runs: { type: "string", default: "20" },
     warmup: { type: "string", default: "3" },
     "base-url": { type: "string", default: "http://localhost:3000" },
+    dump: { type: "string" },
   },
 });
 
@@ -43,6 +48,13 @@ const label = args.label;
 const runs = Number(args.runs);
 const warmup = Number(args.warmup);
 const baseUrl = (args["base-url"] ?? "http://localhost:3000").replace(/\/$/, "");
+const dumpDir = args.dump ? path.resolve(args.dump) : null;
+if (dumpDir) mkdirSync(dumpDir, { recursive: true });
+
+/** Stable file name for a page dump: `HUB_COORDINATOR__hc_schools_ABC_students.html`. */
+export function dumpFileName(route: Route) {
+  return `${route.role}__${route.path.replace(/^\//, "").replace(/[^A-Za-z0-9]+/g, "_")}.html`;
+}
 
 async function measure(url: string, cookie: string) {
   const start = performance.now();
@@ -52,6 +64,7 @@ async function measure(url: string, cookie: string) {
   return {
     status: res.status,
     location: res.headers.get("location"),
+    body,
     bytes: body.length,
     ttfb,
     total: performance.now() - start,
@@ -61,6 +74,9 @@ async function measure(url: string, cookie: string) {
 async function benchPage(route: Route, cookie: string): Promise<PageResult> {
   const url = `${baseUrl}${route.path}`;
   const first = await measure(url, cookie);
+  if (dumpDir && first.status === 200) {
+    writeFileSync(path.join(dumpDir, dumpFileName(route)), first.body);
+  }
   if (first.status !== 200) {
     const redirectTo =
       first.location && !first.location.includes("/login") ? first.location : undefined;

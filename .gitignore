@@ -62,3 +62,6 @@ vscode
 
 # piolium audits
 /piolium
+
+# page dumps from npm run bench -- --dump (large, local only)
+/bench/dumps/
