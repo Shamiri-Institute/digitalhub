@@ -1,7 +1,7 @@
 import path from "node:path";
 
+import { db } from "#/db/client";
 import { createSession } from "#/lib/auth/session";
-import { db } from "#/lib/db";
 
 export const PersonnelFixtures = {
   supervisor: {
@@ -27,6 +27,10 @@ export const PersonnelFixtures = {
 };
 
 export async function generateSessionToken(email: string) {
-  const user = await db.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
+  const user = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.email, email),
+    columns: { id: true },
+  });
+  if (!user) throw new Error(`No user with email ${email}`);
   return (await createSession(user.id)).value;
 }

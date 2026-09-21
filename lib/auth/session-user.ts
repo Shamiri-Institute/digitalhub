@@ -1,6 +1,6 @@
 import type { ImplementerRole } from "#/db/enums";
 
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 import { getDefaultProjectId } from "#/lib/default-project-id";
 
 export interface JWTMembership {
@@ -25,25 +25,19 @@ export type SessionUser = {
 export async function loadSessionUser(userId: string): Promise<SessionUser | null> {
   const [defaultProjectId, user] = await Promise.all([
     getDefaultProjectId(),
-    db.user.findUnique({
-      where: { id: userId, archivedAt: null },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        image: true,
-        activeProjectId: true,
+    db.query.user.findFirst({
+      where: (u, { and, eq, isNull }) => and(eq(u.id, userId), isNull(u.archivedAt)),
+      columns: { id: true, email: true, name: true, image: true, activeProjectId: true },
+      with: {
         memberships: {
-          select: {
-            id: true,
-            role: true,
-            identifier: true,
-            updatedAt: true,
+          columns: { id: true, role: true, identifier: true, updatedAt: true },
+          orderBy: (m, { sql }) => sql`${m.updatedAt} desc nulls last`,
+          with: {
             implementer: {
-              select: { id: true, implementerName: true, hubs: { select: { projectId: true } } },
+              columns: { id: true, implementerName: true },
+              with: { hubs: { columns: { projectId: true } } },
             },
           },
-          orderBy: { updatedAt: { sort: "desc", nulls: "last" } },
         },
       },
     }),

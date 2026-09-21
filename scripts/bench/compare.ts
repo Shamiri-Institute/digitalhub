@@ -3,7 +3,11 @@
 import { ms, readResult, round } from "./lib";
 import type { BenchResult, PageResult } from "./run";
 
-const THRESHOLD_PCT = 5;
+// Two runs of identical code differ by up to ±12% on pages that render in 10–30 ms
+// (measured 2026-09-21), so a page is flagged only when both the relative and the absolute
+// change are beyond that jitter. The aggregate lines at the bottom are the primary signal.
+const THRESHOLD_PCT = 10;
+const THRESHOLD_MS = 5;
 
 const [beforeArg, afterArg] = process.argv.slice(2);
 if (!beforeArg || !afterArg) {
@@ -42,8 +46,12 @@ const describe = (r: BenchResult) =>
 console.log(`Before: ${describe(before)}\nAfter: ${describe(after)}\n`);
 console.log("| Page | Role | Before p50 | After p50 | Δ p50 | Before p95 | After p95 | |");
 console.log("| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |");
-for (const { page, other, delta } of rows) {
-  const flag = delta > THRESHOLD_PCT ? "⚠ slower" : delta < -THRESHOLD_PCT ? "✓ faster" : "";
+const beyondJitter = (r: Row) =>
+  Math.abs(r.delta) > THRESHOLD_PCT &&
+  Math.abs(r.other.total.p50 - r.page.total.p50) > THRESHOLD_MS;
+for (const r of rows) {
+  const { page, other, delta } = r;
+  const flag = !beyondJitter(r) ? "" : delta > 0 ? "⚠ slower" : "✓ faster";
   console.log(
     `| ${page.path} | ${page.role} | ${ms(page.total.p50)} | ${ms(other.total.p50)} | ${pct(delta)} | ${ms(page.total.p95)} | ${ms(other.total.p95)} | ${flag} |`,
   );
@@ -57,7 +65,7 @@ console.log(
   `\n${rows.length} pages compared. Median Δ p50 ${pct(median)}. Sum of p50 ${ms(sumBefore)} → ${ms(sumAfter)} (${pct(round(((sumAfter - sumBefore) / sumBefore) * 100))}).`,
 );
 console.log(
-  `Slower than ${THRESHOLD_PCT}%: ${rows.filter((r) => r.delta > THRESHOLD_PCT).length}. Faster than ${THRESHOLD_PCT}%: ${rows.filter((r) => r.delta < -THRESHOLD_PCT).length}.`,
+  `Beyond jitter (>${THRESHOLD_PCT}% and >${THRESHOLD_MS} ms): ${rows.filter((r) => beyondJitter(r) && r.delta > 0).length} slower, ${rows.filter((r) => beyondJitter(r) && r.delta < 0).length} faster.`,
 );
 if (missing.length > 0)
   console.log(`Not compared (missing or non-200 in one run): ${missing.join(", ")}`);

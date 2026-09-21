@@ -1,0 +1,1427 @@
+{
+  "meta": {
+    "label": "drizzle-auth-2",
+    "date": "2026-09-21T10:19:07.187Z",
+    "gitSha": "d4867c5d",
+    "node": "v24.17.0",
+    "next": "16.3.4",
+    "orm": "drizzle-orm 0.45.2",
+    "baseUrl": "http://localhost:3100",
+    "runs": 20,
+    "warmup": 3
+  },
+  "users": {
+    "ADMIN": "team@shamiri.institute",
+    "CLINICAL_LEAD": "ben.white@test.com",
+    "CLINICAL_TEAM": "takehiro.tomiyasu@test.com",
+    "FELLOW": "aaron70@yahoo.com",
+    "HUB_COORDINATOR": "brandon.mochama@shamiri.institute",
+    "OPERATIONS": "andy37@hotmail.com",
+    "SUPERVISOR": "declan.rice@test.com"
+  },
+  "pages": [
+    {
+      "role": "ADMIN",
+      "path": "/admin",
+      "status": 307,
+      "redirectTo": "/admin/schedule",
+      "bytes": 15,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/fellows",
+      "status": 200,
+      "bytes": 2856876,
+      "ttfb": {
+        "p50": 107.2,
+        "p95": 116.3
+      },
+      "total": {
+        "p50": 117.6,
+        "p95": 129.4
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/hubs",
+      "status": 200,
+      "bytes": 29831367,
+      "ttfb": {
+        "p50": 963.9,
+        "p95": 1028
+      },
+      "total": {
+        "p50": 1053.3,
+        "p95": 1116.5
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/schedule",
+      "status": 200,
+      "bytes": 56311,
+      "ttfb": {
+        "p50": 9,
+        "p95": 11.5
+      },
+      "total": {
+        "p50": 9.8,
+        "p95": 12.1
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/schools/ACSWFS",
+      "status": 307,
+      "redirectTo": "/admin/schools/ACSWFS/supervisors",
+      "bytes": 19898,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/schools/ACSWFS/fellows",
+      "status": 200,
+      "bytes": 591803,
+      "ttfb": {
+        "p50": 9.5,
+        "p95": 11.8
+      },
+      "total": {
+        "p50": 26.2,
+        "p95": 29.8
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/schools/ACSWFS/groups",
+      "status": 200,
+      "bytes": 570472,
+      "ttfb": {
+        "p50": 9.9,
+        "p95": 12.2
+      },
+      "total": {
+        "p50": 26.1,
+        "p95": 29.8
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/schools/ACSWFS/sessions",
+      "status": 200,
+      "bytes": 3529516,
+      "ttfb": {
+        "p50": 11.4,
+        "p95": 14.7
+      },
+      "total": {
+        "p50": 93.6,
+        "p95": 101.9
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/schools/ACSWFS/students",
+      "status": 200,
+      "bytes": 3630831,
+      "ttfb": {
+        "p50": 10.5,
+        "p95": 13.1
+      },
+      "total": {
+        "p50": 96.9,
+        "p95": 102.4
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/schools/ACSWFS/supervisors",
+      "status": 200,
+      "bytes": 177236,
+      "ttfb": {
+        "p50": 9.2,
+        "p95": 11
+      },
+      "total": {
+        "p50": 18.6,
+        "p95": 20.7
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/students",
+      "status": 200,
+      "bytes": 124091,
+      "ttfb": {
+        "p50": 9.9,
+        "p95": 11.4
+      },
+      "total": {
+        "p50": 56.1,
+        "p95": 60.8
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/supervisors",
+      "status": 200,
+      "bytes": 579910,
+      "ttfb": {
+        "p50": 31.3,
+        "p95": 35.6
+      },
+      "total": {
+        "p50": 34.9,
+        "p95": 39.4
+      }
+    },
+    {
+      "role": "ADMIN",
+      "path": "/admin/tickets",
+      "status": 200,
+      "bytes": 57374,
+      "ttfb": {
+        "p50": 7.6,
+        "p95": 9.8
+      },
+      "total": {
+        "p50": 8.7,
+        "p95": 10.6
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl",
+      "status": 307,
+      "redirectTo": "/cl/clinical",
+      "bytes": 12,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl/clinical",
+      "status": 200,
+      "bytes": 896372,
+      "ttfb": {
+        "p50": 10.3,
+        "p95": 12.4
+      },
+      "total": {
+        "p50": 47,
+        "p95": 50.1
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl/fellows",
+      "status": 200,
+      "bytes": 80591,
+      "ttfb": {
+        "p50": 9.4,
+        "p95": 12.1
+      },
+      "total": {
+        "p50": 13.6,
+        "p95": 16.2
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl/students",
+      "status": 200,
+      "bytes": 52186,
+      "ttfb": {
+        "p50": 14.8,
+        "p95": 17.1
+      },
+      "total": {
+        "p50": 16.2,
+        "p95": 18.7
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl/supervisors",
+      "status": 200,
+      "bytes": 70079,
+      "ttfb": {
+        "p50": 8.9,
+        "p95": 10
+      },
+      "total": {
+        "p50": 11,
+        "p95": 12.1
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl/tickets",
+      "status": 200,
+      "bytes": 59462,
+      "ttfb": {
+        "p50": 9.2,
+        "p95": 11.1
+      },
+      "total": {
+        "p50": 10.3,
+        "p95": 12
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl/triage",
+      "status": 307,
+      "redirectTo": "/cl/triage/gaps",
+      "bytes": 18447,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl/triage/audits",
+      "status": 200,
+      "bytes": 50235,
+      "ttfb": {
+        "p50": 9.1,
+        "p95": 9.5
+      },
+      "total": {
+        "p50": 10.1,
+        "p95": 11.1
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl/triage/fidelity",
+      "status": 200,
+      "bytes": 56743,
+      "ttfb": {
+        "p50": 8.6,
+        "p95": 10.7
+      },
+      "total": {
+        "p50": 11.5,
+        "p95": 13.2
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl/triage/gaps",
+      "status": 200,
+      "bytes": 55157,
+      "ttfb": {
+        "p50": 9.1,
+        "p95": 11.6
+      },
+      "total": {
+        "p50": 10.2,
+        "p95": 17.7
+      }
+    },
+    {
+      "role": "CLINICAL_LEAD",
+      "path": "/cl/triage/handoffs",
+      "status": 200,
+      "bytes": 47605,
+      "ttfb": {
+        "p50": 8.8,
+        "p95": 9.5
+      },
+      "total": {
+        "p50": 9.9,
+        "p95": 11.7
+      }
+    },
+    {
+      "role": "CLINICAL_TEAM",
+      "path": "/ct",
+      "status": 307,
+      "redirectTo": "/ct/clinical",
+      "bytes": 12,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "CLINICAL_TEAM",
+      "path": "/ct/clinical",
+      "status": 200,
+      "bytes": 167329,
+      "ttfb": {
+        "p50": 8.4,
+        "p95": 10.4
+      },
+      "total": {
+        "p50": 19,
+        "p95": 21.6
+      }
+    },
+    {
+      "role": "CLINICAL_TEAM",
+      "path": "/ct/fellows",
+      "status": 200,
+      "bytes": 209173,
+      "ttfb": {
+        "p50": 7.3,
+        "p95": 8.1
+      },
+      "total": {
+        "p50": 19.6,
+        "p95": 23.8
+      }
+    },
+    {
+      "role": "CLINICAL_TEAM",
+      "path": "/ct/students",
+      "status": 200,
+      "bytes": 52552,
+      "ttfb": {
+        "p50": 19.3,
+        "p95": 22.5
+      },
+      "total": {
+        "p50": 20.2,
+        "p95": 24.2
+      }
+    },
+    {
+      "role": "CLINICAL_TEAM",
+      "path": "/ct/supervisors",
+      "status": 200,
+      "bytes": 88205,
+      "ttfb": {
+        "p50": 6.9,
+        "p95": 9
+      },
+      "total": {
+        "p50": 8.4,
+        "p95": 10.5
+      }
+    },
+    {
+      "role": "FELLOW",
+      "path": "/fel",
+      "status": 307,
+      "redirectTo": "/fel/schedule",
+      "bytes": 13,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "FELLOW",
+      "path": "/fel/portal",
+      "status": 200,
+      "bytes": 194582,
+      "ttfb": {
+        "p50": 8.2,
+        "p95": 10.4
+      },
+      "total": {
+        "p50": 17.8,
+        "p95": 20.4
+      }
+    },
+    {
+      "role": "FELLOW",
+      "path": "/fel/profile",
+      "status": 200,
+      "bytes": 25197,
+      "ttfb": {
+        "p50": 7.4,
+        "p95": 11.9
+      },
+      "total": {
+        "p50": 7.8,
+        "p95": 12.2
+      }
+    },
+    {
+      "role": "FELLOW",
+      "path": "/fel/schedule",
+      "status": 200,
+      "bytes": 158989,
+      "ttfb": {
+        "p50": 17.2,
+        "p95": 21.5
+      },
+      "total": {
+        "p50": 18.2,
+        "p95": 22.5
+      }
+    },
+    {
+      "role": "FELLOW",
+      "path": "/fel/schools",
+      "status": 200,
+      "bytes": 141822,
+      "ttfb": {
+        "p50": 17.4,
+        "p95": 20
+      },
+      "total": {
+        "p50": 18.3,
+        "p95": 20.9
+      }
+    },
+    {
+      "role": "FELLOW",
+      "path": "/fel/schools/BVBMLD",
+      "status": 307,
+      "redirectTo": "/fel/schools/BVBMLD/sessions",
+      "bytes": 20810,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "FELLOW",
+      "path": "/fel/schools/BVBMLD/group",
+      "status": 200,
+      "bytes": 73730,
+      "ttfb": {
+        "p50": 9.1,
+        "p95": 11.6
+      },
+      "total": {
+        "p50": 21.4,
+        "p95": 24.7
+      }
+    },
+    {
+      "role": "FELLOW",
+      "path": "/fel/schools/BVBMLD/sessions",
+      "status": 200,
+      "bytes": 4560288,
+      "ttfb": {
+        "p50": 10.9,
+        "p95": 17.2
+      },
+      "total": {
+        "p50": 120.3,
+        "p95": 130.4
+      }
+    },
+    {
+      "role": "FELLOW",
+      "path": "/fel/schools/BVBMLD/students",
+      "status": 200,
+      "bytes": 79833,
+      "ttfb": {
+        "p50": 9.2,
+        "p95": 12.4
+      },
+      "total": {
+        "p50": 13.1,
+        "p95": 15.3
+      }
+    },
+    {
+      "role": "FELLOW",
+      "path": "/fel/tickets",
+      "status": 200,
+      "bytes": 56458,
+      "ttfb": {
+        "p50": 8.4,
+        "p95": 13.2
+      },
+      "total": {
+        "p50": 9.7,
+        "p95": 14
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc",
+      "status": 307,
+      "redirectTo": "/hc/schedule",
+      "bytes": 12,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/fellows",
+      "status": 200,
+      "bytes": 610602,
+      "ttfb": {
+        "p50": 28.8,
+        "p95": 32.2
+      },
+      "total": {
+        "p50": 31.4,
+        "p95": 36.4
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/expenses/complaints",
+      "status": 200,
+      "bytes": 135290,
+      "ttfb": {
+        "p50": 9.9,
+        "p95": 12.3
+      },
+      "total": {
+        "p50": 13.8,
+        "p95": 15.8
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/expenses/fellows",
+      "status": 200,
+      "bytes": 140970,
+      "ttfb": {
+        "p50": 9.4,
+        "p95": 10.9
+      },
+      "total": {
+        "p50": 13.3,
+        "p95": 15.3
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/expenses/payout-history",
+      "status": 200,
+      "bytes": 81288,
+      "ttfb": {
+        "p50": 9.2,
+        "p95": 10.7
+      },
+      "total": {
+        "p50": 10.3,
+        "p95": 13.1
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/expenses/supervisors",
+      "status": 200,
+      "bytes": 101622,
+      "ttfb": {
+        "p50": 9.9,
+        "p95": 11
+      },
+      "total": {
+        "p50": 11.7,
+        "p95": 13.4
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/fellow-reports",
+      "status": 307,
+      "redirectTo": "/hc/reporting/fellow-reports/weekly-fellow-evaluation",
+      "bytes": 30641,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/fellow-reports/complaints",
+      "status": 200,
+      "bytes": 89681,
+      "ttfb": {
+        "p50": 10,
+        "p95": 11
+      },
+      "total": {
+        "p50": 10.9,
+        "p95": 12
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/fellow-reports/group-report",
+      "status": 200,
+      "bytes": 112122,
+      "ttfb": {
+        "p50": 20.6,
+        "p95": 25.9
+      },
+      "total": {
+        "p50": 22.1,
+        "p95": 27
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/fellow-reports/student-group-evaluation",
+      "status": 200,
+      "bytes": 80710,
+      "ttfb": {
+        "p50": 10.2,
+        "p95": 12.9
+      },
+      "total": {
+        "p50": 13,
+        "p95": 14
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/fellow-reports/weekly-fellow-evaluation",
+      "status": 200,
+      "bytes": 193654,
+      "ttfb": {
+        "p50": 9.1,
+        "p95": 13.8
+      },
+      "total": {
+        "p50": 12.3,
+        "p95": 16.6
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/monitoring-and-evaluation",
+      "status": 200,
+      "bytes": 44433,
+      "ttfb": {
+        "p50": 8.6,
+        "p95": 10
+      },
+      "total": {
+        "p50": 9.1,
+        "p95": 10.4
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/school-reports",
+      "status": 307,
+      "redirectTo": "/hc/reporting/school-reports/session",
+      "bytes": 30622,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/school-reports/school-feedback",
+      "status": 200,
+      "bytes": 109253,
+      "ttfb": {
+        "p50": 9.9,
+        "p95": 11.3
+      },
+      "total": {
+        "p50": 11.7,
+        "p95": 13.2
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/reporting/school-reports/session",
+      "status": 200,
+      "bytes": 173499,
+      "ttfb": {
+        "p50": 9.5,
+        "p95": 14.3
+      },
+      "total": {
+        "p50": 13.7,
+        "p95": 18.9
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/schedule",
+      "status": 200,
+      "bytes": 5549300,
+      "ttfb": {
+        "p50": 160.8,
+        "p95": 166.7
+      },
+      "total": {
+        "p50": 180.9,
+        "p95": 193.5
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/schools",
+      "status": 200,
+      "bytes": 5388874,
+      "ttfb": {
+        "p50": 161,
+        "p95": 166.6
+      },
+      "total": {
+        "p50": 180.7,
+        "p95": 191.6
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/schools/BCDUSV",
+      "status": 307,
+      "redirectTo": "/hc/schools/BCDUSV/supervisors",
+      "bytes": 32296,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/schools/BCDUSV/fellows",
+      "status": 200,
+      "bytes": 490866,
+      "ttfb": {
+        "p50": 10.9,
+        "p95": 12.6
+      },
+      "total": {
+        "p50": 24.1,
+        "p95": 26.9
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/schools/BCDUSV/groups",
+      "status": 200,
+      "bytes": 454174,
+      "ttfb": {
+        "p50": 10.4,
+        "p95": 13.1
+      },
+      "total": {
+        "p50": 21.7,
+        "p95": 24.7
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/schools/BCDUSV/sessions",
+      "status": 200,
+      "bytes": 2346494,
+      "ttfb": {
+        "p50": 10.9,
+        "p95": 12.6
+      },
+      "total": {
+        "p50": 72.5,
+        "p95": 81.8
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/schools/BCDUSV/students",
+      "status": 200,
+      "bytes": 2326594,
+      "ttfb": {
+        "p50": 12,
+        "p95": 15.7
+      },
+      "total": {
+        "p50": 67.4,
+        "p95": 73.9
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/schools/BCDUSV/supervisors",
+      "status": 200,
+      "bytes": 205722,
+      "ttfb": {
+        "p50": 10.5,
+        "p95": 11.3
+      },
+      "total": {
+        "p50": 21.2,
+        "p95": 23.3
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/students",
+      "status": 200,
+      "bytes": 90704,
+      "ttfb": {
+        "p50": 11.3,
+        "p95": 12
+      },
+      "total": {
+        "p50": 16.6,
+        "p95": 18.4
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/supervisors",
+      "status": 200,
+      "bytes": 178750,
+      "ttfb": {
+        "p50": 19,
+        "p95": 23.3
+      },
+      "total": {
+        "p50": 20.4,
+        "p95": 24.7
+      }
+    },
+    {
+      "role": "HUB_COORDINATOR",
+      "path": "/hc/tickets",
+      "status": 200,
+      "bytes": 71213,
+      "ttfb": {
+        "p50": 8.9,
+        "p95": 11.1
+      },
+      "total": {
+        "p50": 9.8,
+        "p95": 12.5
+      }
+    },
+    {
+      "role": "OPERATIONS",
+      "path": "/ops",
+      "status": 307,
+      "redirectTo": "/ops/reporting",
+      "bytes": 14,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "OPERATIONS",
+      "path": "/ops/reporting",
+      "status": 307,
+      "redirectTo": "/ops/reporting/expenses/fellows",
+      "bytes": 18442,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "OPERATIONS",
+      "path": "/ops/reporting/expenses/complaints",
+      "status": 200,
+      "bytes": 222926,
+      "ttfb": {
+        "p50": 9.7,
+        "p95": 12.8
+      },
+      "total": {
+        "p50": 40.9,
+        "p95": 48.6
+      }
+    },
+    {
+      "role": "OPERATIONS",
+      "path": "/ops/reporting/expenses/fellows",
+      "status": 200,
+      "bytes": 260913,
+      "ttfb": {
+        "p50": 9.6,
+        "p95": 10.8
+      },
+      "total": {
+        "p50": 44.6,
+        "p95": 51.3
+      }
+    },
+    {
+      "role": "OPERATIONS",
+      "path": "/ops/reporting/expenses/payout-history",
+      "status": 200,
+      "bytes": 120693,
+      "ttfb": {
+        "p50": 13.9,
+        "p95": 17.2
+      },
+      "total": {
+        "p50": 29.6,
+        "p95": 36.9
+      }
+    },
+    {
+      "role": "OPERATIONS",
+      "path": "/ops/reporting/expenses/supervisors",
+      "status": 200,
+      "bytes": 123182,
+      "ttfb": {
+        "p50": 8.7,
+        "p95": 10.1
+      },
+      "total": {
+        "p50": 12.4,
+        "p95": 13.9
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc",
+      "status": 307,
+      "redirectTo": "/sc/schedule",
+      "bytes": 12,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/clinical",
+      "status": 200,
+      "bytes": 959330,
+      "ttfb": {
+        "p50": 23.1,
+        "p95": 24.9
+      },
+      "total": {
+        "p50": 44.3,
+        "p95": 47.1
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/fellows",
+      "status": 200,
+      "bytes": 487033,
+      "ttfb": {
+        "p50": 19.1,
+        "p95": 21.9
+      },
+      "total": {
+        "p50": 28.3,
+        "p95": 31.2
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/profile",
+      "status": 200,
+      "bytes": 86853,
+      "ttfb": {
+        "p50": 16.9,
+        "p95": 21.6
+      },
+      "total": {
+        "p50": 17.7,
+        "p95": 22.4
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/expenses/complaints",
+      "status": 200,
+      "bytes": 143081,
+      "ttfb": {
+        "p50": 19.4,
+        "p95": 22.4
+      },
+      "total": {
+        "p50": 22.2,
+        "p95": 25
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/expenses/fellows",
+      "status": 200,
+      "bytes": 152487,
+      "ttfb": {
+        "p50": 19,
+        "p95": 22.4
+      },
+      "total": {
+        "p50": 22.4,
+        "p95": 26.8
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/expenses/my-expenses",
+      "status": 200,
+      "bytes": 143351,
+      "ttfb": {
+        "p50": 21.5,
+        "p95": 24.9
+      },
+      "total": {
+        "p50": 23.7,
+        "p95": 26.8
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/expenses/payout-history",
+      "status": 200,
+      "bytes": 155602,
+      "ttfb": {
+        "p50": 21.9,
+        "p95": 24.1
+      },
+      "total": {
+        "p50": 26.4,
+        "p95": 28.5
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/fellow-reports",
+      "status": 307,
+      "redirectTo": "/sc/reporting/fellow-reports/weekly-fellow-evaluation",
+      "bytes": 77076,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/fellow-reports/complaints",
+      "status": 200,
+      "bytes": 138190,
+      "ttfb": {
+        "p50": 18.2,
+        "p95": 19.1
+      },
+      "total": {
+        "p50": 19.5,
+        "p95": 20.6
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/fellow-reports/group-report",
+      "status": 200,
+      "bytes": 105357,
+      "ttfb": {
+        "p50": 20.7,
+        "p95": 24.3
+      },
+      "total": {
+        "p50": 21.6,
+        "p95": 26
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/fellow-reports/student-group-evaluation",
+      "status": 200,
+      "bytes": 139805,
+      "ttfb": {
+        "p50": 18,
+        "p95": 21.6
+      },
+      "total": {
+        "p50": 21,
+        "p95": 25.7
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/fellow-reports/weekly-fellow-evaluation",
+      "status": 200,
+      "bytes": 137692,
+      "ttfb": {
+        "p50": 20.9,
+        "p95": 24.1
+      },
+      "total": {
+        "p50": 22.3,
+        "p95": 26.2
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/monitoring-and-evaluation",
+      "status": 200,
+      "bytes": 91413,
+      "ttfb": {
+        "p50": 18.6,
+        "p95": 24.7
+      },
+      "total": {
+        "p50": 19.6,
+        "p95": 26
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/recordings",
+      "status": 200,
+      "bytes": 176851,
+      "ttfb": {
+        "p50": 18.4,
+        "p95": 21.6
+      },
+      "total": {
+        "p50": 24.2,
+        "p95": 27.9
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/school-reports",
+      "status": 307,
+      "redirectTo": "/sc/reporting/school-reports/session",
+      "bytes": 77058,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/school-reports/school-feedback",
+      "status": 200,
+      "bytes": 128316,
+      "ttfb": {
+        "p50": 20.4,
+        "p95": 24.8
+      },
+      "total": {
+        "p50": 22,
+        "p95": 27.2
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/reporting/school-reports/session",
+      "status": 200,
+      "bytes": 127195,
+      "ttfb": {
+        "p50": 19,
+        "p95": 22.1
+      },
+      "total": {
+        "p50": 20.1,
+        "p95": 23.9
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/schedule",
+      "status": 200,
+      "bytes": 196505,
+      "ttfb": {
+        "p50": 24.1,
+        "p95": 27.1
+      },
+      "total": {
+        "p50": 25.3,
+        "p95": 28.3
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/schools",
+      "status": 200,
+      "bytes": 687454,
+      "ttfb": {
+        "p50": 40.3,
+        "p95": 43.7
+      },
+      "total": {
+        "p50": 43.4,
+        "p95": 46.4
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/schools/SOBHA_SCH",
+      "status": 307,
+      "redirectTo": "/sc/schools/SOBHA_SCH/fellows",
+      "bytes": 78717,
+      "ttfb": {
+        "p50": 0,
+        "p95": 0
+      },
+      "total": {
+        "p50": 0,
+        "p95": 0
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/schools/SOBHA_SCH/fellows",
+      "status": 200,
+      "bytes": 635403,
+      "ttfb": {
+        "p50": 22.1,
+        "p95": 23.3
+      },
+      "total": {
+        "p50": 41,
+        "p95": 43.9
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/schools/SOBHA_SCH/groups",
+      "status": 200,
+      "bytes": 560887,
+      "ttfb": {
+        "p50": 21.6,
+        "p95": 24.1
+      },
+      "total": {
+        "p50": 34.7,
+        "p95": 38.5
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/schools/SOBHA_SCH/sessions",
+      "status": 200,
+      "bytes": 4711101,
+      "ttfb": {
+        "p50": 23.7,
+        "p95": 27.6
+      },
+      "total": {
+        "p50": 128.7,
+        "p95": 140.5
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/schools/SOBHA_SCH/students",
+      "status": 200,
+      "bytes": 4358005,
+      "ttfb": {
+        "p50": 22.7,
+        "p95": 27.2
+      },
+      "total": {
+        "p50": 123,
+        "p95": 130.8
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/students",
+      "status": 200,
+      "bytes": 149180,
+      "ttfb": {
+        "p50": 18,
+        "p95": 24.3
+      },
+      "total": {
+        "p50": 21,
+        "p95": 25.9
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/tickets",
+      "status": 200,
+      "bytes": 142242,
+      "ttfb": {
+        "p50": 17.4,
+        "p95": 20.1
+      },
+      "total": {
+        "p50": 23.8,
+        "p95": 28.5
+      }
+    },
+    {
+      "role": "SUPERVISOR",
+      "path": "/sc/triage",
+      "status": 200,
+      "bytes": 132629,
+      "ttfb": {
+        "p50": 19.1,
+        "p95": 23.3
+      },
+      "total": {
+        "p50": 21,
+        "p95": 26
+      }
+    }
+  ]
+}
