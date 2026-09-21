@@ -1,8 +1,11 @@
 "use server";
 
-import { ImplementerRole } from "#/db/enums";
+import { inArray } from "drizzle-orm";
+
 import { getCurrentPersonnel } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { supervisorAttendance } from "#/db/schema";
 
 export async function markManySupervisorAttendance(ids: string[], attended: boolean | null) {
   const user = await getCurrentPersonnel();
@@ -15,16 +18,12 @@ export async function markManySupervisorAttendance(ids: string[], attended: bool
   }
 
   try {
-    const data = await db.supervisorAttendance.updateMany({
-      where: {
-        id: {
-          in: ids,
-        },
-      },
-      data: {
-        attended,
-      },
-    });
+    const updated = await db
+      .update(supervisorAttendance)
+      .set({ attended })
+      .where(inArray(supervisorAttendance.id, ids))
+      .returning({ id: supervisorAttendance.id });
+    const data = { count: updated.length };
     return {
       success: true,
       message: `Successfully marked attendance for ${data.count} supervisors.`,

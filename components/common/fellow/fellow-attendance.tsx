@@ -84,7 +84,7 @@ export default function FellowAttendance({
   session: Session | null;
   fellowRatings: {
     id: string;
-    averageRating: number;
+    averageRating: number | null;
   }[];
   role: ImplementerRole;
   isOpen: boolean;

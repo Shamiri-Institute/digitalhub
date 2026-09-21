@@ -1,6 +1,9 @@
-import type { ImplementerRole } from "#/db/enums";
+import { eq } from "drizzle-orm";
+
 import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import type { ImplementerRole } from "#/db/enums";
+import { school } from "#/db/schema";
 
 export default async function SchoolSupervisorsPage({
   visibleId,
@@ -9,42 +12,28 @@ export default async function SchoolSupervisorsPage({
   visibleId: string;
   role: ImplementerRole;
 }) {
-  const school = await db.school.findUnique({
-    where: {
-      visibleId,
-    },
-    include: {
-      interventionSessions: {
-        include: {
-          session: true,
-        },
-      },
-    },
+  const schoolRow = await db.query.school.findFirst({
+    where: (s, { eq }) => eq(s.visibleId, visibleId),
+    with: { interventionSessions: { with: { session: true } } },
   });
 
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      hubId: school?.hubId ?? "",
-    },
-    include: {
+  const supervisors = await db.query.supervisor.findMany({
+    where: (s, { eq }) => eq(s.hubId, schoolRow?.hubId ?? ""),
+    with: {
       assignedSchools: true,
       fellows: true,
       supervisorAttendances: {
-        include: {
-          session: true,
-        },
-        where: {
-          school: {
-            visibleId,
-          },
-        },
+        where: (a, { inArray }) =>
+          inArray(
+            a.schoolId,
+            db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
+          ),
+        with: { session: true },
       },
       monthlySupervisorEvaluation: true,
     },
-    orderBy: {
-      supervisorName: "asc",
-    },
+    orderBy: (s, { asc }) => asc(s.supervisorName),
   });
 
-  return <SupervisorsDataTable supervisors={supervisors} role={role} school={school ?? null} />;
+  return <SupervisorsDataTable supervisors={supervisors} role={role} school={schoolRow ?? null} />;
 }

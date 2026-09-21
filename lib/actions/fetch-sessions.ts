@@ -1,11 +1,15 @@
 "use server";
 
-import { ImplementerRole, type SessionStatus } from "#/db/enums";
+import { and, eq } from "drizzle-orm";
+
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
+import { db } from "#/db/client";
+import { ImplementerRole, type SessionStatus } from "#/db/enums";
+import { hub, interventionGroup } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { getDefaultSessionDateRange } from "#/lib/date-utils";
-import { db } from "#/lib/db";
+import { clinicalCasesCountExtras, withClinicalCasesCount } from "#/lib/actions/schedule-data";
 
 export async function fetchInterventionSessions({
   activeProjectId: clientActiveProjectId,
@@ -37,85 +41,96 @@ export async function fetchInterventionSessions({
     if (!hubId) {
       throw new Error("No assigned hub ID provided");
     }
-    const hub = await db.hub.findUnique({
-      where: { id: hubId },
-      select: { projectId: true },
+    const hubRow = await db.query.hub.findFirst({
+      where: (h, { eq }) => eq(h.id, hubId),
+      columns: { projectId: true },
     });
-    if (!hub?.projectId) {
+    if (!hubRow?.projectId) {
       throw new Error("Hub has no project");
     }
-    projectId = hub.projectId;
+    projectId = hubRow.projectId;
   }
 
   const { start: rangeStart, end: rangeEnd } =
     start && end ? { start, end } : getDefaultSessionDateRange();
 
   const isFellow = role === ImplementerRole.FELLOW && !!fellowId;
+  const statuses =
+    filters &&
+    (Object.keys(filters.statusTypes).filter((status) => {
+      return filters.statusTypes[status];
+    }) as SessionStatus[]);
 
-  const sessions = await db.interventionSession.findMany({
-    where: {
-      sessionDate: {
-        gte: rangeStart,
-        lte: rangeEnd,
-      },
-      // session: {
-      //   sessionName: {
-      //     in:
-      //       filters &&
-      //       Object.keys(filters.sessionTypes).filter((sessionType) => {
-      //         return filters.sessionTypes[sessionType];
-      //       }),
-      //   },
-      // },
-      hub: {
-        id: hubId,
-        implementerId,
-        projectId,
-      },
-      status: {
-        in:
-          filters &&
-          (Object.keys(filters.statusTypes).filter((status) => {
-            return filters.statusTypes[status];
-          }) as SessionStatus[]),
-      },
-      ...(isFellow
-        ? {
-            school: {
-              interventionGroups: { some: { leaderId: fellowId } },
-            },
-          }
-        : {}),
-    },
-    include: {
-      hub: {
-        select: { visibleId: true },
-      },
-      school: {
-        include: {
-          interventionGroups: {
-            ...(isFellow ? { where: { leaderId: fellowId } } : {}),
-            include: {
-              students: {
-                include: {
-                  _count: {
-                    select: {
-                      clinicalCases: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+  // Hubs of this project, narrowed to the caller's hub and/or implementer when given.
+  const hubIds = db
+    .select({ id: hub.id })
+    .from(hub)
+    .where(
+      and(
+        eq(hub.projectId, projectId),
+        hubId ? eq(hub.id, hubId) : undefined,
+        implementerId ? eq(hub.implementerId, implementerId) : undefined,
+      ),
+    );
+
+  const sessions = await db.query.interventionSession.findMany({
+    where: (s, { and, gte, lte, inArray }) =>
+      and(
+        gte(s.sessionDate, rangeStart),
+        lte(s.sessionDate, rangeEnd),
+        inArray(s.hubId, hubIds),
+        statuses ? inArray(s.status, statuses) : undefined,
+        isFellow
+          ? inArray(
+              s.schoolId,
+              db
+                .select({ schoolId: interventionGroup.schoolId })
+                .from(interventionGroup)
+                .where(eq(interventionGroup.leaderId, fellowId)),
+            )
+          : undefined,
+      ),
+    with: {
+      hub: { columns: { visibleId: true } },
       sessionRatings: true,
       session: true,
     },
-    orderBy: {
-      sessionDate: "asc",
-    },
+    orderBy: (s, { asc }) => asc(s.sessionDate),
   });
 
-  return sessions;
+  // Prisma loaded each school (with its groups and students) once; nesting the subtree under
+  // every session would make Drizzle recompute it per row, so load the distinct schools once
+  // and attach them in JS.
+  const schoolIds = [...new Set(sessions.map((s) => s.schoolId).filter((id) => id !== null))];
+  const schools =
+    schoolIds.length === 0
+      ? []
+      : await db.query.school.findMany({
+          where: (sc, { inArray }) => inArray(sc.id, schoolIds),
+          with: {
+            interventionGroups: {
+              ...(isFellow ? { where: (g, { eq }) => eq(g.leaderId, fellowId) } : {}),
+              with: {
+                students: { extras: clinicalCasesCountExtras },
+              },
+            },
+          },
+        });
+  const schoolById = new Map(
+    schools.map((sc) => [
+      sc.id,
+      {
+        ...sc,
+        interventionGroups: sc.interventionGroups.map((g) => ({
+          ...g,
+          students: g.students.map(withClinicalCasesCount),
+        })),
+      },
+    ]),
+  );
+
+  return sessions.map((s) => ({
+    ...s,
+    school: s.schoolId === null ? null : (schoolById.get(s.schoolId) ?? null),
+  }));
 }

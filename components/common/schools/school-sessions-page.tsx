@@ -1,6 +1,15 @@
-import type { ImplementerRole } from "#/db/enums";
+import { eq } from "drizzle-orm";
+
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import type { ImplementerRole } from "#/db/enums";
+import { school } from "#/db/schema";
+import {
+  clinicalCasesCountExtras,
+  fetchHubFellowRatings,
+  fetchScheduleSupervisors,
+  withClinicalCasesCount,
+} from "#/lib/actions/schedule-data";
 
 export default async function SchoolSessionsPage({
   visibleId,
@@ -11,96 +20,52 @@ export default async function SchoolSessionsPage({
   role: ImplementerRole;
   supervisorId?: string;
 }) {
-  // Supervisors and fellow ratings are scoped by the school's own hub, which
-  // for hc and sc is the same hub as the signed-in user's.
-  const school = await db.school.findUnique({
-    where: {
-      visibleId,
-    },
-    select: {
-      hubId: true,
-    },
-  });
-  const hubId = school?.hubId ?? "";
-
-  const [sessions, supervisors, fellowRatings] = await Promise.all([
-    db.interventionSession.findMany({
-      where: {
-        school: {
-          visibleId,
-        },
-      },
-      include: {
-        hub: {
-          select: { visibleId: true },
-        },
-        school: {
-          include: {
-            assignedSupervisor: true,
-            interventionGroups: {
-              include: {
-                students: {
-                  include: {
-                    _count: {
-                      select: {
-                        clinicalCases: true,
-                      },
-                    },
-                    studentAttendances: true,
-                  },
-                },
-              },
-            },
+  // Every session of the page belongs to this one school, so its groups/students subtree is
+  // loaded once and attached in JS instead of being recomputed per session row.
+  const schoolRow = await db.query.school.findFirst({
+    where: (s, { eq }) => eq(s.visibleId, visibleId),
+    with: {
+      assignedSupervisor: true,
+      interventionGroups: {
+        with: {
+          students: {
+            extras: clinicalCasesCountExtras,
+            with: { studentAttendances: true },
           },
         },
+      },
+    },
+  });
+  // Supervisors and fellow ratings are scoped by the school's own hub, which
+  // for hc and sc is the same hub as the signed-in user's.
+  const hubId = schoolRow?.hubId ?? "";
+
+  const [rawSessions, supervisors, fellowRatings] = await Promise.all([
+    db.query.interventionSession.findMany({
+      where: (s, { inArray }) =>
+        inArray(
+          s.schoolId,
+          db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
+        ),
+      with: {
+        hub: { columns: { visibleId: true } },
         sessionRatings: true,
         session: true,
       },
-      orderBy: {
-        sessionDate: "asc",
-      },
+      orderBy: (s, { asc }) => asc(s.sessionDate),
     }),
-    db.supervisor.findMany({
-      where: {
-        hubId,
-      },
-      include: {
-        supervisorAttendances: {
-          include: {
-            session: true,
-          },
-        },
-        fellows: {
-          include: {
-            fellowAttendances: true,
-            groups: {
-              include: {
-                _count: {
-                  select: {
-                    students: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        assignedSchools: true,
-      },
-    }),
-    db.$queryRaw<
-      {
-        id: string;
-        averageRating: number;
-      }[]
-    >`SELECT
-    fel.id,
-    (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
-    FROM
-    fellows fel
-    LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${hubId}
-    GROUP BY fel.id`,
+    fetchScheduleSupervisors(hubId),
+    fetchHubFellowRatings(hubId),
   ]);
+
+  const schoolWithCounts = schoolRow && {
+    ...schoolRow,
+    interventionGroups: schoolRow.interventionGroups.map((g) => ({
+      ...g,
+      students: g.students.map(withClinicalCasesCount),
+    })),
+  };
+  const sessions = rawSessions.map((s) => ({ ...s, school: schoolWithCounts ?? null }));
 
   return (
     <SessionsDatatable

@@ -1,7 +1,11 @@
-import type { ImplementerRole } from "#/db/enums";
+import { eq, sql } from "drizzle-orm";
+
 import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
-import { db } from "#/lib/db";
+import { db, queryRaw } from "#/db/client";
+import type { ImplementerRole } from "#/db/enums";
+import { interventionGroup, school } from "#/db/schema";
+import { clinicalCasesCountExtras, withClinicalCasesCount } from "#/lib/actions/schedule-data";
 
 export default async function SchoolGroupsPage({
   visibleId,
@@ -10,21 +14,21 @@ export default async function SchoolGroupsPage({
   visibleId: string;
   role: ImplementerRole;
 }) {
-  const school = await db.school.findFirstOrThrow({
-    where: {
-      visibleId,
-    },
-    include: {
-      interventionSessions: {
-        include: {
-          session: true,
-        },
-      },
-    },
+  const schoolRow = await db.query.school.findFirst({
+    where: (s, { eq }) => eq(s.visibleId, visibleId),
+    with: { interventionSessions: { with: { session: true } } },
   });
+  if (!schoolRow) {
+    throw new Error("No School found");
+  }
 
-  const [rawGroups, students, reports, supervisors] = await Promise.all([
-    db.$queryRaw<Omit<SchoolGroupDataTableData, "students">[]>`
+  const schoolIds = db
+    .select({ id: school.id })
+    .from(school)
+    .where(eq(school.visibleId, visibleId));
+
+  const [rawGroups, rawStudents, reports, supervisors] = await Promise.all([
+    queryRaw<Omit<SchoolGroupDataTableData, "students">>(sql`
   SELECT
 	intg.id,
 	intg.group_name AS "groupName",
@@ -36,7 +40,7 @@ export default async function SchoolGroupsPage({
 	fel.fellow_name AS "fellowName",
 	sup.supervisor_name AS "supervisorName",
 	sup.id AS "supervisorId",
-	(AVG(intgr.engagement_1) + AVG(intgr.engagement_2) + AVG(intgr.engagement_3) + AVG(intgr.cooperation_1) + AVG(intgr.cooperation_2) + AVG(intgr.cooperation_3) + AVG(intgr.content)) / 7 AS "groupRating"
+	((AVG(intgr.engagement_1) + AVG(intgr.engagement_2) + AVG(intgr.engagement_3) + AVG(intgr.cooperation_1) + AVG(intgr.cooperation_2) + AVG(intgr.cooperation_3) + AVG(intgr.content)) / 7)::float8 AS "groupRating"
   FROM
       intervention_groups intg
       LEFT JOIN schools sch ON intg.school_id = sch.id
@@ -51,43 +55,29 @@ export default async function SchoolGroupsPage({
       fel.fellow_name,
       sup.supervisor_name,
       sup.id
-  `,
-    db.student.findMany({
-      where: {
-        archivedAt: null,
-        school: {
-          visibleId,
-        },
-      },
-      include: {
-        _count: {
-          select: {
-            clinicalCases: true,
-          },
-        },
-      },
+  `),
+    db.query.student.findMany({
+      where: (s, { and, isNull, inArray }) =>
+        and(isNull(s.archivedAt), inArray(s.schoolId, schoolIds)),
+      extras: clinicalCasesCountExtras,
     }),
-    db.interventionGroupReport.findMany({
-      where: {
-        group: {
-          school: {
-            visibleId,
-          },
-        },
-      },
-      include: {
-        session: true,
-      },
+    db.query.interventionGroupReport.findMany({
+      where: (r, { inArray }) =>
+        inArray(
+          r.groupId,
+          db
+            .select({ id: interventionGroup.id })
+            .from(interventionGroup)
+            .where(eq(interventionGroup.schoolId, schoolRow.id)),
+        ),
+      with: { session: true },
     }),
-    db.supervisor.findMany({
-      where: {
-        hubId: school.hubId,
-      },
-      include: {
-        fellows: true,
-      },
+    db.query.supervisor.findMany({
+      where: (s, { eq }) => eq(s.hubId, schoolRow.hubId ?? ""),
+      with: { fellows: true },
     }),
   ]);
+  const students = rawStudents.map(withClinicalCasesCount);
 
   const data = rawGroups.map((group) => ({
     ...group,
@@ -95,5 +85,5 @@ export default async function SchoolGroupsPage({
     reports: reports.filter((report) => report.groupId === group.id),
   }));
 
-  return <GroupsDataTable data={data} school={school} supervisors={supervisors} role={role} />;
+  return <GroupsDataTable data={data} school={schoolRow} supervisors={supervisors} role={role} />;
 }

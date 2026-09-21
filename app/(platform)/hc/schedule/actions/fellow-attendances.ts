@@ -1,20 +1,27 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
+import { sql } from "drizzle-orm";
+
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import type { FellowAttendancesTableData } from "#/components/common/fellow/fellow-attendance";
+import { queryRaw } from "#/db/client";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { db } from "#/lib/db";
+
+const list = (values: string[]) =>
+  sql.join(
+    values.map((v) => sql`${v}`),
+    sql`, `,
+  );
 
 export async function fetchSessionFellowAttendances({ sessionId }: { sessionId?: string }) {
   await requireAuthRole();
-  return await db.$queryRaw<FellowAttendancesTableData[]>`
+  return await queryRaw<FellowAttendancesTableData>(sql`
   SELECT
-    f.id AS "fellowId", f.fellow_name AS "fellowName", f.cell_number AS "cellNumber", 
+    f.id AS "fellowId", f.fellow_name AS "fellowName", f.cell_number AS "cellNumber",
     fa.supervisor_id AS "supervisorId",
     fa.attended AS attended,
     ig.group_name AS "groupName",
-    (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating))/4 AS "averageRating"
+    ((AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating))/4)::float8 AS "averageRating"
   FROM fellow_attendances fa
   LEFT JOIN intervention_sessions isess ON fa.session_id = isess.id
   LEFT JOIN fellows f ON fa.fellow_id = f.id
@@ -22,7 +29,7 @@ export async function fetchSessionFellowAttendances({ sessionId }: { sessionId?:
   LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
   WHERE isess.id = ${sessionId}
   GROUP BY fa.id, f.id, ig.id
-  `;
+  `);
 }
 
 export async function fetchDayFellowAttendances({
@@ -45,14 +52,14 @@ export async function fetchDayFellowAttendances({
     return filters.statusTypes[status];
   });
 
-  return await db.$queryRaw<FellowAttendancesTableData[]>`
+  return await queryRaw<FellowAttendancesTableData>(sql`
   SELECT
-    f.id AS "fellowId", f.fellow_name AS "fellowName", f.cell_number AS "cellNumber", 
+    f.id AS "fellowId", f.fellow_name AS "fellowName", f.cell_number AS "cellNumber",
     fa.supervisor_id AS "supervisorId",fa.session_id AS "sessionId", sup.supervisor_name AS "supervisorName",
     sch.school_name AS "schoolName",
     fa.attended,
     ig.group_name AS "groupName", isess.session_type AS "sessionType", isess.occurred, isess.session_date AS "sessionDate", isess.status AS "sessionStatus",
-    (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating))/4 AS "averageRating"
+    ((AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating))/4)::float8 AS "averageRating"
   FROM fellow_attendances fa
   LEFT JOIN intervention_sessions isess ON fa.session_id = isess.id
   LEFT JOIN fellows f ON fa.fellow_id = f.id
@@ -60,11 +67,11 @@ export async function fetchDayFellowAttendances({
   LEFT JOIN schools sch ON fa.school_id = sch.id
   LEFT JOIN intervention_groups ig ON fa.group_id = ig.id
   LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
-  WHERE isess.session_date > ${start} 
-  AND isess.session_date < ${end} 
+  WHERE isess.session_date > ${start}
+  AND isess.session_date < ${end}
   AND f.hub_id = ${hubId}
-  AND isess.session_type IN (${Prisma.join(sessionTypes)})
-  AND isess.status::text = ANY (ARRAY[${statusTypes.length > 0 ? Prisma.join(statusTypes) : ""}])
+  AND isess.session_type IN (${list(sessionTypes)})
+  AND isess.status::text = ANY (ARRAY[${statusTypes.length > 0 ? list(statusTypes) : sql`''`}])
   GROUP BY fa.id, f.id, ig.id, isess.session_date, sup.supervisor_name, sch.school_name, isess.session_type, isess.occurred, isess.status, isess.session_date
-  `;
+  `);
 }

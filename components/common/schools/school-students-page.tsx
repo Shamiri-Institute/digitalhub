@@ -1,6 +1,10 @@
-import type { ImplementerRole } from "#/db/enums";
+import { eq } from "drizzle-orm";
+
 import StudentsDatatable from "#/components/common/student/students-datatable";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import type { ImplementerRole } from "#/db/enums";
+import { clinicalSessionAttendance, school } from "#/db/schema";
+import { countOf } from "#/db/sql";
 
 export default async function SchoolStudentsPage({
   visibleId,
@@ -9,80 +13,69 @@ export default async function SchoolStudentsPage({
   visibleId: string;
   role: ImplementerRole;
 }) {
-  const students = await db.student.findMany({
-    where: {
-      archivedAt: null,
-      school: {
-        visibleId,
-      },
-    },
-    include: {
-      clinicalCases: {
-        select: {
-          id: true,
-          _count: {
-            select: { sessions: true },
+  // The school subtree is identical for every student, so it is loaded once and attached
+  // in JS. Nesting it under each row made Drizzle recompute the lateral join per student.
+  const [schoolRow, rows] = await Promise.all([
+    db.query.school.findFirst({
+      where: (s, { eq }) => eq(s.visibleId, visibleId),
+      with: { interventionSessions: { with: { session: true } } },
+    }),
+    db.query.student.findMany({
+      where: (s, { and, isNull, inArray }) =>
+        and(
+          isNull(s.archivedAt),
+          inArray(
+            s.schoolId,
+            db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
+          ),
+        ),
+      with: {
+        clinicalCases: {
+          columns: { id: true },
+          extras: (c) => ({
+            sessionsCount: countOf(clinicalSessionAttendance.caseId, c.id).as("sessions_count"),
+          }),
+        },
+        studentAttendances: {
+          with: {
+            session: { with: { session: true } },
+            group: true,
           },
         },
-      },
-      studentAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-            },
-          },
-          group: true,
+        assignedGroup: {
+          columns: { id: true, groupName: true },
+          with: { leader: { columns: { id: true, fellowName: true } } },
         },
-      },
-      assignedGroup: {
-        select: {
-          id: true,
-          groupName: true,
-          leader: {
-            select: {
-              id: true,
-              fellowName: true,
-            },
+        studentGroupTransferTrail: {
+          columns: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            studentId: true,
+            currentGroupId: true,
+            fromGroupId: true,
           },
-        },
-      },
-      school: {
-        include: {
-          interventionSessions: {
-            include: {
-              session: true,
-            },
-          },
-        },
-      },
-      studentGroupTransferTrail: {
-        select: {
-          id: true,
-          createdAt: true,
-          updatedAt: true,
-          studentId: true,
-          currentGroupId: true,
-          fromGroupId: true,
-          fromGroup: {
-            select: {
-              id: true,
-              groupName: true,
-              leader: {
-                select: {
-                  id: true,
-                  fellowName: true,
-                },
-              },
+          with: {
+            fromGroup: {
+              columns: { id: true, groupName: true },
+              with: { leader: { columns: { id: true, fellowName: true } } },
             },
           },
         },
       },
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-  });
+      orderBy: (s, { desc }) => desc(s.updatedAt),
+    }),
+  ]);
+
+  // Prisma-shaped `_count` until the student components move off `Prisma.*GetPayload` types.
+  const students = rows.map((s) => ({
+    ...s,
+    school: schoolRow ?? null,
+    clinicalCases: s.clinicalCases.map(({ sessionsCount, ...c }) => ({
+      ...c,
+      _count: { sessions: sessionsCount },
+    })),
+  }));
 
   return <StudentsDatatable students={students} role={role} />;
 }
