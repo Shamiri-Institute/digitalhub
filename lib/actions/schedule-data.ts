@@ -1,22 +1,12 @@
-import { type AnyColumn, getTableName, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 import { db, queryRaw } from "#/db/client";
 import { clinicalScreeningInfo, student } from "#/db/schema";
+import { countOf } from "#/db/sql";
 
 // Shared reads behind the schedule and school sub-pages. The schedule components still
 // declare their props with `Prisma.*GetPayload` types, so `_count` objects are rebuilt from
 // the count columns until those components move to exported result types (ENG-2158).
-
-/**
- * `(select count(*) from <fk's table> where <fk> = <ref>)` for use in relational-query `extras`.
- * The other table is spelled as raw SQL on purpose: in nested `extras` Drizzle rewrites every
- * Column it finds to the current relation's alias, which breaks `db.$count`-style subqueries.
- */
-export function countOf(fk: AnyColumn, ref: AnyColumn) {
-  const table = sql.raw(`"${getTableName(fk.table)}"`);
-  const column = sql.raw(`"${fk.name}"`);
-  return sql<number>`(select count(*) from ${table} where ${column} = ${ref})`.mapWith(Number);
-}
 
 /** `extras` for a `student` relation that mirrors Prisma's `_count: { clinicalCases }`. */
 export const clinicalCasesCountExtras = (s: { id: typeof student.id }) => ({

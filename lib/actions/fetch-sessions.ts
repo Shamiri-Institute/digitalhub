@@ -92,30 +92,45 @@ export async function fetchInterventionSessions({
       ),
     with: {
       hub: { columns: { visibleId: true } },
-      school: {
-        with: {
-          interventionGroups: {
-            ...(isFellow ? { where: (g, { eq }) => eq(g.leaderId, fellowId) } : {}),
-            with: {
-              students: { extras: clinicalCasesCountExtras },
-            },
-          },
-        },
-      },
       sessionRatings: true,
       session: true,
     },
     orderBy: (s, { asc }) => asc(s.sessionDate),
   });
 
+  // Prisma loaded each school (with its groups and students) once; nesting the subtree under
+  // every session would make Drizzle recompute it per row, so load the distinct schools once
+  // and attach them in JS.
+  const schoolIds = [...new Set(sessions.map((s) => s.schoolId).filter((id) => id !== null))];
+  const schools =
+    schoolIds.length === 0
+      ? []
+      : await db.query.school.findMany({
+          where: (sc, { inArray }) => inArray(sc.id, schoolIds),
+          with: {
+            interventionGroups: {
+              ...(isFellow ? { where: (g, { eq }) => eq(g.leaderId, fellowId) } : {}),
+              with: {
+                students: { extras: clinicalCasesCountExtras },
+              },
+            },
+          },
+        });
+  const schoolById = new Map(
+    schools.map((sc) => [
+      sc.id,
+      {
+        ...sc,
+        interventionGroups: sc.interventionGroups.map((g) => ({
+          ...g,
+          students: g.students.map(withClinicalCasesCount),
+        })),
+      },
+    ]),
+  );
+
   return sessions.map((s) => ({
     ...s,
-    school: s.school && {
-      ...s.school,
-      interventionGroups: s.school.interventionGroups.map((g) => ({
-        ...g,
-        students: g.students.map(withClinicalCasesCount),
-      })),
-    },
+    school: s.schoolId === null ? null : (schoolById.get(s.schoolId) ?? null),
   }));
 }

@@ -20,12 +20,24 @@ export default async function SchoolSessionsPage({
   role: ImplementerRole;
   supervisorId?: string;
 }) {
-  // Supervisors and fellow ratings are scoped by the school's own hub, which
-  // for hc and sc is the same hub as the signed-in user's.
+  // Every session of the page belongs to this one school, so its groups/students subtree is
+  // loaded once and attached in JS instead of being recomputed per session row.
   const schoolRow = await db.query.school.findFirst({
     where: (s, { eq }) => eq(s.visibleId, visibleId),
-    columns: { hubId: true },
+    with: {
+      assignedSupervisor: true,
+      interventionGroups: {
+        with: {
+          students: {
+            extras: clinicalCasesCountExtras,
+            with: { studentAttendances: true },
+          },
+        },
+      },
+    },
   });
+  // Supervisors and fellow ratings are scoped by the school's own hub, which
+  // for hc and sc is the same hub as the signed-in user's.
   const hubId = schoolRow?.hubId ?? "";
 
   const [rawSessions, supervisors, fellowRatings] = await Promise.all([
@@ -37,19 +49,6 @@ export default async function SchoolSessionsPage({
         ),
       with: {
         hub: { columns: { visibleId: true } },
-        school: {
-          with: {
-            assignedSupervisor: true,
-            interventionGroups: {
-              with: {
-                students: {
-                  extras: clinicalCasesCountExtras,
-                  with: { studentAttendances: true },
-                },
-              },
-            },
-          },
-        },
         sessionRatings: true,
         session: true,
       },
@@ -59,16 +58,14 @@ export default async function SchoolSessionsPage({
     fetchHubFellowRatings(hubId),
   ]);
 
-  const sessions = rawSessions.map((s) => ({
-    ...s,
-    school: s.school && {
-      ...s.school,
-      interventionGroups: s.school.interventionGroups.map((g) => ({
-        ...g,
-        students: g.students.map(withClinicalCasesCount),
-      })),
-    },
-  }));
+  const schoolWithCounts = schoolRow && {
+    ...schoolRow,
+    interventionGroups: schoolRow.interventionGroups.map((g) => ({
+      ...g,
+      students: g.students.map(withClinicalCasesCount),
+    })),
+  };
+  const sessions = rawSessions.map((s) => ({ ...s, school: schoolWithCounts ?? null }));
 
   return (
     <SessionsDatatable
