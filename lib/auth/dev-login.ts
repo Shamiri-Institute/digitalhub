@@ -2,9 +2,9 @@
 
 import { cookies } from "next/headers";
 
+import { db } from "#/db/client";
 import { isCredentialAuthAllowed, TEST_USER_EMAILS } from "#/lib/auth/credential-auth";
 import { createSession } from "#/lib/auth/session";
-import { db } from "#/lib/db";
 
 const INVALID = { error: "Invalid email or password" } as const;
 
@@ -16,9 +16,9 @@ export async function devLogin(email: string, password: string): Promise<{ error
     return INVALID;
   }
 
-  const user = await db.user.findUnique({
-    where: { email, archivedAt: null },
-    select: { id: true },
+  const user = await db.query.user.findFirst({
+    where: (u, { and, eq, isNull }) => and(eq(u.email, email), isNull(u.archivedAt)),
+    columns: { id: true },
   });
   if (!user) {
     return INVALID;

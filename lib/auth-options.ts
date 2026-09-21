@@ -1,15 +1,17 @@
 import { addBreadcrumb } from "@sentry/nextjs";
+import { eq } from "drizzle-orm";
 import type { AuthOptions } from "next-auth";
 import { getServerSession } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { cache } from "react";
 import { z } from "zod";
 
+import { db } from "#/db/client";
+import { session as sessionTable, user as userTable } from "#/db/schema";
 import { env } from "#/env";
 import { isCredentialAuthAllowed } from "#/lib/auth/credential-auth";
 import { adapter, sessionCookie } from "#/lib/auth/session";
 import { loadSessionUser } from "#/lib/auth/session-user";
-import { db } from "#/lib/db";
 
 export type { JWTMembership, SessionUser } from "#/lib/auth/session-user";
 
@@ -55,24 +57,25 @@ export const authOptions: AuthOptions = {
         return false;
       }
 
-      const userExists = await db.user.findUnique({
-        where: { email: user.email, archivedAt: null },
-        select: { id: true },
+      const email = user.email;
+      const userExists = await db.query.user.findFirst({
+        where: (u, { and, eq, isNull }) => and(eq(u.email, email), isNull(u.archivedAt)),
+        columns: { id: true },
       });
       if (!userExists) {
         return false;
       }
 
-      await db.user.update({
-        where: { email: user.email },
-        data: { name: profile?.name ?? user.name, image: profile?.image ?? user.image },
-      });
+      await db
+        .update(userTable)
+        .set({ name: profile?.name ?? user.name, image: profile?.image ?? user.image })
+        .where(eq(userTable.email, email));
       return true;
     },
     session: async ({ session, user }) => {
       const sessionUser = await loadSessionUser(user.id);
       if (!sessionUser) {
-        await db.session.deleteMany({ where: { userId: user.id } });
+        await db.delete(sessionTable).where(eq(sessionTable.userId, user.id));
         addBreadcrumb({ message: "Session user not found", data: { userId: user.id } });
         session.user = { id: null, email: null, name: null, image: null };
         return session;

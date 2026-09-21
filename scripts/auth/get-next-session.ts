@@ -1,4 +1,4 @@
-import { db } from "#/lib/db";
+import { pool } from "#/db/client";
 import { generateSessionToken } from "#/tests/helpers";
 
 async function main() {
@@ -29,11 +29,10 @@ async function main() {
 }
 
 main()
-  .then(async () => {
-    await db.$disconnect();
+  .catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
   })
-  .catch(async (e) => {
-    console.error(e);
-    await db.$disconnect();
-    process.exit(1);
+  .finally(() => {
+    void pool.end();
   });

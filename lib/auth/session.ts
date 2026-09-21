@@ -1,11 +1,10 @@
 import { randomBytes } from "node:crypto";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
-import { db } from "#/lib/db";
+import { drizzleAdapter } from "#/lib/auth/adapter";
 
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-export const adapter = PrismaAdapter(db);
+export const adapter = drizzleAdapter;
 
 function required<T>(method: T | undefined, name: string): T {
   if (!method) {

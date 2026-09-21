@@ -1,11 +1,14 @@
-import { ImplementerRole } from "#/db/enums";
+import { avg, eq, inArray } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import type { Session } from "next-auth";
 import { cache } from "react";
+
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { hub, session as sessionTable, weeklyFellowRatings } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { roleHome } from "#/lib/auth/role-home";
 import { getCachedSession } from "#/lib/auth-options";
-import { db } from "#/lib/db";
 
 function requireRole(session: Session, role: ImplementerRole) {
   const membership = session.user.activeMembership;
@@ -32,11 +35,11 @@ export const currentHubCoordinator = cache(async () => {
     return null;
   }
 
-  const hubCoordinator = await db.hubCoordinator.findFirst({
-    where: { id: identifier },
-    include: {
+  const hubCoordinator = await db.query.hubCoordinator.findFirst({
+    where: (hc, { eq }) => eq(hc.id, identifier),
+    with: {
       assignedHub: {
-        include: {
+        with: {
           schools: true,
         },
       },
@@ -51,6 +54,8 @@ export const currentHubCoordinator = cache(async () => {
 });
 
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
+
+const nullableNumber = (value: string | null) => (value === null ? null : Number(value));
 
 export const currentSupervisor = cache(async () => {
   const session = await getCurrentUserSession();
@@ -69,49 +74,46 @@ export const currentSupervisor = cache(async () => {
 
   const projectId = await getActiveProjectId();
 
-  const supervisor = await db.supervisor.findFirst({
-    where: { id: identifier },
-    include: {
+  const supervisor = await db.query.supervisor.findFirst({
+    where: (s, { eq }) => eq(s.id, identifier),
+    with: {
       hub: {
-        include: {
+        with: {
           schools: {
-            include: {
+            with: {
               interventionSessions: true,
             },
           },
         },
       },
       assignedSchools: {
-        where: {
-          hub: { projectId },
-        },
-        include: {
+        where: (school, { inArray }) =>
+          inArray(
+            school.hubId,
+            db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
+          ),
+        with: {
           interventionSessions: true,
-          _count: {
-            select: {
-              students: true,
-            },
-          },
         },
       },
       fellows: {
-        include: {
+        with: {
           hub: true,
           fellowAttendances: {
-            include: {
+            with: {
               repaymentRequests: true,
             },
           },
           fellowComplaints: true,
           fellowReportingNotes: {
-            include: {
+            with: {
               supervisor: true,
             },
           },
           repaymentRequests: {
-            include: {
+            with: {
               fellowAttendance: {
-                include: {
+                with: {
                   group: true,
                   school: true,
                 },
@@ -129,29 +131,34 @@ export const currentSupervisor = cache(async () => {
     return null;
   }
 
-  const fellowAvgRatings = await db.weeklyFellowRatings.groupBy({
-    by: ["fellowId"],
-    _avg: {
-      behaviourRating: true,
-      programDeliveryRating: true,
-      dressingAndGroomingRating: true,
-      punctualityRating: true,
-    },
-    where: {
-      fellowId: {
-        in: supervisor.fellows.map((fellow) => fellow.id),
-      },
-    },
-  });
+  const fellowIds = supervisor.fellows.map((fellow) => fellow.id);
+  const fellowAvgRatings =
+    fellowIds.length === 0
+      ? []
+      : await db
+          .select({
+            fellowId: weeklyFellowRatings.fellowId,
+            behaviourRating: avg(weeklyFellowRatings.behaviourRating).mapWith(nullableNumber),
+            programDeliveryRating: avg(weeklyFellowRatings.programDeliveryRating).mapWith(
+              nullableNumber,
+            ),
+            dressingAndGroomingRating: avg(weeklyFellowRatings.dressingAndGroomingRating).mapWith(
+              nullableNumber,
+            ),
+            punctualityRating: avg(weeklyFellowRatings.punctualityRating).mapWith(nullableNumber),
+          })
+          .from(weeklyFellowRatings)
+          .where(inArray(weeklyFellowRatings.fellowId, fellowIds))
+          .groupBy(weeklyFellowRatings.fellowId);
 
   const newFellowsData = supervisor.fellows.map((fellow) => {
     const ratings = fellowAvgRatings.find((i) => i.fellowId === fellow.id);
     return {
       ...fellow,
-      behaviourRating: ratings?._avg.behaviourRating,
-      programDeliveryRating: ratings?._avg.programDeliveryRating,
-      dressingAndGroomingRating: ratings?._avg.dressingAndGroomingRating,
-      punctualityRating: ratings?._avg.punctualityRating,
+      behaviourRating: ratings?.behaviourRating,
+      programDeliveryRating: ratings?.programDeliveryRating,
+      dressingAndGroomingRating: ratings?.dressingAndGroomingRating,
+      punctualityRating: ratings?.punctualityRating,
     };
   });
 
@@ -169,14 +176,12 @@ export const currentSupervisorLite = cache(async () => {
   if (!membership?.identifier) {
     return null;
   }
+  const { identifier } = membership;
 
-  const supervisor = await db.supervisor.findFirst({
-    where: { id: membership.identifier },
-    select: {
-      id: true,
-      hubId: true,
-      hub: { select: { projectId: true } },
-    },
+  const supervisor = await db.query.supervisor.findFirst({
+    where: (s, { eq }) => eq(s.id, identifier),
+    columns: { id: true, hubId: true },
+    with: { hub: { columns: { projectId: true } } },
   });
 
   if (!supervisor) {
@@ -197,10 +202,11 @@ export const currentFellow = cache(async () => {
   if (!membership?.identifier) {
     return null;
   }
+  const { identifier } = membership;
 
-  const fellow = await db.fellow.findFirst({
-    where: { id: membership.identifier },
-    include: { hub: true },
+  const fellow = await db.query.fellow.findFirst({
+    where: (f, { eq }) => eq(f.id, identifier),
+    with: { hub: true },
   });
 
   if (!fellow) {
@@ -227,9 +233,9 @@ export const currentClinicalLead = cache(async () => {
     return null;
   }
 
-  const clinicalLead = await db.clinicalLead.findFirst({
-    where: { id: identifier },
-    include: {
+  const clinicalLead = await db.query.clinicalLead.findFirst({
+    where: (cl, { eq }) => eq(cl.id, identifier),
+    with: {
       assignedHub: true,
       clinicalScreeningCases: true,
     },
@@ -260,9 +266,9 @@ export const currentClinicalTeam = cache(async () => {
     return null;
   }
 
-  const clinicalTeam = await db.clinicalTeam.findFirst({
-    where: { id: identifier },
-    include: {
+  const clinicalTeam = await db.query.clinicalTeam.findFirst({
+    where: (ct, { eq }) => eq(ct.id, identifier),
+    with: {
       assignedHub: true,
       implementer: true,
     },
@@ -296,9 +302,9 @@ export const currentOpsUser = cache(async () => {
     return null;
   }
 
-  const opsUser = await db.opsUser.findFirst({
-    where: { id: identifier },
-    include: {
+  const opsUser = await db.query.opsUser.findFirst({
+    where: (o, { eq }) => eq(o.id, identifier),
+    with: {
       implementer: true,
       assignedHub: true,
     },
@@ -329,8 +335,8 @@ export const currentAdminUser = cache(async () => {
     return null;
   }
 
-  const adminUser = await db.adminUser.findFirst({
-    where: { id: identifier },
+  const adminUser = await db.query.adminUser.findFirst({
+    where: (a, { eq }) => eq(a.id, identifier),
   });
 
   if (!adminUser) {
@@ -347,7 +353,7 @@ export async function getCurrentUserSession() {
   }
 
   if (!session.user.activeMembership) {
-    await db.session.deleteMany({ where: { userId: session.user.id } });
+    await db.delete(sessionTable).where(eq(sessionTable.userId, session.user.id));
     redirect(`/login?error=${encodeURIComponent("No active membership for this account")}`);
   }
 
