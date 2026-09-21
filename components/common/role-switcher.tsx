@@ -29,15 +29,23 @@ import {
 import type { Personnel } from "#/lib/types/personnel";
 import { cn } from "#/lib/utils";
 
-export function RoleSwitcher({
-  loading,
-  setLoading,
-  session,
-}: {
+interface RoleSwitcherProps {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   session: Session | null;
-}) {
+}
+
+// Development-only impersonation helper. The guard lives outside the component
+// that owns the effect: hooks run before any early return, so guarding inside
+// DevRoleSwitcher would still fire fetchImplementerPersonnel in production.
+export function RoleSwitcher(props: RoleSwitcherProps) {
+  if (process.env.NEXT_PUBLIC_ENV !== "development") {
+    return null;
+  }
+  return <DevRoleSwitcher {...props} />;
+}
+
+function DevRoleSwitcher({ loading, setLoading, session }: RoleSwitcherProps) {
   const [open, setOpen] = useState(false);
   const [implementerMembers, setImplementerMembers] = useState<ImplementerPersonnel | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<Set<ImplementerRole>>(new Set());
@@ -55,12 +63,6 @@ export function RoleSwitcher({
     };
     void fetchImplementerMembers();
   }, [activeMembership]);
-
-  // Only display in development environments
-  const isDevelopment = process.env.NEXT_PUBLIC_ENV === "development";
-  if (!isDevelopment) {
-    return null;
-  }
 
   const handleRoleChange = async (member: Personnel) => {
     setLoading(true);
