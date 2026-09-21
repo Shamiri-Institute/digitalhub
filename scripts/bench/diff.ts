@@ -110,10 +110,11 @@ function resolveRefs(value: unknown, rows: Map<string, unknown>, depth = 0): unk
   if (depth > 50) return value;
   if (typeof value === "string") {
     const m = /^\$([0-9a-f]+)((?::[^:]+)*)$/.exec(value);
-    if (!m) return value;
-    let target = rows.get(m[1]!);
+    const [, rowId, pathPart] = m ?? [];
+    if (rowId === undefined) return value;
+    let target = rows.get(rowId);
     if (target === undefined) return value;
-    for (const segment of m[2]!.split(":").filter(Boolean)) {
+    for (const segment of (pathPart ?? "").split(":").filter(Boolean)) {
       if (Array.isArray(target) && target[0] === "$" && segment === "props") {
         target = target[3];
       } else if (target && typeof target === "object") {
