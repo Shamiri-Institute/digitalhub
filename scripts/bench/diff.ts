@@ -16,6 +16,8 @@ function normalize(html: string) {
     html
       .replace(/\/_next\/static\/[A-Za-z0-9_-]+\//g, "/_next/static/BUILD/")
       .replace(/"buildId":"[^"]+"/g, '"buildId":"BUILD"')
+      // The build id also travels inside the RSC payload as `"b":"<id>"` (JSON-escaped quotes).
+      .replace(/\\"b\\":\\"[A-Za-z0-9_-]{15,}\\"/g, '\\"b\\":\\"BUILD\\"')
       .replace(/\?dpl=[A-Za-z0-9_-]+/g, "")
       .replace(/nonce="[^"]+"/g, 'nonce=""')
       // Sentry injects a fresh trace id and baggage per request.
@@ -37,10 +39,32 @@ function normalize(html: string) {
  * order-independent form: sorted flight rows with row ids and module references removed, plus
  * sorted streamed HTML segments.
  */
+/** The JSON string literals pushed to `self.__next_f`; scanned by hand, a regex overflows on 5 MB pages. */
+function flightPayloads(html: string) {
+  const open = 'self.__next_f.push([1,"';
+  const payloads: string[] = [];
+  let pos = html.indexOf(open);
+  while (pos !== -1) {
+    const start = pos + open.length;
+    let end = start;
+    for (;;) {
+      end = html.indexOf('"])', end);
+      if (end === -1) return payloads;
+      // An even number of backslashes before the quote means it is not escaped.
+      let backslashes = 0;
+      for (let i = end - 1; i >= start && html[i] === "\\"; i--) backslashes++;
+      if (backslashes % 2 === 0) break;
+      end++;
+    }
+    payloads.push(JSON.parse(`"${html.slice(start, end)}"`) as string);
+    pos = html.indexOf(open, end);
+  }
+  return payloads;
+}
+
 function canonical(html: string) {
   const flightRows: string[] = [];
-  for (const m of html.matchAll(/self\.__next_f\.push\(\[1,"((?:[^"\\]|\\.)*)"\]\)/g)) {
-    const payload = JSON.parse(`"${m[1]}"`) as string;
+  for (const payload of flightPayloads(html)) {
     for (const row of payload.split("\n")) {
       const body = row.replace(/^[0-9a-f]+:/, "");
       if (!body || body.startsWith("I[") || body.startsWith("HL[")) continue;
