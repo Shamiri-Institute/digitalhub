@@ -8,7 +8,6 @@ import type {
   supervisor,
   supervisorAttendance,
 } from "#/db/schema";
-import type { InterventionSession } from "#/db/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
@@ -34,7 +33,7 @@ export type SupervisorsData = typeof supervisor.$inferSelect & {
 
 export const columns = (state: {
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  sessions: InterventionSession[];
+  sessions: (typeof interventionSession.$inferSelect)[];
   setSupervisor: Dispatch<SetStateAction<SupervisorsData | null>>;
   role: ImplementerRole;
 }): ColumnDef<SupervisorsData>[] => [

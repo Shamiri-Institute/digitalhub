@@ -1,6 +1,5 @@
 "use client";
 
-import type { Supervisor } from "#/db/types";
 import { useState } from "react";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import {
@@ -10,8 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import type { supervisor } from "#/db/schema";
 
-export default function SupervisorFilterToggle({ supervisors }: { supervisors: Supervisor[] }) {
+export default function SupervisorFilterToggle({
+  supervisors,
+}: {
+  supervisors: (typeof supervisor.$inferSelect)[];
+}) {
   const [open, setOpen] = useState(false);
   const [filterIsActive] = useState(false);
 

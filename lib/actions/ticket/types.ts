@@ -119,9 +119,6 @@ export interface FullTicket {
   currentTier: ImplementerRole | null;
 }
 
-export type FullTicketPendingTier = Omit<FullTicket, "currentTier"> & {
-  currentRecipientId: string | null;
-};
 export interface TicketEscalation {
   id: string;
   ticketId: string;

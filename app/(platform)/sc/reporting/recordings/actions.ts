@@ -4,7 +4,7 @@ import { and, eq, isNull, notInArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
-import { db, executeRaw, isUniqueViolation } from "#/db/client";
+import { db, isUniqueViolation } from "#/db/client";
 import type { RecordingProcessingStatus } from "#/db/enums";
 import { fellow, type JsonValue, sessionRecording } from "#/db/schema";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
@@ -590,7 +590,7 @@ export async function updateRecordingsStatusBatch(
       errorMessages.push(update.errorMessage ?? NULL_SENTINEL);
     }
 
-    const updatedCount = await executeRaw(sql`
+    const { rowCount } = await db.execute(sql`
       UPDATE "session_recordings" AS sr
       SET
         status = data.status::"recording_processing_status",
@@ -622,6 +622,7 @@ export async function updateRecordingsStatusBatch(
         AND sr.status IN ('PENDING', 'PROCESSING')
         AND sr."fidelity_job_id" IS NOT NULL
     `);
+    const updatedCount = rowCount ?? 0;
 
     revalidatePath("/sc/reporting/recordings");
 

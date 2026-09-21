@@ -1,6 +1,5 @@
 "use client";
 
-import type { FellowGroupReport } from "#/db/types";
 import { format } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
 import {
@@ -14,6 +13,7 @@ import {
   TRANSFER_OPTIONS,
 } from "#/components/common/group/fellow-group-report-options";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import type { fellowGroupReport } from "#/db/schema";
 
 function Answer({ question, value }: { question: string; value: string }) {
   return (
@@ -43,7 +43,7 @@ export default function FellowGroupReportView({
   open,
   onOpenChange,
 }: {
-  report: FellowGroupReport;
+  report: typeof fellowGroupReport.$inferSelect;
   groupName: string;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;

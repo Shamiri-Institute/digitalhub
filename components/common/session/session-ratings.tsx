@@ -2,7 +2,6 @@
 
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import type { ImplementerRole } from "#/db/enums";
-import type { InterventionSessionRating } from "#/db/types";
 import { addDays, addHours, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -52,6 +51,9 @@ import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitSessionRatings } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
+import type { interventionSessionRating } from "#/db/schema";
+
+type InterventionSessionRating = typeof interventionSessionRating.$inferSelect;
 
 export default function SessionRatings({
   selectedSession,

@@ -1,12 +1,12 @@
 "use client";
 
-import type { FellowGroupReport } from "#/db/types";
 import { format } from "date-fns";
 import { CheckCircle2, Eye } from "lucide-react";
 import { useState } from "react";
 import FellowGroupReportForm from "#/components/common/group/fellow-group-report-form";
 import FellowGroupReportView from "#/components/common/group/fellow-group-report-view";
 import { Button } from "#/components/ui/button";
+import type { fellowGroupReport } from "#/db/schema";
 
 const SUBSTANTIVE_SESSIONS_REQUIRED = 4;
 
@@ -21,7 +21,7 @@ export default function FellowGroupReportTrigger({
   projectId: string;
   groupName: string;
   occurredSubstantiveCount: number;
-  report: FellowGroupReport | null;
+  report: typeof fellowGroupReport.$inferSelect | null;
 }) {
   const [formOpen, setFormOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);

@@ -1,8 +1,9 @@
 "use server";
 
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { currentHubCoordinator } from "#/app/auth";
+import { fellow } from "#/db/schema";
 import {
   type FellowPayoutDetail,
   loadPayoutHistory,
@@ -19,5 +20,5 @@ export async function loadHubPayoutHistory(): Promise<HubPayoutHistoryType[]> {
     throw new Error("Unauthorised user");
   }
 
-  return loadPayoutHistory(sql`f.hub_id = ${hubCoordinator.profile?.assignedHubId}`);
+  return loadPayoutHistory(eq(fellow.hubId, hubCoordinator.profile.assignedHubId ?? ""));
 }

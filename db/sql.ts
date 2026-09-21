@@ -2,7 +2,7 @@ import { type AnyColumn, getTableName, sql } from "drizzle-orm";
 
 /**
  * `(select count(*) from <fk's table> where <fk> = <ref>)` for relational-query `extras`,
- * the Drizzle equivalent of Prisma's `_count`.
+ * i.e. the number of related rows.
  *
  * Both sides are spelled as raw SQL on purpose. Drizzle rewrites every Column inside an
  * `extras` SQL to the current relation's alias (so `otherTable.fk` would become
@@ -14,7 +14,5 @@ import { type AnyColumn, getTableName, sql } from "drizzle-orm";
 export function countOf(fk: AnyColumn, ref: AnyColumn) {
   const table = sql.raw(`"${getTableName(fk.table)}"."${fk.name}"`);
   const outer = sql.raw(`"${getTableName(ref.table)}"."${ref.name}"`);
-  return sql<number>`(select count(*) from ${sql.raw(`"${getTableName(fk.table)}"`)} where ${table} = ${outer})`.mapWith(
-    Number,
-  );
+  return sql<number>`(select count(*)::int from ${sql.raw(`"${getTableName(fk.table)}"`)} where ${table} = ${outer})`;
 }

@@ -1,8 +1,7 @@
 "use client";
 
-import type { fellow, supervisor } from "#/db/schema";
+import type { fellow, supervisor, weeklyFellowRatings } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
-import type { WeeklyFellowRatings } from "#/db/types";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -24,7 +23,7 @@ export default function MainFellowsDatatable({
 }: {
   fellows: MainFellowTableData[];
   supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
-  weeklyEvaluations: WeeklyFellowRatings[];
+  weeklyEvaluations: (typeof weeklyFellowRatings.$inferSelect)[];
   role: ImplementerRole;
 }) {
   const [selectedFellow, setFellow] = useState<MainFellowTableData | null>(null);

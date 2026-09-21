@@ -34,7 +34,7 @@ export default function PayoutActionsDropdown({ payout }: { payout: PayoutHistor
           `"${fellow.fellowName}"`,
           `"${fellow.hub}"`,
           `"${fellow.supervisorName}"`,
-          `"${formatMpesaNumber(fellow.mpesaNumber)}"`,
+          `"${formatMpesaNumber(fellow.mpesaNumber ?? "")}"`,
           `"${fellow.fellowMpesaName}"`,
           fellow.totalAmount,
         ].join(","),

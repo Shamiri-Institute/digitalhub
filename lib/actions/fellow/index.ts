@@ -15,7 +15,7 @@ import {
   WeeklyFellowEvaluationSchema,
 } from "#/components/common/fellow/schema";
 import { SubmitComplaintSchema } from "#/components/common/schemas";
-import { db, isUniqueViolation, queryRaw, type TransactionCursor } from "#/db/client";
+import { db, isUniqueViolation, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
   fellow,
@@ -41,7 +41,7 @@ async function checkAuth() {
 const attendedFlag = (attended: string | undefined) =>
   attended === "attended" ? true : attended === "missed" ? false : null;
 
-async function requireFellow(tx: TransactionCursor | typeof db, id: string) {
+async function requireFellow(tx: Transaction | typeof db, id: string) {
   const row = await tx.query.fellow.findFirst({ where: (f, { eq }) => eq(f.id, id) });
   if (!row) {
     throw new Error(`Fellow ${id} not found`);
@@ -49,7 +49,7 @@ async function requireFellow(tx: TransactionCursor | typeof db, id: string) {
   return row;
 }
 
-async function requireSessionWithName(tx: TransactionCursor, sessionId: string) {
+async function requireSessionWithName(tx: Transaction, sessionId: string) {
   const row = await tx.query.interventionSession.findFirst({
     where: (s, { eq }) => eq(s.id, sessionId),
     with: { session: true },
@@ -925,7 +925,8 @@ export async function getFellowGroupsAndHubData(fellowId: string) {
   const fellowGroupIds = fellowRow.groups.map((group) => group.id);
   const fellowSchoolIds = Array.from(new Set(fellowRow.groups.map((group) => group.schoolId)));
 
-  const statsPromise = queryRaw<FellowGroupStats>(sql`
+  const statsPromise = db
+    .execute<FellowGroupStats>(sql`
     SELECT
       COUNT(*)::int                 AS group_count,
       COALESCE(SUM(sc.c), 0)::int   AS total_students,
@@ -940,7 +941,8 @@ export async function getFellowGroupsAndHubData(fellowId: string) {
       WHERE school_id = ig.school_id
     ) ic ON TRUE
     WHERE ig.leader_id = ${fellowId}
-  `);
+  `)
+    .then((r) => r.rows);
 
   const [statsRows, schoolRows, sessions] = await Promise.all([
     statsPromise,
@@ -955,9 +957,9 @@ export async function getFellowGroupsAndHubData(fellowId: string) {
               with: { assignedGroup: true },
               extras: (st, { sql }) => ({
                 clinicalCasesCount:
-                  sql<number>`(select count(*) from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`
-                    .mapWith(Number)
-                    .as("clinical_cases_count"),
+                  sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
+                    "clinical_cases_count",
+                  ),
               }),
             },
           },
@@ -968,20 +970,11 @@ export async function getFellowGroupsAndHubData(fellowId: string) {
       : Promise.resolve([]),
   ]);
 
-  // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
-  const schools = schoolRows.map((s) => ({
-    ...s,
-    students: s.students.map(({ clinicalCasesCount, ...st }) => ({
-      ...st,
-      _count: { clinicalCases: clinicalCasesCount },
-    })),
-  }));
-
   const stats = statsRows[0] ?? {
     group_count: 0,
     total_students: 0,
     total_sessions: 0,
   };
 
-  return { stats, hub: { schools, sessions } };
+  return { stats, hub: { schools: schoolRows, sessions } };
 }

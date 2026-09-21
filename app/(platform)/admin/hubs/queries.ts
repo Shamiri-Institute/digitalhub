@@ -43,18 +43,7 @@ export async function fetchAdminHubs(implementerId: string, projectId: string) {
     }),
   });
 
-  // ponytail: SchoolsTableData (components/common/schools/columns.tsx) still expects Prisma's
-  // `students[]._count.clinicalCases`; drop this mapping when ENG-2155 converts that type.
-  return hubs.map((hub) => ({
-    ...hub,
-    schools: hub.schools.map((school) => ({
-      ...school,
-      students: school.students.map(({ clinicalCasesCount, ...student }) => ({
-        ...student,
-        _count: { clinicalCases: clinicalCasesCount },
-      })),
-    })),
-  }));
+  return hubs;
 }
 
 export type AdminHub = Awaited<ReturnType<typeof fetchAdminHubs>>[number];

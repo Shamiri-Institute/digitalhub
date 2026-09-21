@@ -479,7 +479,7 @@ The platform uses a sophisticated RBAC system with the following roles:
 
 ### Database Schema
 
-- Uses Drizzle ORM (`drizzle-orm` 0.45, `pg` driver) with PostgreSQL. `db/schema.ts` is the source of truth; table variables are lowerCamel model names (`interventionSession`), column keys and relation names are the former Prisma field names. `db/relations.ts` declares relations, `db/enums.ts` the enums as plain objects (safe to import in client components), `db/client.ts` the `db` instance, `queryRaw`, `executeRaw`, `isUniqueViolation` and `isSerializationFailure`.
+- Uses Drizzle ORM (`drizzle-orm` 0.45, `pg` driver) with PostgreSQL. `db/schema.ts` is the source of truth; table variables are lowerCamel model names (`interventionSession`), column keys and relation names are the former Prisma field names. `db/relations.ts` declares relations, `db/enums.ts` the enums as plain objects (safe to import in client components), `db/client.ts` the `db` instance, the `Transaction` type, `isUniqueViolation` and `isSerializationFailure`.
 - Implements prefixed Object IDs (e.g., `sup_xxxxx`, `hc_xxxxx`) for better readability and security
 - Key entities: Users, Schools, Students, Fellows, Supervisors, Clinical Cases, Sessions
 
@@ -510,8 +510,8 @@ app/
 #### Data Fetching
 
 - Server Actions for data mutations
-- Relational queries (`db.query.<table>.findMany({ with })`) for reads that load relations, the core builder (`db.select/insert/update/delete`) for aggregates and writes, `sql` templates through `queryRaw` only where the builder cannot express the query
-- Transaction support via `db.transaction(async (tx) => ...)`; helpers that run inside one take a `TransactionCursor` from `#/db/client`
+- Relational queries (`db.query.<table>.findMany({ with })`) for reads that load relations, the core builder (`db.select/insert/update/delete`) for aggregates and writes, `db.execute(sql`…`)` (rows come back raw: cast `count(*)::int`, and prefer the builder for date columns) only where the builder cannot express the query
+- Transaction support via `db.transaction(async (tx) => ...)`; helpers that run inside one take a `Transaction` from `#/db/client`
 - Export the result type next to each query function (`export type X = Awaited<ReturnType<typeof fn>>`) and type consumers with it
 
 #### UI Components

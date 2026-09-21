@@ -12,8 +12,8 @@ import { Checkbox } from "#/components/ui/checkbox";
 
 export type SchoolFellowTableData = {
   id: string;
-  fellowName: string;
-  cellNumber: string;
+  fellowName: string | null;
+  cellNumber: string | null;
   supervisorId: string | null;
   supervisorName: string | null;
   droppedOut: boolean | null;
@@ -23,12 +23,12 @@ export type SchoolFellowTableData = {
   fellowEmail: string | null;
   idNumber: string | null;
   gender: string | null;
-  dateOfBirth: string | null;
+  dateOfBirth: Date | null;
   county: string | null;
   subCounty: string | null;
   mpesaName: string | null;
   mpesaNumber: string | null;
-  students: (typeof student.$inferSelect & { _count: { clinicalCases: number } })[];
+  students: (typeof student.$inferSelect & { clinicalCasesCount: number })[];
 };
 
 export const columns = ({

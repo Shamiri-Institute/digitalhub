@@ -32,7 +32,7 @@ export default async function FellowsChartsWrapper({
     const fellowAttendanceData = db
       .select({
         sessionType: interventionSession.sessionType,
-        n: count(interventionSession.sessionType),
+        count: count(interventionSession.sessionType),
       })
       .from(interventionSession)
       .where(
@@ -44,10 +44,7 @@ export default async function FellowsChartsWrapper({
           eq(interventionSession.occurred, true),
         ),
       )
-      .groupBy(interventionSession.sessionType)
-      .then((rows) =>
-        rows.map(({ sessionType, n }) => ({ sessionType, _count: { sessionType: n } })),
-      );
+      .groupBy(interventionSession.sessionType);
 
     const data = await Promise.all([
       dropoutData,

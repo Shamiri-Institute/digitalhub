@@ -1,6 +1,5 @@
 "use client";
 
-import type { Supervisor } from "#/db/types";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -35,6 +34,9 @@ import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
+import type { supervisor } from "#/db/schema";
+
+type Supervisor = typeof supervisor.$inferSelect;
 
 export const AddAddSupervisorExpenseSchema = z.object({
   week: z.string(),

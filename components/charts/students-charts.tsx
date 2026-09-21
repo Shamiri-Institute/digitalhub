@@ -27,13 +27,11 @@ export default function HubStudentsDetailsCharts({
 }: {
   studentsAttendanceGroupedBySession: {
     sessionType: string | null;
-    _count: { sessionType: number };
+    count: number;
   }[];
   studentsDropOutReasonsGroupedByReason: {
     dropOutReason: (typeof student.$inferSelect)["dropOutReason"];
-    _count: {
-      dropOutReason: number;
-    };
+    count: number;
   }[];
   studentInfoCompletion?: { name: string; value: number }[];
   studentGroupRatings?: { session: string; value: number }[];
@@ -42,13 +40,13 @@ export default function HubStudentsDetailsCharts({
     const found = studentsAttendanceGroupedBySession.find((item) => item.sessionType === session);
     return {
       sessionType: session,
-      attendance: found ? found._count.sessionType : 0,
+      attendance: found ? found.count : 0,
     };
   });
 
   const filteredFormatedDropOutReasons = studentsDropOutReasonsGroupedByReason.map((reason) => ({
     name: reason?.dropOutReason ?? "",
-    value: reason._count.dropOutReason,
+    value: reason.count,
   }));
 
   const formatedStudentsDropOutReasons = filteredFormatedDropOutReasons.reduce(

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import { type ClinicalScope, hubScope } from "./scope";
 
 export type FellowClinicalCasesData = {
@@ -16,7 +16,8 @@ export type FellowClinicalCasesData = {
 export async function fetchFellowClinicalCasesData(scope: ClinicalScope) {
   const f = hubScope(scope, "f");
 
-  return await queryRaw<FellowClinicalCasesData>(sql`
+  return db
+    .execute<FellowClinicalCasesData>(sql`
     WITH fellow_stats AS (
       SELECT
         f.id AS fellow_id,
@@ -85,11 +86,11 @@ export async function fetchFellowClinicalCasesData(scope: ClinicalScope) {
       COALESCE(fs.fellow_name, 'Unknown') AS "fellowName",
       COALESCE(fr.avg_rating, 0)::float8 AS "averageRating",
       'Active' AS "activeStatus",
-      COALESCE(rc.referred_count, 0) AS "casesReferred",
-      COALESCE(fs.groups_count, 0) AS "noOfGroups",
+      COALESCE(rc.referred_count, 0)::int AS "casesReferred",
+      COALESCE(fs.groups_count, 0)::int AS "noOfGroups",
       COALESCE(fs.phone_number, '') AS "phoneNumber",
       COALESCE(fs.supervisor_name, 'Unassigned') AS "supervisorName",
-      COALESCE(fs.clinical_cases_count, 0) AS "noOfClinicalCases"
+      COALESCE(fs.clinical_cases_count, 0)::int AS "noOfClinicalCases"
     FROM
       fellow_stats fs
     LEFT JOIN
@@ -98,5 +99,6 @@ export async function fetchFellowClinicalCasesData(scope: ClinicalScope) {
       fellow_ratings fr ON fs.fellow_id = fr.fellow_id
     ORDER BY
       fs.fellow_name
-  `);
+  `)
+    .then((r) => r.rows);
 }

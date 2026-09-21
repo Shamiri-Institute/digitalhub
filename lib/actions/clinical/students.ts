@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import { type ClinicalScope, hubScope } from "./scope";
 
 export async function fetchOverallStudentsDataBreakdown(scope: ClinicalScope) {
@@ -8,37 +8,45 @@ export async function fetchOverallStudentsDataBreakdown(scope: ClinicalScope) {
 
   const [totalStudentsResult, groupSessionsResult, clinicalCasesResult, clinicalSessionsResult] =
     await Promise.all([
-      queryRaw<{ count: number }>(sql`
-      SELECT COUNT(*) as count
+      db
+        .execute<{ count: number }>(sql`
+      SELECT COUNT(*)::int as count
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       ${sc.join}
       WHERE ${sc.where}
-    `),
-      queryRaw<{ count: number }>(sql`
-      SELECT COUNT(*) as count
+    `)
+        .then((r) => r.rows),
+      db
+        .execute<{ count: number }>(sql`
+      SELECT COUNT(*)::int as count
       FROM intervention_sessions ins
       JOIN session_names sn ON ins.session_id = sn.id
       ${sn.join}
       WHERE ${sn.where}
-    `),
-      queryRaw<{ count: number }>(sql`
-      SELECT COUNT(*) as count
+    `)
+        .then((r) => r.rows),
+      db
+        .execute<{ count: number }>(sql`
+      SELECT COUNT(*)::int as count
       FROM clinical_screening_info csi
       JOIN students sts ON sts.id = csi.student_id
       JOIN schools sc ON sts.school_id = sc.id
       ${sc.join}
       WHERE ${sc.where}
-    `),
-      queryRaw<{ count: number }>(sql`
-      SELECT COUNT(*) as count
+    `)
+        .then((r) => r.rows),
+      db
+        .execute<{ count: number }>(sql`
+      SELECT COUNT(*)::int as count
       FROM clinical_session_attendance cs
       JOIN clinical_screening_info csi ON csi.id = cs."caseId"
       JOIN students sts ON sts.id = csi.student_id
       JOIN schools sc ON sts.school_id = sc.id
       ${sc.join}
       WHERE ${sc.where}
-    `),
+    `)
+        .then((r) => r.rows),
     ]);
 
   return {
@@ -54,10 +62,11 @@ export async function fetchStudentsDataBreakdown(scope: ClinicalScope) {
   const sn = hubScope(scope, "sn");
 
   const [attendanceData, dropoutData, completionData, ratingsData] = await Promise.all([
-    queryRaw<{ sessionName: string | null; count: number }>(sql`
+    db
+      .execute<{ sessionName: string | null; count: number }>(sql`
       SELECT
         sn.session_name as "sessionName",
-        COUNT(DISTINCT sa.student_id) as count
+        COUNT(DISTINCT sa.student_id)::int as count
       FROM student_attendances sa
       JOIN students s ON s.id = sa.student_id
       JOIN schools sc ON s.school_id = sc.id
@@ -68,10 +77,12 @@ export async function fetchStudentsDataBreakdown(scope: ClinicalScope) {
       AND sa.attended = true
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC
-    `),
+    `)
+      .then((r) => r.rows),
 
-    queryRaw<{ reason: string | null; count: number }>(sql`
-      SELECT drop_out_reason as reason, COUNT(*) as count
+    db
+      .execute<{ reason: string | null; count: number }>(sql`
+      SELECT drop_out_reason as reason, COUNT(*)::int as count
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       ${sc.join}
@@ -79,9 +90,11 @@ export async function fetchStudentsDataBreakdown(scope: ClinicalScope) {
       AND drop_out_reason IS NOT NULL
       GROUP BY drop_out_reason
       ORDER BY count DESC
-    `),
+    `)
+      .then((r) => r.rows),
 
-    queryRaw<{ name: string; value: number }>(sql`
+    db
+      .execute<{ name: string; value: number }>(sql`
       WITH total_students AS (
         SELECT COUNT(*) as total
         FROM students s
@@ -113,12 +126,14 @@ export async function fetchStudentsDataBreakdown(scope: ClinicalScope) {
       SELECT
         'target' as name,
         0 as value
-      `),
+      `)
+      .then((r) => r.rows),
 
-    queryRaw<{
-      session_name: string | null;
-      avg_student_behavior_rating: number | null;
-    }>(sql`
+    db
+      .execute<{
+        session_name: string | null;
+        avg_student_behavior_rating: number | null;
+      }>(sql`
       SELECT sn.session_name, AVG(isr.student_behavior_rating)::float8 as avg_student_behavior_rating
       FROM intervention_session_ratings isr
       JOIN intervention_sessions ins ON ins.id = isr.session_id
@@ -127,7 +142,8 @@ export async function fetchStudentsDataBreakdown(scope: ClinicalScope) {
       WHERE ${sn.where}
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC
-    `),
+    `)
+      .then((r) => r.rows),
   ]);
 
   return {
@@ -153,8 +169,9 @@ export async function fetchClinicalSessionsDataBreakdown(scope: ClinicalScope) {
 
   const [casesByStatus, casesBySession, casesBySupervisor, casesByInitialContact] =
     await Promise.all([
-      queryRaw<{ caseStatus: string | null; count: number }>(sql`
-      SELECT case_status as "caseStatus", COUNT(*) as count
+      db
+        .execute<{ caseStatus: string | null; count: number }>(sql`
+      SELECT case_status as "caseStatus", COUNT(*)::int as count
       FROM clinical_screening_info csi
       JOIN students s ON s.id = csi.student_id
       JOIN schools sc ON s.school_id = sc.id
@@ -162,10 +179,12 @@ export async function fetchClinicalSessionsDataBreakdown(scope: ClinicalScope) {
       WHERE ${sc.where}
       GROUP BY case_status
       ORDER BY count DESC
-    `),
+    `)
+        .then((r) => r.rows),
 
-      queryRaw<{ session: string | null; count: number }>(sql`
-      SELECT session, COUNT(*) as count
+      db
+        .execute<{ session: string | null; count: number }>(sql`
+      SELECT session, COUNT(*)::int as count
       FROM clinical_session_attendance csa
       JOIN clinical_screening_info csi ON csi.id = csa."caseId"
       JOIN students s ON s.id = csi.student_id
@@ -174,10 +193,12 @@ export async function fetchClinicalSessionsDataBreakdown(scope: ClinicalScope) {
       WHERE ${sc.where}
       GROUP BY session
       ORDER BY count DESC
-    `),
+    `)
+        .then((r) => r.rows),
 
-      queryRaw<{ supervisorName: string | null; count: number }>(sql`
-      SELECT sp.supervisor_name as "supervisorName", COUNT(*) as count
+      db
+        .execute<{ supervisorName: string | null; count: number }>(sql`
+      SELECT sp.supervisor_name as "supervisorName", COUNT(*)::int as count
       FROM clinical_screening_info csi
       JOIN students s ON s.id = csi.student_id
       JOIN supervisors sp ON sp.id = csi.current_supervisor_id
@@ -185,10 +206,12 @@ export async function fetchClinicalSessionsDataBreakdown(scope: ClinicalScope) {
       WHERE ${sp.where}
       GROUP BY sp.supervisor_name
       ORDER BY count DESC
-    `),
+    `)
+        .then((r) => r.rows),
 
-      queryRaw<{ initialReferredFrom: string | null; count: number }>(sql`
-      SELECT initial_referred_from_specified as "initialReferredFrom", COUNT(*) as count
+      db
+        .execute<{ initialReferredFrom: string | null; count: number }>(sql`
+      SELECT initial_referred_from_specified as "initialReferredFrom", COUNT(*)::int as count
       FROM clinical_screening_info csi
       JOIN students s ON s.id = csi.student_id
       JOIN schools sc ON s.school_id = sc.id
@@ -196,7 +219,8 @@ export async function fetchClinicalSessionsDataBreakdown(scope: ClinicalScope) {
       WHERE ${sc.where}
       GROUP BY initial_referred_from_specified
       ORDER BY count DESC
-    `),
+    `)
+        .then((r) => r.rows),
     ]);
 
   return {
@@ -223,23 +247,26 @@ export async function fetchStudentsStatsBreakdown(scope: ClinicalScope) {
   const sc = hubScope(scope, "sc");
 
   const [formStats, ageStats, genderStats] = await Promise.all([
-    queryRaw<{ form: number | null; count: number }>(sql`
-      SELECT form, COUNT(*) as count
+    db
+      .execute<{ form: number | null; count: number }>(sql`
+      SELECT form, COUNT(*)::int as count
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       ${sc.join}
       WHERE ${sc.where}
       GROUP BY form
       ORDER BY form ASC
-    `),
+    `)
+      .then((r) => r.rows),
 
-    queryRaw<{ age: number | null; count: number }>(sql`
+    db
+      .execute<{ age: number | null; count: number }>(sql`
       SELECT
         CASE
           WHEN year_of_birth IS NULL THEN NULL
           ELSE EXTRACT(YEAR FROM CURRENT_DATE) - year_of_birth
         END as age,
-        COUNT(*) as count
+        COUNT(*)::int as count
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       ${sc.join}
@@ -250,17 +277,20 @@ export async function fetchStudentsStatsBreakdown(scope: ClinicalScope) {
           ELSE EXTRACT(YEAR FROM CURRENT_DATE) - year_of_birth
         END
       ORDER BY age ASC
-    `),
+    `)
+      .then((r) => r.rows),
 
-    queryRaw<{ gender: string | null; count: number }>(sql`
-      SELECT gender, COUNT(*) as count
+    db
+      .execute<{ gender: string | null; count: number }>(sql`
+      SELECT gender, COUNT(*)::int as count
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       ${sc.join}
       WHERE ${sc.where}
       GROUP BY gender
       ORDER BY gender ASC
-    `),
+    `)
+      .then((r) => r.rows),
   ]);
 
   return {

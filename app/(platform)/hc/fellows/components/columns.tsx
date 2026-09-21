@@ -1,8 +1,7 @@
 "use client";
 
-import type { fellowComplaints, interventionGroup, school, user } from "#/db/schema";
+import type { fellowComplaints, interventionGroup, school, supervisor, user } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
-import type { Supervisor } from "#/db/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
@@ -13,6 +12,8 @@ import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+
+type Supervisor = typeof supervisor.$inferSelect;
 
 export type MainFellowTableData = {
   id: string;
@@ -27,7 +28,7 @@ export type MainFellowTableData = {
   mpesaName: string | null;
   mpesaNumber: string | null;
   supervisorId: string | null;
-  supervisorName: string | null;
+  supervisorName?: string | null;
   droppedOut: boolean | null;
   groupCount?: number;
   averageRating: number | null;

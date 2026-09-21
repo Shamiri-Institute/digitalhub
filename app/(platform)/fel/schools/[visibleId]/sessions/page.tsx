@@ -45,9 +45,9 @@ export default async function SchoolSessionsPage(props: {
               with: { studentAttendances: true },
               extras: (st, { sql }) => ({
                 clinicalCasesCount:
-                  sql<number>`(select count(*) from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`
-                    .mapWith(Number)
-                    .as("clinical_cases_count"),
+                  sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
+                    "clinical_cases_count",
+                  ),
               }),
             },
           },
@@ -56,20 +56,7 @@ export default async function SchoolSessionsPage(props: {
     }),
   ]);
 
-  // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
-  const schoolWithCounts = schoolRow
-    ? {
-        ...schoolRow,
-        interventionGroups: schoolRow.interventionGroups.map((g) => ({
-          ...g,
-          students: g.students.map(({ clinicalCasesCount, ...student }) => ({
-            ...student,
-            _count: { clinicalCases: clinicalCasesCount },
-          })),
-        })),
-      }
-    : null;
-  const sessions = rows.map((s) => ({ ...s, school: schoolWithCounts }));
+  const sessions = rows.map((s) => ({ ...s, school: schoolRow ?? null }));
 
   return (
     <SessionsDatatable

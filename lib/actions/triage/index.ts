@@ -3,7 +3,7 @@
 import { and, eq } from "drizzle-orm";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
 import { currentFellow, getCurrentPersonnel } from "#/app/auth";
-import { type DatabaseCursor, db } from "#/db/client";
+import { db, type Transaction } from "#/db/client";
 import { type JsonValue, triageEvent, triageEventAudit } from "#/db/schema";
 
 const triageEventWith = {
@@ -19,7 +19,7 @@ export type TriageEventWithRelations = NonNullable<
   Awaited<ReturnType<typeof getTriageEventByStudentAndSession>>
 >;
 
-function loadTriageEvent(cursor: DatabaseCursor, id: string) {
+function loadTriageEvent(cursor: typeof db | Transaction, id: string) {
   return cursor.query.triageEvent.findFirst({
     where: (t, { eq }) => eq(t.id, id),
     with: triageEventWith,

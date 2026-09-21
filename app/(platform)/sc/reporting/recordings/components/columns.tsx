@@ -1,11 +1,11 @@
 "use client";
 
 import type { RecordingProcessingStatus } from "#/db/enums";
-import type { JsonValue } from "#/db/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Dispatch, SetStateAction } from "react";
 import RecordingStatusBadge from "./recording-status-badge";
 import RecordingsDataTableMenu from "./recordings-datatable-menu";
+import type { JsonValue } from "#/db/schema";
 
 export interface RecordingTableData {
   id: string;

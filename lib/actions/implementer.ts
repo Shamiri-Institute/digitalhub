@@ -3,7 +3,7 @@
 import { and, eq, getTableColumns, sql } from "drizzle-orm";
 
 import { currentAdminUser } from "#/app/auth";
-import { db, queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import { hub, school, sessionName } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
@@ -24,14 +24,14 @@ export async function fetchImplementerStats(implementerId: string) {
   const projectId = await getActiveProjectId();
 
   try {
-    const stats = await queryRaw<{
+    const { rows: stats } = await db.execute<{
       hub_count: number;
       school_count: number;
       student_count: number;
     }>(sql`SELECT
-      COUNT(DISTINCT h.id) AS hub_count,
-      COUNT(DISTINCT sch.id) AS school_count,
-      COUNT(DISTINCT stu.id) AS student_count
+      COUNT(DISTINCT h.id)::int AS hub_count,
+      COUNT(DISTINCT sch.id)::int AS school_count,
+      COUNT(DISTINCT stu.id)::int AS student_count
     FROM
       hubs h
       LEFT JOIN schools sch ON h.id = sch.hub_id
@@ -135,18 +135,7 @@ export async function fetchImplementerSupervisors(implementerId: string) {
         assignedSchools: true,
       },
     });
-    // The fellow-attendance dialog reads `group._count.students`; keep Prisma's shape.
-    const data = supervisors.map((supervisor) => ({
-      ...supervisor,
-      fellows: supervisor.fellows.map((fellow) => ({
-        ...fellow,
-        groups: fellow.groups.map(({ studentsCount, ...group }) => ({
-          ...group,
-          _count: { students: studentsCount },
-        })),
-      })),
-    }));
-    return { success: true, data };
+    return { success: true, data: supervisors };
   } catch (error) {
     console.error("Error fetching implementer supervisors:", error);
     return {
@@ -171,7 +160,7 @@ export async function fetchImplementerFellowRatings(implementerId: string) {
   try {
     // Typed `number` like the Prisma version although AVG over no ratings is NULL; the
     // schedule components declare the same type. Tighten both together.
-    const fellowRatings = await queryRaw<{
+    const { rows: fellowRatings } = await db.execute<{
       id: string;
       averageRating: number;
     }>(sql`SELECT

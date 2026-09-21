@@ -11,7 +11,6 @@ import type {
   studentAttendance,
   studentGroupTransferTrail,
 } from "#/db/schema";
-import type { InterventionSession } from "#/db/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
@@ -28,7 +27,7 @@ type GroupSummary = Pick<typeof interventionGroup.$inferSelect, "id" | "groupNam
 
 // The row shape `SchoolStudentsPage` builds for this table.
 export type SchoolStudentTableData = typeof student.$inferSelect & {
-  clinicalCases: { id: string; _count: { sessions: number } }[];
+  clinicalCases: { id: string; sessionsCount: number }[];
   studentAttendances: (typeof studentAttendance.$inferSelect & {
     session: typeof interventionSession.$inferSelect & {
       session: typeof sessionName.$inferSelect | null;
@@ -60,7 +59,7 @@ export const columns = (state: {
   setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
   setMoveSchoolDialog: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
-  sessions: InterventionSession[];
+  sessions: (typeof interventionSession.$inferSelect)[];
 }): ColumnDef<SchoolStudentTableData>[] => [
   {
     id: "checkbox",
@@ -137,7 +136,7 @@ export const columns = (state: {
   {
     header: () => wrapColumnHeader("Clinical Sessions"),
     id: "Clinical Sessions",
-    accessorFn: (row) => row.clinicalCases?.reduce((acc, val) => acc + val._count.sessions, 0),
+    accessorFn: (row) => row.clinicalCases?.reduce((acc, val) => acc + val.sessionsCount, 0),
   },
   {
     header: "Gender",

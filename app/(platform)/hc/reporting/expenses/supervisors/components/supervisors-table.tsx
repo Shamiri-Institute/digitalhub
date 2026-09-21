@@ -1,17 +1,17 @@
 "use client";
-import type { Supervisor } from "#/db/types";
 
 import type { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import SupervisorsFilterTab from "#/app/(platform)/hc/reporting/expenses/supervisors/components/supervisor-filter";
 import DataTable from "#/components/data-table";
 import { columns } from "./columns";
+import type { supervisor } from "#/db/schema";
 
 export default function HCSupervisorsDataTable({
   supervisorExpenses,
   supervisorsInHub,
 }: {
   supervisorExpenses: HubSupervisorExpensesType[];
-  supervisorsInHub: Supervisor[];
+  supervisorsInHub: (typeof supervisor.$inferSelect)[];
 }) {
   return (
     <div className="container w-full grow space-y-3">

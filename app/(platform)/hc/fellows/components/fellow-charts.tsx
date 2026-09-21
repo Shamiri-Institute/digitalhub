@@ -33,9 +33,7 @@ export default function FellowsCharts({
 }: {
   attendanceData: {
     sessionType: (typeof interventionSession.$inferSelect)["sessionType"];
-    _count: {
-      sessionType: number;
-    };
+    count: number;
   }[];
   dropoutData: FellowDropoutReasonsGraphData[];
   fellowsDataCompletenessPercentage: Awaited<ReturnType<typeof fetchFellowDataCompletenessData>>;
@@ -45,7 +43,7 @@ export default function FellowsCharts({
     .filter((session) => session?.sessionType && /^s[0-4]$/i.test(session.sessionType))
     .map((session) => ({
       sessionType: session.sessionType,
-      attendance: session._count.sessionType,
+      attendance: session.count,
     }));
 
   const randomColors = dropoutData.map(() => generateRandomColor());

@@ -17,7 +17,7 @@ import { isBefore, startOfMonth } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
-import { db, executeRaw, pool, queryRaw } from "#/db/client";
+import { db, pool } from "#/db/client";
 import * as schema from "#/db/schema";
 import { hubSessionTypes } from "#/db/seed/hub-session-types";
 import { createTickets } from "#/db/seed/tickets";
@@ -210,10 +210,10 @@ async function truncateTables() {
 
   const excludedTables = ["_prisma_migrations"];
 
-  // Exclusion is applied in JS: interpolating a joined string into $queryRaw
+  // Exclusion is applied in JS: interpolating a joined string into a query
   // binds it as one literal parameter, so a SQL NOT IN never matched and
   // _prisma_migrations was truncated along with everything else.
-  const allTables = await queryRaw<{ table_name: string }>(sql`
+  const { rows: allTables } = await db.execute<{ table_name: string }>(sql`
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
@@ -223,7 +223,7 @@ async function truncateTables() {
 
   if (tables.length > 0) {
     const truncateCommand = `TRUNCATE TABLE ${tables.map((t) => `"${t.table_name}"`).join(", ")} CASCADE;`;
-    await executeRaw(sql.raw(truncateCommand));
+    await db.execute(sql.raw(truncateCommand));
     console.log("Selected tables truncated successfully.");
   } else {
     console.log("No tables to truncate. Make sure to run `npm run db:dev:migrate` first.");

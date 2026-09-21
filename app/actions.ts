@@ -4,7 +4,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { getCurrentUserSession } from "#/app/auth";
-import { db, type TransactionCursor } from "#/db/client";
+import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { clinicalCaseTransferTrail, clinicalScreeningInfo, implementerMember } from "#/db/schema";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
@@ -49,7 +49,7 @@ export async function selectPersonnel({
 }
 
 /** The latest transfer trail row of a case; the referral decision is recorded on it. */
-async function latestTransferTrail(tx: TransactionCursor, caseId: string) {
+async function latestTransferTrail(tx: Transaction, caseId: string) {
   const [trail] = await tx
     .select({ id: clinicalCaseTransferTrail.id })
     .from(clinicalCaseTransferTrail)

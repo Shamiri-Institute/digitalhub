@@ -1,5 +1,4 @@
-import type { fellow, supervisor } from "#/db/schema";
-import type { School } from "#/db/types";
+import type { fellow, school as schoolTable, supervisor } from "#/db/schema";
 import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -44,7 +43,7 @@ export default function CreateGroup({
   disabled,
 }: {
   supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
-  school: School;
+  school: typeof schoolTable.$inferSelect;
   groupCount: number;
   disabled?: boolean;
 }) {

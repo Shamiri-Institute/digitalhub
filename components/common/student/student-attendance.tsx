@@ -1,6 +1,5 @@
 import { ImplementerRole } from "#/db/enums";
-import type { student } from "#/db/schema";
-import type { Fellow } from "#/db/types";
+import type { fellow, student } from "#/db/schema";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
@@ -57,7 +56,7 @@ export default function StudentAttendance({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
   session: Session | null;
-  fellows: Fellow[];
+  fellows: (typeof fellow.$inferSelect)[];
   fellowId?: string;
 }) {
   const pathname = usePathname();
@@ -435,7 +434,7 @@ export default function StudentAttendance({
 
 // A student of a session's school with the clinical-cases count the producers attach.
 export type StudentAttendanceData = typeof student.$inferSelect & {
-  _count: { clinicalCases: number };
+  clinicalCasesCount: number;
 };
 
 const TRIAGE_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
@@ -587,7 +586,7 @@ const columns = (state: {
     header: "Clinical cases",
     id: "Clinical cases",
     accessorFn: (row) => {
-      return row._count.clinicalCases;
+      return row.clinicalCasesCount;
     },
   },
 

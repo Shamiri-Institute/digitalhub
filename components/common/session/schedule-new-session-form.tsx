@@ -1,5 +1,4 @@
 import type { ImplementerRole } from "#/db/enums";
-import type { School, SessionName } from "#/db/types";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
@@ -36,6 +35,7 @@ import { createNewSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { Session } from "./sessions-provider";
+import type { school, sessionName } from "#/db/schema";
 
 export function ScheduleNewSession({
   toggleDialog,
@@ -44,8 +44,8 @@ export function ScheduleNewSession({
   role,
 }: {
   toggleDialog: Dispatch<SetStateAction<boolean>>;
-  schools: School[];
-  hubSessionTypes: SessionName[];
+  schools: (typeof school.$inferSelect)[];
+  hubSessionTypes: (typeof sessionName.$inferSelect)[];
   role: ImplementerRole;
 }) {
   const { toast } = useToast();

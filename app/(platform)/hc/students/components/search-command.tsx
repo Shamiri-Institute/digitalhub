@@ -1,6 +1,5 @@
 "use client";
 
-import type { Student } from "#/db/types";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import {
@@ -11,8 +10,9 @@ import {
   CommandItem,
   CommandList,
 } from "#/components/ui/command";
+import type { student } from "#/db/schema";
 
-export function StudentSearchCommand({ data }: { data: Student[] }) {
+export function StudentSearchCommand({ data }: { data: (typeof student.$inferSelect)[] }) {
   const [open, setOpen] = useState(false);
 
   return (

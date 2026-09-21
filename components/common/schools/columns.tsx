@@ -27,7 +27,7 @@ export type SchoolsTableData = typeof school.$inferSelect & {
   })[];
   students: (typeof student.$inferSelect & {
     assignedGroup: typeof interventionGroup.$inferSelect | null;
-    _count: { clinicalCases: number };
+    clinicalCasesCount: number;
   })[];
 };
 

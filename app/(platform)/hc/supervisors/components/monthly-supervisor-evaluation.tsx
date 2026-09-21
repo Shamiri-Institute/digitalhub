@@ -1,7 +1,3 @@
-import type {
-  MonthlySupervisorEvaluation as MonthlySupervisorEvaluationType,
-  Project,
-} from "#/db/types";
 import { addDays, differenceInSeconds, eachMonthOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -43,6 +39,9 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
+import type { monthlySupervisorEvaluation, project as projectTable } from "#/db/schema";
+
+type MonthlySupervisorEvaluationType = typeof monthlySupervisorEvaluation.$inferSelect;
 
 type FormInput = {
   section: string;
@@ -66,7 +65,7 @@ export default function MonthlySupervisorEvaluation({
   children: React.ReactNode;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  project: Project | null;
+  project: typeof projectTable.$inferSelect | null;
   evaluations: MonthlySupervisorEvaluationType[];
   mode?: "view" | "edit";
 }) {

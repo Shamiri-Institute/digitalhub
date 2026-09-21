@@ -1,4 +1,3 @@
-import type { User } from "#/db/types";
 import { format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -38,6 +37,7 @@ import { submitFellowComplaint } from "#/lib/actions/fellow";
 import { COMPLAINT_TYPES } from "#/lib/app-constants/constants";
 import { getInitials } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
+import type { user } from "#/db/schema";
 
 export default function SubmitComplaint({
   id,
@@ -54,7 +54,7 @@ export default function SubmitComplaint({
     id: string;
     complaint: string;
     comments?: string;
-    createdBy?: User;
+    createdBy?: typeof user.$inferSelect;
     createdAt: Date;
   }[];
 }) {

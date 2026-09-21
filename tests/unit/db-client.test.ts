@@ -1,24 +1,13 @@
 // @vitest-environment node
-import { eq, sql, TransactionRollbackError } from "drizzle-orm";
+import { eq, TransactionRollbackError } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { db, pool, queryRaw } from "#/db/client";
+import { db, pool } from "#/db/client";
 import { user } from "#/db/schema";
 
 afterAll(() => pool.end());
 
 describe("db client", () => {
-  it("reads raw int8, timestamp and date the way Prisma did", async () => {
-    const [row] = await queryRaw<{ n: number; t: Date; d: Date }>(
-      sql`select 1::int8 as n, '2024-01-02 03:04:05.678'::timestamp as t, '2024-01-02'::date as d`,
-    );
-    expect(row).toEqual({
-      n: 1,
-      t: new Date("2024-01-02T03:04:05.678Z"),
-      d: new Date("2024-01-02T00:00:00.000Z"),
-    });
-  });
-
   it("fills id, createdAt and updatedAt on insert and bumps updatedAt on update", async () => {
     await db
       .transaction(async (tx) => {

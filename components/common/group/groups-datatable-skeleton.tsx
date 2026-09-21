@@ -1,10 +1,10 @@
 "use client";
 
 import { ImplementerRole } from "#/db/enums";
-import type { School } from "#/db/types";
 import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
 import { columns } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
+import type { school } from "#/db/schema";
 
 export default function GroupsDatatableSkeleton({
   role,
@@ -20,7 +20,7 @@ export default function GroupsDatatableSkeleton({
         school={
           {
             schoolName: "",
-          } as School
+          } as typeof school.$inferSelect
         }
         groupCount={0}
         disabled={true}

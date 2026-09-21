@@ -32,9 +32,7 @@ export default function HubStudentClinicalDataCharts({
   hubClinicalSessions: ClinicalSessionAttendance[];
   hubClinicalSessionsBySession: {
     session: ClinicalSessionAttendance["session"];
-    _count: {
-      session: number;
-    };
+    count: number;
   }[];
   clinicalCasesBySupervisors: {
     supervisorName: string;
@@ -42,9 +40,7 @@ export default function HubStudentClinicalDataCharts({
   }[];
   hubClinicalSessionsByInitialReferredFrom: {
     initialReferredFromSpecified: ClinicalScreeningInfo["initialReferredFromSpecified"];
-    _count: {
-      initialReferredFrom: number;
-    };
+    count: number;
   }[];
 }) {
   const caseStatusCounts: CaseData[] = [
@@ -78,14 +74,14 @@ export default function HubStudentClinicalDataCharts({
     const found = hubClinicalSessionsBySession.find((item) => item.session === session);
     return {
       session,
-      count: found ? found._count.session : 0,
+      count: found ? found.count : 0,
     };
   });
 
   const filteredByInitialReferredFrom = hubClinicalSessionsByInitialReferredFrom.map((item) => {
     return {
       initialReferredFrom: item.initialReferredFromSpecified,
-      count: item._count.initialReferredFrom,
+      count: item.count,
     };
   });
 

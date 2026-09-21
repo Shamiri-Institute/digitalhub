@@ -9,7 +9,7 @@ import { hub, interventionGroup } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { getDefaultSessionDateRange } from "#/lib/date-utils";
-import { clinicalCasesCountExtras, withClinicalCasesCount } from "#/lib/actions/schedule-data";
+import { clinicalCasesCountExtras } from "#/lib/actions/schedule-data";
 
 export async function fetchInterventionSessions({
   activeProjectId: clientActiveProjectId,
@@ -116,18 +116,7 @@ export async function fetchInterventionSessions({
             },
           },
         });
-  const schoolById = new Map(
-    schools.map((sc) => [
-      sc.id,
-      {
-        ...sc,
-        interventionGroups: sc.interventionGroups.map((g) => ({
-          ...g,
-          students: g.students.map(withClinicalCasesCount),
-        })),
-      },
-    ]),
-  );
+  const schoolById = new Map(schools.map((sc) => [sc.id, sc]));
 
   return sessions.map((s) => ({
     ...s,

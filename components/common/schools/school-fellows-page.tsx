@@ -1,11 +1,10 @@
 import { eq, sql } from "drizzle-orm";
 
-import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
-import { db, queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import type { ImplementerRole } from "#/db/enums";
-import { school } from "#/db/schema";
-import { clinicalCasesCountExtras, withClinicalCasesCount } from "#/lib/actions/schedule-data";
+import { fellow, interventionGroup, school, supervisor, weeklyFellowRatings } from "#/db/schema";
+import { clinicalCasesCountExtras } from "#/lib/actions/schedule-data";
 
 export default async function SchoolFellowsPage({
   visibleId,
@@ -33,35 +32,40 @@ export default async function SchoolFellowsPage({
     throw new Error("No School found");
   }
 
-  const [rawFellows, rawStudents, supervisors] = await Promise.all([
-    queryRaw<Omit<SchoolFellowTableData, "students">>(sql`
-      SELECT
-        f.id,
-        f.fellow_name as "fellowName",
-        f.fellow_email as "fellowEmail",
-        f.cell_number as "cellNumber",
-        f.mpesa_number as "mpesaNumber",
-        f.mpesa_name as "mpesaName",
-        f.gender as "gender",
-        f.county as "county",
-        f.sub_county as "subCounty",
-        f.supervisor_id as "supervisorId",
-        f.date_of_birth as "dateOfBirth",
-        f.id_number as "idNumber",
-        sup.supervisor_name as "supervisorName",
-        f.dropped_out as "droppedOut",
-        ig.group_name as "groupName",
-        ig.id as "groupId",
-        ((AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating))/4)::float8 AS "averageRating"
-      FROM fellows f
-      LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
-      LEFT JOIN supervisors sup ON f.supervisor_id = sup.id
-      LEFT JOIN
-        (SELECT _ig.* FROM intervention_groups _ig WHERE _ig.school_id = ${schoolRow.id}) ig
-        ON f.id = ig.leader_id
-      WHERE f.hub_id = ${schoolRow.hubId}
-      GROUP BY f.id, ig.id, ig.group_name, sup.supervisor_name
-  `),
+  const schoolGroups = db
+    .select()
+    .from(interventionGroup)
+    .where(eq(interventionGroup.schoolId, schoolRow.id))
+    .as("school_groups");
+  const [rawFellows, students, supervisors] = await Promise.all([
+    db
+      .select({
+        id: fellow.id,
+        fellowName: fellow.fellowName,
+        fellowEmail: fellow.fellowEmail,
+        cellNumber: fellow.cellNumber,
+        mpesaNumber: fellow.mpesaNumber,
+        mpesaName: fellow.mpesaName,
+        gender: fellow.gender,
+        county: fellow.county,
+        subCounty: fellow.subCounty,
+        supervisorId: fellow.supervisorId,
+        dateOfBirth: fellow.dateOfBirth,
+        idNumber: fellow.idNumber,
+        supervisorName: supervisor.supervisorName,
+        droppedOut: fellow.droppedOut,
+        groupName: schoolGroups.groupName,
+        groupId: schoolGroups.id,
+        averageRating: sql<
+          number | null
+        >`((avg(${weeklyFellowRatings.behaviourRating}) + avg(${weeklyFellowRatings.dressingAndGroomingRating}) + avg(${weeklyFellowRatings.programDeliveryRating}) + avg(${weeklyFellowRatings.punctualityRating})) / 4)::float8`,
+      })
+      .from(fellow)
+      .leftJoin(weeklyFellowRatings, eq(fellow.id, weeklyFellowRatings.fellowId))
+      .leftJoin(supervisor, eq(fellow.supervisorId, supervisor.id))
+      .leftJoin(schoolGroups, eq(fellow.id, schoolGroups.leaderId))
+      .where(eq(fellow.hubId, schoolRow.hubId ?? ""))
+      .groupBy(fellow.id, schoolGroups.id, schoolGroups.groupName, supervisor.supervisorName),
     db.query.student.findMany({
       where: (s, { and, isNull, inArray }) =>
         and(
@@ -78,7 +82,6 @@ export default async function SchoolFellowsPage({
       with: { fellows: true },
     }),
   ]);
-  const students = rawStudents.map(withClinicalCasesCount);
 
   const fellows = rawFellows.map((fellow) => ({
     ...fellow,
