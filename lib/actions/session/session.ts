@@ -1,7 +1,8 @@
 "use server";
 
-import { ImplementerRole } from "#/db/enums";
+import { and, eq } from "drizzle-orm";
 import type { z } from "zod";
+
 import { getCurrentPersonnel } from "#/app/auth";
 import {
   MarkSessionOccurrenceSchema,
@@ -9,9 +10,16 @@ import {
   ScheduleNewSessionSchema,
   SessionRatingsSchema,
 } from "#/components/common/session/schema";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import {
+  interventionSession,
+  interventionSessionRating,
+  sessionComment,
+  studentAttendance,
+} from "#/db/schema";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
 
 async function checkAuth() {
   const personnel = await getCurrentPersonnel();
@@ -25,17 +33,40 @@ async function checkAuth() {
   return personnel;
 }
 
+/** Same message Prisma's `findFirstOrThrow` produced; callers surface it to the user. */
+async function findSessionWithSchoolOrThrow(id: string) {
+  const session = await db.query.interventionSession.findFirst({
+    where: (s, { eq }) => eq(s.id, id),
+    with: { school: true, session: true },
+  });
+  if (!session) {
+    throw new Error("No InterventionSession found");
+  }
+  return session;
+}
+
+/** Prisma's `update` failed when the row was gone; keep that behaviour. */
+async function updateSessionOrThrow(
+  id: string,
+  values: Partial<typeof interventionSession.$inferInsert>,
+) {
+  const updated = await db
+    .update(interventionSession)
+    .set(values)
+    .where(eq(interventionSession.id, id))
+    .returning({ id: interventionSession.id });
+  if (updated.length === 0) {
+    throw new Error("Record to update not found.");
+  }
+}
+
 export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSchema>) {
   try {
     await checkAuth();
     const parsedData = ScheduleNewSessionSchema.parse(data);
-    const hubSessionType = await db.sessionName.findFirst({
-      where: {
-        id: parsedData.sessionId,
-      },
-      include: {
-        hub: true,
-      },
+    const hubSessionType = await db.query.sessionName.findFirst({
+      where: (s, { eq }) => eq(s.id, parsedData.sessionId),
+      with: { hub: true },
     });
 
     if (!hubSessionType) {
@@ -44,11 +75,8 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
 
     const { hub } = hubSessionType;
     if (hubSessionType.sessionType === "SUPERVISION" || hubSessionType.sessionType === "TRAINING") {
-      const existingSession = await db.interventionSession.findFirst({
-        where: {
-          hubId: hub.id,
-          sessionId: parsedData.sessionId,
-        },
+      const existingSession = await db.query.interventionSession.findFirst({
+        where: (s, { and, eq }) => and(eq(s.hubId, hub.id), eq(s.sessionId, parsedData.sessionId)),
       });
       if (existingSession) {
         console.error(`This session already exists for hub ${hub.hubName}`);
@@ -59,14 +87,15 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
         };
       }
     } else {
-      const existingSession = await db.interventionSession.findFirst({
-        where: {
-          schoolId: parsedData.schoolId,
-          sessionId: parsedData.sessionId,
-        },
-        include: {
-          school: true,
-        },
+      // Prisma ignored an undefined schoolId in `where`; keep that.
+      const schoolId = parsedData.schoolId;
+      const existingSession = await db.query.interventionSession.findFirst({
+        where: (s, { and, eq }) =>
+          and(
+            schoolId === undefined ? undefined : eq(s.schoolId, schoolId),
+            eq(s.sessionId, parsedData.sessionId),
+          ),
+        with: { school: true },
       });
       if (existingSession) {
         console.error(`This session already exists for ${existingSession?.school?.schoolName}`);
@@ -77,18 +106,16 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
         };
       }
     }
-    await db.interventionSession.create({
-      data: {
-        id: objectId("isess"),
-        sessionId: parsedData.sessionId,
-        sessionDate: parsedData.sessionDate,
-        yearOfImplementation: parsedData.sessionDate.getFullYear() || new Date().getFullYear(),
-        schoolId: parsedData.schoolId !== "" ? parsedData.schoolId : undefined,
-        occurred: false,
-        projectId: hubSessionType.hub.projectId,
-        hubId: hub.id,
-        venue: parsedData.venue,
-      },
+    await db.insert(interventionSession).values({
+      id: objectId("isess"),
+      sessionId: parsedData.sessionId,
+      sessionDate: parsedData.sessionDate,
+      yearOfImplementation: parsedData.sessionDate.getFullYear() || new Date().getFullYear(),
+      schoolId: parsedData.schoolId !== "" ? parsedData.schoolId : undefined,
+      occurred: false,
+      projectId: hubSessionType.hub.projectId,
+      hubId: hub.id,
+      venue: parsedData.venue,
     });
 
     return {
@@ -107,12 +134,7 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
 export async function cancelSession(id: string) {
   try {
     const user = await checkAuth();
-    const session = await db.interventionSession.findFirstOrThrow({
-      where: { id },
-      include: {
-        school: true,
-      },
-    });
+    const session = await findSessionWithSchoolOrThrow(id);
 
     if (
       user.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR &&
@@ -121,14 +143,7 @@ export async function cancelSession(id: string) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
-    await db.interventionSession.update({
-      data: {
-        status: "Cancelled",
-      },
-      where: {
-        id,
-      },
-    });
+    await updateSessionOrThrow(id, { status: "Cancelled" });
 
     return {
       success: true,
@@ -148,12 +163,7 @@ export async function rescheduleSession(id: string, data: z.infer<typeof Resched
     const user = await checkAuth();
     const parsedData = RescheduleSessionSchema.parse(data);
 
-    const session = await db.interventionSession.findFirstOrThrow({
-      where: { id },
-      include: {
-        school: true,
-      },
-    });
+    const session = await findSessionWithSchoolOrThrow(id);
 
     if (
       user.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR &&
@@ -162,15 +172,7 @@ export async function rescheduleSession(id: string, data: z.infer<typeof Resched
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
-    await db.interventionSession.update({
-      data: {
-        sessionDate: parsedData.sessionDate,
-        status: "Rescheduled",
-      },
-      where: {
-        id,
-      },
-    });
+    await updateSessionOrThrow(id, { sessionDate: parsedData.sessionDate, status: "Rescheduled" });
 
     return {
       success: true,
@@ -203,12 +205,10 @@ export async function submitQualitativeFeedback({
       throw new Error("User not authorized to perform this action");
     }
 
-    await db.sessionComment.create({
-      data: {
-        sessionId,
-        content: notes,
-        userId: user.session.user.id,
-      },
+    await db.insert(sessionComment).values({
+      sessionId,
+      content: notes,
+      userId: user.session.user.id,
     });
     return { success: true, message: "Notes submitted successfully" };
   } catch (error) {
@@ -244,48 +244,30 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
       headcount,
     } = SessionRatingsSchema.parse(data);
 
-    const session = await db.interventionSession.findFirstOrThrow({
-      where: { id: sessionId },
-      include: {
-        school: true,
-      },
-    });
+    const session = await findSessionWithSchoolOrThrow(sessionId);
 
     if (session.school?.assignedSupervisorId !== user.profile?.id) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
-    await db.interventionSessionRating.upsert({
-      where: {
-        ratingBySessionIdAndSupervisorId: {
-          sessionId,
-          supervisorId: user.profile?.id,
-        },
-      },
-      create: {
-        id: objectId("isr"),
-        sessionId,
-        supervisorId: user.profile?.id,
-        studentBehaviorRating,
-        workloadRating,
-        adminSupportRating,
-        positiveHighlights,
-        challenges,
-        recommendations,
-        headcount,
-      },
-      update: {
-        sessionId,
-        supervisorId: user.profile?.id,
-        studentBehaviorRating,
-        workloadRating,
-        adminSupportRating,
-        positiveHighlights,
-        challenges,
-        recommendations,
-        headcount,
-      },
-    });
+    const rating = {
+      sessionId,
+      supervisorId: user.profile.id,
+      studentBehaviorRating,
+      workloadRating,
+      adminSupportRating,
+      positiveHighlights,
+      challenges,
+      recommendations,
+      headcount,
+    };
+    await db
+      .insert(interventionSessionRating)
+      .values({ id: objectId("isr"), ...rating })
+      .onConflictDoUpdate({
+        target: [interventionSessionRating.sessionId, interventionSessionRating.supervisorId],
+        set: { ...rating, updatedAt: new Date() },
+      });
 
     return {
       success: true,
@@ -320,13 +302,7 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
 
     const parsedData = MarkSessionOccurrenceSchema.parse(data);
 
-    const session = await db.interventionSession.findFirstOrThrow({
-      where: { id: parsedData.sessionId },
-      include: {
-        school: true,
-        session: true,
-      },
-    });
+    const session = await findSessionWithSchoolOrThrow(parsedData.sessionId);
 
     if (session.sessionDate > new Date()) {
       throw new Error("This session's date has not arrived yet. Please check the date and time.");
@@ -357,11 +333,8 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
       );
     }
 
-    await db.interventionSession.update({
-      where: { id: parsedData.sessionId },
-      data: {
-        occurred: parsedData.occurrence === "attended",
-      },
+    await updateSessionOrThrow(parsedData.sessionId, {
+      occurred: parsedData.occurrence === "attended",
     });
 
     return {
@@ -384,9 +357,9 @@ export async function fetchSessionAttendances(sessionId: string) {
     ImplementerRole.HUB_COORDINATOR,
     ImplementerRole.ADMIN,
   );
-  return db.studentAttendance.findMany({
-    where: { sessionId },
-    select: {
+  return db.query.studentAttendance.findMany({
+    where: (a, { eq }) => eq(a.sessionId, sessionId),
+    columns: {
       id: true,
       studentId: true,
       attended: true,
@@ -408,7 +381,8 @@ export async function countSessionGroupAttendance(sessionId: string, fellowId: s
   if (role === ImplementerRole.FELLOW && identifier !== fellowId) {
     throw new Error("Unauthorized: fellows may only count their own group attendance");
   }
-  return db.studentAttendance.count({
-    where: { sessionId, fellowId },
-  });
+  return db.$count(
+    studentAttendance,
+    and(eq(studentAttendance.sessionId, sessionId), eq(studentAttendance.fellowId, fellowId)),
+  );
 }

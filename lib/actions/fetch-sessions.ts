@@ -1,11 +1,15 @@
 "use server";
 
-import { ImplementerRole, type SessionStatus } from "#/db/enums";
+import { and, eq } from "drizzle-orm";
+
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
+import { db } from "#/db/client";
+import { ImplementerRole, type SessionStatus } from "#/db/enums";
+import { hub, interventionGroup } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { getDefaultSessionDateRange } from "#/lib/date-utils";
-import { db } from "#/lib/db";
+import { clinicalCasesCountExtras, withClinicalCasesCount } from "#/lib/actions/schedule-data";
 
 export async function fetchInterventionSessions({
   activeProjectId: clientActiveProjectId,
@@ -37,74 +41,63 @@ export async function fetchInterventionSessions({
     if (!hubId) {
       throw new Error("No assigned hub ID provided");
     }
-    const hub = await db.hub.findUnique({
-      where: { id: hubId },
-      select: { projectId: true },
+    const hubRow = await db.query.hub.findFirst({
+      where: (h, { eq }) => eq(h.id, hubId),
+      columns: { projectId: true },
     });
-    if (!hub?.projectId) {
+    if (!hubRow?.projectId) {
       throw new Error("Hub has no project");
     }
-    projectId = hub.projectId;
+    projectId = hubRow.projectId;
   }
 
   const { start: rangeStart, end: rangeEnd } =
     start && end ? { start, end } : getDefaultSessionDateRange();
 
   const isFellow = role === ImplementerRole.FELLOW && !!fellowId;
+  const statuses =
+    filters &&
+    (Object.keys(filters.statusTypes).filter((status) => {
+      return filters.statusTypes[status];
+    }) as SessionStatus[]);
 
-  const sessions = await db.interventionSession.findMany({
-    where: {
-      sessionDate: {
-        gte: rangeStart,
-        lte: rangeEnd,
-      },
-      // session: {
-      //   sessionName: {
-      //     in:
-      //       filters &&
-      //       Object.keys(filters.sessionTypes).filter((sessionType) => {
-      //         return filters.sessionTypes[sessionType];
-      //       }),
-      //   },
-      // },
-      hub: {
-        id: hubId,
-        implementerId,
-        projectId,
-      },
-      status: {
-        in:
-          filters &&
-          (Object.keys(filters.statusTypes).filter((status) => {
-            return filters.statusTypes[status];
-          }) as SessionStatus[]),
-      },
-      ...(isFellow
-        ? {
-            school: {
-              interventionGroups: { some: { leaderId: fellowId } },
-            },
-          }
-        : {}),
-    },
-    include: {
-      hub: {
-        select: { visibleId: true },
-      },
+  // Hubs of this project, narrowed to the caller's hub and/or implementer when given.
+  const hubIds = db
+    .select({ id: hub.id })
+    .from(hub)
+    .where(
+      and(
+        eq(hub.projectId, projectId),
+        hubId ? eq(hub.id, hubId) : undefined,
+        implementerId ? eq(hub.implementerId, implementerId) : undefined,
+      ),
+    );
+
+  const sessions = await db.query.interventionSession.findMany({
+    where: (s, { and, gte, lte, inArray }) =>
+      and(
+        gte(s.sessionDate, rangeStart),
+        lte(s.sessionDate, rangeEnd),
+        inArray(s.hubId, hubIds),
+        statuses ? inArray(s.status, statuses) : undefined,
+        isFellow
+          ? inArray(
+              s.schoolId,
+              db
+                .select({ schoolId: interventionGroup.schoolId })
+                .from(interventionGroup)
+                .where(eq(interventionGroup.leaderId, fellowId)),
+            )
+          : undefined,
+      ),
+    with: {
+      hub: { columns: { visibleId: true } },
       school: {
-        include: {
+        with: {
           interventionGroups: {
-            ...(isFellow ? { where: { leaderId: fellowId } } : {}),
-            include: {
-              students: {
-                include: {
-                  _count: {
-                    select: {
-                      clinicalCases: true,
-                    },
-                  },
-                },
-              },
+            ...(isFellow ? { where: (g, { eq }) => eq(g.leaderId, fellowId) } : {}),
+            with: {
+              students: { extras: clinicalCasesCountExtras },
             },
           },
         },
@@ -112,10 +105,17 @@ export async function fetchInterventionSessions({
       sessionRatings: true,
       session: true,
     },
-    orderBy: {
-      sessionDate: "asc",
-    },
+    orderBy: (s, { asc }) => asc(s.sessionDate),
   });
 
-  return sessions;
+  return sessions.map((s) => ({
+    ...s,
+    school: s.school && {
+      ...s.school,
+      interventionGroups: s.school.interventionGroups.map((g) => ({
+        ...g,
+        students: g.students.map(withClinicalCasesCount),
+      })),
+    },
+  }));
 }

@@ -1,7 +1,11 @@
-import type { ImplementerRole } from "#/db/enums";
+import { eq, sql } from "drizzle-orm";
+
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
-import { db } from "#/lib/db";
+import { db, queryRaw } from "#/db/client";
+import type { ImplementerRole } from "#/db/enums";
+import { school } from "#/db/schema";
+import { clinicalCasesCountExtras, withClinicalCasesCount } from "#/lib/actions/schedule-data";
 
 export default async function SchoolFellowsPage({
   visibleId,
@@ -12,33 +16,25 @@ export default async function SchoolFellowsPage({
   role: ImplementerRole;
   hideActions?: boolean;
 }) {
-  const school = await db.school.findFirstOrThrow({
-    where: {
-      visibleId,
-    },
-    include: {
+  const schoolRow = await db.query.school.findFirst({
+    where: (s, { eq }) => eq(s.visibleId, visibleId),
+    with: {
       fellowAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-              school: true,
-            },
-          },
+        with: {
+          session: { with: { session: true, school: true } },
           group: true,
           PayoutStatements: true,
         },
       },
-      hub: {
-        include: {
-          project: true,
-        },
-      },
+      hub: { with: { project: true } },
     },
   });
+  if (!schoolRow) {
+    throw new Error("No School found");
+  }
 
-  const [rawFellows, students, supervisors] = await Promise.all([
-    db.$queryRaw<Omit<SchoolFellowTableData, "students">[]>`
+  const [rawFellows, rawStudents, supervisors] = await Promise.all([
+    queryRaw<Omit<SchoolFellowTableData, "students">>(sql`
       SELECT
         f.id,
         f.fellow_name as "fellowName",
@@ -56,40 +52,33 @@ export default async function SchoolFellowsPage({
         f.dropped_out as "droppedOut",
         ig.group_name as "groupName",
         ig.id as "groupId",
-        (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating))/4 AS "averageRating"
+        ((AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating))/4)::float8 AS "averageRating"
       FROM fellows f
       LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
       LEFT JOIN supervisors sup ON f.supervisor_id = sup.id
       LEFT JOIN
-        (SELECT _ig.* FROM intervention_groups _ig WHERE _ig.school_id = ${school.id}) ig
+        (SELECT _ig.* FROM intervention_groups _ig WHERE _ig.school_id = ${schoolRow.id}) ig
         ON f.id = ig.leader_id
-      WHERE f.hub_id = ${school.hubId}
+      WHERE f.hub_id = ${schoolRow.hubId}
       GROUP BY f.id, ig.id, ig.group_name, sup.supervisor_name
-  `,
-    db.student.findMany({
-      where: {
-        archivedAt: null,
-        school: {
-          visibleId,
-        },
-      },
-      include: {
-        _count: {
-          select: {
-            clinicalCases: true,
-          },
-        },
-      },
+  `),
+    db.query.student.findMany({
+      where: (s, { and, isNull, inArray }) =>
+        and(
+          isNull(s.archivedAt),
+          inArray(
+            s.schoolId,
+            db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
+          ),
+        ),
+      extras: clinicalCasesCountExtras,
     }),
-    db.supervisor.findMany({
-      where: {
-        hubId: school.hubId,
-      },
-      include: {
-        fellows: true,
-      },
+    db.query.supervisor.findMany({
+      where: (s, { eq }) => eq(s.hubId, schoolRow.hubId ?? ""),
+      with: { fellows: true },
     }),
   ]);
+  const students = rawStudents.map(withClinicalCasesCount);
 
   const fellows = rawFellows.map((fellow) => ({
     ...fellow,
@@ -100,10 +89,10 @@ export default async function SchoolFellowsPage({
     <FellowsDatatable
       fellows={fellows}
       supervisors={supervisors}
-      schoolId={school.id}
+      schoolId={schoolRow.id}
       role={role}
       hideActions={hideActions}
-      attendances={school.fellowAttendances}
+      attendances={schoolRow.fellowAttendances}
     />
   );
 }

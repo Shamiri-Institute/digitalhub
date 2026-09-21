@@ -3,8 +3,9 @@ import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import { currentHubCoordinator } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
+import { db } from "#/db/client";
 import { getHubScheduleStats } from "#/lib/actions/hub";
-import { db } from "#/lib/db";
+import { fetchHubFellowRatings, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
 import { ScheduleCalendar } from "../../../../components/common/session/schedule-calendar";
 import { ScheduleHeader } from "../../../../components/common/session/schedule-header";
 
@@ -16,55 +17,14 @@ export default async function HubCoordinatorSchedulePage() {
   if (!coordinator?.profile?.assignedHubId) {
     return <div>Hub coordinator has no assigned hub</div>;
   }
+  const hubId = coordinator.profile.assignedHubId;
 
   const values = await Promise.all([
-    fetchSchoolData(coordinator?.profile?.assignedHubId),
-    getHubScheduleStats(coordinator?.profile?.assignedHubId),
-    db.supervisor.findMany({
-      where: {
-        hubId: coordinator?.profile?.assignedHubId,
-      },
-      include: {
-        supervisorAttendances: {
-          include: {
-            session: true,
-          },
-        },
-        fellows: {
-          include: {
-            fellowAttendances: true,
-            groups: {
-              include: {
-                _count: {
-                  select: {
-                    students: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        assignedSchools: true,
-      },
-    }),
-    db.$queryRaw<
-      {
-        id: string;
-        averageRating: number;
-      }[]
-    >`SELECT
-    fel.id,
-    (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
-    FROM
-    fellows fel
-    LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${coordinator?.profile?.assignedHubId}
-    GROUP BY fel.id`,
-    db.sessionName.findMany({
-      where: {
-        hubId: coordinator?.profile?.assignedHubId,
-      },
-    }),
+    fetchSchoolData(hubId),
+    getHubScheduleStats(hubId),
+    fetchScheduleSupervisors(hubId),
+    fetchHubFellowRatings(hubId),
+    db.query.sessionName.findMany({ where: (s, { eq }) => eq(s.hubId, hubId) }),
   ]);
   const schools = values[0];
   const schoolStats = values[1];
@@ -93,7 +53,7 @@ export default async function HubCoordinatorSchedulePage() {
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
         <ScheduleCalendar
-          hubId={coordinator?.profile?.assignedHubId ?? ""}
+          hubId={hubId}
           aria-label="Session schedule"
           schools={schools}
           supervisors={supervisors}

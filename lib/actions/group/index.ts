@@ -1,16 +1,18 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
-import { ImplementerRole } from "#/db/enums";
+import { eq } from "drizzle-orm";
 import type { z } from "zod";
+
 import { currentFellow, getCurrentPersonnel } from "#/app/auth";
 import {
   CreateGroupSchema,
   FellowGroupReportSchema,
   StudentGroupEvaluationSchema,
 } from "#/components/common/group/schema";
+import { db, isUniqueViolation } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { fellowGroupReport, interventionGroup, interventionGroupReport } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
 
 async function checkAuth() {
@@ -27,17 +29,23 @@ async function checkAuth() {
   return user;
 }
 
+/** Prisma's `update` failed when the row was gone; keep that behaviour. */
+async function setArchivedAt(groupId: string, archivedAt: Date | null) {
+  const [result] = await db
+    .update(interventionGroup)
+    .set({ archivedAt })
+    .where(eq(interventionGroup.id, groupId))
+    .returning({ groupName: interventionGroup.groupName });
+  if (!result) {
+    throw new Error("Record to update not found.");
+  }
+  return result;
+}
+
 export async function archiveInterventionGroup(groupId: string) {
   try {
     await checkAuth();
-    const result = await db.interventionGroup.update({
-      where: {
-        id: groupId,
-      },
-      data: {
-        archivedAt: new Date(),
-      },
-    });
+    const result = await setArchivedAt(groupId, new Date());
     return {
       success: true,
       message: `Successfully archived group ${result.groupName}`,
@@ -57,10 +65,7 @@ export async function unarchiveInterventionGroup(groupId: string) {
     if (!user || user.session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR) {
       throw new Error("Only hub coordinators can unarchive groups.");
     }
-    const result = await db.interventionGroup.update({
-      where: { id: groupId },
-      data: { archivedAt: null },
-    });
+    const result = await setArchivedAt(groupId, null);
     return {
       success: true,
       message: `Successfully unarchived group ${result.groupName}`,
@@ -78,61 +83,46 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
   try {
     await checkAuth();
     const { schoolId, fellowId } = CreateGroupSchema.parse(data);
-    const school = await db.school.findFirstOrThrow({
-      where: {
-        id: schoolId,
-      },
-      include: {
-        hub: {
-          select: {
-            projectId: true,
-          },
-        },
-      },
+    const school = await db.query.school.findFirst({
+      where: (s, { eq }) => eq(s.id, schoolId),
+      with: { hub: { columns: { projectId: true } } },
     });
-    const groupCount = await db.interventionGroup.count({
-      where: { schoolId },
-    });
+    if (!school) {
+      throw new Error("No School found");
+    }
+    const groupCount = await db.$count(interventionGroup, eq(interventionGroup.schoolId, schoolId));
 
     const projectId = school.hub?.projectId;
     if (!projectId) {
       throw new Error("School not linked to a project. Cannot create group.");
     }
 
-    const result = await db.interventionGroup.create({
-      data: {
+    const [result] = await db
+      .insert(interventionGroup)
+      .values({
         id: objectId("group"),
         leaderId: fellowId,
         schoolId,
         projectId,
         groupName: `${getSchoolInitials(school.schoolName)}_${groupCount + 1}`,
-      },
-    });
+      })
+      .returning({ groupName: interventionGroup.groupName });
     return {
       success: true,
-      message: `Successfully created new group ${result.groupName}`,
+      message: `Successfully created new group ${result?.groupName}`,
     };
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError) {
-      if (err.code === "P2002") {
-        const { schoolId, fellowId } = CreateGroupSchema.parse(data);
-        const result = await db.interventionGroup.findFirst({
-          where: {
-            school: {
-              id: schoolId,
-            },
-            leaderId: fellowId,
-          },
-          include: {
-            leader: true,
-          },
-        });
-        if (result !== null) {
-          return {
-            success: false,
-            message: `Sorry, ${result.leader.fellowName} is already assigned to group ${result.groupName}`,
-          };
-        }
+    if (isUniqueViolation(err)) {
+      const { schoolId, fellowId } = CreateGroupSchema.parse(data);
+      const result = await db.query.interventionGroup.findFirst({
+        where: (g, { and, eq }) => and(eq(g.schoolId, schoolId), eq(g.leaderId, fellowId)),
+        with: { leader: true },
+      });
+      if (result !== null && result !== undefined) {
+        return {
+          success: false,
+          message: `Sorry, ${result.leader.fellowName} is already assigned to group ${result.groupName}`,
+        };
       }
     }
     console.error(err);
@@ -168,47 +158,35 @@ export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEva
       engagement3,
       engagement1,
     } = StudentGroupEvaluationSchema.parse(data);
-    const result = await db.interventionGroupReport.upsert({
-      where: {
-        sessionId_groupId: {
-          sessionId,
-          groupId,
-        },
-      },
-      create: {
-        id: objectId("ige"),
-        sessionId,
-        groupId,
-        content,
-        contentComment,
-        cooperation1,
-        cooperation2,
-        cooperation3,
-        cooperationComment,
-        engagement1,
-        engagement2,
-        engagement3,
-        engagementComment,
-      },
-      update: {
-        content,
-        contentComment,
-        cooperation1,
-        cooperation2,
-        cooperation3,
-        cooperationComment,
-        engagement1,
-        engagement2,
-        engagement3,
-        engagementComment,
-      },
-      include: {
-        group: true,
-      },
+    const scores = {
+      content,
+      contentComment,
+      cooperation1,
+      cooperation2,
+      cooperation3,
+      cooperationComment,
+      engagement1,
+      engagement2,
+      engagement3,
+      engagementComment,
+    };
+    await db
+      .insert(interventionGroupReport)
+      .values({ id: objectId("ige"), sessionId, groupId, ...scores })
+      .onConflictDoUpdate({
+        target: [interventionGroupReport.sessionId, interventionGroupReport.groupId],
+        set: { ...scores, updatedAt: new Date() },
+      });
+    const group = await db.query.interventionGroup.findFirst({
+      where: (g, { eq }) => eq(g.id, groupId),
+      columns: { groupName: true },
     });
+    if (!group) {
+      throw new Error("No InterventionGroup found");
+    }
     return {
       success: true,
-      message: `Successfully submitted evaluation for ${result.group.groupName}`,
+      message: `Successfully submitted evaluation for ${group.groupName}`,
     };
   } catch (err) {
     console.error(err);
@@ -227,50 +205,50 @@ export async function submitFellowGroupReport(data: z.infer<typeof FellowGroupRe
     }
 
     const parsed = FellowGroupReportSchema.parse(data);
+    const fellowId = fellow.profile.id;
 
-    const group = await db.interventionGroup.findFirstOrThrow({
-      where: { id: parsed.groupId, leaderId: fellow.profile.id },
-      select: { id: true, projectId: true, groupName: true },
+    const group = await db.query.interventionGroup.findFirst({
+      where: (g, { and, eq }) => and(eq(g.id, parsed.groupId), eq(g.leaderId, fellowId)),
+      columns: { id: true, projectId: true, groupName: true },
     });
+    if (!group) {
+      throw new Error("No InterventionGroup found");
+    }
 
-    await db.fellowGroupReport.create({
-      data: {
-        id: objectId("fgr"),
-        submittedAt: new Date(),
-        fellowId: fellow.profile.id,
-        groupId: group.id,
-        projectId: group.projectId,
-        structuralFidelity: parsed.structuralFidelity,
-        processFidelity: parsed.processFidelity,
-        adaptationsMade: parsed.adaptationsMade,
-        adaptationType: parsed.adaptationsMade ? (parsed.adaptationType ?? null) : null,
-        adaptationReason: parsed.adaptationsMade ? (parsed.adaptationReason ?? null) : null,
-        behavioralEngagement: parsed.behavioralEngagement,
-        reflectiveEngagement: parsed.reflectiveEngagement,
-        psychologicalSafety: parsed.psychologicalSafety,
-        groupCohesion: parsed.groupCohesion,
-        climateConcerns: parsed.climateConcerns,
-        climateConcernsDetail: parsed.climateConcerns
-          ? (parsed.climateConcernsDetail ?? null)
-          : null,
-        skillComprehension: parsed.skillComprehension,
-        inSessionTransfer: parsed.inSessionTransfer,
-        homePracticeApplicable: parsed.homePracticeApplicable,
-        homePracticeEngagement: parsed.homePracticeApplicable
-          ? (parsed.homePracticeEngagement ?? null)
-          : null,
-        fellowGroupRelationship: parsed.fellowGroupRelationship,
-        externalDisruptions: parsed.externalDisruptions,
-        externalDisruptionsDetail: parsed.externalDisruptions
-          ? (parsed.externalDisruptionsDetail ?? null)
-          : null,
-        facilitatorConfidence: parsed.facilitatorConfidence,
-        hardestAspect: parsed.hardestAspect,
-        challengeImpact: parsed.challengeImpact,
-        whatWentWell: parsed.whatWentWell,
-        supportType: parsed.supportType,
-        supportDetail: parsed.supportDetail ?? null,
-      },
+    await db.insert(fellowGroupReport).values({
+      id: objectId("fgr"),
+      submittedAt: new Date(),
+      fellowId,
+      groupId: group.id,
+      projectId: group.projectId,
+      structuralFidelity: parsed.structuralFidelity,
+      processFidelity: parsed.processFidelity,
+      adaptationsMade: parsed.adaptationsMade,
+      adaptationType: parsed.adaptationsMade ? (parsed.adaptationType ?? null) : null,
+      adaptationReason: parsed.adaptationsMade ? (parsed.adaptationReason ?? null) : null,
+      behavioralEngagement: parsed.behavioralEngagement,
+      reflectiveEngagement: parsed.reflectiveEngagement,
+      psychologicalSafety: parsed.psychologicalSafety,
+      groupCohesion: parsed.groupCohesion,
+      climateConcerns: parsed.climateConcerns,
+      climateConcernsDetail: parsed.climateConcerns ? (parsed.climateConcernsDetail ?? null) : null,
+      skillComprehension: parsed.skillComprehension,
+      inSessionTransfer: parsed.inSessionTransfer,
+      homePracticeApplicable: parsed.homePracticeApplicable,
+      homePracticeEngagement: parsed.homePracticeApplicable
+        ? (parsed.homePracticeEngagement ?? null)
+        : null,
+      fellowGroupRelationship: parsed.fellowGroupRelationship,
+      externalDisruptions: parsed.externalDisruptions,
+      externalDisruptionsDetail: parsed.externalDisruptions
+        ? (parsed.externalDisruptionsDetail ?? null)
+        : null,
+      facilitatorConfidence: parsed.facilitatorConfidence,
+      hardestAspect: parsed.hardestAspect,
+      challengeImpact: parsed.challengeImpact,
+      whatWentWell: parsed.whatWentWell,
+      supportType: parsed.supportType,
+      supportDetail: parsed.supportDetail ?? null,
     });
 
     return {
@@ -278,7 +256,7 @@ export async function submitFellowGroupReport(data: z.infer<typeof FellowGroupRe
       message: `Group Report submitted for ${group.groupName}`,
     };
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    if (isUniqueViolation(err)) {
       return {
         success: false,
         message: "A report has already been submitted for this group.",

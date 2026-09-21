@@ -52,7 +52,7 @@ export default function SessionsDatatable({
   }>[];
   fellowRatings?: {
     id: string;
-    averageRating: number;
+    averageRating: number | null;
   }[];
   role: ImplementerRole;
   fellowId?: string;

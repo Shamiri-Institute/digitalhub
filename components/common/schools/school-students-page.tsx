@@ -1,6 +1,10 @@
-import type { ImplementerRole } from "#/db/enums";
+import { eq } from "drizzle-orm";
+
 import StudentsDatatable from "#/components/common/student/students-datatable";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import type { ImplementerRole } from "#/db/enums";
+import { clinicalSessionAttendance, school } from "#/db/schema";
+import { countOf } from "#/lib/actions/schedule-data";
 
 export default async function SchoolStudentsPage({
   visibleId,
@@ -9,80 +13,63 @@ export default async function SchoolStudentsPage({
   visibleId: string;
   role: ImplementerRole;
 }) {
-  const students = await db.student.findMany({
-    where: {
-      archivedAt: null,
-      school: {
-        visibleId,
-      },
-    },
-    include: {
+  const rows = await db.query.student.findMany({
+    where: (s, { and, isNull, inArray }) =>
+      and(
+        isNull(s.archivedAt),
+        inArray(
+          s.schoolId,
+          db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
+        ),
+      ),
+    with: {
       clinicalCases: {
-        select: {
-          id: true,
-          _count: {
-            select: { sessions: true },
-          },
-        },
+        columns: { id: true },
+        extras: (c) => ({
+          sessionsCount: countOf(clinicalSessionAttendance.caseId, c.id).as("sessions_count"),
+        }),
       },
       studentAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-            },
-          },
+        with: {
+          session: { with: { session: true } },
           group: true,
         },
       },
       assignedGroup: {
-        select: {
-          id: true,
-          groupName: true,
-          leader: {
-            select: {
-              id: true,
-              fellowName: true,
-            },
-          },
-        },
+        columns: { id: true, groupName: true },
+        with: { leader: { columns: { id: true, fellowName: true } } },
       },
       school: {
-        include: {
-          interventionSessions: {
-            include: {
-              session: true,
-            },
-          },
-        },
+        with: { interventionSessions: { with: { session: true } } },
       },
       studentGroupTransferTrail: {
-        select: {
+        columns: {
           id: true,
           createdAt: true,
           updatedAt: true,
           studentId: true,
           currentGroupId: true,
           fromGroupId: true,
+        },
+        with: {
           fromGroup: {
-            select: {
-              id: true,
-              groupName: true,
-              leader: {
-                select: {
-                  id: true,
-                  fellowName: true,
-                },
-              },
-            },
+            columns: { id: true, groupName: true },
+            with: { leader: { columns: { id: true, fellowName: true } } },
           },
         },
       },
     },
-    orderBy: {
-      updatedAt: "desc",
-    },
+    orderBy: (s, { desc }) => desc(s.updatedAt),
   });
+
+  // Prisma-shaped `_count` until the student components move off `Prisma.*GetPayload` types.
+  const students = rows.map((s) => ({
+    ...s,
+    clinicalCases: s.clinicalCases.map(({ sessionsCount, ...c }) => ({
+      ...c,
+      _count: { sessions: sessionsCount },
+    })),
+  }));
 
   return <StudentsDatatable students={students} role={role} />;
 }
