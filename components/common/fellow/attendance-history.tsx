@@ -1,6 +1,13 @@
 "use client";
 
-import { Prisma } from "@prisma/client";
+import type {
+  fellowAttendance,
+  interventionGroup,
+  interventionSession,
+  payoutStatements,
+  school,
+  sessionName,
+} from "#/db/schema";
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import { format } from "date-fns";
 import parsePhoneNumberFromString from "libphonenumber-js";
@@ -20,7 +27,18 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 
-import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
+// A fellow attendance with the session, group and payout rows the school fellows page and
+// `loadFellowsData` attach.
+export type FellowAttendanceHistoryRow = typeof fellowAttendance.$inferSelect & {
+  session:
+    | (typeof interventionSession.$inferSelect & {
+        session: typeof sessionName.$inferSelect | null;
+        school: typeof school.$inferSelect | null;
+      })
+    | null;
+  group: typeof interventionGroup.$inferSelect | null;
+  PayoutStatements: (typeof payoutStatements.$inferSelect)[];
+};
 
 export default function AttendanceHistory({
   attendances,
@@ -33,18 +51,7 @@ export default function AttendanceHistory({
   children: React.ReactNode;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  attendances: FellowAttendanceGetPayload<{
-    include: {
-      session: {
-        include: {
-          session: true;
-          school: true;
-        };
-      };
-      group: true;
-      PayoutStatements: true;
-    };
-  }>[];
+  attendances: FellowAttendanceHistoryRow[];
   fellow: SchoolFellowTableData | MainFellowTableData | null;
   columnVisibilityState?: VisibilityState;
 }) {
@@ -78,20 +85,7 @@ export default function AttendanceHistory({
   );
 }
 
-const columns: ColumnDef<
-  FellowAttendanceGetPayload<{
-    include: {
-      session: {
-        include: {
-          session: true;
-          school: true;
-        };
-      };
-      group: true;
-      PayoutStatements: true;
-    };
-  }>
->[] = [
+const columns: ColumnDef<FellowAttendanceHistoryRow>[] = [
   {
     id: "Date of attendance",
     header: "Date of attendance",

@@ -1,6 +1,12 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type {
+  fellow,
+  interventionSession,
+  school as schoolTable,
+  sessionName,
+  supervisor,
+} from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
 import { useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -20,20 +26,12 @@ export default function GroupsDataTable({
   role,
 }: {
   data: SchoolGroupDataTableData[];
-  school: Prisma.SchoolGetPayload<{
-    include: {
-      interventionSessions: {
-        include: {
-          session: true;
-        };
-      };
-    };
-  }>;
-  supervisors?: Prisma.SupervisorGetPayload<{
-    include: {
-      fellows: true;
-    };
-  }>[];
+  school: typeof schoolTable.$inferSelect & {
+    interventionSessions: (typeof interventionSession.$inferSelect & {
+      session: typeof sessionName.$inferSelect | null;
+    })[];
+  };
+  supervisors?: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
   role: ImplementerRole;
 }) {
   const [selectedGroup, setSelectedGroup] = useState<SchoolGroupDataTableData>();

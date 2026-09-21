@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { hub, school } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
 import { Check, ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
@@ -21,17 +21,9 @@ import { fetchImplementerSchools } from "#/lib/actions/implementer";
 import { fetchHubSchools } from "#/lib/actions/school";
 import { cn } from "#/lib/utils";
 
-type School = Prisma.SchoolGetPayload<{
-  select: {
-    visibleId: true;
-    schoolName: true;
-    hub: {
-      select: {
-        hubName: true;
-      };
-    };
-  };
-}>;
+type School = Pick<typeof school.$inferSelect, "visibleId" | "schoolName"> & {
+  hub: Pick<typeof hub.$inferSelect, "hubName"> | null;
+};
 
 export default function SchoolsBreadcrumb() {
   const { data: session } = useSession();

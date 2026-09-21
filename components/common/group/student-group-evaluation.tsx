@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { interventionGroupReport, interventionSession, sessionName } from "#/db/schema";
 import { addDays, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -64,16 +64,12 @@ export default function StudentGroupEvaluation({
   groupId: string;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  evaluations: Prisma.InterventionGroupReportGetPayload<{
-    include: {
-      session: true;
-    };
-  }>[];
-  sessions: Prisma.InterventionSessionGetPayload<{
-    include: {
-      session: true;
-    };
-  }>[];
+  evaluations: (typeof interventionGroupReport.$inferSelect & {
+    session: typeof interventionSession.$inferSelect | null;
+  })[];
+  sessions: (typeof interventionSession.$inferSelect & {
+    session: typeof sessionName.$inferSelect | null;
+  })[];
   mode: "view" | "add";
   children: React.ReactNode;
 }) {
@@ -141,11 +137,9 @@ export default function StudentGroupEvaluation({
       return b.session.sessionDate.getTime() - a.session.sessionDate.getTime();
     })[0];
   const [existingEvaluation, setExistingEvaluation] = useState<
-    | Prisma.InterventionGroupReportGetPayload<{
-        include: {
-          session: true;
-        };
-      }>
+    | (typeof interventionGroupReport.$inferSelect & {
+        session: typeof interventionSession.$inferSelect | null;
+      })
     | undefined
   >(_evaluation);
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);

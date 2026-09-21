@@ -1,6 +1,5 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { type Dispatch, type SetStateAction, useEffect } from "react";
@@ -82,18 +81,7 @@ export default function AttendanceHistory({
 const columns = (
   markAttendance: Dispatch<SetStateAction<boolean>>,
   setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>,
-): ColumnDef<
-  Prisma.StudentAttendanceGetPayload<{
-    include: {
-      session: {
-        include: {
-          session: true;
-        };
-      };
-      group: true;
-    };
-  }>
->[] => [
+): ColumnDef<SchoolStudentTableData["studentAttendances"][number]>[] => [
   {
     id: "Date of attendance",
     header: "Date of attendance",

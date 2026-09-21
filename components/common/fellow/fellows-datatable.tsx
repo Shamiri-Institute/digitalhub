@@ -1,18 +1,18 @@
 "use client";
 
-import { Prisma } from "@prisma/client";
+import type { fellow, supervisor } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
 import { useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
-import AttendanceHistory from "#/components/common/fellow/attendance-history";
+import AttendanceHistory, {
+  type FellowAttendanceHistoryRow,
+} from "#/components/common/fellow/attendance-history";
 import { columns, type SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
-
-import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
 export default function FellowsDatatable({
   fellows,
@@ -22,26 +22,11 @@ export default function FellowsDatatable({
   attendances,
 }: {
   fellows: SchoolFellowTableData[];
-  supervisors: Prisma.SupervisorGetPayload<{
-    include: {
-      fellows: true;
-    };
-  }>[];
+  supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
   schoolId: string;
   role: ImplementerRole;
   hideActions?: boolean;
-  attendances: FellowAttendanceGetPayload<{
-    include: {
-      session: {
-        include: {
-          session: true;
-          school: true;
-        };
-      };
-      group: true;
-      PayoutStatements: true;
-    };
-  }>[];
+  attendances: FellowAttendanceHistoryRow[];
 }) {
   const [selectedFellow, setSelectedFellow] = useState<SchoolFellowTableData | undefined>();
   const [detailsDialog, setDetailsDialog] = useState(false);

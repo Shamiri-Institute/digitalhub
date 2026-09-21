@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import type { ImplementerRole } from "#/db/enums";
 import type { InterventionSessionRating } from "#/db/types";
 import { addDays, addHours, differenceInSeconds, format } from "date-fns";
@@ -70,22 +70,7 @@ export default function SessionRatings({
   children: React.ReactNode;
   supervisorId?: string;
   role: ImplementerRole;
-  supervisors?: Prisma.SupervisorGetPayload<{
-    include: {
-      supervisorAttendances: {
-        include: {
-          session: true;
-        };
-      };
-      fellows: {
-        include: {
-          fellowAttendances: true;
-          groups: true;
-        };
-      };
-      assignedSchools: true;
-    };
-  }>[];
+  supervisors?: ScheduleSupervisor[];
 }) {
   const { refresh } = useContext(SessionsContext);
   const sessionRatings = selectedSession.sessionRatings;

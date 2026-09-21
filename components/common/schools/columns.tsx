@@ -1,7 +1,15 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import type { ImplementerRole } from "#/db/enums";
+import type {
+  interventionGroup,
+  interventionSession,
+  interventionSessionRating,
+  school,
+  sessionName,
+  student,
+  supervisor,
+} from "#/db/schema";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
@@ -10,27 +18,18 @@ import SchoolTableDropdown from "#/components/common/schools/school-table-dropdo
 import { Badge } from "#/components/ui/badge";
 import { sessionDisplayName } from "#/lib/utils";
 
-export type SchoolsTableData = Prisma.SchoolGetPayload<{
-  include: {
-    assignedSupervisor: true;
-    interventionSessions: {
-      include: {
-        sessionRatings: true;
-        session: true;
-      };
-    };
-    students: {
-      include: {
-        assignedGroup: true;
-        _count: {
-          select: {
-            clinicalCases: true;
-          };
-        };
-      };
-    };
-  };
-}>;
+// What `fetchSchoolData`, `fetchAdminHubs` and `getFellowGroupsAndHubData` load per school.
+export type SchoolsTableData = typeof school.$inferSelect & {
+  assignedSupervisor: typeof supervisor.$inferSelect | null;
+  interventionSessions: (typeof interventionSession.$inferSelect & {
+    sessionRatings: (typeof interventionSessionRating.$inferSelect)[];
+    session: typeof sessionName.$inferSelect | null;
+  })[];
+  students: (typeof student.$inferSelect & {
+    assignedGroup: typeof interventionGroup.$inferSelect | null;
+    _count: { clinicalCases: number };
+  })[];
+};
 
 export const columns = ({
   role,

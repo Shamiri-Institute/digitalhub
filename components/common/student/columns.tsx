@@ -1,7 +1,16 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import type { ImplementerRole } from "#/db/enums";
+import type {
+  fellow,
+  interventionGroup,
+  interventionSession,
+  school,
+  sessionName,
+  student,
+  studentAttendance,
+  studentGroupTransferTrail,
+} from "#/db/schema";
 import type { InterventionSession } from "#/db/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -13,71 +22,32 @@ import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { wrapColumnHeader } from "#/lib/utils";
 
-export type SchoolStudentTableData = Prisma.StudentGetPayload<{
-  include: {
-    clinicalCases: {
-      select: {
-        id: true;
-        _count: {
-          select: { sessions: true };
-        };
-      };
+type GroupSummary = Pick<typeof interventionGroup.$inferSelect, "id" | "groupName"> & {
+  leader: Pick<typeof fellow.$inferSelect, "id" | "fellowName">;
+};
+
+// The row shape `SchoolStudentsPage` builds for this table.
+export type SchoolStudentTableData = typeof student.$inferSelect & {
+  clinicalCases: { id: string; _count: { sessions: number } }[];
+  studentAttendances: (typeof studentAttendance.$inferSelect & {
+    session: typeof interventionSession.$inferSelect & {
+      session: typeof sessionName.$inferSelect | null;
     };
-    studentAttendances: {
-      include: {
-        session: {
-          include: {
-            session: true;
-          };
-        };
-        group: true;
-      };
-    };
-    assignedGroup: {
-      select: {
-        id: true;
-        groupName: true;
-        leader: {
-          select: {
-            id: true;
-            fellowName: true;
-          };
-        };
-      };
-    };
-    school: {
-      include: {
-        interventionSessions: {
-          include: {
-            session: true;
-          };
-        };
-      };
-    };
-    studentGroupTransferTrail: {
-      select: {
-        id: true;
-        createdAt: true;
-        updatedAt: true;
-        studentId: true;
-        currentGroupId: true;
-        fromGroupId: true;
-        fromGroup: {
-          select: {
-            id: true;
-            groupName: true;
-            leader: {
-              select: {
-                id: true;
-                fellowName: true;
-              };
-            };
-          };
-        };
-      };
-    };
-  };
-}>;
+    group: typeof interventionGroup.$inferSelect | null;
+  })[];
+  assignedGroup: GroupSummary | null;
+  school:
+    | (typeof school.$inferSelect & {
+        interventionSessions: (typeof interventionSession.$inferSelect & {
+          session: typeof sessionName.$inferSelect | null;
+        })[];
+      })
+    | null;
+  studentGroupTransferTrail: (Pick<
+    typeof studentGroupTransferTrail.$inferSelect,
+    "id" | "createdAt" | "updatedAt" | "studentId" | "currentGroupId" | "fromGroupId"
+  > & { fromGroup: GroupSummary | null })[];
+};
 
 export const columns = (state: {
   setEditDialog: Dispatch<SetStateAction<boolean>>;

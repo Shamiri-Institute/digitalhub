@@ -1,7 +1,13 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import type { ImplementerRole } from "#/db/enums";
+import type {
+  fellow,
+  interventionSession,
+  school,
+  supervisor,
+  supervisorAttendance,
+} from "#/db/schema";
 import type { InterventionSession } from "#/db/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
@@ -17,17 +23,14 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 
-export type SupervisorsData = Prisma.SupervisorGetPayload<{
-  include: {
-    assignedSchools: true;
-    fellows: true;
-    supervisorAttendances: {
-      include: {
-        session: true;
-      };
-    };
-  };
-}>;
+// The row shape `SchoolSupervisorsPage` loads.
+export type SupervisorsData = typeof supervisor.$inferSelect & {
+  assignedSchools: (typeof school.$inferSelect)[];
+  fellows: (typeof fellow.$inferSelect)[];
+  supervisorAttendances: (typeof supervisorAttendance.$inferSelect & {
+    session: typeof interventionSession.$inferSelect;
+  })[];
+};
 
 export const columns = (state: {
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;

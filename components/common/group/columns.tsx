@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { interventionGroupReport, interventionSession, student } from "#/db/schema";
 import type { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Dispatch, SetStateAction } from "react";
@@ -20,20 +20,10 @@ export type SchoolGroupDataTableData = {
   projectId: string;
   archivedAt: string;
   groupRating: number | null;
-  students: Prisma.StudentGetPayload<{
-    include: {
-      _count: {
-        select: {
-          clinicalCases: true;
-        };
-      };
-    };
-  }>[];
-  reports: Prisma.InterventionGroupReportGetPayload<{
-    include: {
-      session: true;
-    };
-  }>[];
+  students: (typeof student.$inferSelect & { _count: { clinicalCases: number } })[];
+  reports: (typeof interventionGroupReport.$inferSelect & {
+    session: typeof interventionSession.$inferSelect | null;
+  })[];
 };
 
 export const columns = (state: {
