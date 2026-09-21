@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { type SQL, sql } from "drizzle-orm";
 
 /**
  * The clinical dashboards exist for two roles with different data scope:
@@ -14,16 +14,16 @@ export type ClinicalScope = { hubId: string | null } | { projectId: string };
  * to the given scope. Hub scope filters the column directly; project scope
  * joins up to hubs and filters on the project.
  */
-export function hubScope(scope: ClinicalScope, alias: string) {
-  const col = Prisma.raw(`${alias}.hub_id`);
+export function hubScope(scope: ClinicalScope, alias: string): { join: SQL; where: SQL } {
+  const col = sql.raw(`${alias}.hub_id`);
   if ("projectId" in scope) {
     return {
-      join: Prisma.sql`JOIN hubs h ON ${col} = h.id`,
-      where: Prisma.sql`h."project_id" = ${scope.projectId}`,
+      join: sql`JOIN hubs h ON ${col} = h.id`,
+      where: sql`h."project_id" = ${scope.projectId}`,
     };
   }
   return {
-    join: Prisma.empty,
-    where: Prisma.sql`${col} = ${scope.hubId}`,
+    join: sql.empty(),
+    where: sql`${col} = ${scope.hubId}`,
   };
 }

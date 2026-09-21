@@ -1,13 +1,15 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import { currentClinicalLead } from "#/app/auth";
+import { db } from "#/db/client";
+import { hub } from "#/db/schema";
 import {
   type CaseNotesResult,
   fetchClinicalCasesChartData,
   fetchClinicalCasesList,
   type HubClinicalCases,
 } from "#/lib/actions/clinical/cases";
-import { db } from "#/lib/db";
 
 export type { CaseNotesResult, HubClinicalCases };
 
@@ -39,57 +41,33 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
 export async function getSchoolsInClinicalLeadHub() {
   const clinicalLead = await currentClinicalLead();
   const projectId = clinicalLead?.profile.assignedHub?.projectId;
-  if (!projectId) {
+  if (!clinicalLead || !projectId) {
     throw new Error("Hub has no project");
   }
+  const hubId = clinicalLead.profile.assignedHubId;
+  const projectHubIds = db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId));
 
   const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all([
-    db.school.findMany({
-      where: {
-        hubId: clinicalLead?.profile.assignedHubId,
-      },
-      include: {
+    db.query.school.findMany({
+      where: (s, { eq }) => eq(s.hubId, hubId),
+      with: {
         students: true,
         interventionSessions: {
-          select: {
-            id: true,
-            session: {
-              select: {
-                sessionName: true,
-                sessionLabel: true,
-              },
-            },
-          },
+          columns: { id: true },
+          with: { session: { columns: { sessionName: true, sessionLabel: true } } },
         },
       },
     }),
-    db.supervisor.findMany({
-      where: {
-        hubId: clinicalLead?.profile.assignedHubId,
-      },
+    db.query.supervisor.findMany({
+      where: (s, { eq }) => eq(s.hubId, hubId),
     }),
-    db.fellow.findMany({
-      where: {
-        hub: {
-          projectId,
-        },
-      },
-      include: {
-        hub: {
-          select: {
-            id: true,
-          },
-        },
-      },
+    db.query.fellow.findMany({
+      where: (f, { inArray }) => inArray(f.hubId, projectHubIds),
+      with: { hub: { columns: { id: true } } },
     }),
-    db.hub.findMany({
-      where: {
-        projectId,
-      },
-      select: {
-        id: true,
-        hubName: true,
-      },
+    db.query.hub.findMany({
+      where: (h, { eq }) => eq(h.projectId, projectId),
+      columns: { id: true, hubName: true },
     }),
   ]);
 
@@ -97,7 +75,7 @@ export async function getSchoolsInClinicalLeadHub() {
     schools,
     supervisorsInHub,
     fellowsInProject,
-    currentClinicalLeadId: clinicalLead?.profile.id,
+    currentClinicalLeadId: clinicalLead.profile.id,
     hubs,
   };
 }
@@ -108,31 +86,23 @@ export type ClinicalLeadCasesType = Awaited<
 
 export async function getClinicalCasesCreatedByClinicalLead() {
   const clinicalLead = await currentClinicalLead();
+  if (!clinicalLead) throw new Error("Unauthorized");
+  const clinicalLeadId = clinicalLead.profile.id;
 
-  const cases = await db.clinicalScreeningInfo.findMany({
-    where: {
-      clinicalLeadId: clinicalLead?.profile.id,
-    },
-    include: {
+  const cases = await db.query.clinicalScreeningInfo.findMany({
+    where: (c, { eq }) => eq(c.clinicalLeadId, clinicalLeadId),
+    with: {
       student: {
-        include: {
-          school: {
-            select: {
-              schoolName: true,
-            },
-          },
-          assignedGroup: {
-            select: {
-              groupName: true,
-            },
-          },
+        with: {
+          school: { columns: { schoolName: true } },
+          assignedGroup: { columns: { groupName: true } },
         },
       },
       sessions: true,
       clinicalCaseNotes: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: { riskLevel: true },
+        orderBy: (n, { desc }) => desc(n.createdAt),
+        limit: 1,
+        columns: { riskLevel: true },
       },
       followUptreatmentPlan: true,
     },
@@ -159,7 +129,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       risk: riskLevel,
       age,
       referralFrom: caseInfo.referredFrom || caseInfo.initialReferredFromSpecified || "Unknown",
-      hubId: clinicalLead?.profile.assignedHubId,
+      hubId: clinicalLead.profile.assignedHubId,
       flagged: caseInfo.flagged,
       flaggedReason: caseInfo.flaggedReason,
       sessionAttendanceHistory: formattedSessions,

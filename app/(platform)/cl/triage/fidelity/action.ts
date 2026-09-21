@@ -1,7 +1,7 @@
 "use server";
 
 import { currentClinicalLead } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 export type FidelityRow = Awaited<ReturnType<typeof getTriageFidelityData>>[number];
 
@@ -11,27 +11,21 @@ export async function getTriageFidelityData() {
 
   const hubId = clinicalLead.profile.assignedHubId;
 
-  const fellows = await db.fellow.findMany({
-    where: { hubId },
-    select: {
-      id: true,
-      fellowName: true,
-      supervisor: { select: { supervisorName: true } },
+  const fellows = await db.query.fellow.findMany({
+    where: (f, { eq }) => eq(f.hubId, hubId),
+    columns: { id: true, fellowName: true },
+    with: {
+      supervisor: { columns: { supervisorName: true } },
       fellowAttendances: {
-        where: { attended: true },
-        select: { sessionId: true },
+        where: (a, { eq }) => eq(a.attended, true),
+        columns: { sessionId: true },
       },
       triageEvents: {
-        select: {
-          id: true,
-          riskScreenOutcome: true,
-          actionTaken: true,
-        },
+        columns: { id: true, riskScreenOutcome: true, actionTaken: true },
       },
       groups: {
-        select: {
-          school: { select: { schoolName: true } },
-        },
+        columns: {},
+        with: { school: { columns: { schoolName: true } } },
       },
     },
   });

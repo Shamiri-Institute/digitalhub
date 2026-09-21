@@ -1,42 +1,58 @@
 "use server";
 
-import { ImplementerRole } from "#/db/enums";
+import { count, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentPersonnel } from "#/app/auth";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import {
+  clinicalCaseNotes,
+  clinicalCaseTermination,
+  clinicalCaseTransferTrail,
+  clinicalExpertCaseNotes,
+  clinicalFollowUpTreatmentPlan,
+  clinicalFollowUpTreatmentPlanAuditTrail,
+  clinicalScreeningInfo,
+  clinicalSessionAttendance,
+  hub,
+  type JsonValue,
+  student,
+} from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
 import { generateStudentVisibleID } from "#/lib/utils";
 
 export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
+export type SchoolsInHubData = Awaited<ReturnType<typeof getSchoolsInHub>>;
+
+/** Throws like Prisma's `update` did when the row does not exist. */
+function requireUpdated<T>(rows: T[], what: string): T {
+  const row = rows[0];
+  if (!row) {
+    throw new Error(`${what} not found`);
+  }
+  return row;
+}
 
 export async function getClinicalCases() {
   const supervisor = await currentSupervisor();
+  if (!supervisor) throw new Error("Unauthorized");
+  const supervisorId = supervisor.profile.id;
 
-  const cases = await db.clinicalScreeningInfo.findMany({
-    where: {
-      currentSupervisorId: supervisor?.profile?.id,
-    },
-    include: {
+  const cases = await db.query.clinicalScreeningInfo.findMany({
+    where: (c, { eq }) => eq(c.currentSupervisorId, supervisorId),
+    with: {
       student: {
-        include: {
-          school: {
-            select: {
-              schoolName: true,
-            },
-          },
-          assignedGroup: {
-            select: {
-              groupName: true,
-            },
-          },
+        with: {
+          school: { columns: { schoolName: true } },
+          assignedGroup: { columns: { groupName: true } },
         },
       },
       sessions: true,
       clinicalCaseNotes: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: { riskLevel: true },
+        orderBy: (n, { desc }) => desc(n.createdAt),
+        limit: 1,
+        columns: { riskLevel: true },
       },
       followUptreatmentPlan: true,
     },
@@ -63,7 +79,7 @@ export async function getClinicalCases() {
       risk: riskLevel,
       age,
       referralFrom: caseInfo.referredFrom || caseInfo.initialReferredFromSpecified || "Unknown",
-      hubId: supervisor?.profile?.hubId,
+      hubId: supervisor.profile.hubId,
       flagged: caseInfo.flagged,
       flaggedReason: caseInfo.flaggedReason,
       sessionAttendanceHistory: formattedSessions,
@@ -87,16 +103,13 @@ export async function getClinicalCases() {
 
 export async function getClinicalCasesStats() {
   const supervisor = await currentSupervisor();
+  if (!supervisor) throw new Error("Unauthorized");
 
-  const caseStats = await db.clinicalScreeningInfo.groupBy({
-    by: ["caseStatus"],
-    where: {
-      currentSupervisorId: supervisor?.profile?.id,
-    },
-    _count: {
-      id: true,
-    },
-  });
+  const caseStats = await db
+    .select({ caseStatus: clinicalScreeningInfo.caseStatus, count: count() })
+    .from(clinicalScreeningInfo)
+    .where(eq(clinicalScreeningInfo.currentSupervisorId, supervisor.profile.id))
+    .groupBy(clinicalScreeningInfo.caseStatus);
 
   const stats = caseStats.reduce<{
     totalCases: number;
@@ -114,7 +127,7 @@ export async function getClinicalCasesStats() {
               ? "activeCases"
               : null;
       if (key) {
-        acc[key] = stat._count.id;
+        acc[key] = stat.count;
       }
       return acc;
     },
@@ -146,18 +159,11 @@ export async function supSubmitConsultClinicalexpert(data: {
   comment: string;
 }) {
   try {
-    await db.clinicalScreeningInfo.update({
-      where: {
-        id: data.caseId,
-      },
-      data: {
-        consultingClinicalExpert: {
-          create: {
-            comment: data.comment,
-            name: data.name,
-          },
-        },
-      },
+    // Prisma's nested create; the foreign key rejects a missing case the way the update did.
+    await db.insert(clinicalExpertCaseNotes).values({
+      caseId: data.caseId,
+      comment: data.comment,
+      name: data.name,
     });
     revalidatePath("/sc/clinical");
     return { success: true };
@@ -182,14 +188,14 @@ export async function updateClinicalSessionAttendance(
   }
 
   try {
-    await db.clinicalSessionAttendance.update({
-      where: {
-        id: sessionId,
-      },
-      data: {
-        attendanceStatus: attendanceStatus,
-      },
-    });
+    requireUpdated(
+      await db
+        .update(clinicalSessionAttendance)
+        .set({ attendanceStatus })
+        .where(eq(clinicalSessionAttendance.id, sessionId))
+        .returning({ id: clinicalSessionAttendance.id }),
+      "Clinical session attendance",
+    );
 
     if (role === ImplementerRole.CLINICAL_LEAD) {
       revalidatePath("/cl/clinical");
@@ -223,31 +229,34 @@ export async function referClinicalCaseToSupervisor(data: {
   supervisorName: string;
 }) {
   try {
-    await db.clinicalScreeningInfo.update({
-      where: {
-        id: data.caseId,
-      },
-      data: {
-        referredFrom: data.referredFrom,
-        referredFromSpecified: data.supervisorName,
-        referredTo: data.referredTo,
-        referredToSpecified: data.referredToPerson ?? data.externalCare,
-        referralNotes: data.referralNotes,
-        referredToSupervisorId: data.referredToPerson ?? null,
-        referralStatus: "Pending",
-        referralReason: data.referralReason,
-        caseTransferTrail: {
-          create: {
-            from: data.referredFrom,
-            fromRole: data.referredFromSpecified,
-            to: data.supervisorName,
-            toRole: data.referredToPerson ?? data.referredTo,
-            date: new Date(),
+    await db.transaction(async (tx) => {
+      requireUpdated(
+        await tx
+          .update(clinicalScreeningInfo)
+          .set({
+            referredFrom: data.referredFrom,
+            referredFromSpecified: data.supervisorName,
+            referredTo: data.referredTo,
+            referredToSpecified: data.referredToPerson ?? data.externalCare,
+            referralNotes: data.referralNotes,
+            referredToSupervisorId: data.referredToPerson ?? null,
             referralStatus: "Pending",
-          },
-        },
-        acceptCase: false,
-      },
+            referralReason: data.referralReason,
+            acceptCase: false,
+          })
+          .where(eq(clinicalScreeningInfo.id, data.caseId))
+          .returning({ id: clinicalScreeningInfo.id }),
+        "Clinical case",
+      );
+      await tx.insert(clinicalCaseTransferTrail).values({
+        caseId: data.caseId,
+        from: data.referredFrom,
+        fromRole: data.referredFromSpecified,
+        to: data.supervisorName,
+        toRole: data.referredToPerson ?? data.referredTo,
+        date: new Date(),
+        referralStatus: "Pending",
+      });
     });
 
     revalidatePath("/screenings");
@@ -261,13 +270,10 @@ export async function referClinicalCaseToSupervisor(data: {
 export async function getSupervisorsInHub() {
   try {
     const supervisor = await currentSupervisor();
-    const supervisors = await db.supervisor.findMany({
-      where: {
-        hubId: supervisor?.profile?.hubId,
-        id: {
-          not: supervisor?.profile?.id,
-        },
-      },
+    if (!supervisor?.profile.hubId) throw new Error("Unauthorized");
+    const { hubId, id: supervisorId } = supervisor.profile;
+    const supervisors = await db.query.supervisor.findMany({
+      where: (s, { and, eq, ne }) => and(eq(s.hubId, hubId), ne(s.id, supervisorId)),
     });
     const allSupervisors =
       supervisors.map((supervisor) => ({
@@ -276,8 +282,8 @@ export async function getSupervisorsInHub() {
       })) || [];
     return {
       currentSupervisor: {
-        id: supervisor?.profile?.id,
-        name: supervisor?.profile?.supervisorName,
+        id: supervisor.profile.id,
+        name: supervisor.profile.supervisorName,
       },
       allSupervisors: allSupervisors,
     };
@@ -293,57 +299,33 @@ export async function getSupervisorsInHub() {
 export async function getSchoolsInHub() {
   const supervisor = await currentSupervisor();
   const projectId = supervisor?.profile?.hub?.projectId;
-  if (!projectId) {
+  const hubId = supervisor?.profile.hubId;
+  if (!supervisor || !projectId || !hubId) {
     throw new Error("Assigned hub has no project");
   }
+  const projectHubIds = db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId));
 
   const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all([
-    db.school.findMany({
-      where: {
-        hubId: supervisor?.profile?.hubId,
-      },
-      include: {
+    db.query.school.findMany({
+      where: (s, { eq }) => eq(s.hubId, hubId),
+      with: {
         students: true,
         interventionSessions: {
-          select: {
-            id: true,
-            session: {
-              select: {
-                sessionName: true,
-                sessionLabel: true,
-              },
-            },
-          },
+          columns: { id: true },
+          with: { session: { columns: { sessionName: true, sessionLabel: true } } },
         },
       },
     }),
-    db.supervisor.findMany({
-      where: {
-        hubId: supervisor?.profile?.hubId,
-      },
+    db.query.supervisor.findMany({
+      where: (s, { eq }) => eq(s.hubId, hubId),
     }),
-    db.fellow.findMany({
-      where: {
-        hub: {
-          projectId,
-        },
-      },
-      include: {
-        hub: {
-          select: {
-            id: true,
-          },
-        },
-      },
+    db.query.fellow.findMany({
+      where: (f, { inArray }) => inArray(f.hubId, projectHubIds),
+      with: { hub: { columns: { id: true } } },
     }),
-    db.hub.findMany({
-      where: {
-        projectId,
-      },
-      select: {
-        id: true,
-        hubName: true,
-      },
+    db.query.hub.findMany({
+      where: (h, { eq }) => eq(h.projectId, projectId),
+      columns: { id: true, hubName: true },
     }),
   ]);
 
@@ -351,7 +333,7 @@ export async function getSchoolsInHub() {
     schools,
     supervisorsInHub,
     fellowsInProject,
-    currentSupervisorId: supervisor?.profile?.id,
+    currentSupervisorId: supervisor.profile.id,
     hubs,
   };
 }
@@ -384,13 +366,14 @@ export async function createStudentClinicalCase(data: {
   }
 
   try {
-    await db.$transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       let studentId = data.studentId;
 
       if (data.newStudent) {
-        const studentCount = await tx.student.count();
-        const student = await tx.student.create({
-          data: {
+        const studentCount = await tx.$count(student);
+        const [created] = await tx
+          .insert(student)
+          .values({
             id: objectId("stu"),
             visibleId: generateStudentVisibleID("CLN", studentCount),
             studentName: data.newStudent.studentName,
@@ -402,29 +385,27 @@ export async function createStudentClinicalCase(data: {
             form: Number.parseInt(data.newStudent.classForm, 10),
             stream: data.newStudent.stream,
             isClinicalCase: true,
-          },
-        });
-        studentId = student.id;
+          })
+          .returning({ id: student.id });
+        studentId = created?.id;
       }
 
       if (!studentId) {
         throw new Error("No student available to attach the clinical case to");
       }
 
-      await tx.clinicalScreeningInfo.create({
-        data: {
-          studentId,
-          schoolId: data.schoolId,
-          currentSupervisorId: data.role === "SUPERVISOR" ? data.creatorId : null,
-          pseudonym: data.pseudonym,
-          initialReferredFromSpecified: data.initialContact,
-          initialReferredFrom: data.fellowId ?? data.supervisorId,
-          flagged: false,
-          riskStatus: "No",
-          caseStatus: "Active",
-          sessionWhenCaseIsFlaggedId: data.sessionId,
-          clinicalLeadId: data.role === "CLINICAL_LEAD" ? data.creatorId : null,
-        },
+      await tx.insert(clinicalScreeningInfo).values({
+        studentId,
+        schoolId: data.schoolId,
+        currentSupervisorId: data.role === "SUPERVISOR" ? data.creatorId : null,
+        pseudonym: data.pseudonym,
+        initialReferredFromSpecified: data.initialContact,
+        initialReferredFrom: data.fellowId ?? data.supervisorId,
+        flagged: false,
+        riskStatus: "No",
+        caseStatus: "Active",
+        sessionWhenCaseIsFlaggedId: data.sessionId,
+        clinicalLeadId: data.role === "CLINICAL_LEAD" ? data.creatorId : null,
       });
     });
 
@@ -449,6 +430,9 @@ type TreatmentPlanData = {
   interventionExplanation: string;
 };
 
+/** A row stored in a jsonb audit column; the driver JSON-serialises it (dates become strings). */
+const asJson = (value: unknown) => value as JsonValue;
+
 export async function updateTreatmentPlan(
   data: TreatmentPlanData & { beforeData: TreatmentPlanData },
 ) {
@@ -459,30 +443,30 @@ export async function updateTreatmentPlan(
       throw new Error("User not found");
     }
 
-    await db.$transaction(async (tx) => {
-      const treatmentPlan = await tx.clinicalFollowUpTreatmentPlan.update({
-        where: {
-          id: data.caseId,
-        },
-        data: {
-          currentORSScore: data.currentOrsScore,
-          plannedSessions: data.plannedSessions,
-          sessionFrequency: data.sessionFrequency,
-          plannedTreatmentIntervention: data.treatmentInterventions,
-          otherTreatmentIntervention: data.otherIntervention,
-          plannedTreatmentInterventionExplanation: data.interventionExplanation,
-          caseId: data.caseId,
-        },
-      });
+    await db.transaction(async (tx) => {
+      const treatmentPlan = requireUpdated(
+        await tx
+          .update(clinicalFollowUpTreatmentPlan)
+          .set({
+            currentORSScore: data.currentOrsScore,
+            plannedSessions: data.plannedSessions,
+            sessionFrequency: data.sessionFrequency,
+            plannedTreatmentIntervention: data.treatmentInterventions,
+            otherTreatmentIntervention: data.otherIntervention,
+            plannedTreatmentInterventionExplanation: data.interventionExplanation,
+            caseId: data.caseId,
+          })
+          .where(eq(clinicalFollowUpTreatmentPlan.id, data.caseId))
+          .returning(),
+        "Treatment plan",
+      );
 
-      await tx.clinicalFollowUpTreatmentPlanAuditTrail.create({
-        data: {
-          caseId: data.caseId,
-          action: "Update",
-          userId: userId,
-          afterData: treatmentPlan,
-          beforeData: data.beforeData,
-        },
+      await tx.insert(clinicalFollowUpTreatmentPlanAuditTrail).values({
+        caseId: data.caseId,
+        action: "Update",
+        userId: userId,
+        afterData: asJson(treatmentPlan),
+        beforeData: asJson(data.beforeData),
       });
     });
 
@@ -508,9 +492,10 @@ export async function createTreatmentPlan(
       throw new Error("You are not authorized to create a treatment plan");
     }
 
-    await db.$transaction(async (tx) => {
-      const treatmentPlan = await tx.clinicalFollowUpTreatmentPlan.create({
-        data: {
+    await db.transaction(async (tx) => {
+      const [treatmentPlan] = await tx
+        .insert(clinicalFollowUpTreatmentPlan)
+        .values({
           caseId: data.caseId,
           currentORSScore: data.currentOrsScore,
           plannedSessions: data.plannedSessions,
@@ -518,16 +503,14 @@ export async function createTreatmentPlan(
           plannedTreatmentIntervention: data.treatmentInterventions,
           plannedTreatmentInterventionExplanation: data.interventionExplanation,
           otherTreatmentIntervention: data.otherIntervention,
-        },
-      });
+        })
+        .returning();
 
-      await tx.clinicalFollowUpTreatmentPlanAuditTrail.create({
-        data: {
-          caseId: data.caseId,
-          action: "Create",
-          userId: userId,
-          afterData: treatmentPlan,
-        },
+      await tx.insert(clinicalFollowUpTreatmentPlanAuditTrail).values({
+        caseId: data.caseId,
+        action: "Create",
+        userId: userId,
+        afterData: asJson(treatmentPlan),
       });
     });
 
@@ -541,28 +524,30 @@ export async function createTreatmentPlan(
 
 export async function updateStudentInfo(data: EditStudentInfoFormValues) {
   try {
-    await db.$transaction(async (tx) => {
-      await tx.student.update({
-        where: {
-          id: data.studentId,
-        },
-        data: {
-          studentName: data.studentName,
-          gender: data.gender,
-          admissionNumber: data.admissionNumber,
-          form: Number.parseInt(data.classForm, 10),
-          stream: data.stream,
-        },
-      });
+    await db.transaction(async (tx) => {
+      requireUpdated(
+        await tx
+          .update(student)
+          .set({
+            studentName: data.studentName,
+            gender: data.gender,
+            admissionNumber: data.admissionNumber,
+            form: Number.parseInt(data.classForm, 10),
+            stream: data.stream,
+          })
+          .where(eq(student.id, data.studentId))
+          .returning({ id: student.id }),
+        "Student",
+      );
 
-      await tx.clinicalScreeningInfo.update({
-        where: {
-          id: data.caseId,
-        },
-        data: {
-          pseudonym: data.pseudonym,
-        },
-      });
+      requireUpdated(
+        await tx
+          .update(clinicalScreeningInfo)
+          .set({ pseudonym: data.pseudonym })
+          .where(eq(clinicalScreeningInfo.id, data.caseId))
+          .returning({ id: clinicalScreeningInfo.id }),
+        "Clinical case",
+      );
     });
 
     return {
@@ -596,12 +581,14 @@ export async function updateClinicalCaseGeneralPresentingIssue(data: {
             generalPresentingIssuesOtherSpecifiedEndpoint: data.otherIssues,
           };
 
-    await db.clinicalScreeningInfo.update({
-      where: {
-        id: data.caseId,
-      },
-      data: updateData,
-    });
+    requireUpdated(
+      await db
+        .update(clinicalScreeningInfo)
+        .set(updateData)
+        .where(eq(clinicalScreeningInfo.id, data.caseId))
+        .returning({ id: clinicalScreeningInfo.id }),
+      "Clinical case",
+    );
 
     revalidatePath("/sc/clinical");
     return { success: true };
@@ -626,12 +613,14 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
             emergencyPresentingIssuesEndpoint: data.presentingIssues,
           };
 
-    await db.clinicalScreeningInfo.update({
-      where: {
-        id: data.caseId,
-      },
-      data: updateData,
-    });
+    requireUpdated(
+      await db
+        .update(clinicalScreeningInfo)
+        .set(updateData)
+        .where(eq(clinicalScreeningInfo.id, data.caseId))
+        .returning({ id: clinicalScreeningInfo.id }),
+      "Clinical case",
+    );
 
     revalidatePath("/sc/clinical");
     return { success: true };
@@ -658,25 +647,23 @@ export async function terminateClinicalCase(data: {
       throw new Error("You are not authorized to terminate this case");
     }
 
-    await db.$transaction(async (tx) => {
-      await tx.clinicalScreeningInfo.update({
-        where: {
-          id: data.caseId,
-        },
-        data: {
-          caseStatus: "Terminated",
-        },
-      });
+    await db.transaction(async (tx) => {
+      requireUpdated(
+        await tx
+          .update(clinicalScreeningInfo)
+          .set({ caseStatus: "Terminated" })
+          .where(eq(clinicalScreeningInfo.id, data.caseId))
+          .returning({ id: clinicalScreeningInfo.id }),
+        "Clinical case",
+      );
 
-      await tx.clinicalCaseTermination.create({
-        data: {
-          caseId: data.caseId,
-          terminationDate: new Date(),
-          terminationReason: data.terminationReason,
-          terminationReasonExplanation: data.terminationReasonExplanation,
-          sessionId: data.sessionId,
-          createdBy: userId,
-        },
+      await tx.insert(clinicalCaseTermination).values({
+        caseId: data.caseId,
+        terminationDate: new Date(),
+        terminationReason: data.terminationReason,
+        terminationReasonExplanation: data.terminationReasonExplanation,
+        sessionId: data.sessionId,
+        createdBy: userId,
       });
     });
 
@@ -700,15 +687,19 @@ export async function unterminateClinicalCase(data: { caseId: string }) {
       throw new Error("You are not authorized to un-terminate this case");
     }
 
-    await db.$transaction(async (tx) => {
-      await tx.clinicalCaseTermination.deleteMany({
-        where: { caseId: data.caseId },
-      });
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(clinicalCaseTermination)
+        .where(eq(clinicalCaseTermination.caseId, data.caseId));
 
-      await tx.clinicalScreeningInfo.update({
-        where: { id: data.caseId },
-        data: { caseStatus: "Active" },
-      });
+      requireUpdated(
+        await tx
+          .update(clinicalScreeningInfo)
+          .set({ caseStatus: "Active" })
+          .where(eq(clinicalScreeningInfo.id, data.caseId))
+          .returning({ id: clinicalScreeningInfo.id }),
+        "Clinical case",
+      );
     });
 
     revalidatePath("/cl/clinical");
@@ -726,9 +717,9 @@ export async function getClinicalCaseNotes(caseId: string) {
     throw new Error("You are not authorized to view clinical case notes");
   }
 
-  return db.clinicalCaseNotes.findMany({
-    where: { caseId },
-    orderBy: { createdAt: "desc" },
+  return db.query.clinicalCaseNotes.findMany({
+    where: (n, { eq }) => eq(n.caseId, caseId),
+    orderBy: (n, { desc }) => desc(n.createdAt),
   });
 }
 
@@ -759,22 +750,20 @@ export async function createClinicalCaseNotes(data: {
       throw new Error("You are not authorized to create clinical case notes");
     }
 
-    await db.clinicalCaseNotes.create({
-      data: {
-        caseId: data.caseId,
-        sessionId: data.sessionId,
-        createdBy: userId,
-        presentingIssues: data.presentingIssues,
-        orsAssessment: data.orsAssessment,
-        riskLevel: data.riskLevel,
-        necessaryConditions: data.necessaryConditions,
-        treatmentInterventions: data.treatmentInterventions,
-        otherIntervention: data.otherIntervention,
-        interventionExplanation: data.interventionExplanation,
-        studentResponseExplanations: data.studentResponseExplanation,
-        followUpPlan: data.followUpPlan,
-        followUpPlanExplanation: data.followUpPlanExplanation,
-      },
+    await db.insert(clinicalCaseNotes).values({
+      caseId: data.caseId,
+      sessionId: data.sessionId,
+      createdBy: userId,
+      presentingIssues: data.presentingIssues,
+      orsAssessment: data.orsAssessment,
+      riskLevel: data.riskLevel,
+      necessaryConditions: data.necessaryConditions,
+      treatmentInterventions: data.treatmentInterventions,
+      otherIntervention: data.otherIntervention,
+      interventionExplanation: data.interventionExplanation,
+      studentResponseExplanations: data.studentResponseExplanation,
+      followUpPlan: data.followUpPlan,
+      followUpPlanExplanation: data.followUpPlanExplanation,
     });
 
     revalidatePath(`${role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical"}`);
@@ -806,21 +795,14 @@ export async function updateClinicalCaseAttendance(data: {
       throw new Error("You are not authorized to create clinical case notes");
     }
 
-    await db.clinicalScreeningInfo.update({
-      where: {
-        id: data.caseId,
-      },
-      data: {
-        sessions: {
-          create: {
-            date: data.dateOfSession,
-            session: data.session,
-            supervisorId: data.supervisorId,
-            clinicalLeadId: data.clinicalLeadId,
-            attendanceStatus: data.attendanceStatus,
-          },
-        },
-      },
+    // Prisma's nested create; the foreign key rejects a missing case the way the update did.
+    await db.insert(clinicalSessionAttendance).values({
+      caseId: data.caseId,
+      date: data.dateOfSession,
+      session: data.session,
+      supervisorId: data.supervisorId,
+      clinicalLeadId: data.clinicalLeadId,
+      attendanceStatus: data.attendanceStatus,
     });
 
     revalidatePath(`${role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical"}`);
@@ -842,12 +824,12 @@ export async function getClinicalLeads() {
       throw new Error("Assigned hub has no project");
     }
 
-    const clinicalLeads = await db.clinicalLead.findMany({
-      where: {
-        assignedHub: {
-          projectId,
-        },
-      },
+    const clinicalLeads = await db.query.clinicalLead.findMany({
+      where: (cl, { inArray }) =>
+        inArray(
+          cl.assignedHubId,
+          db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
+        ),
     });
     const clinicalLeadsWithSupervisor = clinicalLeads.map((lead) => ({
       name: lead.clinicalLeadName,
@@ -872,28 +854,31 @@ export async function referClinicalCaseToClinicalLead(data: {
   referredToPersonId: string;
 }) {
   try {
-    await db.clinicalScreeningInfo.update({
-      where: {
-        id: data.caseId,
-      },
-      data: {
-        clinicalLeadId: data.referredToPersonId,
-        referralNotes: data.referralNotes,
-        referralStatus: "Pending",
-        referralReason: data.referralReason,
-        referredTo: data.referredTo,
-        caseTransferTrail: {
-          create: {
-            from: data.referredFrom,
-            fromRole: data.referredFromSpecified,
-            to: data.referredToPerson,
-            toRole: data.referredToPersonId,
-            date: new Date(),
+    await db.transaction(async (tx) => {
+      requireUpdated(
+        await tx
+          .update(clinicalScreeningInfo)
+          .set({
+            clinicalLeadId: data.referredToPersonId,
+            referralNotes: data.referralNotes,
             referralStatus: "Pending",
-          },
-        },
-        acceptCase: false,
-      },
+            referralReason: data.referralReason,
+            referredTo: data.referredTo,
+            acceptCase: false,
+          })
+          .where(eq(clinicalScreeningInfo.id, data.caseId))
+          .returning({ id: clinicalScreeningInfo.id }),
+        "Clinical case",
+      );
+      await tx.insert(clinicalCaseTransferTrail).values({
+        caseId: data.caseId,
+        from: data.referredFrom,
+        fromRole: data.referredFromSpecified,
+        to: data.referredToPerson,
+        toRole: data.referredToPersonId,
+        date: new Date(),
+        referralStatus: "Pending",
+      });
     });
 
     revalidatePath("/screenings");
@@ -909,15 +894,12 @@ export async function getReferredCasesToSupervisor() {
   if (!supervisor) {
     throw new Error("Supervisor not found");
   }
+  const supervisorId = supervisor.profile.id;
 
-  const referredCases = await db.clinicalScreeningInfo.findMany({
-    where: {
-      referredToSupervisorId: supervisor?.profile.id,
-      acceptCase: false,
-    },
-    include: {
-      student: true,
-    },
+  const referredCases = await db.query.clinicalScreeningInfo.findMany({
+    where: (c, { and, eq }) =>
+      and(eq(c.referredToSupervisorId, supervisorId), eq(c.acceptCase, false)),
+    with: { student: true },
   });
 
   return referredCases;
@@ -925,14 +907,14 @@ export async function getReferredCasesToSupervisor() {
 
 export async function triggerCaseStatusToFollowup(data: { caseId: string }) {
   try {
-    await db.clinicalScreeningInfo.update({
-      where: {
-        id: data.caseId,
-      },
-      data: {
-        caseStatus: "FollowUp",
-      },
-    });
+    requireUpdated(
+      await db
+        .update(clinicalScreeningInfo)
+        .set({ caseStatus: "FollowUp" })
+        .where(eq(clinicalScreeningInfo.id, data.caseId))
+        .returning({ id: clinicalScreeningInfo.id }),
+      "Clinical case",
+    );
 
     revalidatePath("/sc/clinical");
     return { success: true };

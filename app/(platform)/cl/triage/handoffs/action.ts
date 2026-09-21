@@ -1,7 +1,7 @@
 "use server";
 
 import { currentClinicalLead } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 export type HandoffRow = Awaited<ReturnType<typeof getHandoffQualityData>>[number];
 
@@ -11,16 +11,13 @@ export async function getHandoffQualityData() {
 
   const hubId = clinicalLead.profile.assignedHubId;
 
-  const supervisors = await db.supervisor.findMany({
-    where: { hubId },
-    select: {
-      id: true,
-      supervisorName: true,
+  const supervisors = await db.query.supervisor.findMany({
+    where: (s, { eq }) => eq(s.hubId, hubId),
+    columns: { id: true, supervisorName: true },
+    with: {
       triageEventsReferred: {
-        where: {
-          actionTaken: { in: ["ESCALATED", "REFERRED", "REFUSED"] },
-        },
-        select: { supervisorHandoffStatus: true },
+        where: (e, { inArray }) => inArray(e.actionTaken, ["ESCALATED", "REFERRED", "REFUSED"]),
+        columns: { supervisorHandoffStatus: true },
       },
     },
   });

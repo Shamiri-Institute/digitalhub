@@ -1,8 +1,10 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { currentSupervisor, getCurrentPersonnel } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { clinicalScreeningInfo, fellow, triageEvent } from "#/db/schema";
 
 export type TriageEventForSupervisor = Awaited<
   ReturnType<typeof getTriageEventsForSupervisor>
@@ -10,14 +12,20 @@ export type TriageEventForSupervisor = Awaited<
 
 export type FellowForSupervisor = { id: string; fellowName: string | null };
 
+/** Events raised by one of the supervisor's fellows, or escalated to the supervisor. */
+function supervisedFellowIds(supervisorId: string) {
+  return db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, supervisorId));
+}
+
 export async function getFellowsForSupervisor(): Promise<FellowForSupervisor[]> {
   const supervisor = await currentSupervisor();
   if (!supervisor?.profile) throw new Error("Unauthorised");
+  const supervisorId = supervisor.profile.id;
 
-  return db.fellow.findMany({
-    where: { supervisorId: supervisor.profile.id },
-    select: { id: true, fellowName: true },
-    orderBy: { fellowName: "asc" },
+  return db.query.fellow.findMany({
+    where: (f, { eq }) => eq(f.supervisorId, supervisorId),
+    columns: { id: true, fellowName: true },
+    orderBy: (f, { asc }) => asc(f.fellowName),
   });
 }
 
@@ -26,41 +34,37 @@ export async function getTriageEventsForSupervisor() {
   if (!supervisor?.profile) throw new Error("Unauthorised");
   const supervisorId = supervisor.profile.id;
 
-  const events = await db.triageEvent.findMany({
-    where: {
-      OR: [{ fellow: { supervisorId } }, { referredSupervisorId: supervisorId }],
-    },
-    include: {
+  const events = await db.query.triageEvent.findMany({
+    where: (t, { or, inArray, eq }) =>
+      or(
+        inArray(t.fellowId, supervisedFellowIds(supervisorId)),
+        eq(t.referredSupervisorId, supervisorId),
+      ),
+    with: {
       student: {
-        select: {
-          id: true,
-          visibleId: true,
-          studentName: true,
-          schoolId: true,
-          school: { select: { schoolName: true } },
-        },
+        columns: { id: true, visibleId: true, studentName: true, schoolId: true },
+        with: { school: { columns: { schoolName: true } } },
       },
-      fellow: { select: { fellowName: true, supervisorId: true } },
+      fellow: { columns: { fellowName: true, supervisorId: true } },
       session: {
-        select: {
-          sessionDate: true,
-          sessionName: true,
-          sessionType: true,
-          session: { select: { sessionLabel: true } },
-        },
+        columns: { sessionDate: true, sessionName: true, sessionType: true },
+        with: { session: { columns: { sessionLabel: true } } },
       },
-      referredSupervisor: { select: { supervisorName: true } },
-      reviewedBy: { select: { name: true } },
+      referredSupervisor: { columns: { supervisorName: true } },
+      reviewedBy: { columns: { name: true } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: (t, { desc }) => desc(t.createdAt),
   });
 
   const studentIds = Array.from(new Set(events.map((e) => e.studentId)));
 
-  const cases = await db.clinicalScreeningInfo.findMany({
-    where: { studentId: { in: studentIds } },
-    select: { studentId: true, id: true },
-  });
+  const cases =
+    studentIds.length === 0
+      ? []
+      : await db.query.clinicalScreeningInfo.findMany({
+          where: (c, { inArray }) => inArray(c.studentId, studentIds),
+          columns: { studentId: true, id: true },
+        });
   const casesByStudent = new Map(cases.map((c) => [c.studentId, c.id]));
 
   return events.map((e) => ({
@@ -84,11 +88,13 @@ export async function getTriageDashboardStats() {
   weekStart.setHours(0, 0, 0, 0);
 
   const [events, cases] = await Promise.all([
-    db.triageEvent.findMany({
-      where: {
-        OR: [{ fellow: { supervisorId } }, { referredSupervisorId: supervisorId }],
-      },
-      select: {
+    db.query.triageEvent.findMany({
+      where: (t, { or, inArray, eq }) =>
+        or(
+          inArray(t.fellowId, supervisedFellowIds(supervisorId)),
+          eq(t.referredSupervisorId, supervisorId),
+        ),
+      columns: {
         studentId: true,
         referredSupervisorId: true,
         riskScreenOutcome: true,
@@ -96,9 +102,9 @@ export async function getTriageDashboardStats() {
         createdAt: true,
       },
     }),
-    db.clinicalScreeningInfo.findMany({
-      where: { currentSupervisorId: supervisorId },
-      select: { studentId: true },
+    db.query.clinicalScreeningInfo.findMany({
+      where: (c, { eq }) => eq(c.currentSupervisorId, supervisorId),
+      columns: { studentId: true },
     }),
   ]);
 
@@ -127,34 +133,33 @@ export async function createClinicalCaseFromTriage(triageEventId: string, pseudo
   if (!supervisor?.profile) throw new Error("Unauthorised");
   const supervisorId = supervisor.profile.id;
 
-  const event = await db.triageEvent.findUniqueOrThrow({
-    where: { id: triageEventId },
-    include: { student: { select: { schoolId: true } } },
+  const event = await db.query.triageEvent.findFirst({
+    where: (t, { eq }) => eq(t.id, triageEventId),
+    with: { student: { columns: { schoolId: true } } },
   });
+  if (!event) throw new Error("Triage event not found.");
 
   if (event.referredSupervisorId !== supervisorId) throw new Error("Forbidden");
 
   const schoolId = event.student.schoolId;
   if (!schoolId) throw new Error("Student has no school assigned.");
 
-  const existing = await db.clinicalScreeningInfo.findFirst({
-    where: { studentId: event.studentId },
+  const existing = await db.query.clinicalScreeningInfo.findFirst({
+    where: (c, { eq }) => eq(c.studentId, event.studentId),
   });
   if (existing) throw new Error("A clinical case already exists for this student.");
 
-  await db.clinicalScreeningInfo.create({
-    data: {
-      studentId: event.studentId,
-      schoolId,
-      currentSupervisorId: supervisorId,
-      initialReferredFrom: event.fellowId,
-      initialReferredFromSpecified: "fellow",
-      sessionWhenCaseIsFlaggedId: event.sessionId,
-      pseudonym: pseudonym.trim(),
-      flagged: false,
-      riskStatus: event.riskScreenOutcome === "ANY_YES" ? "High" : "No",
-      caseStatus: "Active",
-    },
+  await db.insert(clinicalScreeningInfo).values({
+    studentId: event.studentId,
+    schoolId,
+    currentSupervisorId: supervisorId,
+    initialReferredFrom: event.fellowId,
+    initialReferredFromSpecified: "fellow",
+    sessionWhenCaseIsFlaggedId: event.sessionId,
+    pseudonym: pseudonym.trim(),
+    flagged: false,
+    riskStatus: event.riskScreenOutcome === "ANY_YES" ? "High" : "No",
+    caseStatus: "Active",
   });
 
   revalidatePath("/sc/triage");
@@ -165,17 +170,20 @@ export async function markTriageReviewed(triageEventId: string, note: string) {
   const supervisor = await currentSupervisor();
   if (!supervisor?.profile?.id || !user?.session.user.id) throw new Error("Unauthorised");
 
-  const event = await db.triageEvent.findUniqueOrThrow({ where: { id: triageEventId } });
+  const event = await db.query.triageEvent.findFirst({
+    where: (t, { eq }) => eq(t.id, triageEventId),
+  });
+  if (!event) throw new Error("Triage event not found.");
   if (event.referredSupervisorId !== supervisor.profile.id) throw new Error("Forbidden");
 
-  await db.triageEvent.update({
-    where: { id: triageEventId },
-    data: {
+  await db
+    .update(triageEvent)
+    .set({
       reviewedById: user.session.user.id,
       reviewedAt: new Date(),
       reviewNote: note,
-    },
-  });
+    })
+    .where(eq(triageEvent.id, triageEventId));
 
   revalidatePath("/sc/triage");
 }

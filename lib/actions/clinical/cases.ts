@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client";
-import { db } from "#/lib/db";
+import { sql } from "drizzle-orm";
+import { queryRaw } from "#/db/client";
 import { hubScope } from "./scope";
 
 /**
@@ -12,16 +12,16 @@ export type CasesScope = { hubId: string | null; clinicalLeadId: string } | { pr
 function caseScope(scope: CasesScope) {
   if ("projectId" in scope) {
     return {
-      joins: Prisma.sql`
+      joins: sql`
       JOIN "students" st ON csi."student_id" = st.id
       JOIN "schools" sch ON st."school_id" = sch.id
       JOIN "hubs" h ON sch."hub_id" = h.id`,
-      where: Prisma.sql`h."project_id" = ${scope.projectId}`,
+      where: sql`h."project_id" = ${scope.projectId}`,
     };
   }
   return {
-    joins: Prisma.empty,
-    where: Prisma.sql`(s."hub_id" = ${scope.hubId} OR csi."clinicalLeadId" = ${scope.clinicalLeadId})`,
+    joins: sql.empty(),
+    where: sql`(s."hub_id" = ${scope.hubId} OR csi."clinicalLeadId" = ${scope.clinicalLeadId})`,
   };
 }
 
@@ -48,8 +48,8 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
   const cs = caseScope(scope);
   const sup = hubScope("projectId" in scope ? scope : { hubId: scope.hubId }, `"supervisors"`);
 
-  type StatusResult = { name: string; value: bigint };
-  type SupervisorResult = { id: string; value: bigint };
+  type StatusResult = { name: string; value: number };
+  type SupervisorResult = { id: string; value: number };
   type SupervisorInfo = { id: string; supervisorName: string };
 
   const [
@@ -59,7 +59,7 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
     casesBySupervisorResult,
     supervisorsResult,
   ] = await Promise.all([
-    db.$queryRaw<StatusResult[]>`
+    queryRaw<StatusResult>(sql`
       SELECT
         "case_status" as name,
         COUNT(*) as value
@@ -68,9 +68,9 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
       ${cs.joins}
       WHERE ${cs.where}
       GROUP BY "case_status"
-    `,
+    `),
 
-    db.$queryRaw<StatusResult[]>`
+    queryRaw<StatusResult>(sql`
       SELECT
         COALESCE(
           (SELECT ccn.risk_level
@@ -93,9 +93,9 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
          LIMIT 1),
         'N/A'
       )
-    `,
+    `),
 
-    db.$queryRaw<StatusResult[]>`
+    queryRaw<StatusResult>(sql`
       SELECT
         session as name,
         COUNT(*) as value
@@ -105,9 +105,9 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
       ${cs.joins}
       WHERE ${cs.where}
       GROUP BY session
-    `,
+    `),
 
-    db.$queryRaw<SupervisorResult[]>`
+    queryRaw<SupervisorResult>(sql`
       SELECT
         COALESCE(csi."current_supervisor_id", 'CLINICAL_LEAD') as id,
         COUNT(*) as value
@@ -116,9 +116,9 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
       ${cs.joins}
       WHERE ${cs.where}
       GROUP BY COALESCE(csi."current_supervisor_id", 'CLINICAL_LEAD')
-    `,
+    `),
 
-    db.$queryRaw<SupervisorInfo[]>`
+    queryRaw<SupervisorInfo>(sql`
       SELECT
         "supervisors".id,
         "supervisor_name"
@@ -129,7 +129,7 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
       SELECT
         'CLINICAL_LEAD' as id,
         'Clinical Lead' as "supervisor_name"
-    `,
+    `),
   ]);
 
   const sessionTypes = ["Pre", "S1", "S2", "S3", "S4", "F1", "F2"];
@@ -226,10 +226,10 @@ export async function fetchClinicalCasesList(
 ): Promise<HubClinicalCases[]> {
   const where =
     "projectId" in scope
-      ? Prisma.sql`h."project_id" = ${scope.projectId}`
-      : Prisma.sql`(s."hub_id" = ${scope.hubId})`;
+      ? sql`h."project_id" = ${scope.projectId}`
+      : sql`(s."hub_id" = ${scope.hubId})`;
 
-  const cases = await db.$queryRaw`
+  const cases = await queryRaw<HubClinicalCases>(sql`
       WITH case_notes AS (
         SELECT
           ccn.case_id,
@@ -348,7 +348,7 @@ export async function fetchClinicalCasesList(
       WHERE ${where}
       ORDER BY
         csi.id DESC
-    `;
+    `);
 
-  return cases as HubClinicalCases[];
+  return cases;
 }

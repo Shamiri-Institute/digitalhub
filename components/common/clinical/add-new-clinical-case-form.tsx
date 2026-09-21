@@ -1,12 +1,16 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
-import type { Fellow, Student, Supervisor } from "#/db/types";
 import { format } from "date-fns";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { createStudentClinicalCase } from "#/app/(platform)/sc/clinical/action";
+import {
+  createStudentClinicalCase,
+  type SchoolsInHubData,
+} from "#/app/(platform)/sc/clinical/action";
+
+type StudentInHub = SchoolsInHubData["schools"][number]["students"][number];
+type FellowInProject = SchoolsInHubData["fellowsInProject"][number];
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -111,32 +115,12 @@ export function AddNewClinicalCaseForm({
   hubs,
 }: {
   children?: React.ReactNode;
-  schools: Prisma.SchoolGetPayload<{
-    include: {
-      students: true;
-      interventionSessions: {
-        select: {
-          id: true;
-          session: {
-            select: {
-              sessionName: true;
-              sessionLabel: true;
-            };
-          };
-        };
-      };
-    };
-  }>[];
-  fellowsInProject: Fellow[];
-  supervisorsInHub: Supervisor[];
+  schools: SchoolsInHubData["schools"];
+  fellowsInProject: SchoolsInHubData["fellowsInProject"];
+  supervisorsInHub: SchoolsInHubData["supervisorsInHub"];
   creatorId: string;
   userRole: "CLINICAL_LEAD" | "SUPERVISOR";
-  hubs: Prisma.HubGetPayload<{
-    select: {
-      id: true;
-      hubName: true;
-    };
-  }>[];
+  hubs: SchoolsInHubData["hubs"];
 }) {
   const [open, setOpen] = useState(false);
   const [isNewStudent, setIsNewStudent] = useState(false);
@@ -144,11 +128,11 @@ export function AddNewClinicalCaseForm({
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [selectedHubId, setSelectedHubId] = useState<string>("");
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<StudentInHub[]>([]);
   const [availableSessions, setAvailableSessions] = useState<
     Array<{ id: string; sessionLabel: string }>
   >([]);
-  const [fellowsInHub, setFellowsInHub] = useState<Fellow[]>([]);
+  const [fellowsInHub, setFellowsInHub] = useState<FellowInProject[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

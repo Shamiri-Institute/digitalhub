@@ -1,8 +1,6 @@
 "use client";
-import type { Prisma } from "@prisma/client";
-import type { Supervisor } from "#/db/types";
 import { Plus } from "lucide-react";
-import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import type { ClinicalCases, SchoolsInHubData } from "#/app/(platform)/sc/clinical/action";
 import { columns } from "#/app/(platform)/sc/clinical/columns";
 import { ClinicalDiagnosingBoard } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
 import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
@@ -20,39 +18,11 @@ export default function ClinicalCasesTable({
   hubs,
 }: {
   cases: ClinicalCases[];
-  schools: Prisma.SchoolGetPayload<{
-    include: {
-      students: true;
-      interventionSessions: {
-        select: {
-          id: true;
-          session: {
-            select: {
-              sessionName: true;
-              sessionLabel: true;
-            };
-          };
-        };
-      };
-    };
-  }>[];
-  fellowsInProject: Prisma.FellowGetPayload<{
-    include: {
-      hub: {
-        select: {
-          id: true;
-        };
-      };
-    };
-  }>[];
-  supervisorsInHub: Supervisor[];
+  schools: SchoolsInHubData["schools"];
+  fellowsInProject: SchoolsInHubData["fellowsInProject"];
+  supervisorsInHub: SchoolsInHubData["supervisorsInHub"];
   currentSupervisorId: string;
-  hubs: Prisma.HubGetPayload<{
-    select: {
-      id: true;
-      hubName: true;
-    };
-  }>[];
+  hubs: SchoolsInHubData["hubs"];
 }) {
   const renderTableActions = (
     <AddNewClinicalCaseForm
