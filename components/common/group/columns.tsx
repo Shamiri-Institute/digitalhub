@@ -13,14 +13,14 @@ export type SchoolGroupDataTableData = {
   groupName: string;
   groupType: string;
   leaderId: string;
-  fellowName: string;
-  supervisorId: string;
-  supervisorName: string;
+  fellowName: string | null;
+  supervisorId: string | null;
+  supervisorName: string | null;
   schoolId: string;
   projectId: string;
-  archivedAt: string;
+  archivedAt: Date | null;
   groupRating: number | null;
-  students: (typeof student.$inferSelect & { _count: { clinicalCases: number } })[];
+  students: (typeof student.$inferSelect & { clinicalCasesCount: number })[];
   reports: (typeof interventionGroupReport.$inferSelect & {
     session: typeof interventionSession.$inferSelect | null;
   })[];

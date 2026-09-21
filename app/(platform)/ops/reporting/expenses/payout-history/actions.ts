@@ -1,31 +1,24 @@
 "use server";
 
-import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, max, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { currentOpsUser } from "#/app/auth";
-import { db, queryRaw } from "#/db/client";
-import { fellow, fellowAttendance, hub, interventionSession, payoutStatements } from "#/db/schema";
+import { db } from "#/db/client";
+import {
+  fellow,
+  fellowAttendance,
+  hub,
+  interventionSession,
+  payoutStatements,
+  supervisor,
+} from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
-export type FellowPayoutDetail = {
-  fellowName: string;
-  fellowMpesaName: string;
-  hub: string;
-  supervisorName: string;
-  mpesaNumber: string;
-  totalAmount: number;
-};
+export type OpsHubsPayoutHistoryType = Awaited<ReturnType<typeof loadOpsHubsPayoutHistory>>[number];
+export type FellowPayoutDetail = OpsHubsPayoutHistoryType["fellowDetails"][number];
 
-export type OpsHubsPayoutHistoryType = {
-  dateAdded: Date;
-  duration: string;
-  totalPayoutAmount: number;
-  fellowDetails: FellowPayoutDetail[];
-  confirmedAt: Date | null;
-};
-
-export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryType[]> {
+export async function loadOpsHubsPayoutHistory() {
   const opsUser = await currentOpsUser();
 
   if (!opsUser) {
@@ -34,73 +27,70 @@ export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryTy
 
   const projectId = await getActiveProjectId();
 
-  const payoutDates = await queryRaw<{
-    dateAdded: Date;
-    duration: string;
-    totalPayoutAmount: number;
-    downloadLink: string;
-    confirmedAt: Date | null;
-  }>(sql`
-    WITH payout_groups AS (
-      SELECT
-        executed_at as payout_date,
-        LEAD(executed_at) OVER (ORDER BY executed_at) as next_payout_date,
-        SUM(amount) as total_amount
-      FROM payout_statements ps
-      WHERE fellow_id IN (
-        SELECT f.id FROM fellows f
-        INNER JOIN hubs h ON h.id = f.hub_id
-        WHERE h.project_id =  ${projectId}
-      )
-      AND executed_at IS NOT NULL
-      GROUP BY executed_at
-      ORDER BY executed_at DESC
+  const projectFellowIds = db
+    .select({ id: fellow.id })
+    .from(fellow)
+    .innerJoin(hub, eq(hub.id, fellow.hubId))
+    .where(eq(hub.projectId, projectId));
+  const nextPayoutDate = sql`lead(${payoutStatements.executedAt}) over (order by ${payoutStatements.executedAt})`;
+  const payoutDates = await db
+    .select({
+      // Filtered to non-null below; `mapWith` keeps the column's timestamp decoding.
+      dateAdded: sql<Date>`${payoutStatements.executedAt}`.mapWith(payoutStatements.executedAt),
+      duration: sql<string>`concat(to_char(${payoutStatements.executedAt}, 'DD/MM/YYYY'), ' - ', coalesce(to_char(${nextPayoutDate}, 'DD/MM/YYYY'), 'N/A'))`,
+      totalPayoutAmount: sql<number>`sum(${payoutStatements.amount})`.mapWith(Number),
+      // Every statement of one payout is confirmed together, so the group shares one value.
+      confirmedAt: max(payoutStatements.confirmedAt),
+    })
+    .from(payoutStatements)
+    .where(
+      and(
+        inArray(payoutStatements.fellowId, projectFellowIds),
+        isNotNull(payoutStatements.executedAt),
+      ),
     )
-    SELECT
-      payout_date as "dateAdded",
-      CONCAT(
-        TO_CHAR(payout_date, 'DD/MM/YYYY'),
-        ' - ',
-        COALESCE(TO_CHAR(next_payout_date, 'DD/MM/YYYY'), 'N/A')
-      ) as "duration",
-      total_amount as "totalPayoutAmount",
-      (
-        SELECT confirmed_at
-        FROM payout_statements
-        WHERE executed_at = payout_date
-        LIMIT 1
-      ) as "confirmedAt"
-    FROM payout_groups;
-  `);
+    .groupBy(payoutStatements.executedAt)
+    .orderBy(desc(payoutStatements.executedAt));
 
-  const result = await Promise.all(
-    payoutDates.map(async (payout) => {
-      const fellowDetails = await queryRaw<FellowPayoutDetail>(sql`
-        SELECT
-          f.fellow_name as "fellowName",
-          f.mpesa_name as "fellowMpesaName",
-          h.hub_name as "hub",
-          s.supervisor_name as "supervisorName",
-          ps.mpesa_number as "mpesaNumber",
-          SUM(ps.amount) as "totalAmount"
-        FROM payout_statements ps
-        INNER JOIN fellows f ON f.id = ps.fellow_id
-        INNER JOIN hubs h ON h.id = f.hub_id
-        INNER JOIN supervisors s ON s.id = f.supervisor_id
-        WHERE ps.executed_at = ${payout.dateAdded}
-        AND h.project_id = ${projectId}
-        GROUP BY f.id, f.fellow_name, h.hub_name, s.supervisor_name, ps.mpesa_number
-        ORDER BY f.fellow_name ASC;
-      `);
+  // One query for every payout date; rows are split per date in JS below.
+  const details = await db
+    .select({
+      executedAt: payoutStatements.executedAt,
+      fellowName: fellow.fellowName,
+      fellowMpesaName: fellow.mpesaName,
+      hub: hub.hubName,
+      supervisorName: supervisor.supervisorName,
+      mpesaNumber: payoutStatements.mpesaNumber,
+      totalAmount: sql<number>`sum(${payoutStatements.amount})`.mapWith(Number),
+    })
+    .from(payoutStatements)
+    .innerJoin(fellow, eq(fellow.id, payoutStatements.fellowId))
+    .innerJoin(hub, eq(hub.id, fellow.hubId))
+    .innerJoin(supervisor, eq(supervisor.id, fellow.supervisorId))
+    .where(and(isNotNull(payoutStatements.executedAt), eq(hub.projectId, projectId)))
+    .groupBy(
+      payoutStatements.executedAt,
+      fellow.id,
+      fellow.fellowName,
+      hub.hubName,
+      supervisor.supervisorName,
+      payoutStatements.mpesaNumber,
+    )
+    .orderBy(asc(fellow.fellowName));
 
-      return {
-        ...payout,
-        fellowDetails,
-      };
-    }),
-  );
+  const detailsByDate = new Map<number, Omit<(typeof details)[number], "executedAt">[]>();
+  for (const { executedAt, ...detail } of details) {
+    if (!executedAt) continue;
+    const key = executedAt.getTime();
+    const list = detailsByDate.get(key);
+    if (list) list.push(detail);
+    else detailsByDate.set(key, [detail]);
+  }
 
-  return result;
+  return payoutDates.map((payout) => ({
+    ...payout,
+    fellowDetails: detailsByDate.get(payout.dateAdded.getTime()) ?? [],
+  }));
 }
 
 export async function triggerPayoutAction() {

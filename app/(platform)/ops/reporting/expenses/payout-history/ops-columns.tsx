@@ -86,7 +86,7 @@ export const opsColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
         const csvContent = [
           headers.join(","),
           ...fellowDetails.map((fellow) => {
-            const phone = RenderParsedPhoneNumber(fellow.mpesaNumber);
+            const phone = RenderParsedPhoneNumber(fellow.mpesaNumber ?? undefined);
             return [
               `"${fellow.fellowName}"`,
               `"${fellow.hub}"`,

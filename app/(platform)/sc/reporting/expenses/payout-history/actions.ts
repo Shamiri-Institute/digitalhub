@@ -1,8 +1,9 @@
 "use server";
 
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { currentSupervisor } from "#/app/auth";
+import { fellow } from "#/db/schema";
 import {
   type FellowPayoutDetail,
   loadPayoutHistory,
@@ -19,5 +20,5 @@ export async function loadSupervisorPayoutHistory(): Promise<SupervisorPayoutHis
     throw new Error("Unauthorised user");
   }
 
-  return loadPayoutHistory(sql`f.supervisor_id = ${supervisor.profile?.id}`);
+  return loadPayoutHistory(eq(fellow.supervisorId, supervisor.profile.id));
 }

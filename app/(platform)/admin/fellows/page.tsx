@@ -1,15 +1,14 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, countDistinct, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
 
-import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
 import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { db, queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { fellow, hub } from "#/db/schema";
+import { fellow, hub, interventionGroup, weeklyFellowRatings } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
 export default async function FellowPage() {
@@ -35,35 +34,38 @@ export default async function FellowPage() {
     );
 
   const data = await Promise.all([
-    queryRaw<Omit<MainFellowTableData, "complaints">>(sql`
-      SELECT
-        f.id,
-        f.fellow_name AS "fellowName",
-        f.fellow_email AS "fellowEmail",
-        f.gender AS "gender",
-        f.date_of_birth AS "dateOfBirth",
-        f.id_number AS "idNumber",
-        f.county AS "county",
-        f.sub_county AS "subCounty",
-        f.mpesa_name AS "mpesaName",
-        f.mpesa_number AS "mpesaNumber",
-        f.cell_number AS "cellNumber",
-        f.supervisor_id AS "supervisorId",
-        f.date_of_birth as "dateOfBirth",
-        f.id_number as "idNumber",
-        f.dropped_out AS "droppedOut",
-        COUNT(DISTINCT ig.id) AS "groupCount",
-        ((AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4)::float8 AS "averageRating"
-      FROM
-        fellows f
-          LEFT JOIN hubs h ON f.hub_id = h.id
-          LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
-          LEFT JOIN intervention_groups ig ON f.id = ig.leader_id
-      WHERE (h.project_id = ${projectId} OR f.hub_id IS NULL)
-        AND f.implementer_id = ${implementerId}
-      GROUP BY
-        f.id
-    `),
+    db
+      .select({
+        id: fellow.id,
+        fellowName: fellow.fellowName,
+        fellowEmail: fellow.fellowEmail,
+        gender: fellow.gender,
+        dateOfBirth: fellow.dateOfBirth,
+        idNumber: fellow.idNumber,
+        county: fellow.county,
+        subCounty: fellow.subCounty,
+        mpesaName: fellow.mpesaName,
+        mpesaNumber: fellow.mpesaNumber,
+        cellNumber: fellow.cellNumber,
+        supervisorId: fellow.supervisorId,
+        droppedOut: fellow.droppedOut,
+        groupCount: countDistinct(interventionGroup.id),
+        averageRating: sql<
+          number | null
+        >`((avg(${weeklyFellowRatings.behaviourRating}) + avg(${weeklyFellowRatings.dressingAndGroomingRating}) + avg(${weeklyFellowRatings.programDeliveryRating}) + avg(${weeklyFellowRatings.punctualityRating})) / 4)::float8`,
+      })
+      .from(fellow)
+      .leftJoin(hub, eq(fellow.hubId, hub.id))
+      .leftJoin(weeklyFellowRatings, eq(fellow.id, weeklyFellowRatings.fellowId))
+      .leftJoin(interventionGroup, eq(fellow.id, interventionGroup.leaderId))
+      .where(
+        and(
+          or(eq(hub.projectId, projectId), isNull(fellow.hubId)),
+          // The old raw query compared `implementer_id = NULL` here, which matches nothing.
+          implementerId === undefined ? sql`false` : eq(fellow.implementerId, implementerId),
+        ),
+      )
+      .groupBy(fellow.id),
     db.query.fellowComplaints.findMany({
       where: (c, { inArray }) => inArray(c.fellowId, projectFellowIds),
       with: { user: true },

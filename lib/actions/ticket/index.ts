@@ -1,8 +1,8 @@
 "use server";
 
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
-import { db, isUniqueViolation, queryRaw, type TransactionCursor } from "#/db/client";
+import { db, isUniqueViolation, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
   clinicalLead,
@@ -28,7 +28,6 @@ import {
   type EscalationRecipientRole,
   type FetchEscalationRecipientHandler,
   type FullTicket,
-  type FullTicketPendingTier,
   type FullTicketReassignment,
   isEscalationInitiatorRole,
   REASSIGNMENT_INITIATOR_ROLES,
@@ -156,7 +155,7 @@ export async function getEscalationsPerTicket(
 }
 
 /** The newest escalation of a ticket together with the ticket's status. */
-function latestEscalationWithTicket(tx: TransactionCursor, ticketId: string) {
+function latestEscalationWithTicket(tx: Transaction, ticketId: string) {
   return tx.query.ticketEscalations.findFirst({
     where: (e, { eq }) => eq(e.ticketId, ticketId),
     orderBy: (e, { desc }) => desc(e.createdAt),
@@ -166,7 +165,7 @@ function latestEscalationWithTicket(tx: TransactionCursor, ticketId: string) {
 
 /** Prisma's `update` threw when the row was missing; keep that contract. */
 async function setTicketStatus(
-  tx: TransactionCursor,
+  tx: Transaction,
   ticketId: string,
   status: "ESCALATED" | "RESOLVED",
 ) {
@@ -330,7 +329,7 @@ export async function reassignTicket(
 }
 
 async function assertReassignmentEligible(
-  tx: TransactionCursor,
+  tx: Transaction,
   actor: { role: ImplementerRole; implementerId: string; identifier: string | null },
   reassignedTo: string,
 ): Promise<void> {
@@ -615,41 +614,55 @@ async function fetchTicketsForUser(
   implementerId: string,
   filters: TicketFilters,
 ): Promise<FullTicket[]> {
-  const rows = await queryRaw<FullTicketPendingTier>(sql`
-    WITH user_tickets AS (
-      SELECT DISTINCT t.id
-      FROM tickets t
-      LEFT JOIN ticket_escalations e ON t.id = e.ticket_id
-      WHERE (
-             t.created_by = ${userId}
-          OR e.escalated_to = ${userId}
-          OR e.escalated_by = ${userId}
-         )
-         ${filters.status ? sql`AND t.status = ${filters.status}` : sql.empty()}
-    ),
-    latest_escalations AS (
-      SELECT
-        ticket_id,
-        escalated_to,
-        ROW_NUMBER() OVER (PARTITION BY ticket_id ORDER BY created_at DESC) AS rn
-      FROM ticket_escalations
-      WHERE ticket_id IN (SELECT id FROM user_tickets)
+  const userTickets = db.$with("user_tickets").as(
+    db
+      .selectDistinct({ id: tickets.id })
+      .from(tickets)
+      .leftJoin(ticketEscalations, eq(tickets.id, ticketEscalations.ticketId))
+      .where(
+        and(
+          or(
+            eq(tickets.createdById, userId),
+            eq(ticketEscalations.escalatedToId, userId),
+            eq(ticketEscalations.escalatedById, userId),
+          ),
+          filters.status ? eq(tickets.status, filters.status) : undefined,
+        ),
+      ),
+  );
+  const latestEscalations = db.$with("latest_escalations").as(
+    db
+      .select({
+        ticketId: ticketEscalations.ticketId,
+        escalatedToId: ticketEscalations.escalatedToId,
+        rn: sql<number>`row_number() over (partition by ${ticketEscalations.ticketId} order by ${ticketEscalations.createdAt} desc)`.as(
+          "rn",
+        ),
+      })
+      .from(ticketEscalations)
+      .where(
+        inArray(ticketEscalations.ticketId, db.select({ id: userTickets.id }).from(userTickets)),
+      ),
+  );
+  const rows = await db
+    .with(userTickets, latestEscalations)
+    .select({
+      id: tickets.id,
+      subject: tickets.subject,
+      description: tickets.description,
+      category: tickets.category,
+      status: tickets.status,
+      priority: tickets.priority,
+      createdAt: tickets.createdAt,
+      currentRecipientId: latestEscalations.escalatedToId,
+    })
+    .from(userTickets)
+    .innerJoin(tickets, eq(tickets.id, userTickets.id))
+    .leftJoin(
+      latestEscalations,
+      and(eq(tickets.id, latestEscalations.ticketId), eq(latestEscalations.rn, 1)),
     )
-    SELECT
-      t.id,
-      t.subject,
-      t.description,
-      t.category,
-      t.status,
-      t.priority,
-      t.created_at AS "createdAt",
-      le.escalated_to AS "currentRecipientId"
-    FROM user_tickets ut
-    JOIN tickets t ON t.id = ut.id
-    LEFT JOIN latest_escalations le
-      ON t.id = le.ticket_id AND le.rn = 1
-    ORDER BY t.created_at DESC
-  `);
+    .orderBy(desc(tickets.createdAt));
 
   const currentTierIds = rows.map((r) => r.currentRecipientId).filter((id): id is string => !!id);
   const roleMap = await getUserNamesAndRolesById(currentTierIds, implementerId);
@@ -674,7 +687,7 @@ const fetchEscalationRecipientHandlers: Record<
   FetchEscalationRecipientHandler
 > = {
   SUPERVISOR: async (userId) => {
-    const result = await queryRaw<{ supervisor_user_id: string }>(sql`
+    const { rows: result } = await db.execute<{ supervisor_user_id: string }>(sql`
       SELECT im2.user_id AS supervisor_user_id
       FROM implementer_members im1
       JOIN fellows f ON f.id = im1.identifier
@@ -692,7 +705,7 @@ const fetchEscalationRecipientHandlers: Record<
     return supervisorUserId;
   },
   HUB_COORDINATOR: async (userId, implementerId) => {
-    const result = await queryRaw<{ hub_coordinator_user_id: string }>(sql`
+    const { rows: result } = await db.execute<{ hub_coordinator_user_id: string }>(sql`
       SELECT hc_member.user_id as hub_coordinator_user_id
       FROM implementer_members sup_member
       JOIN supervisors s ON s.id = sup_member.identifier
@@ -713,7 +726,7 @@ const fetchEscalationRecipientHandlers: Record<
     return hubCoordinatorUserId;
   },
   CLINICAL_LEAD: async (userId, implementerId) => {
-    const result = await queryRaw<{ clinical_lead_user_id: string }>(sql`
+    const { rows: result } = await db.execute<{ clinical_lead_user_id: string }>(sql`
       SELECT cl_member.user_id as clinical_lead_user_id
       FROM implementer_members sup_member
       JOIN supervisors s ON s.id = sup_member.identifier
@@ -781,7 +794,11 @@ async function getUserNamesAndRolesById(
     )
     .join("\n");
 
-  const rows = await queryRaw<{ user_id: string; role: ImplementerRole; name: string | null }>(sql`
+  const { rows } = await db.execute<{
+    user_id: string;
+    role: ImplementerRole;
+    name: string | null;
+  }>(sql`
     SELECT
       im.user_id,
       im.role::text AS role,

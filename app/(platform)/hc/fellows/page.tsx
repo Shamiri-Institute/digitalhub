@@ -1,9 +1,8 @@
 import { type AnyPgColumn } from "drizzle-orm/pg-core";
-import { eq, inArray, isNull, sql } from "drizzle-orm";
+import { countDistinct, eq, inArray, isNull, sql } from "drizzle-orm";
 import { Suspense } from "react";
 
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
-import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import FellowsChartsWrapper from "#/app/(platform)/hc/fellows/components/fellows-charts-wrapper";
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
 import { currentHubCoordinator } from "#/app/auth";
@@ -11,9 +10,9 @@ import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { db, queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { fellow } from "#/db/schema";
+import { fellow, interventionGroup, weeklyFellowRatings } from "#/db/schema";
 
 export default async function FellowPage() {
   const hc = await currentHubCoordinator();
@@ -26,33 +25,32 @@ export default async function FellowPage() {
   const hubFellowIds = db.select({ id: fellow.id }).from(fellow).where(inHub(fellow.hubId));
 
   const data = await Promise.all([
-    queryRaw<Omit<MainFellowTableData, "complaints">>(sql`
-      SELECT
-        f.id,
-        f.fellow_name AS "fellowName",
-        f.fellow_email AS "fellowEmail",
-        f.gender AS "gender",
-        f.date_of_birth AS "dateOfBirth",
-        f.id_number AS "idNumber",
-        f.county AS "county",
-        f.sub_county AS "subCounty",
-        f.mpesa_name AS "mpesaName",
-        f.mpesa_number AS "mpesaNumber",
-        f.cell_number AS "cellNumber",
-        f.supervisor_id AS "supervisorId",
-        f.date_of_birth as "dateOfBirth",
-        f.id_number as "idNumber",
-        f.dropped_out AS "droppedOut",
-        COUNT(DISTINCT ig.id) AS "groupCount",
-        ((AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4)::float8 AS "averageRating"
-      FROM
-        fellows f
-          LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
-          LEFT JOIN intervention_groups ig ON f.id = ig.leader_id
-      WHERE f.hub_id =${hubId}
-      GROUP BY
-        f.id
-  `),
+    db
+      .select({
+        id: fellow.id,
+        fellowName: fellow.fellowName,
+        fellowEmail: fellow.fellowEmail,
+        gender: fellow.gender,
+        dateOfBirth: fellow.dateOfBirth,
+        idNumber: fellow.idNumber,
+        county: fellow.county,
+        subCounty: fellow.subCounty,
+        mpesaName: fellow.mpesaName,
+        mpesaNumber: fellow.mpesaNumber,
+        cellNumber: fellow.cellNumber,
+        supervisorId: fellow.supervisorId,
+        droppedOut: fellow.droppedOut,
+        groupCount: countDistinct(interventionGroup.id),
+        averageRating: sql<
+          number | null
+        >`((avg(${weeklyFellowRatings.behaviourRating}) + avg(${weeklyFellowRatings.dressingAndGroomingRating}) + avg(${weeklyFellowRatings.programDeliveryRating}) + avg(${weeklyFellowRatings.punctualityRating})) / 4)::float8`,
+      })
+      .from(fellow)
+      .leftJoin(weeklyFellowRatings, eq(fellow.id, weeklyFellowRatings.fellowId))
+      .leftJoin(interventionGroup, eq(fellow.id, interventionGroup.leaderId))
+      // The old raw query compared `hub_id = NULL` here, which matches nothing.
+      .where(hubId === null ? sql`false` : eq(fellow.hubId, hubId))
+      .groupBy(fellow.id),
     db.query.fellowComplaints.findMany({
       where: (c, { inArray }) => inArray(c.fellowId, hubFellowIds),
       with: { user: true },
@@ -65,11 +63,6 @@ export default async function FellowPage() {
     return values[0].map((fellowRow) => {
       return {
         ...fellowRow,
-        groupCount: Number(fellowRow.groupCount),
-        averageRating:
-          fellowRow.averageRating !== null && fellowRow.averageRating !== undefined
-            ? Number(fellowRow.averageRating)
-            : null,
         complaints: values[1].filter((_complaints) => {
           return _complaints.fellowId === fellowRow.id;
         }),
