@@ -1,13 +1,16 @@
-import { ImplementerRole } from "#/db/enums";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
+
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
 import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { db, queryRaw } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { fellow, hub } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { db } from "#/lib/db";
 
 export default async function FellowPage() {
   const admin = await currentAdminUser();
@@ -18,8 +21,21 @@ export default async function FellowPage() {
   const implementerId = activeMembership?.implementerId;
   const projectId = await getActiveProjectId();
 
+  const projectHubIds = db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId));
+  // Fellows of this implementer in the active project. Prisma dropped the implementer filter
+  // when the id was undefined; keep that.
+  const projectFellowIds = db
+    .select({ id: fellow.id })
+    .from(fellow)
+    .where(
+      and(
+        implementerId === undefined ? undefined : eq(fellow.implementerId, implementerId),
+        inArray(fellow.hubId, projectHubIds),
+      ),
+    );
+
   const data = await Promise.all([
-    db.$queryRaw<Omit<MainFellowTableData, "complaints">[]>`
+    queryRaw<Omit<MainFellowTableData, "complaints">>(sql`
       SELECT
         f.id,
         f.fellow_name AS "fellowName",
@@ -37,7 +53,7 @@ export default async function FellowPage() {
         f.id_number as "idNumber",
         f.dropped_out AS "droppedOut",
         COUNT(DISTINCT ig.id) AS "groupCount",
-        (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
+        ((AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4)::float8 AS "averageRating"
       FROM
         fellows f
           LEFT JOIN hubs h ON f.hub_id = h.id
@@ -47,68 +63,40 @@ export default async function FellowPage() {
         AND f.implementer_id = ${implementerId}
       GROUP BY
         f.id
-    `,
-    db.fellowComplaints.findMany({
-      where: {
-        fellow: {
-          implementerId,
-          hub: {
-            projectId,
-          },
-        },
-      },
-      include: {
-        user: true,
-      },
+    `),
+    db.query.fellowComplaints.findMany({
+      where: (c, { inArray }) => inArray(c.fellowId, projectFellowIds),
+      with: { user: true },
     }),
-    db.interventionGroup.findMany({
-      where: {
-        leader: {
-          implementerId,
-          hub: {
-            projectId,
-          },
-        },
-      },
-      include: {
-        school: true,
-      },
+    db.query.interventionGroup.findMany({
+      where: (g, { inArray }) => inArray(g.leaderId, projectFellowIds),
+      with: { school: true },
     }),
   ]).then((values) => {
-    return values[0].map((fellow) => {
+    return values[0].map((fellowRow) => {
       return {
-        ...fellow,
+        ...fellowRow,
         complaints: values[1].filter((_complaints) => {
-          return _complaints.fellowId === fellow.id;
+          return _complaints.fellowId === fellowRow.id;
         }),
         groups: values[2].filter((_groups) => {
-          return _groups.leaderId === fellow.id;
+          return _groups.leaderId === fellowRow.id;
         }),
       };
     });
   });
 
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      implementerId,
-      hub: {
-        projectId,
-      },
-    },
-    include: {
-      fellows: true,
-    },
+  const supervisors = await db.query.supervisor.findMany({
+    where: (s, { and, eq, inArray }) =>
+      and(
+        implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
+        inArray(s.hubId, projectHubIds),
+      ),
+    with: { fellows: true },
   });
 
-  const weeklyFellowEvaluations = await db.weeklyFellowRatings.findMany({
-    where: {
-      fellow: {
-        implementerId,
-        hub: {
-          projectId,
-        },
-      },
-    },
+  const weeklyFellowEvaluations = await db.query.weeklyFellowRatings.findMany({
+    where: (w, { inArray }) => inArray(w.fellowId, projectFellowIds),
   });
 
   return (

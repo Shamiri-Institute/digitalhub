@@ -1,7 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
-import type { ClinicalScreeningInfo, ClinicalSessionAttendance } from "#/db/types";
+import type { clinicalScreeningInfo, clinicalSessionAttendance } from "#/db/schema";
 import {
   Bar,
   BarChart,
@@ -19,6 +18,8 @@ import { clinicalCasesColors, possibleSessions } from "#/components/charts/const
 import ChartCard from "#/components/ui/chart-card";
 
 type CaseData = { name: "Active" | "FollowUp" | "Terminated"; value: number };
+type ClinicalScreeningInfo = typeof clinicalScreeningInfo.$inferSelect;
+type ClinicalSessionAttendance = typeof clinicalSessionAttendance.$inferSelect;
 
 export default function HubStudentClinicalDataCharts({
   hubClinicalCases,
@@ -29,26 +30,22 @@ export default function HubStudentClinicalDataCharts({
 }: {
   hubClinicalCases: ClinicalScreeningInfo[];
   hubClinicalSessions: ClinicalSessionAttendance[];
-  hubClinicalSessionsBySession: (Prisma.PickEnumerable<
-    Prisma.ClinicalSessionAttendanceGroupByOutputType,
-    "session"[]
-  > & {
+  hubClinicalSessionsBySession: {
+    session: ClinicalSessionAttendance["session"];
     _count: {
       session: number;
     };
-  })[];
+  }[];
   clinicalCasesBySupervisors: {
     supervisorName: string;
     count: number;
   }[];
-  hubClinicalSessionsByInitialReferredFrom: (Prisma.PickEnumerable<
-    Prisma.ClinicalScreeningInfoGroupByOutputType,
-    "initialReferredFromSpecified"[]
-  > & {
+  hubClinicalSessionsByInitialReferredFrom: {
+    initialReferredFromSpecified: ClinicalScreeningInfo["initialReferredFromSpecified"];
     _count: {
       initialReferredFrom: number;
     };
-  })[];
+  }[];
 }) {
   const caseStatusCounts: CaseData[] = [
     { name: "Active", value: 0 },

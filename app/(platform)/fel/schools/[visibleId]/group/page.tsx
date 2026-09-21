@@ -1,10 +1,13 @@
-import { ImplementerRole } from "#/db/enums";
+import { eq, inArray, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
+
 import { currentFellow } from "#/app/auth";
 import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import FellowGroupReportTrigger from "#/components/common/group/fellow-group-report-trigger";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
-import { db } from "#/lib/db";
+import { db, queryRaw } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { interventionGroup, school } from "#/db/schema";
 
 const SUBSTANTIVE_SESSION_TYPES = ["s1", "s2", "s3", "s4"];
 
@@ -17,9 +20,19 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
+  const fellowId = fellow?.profile?.id;
+
+  const schoolIds = db
+    .select({ id: school.id })
+    .from(school)
+    .where(eq(school.visibleId, visibleId));
+  const schoolGroupIds = db
+    .select({ id: interventionGroup.id })
+    .from(interventionGroup)
+    .where(inArray(interventionGroup.schoolId, schoolIds));
 
   const data = await Promise.all([
-    db.$queryRaw<Omit<SchoolGroupDataTableData, "students">[]>`
+    queryRaw<Omit<SchoolGroupDataTableData, "students">>(sql`
   SELECT
 	intg.id,
 	intg.group_name AS "groupName",
@@ -31,7 +44,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
 	fel.fellow_name AS "fellowName",
 	sup.supervisor_name AS "supervisorName",
 	sup.id AS "supervisorId",
-	(AVG(intgr.engagement_1) + AVG(intgr.engagement_2) + AVG(intgr.engagement_3) + AVG(intgr.cooperation_1) + AVG(intgr.cooperation_2) + AVG(intgr.cooperation_3) + AVG(intgr.content)) / 7 AS "groupRating"
+	((AVG(intgr.engagement_1) + AVG(intgr.engagement_2) + AVG(intgr.engagement_3) + AVG(intgr.cooperation_1) + AVG(intgr.cooperation_2) + AVG(intgr.cooperation_3) + AVG(intgr.content)) / 7)::float8 AS "groupRating"
   FROM
       intervention_groups intg
       LEFT JOIN schools sch ON intg.school_id = sch.id
@@ -39,40 +52,35 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
       LEFT JOIN supervisors sup ON fel.supervisor_id = sup.id
       LEFT JOIN intervention_group_reports intgr ON intg.id = intgr.group_id
   WHERE
-      sch.visible_id = ${visibleId} AND fel.id = ${fellow?.profile?.id}
+      sch.visible_id = ${visibleId} AND fel.id = ${fellowId}
   GROUP BY
       intg.id,
       intg.project_id,
       fel.fellow_name,
       sup.supervisor_name,
       sup.id
-  `,
-    db.student.findMany({
-      where: {
-        archivedAt: null,
-        school: {
-          visibleId,
-        },
-      },
-      include: {
-        _count: {
-          select: {
-            clinicalCases: true,
-          },
-        },
-      },
-    }),
-    db.interventionGroupReport.findMany({
-      where: {
-        group: {
-          school: {
-            visibleId,
-          },
-        },
-      },
-      include: {
-        session: true,
-      },
+  `),
+    db.query.student
+      .findMany({
+        where: (st, { and, inArray, isNull }) =>
+          and(isNull(st.archivedAt), inArray(st.schoolId, schoolIds)),
+        extras: (st, { sql }) => ({
+          clinicalCasesCount:
+            sql<number>`(select count(*) from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`
+              .mapWith(Number)
+              .as("clinical_cases_count"),
+        }),
+      })
+      // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
+      .then((rows) =>
+        rows.map(({ clinicalCasesCount, ...student }) => ({
+          ...student,
+          _count: { clinicalCases: clinicalCasesCount },
+        })),
+      ),
+    db.query.interventionGroupReport.findMany({
+      where: (r, { inArray }) => inArray(r.groupId, schoolGroupIds),
+      with: { session: true },
     }),
   ]).then((values) => {
     return values[0].map((group) => {
@@ -88,22 +96,17 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
     });
   });
 
-  const school = await db.school.findFirstOrThrow({
-    where: {
-      visibleId,
-    },
-    include: {
-      interventionSessions: {
-        include: {
-          session: true,
-        },
-      },
-    },
+  const schoolRow = await db.query.school.findFirst({
+    where: (s, { eq }) => eq(s.visibleId, visibleId),
+    with: { interventionSessions: { with: { session: true } } },
   });
+  if (!schoolRow) {
+    throw new Error(`School ${visibleId} not found`);
+  }
 
   const role = fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW;
 
-  const occurredSubstantiveCount = school.interventionSessions.filter(
+  const occurredSubstantiveCount = schoolRow.interventionSessions.filter(
     (session) =>
       session.occurred &&
       session.sessionType !== null &&
@@ -112,11 +115,13 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
 
   const fellowGroupReports =
     role === ImplementerRole.FELLOW
-      ? await db.fellowGroupReport.findMany({
-          where: {
-            fellowId: fellow?.profile?.id,
-            group: { school: { visibleId } },
-          },
+      ? await db.query.fellowGroupReport.findMany({
+          // Prisma dropped the fellow filter when the id was undefined; keep that.
+          where: (r, { and, eq, inArray }) =>
+            and(
+              fellowId === undefined ? undefined : eq(r.fellowId, fellowId),
+              inArray(r.groupId, schoolGroupIds),
+            ),
         })
       : [];
 
@@ -134,7 +139,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
             />
           ))
         : null}
-      <GroupsDataTable data={data} school={school} role={role} />
+      <GroupsDataTable data={data} school={schoolRow} role={role} />
     </div>
   );
 }

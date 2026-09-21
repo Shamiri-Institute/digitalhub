@@ -22,11 +22,7 @@ export default async function SchoolsPage() {
 
   const [data, supervisors, schoolsStats] = await Promise.all([
     fetchSchoolData(hubId),
-    fetchHubSupervisors({
-      where: {
-        hubId: supervisor?.profile?.hubId,
-      },
-    }),
+    fetchHubSupervisors({ hubId: supervisor?.profile?.hubId }),
     getHubScheduleStats(hubId),
   ]);
 

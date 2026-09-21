@@ -1,9 +1,8 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
+import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { db } from "#/lib/db";
 import type { ActionResponse } from "#/types/actions.types";
 import type { UserSearchResult } from "#/types/user-search.types";
 import { FetchHubCoordinatorsSchema } from "./types";
@@ -20,13 +19,14 @@ export async function fetchHubCoordinators(
     const validatedData = FetchHubCoordinatorsSchema.parse({ hubId });
     const term = search?.trim();
 
-    const actorInHub = await db.hubCoordinator.findFirst({
-      where: {
-        id: identifier ?? "",
-        assignedHubId: validatedData.hubId,
-        implementerId,
-      },
-      select: { id: true },
+    const actorInHub = await db.query.hubCoordinator.findFirst({
+      where: (hc, { and, eq }) =>
+        and(
+          eq(hc.id, identifier ?? ""),
+          eq(hc.assignedHubId, validatedData.hubId),
+          eq(hc.implementerId, implementerId),
+        ),
+      columns: { id: true },
     });
 
     if (!actorInHub) {
@@ -36,53 +36,35 @@ export async function fetchHubCoordinators(
       };
     }
 
-    const hubCoordinators = await db.hubCoordinator.findMany({
-      where: {
-        assignedHubId: validatedData.hubId,
-        implementerId,
-        archivedAt: null,
-        ...(identifier ? { id: { not: identifier } } : {}),
-        ...(term
-          ? {
-              OR: [
-                {
-                  coordinatorName: {
-                    contains: term,
-                    mode: Prisma.QueryMode.insensitive,
-                  },
-                },
-                {
-                  coordinatorEmail: {
-                    contains: term,
-                    mode: Prisma.QueryMode.insensitive,
-                  },
-                },
-                {
-                  visibleId: {
-                    contains: term,
-                    mode: Prisma.QueryMode.insensitive,
-                  },
-                },
-              ],
-            }
-          : {}),
-      },
-      orderBy: { coordinatorName: "asc" },
-      take: RESULT_LIMIT,
+    const hubCoordinators = await db.query.hubCoordinator.findMany({
+      where: (hc, { and, eq, ne, ilike, isNull, or }) =>
+        and(
+          eq(hc.assignedHubId, validatedData.hubId),
+          eq(hc.implementerId, implementerId),
+          isNull(hc.archivedAt),
+          identifier ? ne(hc.id, identifier) : undefined,
+          term
+            ? or(
+                ilike(hc.coordinatorName, `%${term}%`),
+                ilike(hc.coordinatorEmail, `%${term}%`),
+                ilike(hc.visibleId, `%${term}%`),
+              )
+            : undefined,
+        ),
+      orderBy: (hc, { asc }) => asc(hc.coordinatorName),
+      limit: RESULT_LIMIT,
     });
 
     const hubCoordinatorIds = hubCoordinators.map((hc) => hc.id);
 
-    const implementerMembers = await db.implementerMember.findMany({
-      where: {
-        role: ImplementerRole.HUB_COORDINATOR,
-        implementerId,
-        identifier: { in: hubCoordinatorIds },
-      },
-      select: {
-        identifier: true,
-        userId: true,
-      },
+    const implementerMembers = await db.query.implementerMember.findMany({
+      where: (m, { and, eq, inArray }) =>
+        and(
+          eq(m.role, ImplementerRole.HUB_COORDINATOR),
+          eq(m.implementerId, implementerId),
+          inArray(m.identifier, hubCoordinatorIds),
+        ),
+      columns: { identifier: true, userId: true },
     });
 
     const memberMap = new Map(

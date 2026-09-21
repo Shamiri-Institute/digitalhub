@@ -9,27 +9,22 @@ import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 export default async function SupervisorsPage() {
   const coordinator = await currentHubCoordinator();
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      hubId: coordinator?.profile?.assignedHubId,
-    },
-    include: {
+  const hubId = coordinator?.profile?.assignedHubId;
+  const supervisors = await db.query.supervisor.findMany({
+    // Prisma dropped the filter for undefined and matched NULL for null; keep that.
+    where: (s, { eq, isNull }) =>
+      hubId === undefined ? undefined : hubId === null ? isNull(s.hubId) : eq(s.hubId, hubId),
+    with: {
       assignedSchools: true,
       fellows: true,
-      hub: {
-        include: {
-          project: true,
-        },
-      },
+      hub: { with: { project: true } },
       monthlySupervisorEvaluation: true,
     },
-    orderBy: {
-      supervisorName: "asc",
-    },
+    orderBy: (s, { asc }) => asc(s.supervisorName),
   });
 
   if (!coordinator) {

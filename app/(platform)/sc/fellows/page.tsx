@@ -1,8 +1,9 @@
-import { ImplementerRole } from "#/db/enums";
 import { signOut } from "next-auth/react";
+
 import { loadFellowsData } from "#/app/(platform)/sc/actions";
 import { currentSupervisorLite } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
 import FellowSchoolsDatatable from "../../../../components/common/fellow/fellow-schools-datatable";
 
 export default async function FellowsPage() {
@@ -22,11 +23,7 @@ export default async function FellowsPage() {
     return <div>Supervisor&apos;s hub has no assigned project</div>;
   }
 
-  const project = await db.project.findUnique({
-    where: {
-      id: projectId,
-    },
-  });
+  const project = await db.query.project.findFirst({ where: (p, { eq }) => eq(p.id, projectId) });
 
   return (
     <div className="px-6 py-5">

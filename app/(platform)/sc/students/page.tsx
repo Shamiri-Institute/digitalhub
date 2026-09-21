@@ -1,18 +1,47 @@
+import { and, count, eq, inArray, isNull, or } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { redirect } from "next/navigation";
+
 import { currentSupervisor } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
 import HubStudentsDetailsCharts from "#/components/charts/students-charts";
 import StudentsStats from "#/components/students-stats";
 import PageFooter from "#/components/ui/page-footer";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import {
+  clinicalScreeningInfo,
+  clinicalSessionAttendance,
+  interventionSession,
+  school,
+  student,
+  supervisor,
+} from "#/db/schema";
 
 export default async function SupervisorStudentsPage() {
-  const supervisor = await currentSupervisor();
+  const current = await currentSupervisor();
 
-  if (!supervisor) {
+  if (!current) {
     redirect("/login");
   }
+
+  const hubId = current.profile.hubId;
+  // Prisma matched NULL for a null hub id; keep that.
+  const inHub = (col: AnyPgColumn) => (hubId === null ? isNull(col) : eq(col, hubId));
+  const hubSchoolIds = db.select({ id: school.id }).from(school).where(inHub(school.hubId));
+  const hubSupervisorIds = db
+    .select({ id: supervisor.id })
+    .from(supervisor)
+    .where(inHub(supervisor.hubId));
+  const hubCaseFilter = inArray(clinicalScreeningInfo.currentSupervisorId, hubSupervisorIds);
+  const hubCaseIds = db
+    .select({ id: clinicalScreeningInfo.id })
+    .from(clinicalScreeningInfo)
+    .where(hubCaseFilter);
+  const activeHubStudentFilter = and(
+    isNull(student.archivedAt),
+    inArray(student.schoolId, hubSchoolIds),
+  );
 
   const [
     _schools, // TODO: use this to provide filter options
@@ -27,133 +56,93 @@ export default async function SupervisorStudentsPage() {
     studentsAttendanceGroupedBySession,
     studentsDropOutReasonsGroupedByReason,
   ] = await Promise.all([
-    db.school.findMany({
-      where: {
-        hubId: supervisor.profile?.hubId,
-      },
+    db.query.school.findMany({ where: (s) => inHub(s.hubId) }),
+    db.$count(student, activeHubStudentFilter),
+    db.$count(interventionSession, inArray(interventionSession.schoolId, hubSchoolIds)),
+    db.query.clinicalScreeningInfo.findMany({
+      where: (c, { inArray }) => inArray(c.currentSupervisorId, hubSupervisorIds),
     }),
-    db.student.count({
-      where: {
-        archivedAt: null,
-        school: {
-          hubId: supervisor.profile?.hubId,
-        },
-      },
+    db.query.clinicalSessionAttendance.findMany({
+      where: (a, { inArray }) => inArray(a.caseId, hubCaseIds),
     }),
-    db.interventionSession.count({
-      where: {
-        school: {
-          hubId: supervisor.profile?.hubId,
-        },
-      },
-    }),
-    db.clinicalScreeningInfo.findMany({
-      where: {
-        currentSupervisor: {
-          hubId: supervisor.profile?.hubId,
-        },
-      },
-    }),
-    db.clinicalSessionAttendance.findMany({
-      where: {
-        case: {
-          currentSupervisor: {
-            hubId: supervisor.profile?.hubId,
-          },
-        },
-      },
-    }),
-    db.clinicalSessionAttendance.groupBy({
-      by: ["session"],
-      where: {
-        case: {
-          currentSupervisor: {
-            hubId: supervisor.profile?.hubId,
-          },
-        },
-      },
-      _count: {
-        session: true,
-      },
-    }),
-    db.clinicalScreeningInfo.groupBy({
-      by: ["currentSupervisorId"],
-      where: {
-        currentSupervisor: {
-          hubId: supervisor.profile?.hubId,
-        },
-      },
-      _count: {
-        currentSupervisorId: true,
-      },
-    }),
-    db.clinicalScreeningInfo.groupBy({
-      by: ["initialReferredFromSpecified"],
-      where: {
-        OR: [
-          {
-            currentSupervisor: {
-              hubId: supervisor.profile?.hubId,
-            },
-          },
-          {
-            clinicalLeadId: supervisor.profile?.id,
-          },
-        ],
-      },
-      _count: {
-        initialReferredFrom: true,
-      },
-    }),
-    db.student.groupBy({
-      by: ["age", "gender", "form"],
-      where: {
-        archivedAt: null,
-        school: {
-          hubId: supervisor.profile?.hubId,
-        },
-      },
-      _count: {
-        id: true,
-      },
-    }),
-    db.interventionSession.groupBy({
-      by: ["sessionType"],
-      where: {
-        school: {
-          hubId: supervisor.profile?.hubId,
-        },
-      },
-      _count: {
-        sessionType: true,
-      },
-    }),
-    db.student.groupBy({
-      by: ["dropOutReason"],
-      where: {
-        archivedAt: null,
-        school: {
-          hubId: supervisor.profile?.hubId,
-        },
-      },
-      _count: {
-        dropOutReason: true,
-      },
-    }),
+    db
+      .select({
+        session: clinicalSessionAttendance.session,
+        n: count(clinicalSessionAttendance.session),
+      })
+      .from(clinicalSessionAttendance)
+      .where(inArray(clinicalSessionAttendance.caseId, hubCaseIds))
+      .groupBy(clinicalSessionAttendance.session)
+      .then((rows) => rows.map(({ session, n }) => ({ session, _count: { session: n } }))),
+    db
+      .select({
+        currentSupervisorId: clinicalScreeningInfo.currentSupervisorId,
+        n: count(clinicalScreeningInfo.currentSupervisorId),
+      })
+      .from(clinicalScreeningInfo)
+      .where(hubCaseFilter)
+      .groupBy(clinicalScreeningInfo.currentSupervisorId)
+      .then((rows) =>
+        rows.map(({ currentSupervisorId, n }) => ({
+          currentSupervisorId,
+          _count: { currentSupervisorId: n },
+        })),
+      ),
+    db
+      .select({
+        initialReferredFromSpecified: clinicalScreeningInfo.initialReferredFromSpecified,
+        n: count(clinicalScreeningInfo.initialReferredFrom),
+      })
+      .from(clinicalScreeningInfo)
+      .where(or(hubCaseFilter, eq(clinicalScreeningInfo.clinicalLeadId, current.profile.id)))
+      .groupBy(clinicalScreeningInfo.initialReferredFromSpecified)
+      .then((rows) =>
+        rows.map(({ initialReferredFromSpecified, n }) => ({
+          initialReferredFromSpecified,
+          _count: { initialReferredFrom: n },
+        })),
+      ),
+    db
+      .select({
+        age: student.age,
+        gender: student.gender,
+        form: student.form,
+        n: count(student.id),
+      })
+      .from(student)
+      .where(activeHubStudentFilter)
+      .groupBy(student.age, student.gender, student.form)
+      .then((rows) => rows.map(({ n, ...keys }) => ({ ...keys, _count: { id: n } }))),
+    db
+      .select({
+        sessionType: interventionSession.sessionType,
+        n: count(interventionSession.sessionType),
+      })
+      .from(interventionSession)
+      .where(inArray(interventionSession.schoolId, hubSchoolIds))
+      .groupBy(interventionSession.sessionType)
+      .then((rows) =>
+        rows.map(({ sessionType, n }) => ({ sessionType, _count: { sessionType: n } })),
+      ),
+    db
+      .select({ dropOutReason: student.dropOutReason, n: count(student.dropOutReason) })
+      .from(student)
+      .where(activeHubStudentFilter)
+      .groupBy(student.dropOutReason)
+      .then((rows) =>
+        rows.map(({ dropOutReason, n }) => ({ dropOutReason, _count: { dropOutReason: n } })),
+      ),
   ]);
 
   const supervisorIds = hubClinicalSessionsBySupervisor.map((item) => item.currentSupervisorId);
 
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      id: {
-        in: supervisorIds.filter((id): id is string => id !== null),
-      },
-    },
-    select: {
-      id: true,
-      supervisorName: true,
-    },
+  const supervisors = await db.query.supervisor.findMany({
+    where: (s, { inArray }) =>
+      inArray(
+        s.id,
+        supervisorIds.filter((id): id is string => id !== null),
+      ),
+    columns: { id: true, supervisorName: true },
   });
 
   const supervisorMap = new Map(supervisors.map((s) => [s.id, s.supervisorName]));

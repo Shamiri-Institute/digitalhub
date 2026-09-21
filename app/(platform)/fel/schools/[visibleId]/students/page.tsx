@@ -1,8 +1,11 @@
-import { ImplementerRole } from "#/db/enums";
+import { and, eq, inArray } from "drizzle-orm";
 import { signOut } from "next-auth/react";
+
 import { currentFellow } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { interventionGroup, school } from "#/db/schema";
 
 export default async function StudentsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
@@ -10,84 +13,73 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
+  const fellowId = fellow?.profile?.id;
 
-  const students = await db.student.findMany({
-    where: {
-      archivedAt: null,
-      school: {
-        visibleId,
-      },
-      assignedGroup: {
-        leaderId: fellow?.profile?.id,
-        school: {
-          visibleId,
-        },
-      },
-    },
-    include: {
+  const schoolIds = db
+    .select({ id: school.id })
+    .from(school)
+    .where(eq(school.visibleId, visibleId));
+  // Prisma dropped the leader filter when the fellow id was undefined; keep that.
+  const fellowGroupIds = db
+    .select({ id: interventionGroup.id })
+    .from(interventionGroup)
+    .where(
+      and(
+        fellowId === undefined ? undefined : eq(interventionGroup.leaderId, fellowId),
+        inArray(interventionGroup.schoolId, schoolIds),
+      ),
+    );
+
+  const rows = await db.query.student.findMany({
+    where: (st, { and, inArray, isNull }) =>
+      and(
+        isNull(st.archivedAt),
+        inArray(st.schoolId, schoolIds),
+        inArray(st.assignedGroupId, fellowGroupIds),
+      ),
+    with: {
       clinicalCases: {
-        select: {
-          id: true,
-          _count: {
-            select: { sessions: true },
-          },
-        },
+        columns: { id: true },
+        extras: (c, { sql }) => ({
+          sessionsCount:
+            sql<number>`(select count(*) from (select "caseId" from clinical_session_attendance) a where a."caseId" = ${c.id})`
+              .mapWith(Number)
+              .as("sessions_count"),
+        }),
       },
-      studentAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-            },
-          },
-          group: true,
-        },
-      },
+      studentAttendances: { with: { session: { with: { session: true } }, group: true } },
       assignedGroup: {
-        select: {
-          id: true,
-          groupName: true,
-          leader: {
-            select: {
-              id: true,
-              fellowName: true,
-            },
-          },
-        },
+        columns: { id: true, groupName: true },
+        with: { leader: { columns: { id: true, fellowName: true } } },
       },
-      school: {
-        include: {
-          interventionSessions: {
-            include: {
-              session: true,
-            },
-          },
-        },
-      },
+      school: { with: { interventionSessions: { with: { session: true } } } },
       studentGroupTransferTrail: {
-        select: {
+        columns: {
           id: true,
           createdAt: true,
           updatedAt: true,
           studentId: true,
           currentGroupId: true,
           fromGroupId: true,
+        },
+        with: {
           fromGroup: {
-            select: {
-              id: true,
-              groupName: true,
-              leader: {
-                select: {
-                  id: true,
-                  fellowName: true,
-                },
-              },
-            },
+            columns: { id: true, groupName: true },
+            with: { leader: { columns: { id: true, fellowName: true } } },
           },
         },
       },
     },
   });
+
+  // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
+  const students = rows.map((st) => ({
+    ...st,
+    clinicalCases: st.clinicalCases.map(({ sessionsCount, ...c }) => ({
+      ...c,
+      _count: { sessions: sessionsCount },
+    })),
+  }));
 
   return (
     <StudentsDatatable

@@ -1,12 +1,13 @@
-import { ImplementerRole } from "#/db/enums";
 import { signOut } from "next-auth/react";
+
 import type { FellowsData } from "#/app/(platform)/sc/actions";
 import { currentFellow } from "#/app/auth";
 import FellowSchoolsDatatable from "#/components/common/fellow/fellow-schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
 
 export default async function FellowsPage() {
   const fellow = await currentFellow();
@@ -14,58 +15,36 @@ export default async function FellowsPage() {
     await signOut({ callbackUrl: "/login" });
   }
 
-  const fellowData = await db.fellow.findFirst({
-    where: {
-      id: fellow?.profile.id,
-    },
-    include: {
-      hub: {
-        include: {
-          project: true,
-        },
-      },
+  const fellowId = fellow?.profile.id;
+  const fellowRow = await db.query.fellow.findFirst({
+    // Prisma dropped the filter when the id was undefined; keep that.
+    where: (f, { eq }) => (fellowId === undefined ? undefined : eq(f.id, fellowId)),
+    with: {
+      hub: { with: { project: true } },
       fellowAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-              school: true,
-            },
-          },
+        with: {
+          session: { with: { session: true, school: true } },
           group: true,
-          PayoutStatements: {
-            orderBy: {
-              createdAt: "desc",
-            },
-          },
+          PayoutStatements: { orderBy: (p, { desc }) => desc(p.createdAt) },
         },
       },
       weeklyFellowRatings: true,
       groups: {
-        include: {
-          interventionGroupReports: {
-            include: {
-              session: true,
-            },
-          },
+        with: {
+          interventionGroupReports: { with: { session: true } },
           students: {
-            include: {
-              _count: {
-                select: {
-                  clinicalCases: true,
-                },
-              },
-            },
+            extras: (st, { sql }) => ({
+              clinicalCasesCount:
+                sql<number>`(select count(*) from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`
+                  .mapWith(Number)
+                  .as("clinical_cases_count"),
+            }),
           },
           school: {
-            include: {
+            with: {
               interventionSessions: {
-                orderBy: {
-                  sessionDate: "asc",
-                },
-                include: {
-                  session: true,
-                },
+                orderBy: (s, { asc }) => asc(s.sessionDate),
+                with: { session: true },
               },
             },
           },
@@ -74,6 +53,20 @@ export default async function FellowsPage() {
       supervisor: true,
     },
   });
+
+  // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
+  const fellowData = fellowRow
+    ? {
+        ...fellowRow,
+        groups: fellowRow.groups.map((group) => ({
+          ...group,
+          students: group.students.map(({ clinicalCasesCount, ...student }) => ({
+            ...student,
+            _count: { clinicalCases: clinicalCasesCount },
+          })),
+        })),
+      }
+    : null;
 
   return (
     <div className="flex h-full flex-col">

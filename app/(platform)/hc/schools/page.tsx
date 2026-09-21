@@ -48,11 +48,7 @@ export default async function SchoolsPage(props: {
     fetchSchoolDataCompletenessData(assignedHubId, queryAsSchoolId),
     fetchSessionRatingAverages(assignedHubId, queryAsSchoolId),
     fetchSchoolAttendances(assignedHubId, queryAsSchoolId),
-    fetchHubSupervisors({
-      where: {
-        hubId: assignedHubId,
-      },
-    }),
+    fetchHubSupervisors({ hubId: assignedHubId }),
   ]);
 
   return (

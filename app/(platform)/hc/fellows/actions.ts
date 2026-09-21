@@ -1,7 +1,9 @@
 "use server";
 
+import { sql } from "drizzle-orm";
+
+import { queryRaw } from "#/db/client";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { db } from "#/lib/db";
 
 export type FellowDropoutReasonsGraphData = {
   name: string;
@@ -10,7 +12,7 @@ export type FellowDropoutReasonsGraphData = {
 
 export async function fetchFellowDropoutReasons(hudId: string) {
   await requireAuthRole();
-  const dropoutData = await db.$queryRaw<FellowDropoutReasonsGraphData[]>`
+  const dropoutData = await queryRaw<FellowDropoutReasonsGraphData>(sql`
     SELECT
       COUNT(*) AS value,
       drop_out_reason AS name
@@ -21,7 +23,7 @@ export async function fetchFellowDropoutReasons(hudId: string) {
       AND hub_id = ${hudId}
     GROUP BY
       drop_out_reason
-  `;
+  `);
 
   dropoutData.forEach((data) => {
     data.value = Number(data.value);
@@ -32,7 +34,7 @@ export async function fetchFellowDropoutReasons(hudId: string) {
 
 export async function fetchFellowDataCompletenessData(hubId: string) {
   await requireAuthRole();
-  const [fellowData] = await db.$queryRaw<{ percentage: number }[]>`
+  const [fellowData] = await queryRaw<{ percentage: number | null }>(sql`
     SELECT
       AVG((
         (CASE WHEN mpesa_name IS NOT NULL THEN 1 ELSE 0 END)
@@ -41,10 +43,10 @@ export async function fetchFellowDataCompletenessData(hubId: string) {
         + (CASE WHEN hub_id IS NOT NULL THEN 1 ELSE 0 END)
         + (CASE WHEN gender IS NOT NULL THEN 1 ELSE 0 END)
         + (CASE WHEN id_number IS NOT NULL THEN 1 ELSE 0 END)
-      ) / 6.0 * 100) AS percentage
+      ) / 6.0 * 100)::float8 AS percentage
     FROM fellows
     WHERE hub_id = ${hubId}
-  `;
+  `);
 
   if (!fellowData) {
     return [];
@@ -68,13 +70,13 @@ export type FellowSessionRatingAverages = {
 
 export async function fetchFellowSessionRatingAverages(hubId: string) {
   await requireAuthRole();
-  const ratingAverages = await db.$queryRaw<FellowSessionRatingAverages[]>`
+  const ratingAverages = await queryRaw<FellowSessionRatingAverages>(sql`
     SELECT
       CONCAT(TRIM(TO_CHAR(wfr.week, 'Month')), ' Week ', EXTRACT(WEEK FROM wfr.week)) AS session_date,
-      AVG(wfr.behaviour_rating) AS behaviour_rating,
-      AVG(wfr.program_delivery_rating) AS program_delivery_rating,
-      AVG(wfr.dressing_and_grooming_rating) AS dressing_and_grooming_rating,
-      AVG(wfr.punctuality_rating) AS punctuality_rating
+      AVG(wfr.behaviour_rating)::float8 AS behaviour_rating,
+      AVG(wfr.program_delivery_rating)::float8 AS program_delivery_rating,
+      AVG(wfr.dressing_and_grooming_rating)::float8 AS dressing_and_grooming_rating,
+      AVG(wfr.punctuality_rating)::float8 AS punctuality_rating
     FROM weekly_fellow_ratings wfr
     INNER JOIN supervisors AS sup ON wfr.supervisor_id = sup.id
     WHERE
@@ -83,7 +85,7 @@ export async function fetchFellowSessionRatingAverages(hubId: string) {
     wfr.week
     ORDER BY
     wfr.week
-  `;
+  `);
 
   if (!ratingAverages.length) {
     return [];

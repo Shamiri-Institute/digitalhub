@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { student } from "#/db/schema";
 import {
   Bar,
   BarChart,
@@ -29,14 +29,12 @@ export default function HubStudentsDetailsCharts({
     sessionType: string | null;
     _count: { sessionType: number };
   }[];
-  studentsDropOutReasonsGroupedByReason: (Prisma.PickEnumerable<
-    Prisma.StudentGroupByOutputType,
-    "dropOutReason"[]
-  > & {
+  studentsDropOutReasonsGroupedByReason: {
+    dropOutReason: (typeof student.$inferSelect)["dropOutReason"];
     _count: {
       dropOutReason: number;
     };
-  })[];
+  }[];
   studentInfoCompletion?: { name: string; value: number }[];
   studentGroupRatings?: { session: string; value: number }[];
 }) {

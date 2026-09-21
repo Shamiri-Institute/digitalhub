@@ -1,8 +1,11 @@
 "use server";
 
-import { ImplementerRole } from "#/db/enums";
+import { eq } from "drizzle-orm";
+
 import { getCurrentPersonnel, getCurrentUserSession } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { hub, school } from "#/db/schema";
 
 export async function fetchSchool(visibleId: string) {
   const session = await getCurrentUserSession();
@@ -11,39 +14,48 @@ export async function fetchSchool(visibleId: string) {
   }
 
   try {
-    const school = await db.school.findUnique({
-      where: {
-        visibleId: visibleId,
+    const row = await db.query.school.findFirst({
+      where: (s, { eq }) => eq(s.visibleId, visibleId),
+      with: {
+        interventionSessions: { with: { session: true } },
+        hub: { with: { sessions: true } },
+        schoolDropoutHistory: { with: { user: true } },
       },
-      include: {
-        interventionSessions: {
-          include: {
-            session: true,
-          },
-        },
-        hub: {
-          include: {
-            sessions: true,
-          },
-        },
-        _count: {
-          select: {
-            interventionSessions: true,
-            students: {
-              where: { archivedAt: null },
-            },
-            interventionGroups: true,
-          },
-        },
-        schoolDropoutHistory: {
-          include: {
-            user: true,
-          },
-        },
-      },
+      // Raw SQL with a derived table on purpose: drizzle 0.45 rewrites other tables' columns inside
+      // `extras` to this table's alias, and at the top level it emits the outer column unqualified
+      // (`"id"`), so the inner table must not expose a column of the same name.
+      extras: (s, { sql }) => ({
+        interventionSessionsCount:
+          sql<number>`(select count(*) from (select school_id from intervention_sessions) i where i.school_id = ${s.id})`
+            .mapWith(Number)
+            .as("intervention_sessions_count"),
+        studentsCount:
+          sql<number>`(select count(*) from (select school_id from students where archived_at is null) st where st.school_id = ${s.id})`
+            .mapWith(Number)
+            .as("students_count"),
+        interventionGroupsCount:
+          sql<number>`(select count(*) from (select school_id from intervention_groups) g where g.school_id = ${s.id})`
+            .mapWith(Number)
+            .as("intervention_groups_count"),
+      }),
     });
 
-    return { success: true, data: school };
+    if (!row) {
+      return { success: true, data: null };
+    }
+    // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
+    const { interventionSessionsCount, studentsCount, interventionGroupsCount, ...school } = row;
+    return {
+      success: true,
+      data: {
+        ...school,
+        _count: {
+          interventionSessions: interventionSessionsCount,
+          students: studentsCount,
+          interventionGroups: interventionGroupsCount,
+        },
+      },
+    };
   } catch (error) {
     console.error("Error fetching implementer school:", error);
     return { success: false, message: "Error fetching implementer school" };
@@ -83,20 +95,15 @@ export async function fetchHubSchools() {
   }
 
   try {
-    const schools = await db.school.findMany({
-      where: {
-        hubId: hubId,
-      },
-      select: {
-        visibleId: true,
-        schoolName: true,
-        hub: {
-          select: {
-            hubName: true,
-          },
-        },
-      },
-    });
+    const schools = await db
+      .select({
+        visibleId: school.visibleId,
+        schoolName: school.schoolName,
+        hub: { hubName: hub.hubName },
+      })
+      .from(school)
+      .leftJoin(hub, eq(school.hubId, hub.id))
+      .where(eq(school.hubId, hubId));
 
     return { success: true, data: schools };
   } catch (error) {

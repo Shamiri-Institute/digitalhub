@@ -1,3 +1,5 @@
+import { and, count, eq, inArray } from "drizzle-orm";
+
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
 import {
   fetchFellowDataCompletenessData,
@@ -5,7 +7,8 @@ import {
   fetchFellowSessionRatingAverages,
 } from "#/app/(platform)/hc/fellows/actions";
 import FellowsCharts from "#/app/(platform)/hc/fellows/components/fellow-charts";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { interventionSession, school } from "#/db/schema";
 
 export default async function FellowsChartsWrapper({
   coordinator,
@@ -18,33 +21,33 @@ export default async function FellowsChartsWrapper({
     if (!coordinator?.assignedHubId) {
       return null;
     }
+    const hubId = coordinator.assignedHubId;
 
-    const dropoutData = fetchFellowDropoutReasons(coordinator.assignedHubId);
+    const dropoutData = fetchFellowDropoutReasons(hubId);
 
-    const fellowsDataCompletenessPercentage = fetchFellowDataCompletenessData(
-      coordinator?.assignedHubId,
-    );
+    const fellowsDataCompletenessPercentage = fetchFellowDataCompletenessData(hubId);
 
-    const fellowsSessionRatings = fetchFellowSessionRatingAverages(coordinator?.assignedHubId);
+    const fellowsSessionRatings = fetchFellowSessionRatingAverages(hubId);
 
-    const fellowAttendanceData = db.interventionSession.groupBy({
-      by: ["sessionType"],
-      where: {
-        AND: [
-          {
-            school: {
-              hubId: coordinator?.assignedHubId,
-            },
-          },
-          {
-            occurred: true,
-          },
-        ],
-      },
-      _count: {
-        sessionType: true,
-      },
-    });
+    const fellowAttendanceData = db
+      .select({
+        sessionType: interventionSession.sessionType,
+        n: count(interventionSession.sessionType),
+      })
+      .from(interventionSession)
+      .where(
+        and(
+          inArray(
+            interventionSession.schoolId,
+            db.select({ id: school.id }).from(school).where(eq(school.hubId, hubId)),
+          ),
+          eq(interventionSession.occurred, true),
+        ),
+      )
+      .groupBy(interventionSession.sessionType)
+      .then((rows) =>
+        rows.map(({ sessionType, n }) => ({ sessionType, _count: { sessionType: n } })),
+      );
 
     const data = await Promise.all([
       dropoutData,

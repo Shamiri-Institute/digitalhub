@@ -1,5 +1,7 @@
-import { ImplementerRole } from "#/db/enums";
+import { type AnyPgColumn } from "drizzle-orm/pg-core";
+import { eq, inArray, isNull, sql } from "drizzle-orm";
 import { Suspense } from "react";
+
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import FellowsChartsWrapper from "#/app/(platform)/hc/fellows/components/fellows-charts-wrapper";
@@ -9,15 +11,22 @@ import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { db } from "#/lib/db";
+import { db, queryRaw } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { fellow } from "#/db/schema";
 
 export default async function FellowPage() {
   const hc = await currentHubCoordinator();
   if (!hc) {
     return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
+  const hubId = hc.profile.assignedHubId;
+  // Prisma matched NULL for a null hub id; keep that.
+  const inHub = (col: AnyPgColumn) => (hubId === null ? isNull(col) : eq(col, hubId));
+  const hubFellowIds = db.select({ id: fellow.id }).from(fellow).where(inHub(fellow.hubId));
+
   const data = await Promise.all([
-    db.$queryRaw<Omit<MainFellowTableData, "complaints">[]>`
+    queryRaw<Omit<MainFellowTableData, "complaints">>(sql`
       SELECT
         f.id,
         f.fellow_name AS "fellowName",
@@ -35,69 +44,49 @@ export default async function FellowPage() {
         f.id_number as "idNumber",
         f.dropped_out AS "droppedOut",
         COUNT(DISTINCT ig.id) AS "groupCount",
-        (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
+        ((AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4)::float8 AS "averageRating"
       FROM
         fellows f
           LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
           LEFT JOIN intervention_groups ig ON f.id = ig.leader_id
-      WHERE f.hub_id =${hc.profile?.assignedHubId}
+      WHERE f.hub_id =${hubId}
       GROUP BY
         f.id
-  `,
-    db.fellowComplaints.findMany({
-      where: {
-        fellow: {
-          hubId: hc.profile?.assignedHubId,
-        },
-      },
-      include: {
-        user: true,
-      },
+  `),
+    db.query.fellowComplaints.findMany({
+      where: (c, { inArray }) => inArray(c.fellowId, hubFellowIds),
+      with: { user: true },
     }),
-    db.interventionGroup.findMany({
-      where: {
-        leader: {
-          hubId: hc.profile?.assignedHubId,
-        },
-      },
-      include: {
-        school: true,
-      },
+    db.query.interventionGroup.findMany({
+      where: (g, { inArray }) => inArray(g.leaderId, hubFellowIds),
+      with: { school: true },
     }),
   ]).then((values) => {
-    return values[0].map((fellow) => {
+    return values[0].map((fellowRow) => {
       return {
-        ...fellow,
-        groupCount: Number(fellow.groupCount),
+        ...fellowRow,
+        groupCount: Number(fellowRow.groupCount),
         averageRating:
-          fellow.averageRating !== null && fellow.averageRating !== undefined
-            ? Number(fellow.averageRating)
+          fellowRow.averageRating !== null && fellowRow.averageRating !== undefined
+            ? Number(fellowRow.averageRating)
             : null,
         complaints: values[1].filter((_complaints) => {
-          return _complaints.fellowId === fellow.id;
+          return _complaints.fellowId === fellowRow.id;
         }),
         groups: values[2].filter((_groups) => {
-          return _groups.leaderId === fellow.id;
+          return _groups.leaderId === fellowRow.id;
         }),
       };
     });
   });
 
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      hubId: hc?.profile?.assignedHubId,
-    },
-    include: {
-      fellows: true,
-    },
+  const supervisors = await db.query.supervisor.findMany({
+    where: (s) => inHub(s.hubId),
+    with: { fellows: true },
   });
 
-  const weeklyFellowEvaluations = await db.weeklyFellowRatings.findMany({
-    where: {
-      fellow: {
-        hubId: hc?.profile?.assignedHubId,
-      },
-    },
+  const weeklyFellowEvaluations = await db.query.weeklyFellowRatings.findMany({
+    where: (w) => inArray(w.fellowId, hubFellowIds),
   });
 
   return (
