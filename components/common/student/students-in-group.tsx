@@ -29,7 +29,7 @@ export default function StudentsInGroup({
   children: React.ReactNode;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  students: (typeof student.$inferSelect & { _count: { clinicalCases: number } })[];
+  students: (typeof student.$inferSelect & { clinicalCasesCount: number })[];
   schoolId: string;
   groupId: string;
   groupName: string | null;
@@ -96,7 +96,7 @@ export default function StudentsInGroup({
   );
 }
 
-const columns: ColumnDef<typeof student.$inferSelect & { _count: { clinicalCases: number } }>[] = [
+const columns: ColumnDef<typeof student.$inferSelect & { clinicalCasesCount: number }>[] = [
   {
     id: "Student name",
     header: "Student name",
@@ -123,7 +123,7 @@ const columns: ColumnDef<typeof student.$inferSelect & { _count: { clinicalCases
     header: "Clinical cases",
     id: "Clinical cases",
     accessorFn: (row) => {
-      return row._count.clinicalCases;
+      return row.clinicalCasesCount;
     },
   },
 ];

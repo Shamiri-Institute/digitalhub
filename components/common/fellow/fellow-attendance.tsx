@@ -102,7 +102,7 @@ export default function FellowAttendance({
           groupName: group?.groupName ?? null,
           groupType: group?.groupType,
           groupId: group?.id,
-          groupStudentCount: group?._count?.students,
+          groupStudentCount: group?.studentsCount,
           averageRating:
             fellowRatings.find((rating) => rating.id === fellow.id)?.averageRating ?? null,
           sessionType: session?.session?.sessionType,

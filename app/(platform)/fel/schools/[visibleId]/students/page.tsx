@@ -45,9 +45,9 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
           columns: { id: true },
           extras: (c, { sql }) => ({
             sessionsCount:
-              sql<number>`(select count(*) from (select "caseId" from clinical_session_attendance) a where a."caseId" = ${c.id})`
-                .mapWith(Number)
-                .as("sessions_count"),
+              sql<number>`(select count(*)::int from (select "caseId" from clinical_session_attendance) a where a."caseId" = ${c.id})`.as(
+                "sessions_count",
+              ),
           }),
         },
         studentAttendances: { with: { session: { with: { session: true } }, group: true } },
@@ -79,15 +79,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
     }),
   ]);
 
-  // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
-  const students = rows.map((st) => ({
-    ...st,
-    school: schoolRow ?? null,
-    clinicalCases: st.clinicalCases.map(({ sessionsCount, ...c }) => ({
-      ...c,
-      _count: { sessions: sessionsCount },
-    })),
-  }));
+  const students = rows.map((st) => ({ ...st, school: schoolRow ?? null }));
 
   return (
     <StudentsDatatable

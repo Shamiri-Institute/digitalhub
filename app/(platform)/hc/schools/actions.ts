@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import type { z } from "zod";
 
 import { currentHubCoordinator } from "#/app/auth";
-import { db, queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import { sessionTypes } from "#/db/enums";
 import {
   interventionGroup,
@@ -41,18 +41,11 @@ type AddSchoolResponse = {
   data?: SchoolWithRelations;
 };
 
-/** Count of clinical cases per student, kept in Prisma's `_count` shape for the shared tables. */
+/** Count of clinical cases per student for the shared tables. */
 const clinicalCasesCount = (st: { id: unknown }) =>
-  sql<number>`(select count(*) from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`
-    .mapWith(Number)
-    .as("clinical_cases_count");
-
-function withClinicalCasesCount<T extends { clinicalCasesCount: number }>({
-  clinicalCasesCount: count,
-  ...student
-}: T) {
-  return { ...student, _count: { clinicalCases: count } };
-}
+  sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
+    "clinical_cases_count",
+  );
 
 export async function fetchSchoolData(hubId: string) {
   const schools = await db.query.school.findMany({
@@ -67,7 +60,7 @@ export async function fetchSchoolData(hubId: string) {
       },
     },
   });
-  return schools.map((s) => ({ ...s, students: s.students.map(withClinicalCasesCount) }));
+  return schools;
 }
 
 export async function revalidatePageAction(pathname: string, mode?: "layout" | "page") {
@@ -76,7 +69,9 @@ export async function revalidatePageAction(pathname: string, mode?: "layout" | "
 
 export async function fetchSchoolDataCompletenessData(hubId: string, schoolId?: string) {
   // TODO: uncomment the school_sub_county query and adjust division from 6.0 -> 7.0
-  const [schoolAttendanceData] = await queryRaw<{
+  const {
+    rows: [schoolAttendanceData],
+  } = await db.execute<{
     percentage: number | string | null;
   }>(sql`
     SELECT
@@ -124,12 +119,12 @@ export type DropoutReasonsGraphData = {
 };
 
 export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
-  const dropoutData = await queryRaw<{
+  const { rows: dropoutData } = await db.execute<{
     name: string;
     value: number | string | null;
   }>(sql`
     SELECT
-      COUNT(*) AS value,
+      COUNT(*)::int AS value,
       dropout_reason AS name
     FROM schools
     WHERE
@@ -262,7 +257,7 @@ export type SessionRatingAverages = {
 };
 
 export async function fetchSessionRatingAverages(hubId: string, schoolId?: string) {
-  const ratingAverages = await queryRaw<{
+  const { rows: ratingAverages } = await db.execute<{
     session_type: "s0" | "s1" | "s2" | "s3" | "s4";
     student_behavior: number | string | null;
     admin_support: number | string | null;
@@ -327,11 +322,13 @@ export type SchoolAttendances = {
 };
 
 export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
-  const [schoolCount] = await queryRaw<{
+  const {
+    rows: [schoolCount],
+  } = await db.execute<{
     count: number | string | null;
   }>(sql`
     SELECT
-      COUNT(*) AS "count"
+      COUNT(*)::int AS "count"
     FROM
       schools
     WHERE
@@ -341,13 +338,13 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
 
   const numSchools = Number(schoolCount?.count ?? 0);
 
-  const schoolAttendances = await queryRaw<{
+  const { rows: schoolAttendances } = await db.execute<{
     count: number | string | null;
     session_type: string;
   }>(sql`
     SELECT
       session_type,
-      count(distinct sa.school_id) AS "count"
+      count(distinct sa.school_id)::int AS "count"
     FROM
       student_attendances sa
     LEFT JOIN schools ON sa.school_id = schools.id

@@ -95,15 +95,15 @@ export default function SchoolLeftPanel({
                 stats={[
                   {
                     title: "Sessions",
-                    count: school?._count.interventionSessions || 0,
+                    count: school?.interventionSessionsCount || 0,
                   },
                   {
                     title: "Groups",
-                    count: school?._count.interventionGroups || 0,
+                    count: school?.interventionGroupsCount || 0,
                   },
                   {
                     title: "Students",
-                    count: school?._count.students || 0,
+                    count: school?.studentsCount || 0,
                   },
                 ]}
               />

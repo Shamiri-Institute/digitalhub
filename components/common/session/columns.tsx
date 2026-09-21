@@ -24,7 +24,7 @@ export type SessionData = Omit<Session, "school"> & {
         interventionGroups: (typeof interventionGroup.$inferSelect & {
           students: (typeof student.$inferSelect & {
             studentAttendances: (typeof studentAttendance.$inferSelect)[];
-            _count: { clinicalCases: number };
+            clinicalCasesCount: number;
           })[];
         })[];
       })

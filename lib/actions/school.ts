@@ -26,36 +26,24 @@ export async function fetchSchool(visibleId: string) {
       // (`"id"`), so the inner table must not expose a column of the same name.
       extras: (s, { sql }) => ({
         interventionSessionsCount:
-          sql<number>`(select count(*) from (select school_id from intervention_sessions) i where i.school_id = ${s.id})`
-            .mapWith(Number)
-            .as("intervention_sessions_count"),
+          sql<number>`(select count(*)::int from (select school_id from intervention_sessions) i where i.school_id = ${s.id})`.as(
+            "intervention_sessions_count",
+          ),
         studentsCount:
-          sql<number>`(select count(*) from (select school_id from students where archived_at is null) st where st.school_id = ${s.id})`
-            .mapWith(Number)
-            .as("students_count"),
+          sql<number>`(select count(*)::int from (select school_id from students where archived_at is null) st where st.school_id = ${s.id})`.as(
+            "students_count",
+          ),
         interventionGroupsCount:
-          sql<number>`(select count(*) from (select school_id from intervention_groups) g where g.school_id = ${s.id})`
-            .mapWith(Number)
-            .as("intervention_groups_count"),
+          sql<number>`(select count(*)::int from (select school_id from intervention_groups) g where g.school_id = ${s.id})`.as(
+            "intervention_groups_count",
+          ),
       }),
     });
 
     if (!row) {
       return { success: true, data: null };
     }
-    // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
-    const { interventionSessionsCount, studentsCount, interventionGroupsCount, ...school } = row;
-    return {
-      success: true,
-      data: {
-        ...school,
-        _count: {
-          interventionSessions: interventionSessionsCount,
-          students: studentsCount,
-          interventionGroups: interventionGroupsCount,
-        },
-      },
-    };
+    return { success: true, data: row };
   } catch (error) {
     console.error("Error fetching implementer school:", error);
     return { success: false, message: "Error fetching implementer school" };

@@ -8,7 +8,6 @@ import {
   clinicalCasesCountExtras,
   fetchHubFellowRatings,
   fetchScheduleSupervisors,
-  withClinicalCasesCount,
 } from "#/lib/actions/schedule-data";
 
 export default async function SchoolSessionsPage({
@@ -58,14 +57,7 @@ export default async function SchoolSessionsPage({
     fetchHubFellowRatings(hubId),
   ]);
 
-  const schoolWithCounts = schoolRow && {
-    ...schoolRow,
-    interventionGroups: schoolRow.interventionGroups.map((g) => ({
-      ...g,
-      students: g.students.map(withClinicalCasesCount),
-    })),
-  };
-  const sessions = rawSessions.map((s) => ({ ...s, school: schoolWithCounts ?? null }));
+  const sessions = rawSessions.map((s) => ({ ...s, school: schoolRow ?? null }));
 
   return (
     <SessionsDatatable

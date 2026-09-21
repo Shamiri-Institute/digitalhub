@@ -71,30 +71,23 @@ export default async function StudentsPage() {
     db
       .select({
         session: clinicalSessionAttendance.session,
-        n: count(clinicalSessionAttendance.session),
+        count: count(clinicalSessionAttendance.session),
       })
       .from(clinicalSessionAttendance)
       .where(inArray(clinicalSessionAttendance.caseId, hubCaseIds))
-      .groupBy(clinicalSessionAttendance.session)
-      .then((rows) => rows.map(({ session, n }) => ({ session, _count: { session: n } }))),
+      .groupBy(clinicalSessionAttendance.session),
     db
       .select({
         currentSupervisorId: clinicalScreeningInfo.currentSupervisorId,
-        n: count(clinicalScreeningInfo.currentSupervisorId),
+        count: count(clinicalScreeningInfo.currentSupervisorId),
       })
       .from(clinicalScreeningInfo)
       .where(hubCaseFilter)
-      .groupBy(clinicalScreeningInfo.currentSupervisorId)
-      .then((rows) =>
-        rows.map(({ currentSupervisorId, n }) => ({
-          currentSupervisorId,
-          _count: { currentSupervisorId: n },
-        })),
-      ),
+      .groupBy(clinicalScreeningInfo.currentSupervisorId),
     db
       .select({
         initialReferredFromSpecified: clinicalScreeningInfo.initialReferredFromSpecified,
-        n: count(clinicalScreeningInfo.initialReferredFrom),
+        count: count(clinicalScreeningInfo.initialReferredFrom),
       })
       .from(clinicalScreeningInfo)
       .where(
@@ -105,43 +98,30 @@ export default async function StudentsPage() {
             : eq(clinicalScreeningInfo.clinicalLeadId, hubId),
         ),
       )
-      .groupBy(clinicalScreeningInfo.initialReferredFromSpecified)
-      .then((rows) =>
-        rows.map(({ initialReferredFromSpecified, n }) => ({
-          initialReferredFromSpecified,
-          _count: { initialReferredFrom: n },
-        })),
-      ),
+      .groupBy(clinicalScreeningInfo.initialReferredFromSpecified),
     db
       .select({
         age: student.age,
         gender: student.gender,
         form: student.form,
-        n: count(student.id),
+        count: count(student.id),
       })
       .from(student)
       .where(activeHubStudentFilter)
-      .groupBy(student.age, student.gender, student.form)
-      .then((rows) => rows.map(({ n, ...keys }) => ({ ...keys, _count: { id: n } }))),
+      .groupBy(student.age, student.gender, student.form),
     db
       .select({
         sessionType: interventionSession.sessionType,
-        n: count(interventionSession.sessionType),
+        count: count(interventionSession.sessionType),
       })
       .from(interventionSession)
       .where(inArray(interventionSession.schoolId, hubSchoolIds))
-      .groupBy(interventionSession.sessionType)
-      .then((rows) =>
-        rows.map(({ sessionType, n }) => ({ sessionType, _count: { sessionType: n } })),
-      ),
+      .groupBy(interventionSession.sessionType),
     db
-      .select({ dropOutReason: student.dropOutReason, n: count(student.dropOutReason) })
+      .select({ dropOutReason: student.dropOutReason, count: count(student.dropOutReason) })
       .from(student)
       .where(and(activeHubStudentFilter, eq(student.droppedOut, true)))
-      .groupBy(student.dropOutReason)
-      .then((rows) =>
-        rows.map(({ dropOutReason, n }) => ({ dropOutReason, _count: { dropOutReason: n } })),
-      ),
+      .groupBy(student.dropOutReason),
   ]);
 
   const supervisorIds = hubClinicalSessionsBySupervisor.map((item) => item.currentSupervisorId);
@@ -159,18 +139,17 @@ export default async function StudentsPage() {
 
   const clinicalCasesBySupervisors = hubClinicalSessionsBySupervisor.map((item) => ({
     supervisorName: supervisorMap.get(item.currentSupervisorId ?? "") || "Unknown",
-    count: item._count.currentSupervisorId,
+    count: item.count,
   }));
 
   const studentsGroupedByAge: Record<string, number> = {};
   const studentsGroupedByGender: Record<string, number> = {};
   const studentsGroupedByForm: Record<string, number> = {};
 
-  studentAggregations.forEach(({ age, gender, form, _count }) => {
-    if (age) studentsGroupedByAge[age] = (_count.id || 0) + (studentsGroupedByAge[age] || 0);
-    if (gender)
-      studentsGroupedByGender[gender] = (_count.id || 0) + (studentsGroupedByGender[gender] || 0);
-    if (form) studentsGroupedByForm[form] = (_count.id || 0) + (studentsGroupedByForm[form] || 0);
+  studentAggregations.forEach(({ age, gender, form, count }) => {
+    if (age) studentsGroupedByAge[age] = count + (studentsGroupedByAge[age] || 0);
+    if (gender) studentsGroupedByGender[gender] = count + (studentsGroupedByGender[gender] || 0);
+    if (form) studentsGroupedByForm[form] = count + (studentsGroupedByForm[form] || 0);
   });
 
   /**

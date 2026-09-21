@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
-import { db, queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import { fellow, interventionGroup, supervisor, weeklyFellowRatings } from "#/db/schema";
 import { DropoutFellowSchema, SupervisorSchema, WeeklyFellowRatingSchema } from "./schemas";
 
@@ -47,9 +47,9 @@ export async function loadFellowsData() {
             students: {
               extras: (st, { sql }) => ({
                 clinicalCasesCount:
-                  sql<number>`(select count(*) from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`
-                    .mapWith(Number)
-                    .as("clinical_cases_count"),
+                  sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
+                    "clinical_cases_count",
+                  ),
               }),
             },
           },
@@ -85,7 +85,8 @@ export async function loadFellowsData() {
       },
     }),
 
-    queryRaw<{ id: string; averageRating: number | null }>(sql`
+    db
+      .execute<{ id: string; averageRating: number | null }>(sql`
       SELECT
         f.id,
         ((AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4)::float8 AS "averageRating"
@@ -95,7 +96,8 @@ export async function loadFellowsData() {
       WHERE f.hub_id =${hubId}
       GROUP BY
         f.id
-    `),
+    `)
+      .then((r) => r.rows),
 
     db.query.supervisor.findMany({
       where: (s, { eq, isNull }) => (hubId === null ? isNull(s.hubId) : eq(s.hubId, hubId)),
@@ -126,14 +128,9 @@ export async function loadFellowsData() {
       }
     }
 
-    // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
     const groups = fellowRow.groups.map((group) => ({
       ...group,
       school: schoolOf(group.schoolId),
-      students: group.students.map(({ clinicalCasesCount, ...student }) => ({
-        ...student,
-        _count: { clinicalCases: clinicalCasesCount },
-      })),
     }));
 
     return {
@@ -165,7 +162,7 @@ export async function loadFellowsData() {
         numberOfStudents: group.students.length,
         students: group.students.map((student) => ({
           ...student,
-          numClinicalCases: student._count.clinicalCases,
+          numClinicalCases: student.clinicalCasesCount,
         })),
       })),
       attendances: fellowRow.fellowAttendances,

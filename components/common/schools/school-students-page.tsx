@@ -67,15 +67,7 @@ export default async function SchoolStudentsPage({
     }),
   ]);
 
-  // Prisma-shaped `_count` until the student components move off `Prisma.*GetPayload` types.
-  const students = rows.map((s) => ({
-    ...s,
-    school: schoolRow ?? null,
-    clinicalCases: s.clinicalCases.map(({ sessionsCount, ...c }) => ({
-      ...c,
-      _count: { sessions: sessionsCount },
-    })),
-  }));
+  const students = rows.map((s) => ({ ...s, school: schoolRow ?? null }));
 
   return <StudentsDatatable students={students} role={role} />;
 }

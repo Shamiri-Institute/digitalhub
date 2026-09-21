@@ -35,9 +35,9 @@ export default async function FellowsPage() {
           students: {
             extras: (st, { sql }) => ({
               clinicalCasesCount:
-                sql<number>`(select count(*) from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`
-                  .mapWith(Number)
-                  .as("clinical_cases_count"),
+                sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
+                  "clinical_cases_count",
+                ),
             }),
           },
         },
@@ -68,18 +68,10 @@ export default async function FellowsPage() {
     return found;
   };
 
-  // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
   const fellowData = fellowRow
     ? {
         ...fellowRow,
-        groups: fellowRow.groups.map((group) => ({
-          ...group,
-          school: schoolOf(group.schoolId),
-          students: group.students.map(({ clinicalCasesCount, ...student }) => ({
-            ...student,
-            _count: { clinicalCases: clinicalCasesCount },
-          })),
-        })),
+        groups: fellowRow.groups.map((group) => ({ ...group, school: schoolOf(group.schoolId) })),
       }
     : null;
 
@@ -106,7 +98,7 @@ export default async function FellowsPage() {
                   numberOfStudents: group.students.length,
                   students: group.students.map((student) => ({
                     ...student,
-                    numClinicalCases: student._count.clinicalCases,
+                    numClinicalCases: student.clinicalCasesCount,
                   })),
                 })) ?? [],
               attendances: fellowData?.fellowAttendances ?? [],
