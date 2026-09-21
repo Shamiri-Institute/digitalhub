@@ -28,7 +28,7 @@
     "bench:diff": "tsx scripts/bench/diff.ts",
     "bench:cold": "dotenv -c development -- tsx scripts/bench/cold.ts",
     "db:dev:up": "docker-compose down && docker-compose up db",
-    "db:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
+    "db:seed": "dotenv -c development -- tsx db/seed/seed.ts",
     "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
     "db:dev:migrate:reset": "dotenv -c development -- npx prisma migrate reset --force",
     "db:dev:generate": "dotenv -c development -- npx prisma generate",

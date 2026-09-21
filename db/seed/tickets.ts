@@ -1,5 +1,6 @@
+import { db } from "#/db/client";
 import type { TicketCategory, TicketPriorityLevel } from "#/db/enums";
-import { db } from "#/lib/db";
+import { ticketEscalations, tickets } from "#/db/schema";
 
 interface SeedTicket {
   category: TicketCategory;
@@ -182,13 +183,13 @@ const TICKET_GROUPS: SeedTicketGroup[] = [
 
 export async function createTickets() {
   for (const group of TICKET_GROUPS) {
-    const fellow = await db.user.findFirst({
-      where: { email: group.fellowEmail },
-      select: { id: true },
+    const fellow = await db.query.user.findFirst({
+      where: (user, { eq }) => eq(user.email, group.fellowEmail),
+      columns: { id: true },
     });
-    const supervisor = await db.user.findFirst({
-      where: { email: group.supervisorEmail },
-      select: { id: true },
+    const supervisor = await db.query.user.findFirst({
+      where: (user, { eq }) => eq(user.email, group.supervisorEmail),
+      columns: { id: true },
     });
 
     if (!fellow || !supervisor) {
@@ -199,25 +200,25 @@ export async function createTickets() {
     }
 
     for (const ticket of group.tickets) {
-      await db.$transaction(async (tx) => {
-        const created = await tx.tickets.create({
-          data: {
+      await db.transaction(async (tx) => {
+        const [created] = await tx
+          .insert(tickets)
+          .values({
             createdById: fellow.id,
             subject: ticket.subject,
             description: ticket.description,
             category: ticket.category,
             priority: ticket.priority,
             status: "ESCALATED",
-          },
-        });
+          })
+          .returning({ id: tickets.id });
+        if (!created) throw new Error(`Ticket "${ticket.subject}" was not created`);
 
-        await tx.ticketEscalations.create({
-          data: {
-            ticketId: created.id,
-            escalatedById: fellow.id,
-            escalatedToId: supervisor.id,
-            escalationReason: ticket.description,
-          },
+        await tx.insert(ticketEscalations).values({
+          ticketId: created.id,
+          escalatedById: fellow.id,
+          escalatedToId: supervisor.id,
+          escalationReason: ticket.description,
         });
       });
     }
