@@ -477,29 +477,35 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
     // Get available fellows for the pre-session date
     const fellows = await db.query.fellow.findMany({
       where: (f, { eq, isNull }) => (hubId === null ? isNull(f.hubId) : eq(f.hubId, hubId)),
-      with: {
-        groups: {
-          with: {
-            school: {
-              columns: {},
-              with: { interventionSessions: { columns: { sessionDate: true } } },
-            },
-          },
-        },
-      },
+      with: { groups: { columns: { id: true, schoolId: true } } },
     });
+
+    // Session dates per school, loaded once instead of per group row.
+    const groupSchoolIds = [...new Set(fellows.flatMap((f) => f.groups.map((g) => g.schoolId)))];
+    const sessionDates =
+      groupSchoolIds.length === 0
+        ? []
+        : await db.query.interventionSession.findMany({
+            where: (s, { inArray }) => inArray(s.schoolId, groupSchoolIds),
+            columns: { schoolId: true, sessionDate: true },
+          });
+    const sessionDatesBySchool = new Map<string, Set<string>>();
+    for (const { schoolId, sessionDate } of sessionDates) {
+      if (!schoolId) continue;
+      const dateStr = format(toZonedTime(sessionDate, "Africa/Nairobi"), "yyyy-MM-dd");
+      const dates = sessionDatesBySchool.get(schoolId) ?? new Set<string>();
+      dates.add(dateStr);
+      sessionDatesBySchool.set(schoolId, dates);
+    }
 
     // Create a map of fellows and their session dates
     const fellowSessionDates = new Map<string, Set<string>>();
     fellows.forEach((fellow) => {
       const dates = new Set<string>();
       fellow.groups.forEach((group) => {
-        group.school.interventionSessions.forEach((session) => {
-          const dateStr = format(toZonedTime(session.sessionDate, "Africa/Nairobi"), "yyyy-MM-dd");
-          if (dateStr) {
-            dates.add(dateStr);
-          }
-        });
+        for (const dateStr of sessionDatesBySchool.get(group.schoolId) ?? []) {
+          dates.add(dateStr);
+        }
       });
       fellowSessionDates.set(fellow.id, dates);
     });

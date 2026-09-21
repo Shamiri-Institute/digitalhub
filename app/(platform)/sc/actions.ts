@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
 import { db, queryRaw } from "#/db/client";
-import { fellow, supervisor, weeklyFellowRatings } from "#/db/schema";
+import { fellow, interventionGroup, supervisor, weeklyFellowRatings } from "#/db/schema";
 import { DropoutFellowSchema, SupervisorSchema, WeeklyFellowRatingSchema } from "./schemas";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
@@ -20,7 +20,7 @@ export async function loadFellowsData() {
   const supervisorId = supervisorProfile.profile.id;
   const hubId = supervisorProfile.profile.hubId;
 
-  const [fellows, fellowAverageRatings, supervisors] = await Promise.all([
+  const [fellows, schools, fellowAverageRatings, supervisors] = await Promise.all([
     db.query.fellow.findMany({
       where: (f, { eq }) => eq(f.supervisorId, supervisorId),
       orderBy: (f, { asc }) => asc(f.id),
@@ -52,17 +52,36 @@ export async function loadFellowsData() {
                     .as("clinical_cases_count"),
               }),
             },
-            school: {
-              with: {
-                interventionSessions: {
-                  orderBy: (s, { asc }) => asc(s.sessionDate),
-                  with: { session: true },
-                },
-              },
-            },
           },
         },
         fellowComplaints: { with: { user: true } },
+      },
+    }),
+
+    // The groups' schools with their sessions, loaded once and attached per group below instead
+    // of being recomputed for every group row by a lateral join.
+    db.query.school.findMany({
+      where: (s, { inArray }) =>
+        inArray(
+          s.id,
+          db
+            .select({ id: interventionGroup.schoolId })
+            .from(interventionGroup)
+            .where(
+              inArray(
+                interventionGroup.leaderId,
+                db
+                  .select({ id: fellow.id })
+                  .from(fellow)
+                  .where(eq(fellow.supervisorId, supervisorId)),
+              ),
+            ),
+        ),
+      with: {
+        interventionSessions: {
+          orderBy: (s, { asc }) => asc(s.sessionDate),
+          with: { session: true },
+        },
       },
     }),
 
@@ -88,6 +107,12 @@ export async function loadFellowsData() {
   const averageRatingById = new Map(
     fellowAverageRatings.map((rating) => [rating.id, rating.averageRating]),
   );
+  const schoolById = new Map(schools.map((s) => [s.id, s]));
+  const schoolOf = (schoolId: string) => {
+    const found = schoolById.get(schoolId);
+    if (!found) throw new Error(`School ${schoolId} not found`);
+    return found;
+  };
 
   return fellows.map((fellowRow) => {
     const attendancesByGroupId = new Map<string, typeof fellowRow.fellowAttendances>();
@@ -104,6 +129,7 @@ export async function loadFellowsData() {
     // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
     const groups = fellowRow.groups.map((group) => ({
       ...group,
+      school: schoolOf(group.schoolId),
       students: group.students.map(({ clinicalCasesCount, ...student }) => ({
         ...student,
         _count: { clinicalCases: clinicalCasesCount },

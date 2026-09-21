@@ -40,19 +40,33 @@ export default async function FellowsPage() {
                   .as("clinical_cases_count"),
             }),
           },
-          school: {
-            with: {
-              interventionSessions: {
-                orderBy: (s, { asc }) => asc(s.sessionDate),
-                with: { session: true },
-              },
-            },
-          },
         },
       },
       supervisor: true,
     },
   });
+
+  // The groups' schools with their sessions, loaded once and attached per group below instead
+  // of being recomputed for every group row by a lateral join.
+  const schoolIds = [...new Set(fellowRow?.groups.map((g) => g.schoolId) ?? [])];
+  const schools =
+    schoolIds.length === 0
+      ? []
+      : await db.query.school.findMany({
+          where: (s, { inArray }) => inArray(s.id, schoolIds),
+          with: {
+            interventionSessions: {
+              orderBy: (s, { asc }) => asc(s.sessionDate),
+              with: { session: true },
+            },
+          },
+        });
+  const schoolById = new Map(schools.map((s) => [s.id, s]));
+  const schoolOf = (schoolId: string) => {
+    const found = schoolById.get(schoolId);
+    if (!found) throw new Error(`School ${schoolId} not found`);
+    return found;
+  };
 
   // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
   const fellowData = fellowRow
@@ -60,6 +74,7 @@ export default async function FellowsPage() {
         ...fellowRow,
         groups: fellowRow.groups.map((group) => ({
           ...group,
+          school: schoolOf(group.schoolId),
           students: group.students.map(({ clinicalCasesCount, ...student }) => ({
             ...student,
             _count: { clinicalCases: clinicalCasesCount },
