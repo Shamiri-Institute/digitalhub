@@ -1,10 +1,13 @@
 "use server";
 
-import { ImplementerRole } from "#/db/enums";
+import { eq } from "drizzle-orm";
+
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { getCurrentPersonnel } from "#/app/auth";
 import type { WeeklyEvaluationFormValues } from "#/components/common/fellow-reports/weekly-fellow-evaluation/view-edit-weekly-fellow-evaluation";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { weeklyFellowRatings } from "#/db/schema";
 
 export const updateWeeklyEvaluation = async (
   userId: string,
@@ -23,12 +26,14 @@ export const updateWeeklyEvaluation = async (
       };
     }
 
-    await db.weeklyFellowRatings.update({
-      where: { id: evaluationId },
-      data: {
-        ...data,
-      },
-    });
+    const updated = await db
+      .update(weeklyFellowRatings)
+      .set({ ...data })
+      .where(eq(weeklyFellowRatings.id, evaluationId))
+      .returning({ id: weeklyFellowRatings.id });
+    if (updated.length === 0) {
+      throw new Error(`Weekly evaluation ${evaluationId} not found`);
+    }
 
     await revalidatePageAction("sc/reporting/fellow-reports/weekly-fellow-evaluation");
     return {

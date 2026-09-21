@@ -1,37 +1,42 @@
 "use server";
 
+import { eq, isNull } from "drizzle-orm";
 import { signOut } from "next-auth/react";
+
 import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
+import { db } from "#/db/client";
+import { reimbursementRequest, supervisor } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
 
 export type SupervisorExpensesType = Awaited<ReturnType<typeof loadSupervisorExpenses>>[number];
 
 export async function loadSupervisorExpenses() {
-  const supervisor = await currentSupervisor();
+  const currentSupervisorData = await currentSupervisor();
 
-  if (!supervisor) {
+  if (!currentSupervisorData) {
     await signOut({ callbackUrl: "/login" });
     throw new Error("Unauthorised user");
   }
 
-  const supervisorsExpenses = await db.reimbursementRequest.findMany({
-    where: {
-      supervisor: {
-        hubId: supervisor.profile?.hubId,
-      },
+  const hubId = currentSupervisorData.profile?.hubId;
+  const supervisorsExpenses = await db.query.reimbursementRequest.findMany({
+    where: (r, { inArray }) =>
+      inArray(
+        r.supervisorId,
+        db
+          .select({ id: supervisor.id })
+          .from(supervisor)
+          // Prisma `hubId: null` matched supervisors with no hub; keep that for a supervisor without one.
+          .where(hubId === null ? isNull(supervisor.hubId) : eq(supervisor.hubId, hubId)),
+      ),
+    with: {
+      supervisor: { columns: { id: true, supervisorName: true } },
     },
-    include: {
-      supervisor: {
-        select: {
-          id: true,
-          supervisorName: true,
-        },
-      },
-    },
+    // The table renders in received order; keep Prisma's insertion order.
+    orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
   });
 
-  return supervisorsExpenses.map((expense: (typeof supervisorsExpenses)[number]) => {
+  return supervisorsExpenses.map((expense) => {
     const details = expense.details;
     const typeOfExpense =
       typeof details === "object" &&
@@ -67,22 +72,26 @@ export async function loadSupervisorExpenses() {
 
 export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
   try {
-    const supervisor = await currentSupervisor();
+    const currentSupervisorData = await currentSupervisor();
 
-    if (!supervisor) {
+    if (!currentSupervisorData) {
       await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
-    if (name !== supervisor.profile?.supervisorName) {
+    if (name !== currentSupervisorData.profile?.supervisorName) {
       return {
         success: false,
         message: "Please enter the correct name",
       };
     }
 
-    await db.reimbursementRequest.delete({
-      where: { id },
-    });
+    const deleted = await db
+      .delete(reimbursementRequest)
+      .where(eq(reimbursementRequest.id, id))
+      .returning({ id: reimbursementRequest.id });
+    if (deleted.length === 0) {
+      throw new Error(`Expense ${id} not found`);
+    }
 
     return {
       success: true,
@@ -99,10 +108,9 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
 
 export async function getSupervisorsInHub() {
   const hubCoordinator = await currentHubCoordinator();
-  return await db.supervisor.findMany({
-    where: {
-      hubId: hubCoordinator?.profile?.assignedHubId ?? "",
-    },
+  const hubId = hubCoordinator?.profile?.assignedHubId ?? "";
+  return await db.query.supervisor.findMany({
+    where: (s, { eq }) => eq(s.hubId, hubId),
   });
 }
 
@@ -115,12 +123,14 @@ export async function approveSupervisorExpense({ id }: { id: string }) {
       throw new Error("Unauthorised user");
     }
 
-    await db.reimbursementRequest.update({
-      where: { id },
-      data: {
-        status: "APPROVED",
-      },
-    });
+    const updated = await db
+      .update(reimbursementRequest)
+      .set({ status: "APPROVED" })
+      .where(eq(reimbursementRequest.id, id))
+      .returning({ id: reimbursementRequest.id });
+    if (updated.length === 0) {
+      throw new Error(`Expense ${id} not found`);
+    }
 
     return {
       success: true,
@@ -156,23 +166,21 @@ export async function addSupervisorExpense({
       throw new Error("Unauthorised user");
     }
 
-    await db.reimbursementRequest.create({
-      data: {
-        id: objectId("reimb"),
-        supervisorId: data.supervisor,
-        hubId: hubCoordinator.profile?.assignedHubId ?? "",
-        hubCoordinatorId: hubCoordinator.profile?.id ?? "",
-        incurredAt: new Date(data.week),
-        amount: Number.parseInt(data.totalAmount, 10),
-        kind: data.expenseType,
-        status: "PENDING",
-        details: {
-          subtype: data.expenseType,
-          session: data.session,
-        },
-        mpesaName: data.mpesaName,
-        mpesaNumber: data.mpesaNumber,
+    await db.insert(reimbursementRequest).values({
+      id: objectId("reimb"),
+      supervisorId: data.supervisor,
+      hubId: hubCoordinator.profile?.assignedHubId ?? "",
+      hubCoordinatorId: hubCoordinator.profile?.id ?? "",
+      incurredAt: new Date(data.week),
+      amount: Number.parseInt(data.totalAmount, 10),
+      kind: data.expenseType,
+      status: "PENDING",
+      details: {
+        subtype: data.expenseType,
+        session: data.session,
       },
+      mpesaName: data.mpesaName,
+      mpesaNumber: data.mpesaNumber,
     });
 
     return {
@@ -210,9 +218,9 @@ export async function updateSupervisorExpense({
       throw new Error("Unauthorised user");
     }
 
-    await db.reimbursementRequest.update({
-      where: { id },
-      data: {
+    const updated = await db
+      .update(reimbursementRequest)
+      .set({
         incurredAt: new Date(data.week),
         amount: Number.parseInt(data.totalAmount, 10),
         kind: data.expenseType,
@@ -222,8 +230,12 @@ export async function updateSupervisorExpense({
         },
         mpesaName: data.mpesaName,
         mpesaNumber: data.mpesaNumber,
-      },
-    });
+      })
+      .where(eq(reimbursementRequest.id, id))
+      .returning({ id: reimbursementRequest.id });
+    if (updated.length === 0) {
+      throw new Error(`Expense ${id} not found`);
+    }
 
     return {
       success: true,

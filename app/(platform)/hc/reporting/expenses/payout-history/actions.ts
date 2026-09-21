@@ -1,6 +1,7 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
+import { sql } from "drizzle-orm";
+
 import { currentHubCoordinator } from "#/app/auth";
 import {
   type FellowPayoutDetail,
@@ -18,5 +19,5 @@ export async function loadHubPayoutHistory(): Promise<HubPayoutHistoryType[]> {
     throw new Error("Unauthorised user");
   }
 
-  return loadPayoutHistory(Prisma.sql`f.hub_id = ${hubCoordinator.profile?.assignedHubId}`);
+  return loadPayoutHistory(sql`f.hub_id = ${hubCoordinator.profile?.assignedHubId}`);
 }

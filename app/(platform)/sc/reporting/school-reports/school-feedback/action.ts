@@ -1,7 +1,7 @@
 "use server";
 
 import { currentSupervisor } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 export async function loadSchoolFeedback() {
   try {
@@ -12,18 +12,18 @@ export async function loadSchoolFeedback() {
     }
 
     const { profile } = supervisor;
+    const hubId = profile?.hubId;
 
-    const schools = await db.school.findMany({
-      where: {
-        hubId: profile?.hubId,
-      },
-      include: {
+    const schools = await db.query.school.findMany({
+      where: (s, { eq, isNull }) => (hubId === null ? isNull(s.hubId) : eq(s.hubId, hubId)),
+      // Lists render in received order; keep Prisma's insertion order.
+      with: {
         schoolFeedbacks: {
-          include: {
-            user: true,
-          },
+          with: { user: true },
+          orderBy: (f, { asc }) => [asc(f.createdAt), asc(f.id)],
         },
       },
+      orderBy: (s, { asc }) => [asc(s.createdAt), asc(s.id)],
     });
 
     const formattedData = schools.map((school) => {

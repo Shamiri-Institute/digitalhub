@@ -1,8 +1,7 @@
 "use server";
 
-import type { Prisma } from "@prisma/client";
 import { currentSupervisor } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 export type SupervisorFellowsAttendancesType = Awaited<
   ReturnType<typeof loadSupervisorFellowAttendance>
@@ -15,39 +14,18 @@ export async function loadSupervisorFellowAttendance() {
     throw new Error("Unauthorised user");
   }
 
-  const fellows = await db.fellow.findMany({
-    where: {
-      supervisorId: currentSupervisorData.profile?.id,
-    },
-    include: {
-      hub: {
-        select: {
-          hubName: true,
-        },
-      },
-      supervisor: {
-        select: {
-          supervisorName: true,
-        },
-      },
+  const supervisorId = currentSupervisorData.profile.id;
+  const fellows = await db.query.fellow.findMany({
+    where: (f, { eq }) => eq(f.supervisorId, supervisorId),
+    with: {
+      hub: { columns: { hubName: true } },
+      supervisor: { columns: { supervisorName: true } },
       fellowAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-            },
-          },
+        with: {
+          session: { with: { session: true } },
           group: true,
-          school: {
-            select: {
-              schoolName: true,
-            },
-          },
-          PayoutStatements: {
-            orderBy: {
-              createdAt: "asc",
-            },
-          },
+          school: { columns: { schoolName: true } },
+          PayoutStatements: { orderBy: (p, { asc }) => asc(p.createdAt) },
         },
       },
     },
@@ -143,16 +121,11 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
   return { preCount, mainCount, supervisionCount, trainingCount };
 }
 
-type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
-  include: {
-    session: {
-      include: {
-        session: true;
-      };
-    };
-    PayoutStatements: true;
-  };
-}>;
+/** The slice of an attendance row the helpers above read. */
+type FellowAttendance = {
+  session: { session: { sessionName: string; sessionType: string } | null } | null;
+  PayoutStatements: { amount: number; confirmedAt: Date | null }[];
+};
 
 export async function submitPaymentReversal(data: { id: number; name: string }) {
   const currentSupervisorData = await currentSupervisor();

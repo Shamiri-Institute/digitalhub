@@ -1,6 +1,9 @@
 "use server";
 
+import { eq } from "drizzle-orm";
+
 import { currentHubCoordinator } from "#/app/auth";
+import { fellow } from "#/db/schema";
 import { loadPaymentComplaints } from "#/lib/actions/expenses/complaints";
 
 export type HubReportComplaintsType = Awaited<ReturnType<typeof loadHubPaymentComplaints>>[number];
@@ -18,5 +21,5 @@ export async function loadHubPaymentComplaints() {
     return [];
   }
 
-  return loadPaymentComplaints({ hubId: assignedHubId });
+  return loadPaymentComplaints(eq(fellow.hubId, assignedHubId));
 }

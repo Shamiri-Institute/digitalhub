@@ -1,33 +1,37 @@
-import type { Prisma } from "@prisma/client";
+import type { SQL } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+
+import { db } from "#/db/client";
+import { reimbursementRequest } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
+
+/** The rows the report is built from, with the supervisor and hub names it shows. */
+async function fetchSupervisorExpenses(scope: SQL | undefined) {
+  return db.query.reimbursementRequest.findMany({
+    where: scope,
+    with: {
+      supervisor: { columns: { id: true, supervisorName: true } },
+      hub: { columns: { hubName: true } },
+    },
+    // The table renders in received order; keep Prisma's insertion order.
+    orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
+  });
+}
+
+export type SupervisorExpenseRecord = Awaited<ReturnType<typeof fetchSupervisorExpenses>>[number];
 
 /**
  * Shared core for supervisor reimbursement expenses. Each role's
- * actions.ts resolves its own auth, passes the request scope it may see,
- * and chooses the coordinator label shown per row (the HC dashboard shows
- * the coordinator's own name; ops shows the expense's hub name).
+ * actions.ts resolves its own auth, passes the request scope it may see (a
+ * condition on the `reimbursementRequest` table), and chooses the coordinator
+ * label shown per row (the HC dashboard shows the coordinator's own name; ops
+ * shows the expense's hub name).
  */
 export async function loadSupervisorExpenses(
-  where: Prisma.ReimbursementRequestWhereInput,
+  scope: SQL | undefined,
   coordinatorLabel: (expense: SupervisorExpenseRecord) => string | null | undefined,
 ) {
-  const supervisorsExpenses = await db.reimbursementRequest.findMany({
-    where,
-    include: {
-      supervisor: {
-        select: {
-          id: true,
-          supervisorName: true,
-        },
-      },
-      hub: {
-        select: {
-          hubName: true,
-        },
-      },
-    },
-  });
+  const supervisorsExpenses = await fetchSupervisorExpenses(scope);
 
   return supervisorsExpenses.map((expense) => {
     const details = expense.details;
@@ -62,18 +66,15 @@ export async function loadSupervisorExpenses(
   });
 }
 
-export type SupervisorExpenseRecord = Prisma.ReimbursementRequestGetPayload<{
-  include: {
-    supervisor: { select: { id: true; supervisorName: true } };
-    hub: { select: { hubName: true } };
-  };
-}>;
-
 export async function deleteSupervisorExpense(id: string) {
   try {
-    await db.reimbursementRequest.delete({
-      where: { id },
-    });
+    const deleted = await db
+      .delete(reimbursementRequest)
+      .where(eq(reimbursementRequest.id, id))
+      .returning({ id: reimbursementRequest.id });
+    if (deleted.length === 0) {
+      throw new Error(`Expense ${id} not found`);
+    }
 
     return {
       success: true,
@@ -90,12 +91,14 @@ export async function deleteSupervisorExpense(id: string) {
 
 export async function approveSupervisorExpenseRequest(id: string) {
   try {
-    await db.reimbursementRequest.update({
-      where: { id },
-      data: {
-        status: "APPROVED",
-      },
-    });
+    const updated = await db
+      .update(reimbursementRequest)
+      .set({ status: "APPROVED" })
+      .where(eq(reimbursementRequest.id, id))
+      .returning({ id: reimbursementRequest.id });
+    if (updated.length === 0) {
+      throw new Error(`Expense ${id} not found`);
+    }
 
     return {
       success: true,
@@ -125,23 +128,21 @@ export async function createSupervisorExpense(
   scope: { hubId: string; hubCoordinatorId: string },
 ) {
   try {
-    await db.reimbursementRequest.create({
-      data: {
-        id: objectId("reimb"),
-        supervisorId: data.supervisor,
-        hubId: scope.hubId,
-        hubCoordinatorId: scope.hubCoordinatorId,
-        incurredAt: new Date(data.week),
-        amount: Number.parseInt(data.totalAmount, 10),
-        kind: data.expenseType,
-        status: "PENDING",
-        details: {
-          subtype: data.expenseType,
-          session: data.session,
-        },
-        mpesaName: data.mpesaName,
-        mpesaNumber: data.mpesaNumber,
+    await db.insert(reimbursementRequest).values({
+      id: objectId("reimb"),
+      supervisorId: data.supervisor,
+      hubId: scope.hubId,
+      hubCoordinatorId: scope.hubCoordinatorId,
+      incurredAt: new Date(data.week),
+      amount: Number.parseInt(data.totalAmount, 10),
+      kind: data.expenseType,
+      status: "PENDING",
+      details: {
+        subtype: data.expenseType,
+        session: data.session,
       },
+      mpesaName: data.mpesaName,
+      mpesaNumber: data.mpesaNumber,
     });
 
     return {
@@ -162,9 +163,9 @@ export async function updateSupervisorExpenseRequest(
   data: Omit<SupervisorExpenseInput, "supervisor">,
 ) {
   try {
-    await db.reimbursementRequest.update({
-      where: { id },
-      data: {
+    const updated = await db
+      .update(reimbursementRequest)
+      .set({
         incurredAt: new Date(data.week),
         amount: Number.parseInt(data.totalAmount, 10),
         kind: data.expenseType,
@@ -174,8 +175,12 @@ export async function updateSupervisorExpenseRequest(
         },
         mpesaName: data.mpesaName,
         mpesaNumber: data.mpesaNumber,
-      },
-    });
+      })
+      .where(eq(reimbursementRequest.id, id))
+      .returning({ id: reimbursementRequest.id });
+    if (updated.length === 0) {
+      throw new Error(`Expense ${id} not found`);
+    }
 
     return {
       success: true,

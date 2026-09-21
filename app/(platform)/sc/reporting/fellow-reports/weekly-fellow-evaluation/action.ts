@@ -2,7 +2,7 @@
 
 import { currentSupervisor } from "#/app/auth";
 import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 export async function loadWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluation[]> {
   try {
@@ -13,13 +13,12 @@ export async function loadWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluati
       throw new Error("Supervisor not found");
     }
 
-    const fellows = await db.fellow.findMany({
-      where: {
-        supervisorId: supervisor.profile?.id,
-      },
-      include: {
-        weeklyFellowRatings: true,
-      },
+    const supervisorId = supervisor.profile.id;
+    const fellows = await db.query.fellow.findMany({
+      where: (f, { eq }) => eq(f.supervisorId, supervisorId),
+      // Lists render in received order; keep Prisma's insertion order.
+      with: { weeklyFellowRatings: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] } },
+      orderBy: (f, { asc }) => [asc(f.createdAt), asc(f.id)],
     });
 
     const formattedData = fellows.map((fellow) => {

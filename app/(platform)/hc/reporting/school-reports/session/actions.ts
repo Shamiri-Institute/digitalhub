@@ -1,8 +1,9 @@
 "use server";
 
 import { format } from "date-fns";
+
 import { currentHubCoordinator } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 export async function loadSessionReport() {
   const hubCoordinator = await currentHubCoordinator();
@@ -11,32 +12,23 @@ export async function loadSessionReport() {
     throw new Error("Hub coordinator has no assigned hub");
   }
 
-  const schools = await db.school.findMany({
-    where: {
-      hubId: hubCoordinator.profile?.assignedHubId,
-    },
-    include: {
+  const hubId = hubCoordinator.profile.assignedHubId;
+  const schools = await db.query.school.findMany({
+    where: (s, { eq }) => eq(s.hubId, hubId),
+    with: {
       interventionSessions: {
-        where: {
-          occurred: true,
-        },
-        include: {
+        where: (session, { eq }) => eq(session.occurred, true),
+        with: {
           sessionRatings: true,
           session: true,
           sessionNotes: true,
           sessionComments: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                },
-              },
+            with: {
+              user: { columns: { name: true } },
             },
           },
         },
-        orderBy: {
-          sessionDate: "asc",
-        },
+        orderBy: (session, { asc }) => asc(session.sessionDate),
       },
     },
   });

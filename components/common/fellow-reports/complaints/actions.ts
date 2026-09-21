@@ -1,9 +1,12 @@
 "use server";
 
-import { ImplementerRole } from "#/db/enums";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+
 import { getCurrentPersonnel } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { fellow, fellowComplaints } from "#/db/schema";
 
 export type FellowComplaintsType = Awaited<ReturnType<typeof loadFellowComplaints>>[number];
 
@@ -27,56 +30,58 @@ export type LoadFellowComplaintsOptions =
 
 export async function loadFellowComplaints(options?: LoadFellowComplaintsOptions) {
   try {
-    const where =
+    const fellowsInScope =
       options?.scope === "supervisor"
-        ? { fellow: { supervisorId: options.supervisorId } }
+        ? db
+            .select({ id: fellow.id })
+            .from(fellow)
+            .where(eq(fellow.supervisorId, options.supervisorId))
         : options?.scope === "hub"
-          ? { fellow: { hubId: options.hubId } }
+          ? db.select({ id: fellow.id }).from(fellow).where(eq(fellow.hubId, options.hubId))
           : undefined;
 
-    const fellowComplaints = await db.fellowComplaints.findMany({
-      where,
-      include: {
+    const complaints = await db.query.fellowComplaints.findMany({
+      where: (c, { inArray }) => (fellowsInScope ? inArray(c.fellowId, fellowsInScope) : undefined),
+      with: {
         supervisor: true,
-        fellow: {
-          include: {
-            supervisor: true,
-          },
-        },
+        fellow: { with: { supervisor: true } },
       },
+      // Grouped by fellow in received order; keep Prisma's insertion order.
+      orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)],
     });
 
-    const groupedByFellow = fellowComplaints.reduce<
-      Record<string, FellowComplaintsGroupedByFellow>
-    >((acc, item) => {
-      const fellowId = item.fellowId;
-      const supervisorName =
-        item.fellow.supervisor?.supervisorName ?? item.supervisor?.supervisorName ?? "";
+    const groupedByFellow = complaints.reduce<Record<string, FellowComplaintsGroupedByFellow>>(
+      (acc, item) => {
+        const fellowId = item.fellowId;
+        const supervisorName =
+          item.fellow.supervisor?.supervisorName ?? item.supervisor?.supervisorName ?? "";
 
-      if (!acc[fellowId]) {
-        acc[fellowId] = {
-          id: fellowId,
+        if (!acc[fellowId]) {
+          acc[fellowId] = {
+            id: fellowId,
+            fellowName: item.fellow.fellowName ?? "",
+            supervisorName,
+            complaints: [],
+          };
+        }
+
+        const formattedDate = (() => {
+          if (!item.createdAt) return new Date().toISOString().split("T")[0];
+          const date = new Date(String(item.createdAt));
+          return date.toISOString().split("T")[0];
+        })();
+
+        acc[fellowId].complaints.push({
+          complaintId: item.id,
+          date: formattedDate ?? "",
+          complaint: item.complaint ?? "",
+          additionalComments: item.comments ?? "",
           fellowName: item.fellow.fellowName ?? "",
-          supervisorName,
-          complaints: [],
-        };
-      }
-
-      const formattedDate = (() => {
-        if (!item.createdAt) return new Date().toISOString().split("T")[0];
-        const date = new Date(String(item.createdAt));
-        return date.toISOString().split("T")[0];
-      })();
-
-      acc[fellowId].complaints.push({
-        complaintId: item.id,
-        date: formattedDate ?? "",
-        complaint: item.complaint ?? "",
-        additionalComments: item.comments ?? "",
-        fellowName: item.fellow.fellowName ?? "",
-      });
-      return acc;
-    }, {});
+        });
+        return acc;
+      },
+      {},
+    );
 
     return Object.values(groupedByFellow);
   } catch (error) {
@@ -95,10 +100,14 @@ export async function editFellowComplaint(complaintId: string, complaint: string
       };
     }
 
-    await db.fellowComplaints.update({
-      where: { id: complaintId },
-      data: { complaint },
-    });
+    const updated = await db
+      .update(fellowComplaints)
+      .set({ complaint })
+      .where(eq(fellowComplaints.id, complaintId))
+      .returning({ id: fellowComplaints.id });
+    if (updated.length === 0) {
+      throw new Error(`Complaint ${complaintId} not found`);
+    }
 
     revalidatePath("/hc/schools/fellow-reports/complaints");
     return {

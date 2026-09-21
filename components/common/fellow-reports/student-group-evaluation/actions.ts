@@ -1,19 +1,10 @@
 "use server";
 
-import type { Prisma } from "@prisma/client";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { db } from "#/lib/db";
+import { eq } from "drizzle-orm";
 
-type InterventionGroupReportWithRelations = Prisma.InterventionGroupReportGetPayload<{
-  include: {
-    group: {
-      include: {
-        leader: true;
-      };
-    };
-    session: true;
-  };
-}>;
+import { db } from "#/db/client";
+import { fellow, interventionGroup, interventionGroupReport } from "#/db/schema";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 
 export type StudentGroupEvaluationType = {
   id: string;
@@ -31,6 +22,46 @@ export type StudentGroupEvaluationType = {
     contentComment: string;
   }[];
 };
+
+export type LoadStudentGroupEvaluationsOptions =
+  | { scope: "supervisor"; supervisorId: string }
+  | { scope: "hub"; hubId: string }
+  | { scope?: "all" };
+
+/** Group reports with the group, its leader and the session, scoped like the Prisma `where`. */
+async function fetchEvaluations(options?: LoadStudentGroupEvaluationsOptions) {
+  const leadersInScope =
+    options?.scope === "supervisor"
+      ? db
+          .select({ id: fellow.id })
+          .from(fellow)
+          .where(eq(fellow.supervisorId, options.supervisorId))
+      : options?.scope === "hub"
+        ? db.select({ id: fellow.id }).from(fellow).where(eq(fellow.hubId, options.hubId))
+        : undefined;
+
+  return db.query.interventionGroupReport.findMany({
+    where: (r, { inArray }) =>
+      leadersInScope
+        ? inArray(
+            r.groupId,
+            db
+              .select({ id: interventionGroup.id })
+              .from(interventionGroup)
+              .where(inArray(interventionGroup.leaderId, leadersInScope)),
+          )
+        : undefined,
+    with: {
+      group: { with: { leader: true } },
+      session: true,
+    },
+    // The page keeps the first report per fellow, so the order must be deterministic. Prisma
+    // returned insertion order; typeid ids are time-ordered, so this reproduces it.
+    orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
+  });
+}
+
+type InterventionGroupReportWithRelations = Awaited<ReturnType<typeof fetchEvaluations>>[number];
 
 const transformEvaluationData = (
   data: InterventionGroupReportWithRelations[],
@@ -80,32 +111,10 @@ const calculateAverage = (numbers: number[]): number => {
   return Number((sum / validNumbers.length).toFixed(1));
 };
 
-export type LoadStudentGroupEvaluationsOptions =
-  | { scope: "supervisor"; supervisorId: string }
-  | { scope: "hub"; hubId: string }
-  | { scope?: "all" };
-
 export async function loadStudentGroupEvaluations(options?: LoadStudentGroupEvaluationsOptions) {
   await requireAuthRole();
   try {
-    const where =
-      options?.scope === "supervisor"
-        ? { group: { leader: { supervisorId: options.supervisorId } } }
-        : options?.scope === "hub"
-          ? { group: { leader: { hubId: options.hubId } } }
-          : undefined;
-
-    const evaluations = await db.interventionGroupReport.findMany({
-      where,
-      include: {
-        group: {
-          include: {
-            leader: true,
-          },
-        },
-        session: true,
-      },
-    });
+    const evaluations = await fetchEvaluations(options);
 
     return transformEvaluationData(evaluations);
   } catch (error) {
@@ -116,14 +125,18 @@ export async function loadStudentGroupEvaluations(options?: LoadStudentGroupEval
 
 export async function editStudentGroupEvaluation(
   evaluationId: string,
-  data: Prisma.InterventionGroupReportUpdateInput,
+  data: Partial<typeof interventionGroupReport.$inferInsert>,
 ) {
   await requireAuthRole();
   try {
-    await db.interventionGroupReport.update({
-      where: { id: evaluationId },
-      data,
-    });
+    const updated = await db
+      .update(interventionGroupReport)
+      .set(data)
+      .where(eq(interventionGroupReport.id, evaluationId))
+      .returning({ id: interventionGroupReport.id });
+    if (updated.length === 0) {
+      throw new Error(`Evaluation ${evaluationId} not found`);
+    }
 
     return { success: true, message: "Evaluation updated successfully" };
   } catch (error) {

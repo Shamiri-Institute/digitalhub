@@ -1,8 +1,7 @@
 "use server";
 
-import type { Prisma } from "@prisma/client";
 import { currentHubCoordinator } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 export type HubFellowsAttendancesType = Awaited<ReturnType<typeof loadHubFellowAttendance>>[number];
 
@@ -13,39 +12,18 @@ export async function loadHubFellowAttendance() {
     throw new Error("Unauthorised user");
   }
 
-  const fellows = await db.fellow.findMany({
-    where: {
-      hubId: hubCoordinator.profile?.assignedHubId,
-    },
-    include: {
-      hub: {
-        select: {
-          hubName: true,
-        },
-      },
-      supervisor: {
-        select: {
-          supervisorName: true,
-        },
-      },
+  const hubId = hubCoordinator.profile?.assignedHubId;
+  const fellows = await db.query.fellow.findMany({
+    where: (f, { eq, isNull }) => (hubId === null ? isNull(f.hubId) : eq(f.hubId, hubId)),
+    with: {
+      hub: { columns: { hubName: true } },
+      supervisor: { columns: { supervisorName: true } },
       fellowAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-            },
-          },
+        with: {
+          session: { with: { session: true } },
           group: true,
-          school: {
-            select: {
-              schoolName: true,
-            },
-          },
-          PayoutStatements: {
-            orderBy: {
-              createdAt: "asc",
-            },
-          },
+          school: { columns: { schoolName: true } },
+          PayoutStatements: { orderBy: (p, { asc }) => asc(p.createdAt) },
         },
       },
     },
@@ -142,16 +120,11 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
   return { preCount, mainCount, supervisionCount, trainingCount };
 }
 
-type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
-  include: {
-    session: {
-      include: {
-        session: true;
-      };
-    };
-    PayoutStatements: true;
-  };
-}>;
+/** The slice of an attendance row the helpers above read. */
+type FellowAttendance = {
+  session: { session: { sessionLabel: string; sessionType: string } | null } | null;
+  PayoutStatements: { amount: number; confirmedAt: Date | null }[];
+};
 
 export async function submitPaymentReversal(data: { id: number; name: string }) {
   const hubCoordinator = await currentHubCoordinator();

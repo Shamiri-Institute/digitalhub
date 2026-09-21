@@ -1,8 +1,10 @@
 "use server";
 
-import type { FellowGroupReport } from "#/db/types";
+import { eq } from "drizzle-orm";
+
+import { db } from "#/db/client";
+import { fellow, type fellowGroupReport } from "#/db/schema";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { db } from "#/lib/db";
 
 export type FellowGroupReportRow = {
   groupId: string;
@@ -10,7 +12,7 @@ export type FellowGroupReportRow = {
   fellowName: string;
   status: "Submitted" | "Not yet submitted";
   submittedAt: Date | null;
-  report: FellowGroupReport | null;
+  report: typeof fellowGroupReport.$inferSelect | null;
 };
 
 export type LoadFellowGroupReportsOptions =
@@ -21,20 +23,25 @@ export type LoadFellowGroupReportsOptions =
 export async function loadFellowGroupReports(options?: LoadFellowGroupReportsOptions) {
   await requireAuthRole();
   try {
-    const where =
+    const leadersInScope =
       options?.scope === "supervisor"
-        ? { leader: { supervisorId: options.supervisorId } }
+        ? db
+            .select({ id: fellow.id })
+            .from(fellow)
+            .where(eq(fellow.supervisorId, options.supervisorId))
         : options?.scope === "hub"
-          ? { leader: { hubId: options.hubId } }
+          ? db.select({ id: fellow.id }).from(fellow).where(eq(fellow.hubId, options.hubId))
           : undefined;
 
-    const groups = await db.interventionGroup.findMany({
-      where: { ...where, archivedAt: null },
-      include: {
+    const groups = await db.query.interventionGroup.findMany({
+      where: (g, { and, isNull, inArray }) =>
+        and(leadersInScope ? inArray(g.leaderId, leadersInScope) : undefined, isNull(g.archivedAt)),
+      with: {
         leader: true,
-        fellowGroupReports: true,
+        // The row shows the first report, so keep Prisma's insertion order.
+        fellowGroupReports: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] },
       },
-      orderBy: { groupName: "asc" },
+      orderBy: (g, { asc }) => asc(g.groupName),
     });
 
     return groups.map<FellowGroupReportRow>((group) => {

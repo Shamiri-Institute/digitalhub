@@ -1,6 +1,9 @@
 "use server";
 
+import { eq } from "drizzle-orm";
+
 import { currentSupervisor } from "#/app/auth";
+import { fellow } from "#/db/schema";
 import { loadPaymentComplaints } from "#/lib/actions/expenses/complaints";
 
 export type FellowReportComplaintsType = Awaited<
@@ -20,5 +23,5 @@ export async function loadFellowPaymentComplaints() {
     return [];
   }
 
-  return loadPaymentComplaints({ supervisorId });
+  return loadPaymentComplaints(eq(fellow.supervisorId, supervisorId));
 }

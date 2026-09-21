@@ -1,5 +1,6 @@
-import type { Prisma } from "@prisma/client";
-import { db } from "#/lib/db";
+import { type SQL, sql } from "drizzle-orm";
+
+import { queryRaw } from "#/db/client";
 
 export type FellowPayoutDetail = {
   fellowId: string;
@@ -21,18 +22,16 @@ export type PayoutHistoryEntry = {
 /**
  * Shared core for the fellow payout-history report. `fellowScope` is a SQL
  * fragment restricting the fellows the caller may see, qualified against the
- * `fellows f` alias, e.g. Prisma.sql`f.hub_id = ${hubId}`. It must be qualified
+ * `fellows f` alias, e.g. sql`f.hub_id = ${hubId}`. It must be qualified
  * because the second query joins fellows to supervisors, which also has a
  * hub_id, so an unqualified column would be ambiguous.
  */
-export async function loadPayoutHistory(fellowScope: Prisma.Sql): Promise<PayoutHistoryEntry[]> {
-  const payoutDates = await db.$queryRaw<
-    Array<{
-      dateAdded: Date;
-      duration: string;
-      totalPayoutAmount: number;
-    }>
-  >`
+export async function loadPayoutHistory(fellowScope: SQL): Promise<PayoutHistoryEntry[]> {
+  const payoutDates = await queryRaw<{
+    dateAdded: Date;
+    duration: string;
+    totalPayoutAmount: number;
+  }>(sql`
     WITH payout_groups AS (
       SELECT
         executed_at as payout_date,
@@ -55,11 +54,11 @@ export async function loadPayoutHistory(fellowScope: Prisma.Sql): Promise<Payout
       ) as "duration",
       total_amount as "totalPayoutAmount"
     FROM payout_groups;
-  `;
+  `);
 
   const result = await Promise.all(
     payoutDates.map(async (payout) => {
-      const fellowDetails = await db.$queryRaw<FellowPayoutDetail[]>`
+      const fellowDetails = await queryRaw<FellowPayoutDetail>(sql`
         SELECT
           f.id as "fellowId",
           f.fellow_name as "fellowName",
@@ -78,7 +77,7 @@ export async function loadPayoutHistory(fellowScope: Prisma.Sql): Promise<Payout
         -- two statements in the same payout, which would split the fellow.
         GROUP BY f.id, f.fellow_name, f.mpesa_name, h.hub_name, s.supervisor_name
         ORDER BY f.fellow_name ASC;
-      `;
+      `);
 
       return {
         ...payout,

@@ -1,7 +1,7 @@
 "use server";
 
 import { currentHubCoordinator } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 export async function loadHubSchoolFeedback() {
   try {
@@ -13,17 +13,17 @@ export async function loadHubSchoolFeedback() {
 
     const assignedHubId = hubCoordinator.profile?.assignedHubId;
 
-    const schools = await db.school.findMany({
-      where: {
-        hubId: assignedHubId,
-      },
-      include: {
+    const schools = await db.query.school.findMany({
+      where: (s, { eq, isNull }) =>
+        assignedHubId === null ? isNull(s.hubId) : eq(s.hubId, assignedHubId),
+      // Lists render in received order; keep Prisma's insertion order.
+      with: {
         schoolFeedbacks: {
-          include: {
-            user: true,
-          },
+          with: { user: true },
+          orderBy: (f, { asc }) => [asc(f.createdAt), asc(f.id)],
         },
       },
+      orderBy: (s, { asc }) => [asc(s.createdAt), asc(s.id)],
     });
 
     const formattedData = schools.map((school) => {

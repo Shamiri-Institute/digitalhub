@@ -1,9 +1,12 @@
 "use server";
 
+import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+
 import { currentOpsUser } from "#/app/auth";
+import { db, queryRaw } from "#/db/client";
+import { fellow, fellowAttendance, hub, interventionSession, payoutStatements } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { db } from "#/lib/db";
 
 export type FellowPayoutDetail = {
   fellowName: string;
@@ -31,17 +34,15 @@ export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryTy
 
   const projectId = await getActiveProjectId();
 
-  const payoutDates = await db.$queryRaw<
-    Array<{
-      dateAdded: Date;
-      duration: string;
-      totalPayoutAmount: number;
-      downloadLink: string;
-      confirmedAt: Date | null;
-    }>
-  >`
+  const payoutDates = await queryRaw<{
+    dateAdded: Date;
+    duration: string;
+    totalPayoutAmount: number;
+    downloadLink: string;
+    confirmedAt: Date | null;
+  }>(sql`
     WITH payout_groups AS (
-      SELECT 
+      SELECT
         executed_at as payout_date,
         LEAD(executed_at) OVER (ORDER BY executed_at) as next_payout_date,
         SUM(amount) as total_amount
@@ -55,7 +56,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryTy
       GROUP BY executed_at
       ORDER BY executed_at DESC
     )
-    SELECT 
+    SELECT
       payout_date as "dateAdded",
       CONCAT(
         TO_CHAR(payout_date, 'DD/MM/YYYY'),
@@ -70,12 +71,12 @@ export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryTy
         LIMIT 1
       ) as "confirmedAt"
     FROM payout_groups;
-  `;
+  `);
 
   const result = await Promise.all(
     payoutDates.map(async (payout) => {
-      const fellowDetails = await db.$queryRaw<FellowPayoutDetail[]>`
-        SELECT 
+      const fellowDetails = await queryRaw<FellowPayoutDetail>(sql`
+        SELECT
           f.fellow_name as "fellowName",
           f.mpesa_name as "fellowMpesaName",
           h.hub_name as "hub",
@@ -90,7 +91,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryTy
         AND h.project_id = ${projectId}
         GROUP BY f.id, f.fellow_name, h.hub_name, s.supervisor_name, ps.mpesa_number
         ORDER BY f.fellow_name ASC;
-      `;
+      `);
 
       return {
         ...payout,
@@ -114,33 +115,36 @@ export async function triggerPayoutAction() {
   const currentTime = new Date();
 
   try {
-    return await db.$transaction(async (tx) => {
-      const eligibleAttendances = await tx.fellowAttendance.findMany({
-        where: {
-          session: {
-            occurred: true,
-          },
-          attended: true,
-          processedAt: null,
-          fellow: {
-            OR: [{ droppedOut: false }, { droppedOut: null }],
-            hub: {
-              projectId,
-            },
-          },
-        },
-        include: {
+    return await db.transaction(async (tx) => {
+      const occurredSessionIds = tx
+        .select({ id: interventionSession.id })
+        .from(interventionSession)
+        .where(eq(interventionSession.occurred, true));
+      const activeFellowIdsInProject = tx
+        .select({ id: fellow.id })
+        .from(fellow)
+        .where(
+          and(
+            or(eq(fellow.droppedOut, false), isNull(fellow.droppedOut)),
+            inArray(
+              fellow.hubId,
+              tx.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
+            ),
+          ),
+        );
+
+      const eligibleAttendances = await tx.query.fellowAttendance.findMany({
+        where: (a, { and, eq, isNull, inArray }) =>
+          and(
+            inArray(a.sessionId, occurredSessionIds),
+            eq(a.attended, true),
+            isNull(a.processedAt),
+            inArray(a.fellowId, activeFellowIdsInProject),
+          ),
+        with: {
           fellow: true,
-          session: {
-            include: {
-              session: true,
-            },
-          },
-          PayoutStatements: {
-            where: {
-              executedAt: null,
-            },
-          },
+          session: { with: { session: true } },
+          PayoutStatements: { where: (p, { isNull }) => isNull(p.executedAt) },
         },
       });
 
@@ -165,27 +169,25 @@ export async function triggerPayoutAction() {
         };
       }
 
-      const payoutStatementsUpdateResult = await tx.payoutStatements.updateMany({
-        where: {
-          fellowAttendanceId: { in: fellowAttendanceIdsToProcess },
-          executedAt: null,
-        },
-        data: {
-          executedAt: currentTime,
-        },
-      });
+      const updatedPayoutStatements = await tx
+        .update(payoutStatements)
+        .set({ executedAt: currentTime })
+        .where(
+          and(
+            inArray(payoutStatements.fellowAttendanceId, fellowAttendanceIdsToProcess),
+            isNull(payoutStatements.executedAt),
+          ),
+        )
+        .returning({ id: payoutStatements.id });
 
-      const fellowAttendancesUpdateResult = await tx.fellowAttendance.updateMany({
-        where: {
-          id: { in: fellowAttendanceIdsToProcess },
-        },
-        data: {
-          processedAt: currentTime,
-        },
-      });
+      const updatedAttendances = await tx
+        .update(fellowAttendance)
+        .set({ processedAt: currentTime })
+        .where(inArray(fellowAttendance.id, fellowAttendanceIdsToProcess))
+        .returning({ id: fellowAttendance.id });
 
-      const processedCount = fellowAttendancesUpdateResult.count;
-      const payoutStatementsCount = payoutStatementsUpdateResult.count;
+      const processedCount = updatedAttendances.length;
+      const payoutStatementsCount = updatedPayoutStatements.length;
 
       if (processedCount === 0 && payoutStatementsCount === 0) {
         return {
@@ -219,13 +221,13 @@ export async function confirmPayoutAction(executedAt: Date) {
   const currentTime = new Date();
 
   try {
-    return await db.$transaction(async (tx) => {
-      const executedPayouts = await tx.payoutStatements.findMany({
-        where: {
-          executedAt: executedAt,
-          confirmedAt: null,
-        },
-      });
+    return await db.transaction(async (tx) => {
+      const executedPayouts = await tx
+        .select({ id: payoutStatements.id })
+        .from(payoutStatements)
+        .where(
+          and(eq(payoutStatements.executedAt, executedAt), isNull(payoutStatements.confirmedAt)),
+        );
 
       if (executedPayouts.length === 0) {
         return {
@@ -234,20 +236,24 @@ export async function confirmPayoutAction(executedAt: Date) {
         };
       }
 
-      const updatedPayouts = await tx.payoutStatements.updateMany({
-        where: {
-          id: { in: executedPayouts.map((payout) => payout.id) },
-        },
-        data: {
+      const updatedPayouts = await tx
+        .update(payoutStatements)
+        .set({
           confirmedAt: currentTime,
           confirmedBy: opsUser.session.user.id,
-        },
-      });
+        })
+        .where(
+          inArray(
+            payoutStatements.id,
+            executedPayouts.map((payout) => payout.id),
+          ),
+        )
+        .returning({ id: payoutStatements.id });
 
       revalidatePath("/ops/reporting/expenses/payout-history");
       return {
         success: true,
-        message: `Successfully confirmed ${updatedPayouts.count} payouts`,
+        message: `Successfully confirmed ${updatedPayouts.length} payouts`,
       };
     });
   } catch (error) {

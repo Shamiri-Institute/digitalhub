@@ -1,10 +1,11 @@
-import type { Prisma } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
+
 import {
   type BatchRecordingUpdate,
   updateRecordingsStatusBatch,
 } from "#/app/(platform)/sc/reporting/recordings/actions";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import type { JsonValue } from "#/db/schema";
 import type { RecordingResult } from "#/lib/fidelity-ratings-api";
 import { verifyRecordingsApiKey } from "#/lib/recordings-api";
 
@@ -43,8 +44,8 @@ export async function POST(request: NextRequest) {
           ? "COMPLETED"
           : "FAILED") as BatchRecordingUpdate["status"],
         overallScore: result.fidelity_ratings?.overall_score,
-        fidelityFeedback: result.fidelity_ratings as Prisma.InputJsonValue | undefined,
-        transcript: result.transcript as Prisma.InputJsonValue | undefined,
+        fidelityFeedback: result.fidelity_ratings as JsonValue | undefined,
+        transcript: result.transcript as JsonValue | undefined,
         errorMessage: result.error,
       }));
     } else {
@@ -83,9 +84,9 @@ export async function POST(request: NextRequest) {
     if (updateResult.updatedCount !== updates.length) {
       const recordingIds = updates.map((u) => u.id);
 
-      const currentRecordings = await db.sessionRecording.findMany({
-        where: { id: { in: recordingIds } },
-        select: { id: true, status: true },
+      const currentRecordings = await db.query.sessionRecording.findMany({
+        where: (r, { inArray }) => inArray(r.id, recordingIds),
+        columns: { id: true, status: true },
       });
 
       const statusMap = new Map(currentRecordings.map((r) => [r.id, r.status]));
