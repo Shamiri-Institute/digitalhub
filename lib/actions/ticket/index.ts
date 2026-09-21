@@ -788,7 +788,7 @@ async function getUserNamesAndRolesById(
       COALESCE(${sql.raw(coalesceSql)}) AS name
     FROM implementer_members im
     ${sql.raw(joinsSql)}
-    WHERE im.user_id = ANY(${userIds}::text[])
+    WHERE ${inArray(sql`im.user_id`, userIds)}
       AND im.implementer_id = ${implementerId}
   `);
 
