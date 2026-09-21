@@ -1,7 +1,13 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
+import type {
+  interventionGroup,
+  school,
+  student,
+  studentAttendance,
+  supervisor,
+} from "#/db/schema";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
@@ -10,34 +16,20 @@ import type { Session } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
-export type SessionData = Prisma.InterventionSessionGetPayload<{
-  include: {
-    hub: {
-      select: { visibleId: true };
-    };
-    school: {
-      include: {
-        assignedSupervisor: true;
-        interventionGroups: {
-          include: {
-            students: {
-              include: {
-                _count: {
-                  select: {
-                    clinicalCases: true;
-                  };
-                };
-                studentAttendances: true;
-              };
-            };
-          };
-        };
-      };
-    };
-    sessionRatings: true;
-    session: true;
-  };
-}>;
+// The school sessions pages load a school's sessions with the whole school subtree attached.
+export type SessionData = Omit<Session, "school"> & {
+  school:
+    | (typeof school.$inferSelect & {
+        assignedSupervisor: typeof supervisor.$inferSelect | null;
+        interventionGroups: (typeof interventionGroup.$inferSelect & {
+          students: (typeof student.$inferSelect & {
+            studentAttendances: (typeof studentAttendance.$inferSelect)[];
+            _count: { clinicalCases: number };
+          })[];
+        })[];
+      })
+    | null;
+};
 
 export const columns = (state: {
   role: ImplementerRole;

@@ -1,6 +1,5 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
@@ -72,11 +71,7 @@ export function ListView({
       });
 
       const groupedSessions: {
-        [key: string]: Prisma.InterventionSessionGetPayload<{
-          include: {
-            school: true;
-          };
-        }>[];
+        [key: string]: Session[];
       } = {};
 
       _sessions.forEach((session) => {

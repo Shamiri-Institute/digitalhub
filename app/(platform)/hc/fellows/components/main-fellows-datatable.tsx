@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { fellow, supervisor } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
 import type { WeeklyFellowRatings } from "#/db/types";
 import parsePhoneNumberFromString from "libphonenumber-js";
@@ -23,9 +23,7 @@ export default function MainFellowsDatatable({
   role,
 }: {
   fellows: MainFellowTableData[];
-  supervisors: Prisma.SupervisorGetPayload<{
-    include: { fellows: true };
-  }>[];
+  supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
   weeklyEvaluations: WeeklyFellowRatings[];
   role: ImplementerRole;
 }) {

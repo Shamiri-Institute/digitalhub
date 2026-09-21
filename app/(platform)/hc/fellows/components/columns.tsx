@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { fellowComplaints, interventionGroup, school, user } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
 import type { Supervisor } from "#/db/types";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -31,14 +31,8 @@ export type MainFellowTableData = {
   droppedOut: boolean | null;
   groupCount?: number;
   averageRating: number | null;
-  complaints?: Prisma.FellowComplaintsGetPayload<{
-    include: {
-      user: true;
-    };
-  }>[];
-  groups?: Prisma.InterventionGroupGetPayload<{
-    include: { school: true };
-  }>[];
+  complaints?: (typeof fellowComplaints.$inferSelect & { user: typeof user.$inferSelect | null })[];
+  groups?: (typeof interventionGroup.$inferSelect & { school: typeof school.$inferSelect })[];
 };
 
 export const columns = (

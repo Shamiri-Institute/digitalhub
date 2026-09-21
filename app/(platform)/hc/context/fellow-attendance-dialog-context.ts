@@ -1,17 +1,16 @@
-import type { Prisma } from "@prisma/client";
+import type { interventionSession, interventionSessionRating, school } from "#/db/schema";
 import { createContext, type Dispatch, type SetStateAction } from "react";
+
+type SessionWithSchool = typeof interventionSession.$inferSelect & {
+  school: typeof school.$inferSelect | null;
+  sessionRatings: (typeof interventionSessionRating.$inferSelect)[];
+};
 
 type FellowAttendanceContextData = {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  session: Prisma.InterventionSessionGetPayload<{
-    include: { school: true; sessionRatings: true };
-  }> | null;
-  setSession: Dispatch<
-    SetStateAction<Prisma.InterventionSessionGetPayload<{
-      include: { school: true; sessionRatings: true };
-    }> | null>
-  >;
+  session: SessionWithSchool | null;
+  setSession: Dispatch<SetStateAction<SessionWithSchool | null>>;
 };
 
 export const FellowAttendanceContext = createContext<FellowAttendanceContextData>({

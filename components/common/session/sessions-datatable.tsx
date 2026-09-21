@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole } from "#/db/enums";
 import * as React from "react";
 import { useState } from "react";
@@ -26,30 +26,7 @@ export default function SessionsDatatable({
   supervisorId,
 }: {
   sessions: SessionData[];
-  supervisors?: Prisma.SupervisorGetPayload<{
-    include: {
-      supervisorAttendances: {
-        include: {
-          session: true;
-        };
-      };
-      fellows: {
-        include: {
-          fellowAttendances: true;
-          groups: {
-            include: {
-              _count: {
-                select: {
-                  students: true;
-                };
-              };
-            };
-          };
-        };
-      };
-      assignedSchools: true;
-    };
-  }>[];
+  supervisors?: ScheduleSupervisor[];
   fellowRatings?: {
     id: string;
     averageRating: number | null;

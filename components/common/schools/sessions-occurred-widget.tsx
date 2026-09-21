@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { SchoolData } from "#/lib/actions/school";
 import type { SessionName } from "#/db/types";
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
@@ -9,11 +9,7 @@ export default function SessionsOccurredWidget({
   sessions,
   types,
 }: {
-  sessions: Prisma.InterventionSessionGetPayload<{
-    include: {
-      session: true;
-    };
-  }>[];
+  sessions: NonNullable<SchoolData>["interventionSessions"][number][];
   types?: SessionName[];
 }) {
   return (

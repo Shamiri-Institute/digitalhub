@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { student } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import React, { type Dispatch, type SetStateAction } from "react";
@@ -29,15 +29,7 @@ export default function StudentsInGroup({
   children: React.ReactNode;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  students: Prisma.StudentGetPayload<{
-    include: {
-      _count: {
-        select: {
-          clinicalCases: true;
-        };
-      };
-    };
-  }>[];
+  students: (typeof student.$inferSelect & { _count: { clinicalCases: number } })[];
   schoolId: string;
   groupId: string;
   groupName: string | null;
@@ -104,17 +96,7 @@ export default function StudentsInGroup({
   );
 }
 
-const columns: ColumnDef<
-  Prisma.StudentGetPayload<{
-    include: {
-      _count: {
-        select: {
-          clinicalCases: true;
-        };
-      };
-    };
-  }>
->[] = [
+const columns: ColumnDef<typeof student.$inferSelect & { _count: { clinicalCases: number } }>[] = [
   {
     id: "Student name",
     header: "Student name",

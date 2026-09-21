@@ -1,6 +1,5 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import { ImplementerRole, QuestionnaireType } from "#/db/enums";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
@@ -80,15 +79,7 @@ export default function StudentDetailsForm({
   };
   const [loading, setLoading] = useState(false);
   const [matchedStudents, setMatchedStudents] = useState<
-    Prisma.StudentGetPayload<{
-      include: {
-        assignedGroup: {
-          include: {
-            leader: true;
-          };
-        };
-      };
-    }>[]
+    Awaited<ReturnType<typeof checkExistingStudents>>
   >([]);
 
   const form = useForm<z.infer<typeof StudentDetailsSchema>>({

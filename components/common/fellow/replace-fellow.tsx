@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { fellow, supervisor } from "#/db/schema";
 import { usePathname } from "next/navigation";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useEffect } from "react";
@@ -41,11 +41,7 @@ export default function ReplaceFellow({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   children?: React.ReactNode;
-  supervisors: Prisma.SupervisorGetPayload<{
-    include: {
-      fellows: true;
-    };
-  }>[];
+  supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
 }) {
   const pathname = usePathname();
   const form = useForm<z.infer<typeof ReplaceGroupLeaderSchema>>({
