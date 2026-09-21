@@ -159,7 +159,7 @@ export default function ViewMarkClinicalSessions({
                       selected={dates[sessionType.key]}
                       onSelect={(date) => handleDateSelect(sessionType.key, date)}
                       captionLayout="dropdown"
-                      initialFocus
+                      autoFocus
                     />
                   </PopoverContent>
                 </Popover>

@@ -4,7 +4,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Label,
   Legend,
   Line,
@@ -67,7 +66,12 @@ export default function SupervisorCharts({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={dropoutData}
+                data={dropoutData.map((reason) => ({
+                  ...reason,
+                  fill: SCHOOL_DROPOUT_REASONS_MAPPING[
+                    reason.name as keyof typeof SCHOOL_DROPOUT_REASONS_MAPPING
+                  ],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -82,13 +86,6 @@ export default function SupervisorCharts({
                 >
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
-                {dropoutData.map((reason) => (
-                  <Cell
-                    key={reason.name}
-                    // @ts-expect-error
-                    fill={SCHOOL_DROPOUT_REASONS_MAPPING[reason.name]}
-                  />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>
@@ -100,7 +97,12 @@ export default function SupervisorCharts({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250}>
               <Pie
-                data={supervisorDataCompletenessPercentage}
+                data={supervisorDataCompletenessPercentage.map((entry) => ({
+                  ...entry,
+                  fill: SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[
+                    entry.name as keyof typeof SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING
+                  ],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -115,13 +117,6 @@ export default function SupervisorCharts({
                 >
                   {`${supervisorDataCompletenessPercentage.find((d) => d.name === "actual")?.value}%`}
                 </Label>
-                {supervisorDataCompletenessPercentage.map(({ name }) => (
-                  <Cell
-                    key={name}
-                    // @ts-expect-error
-                    fill={SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[name]}
-                  />
-                ))}
               </Pie>
             </PieChart>
           </ResponsiveContainer>

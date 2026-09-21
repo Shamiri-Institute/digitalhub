@@ -4,7 +4,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Label,
   Legend,
   Line,
@@ -56,7 +55,7 @@ export default function StudentsDataBreakdown({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={dropoutData}
+                data={dropoutData.map((entry, index) => ({ ...entry, fill: randomColors[index] }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -70,9 +69,6 @@ export default function StudentsDataBreakdown({
                 >
                   {dropoutData.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
-                {dropoutData.map((entry, index) => (
-                  <Cell key={entry.name} fill={randomColors[index]} />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>
@@ -85,7 +81,10 @@ export default function StudentsDataBreakdown({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={completionData}
+                data={completionData.map((entry) => ({
+                  ...entry,
+                  fill: entry.name === "actual" ? "#0085FF" : "#EFF6FF",
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -99,9 +98,6 @@ export default function StudentsDataBreakdown({
                 >
                   {`${completionData.find((d) => d.name === "actual")?.value ?? 0}%`}
                 </Label>
-                {completionData.map((entry) => (
-                  <Cell key={entry.name} fill={entry.name === "actual" ? "#0085FF" : "#EFF6FF"} />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>

@@ -5,7 +5,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Label,
   Legend,
   Line,
@@ -73,7 +72,10 @@ export default function FellowsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={dropoutData}
+                data={dropoutData.map((reason, index) => ({
+                  ...reason,
+                  fill: randomColors[index],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -88,9 +90,6 @@ export default function FellowsCharts({
                 >
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
-                {dropoutData.map((reason, index) => (
-                  <Cell key={reason.name} fill={randomColors[index]} />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>
@@ -102,7 +101,12 @@ export default function FellowsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250}>
               <Pie
-                data={fellowsDataCompletenessPercentage}
+                data={fellowsDataCompletenessPercentage.map((entry) => ({
+                  ...entry,
+                  fill: SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[
+                    entry.name as keyof typeof SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING
+                  ],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -117,13 +121,6 @@ export default function FellowsCharts({
                 >
                   {`${fellowsDataCompletenessPercentage.find((d) => d.name === "actual")?.value}%`}
                 </Label>
-                {fellowsDataCompletenessPercentage?.map(({ name }) => (
-                  <Cell
-                    key={name}
-                    // @ts-expect-error
-                    fill={SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[name]}
-                  />
-                ))}
               </Pie>
             </PieChart>
           </ResponsiveContainer>

@@ -4,7 +4,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Label,
   Pie,
   PieChart,
@@ -59,7 +58,10 @@ export default function CasesBreakdown({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={casesByStatus}
+                data={casesByStatus.map((entry) => ({
+                  ...entry,
+                  fill: CASE_STATUS_COLORS[entry.name as keyof typeof CASE_STATUS_COLORS],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -73,12 +75,6 @@ export default function CasesBreakdown({
                 >
                   {casesByStatus.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
-                {casesByStatus.map((entry) => (
-                  <Cell
-                    key={entry.name}
-                    fill={CASE_STATUS_COLORS[entry.name as keyof typeof CASE_STATUS_COLORS]}
-                  />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>
@@ -91,7 +87,10 @@ export default function CasesBreakdown({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={casesByRiskStatus}
+                data={casesByRiskStatus.map((entry) => ({
+                  ...entry,
+                  fill: RISK_STATUS_COLORS[entry.name as keyof typeof RISK_STATUS_COLORS],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -105,12 +104,6 @@ export default function CasesBreakdown({
                 >
                   {casesByRiskStatus.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
-                {casesByRiskStatus.map((entry) => (
-                  <Cell
-                    key={entry.name}
-                    fill={RISK_STATUS_COLORS[entry.name as keyof typeof RISK_STATUS_COLORS]}
-                  />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>

@@ -5,7 +5,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Label,
   Legend,
   Line,
@@ -73,7 +72,12 @@ const ChartArea = memo(function ChartArea({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={dropoutData}
+                data={dropoutData.map((reason) => ({
+                  ...reason,
+                  fill: SCHOOL_DROPOUT_REASONS_MAPPING[
+                    reason.name as keyof typeof SCHOOL_DROPOUT_REASONS_MAPPING
+                  ],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -88,14 +92,6 @@ const ChartArea = memo(function ChartArea({
                 >
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
-                {dropoutData.map((reason) => (
-                  <Cell
-                    key={reason.name}
-                    // FIXME: remove this ts-ignore to be consistent across the app
-                    // @ts-expect-error
-                    fill={SCHOOL_DROPOUT_REASONS_MAPPING[reason.name]}
-                  />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>
@@ -107,7 +103,12 @@ const ChartArea = memo(function ChartArea({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250}>
               <Pie
-                data={schoolDataCompletenessData}
+                data={schoolDataCompletenessData.map((entry) => ({
+                  ...entry,
+                  fill: SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[
+                    entry.name as keyof typeof SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING
+                  ],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -122,14 +123,6 @@ const ChartArea = memo(function ChartArea({
                 >
                   {`${schoolDataCompletenessData.find((d) => d.name === "actual")?.value}%`}
                 </Label>
-                {schoolDataCompletenessData.map(({ name }) => (
-                  <Cell
-                    key={name}
-                    // FIXME: remove this ts-ignore to be consistent across the app
-                    // @ts-expect-error
-                    fill={SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[name]}
-                  />
-                ))}
               </Pie>
             </PieChart>
           </ResponsiveContainer>

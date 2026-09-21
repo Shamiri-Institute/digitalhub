@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { updateRecordingStatus } from "#/app/(platform)/sc/reporting/recordings/actions";
 import { RecordingStatusUpdateSchema, verifyRecordingsApiKey } from "#/lib/recordings-api";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           error: "Invalid request body",
-          details: validationResult.error.flatten(),
+          details: z.flattenError(validationResult.error),
         },
         { status: 400 },
       );

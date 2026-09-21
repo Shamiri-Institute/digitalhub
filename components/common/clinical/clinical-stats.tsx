@@ -4,7 +4,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Label,
   Pie,
   PieChart,
@@ -47,7 +46,10 @@ export default function ClinicalStats({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={casesByStatus}
+                data={casesByStatus.map((entry, index) => ({
+                  ...entry,
+                  fill: clinicalCasesColors[index % clinicalCasesColors.length],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -61,12 +63,6 @@ export default function ClinicalStats({
                 >
                   {casesByStatus.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
-                {casesByStatus.map((entry, index) => (
-                  <Cell
-                    key={entry.name}
-                    fill={clinicalCasesColors[index % clinicalCasesColors.length]}
-                  />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>
@@ -107,7 +103,10 @@ export default function ClinicalStats({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={casesByInitialContact}
+                data={casesByInitialContact.map((entry, index) => ({
+                  ...entry,
+                  fill: clinicalCasesColors[index % clinicalCasesColors.length],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -121,12 +120,6 @@ export default function ClinicalStats({
                 >
                   {casesByInitialContact.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
-                {casesByInitialContact.map((entry, index) => (
-                  <Cell
-                    key={entry.name}
-                    fill={clinicalCasesColors[index % clinicalCasesColors.length]}
-                  />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>
