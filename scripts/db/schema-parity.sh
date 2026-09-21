@@ -7,13 +7,15 @@
 set -euo pipefail
 
 : "${DATABASE_URL:?DATABASE_URL is required}"
-base="${DATABASE_URL%/*}"
+# psql rejects Prisma-only URI parameters such as ?pool_timeout=30, so drop the query string.
+admin_url="${DATABASE_URL%%\?*}"
+base="${admin_url%/*}"
 prisma_db="$base/parity_prisma"
 drizzle_db="$base/parity_drizzle"
 
 for name in parity_prisma parity_drizzle; do
-  psql "$DATABASE_URL" -qc "drop database if exists $name"
-  psql "$DATABASE_URL" -qc "create database $name"
+  psql "$admin_url" -qc "drop database if exists $name"
+  psql "$admin_url" -qc "create database $name"
 done
 
 echo "prisma migrate deploy → parity_prisma"
