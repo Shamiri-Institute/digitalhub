@@ -100,25 +100,71 @@ function unordered(value: unknown): unknown {
   return value;
 }
 
+/**
+ * The flight encoder writes an object once and refers back to it (`"$1b:props:sessions:0:school"`)
+ * when the same instance appears again, so a query that shares one row object across results
+ * serializes differently from one that repeats equal copies. Inline such references so both
+ * compare as the same data. Elements are `["$", type, key, props]`, so `props` maps to index 3.
+ */
+function resolveRefs(value: unknown, rows: Map<string, unknown>, depth = 0): unknown {
+  if (depth > 50) return value;
+  if (typeof value === "string") {
+    const m = /^\$([0-9a-f]+)((?::[^:]+)*)$/.exec(value);
+    if (!m) return value;
+    let target = rows.get(m[1]!);
+    if (target === undefined) return value;
+    for (const segment of m[2]!.split(":").filter(Boolean)) {
+      if (Array.isArray(target) && target[0] === "$" && segment === "props") {
+        target = target[3];
+      } else if (target && typeof target === "object") {
+        target = (target as Record<string, unknown>)[segment];
+      } else {
+        return value;
+      }
+      if (target === undefined) return value;
+    }
+    return resolveRefs(target, rows, depth + 1);
+  }
+  if (Array.isArray(value)) return value.map((v) => resolveRefs(v, rows, depth + 1));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, resolveRefs(v, rows, depth + 1)]),
+    );
+  }
+  return value;
+}
+
 function canonical(html: string, arrayOrder: "keep" | "ignore" = "keep") {
   const shape = arrayOrder === "keep" ? stable : unordered;
-  const flightRows: string[] = [];
+  const parsed = new Map<string, unknown>();
+  const others: string[] = [];
   for (const payload of flightPayloads(html)) {
     for (const row of payload.split("\n")) {
-      let body = row.replace(/^[0-9a-f]+:/, "");
+      const m = /^([0-9a-f]+):([\s\S]*)$/.exec(row);
+      const id = m?.[1] ?? "";
+      const body = m?.[2] ?? row;
       if (!body || body.startsWith("I[") || body.startsWith("HL[")) continue;
       if (body.startsWith("[") || body.startsWith("{")) {
         try {
-          body = JSON.stringify(shape(JSON.parse(body)));
+          parsed.set(id, JSON.parse(body));
+          continue;
         } catch {
           // text chunks and partial rows stay as they are
         }
       }
-      if (/^\["\$","script","script-\d+"/.test(body)) continue;
-      flightRows.push(body.replace(/\$L?[0-9a-f]+\b/g, "$REF"));
+      others.push(body);
     }
   }
-  return flightRows.toSorted().join("\n");
+  const flightRows = others;
+  for (const value of parsed.values()) {
+    const body = JSON.stringify(shape(resolveRefs(value, parsed)));
+    if (/^\["\$","script","script-\d+"/.test(body)) continue;
+    flightRows.push(body);
+  }
+  return flightRows
+    .map((r) => r.replace(/\$L?[0-9a-f]+\b/g, "$REF"))
+    .toSorted()
+    .join("\n");
 }
 
 function firstDifference(a: string, b: string) {
