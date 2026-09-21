@@ -2,7 +2,7 @@
 import { eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { db, pool, queryRaw } from "#/db/client";
+import { db, pool } from "#/db/client";
 import { clinicalScreeningInfo, student } from "#/db/schema";
 import { countOf } from "#/db/sql";
 
@@ -10,7 +10,9 @@ afterAll(() => pool.end());
 
 describe("countOf", () => {
   it("counts the same at the query root and nested under a relation", async () => {
-    const [target] = await queryRaw<{ studentId: string; schoolId: string; n: number }>(sql`
+    const {
+      rows: [target],
+    } = await db.execute<{ studentId: string; schoolId: string; n: number }>(sql`
       select c.student_id as "studentId", s.school_id as "schoolId", count(*)::int as n
       from clinical_screening_info c join students s on s.id = c.student_id
       where s.school_id is not null

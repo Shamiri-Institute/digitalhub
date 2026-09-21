@@ -1,7 +1,6 @@
 "use client";
 
 import { ImplementerRole } from "#/db/enums";
-import type { Supervisor } from "#/db/types";
 import type { VisibilityState } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -13,6 +12,7 @@ import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-scho
 import SchoolsDataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
+import type { supervisor } from "#/db/schema";
 
 const schoolsCSVHeaders = [
   "school_name",
@@ -54,7 +54,7 @@ export default function SchoolsDatatable({
 }: {
   role: ImplementerRole;
   schools: SchoolsTableData[];
-  supervisors?: Supervisor[];
+  supervisors?: (typeof supervisor.$inferSelect)[];
   disablePagination?: boolean;
   isSubComponent?: boolean;
   className?: string;

@@ -1,13 +1,13 @@
 "use client";
 
-import type { ClinicalScreeningInfo, Student } from "#/db/types";
 import { AcceptRefferedClinicalCase, RejectRefferedClinicalCase } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { toastOnError, useToast } from "#/components/ui/use-toast";
+import type { clinicalScreeningInfo, student } from "#/db/schema";
 
-type CasesType = ClinicalScreeningInfo & {
-  student: Student;
+type CasesType = typeof clinicalScreeningInfo.$inferSelect & {
+  student: typeof student.$inferSelect;
 };
 
 export function CasesReferredToMe({

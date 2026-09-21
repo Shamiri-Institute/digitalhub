@@ -2,7 +2,7 @@
 
 import { sql } from "drizzle-orm";
 
-import { queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 
 export type FellowDropoutReasonsGraphData = {
@@ -12,9 +12,9 @@ export type FellowDropoutReasonsGraphData = {
 
 export async function fetchFellowDropoutReasons(hudId: string) {
   await requireAuthRole();
-  const dropoutData = await queryRaw<FellowDropoutReasonsGraphData>(sql`
+  const { rows: dropoutData } = await db.execute<FellowDropoutReasonsGraphData>(sql`
     SELECT
-      COUNT(*) AS value,
+      COUNT(*)::int AS value,
       drop_out_reason AS name
     FROM fellows
     WHERE
@@ -34,7 +34,9 @@ export async function fetchFellowDropoutReasons(hudId: string) {
 
 export async function fetchFellowDataCompletenessData(hubId: string) {
   await requireAuthRole();
-  const [fellowData] = await queryRaw<{ percentage: number | null }>(sql`
+  const {
+    rows: [fellowData],
+  } = await db.execute<{ percentage: number | null }>(sql`
     SELECT
       AVG((
         (CASE WHEN mpesa_name IS NOT NULL THEN 1 ELSE 0 END)
@@ -70,7 +72,7 @@ export type FellowSessionRatingAverages = {
 
 export async function fetchFellowSessionRatingAverages(hubId: string) {
   await requireAuthRole();
-  const ratingAverages = await queryRaw<FellowSessionRatingAverages>(sql`
+  const { rows: ratingAverages } = await db.execute<FellowSessionRatingAverages>(sql`
     SELECT
       CONCAT(TRIM(TO_CHAR(wfr.week, 'Month')), ' Week ', EXTRACT(WEEK FROM wfr.week)) AS session_date,
       AVG(wfr.behaviour_rating)::float8 AS behaviour_rating,

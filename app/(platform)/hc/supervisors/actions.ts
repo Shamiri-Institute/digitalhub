@@ -13,7 +13,7 @@ import {
   WeeklyHubTeamMeetingSchema,
 } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator } from "#/app/auth";
-import { db, queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import {
   implementerMember,
   monthlySupervisorEvaluation,
@@ -507,9 +507,9 @@ export type SupervisorDropoutReasonsGraphData = {
 };
 
 export async function fetchSupervisorDropoutReasons(hudId: string) {
-  const dropoutData = await queryRaw<SupervisorDropoutReasonsGraphData>(sql`
+  const { rows: dropoutData } = await db.execute<SupervisorDropoutReasonsGraphData>(sql`
     SELECT
-      COUNT(*) AS value,
+      COUNT(*)::int AS value,
       drop_out_reason AS name
     FROM supervisors
     WHERE
@@ -528,7 +528,9 @@ export async function fetchSupervisorDropoutReasons(hudId: string) {
 }
 
 export async function fetchSupervisorDataCompletenessData(hubId: string) {
-  const [supervisorData] = await queryRaw<{ percentage: number | string | null }>(sql`
+  const {
+    rows: [supervisorData],
+  } = await db.execute<{ percentage: number | string | null }>(sql`
     SELECT
       AVG((
         (CASE WHEN supervisor_name IS NOT NULL THEN 1 ELSE 0 END)
@@ -562,7 +564,7 @@ export type SessionRatingAverages = {
 };
 
 export async function fetchSupervisorSessionRatingAverages(hubId: string) {
-  const ratingAverages = await queryRaw<{
+  const { rows: ratingAverages } = await db.execute<{
     session_type: "s0" | "s1" | "s2" | "s3" | "s4";
     student_behavior: number | string | null;
     admin_support: number | string | null;
@@ -603,7 +605,7 @@ export type SupervisorAttendanceData = {
 };
 
 export async function fetchSupervisorAttendanceData(hubId: string) {
-  const supervisorAttendanceData = await queryRaw<{
+  const { rows: supervisorAttendanceData } = await db.execute<{
     supervisor_name: string;
     attended: number | string | null;
   }>(sql`

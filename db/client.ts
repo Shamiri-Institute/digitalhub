@@ -1,17 +1,9 @@
-import type { SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { PgDialect } from "drizzle-orm/pg-core";
-import { DatabaseError, Pool, types } from "pg";
+import { DatabaseError, Pool } from "pg";
 
 import * as relations from "./relations";
 import * as schema from "./schema";
 import { databaseUrl } from "./url";
-
-// Raw query results follow Prisma's conventions: int8 as number (the schema has no
-// BigInt column), `timestamp` without time zone read as UTC, `date` as UTC midnight.
-types.setTypeParser(types.builtins.INT8, Number);
-types.setTypeParser(types.builtins.TIMESTAMP, (value) => new Date(`${value.replace(" ", "T")}Z`));
-types.setTypeParser(types.builtins.DATE, (value) => new Date(`${value}T00:00:00Z`));
 
 function createPool() {
   return new Pool({
@@ -35,39 +27,22 @@ export const db = drizzle({
   logger: process.env.DEBUG === "1",
 });
 
-export type Database = typeof db;
-export type TransactionCursor = Parameters<Parameters<Database["transaction"]>[0]>[0];
-export type DatabaseCursor = Database | TransactionCursor;
-
-const dialect = new PgDialect();
-
-/** Replacement for `prisma.$queryRaw`: rows come back with the type parsers above applied. */
-export async function queryRaw<T extends Record<string, unknown>>(query: SQL): Promise<T[]> {
-  const { sql, params } = dialect.sqlToQuery(query);
-  const result = await pool.query<T>(sql, params);
-  return result.rows;
-}
-
-/** Replacement for `prisma.$executeRaw`: returns the affected row count. */
-export async function executeRaw(query: SQL): Promise<number> {
-  const { sql, params } = dialect.sqlToQuery(query);
-  const result = await pool.query(sql, params);
-  return result.rowCount ?? 0;
-}
+/** The `tx` handed to a `db.transaction` callback; helpers that must run inside one take it. */
+export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /** Drizzle wraps driver errors; find the Postgres error underneath. */
-export function pgError(error: unknown): DatabaseError | undefined {
+function pgError(error: unknown): DatabaseError | undefined {
   if (error instanceof DatabaseError) return error;
   if (error instanceof Error && error.cause instanceof DatabaseError) return error.cause;
   return undefined;
 }
 
-/** Prisma `P2002`. */
+/** Postgres `unique_violation`: an insert or update hit a unique index. */
 export function isUniqueViolation(error: unknown) {
   return pgError(error)?.code === "23505";
 }
 
-/** Prisma `P2034`: serializable transaction conflict, retry the transaction. */
+/** Postgres `serialization_failure`: a serializable transaction conflicted; retry it. */
 export function isSerializationFailure(error: unknown) {
   return pgError(error)?.code === "40001";
 }

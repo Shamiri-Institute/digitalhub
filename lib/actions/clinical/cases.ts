@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { queryRaw } from "#/db/client";
+import { db } from "#/db/client";
 import { hubScope } from "./scope";
 
 /**
@@ -59,18 +59,21 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
     casesBySupervisorResult,
     supervisorsResult,
   ] = await Promise.all([
-    queryRaw<StatusResult>(sql`
+    db
+      .execute<StatusResult>(sql`
       SELECT
         "case_status" as name,
-        COUNT(*) as value
+        COUNT(*)::int as value
       FROM "clinical_screening_info" csi
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
       ${cs.joins}
       WHERE ${cs.where}
       GROUP BY "case_status"
-    `),
+    `)
+      .then((r) => r.rows),
 
-    queryRaw<StatusResult>(sql`
+    db
+      .execute<StatusResult>(sql`
       SELECT
         COALESCE(
           (SELECT ccn.risk_level
@@ -80,7 +83,7 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
            LIMIT 1),
           'N/A'
         ) as name,
-        COUNT(*) as value
+        COUNT(*)::int as value
       FROM "clinical_screening_info" csi
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
       ${cs.joins}
@@ -93,32 +96,38 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
          LIMIT 1),
         'N/A'
       )
-    `),
+    `)
+      .then((r) => r.rows),
 
-    queryRaw<StatusResult>(sql`
+    db
+      .execute<StatusResult>(sql`
       SELECT
         session as name,
-        COUNT(*) as value
+        COUNT(*)::int as value
       FROM "clinical_session_attendance" csa
       JOIN "clinical_screening_info" csi ON csa."caseId" = csi.id
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
       ${cs.joins}
       WHERE ${cs.where}
       GROUP BY session
-    `),
+    `)
+      .then((r) => r.rows),
 
-    queryRaw<SupervisorResult>(sql`
+    db
+      .execute<SupervisorResult>(sql`
       SELECT
         COALESCE(csi."current_supervisor_id", 'CLINICAL_LEAD') as id,
-        COUNT(*) as value
+        COUNT(*)::int as value
       FROM "clinical_screening_info" csi
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
       ${cs.joins}
       WHERE ${cs.where}
       GROUP BY COALESCE(csi."current_supervisor_id", 'CLINICAL_LEAD')
-    `),
+    `)
+      .then((r) => r.rows),
 
-    queryRaw<SupervisorInfo>(sql`
+    db
+      .execute<SupervisorInfo>(sql`
       SELECT
         "supervisors".id,
         "supervisor_name"
@@ -129,7 +138,8 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
       SELECT
         'CLINICAL_LEAD' as id,
         'Clinical Lead' as "supervisor_name"
-    `),
+    `)
+      .then((r) => r.rows),
   ]);
 
   const sessionTypes = ["Pre", "S1", "S2", "S3", "S4", "F1", "F2"];
@@ -229,7 +239,7 @@ export async function fetchClinicalCasesList(
       ? sql`h."project_id" = ${scope.projectId}`
       : sql`(s."hub_id" = ${scope.hubId})`;
 
-  const cases = await queryRaw<HubClinicalCases>(sql`
+  const { rows: cases } = await db.execute<HubClinicalCases>(sql`
       WITH case_notes AS (
         SELECT
           ccn.case_id,

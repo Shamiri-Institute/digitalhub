@@ -1,6 +1,5 @@
 "use client";
 
-import type { Supervisor } from "#/db/types";
 import { usePathname } from "next/navigation";
 import { useEffect, useEffectEvent, useState } from "react";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
@@ -14,6 +13,7 @@ import {
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
+import type { supervisor } from "#/db/schema";
 
 export default function AssignFellowSupervisorSelect({
   fellowId,
@@ -23,7 +23,7 @@ export default function AssignFellowSupervisorSelect({
 }: {
   fellowId: string;
   supervisorId: string | null;
-  supervisors: Supervisor[];
+  supervisors: (typeof supervisor.$inferSelect)[];
   disabled?: boolean;
 }) {
   const pathname = usePathname();

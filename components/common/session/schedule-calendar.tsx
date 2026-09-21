@@ -3,7 +3,6 @@
 import { createCalendar, type DateValue, getLocalTimeZone, today } from "@internationalized/date";
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole, SessionStatus } from "#/db/enums";
-import type { School, SessionName } from "#/db/types";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import {
@@ -63,6 +62,10 @@ import { type Session, SessionsContext, SessionsProvider, useSessions } from "./
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
+import type { school, sessionName } from "#/db/schema";
+
+type School = typeof school.$inferSelect;
+type SessionName = typeof sessionName.$inferSelect;
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
   activeProjectId?: string | null;

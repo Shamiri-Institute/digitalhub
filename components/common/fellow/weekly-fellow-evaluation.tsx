@@ -1,6 +1,5 @@
 "use client";
 
-import type { Project, WeeklyFellowRatings } from "#/db/types";
 import { addDays, differenceInSeconds, eachWeekOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -41,6 +40,9 @@ import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitWeeklyFellowEvaluation } from "#/lib/actions/fellow";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
+import type { project as projectTable, weeklyFellowRatings } from "#/db/schema";
+
+type WeeklyFellowRatings = typeof weeklyFellowRatings.$inferSelect;
 
 export default function WeeklyFellowEvaluation({
   fellowId,
@@ -55,7 +57,7 @@ export default function WeeklyFellowEvaluation({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   evaluations: WeeklyFellowRatings[];
-  project?: Project;
+  project?: typeof projectTable.$inferSelect;
   mode: "view" | "add";
   children: React.ReactNode;
 }) {

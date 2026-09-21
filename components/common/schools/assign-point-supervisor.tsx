@@ -1,6 +1,5 @@
 "use client";
 
-import type { Supervisor } from "#/db/types";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -32,6 +31,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { SchoolsTableData } from "./columns";
+import type { supervisor } from "#/db/schema";
 
 export default function AssignPointSupervisor({
   supervisors,
@@ -39,7 +39,7 @@ export default function AssignPointSupervisor({
   setOpen,
   school,
 }: {
-  supervisors: Supervisor[];
+  supervisors: (typeof supervisor.$inferSelect)[];
   open: boolean;
   setOpen: (open: boolean) => void;
   school: SchoolsTableData | null;

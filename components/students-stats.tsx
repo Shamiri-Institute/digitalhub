@@ -1,5 +1,5 @@
-import type { ClinicalScreeningInfo, ClinicalSessionAttendance } from "#/db/types";
 import InfoCard from "#/app/(platform)/hc/students/components/info-card";
+import type { clinicalScreeningInfo, clinicalSessionAttendance } from "#/db/schema";
 
 export default function StudentsStats({
   totalNumberOfStudentsInHub,
@@ -9,8 +9,8 @@ export default function StudentsStats({
 }: {
   totalNumberOfStudentsInHub: number;
   totalGroupSessions: number;
-  hubClinicalCases: ClinicalScreeningInfo[];
-  hubClinicalSessions: ClinicalSessionAttendance[];
+  hubClinicalCases: (typeof clinicalScreeningInfo.$inferSelect)[];
+  hubClinicalSessions: (typeof clinicalSessionAttendance.$inferSelect)[];
 }) {
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">

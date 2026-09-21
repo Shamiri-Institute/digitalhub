@@ -1,7 +1,6 @@
 "use client";
 
 import { ImplementerRole } from "#/db/enums";
-import type { SessionName } from "#/db/types";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import type { CurrentAdminUser } from "#/app/auth";
@@ -13,13 +12,14 @@ import {
   type ImplementerSupervisor,
 } from "#/lib/actions/implementer";
 import { ScheduleCalendar } from "./schedule-calendar";
+import type { sessionName } from "#/db/schema";
 
 export function AdminScheduleCalendar({ adminUser }: { adminUser: CurrentAdminUser }) {
   const { data: session } = useSession();
   const implementerId = adminUser?.session.user.activeMembership?.implementerId;
   const role = adminUser?.session.user.activeMembership?.role;
   const activeProjectId = session?.user?.activeProjectId ?? null;
-  const [hubSessionTypes, setHubSessionTypes] = useState<SessionName[]>([]);
+  const [hubSessionTypes, setHubSessionTypes] = useState<(typeof sessionName.$inferSelect)[]>([]);
   const [supervisors, setSupervisors] = useState<ImplementerSupervisor[]>([]);
   const [fellowRatings, setFellowRatings] = useState<ImplementerFellowRating[]>([]);
 

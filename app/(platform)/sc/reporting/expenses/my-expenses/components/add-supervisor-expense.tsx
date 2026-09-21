@@ -1,12 +1,12 @@
-import type { Supervisor } from "#/db/types";
 import AddSupervisorExpensesForm from "#/components/common/expenses/supervisor-expenses/add-expense";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import type { supervisor } from "#/db/schema";
 
 export default async function AddSupervisorExpenseTrigger({
   supervisorsInHub,
 }: {
-  supervisorsInHub: Supervisor[];
+  supervisorsInHub: (typeof supervisor.$inferSelect)[];
 }) {
   return (
     <div className="flex justify-end">

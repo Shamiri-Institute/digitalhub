@@ -1,6 +1,5 @@
 "use client";
 import type { ImplementerRole } from "#/db/enums";
-import type { Project } from "#/db/types";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { useState } from "react";
@@ -21,6 +20,7 @@ import { Separator } from "#/components/ui/separator";
 import { markFellowAttendance } from "#/lib/actions/fellow";
 import type { FellowsData } from "../../../app/(platform)/sc/actions";
 import { fellowSchoolsColumns, subColumns } from "./fellow-schools-columns";
+import type { project as projectTable } from "#/db/schema";
 
 export default function FellowSchoolsDatatable({
   fellows,
@@ -28,7 +28,7 @@ export default function FellowSchoolsDatatable({
   role,
 }: {
   fellows: FellowsData[];
-  project?: Project;
+  project?: typeof projectTable.$inferSelect;
   role: ImplementerRole;
 }) {
   const [selectedFellow, setSelectedFellow] = useState<FellowsData | null>(null);
