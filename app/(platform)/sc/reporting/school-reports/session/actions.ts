@@ -1,8 +1,9 @@
 "use server";
 
 import { format } from "date-fns";
+
 import { currentSupervisor } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 type SchoolGroup = {
   schoolName: string;
@@ -39,23 +40,18 @@ export async function loadSessionReport() {
       throw new Error("Unauthorised user");
     }
 
-    const sessions = await db.interventionSessionRating.findMany({
-      where: {
-        supervisorId: supervisor.profile?.id,
-      },
-      include: {
+    const supervisorId = supervisor.profile.id;
+    const sessions = await db.query.interventionSessionRating.findMany({
+      where: (r, { eq }) => eq(r.supervisorId, supervisorId),
+      with: {
         session: {
-          include: {
+          with: {
             school: true,
             session: true,
             sessionNotes: true,
             sessionComments: {
-              include: {
-                user: {
-                  select: {
-                    name: true,
-                  },
-                },
+              with: {
+                user: { columns: { name: true } },
               },
             },
           },

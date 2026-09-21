@@ -1,9 +1,11 @@
 "use server";
 
-import type { Prisma } from "@prisma/client";
+import { eq } from "drizzle-orm";
+
 import { currentOpsUser } from "#/app/auth";
+import { db } from "#/db/client";
+import { hub } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { db } from "#/lib/db";
 
 export type HubFellowsAttendancesType = Awaited<
   ReturnType<typeof loadHubsFellowAttendance>
@@ -19,41 +21,18 @@ export async function loadHubsFellowAttendance() {
   // TODO: Implement project switch for ops users -- for now default to default project
   const projectId = await getActiveProjectId();
 
-  const fellows = await db.fellow.findMany({
-    where: {
-      hub: {
-        projectId,
-      },
-    },
-    include: {
-      hub: {
-        select: {
-          hubName: true,
-        },
-      },
-      supervisor: {
-        select: {
-          supervisorName: true,
-        },
-      },
+  const fellows = await db.query.fellow.findMany({
+    where: (f, { inArray }) =>
+      inArray(f.hubId, db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId))),
+    with: {
+      hub: { columns: { hubName: true } },
+      supervisor: { columns: { supervisorName: true } },
       fellowAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-            },
-          },
+        with: {
+          session: { with: { session: true } },
           group: true,
-          school: {
-            select: {
-              schoolName: true,
-            },
-          },
-          PayoutStatements: {
-            orderBy: {
-              createdAt: "asc",
-            },
-          },
+          school: { columns: { schoolName: true } },
+          PayoutStatements: { orderBy: (p, { asc }) => asc(p.createdAt) },
         },
       },
     },
@@ -152,16 +131,11 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
   return { preCount, mainCount, supervisionCount, trainingCount };
 }
 
-type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
-  include: {
-    session: {
-      include: {
-        session: true;
-      };
-    };
-    PayoutStatements: true;
-  };
-}>;
+/** The slice of an attendance row the helpers above read. */
+type FellowAttendance = {
+  session: { session: { sessionLabel: string; sessionType: string } | null } | null;
+  PayoutStatements: { amount: number; confirmedAt: Date | null }[];
+};
 
 export async function submitPaymentReversal(data: { id: number; name: string }) {
   const opsUser = await currentOpsUser();

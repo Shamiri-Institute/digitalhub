@@ -1,8 +1,9 @@
-import type { Prisma } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
-import { updateRecordingStatus } from "#/app/(platform)/sc/reporting/recordings/actions";
-import { RecordingStatusUpdateSchema, verifyRecordingsApiKey } from "#/lib/recordings-api";
 import { z } from "zod";
+
+import { updateRecordingStatus } from "#/app/(platform)/sc/reporting/recordings/actions";
+import type { JsonValue } from "#/db/schema";
+import { RecordingStatusUpdateSchema, verifyRecordingsApiKey } from "#/lib/recordings-api";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,7 @@ export async function PATCH(
     // Update the recording status using the server action
     const result = await updateRecordingStatus(recordingId, status, {
       overallScore,
-      fidelityFeedback: fidelityFeedback as Prisma.InputJsonValue | undefined,
+      fidelityFeedback: fidelityFeedback as JsonValue | undefined,
       errorMessage,
     });
 

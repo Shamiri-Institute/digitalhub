@@ -1,6 +1,7 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
+import { sql } from "drizzle-orm";
+
 import { currentSupervisor } from "#/app/auth";
 import {
   type FellowPayoutDetail,
@@ -18,5 +19,5 @@ export async function loadSupervisorPayoutHistory(): Promise<SupervisorPayoutHis
     throw new Error("Unauthorised user");
   }
 
-  return loadPayoutHistory(Prisma.sql`f.supervisor_id = ${supervisor.profile?.id}`);
+  return loadPayoutHistory(sql`f.supervisor_id = ${supervisor.profile?.id}`);
 }

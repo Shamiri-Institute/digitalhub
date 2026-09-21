@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { db } from "#/lib/db";
+
+import { db } from "#/db/client";
 import { verifyRecordingsApiKey } from "#/lib/recordings-api";
 
 export const dynamic = "force-dynamic";
@@ -32,12 +33,9 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Number.parseInt(limitParam ?? "50", 10) || 50, 100);
 
     // Fetch pending recordings
-    const recordings = await db.sessionRecording.findMany({
-      where: {
-        status: "PENDING",
-        archivedAt: null,
-      },
-      select: {
+    const recordings = await db.query.sessionRecording.findMany({
+      where: (r, { and, eq, isNull }) => and(eq(r.status, "PENDING"), isNull(r.archivedAt)),
+      columns: {
         id: true,
         s3Key: true,
         fileName: true,
@@ -50,37 +48,18 @@ export async function GET(request: NextRequest) {
         sessionId: true,
         createdAt: true,
         retryCount: true,
-        fellow: {
-          select: {
-            fellowName: true,
-          },
-        },
-        school: {
-          select: {
-            schoolName: true,
-          },
-        },
-        group: {
-          select: {
-            groupName: true,
-          },
-        },
+      },
+      with: {
+        fellow: { columns: { fellowName: true } },
+        school: { columns: { schoolName: true } },
+        group: { columns: { groupName: true } },
         session: {
-          select: {
-            sessionType: true,
-            sessionDate: true,
-            session: {
-              select: {
-                sessionName: true,
-              },
-            },
-          },
+          columns: { sessionType: true, sessionDate: true },
+          with: { session: { columns: { sessionName: true } } },
         },
       },
-      orderBy: {
-        createdAt: "asc", // Process oldest first
-      },
-      take: limit,
+      orderBy: (r, { asc }) => asc(r.createdAt), // Process oldest first
+      limit,
     });
 
     // Transform response to flat structure

@@ -1,10 +1,12 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
-import type { RecordingProcessingStatus } from "#/db/enums";
+import { and, eq, isNull, notInArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+
 import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db, executeRaw, isUniqueViolation } from "#/db/client";
+import type { RecordingProcessingStatus } from "#/db/enums";
+import { fellow, type JsonValue, sessionRecording } from "#/db/schema";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import { createJob } from "#/lib/fidelity-ratings-api";
 import {
@@ -43,24 +45,13 @@ export async function loadFellowGroups(fellowId: string) {
     throw new Error("Fellow not found or unauthorized");
   }
 
-  return db.interventionGroup.findMany({
-    where: {
-      leaderId: fellowId,
+  return db.query.interventionGroup.findMany({
+    where: (g, { eq }) => eq(g.leaderId, fellowId),
+    columns: { id: true, groupName: true, schoolId: true },
+    with: {
+      school: { columns: { id: true, schoolName: true } },
     },
-    select: {
-      id: true,
-      groupName: true,
-      schoolId: true,
-      school: {
-        select: {
-          id: true,
-          schoolName: true,
-        },
-      },
-    },
-    orderBy: {
-      groupName: "asc",
-    },
+    orderBy: (g, { asc }) => asc(g.groupName),
   });
 }
 
@@ -71,40 +62,30 @@ export async function loadGroupSessions(groupId: string) {
     throw new Error("Unauthorized user");
   }
 
-  const group = await db.interventionGroup.findFirst({
-    where: {
-      id: groupId,
-      leader: {
-        supervisorId: supervisor.profile.id,
-      },
-    },
-    include: {
-      school: true,
-    },
+  const supervisorId = supervisor.profile.id;
+  const group = await db.query.interventionGroup.findFirst({
+    where: (g, { and, eq, inArray }) =>
+      and(
+        eq(g.id, groupId),
+        inArray(
+          g.leaderId,
+          db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, supervisorId)),
+        ),
+      ),
+    with: { school: true },
   });
 
   if (!group) {
     throw new Error("Group not found or unauthorized");
   }
 
-  const sessions = await db.interventionSession.findMany({
-    where: {
-      schoolId: group.schoolId,
-      occurred: true,
+  const sessions = await db.query.interventionSession.findMany({
+    where: (s, { and, eq }) => and(eq(s.schoolId, group.schoolId), eq(s.occurred, true)),
+    columns: { id: true, sessionType: true, sessionDate: true },
+    with: {
+      session: { columns: { sessionName: true } },
     },
-    select: {
-      id: true,
-      sessionType: true,
-      sessionDate: true,
-      session: {
-        select: {
-          sessionName: true,
-        },
-      },
-    },
-    orderBy: {
-      sessionDate: "desc",
-    },
+    orderBy: (s, { desc }) => desc(s.sessionDate),
   });
 
   return sessions.map((session) => ({
@@ -127,20 +108,18 @@ export async function checkRecordingExists(params: {
     throw new Error("Unauthorized user");
   }
 
-  return db.sessionRecording.findUnique({
-    where: {
-      unique_recording_per_session: {
-        fellowId: params.fellowId,
-        schoolId: params.schoolId,
-        groupId: params.groupId,
-        sessionId: params.sessionId,
-      },
-    },
-    select: {
-      id: true,
-      status: true,
-    },
+  // The unique key is (fellowId, schoolId, groupId, sessionId).
+  const recording = await db.query.sessionRecording.findFirst({
+    where: (r, { and, eq }) =>
+      and(
+        eq(r.fellowId, params.fellowId),
+        eq(r.schoolId, params.schoolId),
+        eq(r.groupId, params.groupId),
+        eq(r.sessionId, params.sessionId),
+      ),
+    columns: { id: true, status: true },
   });
+  return recording ?? null;
 }
 
 function getAppBaseUrl(): string {
@@ -179,25 +158,26 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
       progress_webhook_url: progressWebhookUrl,
     });
 
-    const updateResult = await db.sessionRecording.updateMany({
-      where: {
-        id: recordingId,
-        fidelityJobId: null,
-        status: {
-          notIn: ["COMPLETED", "FAILED"],
-        },
-      },
-      data: {
+    const updateResult = await db
+      .update(sessionRecording)
+      .set({
         fidelityJobId: jobResponse.job_id,
         fidelityJobSubmittedAt: new Date(),
         status: "PROCESSING",
-      },
-    });
+      })
+      .where(
+        and(
+          eq(sessionRecording.id, recordingId),
+          isNull(sessionRecording.fidelityJobId),
+          notInArray(sessionRecording.status, ["COMPLETED", "FAILED"]),
+        ),
+      )
+      .returning({ id: sessionRecording.id });
 
-    if (updateResult.count === 0) {
-      const current = await db.sessionRecording.findUnique({
-        where: { id: recordingId },
-        select: { status: true },
+    if (updateResult.length === 0) {
+      const current = await db.query.sessionRecording.findFirst({
+        where: (r, { eq }) => eq(r.id, recordingId),
+        columns: { status: true },
       });
       console.warn(
         `Recording ${recordingId} already in final state (${current?.status}), skipping PROCESSING update`,
@@ -209,13 +189,17 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
     console.error(`✗ Failed to submit recording ${recordingId} to Fidelity API:`, error);
 
     try {
-      await db.sessionRecording.update({
-        where: { id: recordingId },
-        data: {
+      const marked = await db
+        .update(sessionRecording)
+        .set({
           status: "FAILED",
           errorMessage: error instanceof Error ? error.message : "Failed to submit to Fidelity API",
-        },
-      });
+        })
+        .where(eq(sessionRecording.id, recordingId))
+        .returning({ id: sessionRecording.id });
+      if (marked.length === 0) {
+        console.error(`Recording ${recordingId} not found while marking it FAILED`);
+      }
     } catch (dbError) {
       console.error(`Failed to mark recording ${recordingId} as FAILED:`, dbError);
     }
@@ -276,10 +260,11 @@ export async function createSessionRecording(input: {
   const uploadedBy = supervisor.session.user.id;
   const supervisorId = supervisor.profile.id;
 
-  let recording: Awaited<ReturnType<typeof db.sessionRecording.create>>;
+  let recording: typeof sessionRecording.$inferSelect;
   try {
-    recording = await db.sessionRecording.create({
-      data: {
+    const [created] = await db
+      .insert(sessionRecording)
+      .values({
         id: ctx.recordingId,
         fileName: ctx.fileName,
         originalFileName: input.originalFileName,
@@ -293,20 +278,23 @@ export async function createSessionRecording(input: {
         uploadedBy,
         supervisorId,
         status: "PENDING",
-      },
-    });
+      })
+      .returning();
+    if (!created) {
+      throw new Error("Insert returned no row");
+    }
+    recording = created;
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      const conflicting = await db.sessionRecording.findUnique({
-        where: {
-          unique_recording_per_session: {
-            fellowId: input.fellowId,
-            schoolId: input.schoolId,
-            groupId: input.groupId,
-            sessionId: input.sessionId,
-          },
-        },
-        select: { s3Key: true },
+    if (isUniqueViolation(error)) {
+      const conflicting = await db.query.sessionRecording.findFirst({
+        where: (r, { and, eq }) =>
+          and(
+            eq(r.fellowId, input.fellowId),
+            eq(r.schoolId, input.schoolId),
+            eq(r.groupId, input.groupId),
+            eq(r.sessionId, input.sessionId),
+          ),
+        columns: { s3Key: true },
       });
       if (conflicting?.s3Key !== input.s3Key) {
         await discardOrphanedUpload(input.s3Key, "recordings");
@@ -354,42 +342,19 @@ export async function loadSupervisorRecordings() {
     throw new Error("Unauthorized user");
   }
 
-  const recordings = await db.sessionRecording.findMany({
-    where: {
-      supervisorId: supervisor.profile.id,
-      archivedAt: null,
-    },
-    include: {
-      fellow: {
-        select: {
-          fellowName: true,
-        },
-      },
-      school: {
-        select: {
-          schoolName: true,
-        },
-      },
-      group: {
-        select: {
-          groupName: true,
-        },
-      },
+  const supervisorId = supervisor.profile.id;
+  const recordings = await db.query.sessionRecording.findMany({
+    where: (r, { and, eq, isNull }) => and(eq(r.supervisorId, supervisorId), isNull(r.archivedAt)),
+    with: {
+      fellow: { columns: { fellowName: true } },
+      school: { columns: { schoolName: true } },
+      group: { columns: { groupName: true } },
       session: {
-        select: {
-          sessionType: true,
-          sessionDate: true,
-          session: {
-            select: {
-              sessionName: true,
-            },
-          },
-        },
+        columns: { sessionType: true, sessionDate: true },
+        with: { session: { columns: { sessionName: true } } },
       },
     },
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy: (r, { desc }) => desc(r.createdAt),
   });
 
   const mappedRecordings = recordings.map((r) => ({
@@ -446,12 +411,10 @@ export async function retryRecordingProcessing(recordingId: string) {
   }
 
   try {
-    const recording = await db.sessionRecording.findFirst({
-      where: {
-        id: recordingId,
-        supervisorId: supervisor.profile.id,
-        status: "FAILED",
-      },
+    const supervisorId = supervisor.profile.id;
+    const recording = await db.query.sessionRecording.findFirst({
+      where: (r, { and, eq }) =>
+        and(eq(r.id, recordingId), eq(r.supervisorId, supervisorId), eq(r.status, "FAILED")),
     });
 
     if (!recording) {
@@ -468,16 +431,20 @@ export async function retryRecordingProcessing(recordingId: string) {
       };
     }
 
-    await db.sessionRecording.update({
-      where: { id: recordingId },
-      data: {
+    const reset = await db
+      .update(sessionRecording)
+      .set({
         status: "PENDING",
         errorMessage: null,
         processedAt: null,
         fidelityJobId: null,
         fidelityJobSubmittedAt: null,
-      },
-    });
+      })
+      .where(eq(sessionRecording.id, recordingId))
+      .returning({ id: sessionRecording.id });
+    if (reset.length === 0) {
+      throw new Error(`Recording ${recordingId} not found`);
+    }
 
     await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
       console.error(
@@ -505,8 +472,8 @@ export type BatchRecordingUpdate = {
   id: string;
   status: RecordingProcessingStatus;
   overallScore?: string;
-  fidelityFeedback?: Prisma.InputJsonValue;
-  transcript?: Prisma.InputJsonValue;
+  fidelityFeedback?: JsonValue;
+  transcript?: JsonValue;
   errorMessage?: string;
 };
 
@@ -515,14 +482,14 @@ export async function updateRecordingStatus(
   status: RecordingProcessingStatus,
   feedback?: {
     overallScore?: string;
-    fidelityFeedback?: Prisma.InputJsonValue;
-    transcript?: Prisma.InputJsonValue;
+    fidelityFeedback?: JsonValue;
+    transcript?: JsonValue;
     errorMessage?: string;
   },
 ) {
   try {
-    const recording = await db.sessionRecording.findUnique({
-      where: { id: recordingId },
+    const recording = await db.query.sessionRecording.findFirst({
+      where: (r, { eq }) => eq(r.id, recordingId),
     });
 
     if (!recording) {
@@ -532,18 +499,28 @@ export async function updateRecordingStatus(
       };
     }
 
-    await db.sessionRecording.update({
-      where: { id: recordingId },
-      data: {
+    // Undefined values are skipped by `set`, like Prisma's `data`.
+    const updated = await db
+      .update(sessionRecording)
+      .set({
         status,
         processedAt: status === "COMPLETED" || status === "FAILED" ? new Date() : undefined,
         overallScore: feedback?.overallScore,
         fidelityFeedback: feedback?.fidelityFeedback,
         transcript: feedback?.transcript,
         errorMessage: feedback?.errorMessage,
-        retryCount: status === "FAILED" ? { increment: 1 } : status === "PENDING" ? 0 : undefined,
-      },
-    });
+        retryCount:
+          status === "FAILED"
+            ? sql`${sessionRecording.retryCount} + 1`
+            : status === "PENDING"
+              ? 0
+              : undefined,
+      })
+      .where(eq(sessionRecording.id, recordingId))
+      .returning({ id: sessionRecording.id });
+    if (updated.length === 0) {
+      throw new Error(`Recording ${recordingId} not found`);
+    }
 
     revalidatePath("/sc/reporting/recordings");
 
@@ -576,9 +553,9 @@ export async function updateRecordingsStatusBatch(
       };
     }
 
-    const existingRecordings = await db.sessionRecording.findMany({
-      where: { id: { in: recordingIds } },
-      select: { id: true },
+    const existingRecordings = await db.query.sessionRecording.findMany({
+      where: (r, { inArray }) => inArray(r.id, recordingIds),
+      columns: { id: true },
     });
 
     const existingIds = new Set(existingRecordings.map((r) => r.id));
@@ -613,7 +590,7 @@ export async function updateRecordingsStatusBatch(
       errorMessages.push(update.errorMessage ?? NULL_SENTINEL);
     }
 
-    const updatedCount = await db.$executeRaw`
+    const updatedCount = await executeRaw(sql`
       UPDATE "session_recordings" AS sr
       SET
         status = data.status::"recording_processing_status",
@@ -644,14 +621,14 @@ export async function updateRecordingsStatusBatch(
       WHERE sr.id = data.id
         AND sr.status IN ('PENDING', 'PROCESSING')
         AND sr."fidelity_job_id" IS NOT NULL
-    `;
+    `);
 
     revalidatePath("/sc/reporting/recordings");
 
     return {
       success: true,
       message: `Successfully updated ${updatedCount} recording(s)`,
-      updatedCount: Number(updatedCount),
+      updatedCount,
     };
   } catch (error) {
     console.error("Error updating recording statuses in batch:", error);
@@ -676,29 +653,27 @@ export async function updateSessionRecording(input: {
     return { success: false, message: "Unauthorized user" };
   }
 
-  const recording = await db.sessionRecording.findFirst({
-    where: {
-      id: input.recordingId,
-      supervisorId: supervisor.profile.id,
-    },
+  const supervisorId = supervisor.profile.id;
+  const recording = await db.query.sessionRecording.findFirst({
+    where: (r, { and, eq }) => and(eq(r.id, input.recordingId), eq(r.supervisorId, supervisorId)),
   });
 
   if (!recording) {
     return { success: false, message: "Recording not found or unauthorized" };
   }
 
-  const authorizedFellow = await db.fellow.findFirst({
-    where: { id: input.fellowId, supervisorId: supervisor.profile.id },
-    select: { id: true },
+  const authorizedFellow = await db.query.fellow.findFirst({
+    where: (f, { and, eq }) => and(eq(f.id, input.fellowId), eq(f.supervisorId, supervisorId)),
+    columns: { id: true },
   });
 
   if (!authorizedFellow) {
     return { success: false, message: "Fellow not found or unauthorized" };
   }
 
-  const group = await db.interventionGroup.findUnique({
-    where: { id: input.groupId },
-    select: { schoolId: true },
+  const group = await db.query.interventionGroup.findFirst({
+    where: (g, { eq }) => eq(g.id, input.groupId),
+    columns: { schoolId: true },
   });
 
   if (!group) {
@@ -707,15 +682,16 @@ export async function updateSessionRecording(input: {
 
   const schoolId = group.schoolId;
 
-  const conflict = await db.sessionRecording.findFirst({
-    where: {
-      fellowId: input.fellowId,
-      schoolId,
-      groupId: input.groupId,
-      sessionId: input.sessionId,
-      id: { not: input.recordingId },
-    },
-    select: { id: true },
+  const conflict = await db.query.sessionRecording.findFirst({
+    where: (r, { and, eq, ne }) =>
+      and(
+        eq(r.fellowId, input.fellowId),
+        eq(r.schoolId, schoolId),
+        eq(r.groupId, input.groupId),
+        eq(r.sessionId, input.sessionId),
+        ne(r.id, input.recordingId),
+      ),
+    columns: { id: true },
   });
 
   if (conflict) {
@@ -726,22 +702,26 @@ export async function updateSessionRecording(input: {
   }
 
   try {
-    await db.sessionRecording.update({
-      where: { id: input.recordingId },
-      data: {
+    const updated = await db
+      .update(sessionRecording)
+      .set({
         fellowId: input.fellowId,
         schoolId,
         groupId: input.groupId,
         sessionId: input.sessionId,
         originalFileName: input.originalFileName,
-      },
-    });
+      })
+      .where(eq(sessionRecording.id, input.recordingId))
+      .returning({ id: sessionRecording.id });
+    if (updated.length === 0) {
+      throw new Error(`Recording ${input.recordingId} not found`);
+    }
 
     revalidatePath("/sc/reporting/recordings");
 
     return { success: true, message: "Recording updated successfully" };
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (isUniqueViolation(error)) {
       return {
         success: false,
         message: "A recording already exists for this combination",
@@ -763,11 +743,9 @@ export async function archiveRecording(recordingId: string) {
   }
 
   try {
-    const recording = await db.sessionRecording.findFirst({
-      where: {
-        id: recordingId,
-        supervisorId: supervisor.profile.id,
-      },
+    const supervisorId = supervisor.profile.id;
+    const recording = await db.query.sessionRecording.findFirst({
+      where: (r, { and, eq }) => and(eq(r.id, recordingId), eq(r.supervisorId, supervisorId)),
     });
 
     if (!recording) {
@@ -777,12 +755,14 @@ export async function archiveRecording(recordingId: string) {
       };
     }
 
-    await db.sessionRecording.update({
-      where: { id: recordingId },
-      data: {
-        archivedAt: new Date(),
-      },
-    });
+    const archived = await db
+      .update(sessionRecording)
+      .set({ archivedAt: new Date() })
+      .where(eq(sessionRecording.id, recordingId))
+      .returning({ id: sessionRecording.id });
+    if (archived.length === 0) {
+      throw new Error(`Recording ${recordingId} not found`);
+    }
 
     revalidatePath("/sc/reporting/recordings");
 

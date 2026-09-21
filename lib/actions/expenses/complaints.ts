@@ -1,40 +1,32 @@
-import type { Prisma } from "@prisma/client";
+import { and, asc, eq, inArray, type SQL, sum } from "drizzle-orm";
+
+/** A condition on the `fellow` table limiting what a caller may see; `and()` may yield undefined. */
+export type Scope = SQL | undefined;
+
 import type {
   ComplaintFormSchema,
   CreateComplaintSchema,
 } from "#/components/common/expenses/complaints/schema";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { fellow, fellowAttendance, fellowPaymentComplaints, payoutStatements } from "#/db/schema";
 
 /**
  * Shared core for the fellow payment-complaints report. Each role's
  * actions.ts resolves its own auth and passes the fellow scope it is
- * allowed to see; everything below the scope is identical across roles.
+ * allowed to see (a condition on the `fellow` table); everything below the
+ * scope is identical across roles.
  */
-export async function loadPaymentComplaints(where: Prisma.FellowWhereInput) {
-  const fellows = await db.fellow.findMany({
-    where,
-    include: {
-      hub: {
-        select: {
-          hubName: true,
-        },
-      },
-      supervisor: {
-        select: {
-          supervisorName: true,
-        },
-      },
+export async function loadPaymentComplaints(scope: Scope) {
+  const fellows = await db.query.fellow.findMany({
+    where: scope,
+    with: {
+      hub: { columns: { hubName: true } },
+      supervisor: { columns: { supervisorName: true } },
       fellowAttendances: {
-        include: {
-          session: {
-            include: {
-              session: true,
-            },
-          },
+        with: {
+          session: { with: { session: true } },
           fellowPaymentComplaints: true,
-          PayoutStatements: {
-            select: { amount: true, executedAt: true },
-          },
+          PayoutStatements: { columns: { amount: true, executedAt: true } },
         },
       },
     },
@@ -124,12 +116,27 @@ type PayoutStatementAmount = { amount: number; executedAt: Date | null };
  * meaning between raising a complaint and approving it.
  */
 async function payoutTotal(fellowId: string, executedAt: Date) {
-  const { _sum } = await db.payoutStatements.aggregate({
-    where: { fellowId, executedAt },
-    _sum: { amount: true },
-  });
+  const [row] = await db
+    .select({
+      amount: sum(payoutStatements.amount).mapWith((v: string | null) =>
+        v === null ? null : Number(v),
+      ),
+    })
+    .from(payoutStatements)
+    .where(
+      and(eq(payoutStatements.fellowId, fellowId), eq(payoutStatements.executedAt, executedAt)),
+    );
 
-  return _sum.amount;
+  return row?.amount ?? null;
+}
+
+/** Attendances whose fellow is inside the caller's scope. */
+function attendanceIdsInScope(scope: Scope) {
+  return db
+    .select({ id: fellowAttendance.id })
+    .from(fellowAttendance)
+    .innerJoin(fellow, eq(fellowAttendance.fellowId, fellow.id))
+    .where(scope);
 }
 
 /**
@@ -138,24 +145,20 @@ async function payoutTotal(fellowId: string, executedAt: Date) {
  * across roles.
  */
 export async function resolveComplaint(
-  data: { id: string; formData: ComplaintFormSchema; scope: Prisma.FellowWhereInput },
+  data: { id: string; formData: ComplaintFormSchema; scope: Scope },
   status: "APPROVED" | "REJECTED",
 ) {
   try {
     // A complaint id on its own is not proof of access, so confirm the
     // complaint belongs to a fellow inside the caller's scope before mutating.
-    const complaint = await db.fellowPaymentComplaints.findFirst({
-      where: {
-        id: data.id,
-        fellowAttendance: { fellow: data.scope },
-      },
-      select: {
-        id: true,
+    const complaint = await db.query.fellowPaymentComplaints.findFirst({
+      where: (c, { and, eq, inArray }) =>
+        and(eq(c.id, data.id), inArray(c.fellowAttendanceId, attendanceIdsInScope(data.scope))),
+      columns: { id: true },
+      with: {
         fellowAttendance: {
-          select: {
-            fellowId: true,
-            PayoutStatements: { select: { executedAt: true } },
-          },
+          columns: { fellowId: true },
+          with: { PayoutStatements: { columns: { executedAt: true } } },
         },
       },
     });
@@ -174,11 +177,9 @@ export async function resolveComplaint(
       ? await payoutTotal(complaint.fellowAttendance.fellowId, executedAt)
       : null;
 
-    await db.fellowPaymentComplaints.update({
-      where: {
-        id: data.id,
-      },
-      data: {
+    const updated = await db
+      .update(fellowPaymentComplaints)
+      .set({
         status,
         ...(status === "APPROVED"
           ? { reasonForAcceptance: data.formData.reasonForAccepting }
@@ -197,8 +198,12 @@ export async function resolveComplaint(
         // statement is deliberately left alone. It is the fellow's evidence,
         // supplied when the complaint is raised, and the Statement column
         // downloads it — writing a placeholder here destroyed that link.
-      },
-    });
+      })
+      .where(eq(fellowPaymentComplaints.id, data.id))
+      .returning({ id: fellowPaymentComplaints.id });
+    if (updated.length === 0) {
+      throw new Error(`Complaint ${data.id} not found`);
+    }
     return {
       success: true,
       message:
@@ -222,35 +227,32 @@ export async function resolveComplaint(
  * payout, so the dialog uses that payout's amount for the fellow rather than
  * their all-time total.
  */
-export async function loadComplaintContext(data: {
-  fellowId: string;
-  scope: Prisma.FellowWhereInput;
-}) {
-  const fellow = await db.fellow.findFirst({
-    where: { AND: [{ id: data.fellowId }, data.scope] },
-    include: {
+export async function loadComplaintContext(data: { fellowId: string; scope: Scope }) {
+  const fellowRow = await db.query.fellow.findFirst({
+    where: and(eq(fellow.id, data.fellowId), data.scope),
+    with: {
       fellowAttendances: {
-        include: { session: { include: { session: true } } },
+        with: { session: { with: { session: true } } },
       },
     },
   });
 
-  if (!fellow) {
+  if (!fellowRow) {
     return null;
   }
 
   const { preCount, mainCount, supervisionCount, trainingCount } = calculateSessionCounts(
-    fellow.fellowAttendances,
+    fellowRow.fellowAttendances,
   );
 
   return {
-    mpesaName: fellow.mpesaName ?? "",
-    mpesaNumber: fellow.mpesaNumber ?? "",
+    mpesaName: fellowRow.mpesaName ?? "",
+    mpesaNumber: fellowRow.mpesaNumber ?? "",
     noOfTrainingSessions: trainingCount,
     noOfSupervisionSessions: supervisionCount,
     noOfPreSessions: preCount,
     noOfMainSessions: mainCount,
-    noOfSpecialSessions: specialSessionCount(fellow.fellowAttendances),
+    noOfSpecialSessions: specialSessionCount(fellowRow.fellowAttendances),
   };
 }
 
@@ -267,29 +269,37 @@ export async function createPaymentComplaint(data: {
   fellowId: string;
   payoutDate: Date;
   formData: CreateComplaintSchema;
-  scope: Prisma.FellowWhereInput;
+  scope: Scope;
 }) {
   try {
-    const fellow = await db.fellow.findFirst({
-      where: { AND: [{ id: data.fellowId }, data.scope] },
-      select: { id: true },
+    const fellowRow = await db.query.fellow.findFirst({
+      where: and(eq(fellow.id, data.fellowId), data.scope),
+      columns: { id: true },
     });
 
-    if (!fellow) {
+    if (!fellowRow) {
       return {
         success: false,
         message: "Fellow not found",
       };
     }
 
-    const statements = await db.payoutStatements.findMany({
-      where: { fellowId: fellow.id, executedAt: data.payoutDate },
+    const statements = await db
+      .select({
+        fellowAttendanceId: payoutStatements.fellowAttendanceId,
+        amount: payoutStatements.amount,
+      })
+      .from(payoutStatements)
+      .where(
+        and(
+          eq(payoutStatements.fellowId, fellowRow.id),
+          eq(payoutStatements.executedAt, data.payoutDate),
+        ),
+      )
       // Ordered by attendance so the complaint always hangs off the same row:
       // statements written in one transaction share created_at, so ordering by
       // that would pick an arbitrary attendance and defeat the guard below.
-      orderBy: { fellowAttendanceId: "asc" },
-      select: { fellowAttendanceId: true, amount: true },
-    });
+      .orderBy(asc(payoutStatements.fellowAttendanceId));
 
     const fellowAttendanceId = statements[0]?.fellowAttendanceId;
 
@@ -303,12 +313,16 @@ export async function createPaymentComplaint(data: {
     // Nothing in the schema stops two identical complaints, and a double submit
     // would give reviewers two rows to resolve separately. Keyed to every
     // attendance in the payout, not just the one this complaint will hang off.
-    const existing = await db.fellowPaymentComplaints.findFirst({
-      where: {
-        fellowAttendanceId: { in: statements.map((statement) => statement.fellowAttendanceId) },
-        status: "PENDING",
-      },
-      select: { id: true },
+    const existing = await db.query.fellowPaymentComplaints.findFirst({
+      where: (c, { and, eq }) =>
+        and(
+          inArray(
+            c.fellowAttendanceId,
+            statements.map((statement) => statement.fellowAttendanceId),
+          ),
+          eq(c.status, "PENDING"),
+        ),
+      columns: { id: true },
     });
 
     if (existing) {
@@ -320,18 +334,16 @@ export async function createPaymentComplaint(data: {
 
     const paidAmount = statements.reduce((total, statement) => total + statement.amount, 0);
 
-    await db.fellowPaymentComplaints.create({
-      data: {
-        fellowAttendanceId,
-        dateOfComplaint: new Date(),
-        reason: data.formData.reasonForComplaint,
-        // The column is NOT NULL, so "no statement yet" is stored as empty and
-        // the Statement column checks for it before offering a download.
-        statement: data.formData.statement,
-        confirmedAmountReceived: data.formData.confirmedAmountReceived,
-        differenceInAmount: paidAmount - data.formData.confirmedAmountReceived,
-        comments: data.formData.comments,
-      },
+    await db.insert(fellowPaymentComplaints).values({
+      fellowAttendanceId,
+      dateOfComplaint: new Date(),
+      reason: data.formData.reasonForComplaint,
+      // The column is NOT NULL, so "no statement yet" is stored as empty and
+      // the Statement column checks for it before offering a download.
+      statement: data.formData.statement,
+      confirmedAmountReceived: data.formData.confirmedAmountReceived,
+      differenceInAmount: paidAmount - data.formData.confirmedAmountReceived,
+      comments: data.formData.comments,
     });
 
     return {
@@ -397,12 +409,10 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
   return { preCount, mainCount, supervisionCount, trainingCount };
 }
 
-type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
-  include: {
-    session: {
-      include: {
-        session: true;
-      };
-    };
-  };
-}>;
+/** The slice of an attendance row the helpers above read. */
+type FellowAttendance = {
+  processedAt: Date | null;
+  session: {
+    session: { amount: number | null; sessionType: string; sessionLabel: string } | null;
+  } | null;
+};

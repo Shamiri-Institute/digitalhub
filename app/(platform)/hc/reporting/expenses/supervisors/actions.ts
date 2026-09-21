@@ -1,7 +1,11 @@
 "use server";
 
+import { eq, inArray, isNull } from "drizzle-orm";
 import { signOut } from "next-auth/react";
+
 import { currentHubCoordinator } from "#/app/auth";
+import { db } from "#/db/client";
+import { reimbursementRequest, supervisor } from "#/db/schema";
 import {
   approveSupervisorExpenseRequest,
   createSupervisorExpense,
@@ -10,7 +14,6 @@ import {
   type SupervisorExpenseInput,
   updateSupervisorExpenseRequest,
 } from "#/lib/actions/expenses/supervisor-expenses";
-import { db } from "#/lib/db";
 
 export type HubSupervisorExpensesType = Awaited<
   ReturnType<typeof loadHubSupervisorExpenses>
@@ -24,12 +27,15 @@ export async function loadHubSupervisorExpenses() {
     throw new Error("Unauthorised user");
   }
 
+  const hubId = hubCoordinator.profile?.assignedHubId;
   return loadSupervisorExpenses(
-    {
-      supervisor: {
-        hubId: hubCoordinator.profile?.assignedHubId,
-      },
-    },
+    inArray(
+      reimbursementRequest.supervisorId,
+      db
+        .select({ id: supervisor.id })
+        .from(supervisor)
+        .where(hubId === null ? isNull(supervisor.hubId) : eq(supervisor.hubId, hubId)),
+    ),
     () => hubCoordinator.profile?.coordinatorName,
   );
 }
@@ -61,10 +67,11 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
 
 export async function getSupervisorsInHub() {
   const hubCoordinator = await currentHubCoordinator();
-  return await db.supervisor.findMany({
-    where: {
-      hubId: hubCoordinator?.profile?.assignedHubId,
-    },
+  const hubId = hubCoordinator?.profile?.assignedHubId;
+  return await db.query.supervisor.findMany({
+    // No coordinator means no filter, like the Prisma `hubId: undefined` it replaces.
+    where: (s, { eq, isNull }) =>
+      hubId === undefined ? undefined : hubId === null ? isNull(s.hubId) : eq(s.hubId, hubId),
   });
 }
 

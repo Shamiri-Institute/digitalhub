@@ -2,7 +2,7 @@
 
 import { currentHubCoordinator } from "#/app/auth";
 import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
 
 export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluation[]> {
   try {
@@ -13,13 +13,10 @@ export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvalu
 
     const userId = hubCoordinator.session.user.id;
 
-    const fellows = await db.fellow.findMany({
-      where: {
-        hubId: hubCoordinator.profile?.assignedHubId,
-      },
-      include: {
-        weeklyFellowRatings: true,
-      },
+    const hubId = hubCoordinator.profile?.assignedHubId;
+    const fellows = await db.query.fellow.findMany({
+      where: (f, { eq, isNull }) => (hubId === null ? isNull(f.hubId) : eq(f.hubId, hubId)),
+      with: { weeklyFellowRatings: true },
     });
 
     const formattedData = fellows.map((fellow) => {

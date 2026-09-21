@@ -1,8 +1,8 @@
 "use server";
 
-import type { Prisma } from "@prisma/client";
-import { ImplementerRole } from "#/db/enums";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+
 import {
   currentHubCoordinator,
   currentOpsUser,
@@ -15,16 +15,20 @@ import {
   CreateComplaintSchema,
   RejectComplaintSchema,
 } from "#/components/common/expenses/complaints/schema";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { fellow, hub } from "#/db/schema";
 import {
   createPaymentComplaint,
   loadComplaintContext,
   resolveComplaint,
+  type Scope,
 } from "#/lib/actions/expenses/complaints";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
 type ComplaintActor = {
-  /** Fellows whose complaints this user may raise, approve or reject. */
-  scope: Prisma.FellowWhereInput;
+  /** Fellows whose complaints this user may raise, approve or reject (a condition on `fellow`). */
+  scope: Scope;
   /** The user's complaints route, revalidated after a successful write. */
   path: string;
   /** The user's payout-history route, where complaints are raised from. */
@@ -51,7 +55,7 @@ async function currentComplaintActor(): Promise<ComplaintActor | null> {
     }
 
     return {
-      scope: { hubId: assignedHubId },
+      scope: eq(fellow.hubId, assignedHubId),
       path: "/hc/reporting/expenses/complaints",
       payoutPath: "/hc/reporting/expenses/payout-history",
     };
@@ -66,7 +70,7 @@ async function currentComplaintActor(): Promise<ComplaintActor | null> {
     }
 
     return {
-      scope: { supervisorId },
+      scope: eq(fellow.supervisorId, supervisorId),
       path: "/sc/reporting/expenses/complaints",
       payoutPath: "/sc/reporting/expenses/payout-history",
     };
@@ -80,11 +84,15 @@ async function currentComplaintActor(): Promise<ComplaintActor | null> {
       return null;
     }
 
+    const projectId = await getActiveProjectId();
     return {
-      scope: {
-        implementerId,
-        hub: { projectId: await getActiveProjectId() },
-      },
+      scope: and(
+        eq(fellow.implementerId, implementerId),
+        inArray(
+          fellow.hubId,
+          db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
+        ),
+      ),
       path: "/ops/reporting/expenses/complaints",
       payoutPath: "/ops/reporting/expenses/payout-history",
     };

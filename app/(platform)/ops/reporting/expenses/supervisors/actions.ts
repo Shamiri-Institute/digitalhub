@@ -1,6 +1,10 @@
 "use server";
 
+import { and, eq, inArray } from "drizzle-orm";
+
 import { currentOpsUser } from "#/app/auth";
+import { db } from "#/db/client";
+import { hub, reimbursementRequest, supervisor } from "#/db/schema";
 import {
   approveSupervisorExpenseRequest,
   createSupervisorExpense,
@@ -10,7 +14,6 @@ import {
   updateSupervisorExpenseRequest,
 } from "#/lib/actions/expenses/supervisor-expenses";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { db } from "#/lib/db";
 
 export type HubSupervisorExpensesType = Awaited<
   ReturnType<typeof loadHubsSupervisorExpenses>
@@ -24,18 +27,28 @@ export async function loadHubsSupervisorExpenses() {
   }
 
   const projectId = await getActiveProjectId();
+  const implementerId = opsUser.session.user.activeMembership?.implementerId;
 
-  return loadSupervisorExpenses(
-    {
-      supervisor: {
-        implementerId: opsUser.session.user.activeMembership?.implementerId,
-      },
-      hub: {
-        projectId,
-      },
-    },
-    (expense) => expense.hub.hubName,
+  const inProject = inArray(
+    reimbursementRequest.hubId,
+    db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
   );
+  // No membership means no supervisor filter, like the Prisma `implementerId: undefined` it replaces.
+  const scope =
+    implementerId === undefined
+      ? inProject
+      : and(
+          inArray(
+            reimbursementRequest.supervisorId,
+            db
+              .select({ id: supervisor.id })
+              .from(supervisor)
+              .where(eq(supervisor.implementerId, implementerId)),
+          ),
+          inProject,
+        );
+
+  return loadSupervisorExpenses(scope, (expense) => expense.hub.hubName);
 }
 
 export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
@@ -65,11 +78,12 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
 
 export async function getSupervisorsInImplementation() {
   const opsUser = await currentOpsUser();
+  const implementerId = opsUser?.session.user.activeMembership?.implementerId;
 
-  return await db.supervisor.findMany({
-    where: {
-      implementerId: opsUser?.session.user.activeMembership?.implementerId,
-    },
+  return await db.query.supervisor.findMany({
+    // No membership means no filter, like the Prisma `implementerId: undefined` it replaces.
+    where: (s, { eq }) =>
+      implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
   });
 }
 
