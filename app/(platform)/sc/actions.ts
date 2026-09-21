@@ -1,31 +1,34 @@
 "use server";
-import type { Fellow } from "#/db/types";
+import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
 import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db, queryRaw } from "#/db/client";
+import { fellow, interventionGroup, supervisor, weeklyFellowRatings } from "#/db/schema";
 import { DropoutFellowSchema, SupervisorSchema, WeeklyFellowRatingSchema } from "./schemas";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
 export async function loadFellowsData() {
-  const supervisor = await currentSupervisorLite();
+  const supervisorProfile = await currentSupervisorLite();
 
-  if (!supervisor) {
+  if (!supervisorProfile) {
     throw new Error("Unauthorised user");
   }
 
-  const [fellows, fellowAverageRatings, supervisors] = await Promise.all([
-    db.fellow.findMany({
-      where: {
-        supervisorId: supervisor.profile?.id,
-      },
-      orderBy: { id: "asc" },
-      include: {
+  const supervisorId = supervisorProfile.profile.id;
+  const hubId = supervisorProfile.profile.hubId;
+
+  const [fellows, schools, fellowAverageRatings, supervisors] = await Promise.all([
+    db.query.fellow.findMany({
+      where: (f, { eq }) => eq(f.supervisorId, supervisorId),
+      orderBy: (f, { asc }) => asc(f.id),
+      with: {
         fellowAttendances: {
-          include: {
+          with: {
             session: {
-              include: {
+              with: {
                 session: true,
                 school: true, // Used in AttendanceHistory for school name
               },
@@ -33,70 +36,70 @@ export async function loadFellowsData() {
             group: true,
             PayoutStatements: {
               // Used in AttendanceHistory for MPESA number and payment status
-              orderBy: {
-                createdAt: "desc",
-              },
+              orderBy: (p, { desc }) => desc(p.createdAt),
             },
           },
         },
         weeklyFellowRatings: true,
         groups: {
-          include: {
-            interventionGroupReports: {
-              include: {
-                session: true,
-              },
-            },
+          with: {
+            interventionGroupReports: { with: { session: true } },
             students: {
-              include: {
-                _count: {
-                  select: {
-                    clinicalCases: true,
-                  },
-                },
-              },
-            },
-            school: {
-              include: {
-                interventionSessions: {
-                  orderBy: {
-                    sessionDate: "asc",
-                  },
-                  include: {
-                    session: true,
-                  },
-                },
-              },
+              extras: (st, { sql }) => ({
+                clinicalCasesCount:
+                  sql<number>`(select count(*) from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`
+                    .mapWith(Number)
+                    .as("clinical_cases_count"),
+              }),
             },
           },
         },
-        fellowComplaints: {
-          include: {
-            user: true,
-          },
+        fellowComplaints: { with: { user: true } },
+      },
+    }),
+
+    // The groups' schools with their sessions, loaded once and attached per group below instead
+    // of being recomputed for every group row by a lateral join.
+    db.query.school.findMany({
+      where: (s, { inArray }) =>
+        inArray(
+          s.id,
+          db
+            .select({ id: interventionGroup.schoolId })
+            .from(interventionGroup)
+            .where(
+              inArray(
+                interventionGroup.leaderId,
+                db
+                  .select({ id: fellow.id })
+                  .from(fellow)
+                  .where(eq(fellow.supervisorId, supervisorId)),
+              ),
+            ),
+        ),
+      with: {
+        interventionSessions: {
+          orderBy: (s, { asc }) => asc(s.sessionDate),
+          with: { session: true },
         },
       },
     }),
 
-    db.$queryRaw<{ id: string; averageRating: number }[]>`
+    queryRaw<{ id: string; averageRating: number | null }>(sql`
       SELECT
         f.id,
-        (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
+        ((AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4)::float8 AS "averageRating"
       FROM
         fellows f
           LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
-      WHERE f.hub_id =${supervisor.profile?.hubId}
+      WHERE f.hub_id =${hubId}
       GROUP BY
         f.id
-    `,
+    `),
 
-    db.supervisor.findMany({
-      where: {
-        hubId: supervisor.profile?.hubId,
-      },
-      include: {
-        fellows: { select: { id: true, fellowName: true } },
-      },
+    db.query.supervisor.findMany({
+      where: (s, { eq, isNull }) => (hubId === null ? isNull(s.hubId) : eq(s.hubId, hubId)),
+      with: { fellows: { columns: { id: true, fellowName: true } } },
     }),
   ]);
 
@@ -104,10 +107,16 @@ export async function loadFellowsData() {
   const averageRatingById = new Map(
     fellowAverageRatings.map((rating) => [rating.id, rating.averageRating]),
   );
+  const schoolById = new Map(schools.map((s) => [s.id, s]));
+  const schoolOf = (schoolId: string) => {
+    const found = schoolById.get(schoolId);
+    if (!found) throw new Error(`School ${schoolId} not found`);
+    return found;
+  };
 
-  return fellows.map((fellow) => {
-    const attendancesByGroupId = new Map<string, typeof fellow.fellowAttendances>();
-    for (const attendance of fellow.fellowAttendances) {
+  return fellows.map((fellowRow) => {
+    const attendancesByGroupId = new Map<string, typeof fellowRow.fellowAttendances>();
+    for (const attendance of fellowRow.fellowAttendances) {
       if (!attendance.groupId) continue;
       const existing = attendancesByGroupId.get(attendance.groupId);
       if (existing) {
@@ -117,25 +126,35 @@ export async function loadFellowsData() {
       }
     }
 
+    // Readers still use the `_count` shape; flatten it together with them (ENG-2161).
+    const groups = fellowRow.groups.map((group) => ({
+      ...group,
+      school: schoolOf(group.schoolId),
+      students: group.students.map(({ clinicalCasesCount, ...student }) => ({
+        ...student,
+        _count: { clinicalCases: clinicalCasesCount },
+      })),
+    }));
+
     return {
-      county: fellow.county,
-      subCounty: fellow.subCounty,
-      fellowName: fellow.fellowName,
-      fellowEmail: fellow.fellowEmail,
-      cellNumber: fellow.cellNumber,
-      mpesaNumber: fellow.mpesaNumber,
-      mpesaName: fellow.mpesaName,
-      createdAt: fellow.createdAt,
-      droppedOut: fellow.droppedOut,
-      droppedOutAt: fellow.droppedOutAt,
-      idNumber: fellow.idNumber,
-      gender: fellow.gender,
-      dateOfBirth: fellow.dateOfBirth ?? null,
-      supervisorId: fellow.supervisorId,
-      supervisorName: supervisorNameById.get(fellow.supervisorId ?? "") ?? null,
-      id: fellow.id,
-      weeklyFellowRatings: fellow.weeklyFellowRatings,
-      sessions: fellow.groups.map((group) => ({
+      county: fellowRow.county,
+      subCounty: fellowRow.subCounty,
+      fellowName: fellowRow.fellowName,
+      fellowEmail: fellowRow.fellowEmail,
+      cellNumber: fellowRow.cellNumber,
+      mpesaNumber: fellowRow.mpesaNumber,
+      mpesaName: fellowRow.mpesaName,
+      createdAt: fellowRow.createdAt,
+      droppedOut: fellowRow.droppedOut,
+      droppedOutAt: fellowRow.droppedOutAt,
+      idNumber: fellowRow.idNumber,
+      gender: fellowRow.gender,
+      dateOfBirth: fellowRow.dateOfBirth ?? null,
+      supervisorId: fellowRow.supervisorId,
+      supervisorName: supervisorNameById.get(fellowRow.supervisorId ?? "") ?? null,
+      id: fellowRow.id,
+      weeklyFellowRatings: fellowRow.weeklyFellowRatings,
+      sessions: groups.map((group) => ({
         schoolName: group.school?.schoolName,
         sessionType:
           group.school?.interventionSessions[0]?.sessionDate &&
@@ -149,22 +168,22 @@ export async function loadFellowsData() {
           numClinicalCases: student._count.clinicalCases,
         })),
       })),
-      attendances: fellow.fellowAttendances,
-      groups: fellow.groups.map((group) => ({
+      attendances: fellowRow.fellowAttendances,
+      groups: groups.map((group) => ({
         ...group,
         attendances: attendancesByGroupId.get(group.id) ?? [],
       })),
-      complaints: fellow.fellowComplaints,
-      averageRating: Number(averageRatingById.get(fellow.id) ?? 0),
+      complaints: fellowRow.fellowComplaints,
+      averageRating: Number(averageRatingById.get(fellowRow.id) ?? 0),
     };
   });
 }
 
 export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
   try {
-    const supervisor = await currentSupervisor();
+    const supervisorProfile = await currentSupervisor();
 
-    if (!supervisor) {
+    if (!supervisorProfile) {
       return {
         success: false,
         message: "User is not authorised",
@@ -172,11 +191,9 @@ export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
     }
     const parsedData = WeeklyFellowRatingSchema.parse(data);
 
-    await db.weeklyFellowRatings.create({
-      data: {
-        ...parsedData,
-        supervisorId: supervisor.profile?.id,
-      },
+    await db.insert(weeklyFellowRatings).values({
+      ...parsedData,
+      supervisorId: supervisorProfile.profile.id,
     });
 
     revalidatePath("/sc/fellows");
@@ -191,14 +208,14 @@ export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
 }
 
 export async function dropoutFellowWithReason(
-  fellowId: Fellow["id"],
-  dropoutReason: Fellow["dropOutReason"],
+  fellowId: (typeof fellow.$inferSelect)["id"],
+  dropoutReason: (typeof fellow.$inferSelect)["dropOutReason"],
   revalidationPath: string,
 ) {
   try {
-    const supervisor = await currentSupervisor();
+    const supervisorProfile = await currentSupervisor();
 
-    if (!supervisor) {
+    if (!supervisorProfile) {
       return {
         success: false,
         message: "User is not authorised",
@@ -215,20 +232,24 @@ export async function dropoutFellowWithReason(
       dropoutReason,
     });
 
-    const fellow = await db.fellow.update({
-      where: { id: data.fellowId },
-      data: {
+    const [updated] = await db
+      .update(fellow)
+      .set({
         droppedOut: true,
         droppedOutAt: new Date(),
         dropOutReason: data.dropoutReason,
-      },
-    });
+      })
+      .where(eq(fellow.id, data.fellowId))
+      .returning();
+    if (!updated) {
+      throw new Error(`Fellow ${data.fellowId} not found`);
+    }
 
     revalidatePath(revalidationPath);
     return {
       success: true,
       message: "Successfully dropped out the fellow",
-      fellow,
+      fellow: updated,
     };
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -256,9 +277,9 @@ export async function updateSupervisorProfile(formData: z.infer<typeof Superviso
       return { success: false, message: "Invalid date format" };
     }
 
-    const updated = await db.supervisor.update({
-      where: { id: user.session.user.id },
-      data: {
+    const [updated] = await db
+      .update(supervisor)
+      .set({
         supervisorEmail: data.supervisorEmail,
         supervisorName: data.supervisorName,
         idNumber: data.idNumber,
@@ -270,8 +291,12 @@ export async function updateSupervisorProfile(formData: z.infer<typeof Superviso
         subCounty: data.subCounty,
         bankName: data.bankName,
         bankBranch: data.bankBranch,
-      },
-    });
+      })
+      .where(eq(supervisor.id, user.session.user.id))
+      .returning();
+    if (!updated) {
+      throw new Error(`Supervisor ${user.session.user.id} not found`);
+    }
 
     return { success: true, data: updated };
   } catch (error) {

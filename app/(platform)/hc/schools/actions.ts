@@ -1,14 +1,22 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
-import { sessionTypes } from "#/db/enums";
 import { format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
+
 import { currentHubCoordinator } from "#/app/auth";
+import { db, queryRaw } from "#/db/client";
+import { sessionTypes } from "#/db/enums";
+import {
+  interventionGroup,
+  interventionSession,
+  school,
+  schoolDropoutHistory,
+  weeklyHubReport,
+} from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
 import {
   AddSchoolSchema,
@@ -22,27 +30,10 @@ import {
  * TODO: the functions here should also be cognizant of the project
  */
 
-type SchoolWithRelations = Prisma.SchoolGetPayload<{
-  include: {
-    assignedSupervisor: true;
-    interventionSessions: {
-      include: {
-        sessionRatings: true;
-        session: true;
-      };
-    };
-    students: {
-      include: {
-        assignedGroup: true;
-        _count: {
-          select: {
-            clinicalCases: true;
-          };
-        };
-      };
-    };
-  };
-}>;
+type SchoolWithRelations = Omit<
+  Awaited<ReturnType<typeof fetchSchoolData>>[number],
+  "interventionGroups"
+>;
 
 type AddSchoolResponse = {
   success: boolean;
@@ -50,36 +41,33 @@ type AddSchoolResponse = {
   data?: SchoolWithRelations;
 };
 
+/** Count of clinical cases per student, kept in Prisma's `_count` shape for the shared tables. */
+const clinicalCasesCount = (st: { id: unknown }) =>
+  sql<number>`(select count(*) from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`
+    .mapWith(Number)
+    .as("clinical_cases_count");
+
+function withClinicalCasesCount<T extends { clinicalCasesCount: number }>({
+  clinicalCasesCount: count,
+  ...student
+}: T) {
+  return { ...student, _count: { clinicalCases: count } };
+}
+
 export async function fetchSchoolData(hubId: string) {
-  return await db.school.findMany({
-    where: {
-      hubId,
-    },
-    include: {
+  const schools = await db.query.school.findMany({
+    where: (s, { eq }) => eq(s.hubId, hubId),
+    with: {
       assignedSupervisor: true,
-      interventionSessions: {
-        include: {
-          sessionRatings: true,
-          session: true,
-        },
-      },
-      interventionGroups: {
-        include: {
-          leader: true,
-        },
-      },
+      interventionSessions: { with: { sessionRatings: true, session: true } },
+      interventionGroups: { with: { leader: true } },
       students: {
-        include: {
-          assignedGroup: true,
-          _count: {
-            select: {
-              clinicalCases: true,
-            },
-          },
-        },
+        with: { assignedGroup: true },
+        extras: (st) => ({ clinicalCasesCount: clinicalCasesCount(st) }),
       },
     },
   });
+  return schools.map((s) => ({ ...s, students: s.students.map(withClinicalCasesCount) }));
 }
 
 export async function revalidatePageAction(pathname: string, mode?: "layout" | "page") {
@@ -88,15 +76,13 @@ export async function revalidatePageAction(pathname: string, mode?: "layout" | "
 
 export async function fetchSchoolDataCompletenessData(hubId: string, schoolId?: string) {
   // TODO: uncomment the school_sub_county query and adjust division from 6.0 -> 7.0
-  const [schoolAttendanceData] = await db.$queryRaw<
-    {
-      percentage: number | string | bigint | null;
-    }[]
-  >`
+  const [schoolAttendanceData] = await queryRaw<{
+    percentage: number | string | null;
+  }>(sql`
     SELECT
       ${
         schoolId
-          ? Prisma.sql`(
+          ? sql`(
             (CASE WHEN school_county IS NOT NULL THEN 1 ELSE 0 END)
             -- + (CASE WHEN school_sub_county is null THEN 1 ELSE 0 END)
             + (CASE WHEN school_type IS NOT NULL THEN 1 ELSE 0 END)
@@ -105,7 +91,7 @@ export async function fetchSchoolDataCompletenessData(hubId: string, schoolId?: 
             + (CASE WHEN point_person_name IS NOT NULL THEN 1 ELSE 0 END)
             + (CASE WHEN point_person_phone IS NOT NULL THEN 1 ELSE 0 END)
           ) / 6.0 * 100`
-          : Prisma.sql`AVG(
+          : sql`AVG(
             (CASE WHEN school_county IS NOT NULL THEN 1 ELSE 0 END)
             -- + (CASE WHEN school_sub_county is null THEN 1 ELSE 0 END)
             + (CASE WHEN school_type IS NOT NULL THEN 1 ELSE 0 END)
@@ -117,8 +103,8 @@ export async function fetchSchoolDataCompletenessData(hubId: string, schoolId?: 
       } AS percentage
     FROM schools
     WHERE hub_id = ${hubId}
-      ${schoolId ? Prisma.sql`AND id = ${schoolId}` : Prisma.sql``}
-  `;
+      ${schoolId ? sql`AND id = ${schoolId}` : sql.empty()}
+  `);
 
   if (!schoolAttendanceData) {
     return [];
@@ -138,12 +124,10 @@ export type DropoutReasonsGraphData = {
 };
 
 export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
-  const dropoutData = await db.$queryRaw<
-    {
-      name: string;
-      value: number | string | bigint | null;
-    }[]
-  >`
+  const dropoutData = await queryRaw<{
+    name: string;
+    value: number | string | null;
+  }>(sql`
     SELECT
       COUNT(*) AS value,
       dropout_reason AS name
@@ -152,10 +136,10 @@ export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
       dropout_reason IS NOT NULL
       AND dropped_out = true
       AND hub_id = ${hubId}
-      ${schoolId ? Prisma.sql`AND id = ${schoolId}` : Prisma.sql``}
+      ${schoolId ? sql`AND id = ${schoolId}` : sql.empty()}
     GROUP BY
       dropout_reason
-  `;
+  `);
 
   const mapped: Array<{ name: string; value: number }> = dropoutData.map((data) => ({
     name: data.name,
@@ -163,6 +147,30 @@ export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
   }));
 
   return mapped;
+}
+
+/** Updates the school and records the change; returns the school with its dropout history. */
+async function setSchoolDropout(
+  schoolId: string,
+  data: { dropoutReason: string | null; droppedOut: boolean; droppedOutAt: Date | null },
+  userId: string,
+) {
+  return await db.transaction(async (tx) => {
+    const [updated] = await tx.update(school).set(data).where(eq(school.id, schoolId)).returning();
+    if (!updated) {
+      throw new Error(`School ${schoolId} not found`);
+    }
+    await tx.insert(schoolDropoutHistory).values({
+      schoolId,
+      dropoutReason: data.dropoutReason,
+      droppedOut: data.droppedOut,
+      userId,
+    });
+    const history = await tx.query.schoolDropoutHistory.findMany({
+      where: (h, { eq }) => eq(h.schoolId, schoolId),
+    });
+    return { ...updated, schoolDropoutHistory: history };
+  });
 }
 
 export async function dropoutSchool(schoolId: string, dropoutReason: string) {
@@ -176,28 +184,11 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
     const userId = hubCoordinator.session.user.id;
 
     const data = DropoutSchoolSchema.parse({ schoolId, dropoutReason });
-    const result = await db.school.update({
-      data: {
-        dropoutReason: data.dropoutReason,
-        droppedOut: true,
-        droppedOutAt: new Date(),
-        schoolDropoutHistory: {
-          create: [
-            {
-              dropoutReason: data.dropoutReason,
-              droppedOut: true,
-              userId,
-            },
-          ],
-        },
-      },
-      where: {
-        id: data.schoolId,
-      },
-      include: {
-        schoolDropoutHistory: true,
-      },
-    });
+    const result = await setSchoolDropout(
+      data.schoolId,
+      { dropoutReason: data.dropoutReason, droppedOut: true, droppedOutAt: new Date() },
+      userId,
+    );
 
     revalidatePath("/hc/schools");
 
@@ -223,28 +214,11 @@ export async function undoDropoutSchool(schoolId: string) {
       throw new Error("The session has not been authenticated");
     }
 
-    const result = await db.school.update({
-      data: {
-        dropoutReason: null,
-        droppedOut: false,
-        droppedOutAt: null,
-        schoolDropoutHistory: {
-          create: [
-            {
-              dropoutReason: null,
-              droppedOut: false,
-              userId: hubCoordinator.session.user.id as string,
-            },
-          ],
-        },
-      },
-      where: {
-        id: schoolId,
-      },
-      include: {
-        schoolDropoutHistory: true,
-      },
-    });
+    const result = await setSchoolDropout(
+      schoolId,
+      { dropoutReason: null, droppedOut: false, droppedOutAt: null },
+      hubCoordinator.session.user.id as string,
+    );
 
     revalidatePath("/hc/schools");
 
@@ -266,9 +240,7 @@ export async function submitWeeklyHubReport(data: z.infer<typeof WeeklyHubReport
   try {
     const parsedData = WeeklyHubReportSchema.parse(data);
 
-    await db.weeklyHubReport.create({
-      data: parsedData,
-    });
+    await db.insert(weeklyHubReport).values(parsedData);
 
     // TODO:
     // this should revalidate the reports page
@@ -284,23 +256,21 @@ export async function submitWeeklyHubReport(data: z.infer<typeof WeeklyHubReport
 
 export type SessionRatingAverages = {
   session_type: "s0" | "s1" | "s2" | "s3" | "s4";
-  student_behavior: number | string | bigint | null;
-  admin_support: number | string | bigint | null;
-  workload: number | string | bigint | null;
+  student_behavior: number | string | null;
+  admin_support: number | string | null;
+  workload: number | string | null;
 };
 
 export async function fetchSessionRatingAverages(hubId: string, schoolId?: string) {
-  const ratingAverages = await db.$queryRaw<
-    {
-      session_type: "s0" | "s1" | "s2" | "s3" | "s4";
-      student_behavior: number | string | bigint | null;
-      admin_support: number | string | bigint | null;
-      workload: number | string | bigint | null;
-    }[]
-  >`
+  const ratingAverages = await queryRaw<{
+    session_type: "s0" | "s1" | "s2" | "s3" | "s4";
+    student_behavior: number | string | null;
+    admin_support: number | string | null;
+    workload: number | string | null;
+  }>(sql`
     ${
       schoolId
-        ? Prisma.sql`
+        ? sql`
         SELECT
           ses.session_type AS session_type,
           AVG(isr.student_behavior_rating) AS student_behavior,
@@ -317,7 +287,7 @@ export async function fetchSessionRatingAverages(hubId: string, schoolId?: strin
         ORDER BY
           ses.session_type
       `
-        : Prisma.sql`
+        : sql`
         SELECT
           ses.session_type AS session_type,
           AVG(isr.student_behavior_rating) AS student_behavior,
@@ -334,7 +304,7 @@ export async function fetchSessionRatingAverages(hubId: string, schoolId?: strin
           ses.session_type
       `
     }
-  `;
+  `);
 
   if (!ratingAverages.length) {
     return [];
@@ -357,28 +327,24 @@ export type SchoolAttendances = {
 };
 
 export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
-  const [schoolCount] = await db.$queryRaw<
-    {
-      count: number | string | bigint | null;
-    }[]
-  >`
+  const [schoolCount] = await queryRaw<{
+    count: number | string | null;
+  }>(sql`
     SELECT
       COUNT(*) AS "count"
     FROM
       schools
     WHERE
       hub_id = ${hubId}
-      ${schoolId ? Prisma.sql`AND id = ${schoolId}` : Prisma.sql``}
-  `;
+      ${schoolId ? sql`AND id = ${schoolId}` : sql.empty()}
+  `);
 
   const numSchools = Number(schoolCount?.count ?? 0);
 
-  const schoolAttendances = await db.$queryRaw<
-    {
-      count: number | string | bigint | null;
-      session_type: string;
-    }[]
-  >`
+  const schoolAttendances = await queryRaw<{
+    count: number | string | null;
+    session_type: string;
+  }>(sql`
     SELECT
       session_type,
       count(distinct sa.school_id) AS "count"
@@ -388,11 +354,11 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
     LEFT JOIN intervention_sessions ON sa.session_id = intervention_sessions.id
     WHERE
       schools.hub_id = ${hubId}
-      ${schoolId ? Prisma.sql`AND schools.id = ${schoolId}` : Prisma.sql``}
+      ${schoolId ? sql`AND schools.id = ${schoolId}` : sql.empty()}
     GROUP BY
       session_type
     ORDER BY
-      session_type ASC`;
+      session_type ASC`);
 
   return schoolAttendances.map<{
     session_type: string;
@@ -418,11 +384,9 @@ export async function editSchoolInformation(
 
     const parsedData = EditSchoolSchema.parse(schoolInfo);
 
-    const { schoolName } = await db.school.update({
-      where: {
-        id: schoolId,
-      },
-      data: {
+    const [updated] = await db
+      .update(school)
+      .set({
         schoolName: parsedData.schoolName ?? null,
         numbersExpected: parsedData.numbersExpected ?? null,
         schoolType: parsedData.schoolType ?? null,
@@ -439,11 +403,15 @@ export async function editSchoolInformation(
         droppedOut: false,
         dropoutReason: null,
         droppedOutAt: null,
-      },
-    });
+      })
+      .where(eq(school.id, schoolId))
+      .returning({ schoolName: school.schoolName });
+    if (!updated) {
+      throw new Error(`School ${schoolId} not found`);
+    }
     return {
       success: true,
-      message: `Successfully updated school information for ${schoolName}`,
+      message: `Successfully updated school information for ${updated.schoolName}`,
     };
   } catch (err) {
     console.error(err);
@@ -454,9 +422,11 @@ export async function editSchoolInformation(
   }
 }
 
-export async function fetchHubSupervisors({ where }: { where: Prisma.SupervisorWhereInput }) {
-  return await db.supervisor.findMany({
-    where,
+/** Supervisors of a hub. `null` matches supervisors without a hub; `undefined` matches all. */
+export async function fetchHubSupervisors({ hubId }: { hubId: string | null | undefined }) {
+  return await db.query.supervisor.findMany({
+    where: (s, { eq, isNull }) =>
+      hubId === undefined ? undefined : hubId === null ? isNull(s.hubId) : eq(s.hubId, hubId),
   });
 }
 
@@ -473,15 +443,17 @@ export async function assignSchoolPointSupervisor(
 
     const parsedData = AssignPointSupervisorSchema.parse(schoolInfo);
 
-    const { schoolName } = await db.school.update({
-      where: {
-        id: schoolId,
-      },
-      data: parsedData,
-    });
+    const [updated] = await db
+      .update(school)
+      .set(parsedData)
+      .where(eq(school.id, schoolId))
+      .returning({ schoolName: school.schoolName });
+    if (!updated) {
+      throw new Error(`School ${schoolId} not found`);
+    }
     return {
       success: true,
-      message: `Successfully updated point supervisor for ${schoolName}`,
+      message: `Successfully updated point supervisor for ${updated.schoolName}`,
     };
   } catch (err) {
     console.error(err);
@@ -503,36 +475,37 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
     const parsedData = AddSchoolSchema.parse(data);
 
     // Get available fellows for the pre-session date
-    const fellows = await db.fellow.findMany({
-      where: { hubId },
-      include: {
-        groups: {
-          include: {
-            school: {
-              select: {
-                interventionSessions: {
-                  select: {
-                    sessionDate: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+    const fellows = await db.query.fellow.findMany({
+      where: (f, { eq, isNull }) => (hubId === null ? isNull(f.hubId) : eq(f.hubId, hubId)),
+      with: { groups: { columns: { id: true, schoolId: true } } },
     });
+
+    // Session dates per school, loaded once instead of per group row.
+    const groupSchoolIds = [...new Set(fellows.flatMap((f) => f.groups.map((g) => g.schoolId)))];
+    const sessionDates =
+      groupSchoolIds.length === 0
+        ? []
+        : await db.query.interventionSession.findMany({
+            where: (s, { inArray }) => inArray(s.schoolId, groupSchoolIds),
+            columns: { schoolId: true, sessionDate: true },
+          });
+    const sessionDatesBySchool = new Map<string, Set<string>>();
+    for (const { schoolId, sessionDate } of sessionDates) {
+      if (!schoolId) continue;
+      const dateStr = format(toZonedTime(sessionDate, "Africa/Nairobi"), "yyyy-MM-dd");
+      const dates = sessionDatesBySchool.get(schoolId) ?? new Set<string>();
+      dates.add(dateStr);
+      sessionDatesBySchool.set(schoolId, dates);
+    }
 
     // Create a map of fellows and their session dates
     const fellowSessionDates = new Map<string, Set<string>>();
     fellows.forEach((fellow) => {
       const dates = new Set<string>();
       fellow.groups.forEach((group) => {
-        group.school.interventionSessions.forEach((session) => {
-          const dateStr = format(toZonedTime(session.sessionDate, "Africa/Nairobi"), "yyyy-MM-dd");
-          if (dateStr) {
-            dates.add(dateStr);
-          }
-        });
+        for (const dateStr of sessionDatesBySchool.get(group.schoolId) ?? []) {
+          dates.add(dateStr);
+        }
       });
       fellowSessionDates.set(fellow.id, dates);
     });
@@ -554,9 +527,10 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       };
     }
 
-    return await db.$transaction(async (tx) => {
-      const school = await tx.school.create({
-        data: {
+    return await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(school)
+        .values({
           id: objectId("sch"),
           visibleId: objectId("sch"),
           schoolName: parsedData.schoolName,
@@ -576,34 +550,25 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
           dropoutReason: null,
           droppedOutAt: null,
           hubId,
-        },
-        include: {
-          assignedSupervisor: true,
-          interventionSessions: {
-            include: {
-              sessionRatings: true,
-              session: true,
-            },
-          },
-          students: {
-            include: {
-              assignedGroup: true,
-              _count: {
-                select: {
-                  clinicalCases: true,
-                },
-              },
-            },
-          },
-        },
-      });
+        })
+        .returning();
+      if (!created) {
+        throw new Error("Could not create the school");
+      }
+      // A school created in this transaction has no supervisor, sessions or students yet.
+      const newSchool: SchoolWithRelations = {
+        ...created,
+        assignedSupervisor: null,
+        interventionSessions: [],
+        students: [],
+      };
 
       const numGroups = Math.ceil((parsedData.numbersExpected || 1000) / 16);
 
       // Get the first word of the school name for the prefix
-      const schoolNamePrefix = getSchoolInitials(school.schoolName) ?? "GROUP";
+      const schoolNamePrefix = getSchoolInitials(newSchool.schoolName) ?? "GROUP";
 
-      const interventionGroups = [];
+      const interventionGroups: (typeof interventionGroup.$inferInsert)[] = [];
       for (let i = 0; i < numGroups; i++) {
         // Get the fellow with the least number of groups
         const leader = availableFellows[i];
@@ -612,27 +577,27 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
         interventionGroups.push({
           id: objectId("group"),
           groupName: `${schoolNamePrefix} ${i + 1}`,
-          schoolId: school.id,
+          schoolId: newSchool.id,
           leaderId: leader.id,
           projectId: hubCoordinator.profile?.assignedHub?.projectId ?? "",
         });
       }
 
       if (interventionGroups.length > 0) {
-        await tx.interventionGroup.createMany({
-          data: interventionGroups,
-        });
+        await tx.insert(interventionGroup).values(interventionGroups);
       }
 
       // Create intervention sessions
-      const sessionNames = await tx.sessionName.findMany({
-        where: {
-          hubId: hubCoordinator.profile?.assignedHubId ?? undefined,
-          sessionType: sessionTypes.INTERVENTION,
-        },
+      const assignedHubId = hubCoordinator.profile?.assignedHubId ?? undefined;
+      const sessionNames = await tx.query.sessionName.findMany({
+        where: (n, { and, eq }) =>
+          and(
+            assignedHubId ? eq(n.hubId, assignedHubId) : undefined,
+            eq(n.sessionType, sessionTypes.INTERVENTION),
+          ),
       });
 
-      const interventionSessions: Prisma.InterventionSessionCreateManyInput[] = [];
+      const interventionSessions: (typeof interventionSession.$inferInsert)[] = [];
 
       const currentDate = toZonedTime(parsedData.preSessionDate, "Africa/Nairobi");
       currentDate.setHours(16, 0, 0, 0); // Set to 4 PM Nairobi time
@@ -644,7 +609,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
           status: "Scheduled",
           sessionType: sessionName.sessionName,
           sessionId: sessionName.id,
-          schoolId: school.id,
+          schoolId: newSchool.id,
           occurred: false,
           yearOfImplementation: new Date().getFullYear(),
           projectId: hubCoordinator.profile?.assignedHub?.projectId || undefined,
@@ -656,15 +621,13 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       }
 
       if (interventionSessions.length > 0) {
-        await tx.interventionSession.createMany({
-          data: interventionSessions,
-        });
+        await tx.insert(interventionSession).values(interventionSessions);
       }
 
       return {
         success: true,
         message: "School added successfully",
-        data: school,
+        data: newSchool,
       };
     });
   } catch (error) {

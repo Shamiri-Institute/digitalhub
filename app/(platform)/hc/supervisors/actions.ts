@@ -1,6 +1,8 @@
 "use server";
 
+import { eq, sql } from "drizzle-orm";
 import type { z } from "zod";
+
 import {
   AddNewSupervisorSchema,
   DropoutSupervisorSchema,
@@ -11,16 +13,23 @@ import {
   WeeklyHubTeamMeetingSchema,
 } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator } from "#/app/auth";
+import { db, queryRaw } from "#/db/client";
+import {
+  implementerMember,
+  monthlySupervisorEvaluation,
+  supervisor,
+  supervisorAttendance,
+  supervisorComplaints,
+  user,
+  weeklyTeamMeetingReport,
+} from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
 
 export async function submitWeeklyTeamMeeting(data: z.infer<typeof WeeklyHubTeamMeetingSchema>) {
   try {
     const parsedData = WeeklyHubTeamMeetingSchema.parse(data);
 
-    await db.weeklyTeamMeetingReport.create({
-      data: parsedData,
-    });
+    await db.insert(weeklyTeamMeetingReport).values(parsedData);
     //TODO: If there will be a view for the weekly report, we should add a revalidation here
     return {
       success: true,
@@ -49,17 +58,19 @@ export async function dropoutSupervisor(supervisorId: string, dropoutReason: str
     await checkAuth();
 
     const data = DropoutSupervisorSchema.parse({ supervisorId, dropoutReason });
-    const result = await db.supervisor.update({
-      data: {
+    const [result] = await db
+      .update(supervisor)
+      .set({
         // TODO: add columns for drop-out details. Confirm with @Wendy
         dropOutReason: data.dropoutReason,
         // droppedOutAt: new Date(),
         droppedOut: true,
-      },
-      where: {
-        id: data.supervisorId,
-      },
-    });
+      })
+      .where(eq(supervisor.id, data.supervisorId))
+      .returning();
+    if (!result) {
+      throw new Error(`Supervisor ${data.supervisorId} not found`);
+    }
 
     return {
       success: true,
@@ -78,17 +89,19 @@ export async function dropoutSupervisor(supervisorId: string, dropoutReason: str
 export async function undropSupervisor(supervisorId: string) {
   try {
     await checkAuth();
-    const result = await db.supervisor.update({
-      data: {
+    const [result] = await db
+      .update(supervisor)
+      .set({
         // TODO: add columns for drop-out details. Confirm with @Wendy
         dropOutReason: null,
         // droppedOutAt: null,
         droppedOut: false,
-      },
-      where: {
-        id: supervisorId,
-      },
-    });
+      })
+      .where(eq(supervisor.id, supervisorId))
+      .returning();
+    if (!result) {
+      throw new Error(`Supervisor ${supervisorId} not found`);
+    }
 
     return {
       success: true,
@@ -114,15 +127,16 @@ export async function submitSupervisorComplaint(data: z.infer<typeof SubmitCompl
     }
 
     const parsedData = SubmitComplaintSchema.parse(data);
-    const result = await db.supervisorComplaints.create({
-      data: {
+    const [result] = await db
+      .insert(supervisorComplaints)
+      .values({
         supervisorId: parsedData.supervisorId,
         complaint: parsedData.complaint,
         comments: parsedData.comments,
         hubCoordinatorId: hubCoordinator.profile?.id ?? "",
         projectId,
-      },
-    });
+      })
+      .returning();
 
     return {
       success: true,
@@ -148,22 +162,15 @@ export async function getSessionAndSupervisorAttendances({
   schoolId: string;
 }) {
   try {
-    const data = await db.interventionSession.findMany({
-      where: {
-        schoolId,
-        projectId,
-        occurred: true,
-      },
-      include: {
+    const data = await db.query.interventionSession.findMany({
+      where: (s, { and, eq }) =>
+        and(eq(s.schoolId, schoolId), eq(s.projectId, projectId), eq(s.occurred, true)),
+      with: {
         supervisorAttendances: {
-          where: {
-            supervisorId,
-          },
+          where: (a, { eq }) => eq(a.supervisorId, supervisorId),
         },
       },
-      orderBy: {
-        sessionDate: "asc",
-      },
+      orderBy: (s, { asc }) => asc(s.sessionDate),
     });
     return {
       success: true,
@@ -186,21 +193,19 @@ export async function markSupervisorAttendance(
   const attended =
     parsedData.attended === "attended" ? true : parsedData.attended === "missed" ? false : null;
   try {
-    const attendance = await db.supervisorAttendance.findFirst({
-      where: { id },
+    const attendance = await db.query.supervisorAttendance.findFirst({
+      where: (a, { eq }) => eq(a.id, id),
     });
 
-    if (attendance !== null) {
-      await db.supervisorAttendance.update({
-        where: {
-          id: attendance.id,
-        },
-        data: {
+    if (attendance !== undefined) {
+      await db
+        .update(supervisorAttendance)
+        .set({
           attended,
           absenceReason: !attended ? parsedData.absenceReason : null,
           absenceComments: !attended ? parsedData.comments : null,
-        },
-      });
+        })
+        .where(eq(supervisorAttendance.id, attendance.id));
       return {
         success: true,
         message: "Successfully marked supervisor attendance.",
@@ -237,14 +242,9 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
     } = EditSupervisorSchema.parse(data);
 
     // Get the current supervisor's user ID
-    const supervisorMember = await db.implementerMember.findFirst({
-      where: {
-        identifier: supervisorId,
-        role: "SUPERVISOR",
-      },
-      select: {
-        userId: true,
-      },
+    const supervisorMember = await db.query.implementerMember.findFirst({
+      where: (m, { and, eq }) => and(eq(m.identifier, supervisorId), eq(m.role, "SUPERVISOR")),
+      columns: { userId: true },
     });
 
     if (!supervisorMember) {
@@ -255,13 +255,9 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
     }
 
     // Check if email exists for any other user
-    const existingUser = await db.user.findFirst({
-      where: {
-        email: personalEmail,
-        NOT: {
-          id: supervisorMember.userId,
-        },
-      },
+    const existingUser = await db.query.user.findFirst({
+      where: (u, { and, eq, ne }) =>
+        and(eq(u.email, personalEmail), ne(u.id, supervisorMember.userId)),
     });
 
     if (existingUser) {
@@ -271,11 +267,9 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
       };
     }
 
-    await db.supervisor.update({
-      where: {
-        id: supervisorId,
-      },
-      data: {
+    const updated = await db
+      .update(supervisor)
+      .set({
         supervisorName,
         personalEmail,
         county,
@@ -286,18 +280,22 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
         gender,
         idNumber,
         dateOfBirth,
-      },
-    });
+      })
+      .where(eq(supervisor.id, supervisorId))
+      .returning({ id: supervisor.id });
+    if (updated.length === 0) {
+      throw new Error(`Supervisor ${supervisorId} not found`);
+    }
 
     // Update the corresponding user's email
-    await db.user.update({
-      where: {
-        id: supervisorMember.userId,
-      },
-      data: {
-        email: personalEmail,
-      },
-    });
+    const updatedUsers = await db
+      .update(user)
+      .set({ email: personalEmail })
+      .where(eq(user.id, supervisorMember.userId))
+      .returning({ id: user.id });
+    if (updatedUsers.length === 0) {
+      throw new Error(`User ${supervisorMember.userId} not found`);
+    }
 
     return {
       success: true,
@@ -328,13 +326,9 @@ export async function createNewSupervisor(data: z.infer<typeof AddNewSupervisorS
     const parsedData = AddNewSupervisorSchema.parse(data);
 
     // Check if email already exists
-    const existingUser = await db.user.findUnique({
-      where: {
-        email: parsedData.personalEmail,
-      },
-      include: {
-        memberships: true,
-      },
+    const existingUser = await db.query.user.findFirst({
+      where: (u, { eq }) => eq(u.email, parsedData.personalEmail),
+      with: { memberships: true },
     });
 
     if (existingUser) {
@@ -346,36 +340,44 @@ export async function createNewSupervisor(data: z.infer<typeof AddNewSupervisorS
       }
     }
 
-    const result = await db.$transaction(async (tx) => {
-      const supervisor = await tx.supervisor.create({
-        data: {
+    const result = await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(supervisor)
+        .values({
           ...parsedData,
           id: objectId("sup"),
           implementerId: assignedHub.implementerId,
           hubId: assignedHub.id,
-        },
-      });
+        })
+        .returning();
+      if (!created) {
+        throw new Error("Could not create the supervisor");
+      }
 
-      const user =
-        existingUser ||
-        (await tx.user.create({
-          data: {
+      let userId = existingUser?.id;
+      if (!userId) {
+        const [createdUser] = await tx
+          .insert(user)
+          .values({
             id: objectId("user"),
             email: parsedData.personalEmail,
             name: parsedData.supervisorName,
-          },
-        }));
+          })
+          .returning({ id: user.id });
+        if (!createdUser) {
+          throw new Error("Could not create the supervisor's user");
+        }
+        userId = createdUser.id;
+      }
 
-      await tx.implementerMember.create({
-        data: {
-          implementerId: assignedHub.implementerId,
-          userId: user.id,
-          role: "SUPERVISOR",
-          identifier: supervisor.id,
-        },
+      await tx.insert(implementerMember).values({
+        implementerId: assignedHub.implementerId,
+        userId,
+        role: "SUPERVISOR",
+        identifier: created.id,
       });
 
-      return supervisor;
+      return created;
     });
 
     return {
@@ -429,50 +431,16 @@ export async function submitMonthlySupervisorEvaluation(
       throw new Error("Assigned hub has no project");
     }
 
-    const match = await db.monthlySupervisorEvaluation.findFirst({
-      where: {
-        month,
-        supervisorId,
-        projectId,
-      },
+    const match = await db.query.monthlySupervisorEvaluation.findFirst({
+      where: (m, { and, eq }) =>
+        and(eq(m.month, month), eq(m.supervisorId, supervisorId), eq(m.projectId, projectId)),
     });
-    if (match === null) {
-      await db.monthlySupervisorEvaluation.create({
-        data: {
-          supervisorId,
-          hubCoordinatorId: hc.profile?.id ?? "",
-          projectId,
-          month,
-          respectfulness,
-          attitude,
-          collaboration,
-          reliability,
-          identificationOfIssues,
-          workplaceDemeanorComments,
-          leadership,
-          communicationStyle,
-          conflictResolution,
-          adaptability,
-          recognitionAndFeedback,
-          decisionMaking,
-          managementStyleComments,
-          fellowRecruitmentEffectiveness,
-          fellowTrainingEffectiveness,
-          programLogisticsCoordination,
-          programSessionAttendance,
-          programExecutionComments,
-        },
-      });
-      return {
-        success: true,
-        message: "Successfully submitted monthly evaluation.",
-      };
-    }
-    await db.monthlySupervisorEvaluation.update({
-      where: {
-        id: match.id,
-      },
-      data: {
+    if (match === undefined) {
+      await db.insert(monthlySupervisorEvaluation).values({
+        supervisorId,
+        hubCoordinatorId: hc.profile?.id ?? "",
+        projectId,
+        month,
         respectfulness,
         attitude,
         collaboration,
@@ -491,8 +459,35 @@ export async function submitMonthlySupervisorEvaluation(
         programLogisticsCoordination,
         programSessionAttendance,
         programExecutionComments,
-      },
-    });
+      });
+      return {
+        success: true,
+        message: "Successfully submitted monthly evaluation.",
+      };
+    }
+    await db
+      .update(monthlySupervisorEvaluation)
+      .set({
+        respectfulness,
+        attitude,
+        collaboration,
+        reliability,
+        identificationOfIssues,
+        workplaceDemeanorComments,
+        leadership,
+        communicationStyle,
+        conflictResolution,
+        adaptability,
+        recognitionAndFeedback,
+        decisionMaking,
+        managementStyleComments,
+        fellowRecruitmentEffectiveness,
+        fellowTrainingEffectiveness,
+        programLogisticsCoordination,
+        programSessionAttendance,
+        programExecutionComments,
+      })
+      .where(eq(monthlySupervisorEvaluation.id, match.id));
     return {
       success: true,
       message: "Successfully updated monthly evaluation.",
@@ -512,7 +507,7 @@ export type SupervisorDropoutReasonsGraphData = {
 };
 
 export async function fetchSupervisorDropoutReasons(hudId: string) {
-  const dropoutData = await db.$queryRaw<SupervisorDropoutReasonsGraphData[]>`
+  const dropoutData = await queryRaw<SupervisorDropoutReasonsGraphData>(sql`
     SELECT
       COUNT(*) AS value,
       drop_out_reason AS name
@@ -523,7 +518,7 @@ export async function fetchSupervisorDropoutReasons(hudId: string) {
       AND hub_id = ${hudId}
     GROUP BY
       drop_out_reason
-  `;
+  `);
 
   dropoutData.forEach((data) => {
     data.value = Math.round(Number(data.value));
@@ -533,7 +528,7 @@ export async function fetchSupervisorDropoutReasons(hudId: string) {
 }
 
 export async function fetchSupervisorDataCompletenessData(hubId: string) {
-  const [supervisorData] = await db.$queryRaw<{ percentage: number | string | bigint | null }[]>`
+  const [supervisorData] = await queryRaw<{ percentage: number | string | null }>(sql`
     SELECT
       AVG((
         (CASE WHEN supervisor_name IS NOT NULL THEN 1 ELSE 0 END)
@@ -545,7 +540,7 @@ export async function fetchSupervisorDataCompletenessData(hubId: string) {
       ) / 6.0 * 100) AS percentage
     FROM supervisors
     WHERE hub_id = ${hubId}
-  `;
+  `);
 
   if (!supervisorData) {
     return [];
@@ -567,14 +562,12 @@ export type SessionRatingAverages = {
 };
 
 export async function fetchSupervisorSessionRatingAverages(hubId: string) {
-  const ratingAverages = await db.$queryRaw<
-    {
-      session_type: "s0" | "s1" | "s2" | "s3" | "s4";
-      student_behavior: number | string | bigint | null;
-      admin_support: number | string | bigint | null;
-      workload: number | string | bigint | null;
-    }[]
-  >`
+  const ratingAverages = await queryRaw<{
+    session_type: "s0" | "s1" | "s2" | "s3" | "s4";
+    student_behavior: number | string | null;
+    admin_support: number | string | null;
+    workload: number | string | null;
+  }>(sql`
     SELECT
       ses.session_type AS session_type,
       AVG(isr.student_behavior_rating) AS student_behavior,
@@ -589,7 +582,7 @@ export async function fetchSupervisorSessionRatingAverages(hubId: string) {
       ses.session_type
     ORDER BY
       ses.session_type
-  `;
+  `);
 
   if (!ratingAverages.length) {
     return [];
@@ -610,12 +603,10 @@ export type SupervisorAttendanceData = {
 };
 
 export async function fetchSupervisorAttendanceData(hubId: string) {
-  const supervisorAttendanceData = await db.$queryRaw<
-    {
-      supervisor_name: string;
-      attended: number | string | bigint | null;
-    }[]
-  >`
+  const supervisorAttendanceData = await queryRaw<{
+    supervisor_name: string;
+    attended: number | string | null;
+  }>(sql`
     SELECT
       sup.supervisor_name AS supervisor_name,
       COUNT(sa.attended)::integer AS attended
@@ -623,7 +614,7 @@ export async function fetchSupervisorAttendanceData(hubId: string) {
     INNER JOIN supervisors sup ON sa.supervisor_id = sup.id
     WHERE sup.hub_id = ${hubId} AND (sa.attended IS NOT NULL AND sa.attended = true)
     GROUP BY sup.supervisor_name
-  `;
+  `);
 
   const mapped: Array<{
     supervisor_name: string;

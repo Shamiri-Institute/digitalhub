@@ -1,7 +1,10 @@
 "use server";
 
+import { eq } from "drizzle-orm";
+
 import { currentHubCoordinator } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { fellow } from "#/db/schema";
 
 async function checkAuth() {
   const hc = await currentHubCoordinator();
@@ -20,20 +23,21 @@ export async function assignFellowSupervisor({
 }) {
   try {
     await checkAuth();
-    const result = await db.fellow.update({
-      where: {
-        id: fellowId,
-      },
-      data: {
-        supervisorId,
-      },
-      include: {
-        supervisor: true,
-      },
+    const [updated] = await db
+      .update(fellow)
+      .set({ supervisorId })
+      .where(eq(fellow.id, fellowId))
+      .returning({ fellowName: fellow.fellowName });
+    if (!updated) {
+      throw new Error(`Fellow ${fellowId} not found`);
+    }
+    const assigned = await db.query.supervisor.findFirst({
+      where: (s, { eq }) => eq(s.id, supervisorId),
+      columns: { supervisorName: true },
     });
     return {
       success: true,
-      message: `Successfully assigned ${result.fellowName} to ${result.supervisor ? result.supervisor.supervisorName : "supervisor"}.`,
+      message: `Successfully assigned ${updated.fellowName} to ${assigned ? assigned.supervisorName : "supervisor"}.`,
     };
   } catch (error: unknown) {
     console.error(error);

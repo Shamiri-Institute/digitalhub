@@ -1,9 +1,18 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
-import { ImplementerRole } from "#/db/enums";
+import { and, eq, inArray, isNull, or, type SQL, sql } from "drizzle-orm";
+
 import { getCurrentUserSession } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db, isSerializationFailure } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import {
+  attendanceDocuments,
+  fellow,
+  hubCoordinator,
+  interventionGroup,
+  school,
+  studentAttendance,
+} from "#/db/schema";
 import { deleteObject, getPresignedUrl } from "#/lib/s3/s3.service";
 import {
   discardOrphanedUpload,
@@ -32,25 +41,49 @@ class StaleAttendanceUploadError extends Error {
   }
 }
 
+/** Groups the caller may see; `null` means the role may not see any. */
 function buildAttendanceScopeFilter(
   role: ImplementerRole | undefined,
   identifier: string | null | undefined,
-): Prisma.InterventionGroupWhereInput | null {
-  if (role === ImplementerRole.ADMIN) return {};
+): SQL | null {
+  if (role === ImplementerRole.ADMIN) return sql`true`;
   if (!identifier) return null;
 
   switch (role) {
     case ImplementerRole.FELLOW:
-      return { leaderId: identifier };
+      return eq(interventionGroup.leaderId, identifier);
     case ImplementerRole.SUPERVISOR:
-      return {
-        OR: [
-          { leader: { supervisorId: identifier } },
-          { school: { assignedSupervisorId: identifier } },
-        ],
-      };
+      return (
+        or(
+          inArray(
+            interventionGroup.leaderId,
+            db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, identifier)),
+          ),
+          inArray(
+            interventionGroup.schoolId,
+            db
+              .select({ id: school.id })
+              .from(school)
+              .where(eq(school.assignedSupervisorId, identifier)),
+          ),
+        ) ?? null
+      );
     case ImplementerRole.HUB_COORDINATOR:
-      return { school: { hub: { coordinators: { some: { id: identifier } } } } };
+      return inArray(
+        interventionGroup.schoolId,
+        db
+          .select({ id: school.id })
+          .from(school)
+          .where(
+            inArray(
+              school.hubId,
+              db
+                .select({ id: hubCoordinator.assignedHubId })
+                .from(hubCoordinator)
+                .where(eq(hubCoordinator.id, identifier)),
+            ),
+          ),
+      );
     default:
       return null;
   }
@@ -82,16 +115,18 @@ export async function getAttendanceDocument(
     const scopeFilter = buildAttendanceScopeFilter(role, identifier);
     if (!scopeFilter) throw new Error("Forbidden");
 
-    const group = await db.interventionGroup.findFirst({
-      where: { id: groupId, ...scopeFilter },
-      select: { id: true },
-    });
+    const [group] = await db
+      .select({ id: interventionGroup.id })
+      .from(interventionGroup)
+      .where(and(eq(interventionGroup.id, groupId), scopeFilter))
+      .limit(1);
 
     if (!group) throw new Error("Forbidden");
 
-    const doc = await db.attendanceDocuments.findFirst({
-      where: { sessionId, groupId, archivedAt: null },
-      orderBy: { createdAt: "desc" },
+    const doc = await db.query.attendanceDocuments.findFirst({
+      where: (d, { and, eq, isNull }) =>
+        and(eq(d.sessionId, sessionId), eq(d.groupId, groupId), isNull(d.archivedAt)),
+      orderBy: (d, { desc }) => desc(d.createdAt),
     });
 
     if (!doc) throw new Error(NO_ATTENDANCE_DOCUMENT_MESSAGE);
@@ -150,12 +185,13 @@ export async function createAttendanceDocument(
       throw new Error("Upload does not match authorized scope");
     }
 
-    const markedStudentCount = await db.studentAttendance.count({
-      where: {
-        sessionId: payload.sessionId,
-        groupId: payload.groupId,
-      },
-    });
+    const markedStudentCount = await db.$count(
+      studentAttendance,
+      and(
+        eq(studentAttendance.sessionId, payload.sessionId),
+        eq(studentAttendance.groupId, payload.groupId),
+      ),
+    );
 
     if (markedStudentCount < 2) {
       await discardOrphanedUpload(payload.link, "student-attendance");
@@ -171,18 +207,24 @@ export async function createAttendanceDocument(
     }
 
     const supersededLinks: string[] = [];
+    const activeFilter = and(
+      eq(attendanceDocuments.sessionId, payload.sessionId),
+      eq(attendanceDocuments.groupId, payload.groupId),
+      isNull(attendanceDocuments.archivedAt),
+    );
 
     try {
-      await db.$transaction(
+      await db.transaction(
         async (tx) => {
-          const active = await tx.attendanceDocuments.findMany({
-            where: {
-              sessionId: payload.sessionId,
-              groupId: payload.groupId,
-              archivedAt: null,
-            },
-            select: { id: true, link: true },
-            orderBy: { createdAt: "desc" },
+          const active = await tx.query.attendanceDocuments.findMany({
+            where: (d, { and, eq, isNull }) =>
+              and(
+                eq(d.sessionId, payload.sessionId),
+                eq(d.groupId, payload.groupId),
+                isNull(d.archivedAt),
+              ),
+            columns: { id: true, link: true },
+            orderBy: (d, { desc }) => desc(d.createdAt),
           });
 
           const currentActiveId = active[0]?.id ?? null;
@@ -192,31 +234,23 @@ export async function createAttendanceDocument(
 
           for (const doc of active) supersededLinks.push(doc.link);
 
-          await tx.attendanceDocuments.updateMany({
-            where: {
-              sessionId: payload.sessionId,
-              groupId: payload.groupId,
-              archivedAt: null,
-            },
-            data: { archivedAt: new Date() },
-          });
+          await tx.update(attendanceDocuments).set({ archivedAt: new Date() }).where(activeFilter);
 
-          await tx.attendanceDocuments.create({
-            data: {
-              groupId: payload.groupId,
-              sessionId: payload.sessionId,
-              link: claim.key,
-              fileName: claim.fileName,
-              uploadedBy: userId,
-            },
+          await tx.insert(attendanceDocuments).values({
+            groupId: payload.groupId,
+            sessionId: payload.sessionId,
+            link: claim.key,
+            fileName: claim.fileName,
+            uploadedBy: userId,
           });
         },
-        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        { isolationLevel: "serializable" },
       );
     } catch (txError) {
-      const stillReferenced = await db.attendanceDocuments.count({
-        where: { link: payload.link },
-      });
+      const stillReferenced = await db.$count(
+        attendanceDocuments,
+        eq(attendanceDocuments.link, payload.link),
+      );
       if (stillReferenced === 0) {
         await discardOrphanedUpload(payload.link, "student-attendance");
       }
@@ -241,7 +275,7 @@ export async function createAttendanceDocument(
     if (error instanceof StaleAttendanceUploadError) {
       return { success: false, message: error.message };
     }
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
+    if (isSerializationFailure(error)) {
       return {
         success: false,
         message: "Another upload for this session is in progress. Please try again.",
@@ -263,16 +297,26 @@ export async function deleteAttendanceFile(documentId: string): Promise<ActionRe
     const fellowId = session.user.activeMembership?.identifier;
     if (!fellowId) throw new Error("Forbidden");
 
-    const doc = await db.attendanceDocuments.findFirst({
-      where: { id: documentId, group: { leaderId: fellowId } },
-      select: { id: true, link: true },
+    const doc = await db.query.attendanceDocuments.findFirst({
+      where: (d, { and, eq, inArray }) =>
+        and(
+          eq(d.id, documentId),
+          inArray(
+            d.groupId,
+            db
+              .select({ id: interventionGroup.id })
+              .from(interventionGroup)
+              .where(eq(interventionGroup.leaderId, fellowId)),
+          ),
+        ),
+      columns: { id: true, link: true },
     });
     if (!doc) throw new Error("Forbidden");
 
-    await db.attendanceDocuments.update({
-      where: { id: doc.id },
-      data: { archivedAt: new Date() },
-    });
+    await db
+      .update(attendanceDocuments)
+      .set({ archivedAt: new Date() })
+      .where(eq(attendanceDocuments.id, doc.id));
 
     if (doc.link) {
       await deleteObject({ Key: doc.link }, "student-attendance");

@@ -1,8 +1,11 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import { z } from "zod";
+
 import { currentHubCoordinator } from "#/app/auth";
-import { db } from "#/lib/db";
+import { db } from "#/db/client";
+import { hubCoordinator } from "#/db/schema";
 import { HubCoordinatorSchema } from "./schemas";
 
 export async function updateHubCoordinatorProfile(formData: z.infer<typeof HubCoordinatorSchema>) {
@@ -19,9 +22,9 @@ export async function updateHubCoordinatorProfile(formData: z.infer<typeof HubCo
       return { success: false, message: "Invalid date format" };
     }
 
-    const updated = await db.hubCoordinator.update({
-      where: { id: user.profile.id },
-      data: {
+    const [updated] = await db
+      .update(hubCoordinator)
+      .set({
         coordinatorEmail: data.coordinatorEmail,
         coordinatorName: data.coordinatorName,
         idNumber: data.idNumber,
@@ -33,8 +36,12 @@ export async function updateHubCoordinatorProfile(formData: z.infer<typeof HubCo
         subCounty: data.subCounty,
         bankName: data.bankName,
         bankBranch: data.bankBranch,
-      },
-    });
+      })
+      .where(eq(hubCoordinator.id, user.profile.id))
+      .returning();
+    if (!updated) {
+      throw new Error(`Hub coordinator ${user.profile.id} not found`);
+    }
 
     return { success: true, data: updated };
   } catch (error) {

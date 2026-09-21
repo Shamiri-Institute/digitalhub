@@ -1,4 +1,6 @@
+import { and, count, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
+
 import { currentAdminUser } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
@@ -7,8 +9,18 @@ import StudentsStats from "#/components/students-stats";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { db, queryRaw } from "#/db/client";
+import {
+  clinicalLead,
+  clinicalScreeningInfo,
+  clinicalSessionAttendance,
+  hub,
+  interventionSession,
+  school,
+  student,
+  supervisor,
+} from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { db } from "#/lib/db";
 
 export default async function StudentsPage() {
   const admin = await currentAdminUser();
@@ -16,6 +28,37 @@ export default async function StudentsPage() {
     await signOut({ callbackUrl: "/login" });
   }
   const projectId = await getActiveProjectId();
+
+  const projectHubIds = db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId));
+  const projectSchoolIds = db
+    .select({ id: school.id })
+    .from(school)
+    .where(inArray(school.hubId, projectHubIds));
+  // Cases handled by a supervisor or a clinical lead of a hub in the project.
+  const projectCaseFilter = or(
+    inArray(
+      clinicalScreeningInfo.currentSupervisorId,
+      db
+        .select({ id: supervisor.id })
+        .from(supervisor)
+        .where(inArray(supervisor.hubId, projectHubIds)),
+    ),
+    inArray(
+      clinicalScreeningInfo.clinicalLeadId,
+      db
+        .select({ id: clinicalLead.id })
+        .from(clinicalLead)
+        .where(inArray(clinicalLead.assignedHubId, projectHubIds)),
+    ),
+  );
+  const projectCaseIds = db
+    .select({ id: clinicalScreeningInfo.id })
+    .from(clinicalScreeningInfo)
+    .where(projectCaseFilter);
+  const activeProjectStudentFilter = and(
+    isNull(student.archivedAt),
+    inArray(student.schoolId, projectSchoolIds),
+  );
 
   const [
     totalNumberOfStudentsInHub,
@@ -31,95 +74,54 @@ export default async function StudentsPage() {
     incompleteStudentCount,
     studentGroupRatingsRaw,
   ] = await Promise.all([
-    db.student.count({
-      where: {
-        archivedAt: null,
-        school: {
-          hub: {
-            projectId,
-          },
-        },
-      },
+    db.$count(student, activeProjectStudentFilter),
+    db.$count(interventionSession, eq(interventionSession.projectId, projectId)),
+    db.query.clinicalScreeningInfo.findMany({ where: () => projectCaseFilter }),
+    db.query.clinicalSessionAttendance.findMany({
+      where: (a, { inArray }) => inArray(a.caseId, projectCaseIds),
     }),
-    db.interventionSession.count({
-      where: {
-        projectId,
-      },
+    db
+      .select({
+        session: clinicalSessionAttendance.session,
+        n: count(clinicalSessionAttendance.session),
+      })
+      .from(clinicalSessionAttendance)
+      .where(inArray(clinicalSessionAttendance.caseId, projectCaseIds))
+      .groupBy(clinicalSessionAttendance.session)
+      .then((rows) => rows.map(({ session, n }) => ({ session, _count: { session: n } }))),
+    db
+      .select({
+        currentSupervisorId: clinicalScreeningInfo.currentSupervisorId,
+        n: count(clinicalScreeningInfo.currentSupervisorId),
+      })
+      .from(clinicalScreeningInfo)
+      .where(and(projectCaseFilter, isNotNull(clinicalScreeningInfo.currentSupervisorId)))
+      .groupBy(clinicalScreeningInfo.currentSupervisorId)
+      .then((rows) =>
+        rows.map(({ currentSupervisorId, n }) => ({
+          currentSupervisorId,
+          _count: { currentSupervisorId: n },
+        })),
+      ),
+    db
+      .select({
+        initialReferredFromSpecified: clinicalScreeningInfo.initialReferredFromSpecified,
+        n: count(clinicalScreeningInfo.initialReferredFrom),
+      })
+      .from(clinicalScreeningInfo)
+      .where(projectCaseFilter)
+      .groupBy(clinicalScreeningInfo.initialReferredFromSpecified)
+      .then((rows) =>
+        rows.map(({ initialReferredFromSpecified, n }) => ({
+          initialReferredFromSpecified,
+          _count: { initialReferredFrom: n },
+        })),
+      ),
+    db.query.student.findMany({
+      where: () => activeProjectStudentFilter,
+      columns: { yearOfBirth: true, age: true, gender: true, form: true },
     }),
-    db.clinicalScreeningInfo.findMany({
-      where: {
-        OR: [
-          { currentSupervisor: { hub: { projectId } } },
-          { clinicalLead: { assignedHub: { projectId } } },
-        ],
-      },
-    }),
-    db.clinicalSessionAttendance.findMany({
-      where: {
-        case: {
-          OR: [
-            { currentSupervisor: { hub: { projectId } } },
-            { clinicalLead: { assignedHub: { projectId } } },
-          ],
-        },
-      },
-    }),
-    db.clinicalSessionAttendance.groupBy({
-      by: ["session"],
-      where: {
-        case: {
-          OR: [
-            { currentSupervisor: { hub: { projectId } } },
-            { clinicalLead: { assignedHub: { projectId } } },
-          ],
-        },
-      },
-      _count: {
-        session: true,
-      },
-    }),
-    db.clinicalScreeningInfo.groupBy({
-      by: ["currentSupervisorId"],
-      where: {
-        OR: [
-          { currentSupervisor: { hub: { projectId } } },
-          { clinicalLead: { assignedHub: { projectId } } },
-        ],
-        currentSupervisorId: { not: null },
-      },
-      _count: {
-        currentSupervisorId: true,
-      },
-    }),
-    db.clinicalScreeningInfo.groupBy({
-      by: ["initialReferredFromSpecified"],
-      where: {
-        OR: [
-          { currentSupervisor: { hub: { projectId } } },
-          { clinicalLead: { assignedHub: { projectId } } },
-        ],
-      },
-      _count: {
-        initialReferredFrom: true,
-      },
-    }),
-    db.student.findMany({
-      where: {
-        archivedAt: null,
-        school: {
-          hub: {
-            projectId,
-          },
-        },
-      },
-      select: {
-        yearOfBirth: true,
-        age: true,
-        gender: true,
-        form: true,
-      },
-    }),
-    db.$queryRaw<{ sessionType: string | null; count: bigint }[]>`
+    queryRaw<{ sessionType: string | null; count: number }>(sql`
       SELECT ins.session_type as "sessionType", COUNT(*)::bigint as count
       FROM student_attendances sa
       JOIN intervention_sessions ins ON ins.id = sa.session_id
@@ -130,30 +132,28 @@ export default async function StudentsPage() {
         AND s.archived_at IS NULL
         AND h.project_id = ${projectId}
       GROUP BY ins.session_type
-    `,
-    db.student.groupBy({
-      by: ["dropOutReason"],
-      where: {
-        archivedAt: null,
-        school: {
-          hub: {
-            projectId,
-          },
-        },
-        droppedOut: true,
-      },
-      _count: {
-        dropOutReason: true,
-      },
-    }),
-    db.student.count({
-      where: {
-        archivedAt: null,
-        school: { hub: { projectId } },
-        OR: [{ studentName: null }, { gender: null }, { yearOfBirth: null }, { form: null }],
-      },
-    }),
-    db.$queryRaw<{ sessionName: string; value: number }[]>`
+    `),
+    db
+      .select({ dropOutReason: student.dropOutReason, n: count(student.dropOutReason) })
+      .from(student)
+      .where(and(activeProjectStudentFilter, eq(student.droppedOut, true)))
+      .groupBy(student.dropOutReason)
+      .then((rows) =>
+        rows.map(({ dropOutReason, n }) => ({ dropOutReason, _count: { dropOutReason: n } })),
+      ),
+    db.$count(
+      student,
+      and(
+        activeProjectStudentFilter,
+        or(
+          isNull(student.studentName),
+          isNull(student.gender),
+          isNull(student.yearOfBirth),
+          isNull(student.form),
+        ),
+      ),
+    ),
+    queryRaw<{ sessionName: string; value: number }>(sql`
       SELECT sn.session_name as "sessionName",
              COALESCE(AVG(isr.student_behavior_rating), 0)::float as value
       FROM intervention_session_ratings isr
@@ -164,21 +164,18 @@ export default async function StudentsPage() {
         AND isr.student_behavior_rating IS NOT NULL
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC
-    `,
+    `),
   ]);
 
   const supervisorIds = hubClinicalSessionsBySupervisor.map((item) => item.currentSupervisorId);
 
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      id: {
-        in: supervisorIds.filter((id): id is string => id !== null),
-      },
-    },
-    select: {
-      id: true,
-      supervisorName: true,
-    },
+  const supervisors = await db.query.supervisor.findMany({
+    where: (s, { inArray }) =>
+      inArray(
+        s.id,
+        supervisorIds.filter((id): id is string => id !== null),
+      ),
+    columns: { id: true, supervisorName: true },
   });
 
   const supervisorMap = new Map(supervisors.map((s) => [s.id, s.supervisorName]));

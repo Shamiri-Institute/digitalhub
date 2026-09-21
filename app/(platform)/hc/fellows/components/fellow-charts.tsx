@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { interventionSession } from "#/db/schema";
 import {
   Bar,
   BarChart,
@@ -31,14 +31,12 @@ export default function FellowsCharts({
   fellowsDataCompletenessPercentage,
   fellowsSessionRatings,
 }: {
-  attendanceData: (Prisma.PickEnumerable<
-    Prisma.InterventionSessionGroupByOutputType,
-    "sessionType"[]
-  > & {
+  attendanceData: {
+    sessionType: (typeof interventionSession.$inferSelect)["sessionType"];
     _count: {
       sessionType: number;
     };
-  })[];
+  }[];
   dropoutData: FellowDropoutReasonsGraphData[];
   fellowsDataCompletenessPercentage: Awaited<ReturnType<typeof fetchFellowDataCompletenessData>>;
   fellowsSessionRatings: FellowSessionRatingAverages[];

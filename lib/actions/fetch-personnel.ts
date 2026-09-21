@@ -1,10 +1,10 @@
 "use server";
 
-import { ImplementerRole } from "#/db/enums";
 import { getCurrentUserSession } from "#/app/auth";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
 import type { JWTMembership } from "#/lib/auth/session-user";
 import { constants } from "#/lib/constants";
-import { db } from "#/lib/db";
 import type { Personnel } from "#/lib/types/personnel";
 
 export async function fetchImplementerPersonnel(_membership: JWTMembership) {
@@ -21,23 +21,16 @@ export async function fetchImplementerPersonnel(_membership: JWTMembership) {
   // Scope to the caller's own implementer from the session; never trust the argument.
   const { activeMembership } = session.user;
 
-  const implementerMembers = await db.implementerMember.findMany({
-    where: {
-      implementerId: activeMembership.implementerId,
-    },
-    include: {
-      user: true,
-    },
+  const implementerMembers = await db.query.implementerMember.findMany({
+    where: (m, { eq }) => eq(m.implementerId, activeMembership.implementerId),
+    with: { user: true },
   });
+  const memberIds = implementerMembers.map((member) => member.identifier || "");
 
   const admins: Personnel[] = (
-    await db.adminUser.findMany({
-      orderBy: { adminName: "asc" },
-      where: {
-        id: {
-          in: implementerMembers.map((member) => member.identifier || ""),
-        },
-      },
+    await db.query.adminUser.findMany({
+      where: (a, { inArray }) => inArray(a.id, memberIds),
+      orderBy: (a, { asc }) => asc(a.adminName),
     })
   ).map((admin) => ({
     id: admin.id,
@@ -46,20 +39,10 @@ export async function fetchImplementerPersonnel(_membership: JWTMembership) {
   }));
 
   const supervisors: Personnel[] = (
-    await db.supervisor.findMany({
-      orderBy: { supervisorName: "asc" },
-      where: {
-        id: {
-          in: implementerMembers.map((member) => member.identifier || ""),
-        },
-      },
-      include: {
-        hub: {
-          include: {
-            project: true,
-          },
-        },
-      },
+    await db.query.supervisor.findMany({
+      where: (s, { inArray }) => inArray(s.id, memberIds),
+      orderBy: (s, { asc }) => asc(s.supervisorName),
+      with: { hub: { with: { project: true } } },
     })
   ).map((sup) => ({
     id: sup.id,
@@ -70,20 +53,10 @@ export async function fetchImplementerPersonnel(_membership: JWTMembership) {
   }));
 
   const hubCoordinators: Personnel[] = (
-    await db.hubCoordinator.findMany({
-      orderBy: { coordinatorName: "asc" },
-      where: {
-        id: {
-          in: implementerMembers.map((member) => member.identifier || ""),
-        },
-      },
-      include: {
-        assignedHub: {
-          include: {
-            project: true,
-          },
-        },
-      },
+    await db.query.hubCoordinator.findMany({
+      where: (hc, { inArray }) => inArray(hc.id, memberIds),
+      orderBy: (hc, { asc }) => asc(hc.coordinatorName),
+      with: { assignedHub: { with: { project: true } } },
     })
   ).map((hc) => ({
     id: hc.id,
@@ -94,20 +67,10 @@ export async function fetchImplementerPersonnel(_membership: JWTMembership) {
   }));
 
   const fellows: Personnel[] = (
-    await db.fellow.findMany({
-      orderBy: { fellowName: "desc" },
-      where: {
-        id: {
-          in: implementerMembers.map((member) => member.identifier || ""),
-        },
-      },
-      include: {
-        hub: {
-          include: {
-            project: true,
-          },
-        },
-      },
+    await db.query.fellow.findMany({
+      where: (f, { inArray }) => inArray(f.id, memberIds),
+      orderBy: (f, { desc }) => desc(f.fellowName),
+      with: { hub: { with: { project: true } } },
     })
   ).map((fellow) => ({
     id: fellow.id,
@@ -118,20 +81,10 @@ export async function fetchImplementerPersonnel(_membership: JWTMembership) {
   }));
 
   const clinicalLeads: Personnel[] = (
-    await db.clinicalLead.findMany({
-      orderBy: { clinicalLeadName: "asc" },
-      where: {
-        id: {
-          in: implementerMembers.map((member) => member.identifier || ""),
-        },
-      },
-      include: {
-        assignedHub: {
-          include: {
-            project: true,
-          },
-        },
-      },
+    await db.query.clinicalLead.findMany({
+      where: (cl, { inArray }) => inArray(cl.id, memberIds),
+      orderBy: (cl, { asc }) => asc(cl.clinicalLeadName),
+      with: { assignedHub: { with: { project: true } } },
     })
   ).map((cl) => ({
     id: cl.id,
@@ -142,20 +95,10 @@ export async function fetchImplementerPersonnel(_membership: JWTMembership) {
   }));
 
   const clinicalTeams: Personnel[] = (
-    await db.clinicalTeam.findMany({
-      orderBy: { name: "asc" },
-      where: {
-        id: {
-          in: implementerMembers.map((member) => member.identifier || ""),
-        },
-      },
-      include: {
-        assignedHub: {
-          include: {
-            project: true,
-          },
-        },
-      },
+    await db.query.clinicalTeam.findMany({
+      where: (ct, { inArray }) => inArray(ct.id, memberIds),
+      orderBy: (ct, { asc }) => asc(ct.name),
+      with: { assignedHub: { with: { project: true } } },
     })
   ).map((ct) => ({
     id: ct.id,
@@ -166,20 +109,10 @@ export async function fetchImplementerPersonnel(_membership: JWTMembership) {
   }));
 
   const opsUsers: Personnel[] = (
-    await db.opsUser.findMany({
-      orderBy: { name: "asc" },
-      where: {
-        id: {
-          in: implementerMembers.map((member) => member.identifier || ""),
-        },
-      },
-      include: {
-        assignedHub: {
-          include: {
-            project: true,
-          },
-        },
-      },
+    await db.query.opsUser.findMany({
+      where: (o, { inArray }) => inArray(o.id, memberIds),
+      orderBy: (o, { asc }) => asc(o.name),
+      with: { assignedHub: { with: { project: true } } },
     })
   ).map((ops) => ({
     id: ops.id,
@@ -214,10 +147,8 @@ export async function isCurrentUserAdmin() {
   if (!email) {
     return false;
   }
-  const adminUser = await db.adminUser.findFirst({
-    where: {
-      email,
-    },
+  const adminUser = await db.query.adminUser.findFirst({
+    where: (a, { eq }) => eq(a.email, email),
   });
-  return adminUser !== null;
+  return adminUser !== undefined;
 }
