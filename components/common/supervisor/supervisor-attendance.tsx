@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole, SessionStatus } from "#/db/enums";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
@@ -38,22 +38,7 @@ export default function SupervisorAttendance({
   setIsOpen,
   session,
 }: {
-  supervisors?: Prisma.SupervisorGetPayload<{
-    include: {
-      supervisorAttendances: {
-        include: {
-          session: true;
-        };
-      };
-      fellows: {
-        include: {
-          fellowAttendances: true;
-          groups: true;
-        };
-      };
-      assignedSchools: true;
-    };
-  }>[];
+  supervisors?: ScheduleSupervisor[];
   role: ImplementerRole;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;

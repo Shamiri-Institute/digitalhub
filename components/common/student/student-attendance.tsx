@@ -1,5 +1,5 @@
-import type { Prisma } from "@prisma/client";
 import { ImplementerRole } from "#/db/enums";
+import type { student } from "#/db/schema";
 import type { Fellow } from "#/db/types";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { usePathname } from "next/navigation";
@@ -433,15 +433,10 @@ export default function StudentAttendance({
   );
 }
 
-export type StudentAttendanceData = Prisma.StudentGetPayload<{
-  include: {
-    _count: {
-      select: {
-        clinicalCases: true;
-      };
-    };
-  };
-}>;
+// A student of a session's school with the clinical-cases count the producers attach.
+export type StudentAttendanceData = typeof student.$inferSelect & {
+  _count: { clinicalCases: number };
+};
 
 const TRIAGE_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
   SUPPORTED: {

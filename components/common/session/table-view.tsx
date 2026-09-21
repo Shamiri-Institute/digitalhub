@@ -1,5 +1,5 @@
 import type { CalendarDate } from "@internationalized/date";
-import type { Prisma } from "@prisma/client";
+import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
@@ -269,22 +269,7 @@ export function TableView({
   supervisorId,
 }: {
   state: CalendarState;
-  supervisors?: Prisma.SupervisorGetPayload<{
-    include: {
-      supervisorAttendances: {
-        include: {
-          session: true;
-        };
-      };
-      fellows: {
-        include: {
-          fellowAttendances: true;
-          groups: true;
-        };
-      };
-      assignedSchools: true;
-    };
-  }>[];
+  supervisors?: ScheduleSupervisor[];
   role: ImplementerRole;
   supervisorId?: string;
 }) {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { fellow as fellowTable, supervisor } from "#/db/schema";
 import { usePathname } from "next/navigation";
 import type React from "react";
 import type { Dispatch, SetStateAction } from "react";
@@ -31,11 +31,9 @@ export default function AssignFellowSupervisorDialog({
   children,
   fellow,
 }: {
-  supervisors: Prisma.SupervisorGetPayload<{
-    include: {
-      fellows: true;
-    };
-  }>[];
+  supervisors: (typeof supervisor.$inferSelect & {
+    fellows: (typeof fellowTable.$inferSelect)[];
+  })[];
   children: React.ReactNode;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;

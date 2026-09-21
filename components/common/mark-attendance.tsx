@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { interventionSession, sessionName } from "#/db/schema";
 import { addHours, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -64,11 +64,9 @@ export function MarkAttendance({
   id?: string;
   title: string;
   children: React.ReactNode;
-  sessions?: Prisma.InterventionSessionGetPayload<{
-    include: {
-      session: true;
-    };
-  }>[];
+  sessions?: (typeof interventionSession.$inferSelect & {
+    session: typeof sessionName.$inferSelect | null;
+  })[];
   attendances: Attendance[];
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;

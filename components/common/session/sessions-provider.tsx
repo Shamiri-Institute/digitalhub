@@ -1,5 +1,4 @@
 import { type CalendarDate, isSameDay } from "@internationalized/date";
-import type { Prisma } from "@prisma/client";
 import { ImplementerRole } from "#/db/enums";
 import {
   createContext,
@@ -30,32 +29,7 @@ export const SessionsContext = createContext<SessionsContextType>({
   refresh: () => Promise.resolve(),
 });
 
-export type Session = Prisma.InterventionSessionGetPayload<{
-  include: {
-    hub: {
-      select: { visibleId: true };
-    };
-    school: {
-      include: {
-        interventionGroups: {
-          include: {
-            students: {
-              include: {
-                _count: {
-                  select: {
-                    clinicalCases: true;
-                  };
-                };
-              };
-            };
-          };
-        };
-      };
-    };
-    sessionRatings: true;
-    session: true;
-  };
-}>;
+export type Session = Awaited<ReturnType<typeof fetchInterventionSessions>>[number];
 
 export function SessionsProvider({
   children,

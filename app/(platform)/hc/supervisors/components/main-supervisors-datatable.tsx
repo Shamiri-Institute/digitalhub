@@ -1,6 +1,5 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import { ImplementerRole } from "#/db/enums";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useState } from "react";
@@ -18,18 +17,7 @@ export default function MainSupervisorsDataTable({
   supervisors,
   role,
 }: {
-  supervisors: Prisma.SupervisorGetPayload<{
-    include: {
-      assignedSchools: true;
-      fellows: true;
-      hub: {
-        include: {
-          project: true;
-        };
-      };
-      monthlySupervisorEvaluation: true;
-    };
-  }>[];
+  supervisors: SupervisorsData[];
   role: ImplementerRole;
 }) {
   const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);

@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole, type SessionStatus } from "#/db/enums";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -45,30 +45,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip
 import { markFellowAttendance, markManyFellowAttendance } from "#/lib/actions/fellow";
 import { sessionDisplayName } from "#/lib/utils";
 
-type SupervisorData = Prisma.SupervisorGetPayload<{
-  include: {
-    supervisorAttendances: {
-      include: {
-        session: true;
-      };
-    };
-    fellows: {
-      include: {
-        fellowAttendances: true;
-        groups: {
-          include: {
-            _count: {
-              select: {
-                students: true;
-              };
-            };
-          };
-        };
-      };
-    };
-    assignedSchools: true;
-  };
-}>;
+type SupervisorData = ScheduleSupervisor;
 
 export default function FellowAttendance({
   supervisors,
@@ -251,9 +228,7 @@ export function FellowAttendanceDataTable({
   onChangeData?: Dispatch<SetStateAction<FellowAttendancesTableData[]>>;
   closeDialogFn?: Dispatch<SetStateAction<boolean>>;
   emptyStateMessage?: string;
-  session?: Prisma.InterventionSessionGetPayload<{
-    include: { school: true; sessionRatings: true; session: true };
-  }> | null;
+  session?: Session | null;
   enableRowSelection?: boolean | ((row: Row<FellowAttendancesTableData>) => boolean) | undefined;
   overrideColumns?: (state: {
     setAttendance: Dispatch<SetStateAction<FellowAttendancesTableData | undefined>>;

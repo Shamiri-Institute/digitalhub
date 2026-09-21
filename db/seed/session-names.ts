@@ -3,9 +3,10 @@
  * session names in a database (e.g. after adding new hubs without re-seeding).
  */
 
-import { db } from "#/lib/db";
+import { db, pool } from "#/db/client";
+import { sessionName } from "#/db/schema";
+import { hubSessionTypes } from "#/db/seed/hub-session-types";
 import { getDefaultProjectId } from "#/lib/default-project-id";
-import { hubSessionTypes } from "#/prisma/scripts/hub-session-types";
 
 async function main() {
   let projectId: string;
@@ -16,8 +17,8 @@ async function main() {
     return;
   }
 
-  const project = await db.project.findUnique({
-    where: { id: projectId },
+  const project = await db.query.project.findFirst({
+    where: (p, { eq }) => eq(p.id, projectId),
   });
 
   if (!project) {
@@ -25,10 +26,8 @@ async function main() {
     return;
   }
 
-  const hubs = await db.hub.findMany({
-    where: {
-      projectId: project.id,
-    },
+  const hubs = await db.query.hub.findMany({
+    where: (hub, { eq }) => eq(hub.projectId, project.id),
   });
 
   if (hubs.length === 0) {
@@ -47,10 +46,12 @@ async function main() {
     }));
   });
 
-  await db.sessionName.createMany({
-    data: sessions.flat(),
-    skipDuplicates: true,
-  });
+  await db.insert(sessionName).values(sessions.flat()).onConflictDoNothing();
 }
 
-void main();
+main()
+  .catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(() => void pool.end());

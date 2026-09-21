@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { fellow, supervisor } from "#/db/schema";
 import type { School } from "#/db/types";
 import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
@@ -43,11 +43,7 @@ export default function CreateGroup({
   groupCount,
   disabled,
 }: {
-  supervisors: Prisma.SupervisorGetPayload<{
-    include: {
-      fellows: true;
-    };
-  }>[];
+  supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
   school: School;
   groupCount: number;
   disabled?: boolean;

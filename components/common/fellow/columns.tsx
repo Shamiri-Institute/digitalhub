@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { student } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
@@ -28,15 +28,7 @@ export type SchoolFellowTableData = {
   subCounty: string | null;
   mpesaName: string | null;
   mpesaNumber: string | null;
-  students: Prisma.StudentGetPayload<{
-    include: {
-      _count: {
-        select: {
-          clinicalCases: true;
-        };
-      };
-    };
-  }>[];
+  students: (typeof student.$inferSelect & { _count: { clinicalCases: number } })[];
 };
 
 export const columns = ({

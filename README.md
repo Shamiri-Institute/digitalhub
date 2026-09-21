@@ -22,7 +22,7 @@ The Shamiri Digital Hub is a comprehensive digital platform designed to manage y
 
 - **Framework**: [Next.js](https://nextjs.org/) 16.x (App Router)
 - **Language**: TypeScript (Strict Mode)
-- **Database**: PostgreSQL with [Prisma ORM](https://www.prisma.io/)
+- **Database**: PostgreSQL with [Drizzle ORM](https://orm.drizzle.team/)
 - **Authentication**: NextAuth.js with Google OAuth
 - **UI Components**: Radix UI + TailwindCSS
 - **Data Visualization**: Recharts
@@ -184,7 +184,7 @@ METABASE_MONITORING_DASHBOARD_ID="your-metabase-dashboard-id"  # Dashboard ID fo
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NEXT_PUBLIC_ENV="development"
 APP_ENV="development"
-DEBUG="0"        # Set to 1 to enable verbose Prisma query logging
+DEBUG="0"        # Set to 1 to log every SQL statement Drizzle runs
 
 # Feature flags
 NEXT_PUBLIC_ENABLE_PERF_PROFILER="0"  # Set to 1 to enable the performance profiler
@@ -295,7 +295,7 @@ When `NEXT_PUBLIC_ENV=development` and `TEST_USER_PASSWORD` is set, sign in as a
           ▼                   ▼                   ▼
 ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
 │   PostgreSQL    │  │    AWS S3       │  │  Google Drive   │
-│   (Prisma ORM)  │  │  (File Storage) │  │   (Documents)   │
+│  (Drizzle ORM)  │  │  (File Storage) │  │   (Documents)   │
 └─────────────────┘  └─────────────────┘  └─────────────────┘
 ```
 
@@ -357,10 +357,10 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 | Command                        | Description                         |
 | ------------------------------ | ----------------------------------- |
 | `npm run db:dev:up`            | Start local PostgreSQL (Docker)     |
-| `npm run db:dev:migrate`       | Run Prisma migrations               |
+| `npm run db:dev:migrate`       | Apply pending Drizzle migrations    |
 | `npm run db:dev:migrate:reset` | Reset and reapply all migrations    |
 | `npm run db:seed`              | Seed with faker-generated test data |
-| `npm run db:dev:generate`      | Generate Prisma client types        |
+| `npm run db:dev:generate`      | Generate a migration from db/schema |
 
 #### Code Quality
 
@@ -462,8 +462,8 @@ environment), so `vercel:build` self-selects based on the `VERCEL_ENV` system
 variable. Set the project's **Build Command** to `npm run vercel:build` and it
 does the right thing everywhere:
 
-- **Production** (`VERCEL_ENV=production`) → `vercel:prod:build`: `prisma migrate deploy` + `next build` — applies pending migrations, never touches data.
-- **Preview / Staging / Training** (any non-production `VERCEL_ENV`) → `vercel:seeded:build`: `prisma migrate reset` + `prisma migrate deploy` + `npm run db:seed` + `next build` — rebuilds the database from faker-generated data on each deploy.
+- **Production** (`VERCEL_ENV=production`) → `vercel:prod:build`: marks the Drizzle baseline on a database built by the old Prisma migrations (no-op afterwards) + `drizzle-kit migrate` + `next build` — applies pending migrations, never touches data.
+- **Preview / Staging / Training** (any non-production `VERCEL_ENV`) → `vercel:seeded:build`: `scripts/db/reset.ts` + `drizzle-kit migrate` + `npm run db:seed` + `next build` — rebuilds the database from faker-generated data on each deploy.
 - **Run locally with no `VERCEL_ENV` set** → falls back to `vercel:prod:build`, so it never wipes a local database by accident.
 
 The preview/staging database is **seeded with synthetic data and never cloned
@@ -541,19 +541,19 @@ See [S3 Recordings Bucket Setup](#s3-recordings-bucket-setup) for detailed AWS c
 This platform can be adapted for similar intervention programs:
 
 1. **Branding**: Update `tailwind.config.ts` for your color scheme
-2. **Roles**: Modify role definitions in `prisma/schema.prisma`
+2. **Roles**: Modify role definitions in `db/enums.ts`
 3. **Workflows**: Adapt server actions in `lib/actions/`
-4. **Data Models**: Extend Prisma schema for your data requirements
+4. **Data Models**: Extend `db/schema.ts` and `db/relations.ts` for your data requirements
 
 ### Configuration Options
 
-| Feature       | Configuration                                             | Description                         |
-| ------------- | --------------------------------------------------------- | ----------------------------------- |
-| Debug Mode    | `DEBUG=1`                                                 | Enable verbose Prisma query logging |
-| Perf Profiler | `NEXT_PUBLIC_ENABLE_PERF_PROFILER=1`                      | Enable the performance profiler     |
-| OAuth         | `GOOGLE_ID/SECRET`                                        | Google authentication               |
-| File Storage  | `S3_*` variables                                          | AWS S3 configuration                |
-| Analytics     | `METABASE_SECRET_KEY`, `METABASE_MONITORING_DASHBOARD_ID` | Embedded Metabase dashboards        |
+| Feature       | Configuration                                             | Description                          |
+| ------------- | --------------------------------------------------------- | ------------------------------------ |
+| Debug Mode    | `DEBUG=1`                                                 | Log every SQL statement Drizzle runs |
+| Perf Profiler | `NEXT_PUBLIC_ENABLE_PERF_PROFILER=1`                      | Enable the performance profiler      |
+| OAuth         | `GOOGLE_ID/SECRET`                                        | Google authentication                |
+| File Storage  | `S3_*` variables                                          | AWS S3 configuration                 |
+| Analytics     | `METABASE_SECRET_KEY`, `METABASE_MONITORING_DASHBOARD_ID` | Embedded Metabase dashboards         |
 
 ### Scaling Considerations
 

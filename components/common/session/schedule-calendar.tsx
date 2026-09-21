@@ -1,7 +1,7 @@
 "use client";
 
 import { createCalendar, type DateValue, getLocalTimeZone, today } from "@internationalized/date";
-import type { Prisma } from "@prisma/client";
+import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole, SessionStatus } from "#/db/enums";
 import type { School, SessionName } from "#/db/types";
 import { useSearchParams } from "next/navigation";
@@ -69,30 +69,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
   hubId?: string;
   implementerId?: string;
   schools: School[];
-  supervisors?: Prisma.SupervisorGetPayload<{
-    include: {
-      supervisorAttendances: {
-        include: {
-          session: true;
-        };
-      };
-      fellows: {
-        include: {
-          fellowAttendances: true;
-          groups: {
-            include: {
-              _count: {
-                select: {
-                  students: true;
-                };
-              };
-            };
-          };
-        };
-      };
-      assignedSchools: true;
-    };
-  }>[];
+  supervisors?: ScheduleSupervisor[];
   fellowRatings?: {
     id: string;
     averageRating: number;
@@ -466,30 +443,7 @@ function CalendarView({
   tableProps: {
     state: CalendarState;
   };
-  supervisors?: Prisma.SupervisorGetPayload<{
-    include: {
-      supervisorAttendances: {
-        include: {
-          session: true;
-        };
-      };
-      fellows: {
-        include: {
-          fellowAttendances: true;
-          groups: {
-            include: {
-              _count: {
-                select: {
-                  students: true;
-                };
-              };
-            };
-          };
-        };
-      };
-      assignedSchools: true;
-    };
-  }>[];
+  supervisors?: ScheduleSupervisor[];
   fellowRatings?: {
     id: string;
     averageRating: number;

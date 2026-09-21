@@ -1,6 +1,5 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isBefore } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
@@ -87,11 +86,7 @@ export default function GroupTransferHistory({
 }
 
 const columns = (
-  sessions: Prisma.InterventionSessionGetPayload<{
-    include: {
-      session: true;
-    };
-  }>[],
+  sessions: NonNullable<SchoolStudentTableData["school"]>["interventionSessions"][number][],
 ): ColumnDef<SchoolStudentTableData["studentGroupTransferTrail"][number]>[] => [
   {
     id: "Date of transfer",

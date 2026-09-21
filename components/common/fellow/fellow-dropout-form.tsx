@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { fellow as fellowTable, supervisor } from "#/db/schema";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -36,9 +36,7 @@ import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
-type Group = Prisma.InterventionGroupGetPayload<{
-  include: { school: true };
-}>;
+type Group = NonNullable<MainFellowTableData["groups"]>[number];
 
 export default function FellowDropoutForm({
   fellow,
@@ -49,9 +47,9 @@ export default function FellowDropoutForm({
   fellow: MainFellowTableData;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  supervisors: Prisma.SupervisorGetPayload<{
-    include: { fellows: true };
-  }>[];
+  supervisors: (typeof supervisor.$inferSelect & {
+    fellows: (typeof fellowTable.$inferSelect)[];
+  })[];
 }) {
   const [loading, setLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(false);

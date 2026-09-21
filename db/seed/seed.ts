@@ -1,5 +1,7 @@
 import { faker } from "@faker-js/faker";
-import type { Prisma } from "@prisma/client";
+import { sql } from "drizzle-orm";
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import type { PgTable } from "drizzle-orm/pg-core";
 import {
   caseStatusOptions,
   FollowUpPlanOptions,
@@ -11,30 +13,18 @@ import {
   sessionTypes,
   TriageActionTaken,
 } from "#/db/enums";
-import type {
-  AdminUser,
-  ClinicalLead,
-  ClinicalTeam,
-  Fellow,
-  Hub,
-  HubCoordinator,
-  Implementer,
-  OpsUser,
-  Project,
-  SessionName,
-  Supervisor,
-} from "#/db/types";
 import { isBefore, startOfMonth } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
+import { db, executeRaw, pool, queryRaw } from "#/db/client";
+import * as schema from "#/db/schema";
+import { hubSessionTypes } from "#/db/seed/hub-session-types";
+import { createTickets } from "#/db/seed/tickets";
 import {
   buildRecordingsS3Key,
   generateRecordingFilename,
 } from "#/lib/s3/key-builders/build-recordings-s3-key";
-import { hubSessionTypes } from "#/prisma/scripts/hub-session-types";
-import { createTickets } from "#/prisma/scripts/seed-tickets";
 
 // GETTING STARTED WITH SEEDING
 // ===========================
@@ -172,9 +162,48 @@ import { createTickets } from "#/prisma/scripts/seed-tickets";
 // 6. Include both active and archived records
 // 7. Test edge cases (e.g., dropouts, transfers)
 
+type AdminUser = InferSelectModel<typeof schema.adminUser>;
+type ClinicalLead = InferSelectModel<typeof schema.clinicalLead>;
+type ClinicalTeam = InferSelectModel<typeof schema.clinicalTeam>;
+type Fellow = InferSelectModel<typeof schema.fellow>;
+type Hub = InferSelectModel<typeof schema.hub>;
+type HubCoordinator = InferSelectModel<typeof schema.hubCoordinator>;
+type Implementer = InferSelectModel<typeof schema.implementer>;
+type OpsUser = InferSelectModel<typeof schema.opsUser>;
+type Project = InferSelectModel<typeof schema.project>;
+type SessionName = InferSelectModel<typeof schema.sessionName>;
+type Supervisor = InferSelectModel<typeof schema.supervisor>;
+
 // Set faker seed
 // TODO: Set seed value as an ENV variable for e2e testing
 faker.seed(7634912);
+
+// Postgres allows 65535 bind parameters per statement; Prisma's createMany chunked
+// for us. 1000 rows of the widest seeded table stays well under that.
+const INSERT_CHUNK = 1000;
+
+function* chunk<T>(rows: T[]) {
+  for (let i = 0; i < rows.length; i += INSERT_CHUNK) {
+    yield rows.slice(i, i + INSERT_CHUNK);
+  }
+}
+
+/** `createMany`: bulk insert, nothing returned, no-op on an empty list. */
+async function insertMany<T extends PgTable>(table: T, rows: InferInsertModel<T>[]) {
+  for (const part of chunk(rows)) {
+    await db.insert(table).values(part);
+  }
+}
+
+/** `createManyAndReturn`: bulk insert returning the rows in insert order. */
+async function insertManyReturning<T extends PgTable>(table: T, rows: InferInsertModel<T>[]) {
+  const inserted: InferSelectModel<T>[] = [];
+  for (const part of chunk(rows)) {
+    const returned = (await db.insert(table).values(part).returning()) as InferSelectModel<T>[];
+    for (const row of returned) inserted.push(row);
+  }
+  return inserted;
+}
 
 async function truncateTables() {
   console.log("Truncating tables");
@@ -184,17 +213,17 @@ async function truncateTables() {
   // Exclusion is applied in JS: interpolating a joined string into $queryRaw
   // binds it as one literal parameter, so a SQL NOT IN never matched and
   // _prisma_migrations was truncated along with everything else.
-  const allTables = await db.$queryRaw<Array<{ table_name: string }>>`
+  const allTables = await queryRaw<{ table_name: string }>(sql`
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
     AND table_type = 'BASE TABLE';
-  `;
+  `);
   const tables = allTables.filter((t) => !excludedTables.includes(t.table_name));
 
   if (tables.length > 0) {
     const truncateCommand = `TRUNCATE TABLE ${tables.map((t) => `"${t.table_name}"`).join(", ")} CASCADE;`;
-    await db.$executeRawUnsafe(truncateCommand);
+    await executeRaw(sql.raw(truncateCommand));
     console.log("Selected tables truncated successfully.");
   } else {
     console.log("No tables to truncate. Make sure to run `npm run db:dev:migrate` first.");
@@ -223,22 +252,20 @@ function generateImplementers(n: number) {
 
 function createImplementers() {
   console.log("creating implementers");
-  return db.implementer.createManyAndReturn({
-    data: [
-      {
-        id: objectId("impl"),
-        visibleId: "SHA",
-        implementerName: "Shamiri Institute",
-        implementerType: "NGO",
-        implementerAddress: "13th Floor, Pioneer Point (CMS-Africa)\nChania Avenue, Nairobi, Kenya",
-        pointPersonName: "Tom Osborn",
-        pointPersonPhone: "+254 (0) 11 254 0760",
-        pointPersonEmail: "team@shamiri.institute",
-        countyOfOperation: "Nairobi",
-      },
-      ...generateImplementers(2),
-    ],
-  });
+  return insertManyReturning(schema.implementer, [
+    {
+      id: objectId("impl"),
+      visibleId: "SHA",
+      implementerName: "Shamiri Institute",
+      implementerType: "NGO",
+      implementerAddress: "13th Floor, Pioneer Point (CMS-Africa)\nChania Avenue, Nairobi, Kenya",
+      pointPersonName: "Tom Osborn",
+      pointPersonPhone: "+254 (0) 11 254 0760",
+      pointPersonEmail: "team@shamiri.institute",
+      countyOfOperation: "Nairobi",
+    },
+    ...generateImplementers(2),
+  ]);
 }
 
 function createProjects() {
@@ -256,9 +283,7 @@ function createProjects() {
     });
   }
 
-  return db.project.createManyAndReturn({
-    data: projects,
-  });
+  return insertManyReturning(schema.project, projects);
 }
 
 function createProjectImplementers(projects: Project[], implementers: Implementer[]) {
@@ -274,9 +299,7 @@ function createProjectImplementers(projects: Project[], implementers: Implemente
     });
   }
 
-  return db.projectImplementer.createManyAndReturn({
-    data: projectImplementers,
-  });
+  return insertManyReturning(schema.projectImplementer, projectImplementers);
 }
 
 function createHubs(projects: Project[], implementers: Implementer[]) {
@@ -309,9 +332,7 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
     }
   }
 
-  return db.hub.createManyAndReturn({
-    data: hubs,
-  });
+  return insertManyReturning(schema.hub, hubs);
 }
 
 async function createCoreUsers(
@@ -390,13 +411,14 @@ async function createCoreUsers(
     },
   ];
 
-  const users = await db.user.createManyAndReturn({
-    data: userData.map(({ id, email }) => ({
+  const users = await insertManyReturning(
+    schema.user,
+    userData.map(({ id, email }) => ({
       id,
       email,
       activeProjectId: defaultProjectId,
     })),
-  });
+  );
 
   const membershipData = users.map((user) => {
     const role = userData.find((u) => u.id === user.id)?.role as ImplementerRole;
@@ -432,9 +454,7 @@ async function createCoreUsers(
     };
   });
 
-  await db.implementerMember.createMany({
-    data: membershipData.flat(),
-  });
+  await insertMany(schema.implementerMember, membershipData.flat());
 }
 
 async function createAdminUsers(
@@ -465,22 +485,24 @@ async function createAdminUsers(
   const adminData = [...implementerAdmins, ...superAdmin];
 
   // create admin profiles
-  const createdAdminUsers = await db.adminUser.createManyAndReturn({
-    data: adminData.map((user) => ({
+  const createdAdminUsers = await insertManyReturning(
+    schema.adminUser,
+    adminData.map((user) => ({
       id: objectId("admin"),
       email: user.email,
       adminName: user.adminName,
-    })) as Prisma.AdminUserCreateManyInput[],
-  });
+    })) as (typeof schema.adminUser.$inferInsert)[],
+  );
 
-  const createdUsers = await db.user.createManyAndReturn({
-    data: adminData.map((user) => ({
+  const createdUsers = await insertManyReturning(
+    schema.user,
+    adminData.map((user) => ({
       id: user.id,
       email: user.email,
       name: user.adminName,
       activeProjectId: defaultProjectId,
     })),
-  });
+  );
 
   // Create membership records
   const membershipData = adminData.map((user) => {
@@ -492,9 +514,7 @@ async function createAdminUsers(
     }));
   });
 
-  await db.implementerMember.createMany({
-    data: membershipData.flat(),
-  });
+  await insertMany(schema.implementerMember, membershipData.flat());
 
   // Add admin emails to set
   createdUsers.forEach((user) => {
@@ -566,9 +586,7 @@ async function createHubCoordinators(
   }));
 
   // Create users in database
-  const _createdUsers = await db.user.createManyAndReturn({
-    data: staticUsers,
-  });
+  const _createdUsers = await insertManyReturning(schema.user, staticUsers);
 
   // Create membership records for static coordinators
   const staticMembershipData = staticUsers.map((user, index) => ({
@@ -578,14 +596,10 @@ async function createHubCoordinators(
     identifier: staticCoordinators[index]?.id ?? "",
   }));
 
-  await db.implementerMember.createMany({
-    data: staticMembershipData,
-  });
+  await insertMany(schema.implementerMember, staticMembershipData);
 
   // Add static coordinators to database
-  await db.hubCoordinator.createMany({
-    data: staticCoordinators,
-  });
+  await insertMany(schema.hubCoordinator, staticCoordinators);
 
   // Add static coordinator emails to set
   staticCoordinators.forEach((coord) => {
@@ -605,21 +619,17 @@ async function createHubCoordinators(
     const coordinatorId = objectId("hubcoordinator");
 
     // Create user
-    await db.user.create({
-      data: {
-        id: userId,
-        email: uniqueEmail,
-      },
+    await db.insert(schema.user).values({
+      id: userId,
+      email: uniqueEmail,
     });
 
     // Create membership
-    await db.implementerMember.create({
-      data: {
-        userId,
-        implementerId: hub.implementerId,
-        role: ImplementerRole.HUB_COORDINATOR,
-        identifier: coordinatorId,
-      },
+    await db.insert(schema.implementerMember).values({
+      userId,
+      implementerId: hub.implementerId,
+      role: ImplementerRole.HUB_COORDINATOR,
+      identifier: coordinatorId,
     });
 
     // Create hub coordinator
@@ -627,37 +637,35 @@ async function createHubCoordinators(
     const subCounty = faker.helpers.arrayElement(county.sub_counties);
     const gender = faker.person.sexType();
 
-    await db.hubCoordinator.create({
-      data: {
-        id: coordinatorId,
-        implementerId: hub.implementerId,
-        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-        coordinatorName: faker.person.fullName(),
-        coordinatorEmail: uniqueEmail,
-        county: county.name,
-        subCounty: subCounty,
-        bankName: faker.company.name(),
-        bankBranch: faker.location.county(),
-        bankAccountNumber: faker.finance.accountNumber(),
-        bankAccountName: faker.person.fullName(),
-        kra: faker.finance.accountNumber(),
-        nhif: faker.finance.accountNumber(),
-        dateOfBirth: faker.date.birthdate(),
-        cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        gender: Math.random() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
-        idNumber: faker.string.numeric({ length: 8 }),
-        assignedHubId: hub.id,
-      },
+    await db.insert(schema.hubCoordinator).values({
+      id: coordinatorId,
+      implementerId: hub.implementerId,
+      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+      coordinatorName: faker.person.fullName(),
+      coordinatorEmail: uniqueEmail,
+      county: county.name,
+      subCounty: subCounty,
+      bankName: faker.company.name(),
+      bankBranch: faker.location.county(),
+      bankAccountNumber: faker.finance.accountNumber(),
+      bankAccountName: faker.person.fullName(),
+      kra: faker.finance.accountNumber(),
+      nhif: faker.finance.accountNumber(),
+      dateOfBirth: faker.date.birthdate(),
+      cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+      mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+      gender: Math.random() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
+      idNumber: faker.string.numeric({ length: 8 }),
+      assignedHubId: hub.id,
     });
   }
 
-  return db.hubCoordinator.findMany();
+  return db.query.hubCoordinator.findMany();
 }
 
 async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
   console.log("creating supervisors");
-  const supervisors: Prisma.SupervisorCreateManyInput[] = [];
+  const supervisors: (typeof schema.supervisor.$inferInsert)[] = [];
 
   // Add three static supervisors for the static hub
   const staticHub = hubs[0];
@@ -755,12 +763,13 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
 
   supervisors.push(...dynamicSupervisors);
 
-  const createSupervisors = await db.user.createManyAndReturn({
-    data: supervisors.map(({ id, supervisorEmail }) => ({
+  const createSupervisors = await insertManyReturning(
+    schema.user,
+    supervisors.map(({ id, supervisorEmail }) => ({
       id,
       email: supervisorEmail,
     })),
-  });
+  );
 
   const membershipData = createSupervisors.map((user) => ({
     userId: user.id,
@@ -769,9 +778,7 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
     identifier: objectId("supervisor"),
   }));
 
-  await db.implementerMember.createMany({
-    data: membershipData,
-  });
+  await insertMany(schema.implementerMember, membershipData);
 
   const supervisorRecords = supervisors.map((_user) => {
     // Check if this is a static supervisor
@@ -813,14 +820,12 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
     };
   });
 
-  return db.supervisor.createManyAndReturn({
-    data: supervisorRecords,
-  });
+  return insertManyReturning(schema.supervisor, supervisorRecords);
 }
 
 async function createOperations(hubs: Hub[], emails: Set<string>) {
   console.log("creating operations users");
-  const operations: Prisma.OpsUserCreateManyInput[] = [];
+  const operations: (typeof schema.opsUser.$inferInsert)[] = [];
 
   // Add static operations user for static hub
   const staticHub = hubs[0];
@@ -855,12 +860,13 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
     operations.push(opsUser);
   }
 
-  const createdOperations = await db.user.createManyAndReturn({
-    data: operations.map(({ id, email }) => ({
+  const createdOperations = await insertManyReturning(
+    schema.user,
+    operations.map(({ id, email }) => ({
       id,
       email,
     })),
-  });
+  );
 
   const membershipData = createdOperations.map((ops) => ({
     userId: ops.id,
@@ -869,24 +875,23 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
     identifier: objectId("opsuser"),
   }));
 
-  await db.implementerMember.createMany({
-    data: membershipData,
-  });
+  await insertMany(schema.implementerMember, membershipData);
 
-  return db.opsUser.createManyAndReturn({
-    data: operations.map((ops) => ({
+  return insertManyReturning(
+    schema.opsUser,
+    operations.map((ops) => ({
       id: membershipData.find((x) => x.userId === ops.id)?.identifier ?? "",
       email: ops.email,
       name: ops.name,
       implementerId: ops.implementerId,
       cellPhone: ops.cellPhone,
     })),
-  });
+  );
 }
 
 async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
   console.log("creating clinical leads");
-  const clinicalLeads: Prisma.ClinicalLeadCreateManyInput[] = [];
+  const clinicalLeads: (typeof schema.clinicalLead.$inferInsert)[] = [];
 
   // Add static clinical lead for static hub
   const staticHub = hubs[0];
@@ -919,12 +924,13 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
     clinicalLeads.push(clinicalLead);
   }
 
-  const createClinicalLeads = await db.user.createManyAndReturn({
-    data: clinicalLeads.map(({ id, clinicalLeadEmail }) => ({
+  const createClinicalLeads = await insertManyReturning(
+    schema.user,
+    clinicalLeads.map(({ id, clinicalLeadEmail }) => ({
       id,
       email: clinicalLeadEmail,
     })),
-  });
+  );
 
   const membershipData = createClinicalLeads.map((user) => ({
     userId: user.id,
@@ -934,19 +940,18 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
     identifier: objectId("clinicallead"),
   }));
 
-  await db.implementerMember.createMany({
-    data: membershipData,
-  });
+  await insertMany(schema.implementerMember, membershipData);
 
-  return db.clinicalLead.createManyAndReturn({
-    data: clinicalLeads.map((clinicalLead) => ({
+  return insertManyReturning(
+    schema.clinicalLead,
+    clinicalLeads.map((clinicalLead) => ({
       id: membershipData.find((x) => x.userId === clinicalLead.id)?.identifier ?? "",
       clinicalLeadName: clinicalLead.clinicalLeadName,
       clinicalLeadEmail: clinicalLead.clinicalLeadEmail,
       assignedHubId: clinicalLead.assignedHubId,
       implementerId: clinicalLead.implementerId,
     })),
-  });
+  );
 }
 
 async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
@@ -961,21 +966,17 @@ async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
   const userId = objectId("user");
   const clinicalTeamId = objectId("clinicalteam");
 
-  await db.user.create({
-    data: {
-      id: userId,
-      email: "takehiro.tomiyasu@test.com",
-    },
+  await db.insert(schema.user).values({
+    id: userId,
+    email: "takehiro.tomiyasu@test.com",
   });
 
   // Create implementer member with identifier
-  await db.implementerMember.create({
-    data: {
-      userId,
-      implementerId: staticImplementer.id,
-      role: ImplementerRole.CLINICAL_TEAM,
-      identifier: clinicalTeamId,
-    },
+  await db.insert(schema.implementerMember).values({
+    userId,
+    implementerId: staticImplementer.id,
+    role: ImplementerRole.CLINICAL_TEAM,
+    identifier: clinicalTeamId,
   });
 
   // Create clinical team member with matching id
@@ -987,12 +988,14 @@ async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
     assignedHubId: staticHub.id,
     implementerId: staticImplementer.id,
   };
-  return db.clinicalTeam.create({ data: clinicalTeamMember });
+  const [created] = await db.insert(schema.clinicalTeam).values(clinicalTeamMember).returning();
+  if (!created) throw new Error("Clinical team member was not created");
+  return created;
 }
 
 async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
   console.log("creating fellows");
-  const fellows: Prisma.FellowCreateManyInput[] = [];
+  const fellows: (typeof schema.fellow.$inferInsert)[] = [];
 
   // Add three static fellows for the static supervisors
   const staticSupervisors = supervisors.slice(0, 3);
@@ -1096,12 +1099,13 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
     }
   }
 
-  const createFellows = await db.user.createManyAndReturn({
-    data: fellows.map(({ id, fellowEmail }) => ({
+  const createFellows = await insertManyReturning(
+    schema.user,
+    fellows.map(({ id, fellowEmail }) => ({
       id,
       email: fellowEmail,
     })),
-  });
+  );
 
   const membershipData = createFellows.map((user) => ({
     userId: user.id,
@@ -1110,25 +1114,24 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
     identifier: objectId("fellow"),
   }));
 
-  await db.implementerMember.createMany({
-    data: membershipData,
-  });
+  await insertMany(schema.implementerMember, membershipData);
 
-  return db.fellow.createManyAndReturn({
-    data: fellows.map((fellow) => {
+  return insertManyReturning(
+    schema.fellow,
+    fellows.map((fellow) => {
       const { id, ..._fellow } = fellow;
       return {
         id: membershipData.find((fellow) => fellow.userId === id)?.identifier ?? "",
         ..._fellow,
       };
     }),
-  });
+  );
 }
 
 // TODO: should each school have a unique supervisor?
 async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
   console.log("creating schools");
-  const schools: Prisma.SchoolCreateManyInput[] = [];
+  const schools: (typeof schema.school.$inferInsert)[] = [];
 
   // Add static school for static hub
   const staticHub = hubs[0];
@@ -1210,24 +1213,18 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
     }
   });
 
-  return db.school.createManyAndReturn({
-    data: schools,
-    include: {
-      hub: {
-        include: {
-          project: true,
-          fellows: true,
-        },
-      },
-    },
-  });
+  const created = await insertManyReturning(schema.school, schools);
+  return created.map((school) => ({
+    ...school,
+    hub: hubs.find((hub) => hub.id === school.hubId) ?? null,
+  }));
 }
 
 type SchoolCreationResult = Awaited<ReturnType<typeof createSchools>>;
 
 async function createInterventionGroups(schools: SchoolCreationResult, fellows: Fellow[]) {
   console.log("creating intervention groups");
-  const interventionGroups: Prisma.InterventionGroupCreateManyInput[] = [];
+  const interventionGroups: (typeof schema.interventionGroup.$inferInsert)[] = [];
 
   // Add static intervention groups for static school
   const staticSchool = schools[0];
@@ -1302,21 +1299,27 @@ async function createInterventionGroups(schools: SchoolCreationResult, fellows: 
     }
   }
 
-  return db.interventionGroup.createManyAndReturn({
-    data: interventionGroups,
-    include: {
-      school: true,
+  return insertManyReturning(schema.interventionGroup, interventionGroups);
+}
+
+function loadSchoolsWithGroupsAndHub() {
+  return db.query.school.findMany({
+    with: {
+      interventionGroups: {
+        with: {
+          leader: true,
+        },
+      },
+      hub: true,
     },
   });
 }
 
-async function createStudentsForSchools(
-  schools: Prisma.SchoolGetPayload<{
-    include: { interventionGroups: { include: { leader: true } } };
-  }>[],
-) {
+type DemoSchool = Awaited<ReturnType<typeof loadSchoolsWithGroupsAndHub>>[number];
+
+async function createStudentsForSchools(schools: DemoSchool[]) {
   console.log("creating students");
-  const students: Prisma.StudentCreateManyInput[] = [];
+  const students: (typeof schema.student.$inferInsert)[] = [];
 
   // Add static students for static school
   const staticSchool = schools[0];
@@ -1359,14 +1362,12 @@ async function createStudentsForSchools(
     }
   }
 
-  return db.student.createManyAndReturn({
-    data: students,
-  });
+  return insertManyReturning(schema.student, students);
 }
 
 async function createSessionNames(hubs: Hub[]) {
   console.log("creating session names");
-  const sessionNamesRecords: Prisma.SessionNameCreateManyInput[] = [];
+  const sessionNamesRecords: (typeof schema.sessionName.$inferInsert)[] = [];
 
   for (const hub of hubs) {
     // TODO: Modify to create sessionTypes per project per hub
@@ -1383,9 +1384,7 @@ async function createSessionNames(hubs: Hub[]) {
     }
   }
 
-  const sessions = await db.sessionName.createManyAndReturn({
-    data: sessionNamesRecords,
-  });
+  const sessions = await insertManyReturning(schema.sessionName, sessionNamesRecords);
 
   return sessions.reduce<
     Record<"interventionSessionsNames" | "followUpSessionsNames", SessionName[]>
@@ -1403,13 +1402,11 @@ async function createSessionNames(hubs: Hub[]) {
 }
 
 async function createInterventionSessionsForSchools(
-  schools: Prisma.SchoolGetPayload<{
-    include: { interventionGroups: { include: { leader: true } }; hub: true };
-  }>[],
+  schools: DemoSchool[],
   interventionSessionNames: SessionName[],
 ) {
   console.log("creating intervention sessions");
-  const interventionSessions: Prisma.InterventionSessionCreateManyInput[] = [];
+  const interventionSessions: (typeof schema.interventionSession.$inferInsert)[] = [];
   const fellowSessionDates = new Map<string, Set<string>>();
 
   // Create static sessions for static school
@@ -1509,9 +1506,7 @@ async function createInterventionSessionsForSchools(
     }
   }
 
-  return db.interventionSession.createManyAndReturn({
-    data: interventionSessions,
-  });
+  return insertManyReturning(schema.interventionSession, interventionSessions);
 }
 
 // ============================================================================
@@ -1537,9 +1532,6 @@ const TREATMENT_INTERVENTIONS = [
   "Mindfulness",
 ];
 
-type DemoSchool = Prisma.SchoolGetPayload<{
-  include: { interventionGroups: { include: { leader: true } }; hub: true };
-}>;
 type DemoStudents = Awaited<ReturnType<typeof createStudentsForSchools>>;
 type DemoSessions = Awaited<ReturnType<typeof createInterventionSessionsForSchools>>;
 type DemoFellowAttendances = Awaited<
@@ -1554,9 +1546,9 @@ async function createAttendanceRecords(
 ) {
   console.log("creating attendance records");
 
-  const fellowAttendanceData: Prisma.FellowAttendanceCreateManyInput[] = [];
-  const studentAttendanceData: Prisma.StudentAttendanceCreateManyInput[] = [];
-  const supervisorAttendanceData: Prisma.SupervisorAttendanceCreateManyInput[] = [];
+  const fellowAttendanceData: (typeof schema.fellowAttendance.$inferInsert)[] = [];
+  const studentAttendanceData: (typeof schema.studentAttendance.$inferInsert)[] = [];
+  const supervisorAttendanceData: (typeof schema.supervisorAttendance.$inferInsert)[] = [];
 
   for (const school of schools) {
     const projectId = school.hub?.projectId;
@@ -1613,13 +1605,15 @@ async function createAttendanceRecords(
     }
   }
 
-  const fellowAttendances = await db.fellowAttendance.createManyAndReturn({
-    data: fellowAttendanceData,
-  });
-  const studentAttendances = await db.studentAttendance.createManyAndReturn({
-    data: studentAttendanceData,
-  });
-  await db.supervisorAttendance.createMany({ data: supervisorAttendanceData });
+  const fellowAttendances = await insertManyReturning(
+    schema.fellowAttendance,
+    fellowAttendanceData,
+  );
+  const studentAttendances = await insertManyReturning(
+    schema.studentAttendance,
+    studentAttendanceData,
+  );
+  await insertMany(schema.supervisorAttendance, supervisorAttendanceData);
 
   return { fellowAttendances, studentAttendances };
 }
@@ -1630,7 +1624,7 @@ async function createStudentOutcomes(
   groupTypeByGroupId: Map<string, string>,
 ) {
   console.log("creating student outcomes");
-  const outcomes: Prisma.StudentOutcomeCreateManyInput[] = [];
+  const outcomes: (typeof schema.studentOutcome.$inferInsert)[] = [];
   const score = () => faker.number.int({ min: 0, max: 3 });
 
   for (const school of schools) {
@@ -1660,7 +1654,7 @@ async function createStudentOutcomes(
     }
   }
 
-  await db.studentOutcome.createMany({ data: outcomes });
+  await insertMany(schema.studentOutcome, outcomes);
 }
 
 async function createClinicalRecords(
@@ -1674,12 +1668,12 @@ async function createClinicalRecords(
 
   // Pre-generate ids so the whole clinical graph can be built in memory and
   // written with a few bulk inserts instead of one create per row.
-  const screeningData: Prisma.ClinicalScreeningInfoCreateManyInput[] = [];
-  const sessionData: Prisma.ClinicalSessionAttendanceCreateManyInput[] = [];
-  const notesData: Prisma.ClinicalCaseNotesCreateManyInput[] = [];
-  const followUpData: Prisma.ClinicalFollowUpTreatmentPlanCreateManyInput[] = [];
-  const terminationData: Prisma.ClinicalCaseTerminationCreateManyInput[] = [];
-  const triageData: Prisma.TriageEventCreateManyInput[] = [];
+  const screeningData: (typeof schema.clinicalScreeningInfo.$inferInsert)[] = [];
+  const sessionData: (typeof schema.clinicalSessionAttendance.$inferInsert)[] = [];
+  const notesData: (typeof schema.clinicalCaseNotes.$inferInsert)[] = [];
+  const followUpData: (typeof schema.clinicalFollowUpTreatmentPlan.$inferInsert)[] = [];
+  const terminationData: (typeof schema.clinicalCaseTermination.$inferInsert)[] = [];
+  const triageData: (typeof schema.triageEvent.$inferInsert)[] = [];
 
   // Cycle through case statuses so every state (incl. Terminated/FollowUp) is
   // reliably represented for demos, regardless of sample size.
@@ -1829,13 +1823,13 @@ async function createClinicalRecords(
 
   // Insert respecting FK order: screening -> sessions -> (notes/termination),
   // with the independent leaf tables written in parallel.
-  await db.clinicalScreeningInfo.createMany({ data: screeningData });
-  await db.clinicalSessionAttendance.createMany({ data: sessionData });
+  await insertMany(schema.clinicalScreeningInfo, screeningData);
+  await insertMany(schema.clinicalSessionAttendance, sessionData);
   await Promise.all([
-    db.clinicalCaseNotes.createMany({ data: notesData }),
-    db.clinicalCaseTermination.createMany({ data: terminationData }),
-    db.clinicalFollowUpTreatmentPlan.createMany({ data: followUpData }),
-    db.triageEvent.createMany({ data: triageData }),
+    insertMany(schema.clinicalCaseNotes, notesData),
+    insertMany(schema.clinicalCaseTermination, terminationData),
+    insertMany(schema.clinicalFollowUpTreatmentPlan, followUpData),
+    insertMany(schema.triageEvent, triageData),
   ]);
 }
 
@@ -1852,10 +1846,10 @@ async function createPayoutRecords(
   );
   const sample = eligible.slice(0, DEMO_PAYOUT_SAMPLE);
 
-  const payoutStatementData: Prisma.PayoutStatementsCreateManyInput[] = [];
-  const reconciliationData: Prisma.PayoutReconciliationCreateManyInput[] = [];
-  const repaymentData: Prisma.RepaymentRequestCreateManyInput[] = [];
-  const delayedData: Prisma.DelayedPaymentRequestCreateManyInput[] = [];
+  const payoutStatementData: (typeof schema.payoutStatements.$inferInsert)[] = [];
+  const reconciliationData: (typeof schema.payoutReconciliation.$inferInsert)[] = [];
+  const repaymentData: (typeof schema.repaymentRequest.$inferInsert)[] = [];
+  const delayedData: (typeof schema.delayedPaymentRequest.$inferInsert)[] = [];
 
   for (const fa of sample) {
     const hubId = hubIdBySchoolId.get(fa.schoolId as string) as string;
@@ -1902,7 +1896,7 @@ async function createPayoutRecords(
   }
 
   // A handful of reimbursement requests, one per unique supervisor in the sample
-  const reimbursementData: Prisma.ReimbursementRequestCreateManyInput[] = [];
+  const reimbursementData: (typeof schema.reimbursementRequest.$inferInsert)[] = [];
   const supervisorHubPairs = Array.from(
     new Map(
       sample.map((fa) => [fa.supervisorId as string, hubIdBySchoolId.get(fa.schoolId as string)]),
@@ -1924,11 +1918,11 @@ async function createPayoutRecords(
     });
   }
 
-  await db.payoutStatements.createMany({ data: payoutStatementData });
-  await db.payoutReconciliation.createMany({ data: reconciliationData });
-  await db.repaymentRequest.createMany({ data: repaymentData });
-  await db.delayedPaymentRequest.createMany({ data: delayedData });
-  await db.reimbursementRequest.createMany({ data: reimbursementData });
+  await insertMany(schema.payoutStatements, payoutStatementData);
+  await insertMany(schema.payoutReconciliation, reconciliationData);
+  await insertMany(schema.repaymentRequest, repaymentData);
+  await insertMany(schema.delayedPaymentRequest, delayedData);
+  await insertMany(schema.reimbursementRequest, reimbursementData);
 }
 
 // Pools used to generate varied (V1-shaped) fidelity feedback per recording so
@@ -2113,7 +2107,7 @@ function buildFidelityFeedbackV1() {
       session_flow_and_engagement: faker.helpers.arrayElement(SESSION_FLOWS),
     },
     safety_flags: buildSafetyFlags(),
-  } as Prisma.InputJsonValue;
+  } as schema.JsonValue;
 
   return { feedback, overallScore, promptVersion: 1 };
 }
@@ -2207,7 +2201,7 @@ function buildFidelityFeedbackV2() {
       }),
     },
     safety_flags: buildSafetyFlags(),
-  } as Prisma.InputJsonValue;
+  } as schema.JsonValue;
 
   return { feedback, overallScore, promptVersion: 2 };
 }
@@ -2226,7 +2220,7 @@ async function createSessionRecordings(
 ) {
   console.log("creating session recordings");
 
-  const recordings: Prisma.SessionRecordingCreateManyInput[] = [];
+  const recordings: (typeof schema.sessionRecording.$inferInsert)[] = [];
 
   for (const school of schools) {
     if (!school.assignedSupervisorId) continue;
@@ -2259,7 +2253,7 @@ async function createSessionRecordings(
             { speaker: "fellow", text: faker.lorem.paragraph() },
             { speaker: "student", text: faker.lorem.sentence() },
           ],
-        } as Prisma.InputJsonValue;
+        } as schema.JsonValue;
 
         recordings.push({
           id: recordingId,
@@ -2287,7 +2281,7 @@ async function createSessionRecordings(
     }
   }
 
-  await db.sessionRecording.createMany({ data: recordings });
+  await insertMany(schema.sessionRecording, recordings);
 }
 
 async function createDemoRecords(
@@ -2299,7 +2293,7 @@ async function createDemoRecords(
   const schoolIds = new Set(schools.map((s) => s.id));
 
   // markedBy / createdBy / uploadedBy require a real user FK; reuse one seeded user
-  const seeder = await db.user.findFirst({ select: { id: true } });
+  const seeder = await db.query.user.findFirst({ columns: { id: true } });
   if (!seeder) {
     console.warn("No users found - skipping demo tracking/clinical/financial records");
     return;
@@ -2381,9 +2375,9 @@ async function createReportRecords(
     "Fellow did not follow the session guide",
   ];
 
-  const fellowComplaintData: Prisma.FellowComplaintsCreateManyInput[] = [];
-  const groupEvaluationData: Prisma.InterventionGroupReportCreateManyInput[] = [];
-  const fellowGroupReportData: Prisma.FellowGroupReportCreateManyInput[] = [];
+  const fellowComplaintData: (typeof schema.fellowComplaints.$inferInsert)[] = [];
+  const groupEvaluationData: (typeof schema.interventionGroupReport.$inferInsert)[] = [];
+  const fellowGroupReportData: (typeof schema.fellowGroupReport.$inferInsert)[] = [];
 
   for (const school of schools) {
     const sessions = sessionsBySchool.get(school.id) ?? [];
@@ -2452,9 +2446,8 @@ async function createReportRecords(
   }
 
   // Payment complaints hang off fellow attendance rows (see expenses/complaints)
-  const paymentComplaintData: Prisma.FellowPaymentComplaintsCreateManyInput[] = fellowAttendances
-    .slice(0, DEMO_PAYMENT_COMPLAINT_SAMPLE)
-    .map((fa, index) => ({
+  const paymentComplaintData: (typeof schema.fellowPaymentComplaints.$inferInsert)[] =
+    fellowAttendances.slice(0, DEMO_PAYMENT_COMPLAINT_SAMPLE).map((fa, index) => ({
       reason: faker.helpers.arrayElement(["Received less payment", "Not paid", "Wrong amount"]),
       statement: "mpesa statement",
       status: (["PENDING", "APPROVED", "REJECTED"] as const)[index % 3],
@@ -2468,10 +2461,10 @@ async function createReportRecords(
     }));
 
   await Promise.all([
-    db.fellowComplaints.createMany({ data: fellowComplaintData }),
-    db.interventionGroupReport.createMany({ data: groupEvaluationData }),
-    db.fellowPaymentComplaints.createMany({ data: paymentComplaintData }),
-    db.fellowGroupReport.createMany({ data: fellowGroupReportData }),
+    insertMany(schema.fellowComplaints, fellowComplaintData),
+    insertMany(schema.interventionGroupReport, groupEvaluationData),
+    insertMany(schema.fellowPaymentComplaints, paymentComplaintData),
+    insertMany(schema.fellowGroupReport, fellowGroupReportData),
   ]);
 }
 
@@ -2511,16 +2504,7 @@ async function main() {
 
   const schools = await createSchools(hubs, supervisors);
   await createInterventionGroups(schools, fellows);
-  const schoolsWithGroupsAndFellows = await db.school.findMany({
-    include: {
-      interventionGroups: {
-        include: {
-          leader: true,
-        },
-      },
-      hub: true,
-    },
-  });
+  const schoolsWithGroupsAndFellows = await loadSchoolsWithGroupsAndHub();
   const students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
   const { interventionSessionsNames } = await createSessionNames(hubs);
 
@@ -2534,4 +2518,9 @@ async function main() {
   await createDemoRecords(schoolsWithGroupsAndFellows, students, interventionSessions);
 }
 
-void main();
+main()
+  .catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(() => void pool.end());

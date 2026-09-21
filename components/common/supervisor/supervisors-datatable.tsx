@@ -1,7 +1,7 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import { ImplementerRole } from "#/db/enums";
+import type { interventionSession, school as schoolTable, sessionName } from "#/db/schema";
 import type { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useState } from "react";
@@ -20,27 +20,15 @@ export default function SupervisorsDataTable({
   role,
   school,
 }: {
-  supervisors: Prisma.SupervisorGetPayload<{
-    include: {
-      assignedSchools: true;
-      fellows: true;
-      supervisorAttendances: {
-        include: {
-          session: true;
-        };
-      };
-    };
-  }>[];
+  supervisors: SupervisorsData[];
   role: ImplementerRole;
-  school: Prisma.SchoolGetPayload<{
-    include: {
-      interventionSessions: {
-        include: {
-          session: true;
-        };
-      };
-    };
-  }> | null;
+  school:
+    | (typeof schoolTable.$inferSelect & {
+        interventionSessions: (typeof interventionSession.$inferSelect & {
+          session: typeof sessionName.$inferSelect | null;
+        })[];
+      })
+    | null;
 }) {
   const [batchMode, setBatchMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<SupervisorsData>[]>([]);
