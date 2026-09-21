@@ -38,7 +38,8 @@ export async function loadFellowGroupReports(options?: LoadFellowGroupReportsOpt
         and(leadersInScope ? inArray(g.leaderId, leadersInScope) : undefined, isNull(g.archivedAt)),
       with: {
         leader: true,
-        fellowGroupReports: true,
+        // The row shows the first report, so keep Prisma's insertion order.
+        fellowGroupReports: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] },
       },
       orderBy: (g, { asc }) => asc(g.groupName),
     });

@@ -17,6 +17,8 @@ import { fellow, fellowAttendance, fellowPaymentComplaints, payoutStatements } f
  * scope is identical across roles.
  */
 export async function loadPaymentComplaints(scope: Scope) {
+  // Ordered like Prisma's insertion order: the report lists complaints in received order and
+  // `payoutTotalForAttendance` takes the first executed statement.
   const fellows = await db.query.fellow.findMany({
     where: scope,
     with: {
@@ -25,11 +27,16 @@ export async function loadPaymentComplaints(scope: Scope) {
       fellowAttendances: {
         with: {
           session: { with: { session: true } },
-          fellowPaymentComplaints: true,
-          PayoutStatements: { columns: { amount: true, executedAt: true } },
+          fellowPaymentComplaints: { orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)] },
+          PayoutStatements: {
+            columns: { amount: true, executedAt: true },
+            orderBy: (p, { asc }) => [asc(p.createdAt), asc(p.id)],
+          },
         },
+        orderBy: (a, { asc }) => asc(a.id),
       },
     },
+    orderBy: (f, { asc }) => [asc(f.createdAt), asc(f.id)],
   });
 
   return Promise.all(
@@ -158,7 +165,12 @@ export async function resolveComplaint(
       with: {
         fellowAttendance: {
           columns: { fellowId: true },
-          with: { PayoutStatements: { columns: { executedAt: true } } },
+          with: {
+            PayoutStatements: {
+              columns: { executedAt: true },
+              orderBy: (p, { asc }) => [asc(p.createdAt), asc(p.id)],
+            },
+          },
         },
       },
     });

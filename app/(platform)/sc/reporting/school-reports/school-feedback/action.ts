@@ -16,9 +16,14 @@ export async function loadSchoolFeedback() {
 
     const schools = await db.query.school.findMany({
       where: (s, { eq, isNull }) => (hubId === null ? isNull(s.hubId) : eq(s.hubId, hubId)),
+      // Lists render in received order; keep Prisma's insertion order.
       with: {
-        schoolFeedbacks: { with: { user: true } },
+        schoolFeedbacks: {
+          with: { user: true },
+          orderBy: (f, { asc }) => [asc(f.createdAt), asc(f.id)],
+        },
       },
+      orderBy: (s, { asc }) => [asc(s.createdAt), asc(s.id)],
     });
 
     const formattedData = schools.map((school) => {

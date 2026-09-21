@@ -55,6 +55,9 @@ async function fetchEvaluations(options?: LoadStudentGroupEvaluationsOptions) {
       group: { with: { leader: true } },
       session: true,
     },
+    // The page keeps the first report per fellow, so the order must be deterministic. Prisma
+    // returned insertion order; typeid ids are time-ordered, so this reproduces it.
+    orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
   });
 }
 

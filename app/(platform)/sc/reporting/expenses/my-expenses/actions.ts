@@ -32,6 +32,8 @@ export async function loadSupervisorExpenses() {
     with: {
       supervisor: { columns: { id: true, supervisorName: true } },
     },
+    // The table renders in received order; keep Prisma's insertion order.
+    orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
   });
 
   return supervisorsExpenses.map((expense) => {

@@ -16,7 +16,9 @@ export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvalu
     const hubId = hubCoordinator.profile?.assignedHubId;
     const fellows = await db.query.fellow.findMany({
       where: (f, { eq, isNull }) => (hubId === null ? isNull(f.hubId) : eq(f.hubId, hubId)),
-      with: { weeklyFellowRatings: true },
+      // Lists render in received order; keep Prisma's insertion order.
+      with: { weeklyFellowRatings: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] } },
+      orderBy: (f, { asc }) => [asc(f.createdAt), asc(f.id)],
     });
 
     const formattedData = fellows.map((fellow) => {

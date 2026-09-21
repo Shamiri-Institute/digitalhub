@@ -13,6 +13,8 @@ async function fetchSupervisorExpenses(scope: SQL | undefined) {
       supervisor: { columns: { id: true, supervisorName: true } },
       hub: { columns: { hubName: true } },
     },
+    // The table renders in received order; keep Prisma's insertion order.
+    orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
   });
 }
 
