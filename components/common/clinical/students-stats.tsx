@@ -1,6 +1,6 @@
 "use client";
 
-import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { generateRandomColor, studentsGroupByColors } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
@@ -22,7 +22,10 @@ export default function StudentsStatsBreakdown({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={studentsStats.formStats}
+                data={studentsStats.formStats.map((val, index) => ({
+                  ...val,
+                  fill: studentsGroupByColors[index % studentsGroupByColors.length],
+                }))}
                 dataKey="value"
                 nameKey="form"
                 startAngle={90}
@@ -40,12 +43,6 @@ export default function StudentsStatsBreakdown({
                     0,
                   )}
                 </Label>
-                {studentsStats.formStats.map((val, index: number) => (
-                  <Cell
-                    key={val.form}
-                    fill={studentsGroupByColors[index % studentsGroupByColors.length]}
-                  />
-                ))}
               </Pie>
               <Tooltip formatter={(value) => `${value} students`} />
             </PieChart>
@@ -57,7 +54,10 @@ export default function StudentsStatsBreakdown({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={studentsStats.ageStats}
+                data={studentsStats.ageStats.map((val, index) => ({
+                  ...val,
+                  fill: randomColors[index],
+                }))}
                 dataKey="value"
                 nameKey="age"
                 startAngle={90}
@@ -65,11 +65,7 @@ export default function StudentsStatsBreakdown({
                 outerRadius={100}
                 innerRadius={70}
                 fill="#8884d8"
-              >
-                {studentsStats.ageStats.map((val, index: number) => (
-                  <Cell key={val.age} fill={randomColors[index]} />
-                ))}
-              </Pie>
+              />
               <Tooltip
                 formatter={(value) => `${value} students`}
                 labelFormatter={(label) => `${label} years`}
@@ -84,7 +80,10 @@ export default function StudentsStatsBreakdown({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={studentsStats.genderStats}
+                data={studentsStats.genderStats.map((val, index) => ({
+                  ...val,
+                  fill: studentsGroupByColors[index % studentsGroupByColors.length],
+                }))}
                 dataKey="value"
                 nameKey="gender"
                 startAngle={90}
@@ -102,12 +101,6 @@ export default function StudentsStatsBreakdown({
                     0,
                   )}
                 </Label>
-                {studentsStats.genderStats.map((val, index: number) => (
-                  <Cell
-                    key={val.gender}
-                    fill={studentsGroupByColors[index % studentsGroupByColors.length]}
-                  />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>

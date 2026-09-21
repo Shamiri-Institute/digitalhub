@@ -11,7 +11,7 @@ export const EditFellowSchema = z.object({
     .min(1, { message: "Please enter a name" }),
   dateOfBirth: z.date(),
   gender: z.string(),
-  fellowEmail: stringValidation("Please provide fellow email").email(),
+  fellowEmail: stringValidation("Please provide fellow email").pipe(z.email()),
   idNumber: stringValidation("Please input the fellow's ID"),
   cellNumber: z
     .string({

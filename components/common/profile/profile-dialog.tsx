@@ -374,7 +374,7 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
                               selected={field.value}
                               captionLayout="dropdown"
                               onSelect={field.onChange}
-                              initialFocus
+                              autoFocus
                             />
                           </PopoverContent>
                         </Popover>

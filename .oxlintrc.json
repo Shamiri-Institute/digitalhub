@@ -44,7 +44,7 @@
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",
     "typescript/prefer-optional-chain": "error",
-    "typescript/no-deprecated": "warn",
+    "typescript/no-deprecated": "error",
     "unicorn/no-useless-undefined": "error",
     "unicorn/prefer-date-now": "error",
     "unicorn/prefer-number-properties": "error",
@@ -94,6 +94,7 @@
     "react/set-state-in-effect": "error",
     "react/no-deriving-state-in-effects": "error",
     "react/no-unstable-nested-components": "error",
+    "jsx-a11y/no-autofocus": ["error", { "ignoreNonDOM": true }],
     "hooks-policy/justify": [
       "error",
       {

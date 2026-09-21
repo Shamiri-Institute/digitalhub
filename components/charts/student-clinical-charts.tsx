@@ -5,7 +5,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Label,
   Legend,
   Pie,
@@ -98,7 +97,13 @@ export default function HubStudentClinicalDataCharts({
         <ResponsiveContainer width="100%" height="100%">
           <PieChart width={250} height={250}>
             <Pie
-              data={sumOfCases === 0 ? emptyDataObject : caseStatusCounts}
+              data={(sumOfCases === 0 ? emptyDataObject : caseStatusCounts).map((entry, index) => ({
+                ...entry,
+                fill:
+                  sumOfCases === 0
+                    ? "#e5e7eb"
+                    : clinicalCasesColors[index % clinicalCasesColors.length],
+              }))}
               dataKey="value"
               nameKey="name"
               startAngle={90}
@@ -109,16 +114,6 @@ export default function HubStudentClinicalDataCharts({
               <Label position="center" className="text-xl font-semibold leading-8" fill="#000">
                 {caseStatusCounts.reduce((acc, d) => acc + d.value, 0)}
               </Label>
-              {caseStatusCounts.map((entry, index) => (
-                <Cell
-                  key={entry.name}
-                  fill={
-                    sumOfCases === 0
-                      ? "#e5e7eb"
-                      : clinicalCasesColors[index % clinicalCasesColors.length]
-                  }
-                />
-              ))}
             </Pie>
             <Tooltip />
             <Legend
@@ -168,7 +163,10 @@ export default function HubStudentClinicalDataCharts({
         <ResponsiveContainer width="100%" height="100%">
           <PieChart width={250} height={250}>
             <Pie
-              data={filteredByInitialReferredFrom}
+              data={filteredByInitialReferredFrom.map((entry, index) => ({
+                ...entry,
+                fill: clinicalCasesColors[index % clinicalCasesColors.length],
+              }))}
               dataKey="count"
               nameKey="initialReferredFrom"
               startAngle={90}
@@ -179,12 +177,6 @@ export default function HubStudentClinicalDataCharts({
               <Label position="center" className="text-2xl font-semibold leading-8" fill="#000">
                 {filteredByInitialReferredFrom.reduce((acc, d) => acc + d.count, 0)}
               </Label>
-              {filteredByInitialReferredFrom.map((entry, index) => (
-                <Cell
-                  key={entry.initialReferredFrom}
-                  fill={clinicalCasesColors[index % clinicalCasesColors.length]}
-                />
-              ))}
             </Pie>
             <Tooltip />
           </PieChart>

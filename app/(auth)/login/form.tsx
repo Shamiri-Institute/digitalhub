@@ -30,7 +30,7 @@ export function LoginForm() {
     }
   }, [searchParams, toast]);
 
-  const handleCredentialSubmit = async (e: React.FormEvent) => {
+  const handleCredentialSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email || !password) {
       toast({ title: "Please enter email and password", variant: "destructive" });

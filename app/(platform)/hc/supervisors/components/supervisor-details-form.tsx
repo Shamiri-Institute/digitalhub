@@ -309,7 +309,7 @@ export default function SupervisorDetailsForm({
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
-                                initialFocus
+                                autoFocus
                                 captionLayout="dropdown"
                               />
                             </PopoverContent>

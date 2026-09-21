@@ -1,6 +1,6 @@
 "use client";
 
-import { Cell, Label, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Label, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { generateRandomColor, studentsGroupByColors } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
@@ -41,7 +41,10 @@ export default function HubStudentDemographicsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={formatedStudentsGroupedByForm}
+                data={formatedStudentsGroupedByForm.map((val, index) => ({
+                  ...val,
+                  fill: studentsGroupByColors[index % studentsGroupByColors.length],
+                }))}
                 dataKey="value"
                 nameKey="form"
                 startAngle={90}
@@ -56,12 +59,6 @@ export default function HubStudentDemographicsCharts({
                 >
                   {formatedStudentsGroupedByForm.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
-                {formatedStudentsGroupedByForm.map((val, index) => (
-                  <Cell
-                    key={val.form}
-                    fill={studentsGroupByColors[index % studentsGroupByColors.length]}
-                  />
-                ))}
               </Pie>
               <Tooltip formatter={(value) => `${value} students`} />
               <Legend
@@ -81,7 +78,10 @@ export default function HubStudentDemographicsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={formatedStudentsGroupedByAge}
+                data={formatedStudentsGroupedByAge.map((val, index) => ({
+                  ...val,
+                  fill: randomColors[index],
+                }))}
                 dataKey="value"
                 nameKey="age"
                 startAngle={90}
@@ -89,11 +89,7 @@ export default function HubStudentDemographicsCharts({
                 outerRadius={100}
                 innerRadius={70}
                 fill="#8884d8"
-              >
-                {formatedStudentsGroupedByAge.map((val, index) => (
-                  <Cell key={val.age} fill={randomColors[index]} />
-                ))}
-              </Pie>
+              />
               <Tooltip
                 formatter={(value) => `${value} students`}
                 labelFormatter={(label) => `${label} years`}
@@ -108,7 +104,10 @@ export default function HubStudentDemographicsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={formatedStudentsGroupedByGender}
+                data={formatedStudentsGroupedByGender.map((val, index) => ({
+                  ...val,
+                  fill: studentsGroupByColors[index % studentsGroupByColors.length],
+                }))}
                 dataKey="value"
                 nameKey="gender"
                 startAngle={90}
@@ -123,12 +122,6 @@ export default function HubStudentDemographicsCharts({
                 >
                   {formatedStudentsGroupedByGender.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
-                {formatedStudentsGroupedByGender.map((val, index) => (
-                  <Cell
-                    key={val.gender}
-                    fill={studentsGroupByColors[index % studentsGroupByColors.length]}
-                  />
-                ))}
               </Pie>
               <Tooltip formatter={(value) => `${value} students`} />
               <Legend

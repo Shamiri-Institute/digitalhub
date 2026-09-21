@@ -431,7 +431,7 @@ export default function SchoolDetailsForm({
                                 selected={field.value || undefined}
                                 captionLayout="dropdown"
                                 onSelect={field.onChange}
-                                initialFocus
+                                autoFocus
                               />
                             </PopoverContent>
                           </Popover>

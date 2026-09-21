@@ -5,7 +5,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Label,
   Legend,
   Line,
@@ -92,7 +91,10 @@ export default function HubStudentsDetailsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={formatedStudentsDropOutReasons}
+                data={formatedStudentsDropOutReasons.map((reason, index) => ({
+                  ...reason,
+                  fill: randomColors[index],
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -107,9 +109,6 @@ export default function HubStudentsDetailsCharts({
                 >
                   {formatedStudentsDropOutReasons.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
-                {formatedStudentsDropOutReasons.map((reason, index) => (
-                  <Cell key={reason.name} fill={randomColors[index]} />
-                ))}
               </Pie>
               <Tooltip />
             </PieChart>
@@ -121,7 +120,10 @@ export default function HubStudentsDetailsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250}>
               <Pie
-                data={studentInfoCompletion}
+                data={studentInfoCompletion.map((entry) => ({
+                  ...entry,
+                  fill: entry.name === "actual" ? "#0085FF" : "#EFF6FF",
+                }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -135,9 +137,6 @@ export default function HubStudentsDetailsCharts({
                 >
                   {`${studentInfoCompletion.find((d) => d.name === "actual")?.value ?? 0}%`}
                 </Label>
-                {studentInfoCompletion.map((entry) => (
-                  <Cell key={entry.name} fill={entry.name === "actual" ? "#0085FF" : "#EFF6FF"} />
-                ))}
               </Pie>
               <Tooltip formatter={(value) => `${value}%`} />
             </PieChart>
