@@ -1,6 +1,8 @@
 "use client";
 
-import { ImplementerRole, type Prisma, type WeeklyFellowRatings } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
+import type { WeeklyFellowRatings } from "#/db/types";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { Plus } from "lucide-react";
 import { useState } from "react";

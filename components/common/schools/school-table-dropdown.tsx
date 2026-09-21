@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import Link from "next/link";
 import type { Dispatch, SetStateAction } from "react";
 import type { SchoolsTableData } from "#/components/common/schools/columns";

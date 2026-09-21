@@ -1,9 +1,9 @@
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import {
   TicketCategory as PrismaTicketCategory,
   TicketPriorityLevel as PrismaTicketPriorityLevel,
   TicketStatus as PrismaTicketStatus,
-} from "@prisma/client";
+} from "#/db/enums";
 import { z } from "zod";
 import { stringValidation } from "#/lib/utils";
 

@@ -1,6 +1,7 @@
 "use server";
 
-import { Prisma, type RecordingProcessingStatus } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import type { RecordingProcessingStatus } from "#/db/enums";
 import { revalidatePath } from "next/cache";
 import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
 import { db } from "#/lib/db";

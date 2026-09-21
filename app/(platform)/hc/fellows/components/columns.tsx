@@ -1,6 +1,8 @@
 "use client";
 
-import { ImplementerRole, type Prisma, type Supervisor } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
+import type { Supervisor } from "#/db/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";

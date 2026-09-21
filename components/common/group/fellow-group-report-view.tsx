@@ -1,6 +1,6 @@
 "use client";
 
-import type { FellowGroupReport } from "@prisma/client";
+import type { FellowGroupReport } from "#/db/types";
 import { format } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
 import {

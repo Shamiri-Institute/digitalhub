@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { redirect } from "next/navigation";
 import { currentSupervisor } from "#/app/auth";
 import TicketsDatatable from "#/components/common/ticket/tickets-datatable";

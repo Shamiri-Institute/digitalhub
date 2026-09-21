@@ -1,6 +1,7 @@
 "use client";
 
-import { ImplementerRole, type SessionName } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
+import type { SessionName } from "#/db/types";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import type { CurrentAdminUser } from "#/app/auth";

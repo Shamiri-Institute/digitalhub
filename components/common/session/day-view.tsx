@@ -1,7 +1,7 @@
 "use client";
 
 import { type CalendarDate, isToday } from "@internationalized/date";
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";

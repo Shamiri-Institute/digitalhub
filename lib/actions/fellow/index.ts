@@ -1,6 +1,7 @@
 "use server";
 
-import { ImplementerRole, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { format } from "date-fns";
 import type { z } from "zod";
 import { FellowDetailsSchema, MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";

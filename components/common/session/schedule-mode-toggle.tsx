@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { type Mode, useMode } from "./mode-provider";
 

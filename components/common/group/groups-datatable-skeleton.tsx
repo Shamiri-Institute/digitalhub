@@ -1,6 +1,7 @@
 "use client";
 
-import { ImplementerRole, type School } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
+import type { School } from "#/db/types";
 import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
 import { columns } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";

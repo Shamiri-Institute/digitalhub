@@ -1,6 +1,6 @@
 "use client";
 
-import type { FellowGroupReport } from "@prisma/client";
+import type { FellowGroupReport } from "#/db/types";
 import { format } from "date-fns";
 import { CheckCircle2, Eye } from "lucide-react";
 import { useState } from "react";

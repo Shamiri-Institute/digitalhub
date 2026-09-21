@@ -1,6 +1,7 @@
 "use client";
 
-import { ImplementerRole, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";

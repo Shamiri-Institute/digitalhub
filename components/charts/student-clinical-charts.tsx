@@ -1,6 +1,7 @@
 "use client";
 
-import type { ClinicalScreeningInfo, ClinicalSessionAttendance, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import type { ClinicalScreeningInfo, ClinicalSessionAttendance } from "#/db/types";
 import {
   Bar,
   BarChart,

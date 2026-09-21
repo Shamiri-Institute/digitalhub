@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
 

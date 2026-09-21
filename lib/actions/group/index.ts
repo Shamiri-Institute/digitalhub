@@ -1,6 +1,7 @@
 "use server";
 
-import { ImplementerRole, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import type { z } from "zod";
 import { currentFellow, getCurrentPersonnel } from "#/app/auth";
 import {

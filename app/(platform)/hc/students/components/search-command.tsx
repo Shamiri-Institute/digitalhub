@@ -1,6 +1,6 @@
 "use client";
 
-import type { Student } from "@prisma/client";
+import type { Student } from "#/db/types";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import {

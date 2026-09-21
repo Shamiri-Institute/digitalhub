@@ -1,4 +1,5 @@
-import type { ImplementerRole, School, SessionName } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
+import type { School, SessionName } from "#/db/types";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";

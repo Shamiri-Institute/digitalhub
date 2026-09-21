@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { signOut } from "next-auth/react";
 import { currentHubCoordinator } from "#/app/auth";
 import SchoolFellowsPage from "#/components/common/schools/school-fellows-page";

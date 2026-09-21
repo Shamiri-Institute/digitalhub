@@ -1,6 +1,7 @@
 "use client";
 
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import React, { type Dispatch, type SetStateAction } from "react";
 import StudentDetailsForm from "#/components/common/student/student-details-form";

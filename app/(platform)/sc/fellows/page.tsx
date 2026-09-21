@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { signOut } from "next-auth/react";
 import { loadFellowsData } from "#/app/(platform)/sc/actions";
 import { currentSupervisorLite } from "#/app/auth";

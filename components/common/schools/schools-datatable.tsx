@@ -1,6 +1,7 @@
 "use client";
 
-import { ImplementerRole, type Supervisor } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
+import type { Supervisor } from "#/db/types";
 import type { VisibilityState } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { useState } from "react";

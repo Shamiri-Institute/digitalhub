@@ -1,6 +1,6 @@
 "use client";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
 import { columns } from "#/components/common/fellow/columns";
 

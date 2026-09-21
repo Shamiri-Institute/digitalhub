@@ -1,6 +1,6 @@
 "use client";
 
-import type { Supervisor } from "@prisma/client";
+import type { Supervisor } from "#/db/types";
 import { usePathname } from "next/navigation";
 import { useEffect, useEffectEvent, useState } from "react";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";

@@ -1,5 +1,5 @@
 "use client";
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
 import Image from "next/image";

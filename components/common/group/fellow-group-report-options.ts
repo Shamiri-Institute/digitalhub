@@ -1,4 +1,4 @@
-import { AdaptationType, SupportType } from "@prisma/client";
+import { AdaptationType, SupportType } from "#/db/enums";
 
 export type ScaleOption = { value: number; label: string };
 

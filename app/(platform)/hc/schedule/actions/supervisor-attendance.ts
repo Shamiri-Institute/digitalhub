@@ -1,6 +1,6 @@
 "use server";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { getCurrentPersonnel } from "#/app/auth";
 import { db } from "#/lib/db";
 

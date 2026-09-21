@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import { getCurrentUserSession } from "#/app/auth";
 
 export class UnauthenticatedError extends Error {

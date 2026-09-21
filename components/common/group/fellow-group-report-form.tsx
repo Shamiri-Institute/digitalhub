@@ -1,6 +1,6 @@
 "use client";
 
-import { SupportType } from "@prisma/client";
+import { SupportType } from "#/db/enums";
 import { usePathname } from "next/navigation";
 import type * as React from "react";
 import { type Dispatch, type SetStateAction, useRef, useState } from "react";

@@ -1,4 +1,6 @@
-import { type Fellow, ImplementerRole, type Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
+import type { Fellow } from "#/db/types";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";

@@ -1,4 +1,5 @@
-import { ImplementerRole, type Prisma, type SessionStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole, type SessionStatus } from "#/db/enums";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { CheckCheck, InfoIcon } from "lucide-react";

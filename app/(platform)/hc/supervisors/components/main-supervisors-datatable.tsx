@@ -1,6 +1,7 @@
 "use client";
 
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useState } from "react";
 import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";

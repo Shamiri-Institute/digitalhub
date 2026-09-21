@@ -1,6 +1,7 @@
 "use server";
 
-import { Prisma, sessionTypes } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { sessionTypes } from "#/db/enums";
 import { format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { revalidatePath } from "next/cache";

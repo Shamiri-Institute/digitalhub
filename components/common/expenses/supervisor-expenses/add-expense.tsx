@@ -1,6 +1,6 @@
 "use client";
 
-import type { Supervisor } from "@prisma/client";
+import type { Supervisor } from "#/db/types";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";

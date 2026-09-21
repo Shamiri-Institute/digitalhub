@@ -1,5 +1,6 @@
 "use client";
-import type { ImplementerRole, Project } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
+import type { Project } from "#/db/types";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { useState } from "react";

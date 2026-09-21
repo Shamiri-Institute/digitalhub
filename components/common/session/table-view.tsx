@@ -1,5 +1,6 @@
 import type { CalendarDate } from "@internationalized/date";
-import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";

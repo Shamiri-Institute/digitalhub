@@ -1,4 +1,5 @@
-import type { Prisma, School } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import type { School } from "#/db/types";
 import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";

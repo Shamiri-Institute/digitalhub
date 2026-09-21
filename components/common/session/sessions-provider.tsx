@@ -1,5 +1,6 @@
 import { type CalendarDate, isSameDay } from "@internationalized/date";
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import {
   createContext,
   type Dispatch,

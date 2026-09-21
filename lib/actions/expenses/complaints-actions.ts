@@ -1,6 +1,7 @@
 "use server";
 
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import { revalidatePath } from "next/cache";
 import {
   currentHubCoordinator,

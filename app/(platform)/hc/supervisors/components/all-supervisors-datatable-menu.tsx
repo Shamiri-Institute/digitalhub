@@ -1,6 +1,6 @@
 "use client";
 
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "#/db/enums";
 import type { SupervisorsData } from "#/app/(platform)/hc/supervisors/components/columns";
 import { Icons } from "#/components/icons";
 import {

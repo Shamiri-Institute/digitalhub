@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import { signOut } from "next-auth/react";
 import { getCurrentUserSession } from "#/app/auth";
 import FellowsDatatableSkeleton from "#/components/common/fellow/fellows-datatable-skeleton";

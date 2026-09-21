@@ -1,6 +1,8 @@
 "use client";
 
-import type { ImplementerRole, InterventionSessionRating, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
+import type { InterventionSessionRating } from "#/db/types";
 import { addDays, addHours, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "#/db/enums";
 import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 import { SessionDetail } from "#/components/common/session/session-list";

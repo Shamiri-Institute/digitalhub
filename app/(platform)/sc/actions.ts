@@ -1,5 +1,5 @@
 "use server";
-import type { Fellow } from "@prisma/client";
+import type { Fellow } from "#/db/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { currentSupervisor, currentSupervisorLite } from "#/app/auth";

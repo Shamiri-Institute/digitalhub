@@ -1,4 +1,4 @@
-import { SessionStatus } from "@prisma/client";
+import { SessionStatus } from "#/db/enums";
 import { createContext, type Dispatch, type SetStateAction } from "react";
 
 const sessionTypeFilterOptions: { [key: string]: boolean } = {};
