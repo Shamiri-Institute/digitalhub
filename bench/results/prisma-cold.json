@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "label": "prisma-cold",
+    "date": "2026-09-21T09:04:41.051Z",
+    "gitSha": "aca22fc5",
+    "node": "v24.17.0",
+    "next": "16.3.4",
+    "orm": "prisma 6.19.3",
+    "runs": 10
+  },
+  "processWallMs": {
+    "p50": 96.3,
+    "p95": 149
+  },
+  "importMs": {
+    "p50": 27.9,
+    "p95": 36.8
+  },
+  "firstQueryMs": {
+    "p50": 19.2,
+    "p95": 24.2
+  },
+  "sizesKb": {
+    "node_modules/@prisma": 118160,
+    "node_modules/.prisma": 31472,
+    "node_modules/prisma": 70188,
+    ".next/server": 103736
+  }
+}
