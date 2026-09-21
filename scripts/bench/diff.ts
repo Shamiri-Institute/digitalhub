@@ -12,15 +12,47 @@ if (!dirA || !dirB) {
 
 // Things that legitimately differ between two builds or two requests of the same data.
 function normalize(html: string) {
-  return html
-    .replace(/\/_next\/static\/[A-Za-z0-9_-]+\//g, "/_next/static/BUILD/")
-    .replace(/"buildId":"[^"]+"/g, '"buildId":"BUILD"')
-    .replace(/\?dpl=[A-Za-z0-9_-]+/g, "")
-    .replace(/nonce="[^"]+"/g, 'nonce=""')
-    .replace(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\b/g, (iso) =>
-      // Session expiry and "now" style timestamps move between runs; keep the date only.
-      iso.slice(0, 10),
-    );
+  return (
+    html
+      .replace(/\/_next\/static\/[A-Za-z0-9_-]+\//g, "/_next/static/BUILD/")
+      .replace(/"buildId":"[^"]+"/g, '"buildId":"BUILD"')
+      .replace(/\?dpl=[A-Za-z0-9_-]+/g, "")
+      .replace(/nonce="[^"]+"/g, 'nonce=""')
+      // Sentry injects a fresh trace id and baggage per request.
+      .replace(
+        /<meta name="sentry-trace" content="[^"]*"\/>/g,
+        '<meta name="sentry-trace" content=""/>',
+      )
+      .replace(/<meta name="baggage" content="[^"]*"\/>/g, '<meta name="baggage" content=""/>')
+      .replace(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\b/g, (iso) =>
+        // Session expiry and "now" style timestamps move between runs; keep the date only.
+        iso.slice(0, 10),
+      )
+  );
+}
+
+/**
+ * React streams Suspense boundaries in whatever order they resolve, so two renders of the same
+ * data can differ in chunk order and in RSC row numbering. This reduces a page to an
+ * order-independent form: sorted flight rows with row ids and module references removed, plus
+ * sorted streamed HTML segments.
+ */
+function canonical(html: string) {
+  const flightRows: string[] = [];
+  for (const m of html.matchAll(/self\.__next_f\.push\(\[1,"((?:[^"\\]|\\.)*)"\]\)/g)) {
+    const payload = JSON.parse(`"${m[1]}"`) as string;
+    for (const row of payload.split("\n")) {
+      const body = row.replace(/^[0-9a-f]+:/, "");
+      if (!body || body.startsWith("I[") || body.startsWith("HL[")) continue;
+      flightRows.push(body.replace(/\$L?[0-9a-f]+\b/g, "$REF"));
+    }
+  }
+  const markup = html
+    .replace(/<script[\s\S]*?<\/script>/g, "")
+    .replace(/\b(id|hidden id)="(S|B|P):\d+"/g, '$1="$2:N"')
+    .replace(/\$RC\("B:\d+","S:\d+"\)/g, "$RC()");
+  const segments = markup.split(/(?=<div hidden id="S:N">)/).toSorted();
+  return `${segments.join("\n")}\n${flightRows.toSorted().join("\n")}`;
 }
 
 function firstDifference(a: string, b: string) {
@@ -35,6 +67,7 @@ const files = readdirSync(dirA)
   .filter((f) => f.endsWith(".html"))
   .toSorted();
 let same = 0;
+let sameAfterReorder = 0;
 const differing: string[] = [];
 const missing: string[] = [];
 for (const file of files) {
@@ -49,6 +82,10 @@ for (const file of files) {
     same++;
     continue;
   }
+  if (canonical(a) === canonical(b)) {
+    sameAfterReorder++;
+    continue;
+  }
   differing.push(file);
   const d = firstDifference(a, b);
   console.log(`\n## ${file} differs (${a.length} vs ${b.length} chars, first at ${d.at})`);
@@ -57,7 +94,7 @@ for (const file of files) {
 }
 
 console.log(
-  `\n${files.length} pages: ${same} identical, ${differing.length} differ, ${missing.length} missing in ${dirB}.`,
+  `\n${files.length} pages: ${same} identical, ${sameAfterReorder} identical after streaming reorder, ${differing.length} differ, ${missing.length} missing in ${dirB}.`,
 );
 if (differing.length > 0) console.log(`Differ: ${differing.join(", ")}`);
 if (missing.length > 0) console.log(`Missing: ${missing.join(", ")}`);
