@@ -4,6 +4,7 @@ const RETRYABLE_STATUSES = new Set([408, 429]);
 
 async function fetchExistingDocument(url: string, attempts = 3): Promise<Response> {
   let lastError: unknown;
+  /* oxlint-disable eslint/no-await-in-loop -- each retry waits for the previous attempt and its backoff */
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
       const res = await fetch(url);
@@ -18,6 +19,7 @@ async function fetchExistingDocument(url: string, attempts = 3): Promise<Respons
       await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
     }
   }
+  /* oxlint-enable eslint/no-await-in-loop */
   throw lastError instanceof Error
     ? lastError
     : new Error("Could not load the existing attendance document");
