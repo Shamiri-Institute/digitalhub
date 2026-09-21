@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { columns } from "#/components/common/fellow-reports/weekly-fellow-evaluation/columns";
 import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import DataTable from "#/components/data-table";
-import { Skeleton } from "#/components/ui/skeleton";
+import { SkeletonCell } from "#/components/ui/skeleton";
 
 export default function WeeklyFellowEvaluationTableSkeleton() {
   const loadingColumns: ColumnDef<WeeklyFellowEvaluation>[] = columns.map((column) => {
@@ -13,11 +13,7 @@ export default function WeeklyFellowEvaluationTableSkeleton() {
       accessorFn: () => null,
       header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
       id: columnId,
-      cell: () => {
-        return columnId !== "checkbox" && columnId !== "button" ? (
-          <Skeleton className="h-5 w-full bg-gray-200" />
-        ) : null;
-      },
+      cell: columnId !== "checkbox" && columnId !== "button" ? SkeletonCell : undefined,
     };
   });
 

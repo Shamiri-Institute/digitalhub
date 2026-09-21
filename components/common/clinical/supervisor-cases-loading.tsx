@@ -2,7 +2,7 @@
 
 import DataTable from "#/components/data-table";
 import { Separator } from "#/components/ui/separator";
-import { Skeleton } from "#/components/ui/skeleton";
+import { SkeletonCell } from "#/components/ui/skeleton";
 
 export default function SupervisorTableSkeleton() {
   const loadingColumns = [
@@ -14,7 +14,7 @@ export default function SupervisorTableSkeleton() {
   ].map((column) => ({
     header: column.header,
     id: column.id,
-    cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+    cell: SkeletonCell,
   }));
 
   return (
