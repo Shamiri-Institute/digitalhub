@@ -1,10 +1,13 @@
 import "server-only";
 
-import { ImplementerRole } from "#/db/enums";
+import { and, eq, isNull, or } from "drizzle-orm";
+
 import { currentSupervisorLite } from "#/app/auth";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { fellow as fellowTable } from "#/db/schema";
 import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
 import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
 import {
   buildRecordingsS3Key,
   generateRecordingFilename,
@@ -28,48 +31,53 @@ export async function authorizeRecordingUpload(
 
   const supervisor = await currentSupervisorLite();
   if (!supervisor?.profile?.id) throw new UploadAuthorizationError("Forbidden", 403);
+  const supervisorId = supervisor.profile.id;
 
   const normalized = normalizeContentType(params.contentType);
   const extension = extensionForRecordingContentType(normalized);
   if (!extension) throw new UploadAuthorizationError("Unsupported content type");
   if (params.size > MAX_FILE_SIZE) throw new UploadAuthorizationError("File too large");
 
-  const group = await db.interventionGroup.findFirst({
-    where: {
-      id: params.groupId,
-      leader: {
-        supervisorId: supervisor.profile.id,
-        OR: [{ droppedOut: false }, { droppedOut: null }],
-      },
-    },
-    select: {
-      id: true,
-      groupName: true,
-      schoolId: true,
-      school: { select: { schoolName: true } },
-      leader: { select: { id: true, fellowName: true } },
+  // Active fellows led by this supervisor; the group must belong to one of them.
+  const supervisedFellows = db
+    .select({ id: fellowTable.id })
+    .from(fellowTable)
+    .where(
+      and(
+        eq(fellowTable.supervisorId, supervisorId),
+        or(eq(fellowTable.droppedOut, false), isNull(fellowTable.droppedOut)),
+      ),
+    );
+
+  const group = await db.query.interventionGroup.findFirst({
+    where: (g, { and, eq, inArray }) =>
+      and(eq(g.id, params.groupId), inArray(g.leaderId, supervisedFellows)),
+    columns: { id: true, groupName: true, schoolId: true },
+    with: {
+      school: { columns: { schoolName: true } },
+      leader: { columns: { id: true, fellowName: true } },
     },
   });
   if (!group) throw new UploadAuthorizationError("Forbidden", 403);
 
   const fellow = group.leader;
 
-  const session = await db.interventionSession.findFirst({
-    where: { id: params.sessionId, schoolId: group.schoolId, occurred: true },
-    select: { id: true, sessionType: true },
+  const session = await db.query.interventionSession.findFirst({
+    where: (s, { and, eq }) =>
+      and(eq(s.id, params.sessionId), eq(s.schoolId, group.schoolId), eq(s.occurred, true)),
+    columns: { id: true, sessionType: true },
   });
   if (!session) throw new UploadAuthorizationError("Forbidden", 403);
 
-  const existing = await db.sessionRecording.findUnique({
-    where: {
-      unique_recording_per_session: {
-        fellowId: fellow.id,
-        schoolId: group.schoolId,
-        groupId: group.id,
-        sessionId: session.id,
-      },
-    },
-    select: { id: true },
+  const existing = await db.query.sessionRecording.findFirst({
+    where: (r, { and, eq }) =>
+      and(
+        eq(r.fellowId, fellow.id),
+        eq(r.schoolId, group.schoolId),
+        eq(r.groupId, group.id),
+        eq(r.sessionId, session.id),
+      ),
+    columns: { id: true },
   });
   if (existing)
     throw new UploadAuthorizationError("A recording already exists for this session", 409);

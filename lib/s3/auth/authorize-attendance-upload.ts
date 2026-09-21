@@ -1,9 +1,9 @@
 import "server-only";
 
-import { ImplementerRole } from "#/db/enums";
 import { currentFellow } from "#/app/auth";
+import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
 import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
-import { db } from "#/lib/db";
 import { buildAttendanceS3Key } from "#/lib/s3/key-builders/build-attendance-s3-key";
 import { UploadAuthorizationError } from "#/lib/s3/s3.errors";
 import { MAX_FILE_SIZE, type S3AuthParams, type UploadTarget } from "#/lib/s3/s3.types";
@@ -25,20 +25,17 @@ export async function authorizeAttendanceUpload(
     throw new UploadAuthorizationError("Unsupported content type");
   if (params.size > MAX_FILE_SIZE) throw new UploadAuthorizationError("File too large");
 
-  const group = await db.interventionGroup.findFirst({
-    where: { id: params.groupId, leaderId: profile.id },
-    select: {
-      id: true,
-      groupName: true,
-      schoolId: true,
-      school: { select: { schoolName: true } },
-    },
+  const group = await db.query.interventionGroup.findFirst({
+    where: (g, { and, eq }) => and(eq(g.id, params.groupId), eq(g.leaderId, profile.id)),
+    columns: { id: true, groupName: true, schoolId: true },
+    with: { school: { columns: { schoolName: true } } },
   });
   if (!group) throw new UploadAuthorizationError("Forbidden", 403);
 
-  const session = await db.interventionSession.findFirst({
-    where: { id: params.sessionId, schoolId: group.schoolId, occurred: true },
-    select: { id: true, sessionType: true, sessionDate: true },
+  const session = await db.query.interventionSession.findFirst({
+    where: (s, { and, eq }) =>
+      and(eq(s.id, params.sessionId), eq(s.schoolId, group.schoolId), eq(s.occurred, true)),
+    columns: { id: true, sessionType: true, sessionDate: true },
   });
   if (!session) throw new UploadAuthorizationError("Forbidden", 403);
 

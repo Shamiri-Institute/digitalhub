@@ -1,9 +1,18 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+
+import { db, isUniqueViolation, queryRaw, type TransactionCursor } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
+import {
+  clinicalLead,
+  hubCoordinator,
+  ticketEscalations,
+  ticketReassignments,
+  ticketResolutions,
+  tickets,
+} from "#/db/schema";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { db } from "#/lib/db";
 import type { ActionResponse } from "#/types/actions.types";
 import {
   type CreateTicketEscalationPayload,
@@ -52,18 +61,18 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
       createdById,
     };
 
-    await db.$transaction(async (transaction) => {
-      const ticket = await transaction.tickets.create({
-        data: { ...ticketPayload, status: "ESCALATED" },
-      });
+    await db.transaction(async (tx) => {
+      const [ticket] = await tx
+        .insert(tickets)
+        .values({ ...ticketPayload, status: "ESCALATED" })
+        .returning({ id: tickets.id });
+      if (!ticket) throw new Error("Ticket insert returned no row");
 
-      await transaction.ticketEscalations.create({
-        data: {
-          ticketId: ticket.id,
-          escalatedById: createdById,
-          escalatedToId: escalationRecipientId,
-          escalationReason: ticketPayload.description,
-        },
+      await tx.insert(ticketEscalations).values({
+        ticketId: ticket.id,
+        escalatedById: createdById,
+        escalatedToId: escalationRecipientId,
+        escalationReason: ticketPayload.description,
       });
     });
 
@@ -91,21 +100,26 @@ export async function getAllTickets(filters: TicketFilters): Promise<ActionRespo
   }
 }
 
+/** An escalation on the ticket where the user is either party; used as the view permission. */
+function escalationParticipation(ticketId: string, userId: string) {
+  return db.query.ticketEscalations.findFirst({
+    where: (e, { and, eq, or }) =>
+      and(eq(e.ticketId, ticketId), or(eq(e.escalatedById, userId), eq(e.escalatedToId, userId))),
+  });
+}
+
 export async function getEscalationsPerTicket(
   ticketId: string,
 ): Promise<ActionResponse<TicketEscalation[]>> {
   try {
     const { userId, implementerId } = await requireAuthRole(...Object.values(ImplementerRole));
 
-    const authorized = await db.ticketEscalations.findFirst({
-      where: { ticketId, OR: [{ escalatedById: userId }, { escalatedToId: userId }] },
-      take: 1,
-    });
+    const authorized = await escalationParticipation(ticketId, userId);
     if (!authorized) throw new Error("Not authorized to view this ticket's escalations");
 
-    const escalations = await db.ticketEscalations.findMany({
-      where: { ticketId },
-      orderBy: { createdAt: "asc" },
+    const escalations = await db.query.ticketEscalations.findMany({
+      where: (e, { eq }) => eq(e.ticketId, ticketId),
+      orderBy: (e, { asc }) => asc(e.createdAt),
     });
 
     if (escalations.length === 0) throw new Error("No escalations were found for this ticket");
@@ -141,6 +155,29 @@ export async function getEscalationsPerTicket(
   }
 }
 
+/** The newest escalation of a ticket together with the ticket's status. */
+function latestEscalationWithTicket(tx: TransactionCursor, ticketId: string) {
+  return tx.query.ticketEscalations.findFirst({
+    where: (e, { eq }) => eq(e.ticketId, ticketId),
+    orderBy: (e, { desc }) => desc(e.createdAt),
+    with: { ticket: { columns: { status: true } } },
+  });
+}
+
+/** Prisma's `update` threw when the row was missing; keep that contract. */
+async function setTicketStatus(
+  tx: TransactionCursor,
+  ticketId: string,
+  status: "ESCALATED" | "RESOLVED",
+) {
+  const updated = await tx
+    .update(tickets)
+    .set({ status })
+    .where(eq(tickets.id, ticketId))
+    .returning({ id: tickets.id });
+  if (updated.length === 0) throw new Error("Ticket not found");
+}
+
 export async function createEscalation(
   ticketId: string,
   escalationReason: string,
@@ -166,16 +203,8 @@ export async function createEscalation(
       escalationReason,
     };
 
-    await db.$transaction(async (tx) => {
-      const latestEscalation = await tx.ticketEscalations.findFirst({
-        where: { ticketId },
-        orderBy: { createdAt: "desc" },
-        include: {
-          ticket: {
-            select: { status: true },
-          },
-        },
-      });
+    await db.transaction(async (tx) => {
+      const latestEscalation = await latestEscalationWithTicket(tx, ticketId);
 
       if (!latestEscalation) {
         throw new Error("No escalation exists for this ticket");
@@ -189,12 +218,9 @@ export async function createEscalation(
         throw new Error("You are not the current escalation recipient of this ticket");
       }
 
-      await tx.ticketEscalations.create({ data: escalationData });
+      await tx.insert(ticketEscalations).values(escalationData);
 
-      await tx.tickets.update({
-        where: { id: ticketId },
-        data: { status: "ESCALATED" },
-      });
+      await setTicketStatus(tx, ticketId, "ESCALATED");
     });
 
     return { success: true, message: "Escalation created successfully" };
@@ -210,16 +236,8 @@ export async function resolveTicket(
   try {
     const { userId } = await requireAuthRole(...ESCALATION_RECIPIENT_ROLES);
 
-    await db.$transaction(async (tx) => {
-      const latestEscalation = await tx.ticketEscalations.findFirst({
-        where: { ticketId },
-        orderBy: { createdAt: "desc" },
-        include: {
-          ticket: {
-            select: { status: true },
-          },
-        },
-      });
+    await db.transaction(async (tx) => {
+      const latestEscalation = await latestEscalationWithTicket(tx, ticketId);
 
       if (!latestEscalation) throw new Error("No escalation exists for this ticket");
 
@@ -231,18 +249,13 @@ export async function resolveTicket(
         throw new Error("Only the current escalation recipient can resolve this ticket");
       }
 
-      await tx.ticketResolutions.create({
-        data: {
-          ticketId,
-          resolvedById: userId,
-          resolutionReason,
-        },
+      await tx.insert(ticketResolutions).values({
+        ticketId,
+        resolvedById: userId,
+        resolutionReason,
       });
 
-      await tx.tickets.update({
-        where: { id: ticketId },
-        data: { status: "RESOLVED" },
-      });
+      await setTicketStatus(tx, ticketId, "RESOLVED");
     });
 
     return { success: true, message: "Ticket resolved successfully" };
@@ -266,12 +279,8 @@ export async function reassignTicket(
       throw new Error("You cannot reassign a ticket to yourself");
     }
 
-    await db.$transaction(async (tx) => {
-      const escalation = await tx.ticketEscalations.findFirst({
-        where: { ticketId },
-        orderBy: { createdAt: "desc" },
-        include: { ticket: { select: { status: true } } },
-      });
+    await db.transaction(async (tx) => {
+      const escalation = await latestEscalationWithTicket(tx, ticketId);
 
       if (!escalation) throw new Error("No escalation exists for this ticket");
 
@@ -283,8 +292,8 @@ export async function reassignTicket(
         throw new Error("Only the current escalation recipient can reassign this ticket");
       }
 
-      const existingReassignment = await tx.ticketReassignments.findFirst({
-        where: { escalationId: escalation.id },
+      const existingReassignment = await tx.query.ticketReassignments.findFirst({
+        where: (r, { eq }) => eq(r.escalationId, escalation.id),
       });
 
       if (existingReassignment) throw new Error("This ticket has already been reassigned");
@@ -299,22 +308,21 @@ export async function reassignTicket(
         escalationId: escalation.id,
       };
 
-      await tx.ticketReassignments.create({ data: reassignmentData });
+      await tx.insert(ticketReassignments).values(reassignmentData);
 
-      await tx.ticketEscalations.update({
-        where: { id: escalation.id },
-        data: { escalatedToId: reassignedTo },
-      });
+      const updatedEscalations = await tx
+        .update(ticketEscalations)
+        .set({ escalatedToId: reassignedTo })
+        .where(eq(ticketEscalations.id, escalation.id))
+        .returning({ id: ticketEscalations.id });
+      if (updatedEscalations.length === 0) throw new Error("Escalation not found");
 
-      await tx.tickets.update({
-        where: { id: ticketId },
-        data: { status: "ESCALATED" },
-      });
+      await setTicketStatus(tx, ticketId, "ESCALATED");
     });
 
     return { success: true, message: "Ticket reassigned successfully" };
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (isUniqueViolation(error)) {
       return { success: false, message: "This ticket has already been reassigned" };
     }
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
@@ -322,15 +330,16 @@ export async function reassignTicket(
 }
 
 async function assertReassignmentEligible(
-  tx: Prisma.TransactionClient,
+  tx: TransactionCursor,
   actor: { role: ImplementerRole; implementerId: string; identifier: string | null },
   reassignedTo: string,
 ): Promise<void> {
   const { role, implementerId, identifier } = actor;
 
-  const targetMember = await tx.implementerMember.findFirst({
-    where: { userId: reassignedTo, role, implementerId },
-    select: { identifier: true },
+  const targetMember = await tx.query.implementerMember.findFirst({
+    where: (m, { and, eq }) =>
+      and(eq(m.userId, reassignedTo), eq(m.role, role), eq(m.implementerId, implementerId)),
+    columns: { identifier: true },
   });
 
   if (!targetMember?.identifier) {
@@ -340,14 +349,21 @@ async function assertReassignmentEligible(
   if (role === ImplementerRole.HUB_COORDINATOR) {
     if (!identifier) throw new Error("Your account is not linked to a hub coordinator profile");
 
-    const target = await tx.hubCoordinator.findFirst({
-      where: {
-        id: targetMember.identifier,
-        archivedAt: null,
-        assignedHub: { coordinators: { some: { id: identifier } } },
-      },
-      select: { id: true },
-    });
+    // The target's hub must be one the acting coordinator is assigned to.
+    const actorHubs = tx
+      .select({ hubId: hubCoordinator.assignedHubId })
+      .from(hubCoordinator)
+      .where(eq(hubCoordinator.id, identifier));
+    const [target] = await tx
+      .select({ id: hubCoordinator.id })
+      .from(hubCoordinator)
+      .where(
+        and(
+          eq(hubCoordinator.id, targetMember.identifier),
+          isNull(hubCoordinator.archivedAt),
+          inArray(hubCoordinator.assignedHubId, actorHubs),
+        ),
+      );
 
     if (!target) {
       throw new Error("The selected hub coordinator is inactive or not in your hub");
@@ -358,13 +374,19 @@ async function assertReassignmentEligible(
   if (role === ImplementerRole.CLINICAL_LEAD) {
     if (!identifier) throw new Error("Your account is not linked to a clinical lead profile");
 
-    const target = await tx.clinicalLead.findFirst({
-      where: {
-        id: targetMember.identifier,
-        assignedHub: { clinicalLeads: { some: { id: identifier } } },
-      },
-      select: { id: true },
-    });
+    const actorHubs = tx
+      .select({ hubId: clinicalLead.assignedHubId })
+      .from(clinicalLead)
+      .where(eq(clinicalLead.id, identifier));
+    const [target] = await tx
+      .select({ id: clinicalLead.id })
+      .from(clinicalLead)
+      .where(
+        and(
+          eq(clinicalLead.id, targetMember.identifier),
+          inArray(clinicalLead.assignedHubId, actorHubs),
+        ),
+      );
 
     if (!target) {
       throw new Error("The selected clinical lead is inactive or not in your hub");
@@ -378,30 +400,30 @@ export async function getTicketEscalationStatus(
   try {
     const { userId, role } = await requireAuthRole(...Object.values(ImplementerRole));
 
-    const ticket = await db.tickets.findUnique({
-      where: { id: ticketId },
-      select: { status: true },
+    const ticket = await db.query.tickets.findFirst({
+      where: (t, { eq }) => eq(t.id, ticketId),
+      columns: { status: true },
     });
 
     if (!ticket) throw new Error("Ticket not found");
 
-    const latestEscalation = await db.ticketEscalations.findFirst({
-      where: { ticketId },
-      orderBy: { createdAt: "desc" },
+    const latestEscalation = await db.query.ticketEscalations.findFirst({
+      where: (e, { eq }) => eq(e.ticketId, ticketId),
+      orderBy: (e, { desc }) => desc(e.createdAt),
     });
 
     const isCurrentRecipient = latestEscalation?.escalatedToId === userId;
 
     const existingReassignment = latestEscalation
-      ? await db.ticketReassignments.findFirst({
-          where: { escalationId: latestEscalation.id },
+      ? await db.query.ticketReassignments.findFirst({
+          where: (r, { eq }) => eq(r.escalationId, latestEscalation.id),
         })
       : null;
 
     const hasReassignment = Boolean(existingReassignment);
 
-    const existingResolution = await db.ticketResolutions.findFirst({
-      where: { ticketId },
+    const existingResolution = await db.query.ticketResolutions.findFirst({
+      where: (r, { eq }) => eq(r.ticketId, ticketId),
     });
 
     const hasResolution = Boolean(existingResolution);
@@ -470,25 +492,17 @@ export async function getTicketResolution(
   try {
     const { userId } = await requireAuthRole();
 
-    const escalationParticipant = await db.ticketEscalations.findFirst({
-      where: {
-        ticketId,
-        OR: [{ escalatedById: userId }, { escalatedToId: userId }],
-      },
-      take: 1,
-    });
+    const escalationParticipant = await escalationParticipation(ticketId, userId);
 
     if (!escalationParticipant)
       throw new Error("You are not authorized to view this ticket's resolution");
 
-    const resolution = await db.ticketResolutions.findFirst({
-      where: { ticketId },
-      include: {
+    const resolution = await db.query.ticketResolutions.findFirst({
+      where: (r, { eq }) => eq(r.ticketId, ticketId),
+      with: {
         resolvedByUser: {
-          include: {
-            memberships: {
-              select: { role: true },
-            },
+          with: {
+            memberships: { columns: { role: true } },
           },
         },
       },
@@ -521,9 +535,9 @@ export async function getTicketReassignments(
   try {
     const { userId, implementerId } = await requireAuthRole(...Object.values(ImplementerRole));
 
-    const ticket = await db.tickets.findUnique({
-      where: { id: ticketId },
-      select: { createdById: true },
+    const ticket = await db.query.tickets.findFirst({
+      where: (t, { eq }) => eq(t.id, ticketId),
+      columns: { createdById: true },
     });
 
     if (!ticket) throw new Error("Ticket not found");
@@ -531,22 +545,17 @@ export async function getTicketReassignments(
     const isCreator = ticket.createdById === userId;
 
     if (!isCreator) {
-      const isReassignmentParty = await db.ticketReassignments.findFirst({
-        where: {
-          ticketId,
-          OR: [{ reassignedFrom: userId }, { reassignedTo: userId }],
-        },
-        select: { id: true },
+      const isReassignmentParty = await db.query.ticketReassignments.findFirst({
+        where: (r, { and, eq, or }) =>
+          and(
+            eq(r.ticketId, ticketId),
+            or(eq(r.reassignedFrom, userId), eq(r.reassignedTo, userId)),
+          ),
+        columns: { id: true },
       });
 
       if (!isReassignmentParty) {
-        const escalationParticipant = await db.ticketEscalations.findFirst({
-          where: {
-            ticketId,
-            OR: [{ escalatedById: userId }, { escalatedToId: userId }],
-          },
-          take: 1,
-        });
+        const escalationParticipant = await escalationParticipation(ticketId, userId);
 
         if (!escalationParticipant) {
           throw new Error("You are not authorized to view this ticket's reassignments");
@@ -554,9 +563,9 @@ export async function getTicketReassignments(
       }
     }
 
-    const reassignments = await db.ticketReassignments.findMany({
-      where: { ticketId },
-      orderBy: { createdAt: "asc" },
+    const reassignments = await db.query.ticketReassignments.findMany({
+      where: (r, { eq }) => eq(r.ticketId, ticketId),
+      orderBy: (r, { asc }) => asc(r.createdAt),
     });
 
     if (reassignments.length === 0) {
@@ -606,7 +615,7 @@ async function fetchTicketsForUser(
   implementerId: string,
   filters: TicketFilters,
 ): Promise<FullTicket[]> {
-  const rows = await db.$queryRaw<FullTicketPendingTier[]>`
+  const rows = await queryRaw<FullTicketPendingTier>(sql`
     WITH user_tickets AS (
       SELECT DISTINCT t.id
       FROM tickets t
@@ -616,7 +625,7 @@ async function fetchTicketsForUser(
           OR e.escalated_to = ${userId}
           OR e.escalated_by = ${userId}
          )
-         ${filters.status ? Prisma.sql`AND t.status = ${filters.status}` : Prisma.empty}
+         ${filters.status ? sql`AND t.status = ${filters.status}` : sql.empty()}
     ),
     latest_escalations AS (
       SELECT
@@ -640,7 +649,7 @@ async function fetchTicketsForUser(
     LEFT JOIN latest_escalations le
       ON t.id = le.ticket_id AND le.rn = 1
     ORDER BY t.created_at DESC
-  `;
+  `);
 
   const currentTierIds = rows.map((r) => r.currentRecipientId).filter((id): id is string => !!id);
   const roleMap = await getUserNamesAndRolesById(currentTierIds, implementerId);
@@ -665,7 +674,7 @@ const fetchEscalationRecipientHandlers: Record<
   FetchEscalationRecipientHandler
 > = {
   SUPERVISOR: async (userId) => {
-    const result = await db.$queryRaw<{ supervisor_user_id: string }[]>`
+    const result = await queryRaw<{ supervisor_user_id: string }>(sql`
       SELECT im2.user_id AS supervisor_user_id
       FROM implementer_members im1
       JOIN fellows f ON f.id = im1.identifier
@@ -675,7 +684,7 @@ const fetchEscalationRecipientHandlers: Record<
         AND im1.role = 'FELLOW'
         AND im2.role = 'SUPERVISOR'
       LIMIT 1;
-    `;
+    `);
 
     const supervisorUserId = result[0]?.supervisor_user_id;
     if (!supervisorUserId) throw new Error("No supervisor found for this fellow");
@@ -683,7 +692,7 @@ const fetchEscalationRecipientHandlers: Record<
     return supervisorUserId;
   },
   HUB_COORDINATOR: async (userId, implementerId) => {
-    const result = await db.$queryRaw<{ hub_coordinator_user_id: string }[]>`
+    const result = await queryRaw<{ hub_coordinator_user_id: string }>(sql`
       SELECT hc_member.user_id as hub_coordinator_user_id
       FROM implementer_members sup_member
       JOIN supervisors s ON s.id = sup_member.identifier
@@ -696,7 +705,7 @@ const fetchEscalationRecipientHandlers: Record<
         AND sup_member.role = 'SUPERVISOR'
         AND sup_member.implementer_id = ${implementerId}
       LIMIT 1
-    `;
+    `);
 
     const hubCoordinatorUserId = result[0]?.hub_coordinator_user_id;
     if (!hubCoordinatorUserId) throw new Error("No hub coordinator found for this supervisor");
@@ -704,7 +713,7 @@ const fetchEscalationRecipientHandlers: Record<
     return hubCoordinatorUserId;
   },
   CLINICAL_LEAD: async (userId, implementerId) => {
-    const result = await db.$queryRaw<{ clinical_lead_user_id: string }[]>`
+    const result = await queryRaw<{ clinical_lead_user_id: string }>(sql`
       SELECT cl_member.user_id as clinical_lead_user_id
       FROM implementer_members sup_member
       JOIN supervisors s ON s.id = sup_member.identifier
@@ -717,7 +726,7 @@ const fetchEscalationRecipientHandlers: Record<
         AND sup_member.role = 'SUPERVISOR'::implementer_roles
         AND sup_member.implementer_id = ${implementerId}
       LIMIT 1
-    `;
+    `);
 
     const clinicalLeadUserId = result[0]?.clinical_lead_user_id;
     if (!clinicalLeadUserId) throw new Error("No clinical lead found for this supervisor");
@@ -725,18 +734,23 @@ const fetchEscalationRecipientHandlers: Record<
     return clinicalLeadUserId;
   },
   ADMIN: async () => {
-    const adminUsers = await db.adminUser.findMany({
-      orderBy: { createdAt: "desc" },
+    const adminUsers = await db.query.adminUser.findMany({
+      orderBy: (a, { desc }) => desc(a.createdAt),
     });
+    if (adminUsers.length === 0) throw new Error("No admin user found");
 
-    const adminMemberships = await db.implementerMember.findMany({
-      where: {
-        role: "ADMIN",
-        identifier: { in: adminUsers.map((a) => a.id) },
-      },
-      select: { userId: true, createdAt: true },
-      orderBy: { createdAt: "desc" },
-      take: 1,
+    const adminMemberships = await db.query.implementerMember.findMany({
+      where: (m, { and, eq, inArray }) =>
+        and(
+          eq(m.role, "ADMIN"),
+          inArray(
+            m.identifier,
+            adminUsers.map((a) => a.id),
+          ),
+        ),
+      columns: { userId: true, createdAt: true },
+      orderBy: (m, { desc }) => desc(m.createdAt),
+      limit: 1,
     });
 
     const adminUserId = adminMemberships[0]?.userId;
@@ -767,18 +781,16 @@ async function getUserNamesAndRolesById(
     )
     .join("\n");
 
-  const rows = await db.$queryRaw<
-    { user_id: string; role: ImplementerRole; name: string | null }[]
-  >`
+  const rows = await queryRaw<{ user_id: string; role: ImplementerRole; name: string | null }>(sql`
     SELECT
       im.user_id,
       im.role::text AS role,
-      COALESCE(${Prisma.raw(coalesceSql)}) AS name
+      COALESCE(${sql.raw(coalesceSql)}) AS name
     FROM implementer_members im
-    ${Prisma.raw(joinsSql)}
-    WHERE im.user_id = ANY(${userIds}::text[])
+    ${sql.raw(joinsSql)}
+    WHERE ${inArray(sql`im.user_id`, userIds)}
       AND im.implementer_id = ${implementerId}
-  `;
+  `);
 
   for (const row of rows) {
     result.set(`${row.user_id}`, { role: row.role, name: row.name });

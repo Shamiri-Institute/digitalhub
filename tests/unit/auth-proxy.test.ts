@@ -1,15 +1,11 @@
 // @vitest-environment node
 import { pathToRegexp } from "next/dist/compiled/path-to-regexp";
 import { NextRequest } from "next/server";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { sessionCookie } from "#/lib/auth/session";
-import { db } from "#/lib/db";
 import proxy, { config } from "#/proxy";
 
-vi.mock("#/lib/db", () => ({ db: { session: { findUnique: vi.fn(), deleteMany: vi.fn() } } }));
-
-const findUnique = vi.mocked(db.session.findUnique);
 const original = { NEXTAUTH_URL: process.env.NEXTAUTH_URL, VERCEL_URL: process.env.VERCEL_URL };
 
 function request(path: string, cookie?: string) {
@@ -25,7 +21,6 @@ afterEach(() => {
 
 describe("proxy", () => {
   beforeEach(() => {
-    findUnique.mockReset();
     process.env.NEXTAUTH_URL = "http://localhost:3000";
   });
 
@@ -40,9 +35,11 @@ describe("proxy", () => {
   });
 
   it("lets a request with a cookie through without touching the database", () => {
+    // The proxy runs where the database is unreachable (see proxy.ts). A database call would
+    // have to be awaited, so a synchronous response is the proof that none is made.
     const res = proxy(request("/hc/schools", "next-auth.session-token=abc"));
+    expect(res).not.toBeInstanceOf(Promise);
     expect(res.headers.get("x-middleware-next")).toBe("1");
-    expect(findUnique).not.toHaveBeenCalled();
   });
 
   it("reads the secure-prefixed cookie when the site is served over https", () => {

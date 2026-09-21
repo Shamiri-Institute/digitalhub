@@ -1,48 +1,13 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import HubDatatableMenu from "./hub-datatable-menu";
 
-export type HubsWithSchools = Prisma.HubGetPayload<{
-  include: {
-    schools: {
-      include: {
-        assignedSupervisor: true;
-        interventionSessions: {
-          include: {
-            sessionRatings: true;
-            session: true;
-          };
-        };
-        students: {
-          include: {
-            assignedGroup: true;
-            _count: {
-              select: {
-                clinicalCases: true;
-              };
-            };
-          };
-        };
-      };
-    };
-    implementer: {
-      select: {
-        implementerName: true;
-      };
-    };
-    coordinators: true;
-    _count: {
-      select: {
-        fellows: true;
-        supervisors: true;
-      };
-    };
-  };
-}>;
+import type { AdminHub } from "../queries";
+
+export type HubsWithSchools = AdminHub;
 
 export const columns: ColumnDef<HubsWithSchools>[] = [
   {
@@ -101,7 +66,7 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
     header: "Supervisors | Fellows",
     id: "Supervisors | Fellows",
     cell: ({ row }) => {
-      return `${row.original._count.supervisors} | ${row.original._count.fellows}`;
+      return `${row.original.supervisorsCount} | ${row.original.fellowsCount}`;
     },
   },
   {

@@ -1,6 +1,5 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import { Search, Undo2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -14,30 +13,7 @@ import {
   CommandSeparator,
 } from "#/components/ui/command";
 
-export function SearchCommand({
-  data,
-}: {
-  data: Prisma.SchoolGetPayload<{
-    include: {
-      assignedSupervisor: true;
-      interventionSessions: {
-        include: {
-          sessionRatings: true;
-        };
-      };
-      students: {
-        include: {
-          assignedGroup: true;
-          _count: {
-            select: {
-              clinicalCases: true;
-            };
-          };
-        };
-      };
-    };
-  }>[];
-}) {
+export function SearchCommand({ data }: { data: { id: string; schoolName: string }[] }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const pathname = usePathname();
