@@ -1,7 +1,7 @@
 // Compares two `bench --dump` directories page by page after removing build-specific noise,
 // so a query conversion can be checked for rendering the same data.
 //   npm run bench:diff -- bench/dumps/before bench/dumps/after
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const [dirA, dirB] = process.argv.slice(2);
@@ -15,6 +15,8 @@ function normalize(html: string) {
   return (
     html
       .replace(/\/_next\/static\/[A-Za-z0-9_-]+\//g, "/_next/static/BUILD/")
+      // Chunk file names embed content hashes and change whenever a client component changes.
+      .replace(/\/_next\/static\/BUILD\/[A-Za-z0-9_-]+\.js/g, "/_next/static/BUILD/CHUNK.js")
       .replace(/"buildId":"[^"]+"/g, '"buildId":"BUILD"')
       // The build id also travels inside the RSC payload as `"b":"<id>"` (JSON-escaped quotes).
       .replace(/\\"b\\":\\"[A-Za-z0-9_-]{15,}\\"/g, '\\"b\\":\\"BUILD\\"')
@@ -62,21 +64,61 @@ function flightPayloads(html: string) {
   return payloads;
 }
 
-function canonical(html: string) {
+/** JSON with object keys sorted, so column order (Prisma schema order vs table order) does not matter. */
+function stable(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stable);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value)
+        .toSorted()
+        .map((k) => [k, stable((value as Record<string, unknown>)[k])]),
+    );
+  }
+  return value;
+}
+
+/**
+ * The RSC flight payload carries the whole server-rendered tree, so it is compared on its own:
+ * the HTML is a render of the same data whose shape depends on which Suspense boundaries had
+ * resolved when the shell flushed. Rows are sorted (row numbering follows resolution order),
+ * row ids, module references and script chunk rows are dropped, and JSON keys are sorted.
+ */
+/** Like `stable`, but also sorts arrays: order of to-many relations is unspecified in both ORMs. */
+function unordered(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value
+      .map(unordered)
+      .toSorted((x, y) => JSON.stringify(x).localeCompare(JSON.stringify(y)));
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value)
+        .toSorted()
+        .map((k) => [k, unordered((value as Record<string, unknown>)[k])]),
+    );
+  }
+  return value;
+}
+
+function canonical(html: string, arrayOrder: "keep" | "ignore" = "keep") {
+  const shape = arrayOrder === "keep" ? stable : unordered;
   const flightRows: string[] = [];
   for (const payload of flightPayloads(html)) {
     for (const row of payload.split("\n")) {
-      const body = row.replace(/^[0-9a-f]+:/, "");
+      let body = row.replace(/^[0-9a-f]+:/, "");
       if (!body || body.startsWith("I[") || body.startsWith("HL[")) continue;
+      if (body.startsWith("[") || body.startsWith("{")) {
+        try {
+          body = JSON.stringify(shape(JSON.parse(body)));
+        } catch {
+          // text chunks and partial rows stay as they are
+        }
+      }
+      if (/^\["\$","script","script-\d+"/.test(body)) continue;
       flightRows.push(body.replace(/\$L?[0-9a-f]+\b/g, "$REF"));
     }
   }
-  const markup = html
-    .replace(/<script[\s\S]*?<\/script>/g, "")
-    .replace(/\b(id|hidden id)="(S|B|P):\d+"/g, '$1="$2:N"')
-    .replace(/\$RC\("B:\d+","S:\d+"\)/g, "$RC()");
-  const segments = markup.split(/(?=<div hidden id="S:N">)/).toSorted();
-  return `${segments.join("\n")}\n${flightRows.toSorted().join("\n")}`;
+  return flightRows.toSorted().join("\n");
 }
 
 function firstDifference(a: string, b: string) {
@@ -92,6 +134,7 @@ const files = readdirSync(dirA)
   .toSorted();
 let same = 0;
 let sameAfterReorder = 0;
+const sameUpToArrayOrder: string[] = [];
 const differing: string[] = [];
 const missing: string[] = [];
 for (const file of files) {
@@ -106,11 +149,22 @@ for (const file of files) {
     same++;
     continue;
   }
-  if (canonical(a) === canonical(b)) {
+  const [ca, cb] = [canonical(a), canonical(b)];
+  if (ca === cb) {
     sameAfterReorder++;
     continue;
   }
+  if (canonical(a, "ignore") === canonical(b, "ignore")) {
+    sameUpToArrayOrder.push(file);
+    continue;
+  }
   differing.push(file);
+  // BENCH_DIFF_OUT=dir writes both canonical forms so `diff` can show the real change.
+  if (process.env.BENCH_DIFF_OUT) {
+    mkdirSync(process.env.BENCH_DIFF_OUT, { recursive: true });
+    writeFileSync(path.join(process.env.BENCH_DIFF_OUT, `${file}.before.txt`), ca);
+    writeFileSync(path.join(process.env.BENCH_DIFF_OUT, `${file}.after.txt`), cb);
+  }
   const d = firstDifference(a, b);
   console.log(`\n## ${file} differs (${a.length} vs ${b.length} chars, first at ${d.at})`);
   console.log(`--- before: …${d.a.replace(/\n/g, "\\n")}…`);
@@ -118,8 +172,11 @@ for (const file of files) {
 }
 
 console.log(
-  `\n${files.length} pages: ${same} identical, ${sameAfterReorder} identical after streaming reorder, ${differing.length} differ, ${missing.length} missing in ${dirB}.`,
+  `\n${files.length} pages: ${same} identical, ${sameAfterReorder} identical after streaming reorder, ${sameUpToArrayOrder.length} identical up to relation order, ${differing.length} differ, ${missing.length} missing in ${dirB}.`,
 );
+if (sameUpToArrayOrder.length > 0) {
+  console.log(`Same rows, different to-many order: ${sameUpToArrayOrder.join(", ")}`);
+}
 if (differing.length > 0) console.log(`Differ: ${differing.join(", ")}`);
 if (missing.length > 0) console.log(`Missing: ${missing.join(", ")}`);
 process.exitCode = differing.length + missing.length > 0 ? 1 : 0;
