@@ -43,7 +43,7 @@ const clinicalCasesCount = (st: { id: unknown }) =>
     "clinical_cases_count",
   );
 
-export function fetchSchoolData(hubId: string) {
+export async function fetchSchoolData(hubId: string) {
   return db.query.school.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
     with: {
@@ -414,7 +414,7 @@ export async function editSchoolInformation(
   }
 }
 
-export function fetchHubSupervisors({ hubId }: { hubId: string }) {
+export async function fetchHubSupervisors({ hubId }: { hubId: string }) {
   return db.query.supervisor.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
   });
