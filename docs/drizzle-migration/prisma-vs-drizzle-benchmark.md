@@ -116,12 +116,15 @@ worth knowing.
    `clinicalCasesCount` on 18, `studentsCount` on 5, and `fellowsCount`, `supervisorsCount`,
    `groupCount` and `sessionsCount` on one each. In 18 further cases a whole `clinicalCases` array
    became a count, which is where the payload savings come from.
-2. _BigInt became Number._ The payload held 2229 BigInt scalars before and none after. Prisma
-   returns BigInt for a raw `count(*)` and for BigInt columns, so the flight payload wrote `$n1014`
-   where Drizzle writes `1014`. The numbers are equal: on `/admin/fellows` both sides give the same
-   distribution of group counts, 110 twos, 242 threes, 111 fours and one five. Payout sums behave
-   the same way. Numbers above 2^53 would lose precision as a Number, which no payout or count in
-   this data approaches.
+2. _BigInt became Number, which is a correction._ No column in this database is `bigint` or
+   `numeric`. `payout_statements.amount` is `integer`, and the counts are counts of rows. The
+   BigInt existed only because Postgres types `count(*)` and `sum(integer)` as `bigint` on the
+   wire, and Prisma returned that as a JavaScript BigInt. The payload then had to carry a type
+   that JSON cannot serialise, which is why it wrote `$n1014` instead of `1014`. The Drizzle
+   queries cast with `count(*)::int`, so the payload holds the same number in the type the column
+   already uses. The payload held 2229 BigInt scalars before and none after. The numbers are
+   equal: on `/admin/fellows` both sides give the same distribution of group counts, 110 twos,
+   242 threes, 111 fours and one five.
 3. _One rating lost precision beyond a double._ `/sc/schools/SOBHA_SCH/groups` is the only page
    where a value disappears. Prisma returned the group rating as a full-precision numeric string,
    `"3.21428571428571428571"`; Drizzle returns the double `3.2142857142857144`. The column is an
