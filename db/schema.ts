@@ -45,7 +45,6 @@ import {
   enumValues,
 } from "./enums";
 
-// Same shape as Prisma's JsonValue (object members may be undefined) so rows from either client interchange.
 export type JsonValue =
   | string
   | number

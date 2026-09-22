@@ -33,7 +33,6 @@ async function checkAuth() {
   return personnel;
 }
 
-/** Same message Prisma's `findFirstOrThrow` produced; callers surface it to the user. */
 async function findSessionWithSchoolOrThrow(id: string) {
   const session = await db.query.interventionSession.findFirst({
     where: (s, { eq }) => eq(s.id, id),
@@ -45,7 +44,6 @@ async function findSessionWithSchoolOrThrow(id: string) {
   return session;
 }
 
-/** Prisma's `update` failed when the row was gone; keep that behaviour. */
 async function updateSessionOrThrow(
   id: string,
   values: Partial<typeof interventionSession.$inferInsert>,
@@ -74,7 +72,11 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
     }
 
     const { hub } = hubSessionType;
-    if (hubSessionType.sessionType === "SUPERVISION" || hubSessionType.sessionType === "TRAINING") {
+    if (
+      hubSessionType.sessionType === "SUPERVISION" ||
+      hubSessionType.sessionType === "TRAINING" ||
+      hubSessionType.sessionType === "SPECIAL"
+    ) {
       const existingSession = await db.query.interventionSession.findFirst({
         where: (s, { and, eq }) => and(eq(s.hubId, hub.id), eq(s.sessionId, parsedData.sessionId)),
       });
@@ -87,14 +89,13 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
         };
       }
     } else {
-      // Prisma ignored an undefined schoolId in `where`; keep that.
-      const schoolId = parsedData.schoolId;
+      const { schoolId } = parsedData;
+      if (!schoolId) {
+        throw new Error("A school is required for this session type.");
+      }
       const existingSession = await db.query.interventionSession.findFirst({
         where: (s, { and, eq }) =>
-          and(
-            schoolId === undefined ? undefined : eq(s.schoolId, schoolId),
-            eq(s.sessionId, parsedData.sessionId),
-          ),
+          and(eq(s.schoolId, schoolId), eq(s.sessionId, parsedData.sessionId)),
         with: { school: true },
       });
       if (existingSession) {

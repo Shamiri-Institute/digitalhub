@@ -1,5 +1,6 @@
 import { type AnyPgColumn } from "drizzle-orm/pg-core";
-import { countDistinct, eq, inArray, isNull, sql } from "drizzle-orm";
+import { countDistinct, eq, inArray, sql } from "drizzle-orm";
+import { signOut } from "next-auth/react";
 import { Suspense } from "react";
 
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
@@ -20,8 +21,11 @@ export default async function FellowPage() {
     return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
   const hubId = hc.profile.assignedHubId;
-  // Prisma matched NULL for a null hub id; keep that.
-  const inHub = (col: AnyPgColumn) => (hubId === null ? isNull(col) : eq(col, hubId));
+  if (!hubId) {
+    await signOut({ callbackUrl: "/login" });
+    return null;
+  }
+  const inHub = (col: AnyPgColumn) => eq(col, hubId);
   const hubFellowIds = db.select({ id: fellow.id }).from(fellow).where(inHub(fellow.hubId));
 
   const data = await Promise.all([
@@ -48,8 +52,7 @@ export default async function FellowPage() {
       .from(fellow)
       .leftJoin(weeklyFellowRatings, eq(fellow.id, weeklyFellowRatings.fellowId))
       .leftJoin(interventionGroup, eq(fellow.id, interventionGroup.leaderId))
-      // The old raw query compared `hub_id = NULL` here, which matches nothing.
-      .where(hubId === null ? sql`false` : eq(fellow.hubId, hubId))
+      .where(eq(fellow.hubId, hubId))
       .groupBy(fellow.id),
     db.query.fellowComplaints.findMany({
       where: (c, { inArray }) => inArray(c.fellowId, hubFellowIds),

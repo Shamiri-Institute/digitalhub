@@ -25,7 +25,6 @@ import { generateStudentVisibleID } from "#/lib/utils";
 export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
 export type SchoolsInHubData = Awaited<ReturnType<typeof getSchoolsInHub>>;
 
-/** Throws like Prisma's `update` did when the row does not exist. */
 function requireUpdated<T>(rows: T[], what: string): T {
   const row = rows[0];
   if (!row) {
@@ -159,7 +158,6 @@ export async function supSubmitConsultClinicalexpert(data: {
   comment: string;
 }) {
   try {
-    // Prisma's nested create; the foreign key rejects a missing case the way the update did.
     await db.insert(clinicalExpertCaseNotes).values({
       caseId: data.caseId,
       comment: data.comment,
@@ -795,7 +793,6 @@ export async function updateClinicalCaseAttendance(data: {
       throw new Error("You are not authorized to create clinical case notes");
     }
 
-    // Prisma's nested create; the foreign key rejects a missing case the way the update did.
     await db.insert(clinicalSessionAttendance).values({
       caseId: data.caseId,
       date: data.dateOfSession,

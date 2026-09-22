@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { signOut } from "next-auth/react";
 
 import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
@@ -19,20 +19,19 @@ export async function loadSupervisorExpenses() {
   }
 
   const hubId = currentSupervisorData.profile?.hubId;
+  if (!hubId) {
+    await signOut({ callbackUrl: "/login" });
+    throw new Error("Unauthorised user");
+  }
   const supervisorsExpenses = await db.query.reimbursementRequest.findMany({
     where: (r, { inArray }) =>
       inArray(
         r.supervisorId,
-        db
-          .select({ id: supervisor.id })
-          .from(supervisor)
-          // Prisma `hubId: null` matched supervisors with no hub; keep that for a supervisor without one.
-          .where(hubId === null ? isNull(supervisor.hubId) : eq(supervisor.hubId, hubId)),
+        db.select({ id: supervisor.id }).from(supervisor).where(eq(supervisor.hubId, hubId)),
       ),
     with: {
       supervisor: { columns: { id: true, supervisorName: true } },
     },
-    // The table renders in received order; keep Prisma's insertion order.
     orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
   });
 
@@ -109,7 +108,7 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
 export async function getSupervisorsInHub() {
   const hubCoordinator = await currentHubCoordinator();
   const hubId = hubCoordinator?.profile?.assignedHubId ?? "";
-  return await db.query.supervisor.findMany({
+  return db.query.supervisor.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
   });
 }

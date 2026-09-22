@@ -46,7 +46,6 @@ export async function loadFellowComplaints(options?: LoadFellowComplaintsOptions
         supervisor: true,
         fellow: { with: { supervisor: true } },
       },
-      // Grouped by fellow in received order; keep Prisma's insertion order.
       orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)],
     });
 

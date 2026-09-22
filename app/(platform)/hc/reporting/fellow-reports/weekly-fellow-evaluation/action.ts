@@ -1,6 +1,7 @@
 "use server";
 
 import { currentHubCoordinator } from "#/app/auth";
+import { signOut } from "next-auth/react";
 import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { db } from "#/db/client";
 
@@ -14,9 +15,12 @@ export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvalu
     const userId = hubCoordinator.session.user.id;
 
     const hubId = hubCoordinator.profile?.assignedHubId;
+    if (!hubId) {
+      await signOut({ callbackUrl: "/login" });
+      throw new Error("Unauthorised user");
+    }
     const fellows = await db.query.fellow.findMany({
-      where: (f, { eq, isNull }) => (hubId === null ? isNull(f.hubId) : eq(f.hubId, hubId)),
-      // Lists render in received order; keep Prisma's insertion order.
+      where: (f, { eq }) => eq(f.hubId, hubId),
       with: { weeklyFellowRatings: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] } },
       orderBy: (f, { asc }) => [asc(f.createdAt), asc(f.id)],
     });

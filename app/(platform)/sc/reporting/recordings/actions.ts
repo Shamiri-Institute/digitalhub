@@ -499,7 +499,6 @@ export async function updateRecordingStatus(
       };
     }
 
-    // Undefined values are skipped by `set`, like Prisma's `data`.
     const updated = await db
       .update(sessionRecording)
       .set({

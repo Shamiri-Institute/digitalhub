@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
 
 import { currentFellow } from "#/app/auth";
@@ -19,13 +19,12 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
     .select({ id: school.id })
     .from(school)
     .where(eq(school.visibleId, visibleId));
-  // Prisma dropped the leader filter when the fellow id was undefined; keep that.
   const fellowGroupIds = db
     .select({ id: interventionGroup.id })
     .from(interventionGroup)
     .where(
       and(
-        fellowId === undefined ? undefined : eq(interventionGroup.leaderId, fellowId),
+        fellowId === undefined ? sql`false` : eq(interventionGroup.leaderId, fellowId),
         inArray(interventionGroup.schoolId, schoolIds),
       ),
     );

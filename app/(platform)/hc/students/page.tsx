@@ -1,5 +1,6 @@
 import { and, count, eq, inArray, isNull, or } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import { signOut } from "next-auth/react";
 
 import { currentHubCoordinator } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
@@ -31,8 +32,11 @@ export default async function StudentsPage() {
   }
 
   const hubId = hubCoordinator.profile.assignedHubId;
-  // Prisma matched NULL for a null hub id; keep that.
-  const inHub = (col: AnyPgColumn) => (hubId === null ? isNull(col) : eq(col, hubId));
+  if (!hubId) {
+    await signOut({ callbackUrl: "/login" });
+    return null;
+  }
+  const inHub = (col: AnyPgColumn) => eq(col, hubId);
   const hubSchoolIds = db.select({ id: school.id }).from(school).where(inHub(school.hubId));
   const hubSupervisorIds = db
     .select({ id: supervisor.id })

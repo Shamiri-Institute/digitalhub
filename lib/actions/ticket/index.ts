@@ -154,7 +154,6 @@ export async function getEscalationsPerTicket(
   }
 }
 
-/** The newest escalation of a ticket together with the ticket's status. */
 function latestEscalationWithTicket(tx: Transaction, ticketId: string) {
   return tx.query.ticketEscalations.findFirst({
     where: (e, { eq }) => eq(e.ticketId, ticketId),
@@ -163,7 +162,6 @@ function latestEscalationWithTicket(tx: Transaction, ticketId: string) {
   });
 }
 
-/** Prisma's `update` threw when the row was missing; keep that contract. */
 async function setTicketStatus(
   tx: Transaction,
   ticketId: string,

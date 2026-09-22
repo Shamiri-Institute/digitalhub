@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
 
 import type { FellowsData } from "#/app/(platform)/sc/actions";
@@ -17,8 +18,7 @@ export default async function FellowsPage() {
 
   const fellowId = fellow?.profile.id;
   const fellowRow = await db.query.fellow.findFirst({
-    // Prisma dropped the filter when the id was undefined; keep that.
-    where: (f, { eq }) => (fellowId === undefined ? undefined : eq(f.id, fellowId)),
+    where: (f, { eq }) => (fellowId === undefined ? sql`false` : eq(f.id, fellowId)),
     with: {
       hub: { with: { project: true } },
       fellowAttendances: {

@@ -57,7 +57,6 @@ export async function loadSessionReport() {
           },
         },
       },
-      // Grouped by school in received order; keep Prisma's insertion order.
       orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
     });
 

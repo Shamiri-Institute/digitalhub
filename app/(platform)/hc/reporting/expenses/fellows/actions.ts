@@ -1,6 +1,7 @@
 "use server";
 
 import { currentHubCoordinator } from "#/app/auth";
+import { signOut } from "next-auth/react";
 import { db } from "#/db/client";
 
 export type HubFellowsAttendancesType = Awaited<ReturnType<typeof loadHubFellowAttendance>>[number];
@@ -13,8 +14,12 @@ export async function loadHubFellowAttendance() {
   }
 
   const hubId = hubCoordinator.profile?.assignedHubId;
+  if (!hubId) {
+    await signOut({ callbackUrl: "/login" });
+    throw new Error("Unauthorised user");
+  }
   const fellows = await db.query.fellow.findMany({
-    where: (f, { eq, isNull }) => (hubId === null ? isNull(f.hubId) : eq(f.hubId, hubId)),
+    where: (f, { eq }) => eq(f.hubId, hubId),
     with: {
       hub: { columns: { hubName: true } },
       supervisor: { columns: { supervisorName: true } },

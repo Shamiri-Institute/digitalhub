@@ -33,7 +33,6 @@ export async function loadHubsSupervisorExpenses() {
     reimbursementRequest.hubId,
     db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
   );
-  // No membership means no supervisor filter, like the Prisma `implementerId: undefined` it replaces.
   const scope =
     implementerId === undefined
       ? inProject
@@ -80,8 +79,7 @@ export async function getSupervisorsInImplementation() {
   const opsUser = await currentOpsUser();
   const implementerId = opsUser?.session.user.activeMembership?.implementerId;
 
-  return await db.query.supervisor.findMany({
-    // No membership means no filter, like the Prisma `implementerId: undefined` it replaces.
+  return db.query.supervisor.findMany({
     where: (s, { eq }) =>
       implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
   });

@@ -1,6 +1,7 @@
 "use server";
 
 import { currentHubCoordinator } from "#/app/auth";
+import { signOut } from "next-auth/react";
 import { db } from "#/db/client";
 
 export async function loadHubSchoolFeedback() {
@@ -12,11 +13,13 @@ export async function loadHubSchoolFeedback() {
     }
 
     const assignedHubId = hubCoordinator.profile?.assignedHubId;
+    if (!assignedHubId) {
+      await signOut({ callbackUrl: "/login" });
+      throw new Error("Unauthorised user");
+    }
 
     const schools = await db.query.school.findMany({
-      where: (s, { eq, isNull }) =>
-        assignedHubId === null ? isNull(s.hubId) : eq(s.hubId, assignedHubId),
-      // Lists render in received order; keep Prisma's insertion order.
+      where: (s, { eq }) => eq(s.hubId, assignedHubId),
       with: {
         schoolFeedbacks: {
           with: { user: true },
