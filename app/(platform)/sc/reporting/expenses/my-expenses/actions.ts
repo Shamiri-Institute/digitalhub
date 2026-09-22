@@ -108,7 +108,7 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
 export async function getSupervisorsInHub() {
   const hubCoordinator = await currentHubCoordinator();
   const hubId = hubCoordinator?.profile?.assignedHubId ?? "";
-  return await db.query.supervisor.findMany({
+  return db.query.supervisor.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
   });
 }

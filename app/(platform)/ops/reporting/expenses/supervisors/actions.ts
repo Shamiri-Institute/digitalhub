@@ -79,7 +79,7 @@ export async function getSupervisorsInImplementation() {
   const opsUser = await currentOpsUser();
   const implementerId = opsUser?.session.user.activeMembership?.implementerId;
 
-  return await db.query.supervisor.findMany({
+  return db.query.supervisor.findMany({
     where: (s, { eq }) =>
       implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
   });

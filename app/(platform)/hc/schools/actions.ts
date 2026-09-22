@@ -146,12 +146,12 @@ export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
 }
 
 /** Updates the school and records the change; returns the school with its dropout history. */
-async function setSchoolDropout(
+function setSchoolDropout(
   schoolId: string,
   data: { dropoutReason: string | null; droppedOut: boolean; droppedOutAt: Date | null },
   userId: string,
 ) {
-  return await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
     const [updated] = await tx.update(school).set(data).where(eq(school.id, schoolId)).returning();
     if (!updated) {
       throw new Error(`School ${schoolId} not found`);
@@ -422,7 +422,7 @@ export async function editSchoolInformation(
 
 /** Supervisors of a hub. */
 export async function fetchHubSupervisors({ hubId }: { hubId: string }) {
-  return await db.query.supervisor.findMany({
+  return db.query.supervisor.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
   });
 }

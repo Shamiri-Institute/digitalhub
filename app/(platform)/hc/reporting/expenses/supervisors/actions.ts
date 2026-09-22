@@ -77,7 +77,7 @@ export async function getSupervisorsInHub() {
     await signOut({ callbackUrl: "/login" });
     throw new Error("Unauthorised user");
   }
-  return await db.query.supervisor.findMany({
+  return db.query.supervisor.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
   });
 }
