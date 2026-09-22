@@ -1,5 +1,3 @@
-// DATABASE_URL for pg and drizzle-kit. pg refuses RDS without an sslmode, so remote
-// URLs that do not set one get no-verify.
 export function databaseUrl() {
   const connectionString = process.env.DATABASE_URL ?? "";
   let url: URL;

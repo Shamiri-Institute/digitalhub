@@ -27,10 +27,6 @@ import {
   WeeklyHubReportSchema,
 } from "../schemas";
 
-/**
- * TODO: the functions here should also be cognizant of the project
- */
-
 type SchoolWithRelations = Omit<
   Awaited<ReturnType<typeof fetchSchoolData>>[number],
   "interventionGroups"
@@ -42,14 +38,13 @@ type AddSchoolResponse = {
   data?: SchoolWithRelations;
 };
 
-/** Count of clinical cases per student for the shared tables. */
 const clinicalCasesCount = (st: { id: unknown }) =>
   sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
     "clinical_cases_count",
   );
 
-export async function fetchSchoolData(hubId: string) {
-  const schools = await db.query.school.findMany({
+export function fetchSchoolData(hubId: string) {
+  return db.query.school.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
     with: {
       assignedSupervisor: true,
@@ -61,7 +56,6 @@ export async function fetchSchoolData(hubId: string) {
       },
     },
   });
-  return schools;
 }
 
 export async function revalidatePageAction(pathname: string, mode?: "layout" | "page") {
@@ -420,8 +414,7 @@ export async function editSchoolInformation(
   }
 }
 
-/** Supervisors of a hub. */
-export async function fetchHubSupervisors({ hubId }: { hubId: string }) {
+export function fetchHubSupervisors({ hubId }: { hubId: string }) {
   return db.query.supervisor.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
   });
@@ -475,13 +468,11 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
     }
     const parsedData = AddSchoolSchema.parse(data);
 
-    // Get available fellows for the pre-session date
     const fellows = await db.query.fellow.findMany({
       where: (f, { eq }) => eq(f.hubId, hubId),
       with: { groups: { columns: { id: true, schoolId: true } } },
     });
 
-    // Session dates per school, loaded once instead of per group row.
     const groupSchoolIds = [...new Set(fellows.flatMap((f) => f.groups.map((g) => g.schoolId)))];
     const sessionDates =
       groupSchoolIds.length === 0
@@ -499,7 +490,6 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       sessionDatesBySchool.set(schoolId, dates);
     }
 
-    // Create a map of fellows and their session dates
     const fellowSessionDates = new Map<string, Set<string>>();
     fellows.forEach((fellow) => {
       const dates = new Set<string>();
@@ -518,7 +508,6 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       );
     });
 
-    // Sort fellows by number of assigned groups (ascending)
     availableFellows.sort((a, b) => a.groups.length - b.groups.length);
 
     if (availableFellows.length === 0) {
@@ -528,7 +517,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       };
     }
 
-    return await db.transaction(async (tx) => {
+    return db.transaction(async (tx) => {
       const [created] = await tx
         .insert(school)
         .values({
@@ -566,7 +555,6 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
 
       const numGroups = Math.ceil((parsedData.numbersExpected || 1000) / 16);
 
-      // Get the first word of the school name for the prefix
       const schoolNamePrefix = getSchoolInitials(newSchool.schoolName) ?? "GROUP";
 
       const interventionGroups: (typeof interventionGroup.$inferInsert)[] = [];
@@ -588,7 +576,6 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
         await tx.insert(interventionGroup).values(interventionGroups);
       }
 
-      // Create intervention sessions
       const assignedHubId = hubCoordinator.profile?.assignedHubId ?? undefined;
       const sessionNames = await tx.query.sessionName.findMany({
         where: (n, { and, eq }) =>

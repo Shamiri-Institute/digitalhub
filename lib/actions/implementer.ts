@@ -157,7 +157,6 @@ export async function fetchImplementerFellowRatings(implementerId: string) {
   const projectId = await getActiveProjectId();
 
   try {
-    // AVG over no ratings is NULL, but the schedule components declare `number`; tighten both together.
     const { rows: fellowRatings } = await db.execute<{
       id: string;
       averageRating: number;

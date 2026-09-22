@@ -33,7 +33,6 @@ async function checkAuth() {
   return personnel;
 }
 
-/** Throws a user-facing error when the session is missing. */
 async function findSessionWithSchoolOrThrow(id: string) {
   const session = await db.query.interventionSession.findFirst({
     where: (s, { eq }) => eq(s.id, id),
@@ -45,7 +44,6 @@ async function findSessionWithSchoolOrThrow(id: string) {
   return session;
 }
 
-/** Throws when the row was already deleted. */
 async function updateSessionOrThrow(
   id: string,
   values: Partial<typeof interventionSession.$inferInsert>,

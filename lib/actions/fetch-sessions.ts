@@ -98,8 +98,6 @@ export async function fetchInterventionSessions({
     orderBy: (s, { asc }) => asc(s.sessionDate),
   });
 
-  // Nesting the school subtree under every session would make Drizzle recompute it per row,
-  // so load the distinct schools once and attach them in JS.
   const schoolIds = [...new Set(sessions.map((s) => s.schoolId).filter((id) => id !== null))];
   const schools =
     schoolIds.length === 0

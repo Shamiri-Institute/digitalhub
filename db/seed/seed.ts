@@ -174,12 +174,8 @@ type Project = InferSelectModel<typeof schema.project>;
 type SessionName = InferSelectModel<typeof schema.sessionName>;
 type Supervisor = InferSelectModel<typeof schema.supervisor>;
 
-// Set faker seed
-// TODO: Set seed value as an ENV variable for e2e testing
 faker.seed(7634912);
 
-// Postgres allows 65535 bind parameters per statement; 1000 rows of the widest
-// seeded table stays well under that.
 const INSERT_CHUNK = 1000;
 
 function* chunk<T>(rows: T[]) {

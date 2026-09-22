@@ -45,7 +45,6 @@ import {
   enumValues,
 } from "./enums";
 
-// Object members may be undefined.
 export type JsonValue =
   | string
   | number

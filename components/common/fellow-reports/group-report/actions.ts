@@ -38,7 +38,6 @@ export async function loadFellowGroupReports(options?: LoadFellowGroupReportsOpt
         and(leadersInScope ? inArray(g.leaderId, leadersInScope) : undefined, isNull(g.archivedAt)),
       with: {
         leader: true,
-        // The row shows the first report, so keep oldest first.
         fellowGroupReports: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] },
       },
       orderBy: (g, { asc }) => asc(g.groupName),
