@@ -17,6 +17,8 @@ function normalize(html: string) {
       .replace(/\/_next\/static\/[A-Za-z0-9_-]+\//g, "/_next/static/BUILD/")
       // Chunk file names embed content hashes and change whenever a client component changes.
       .replace(/\/_next\/static\/BUILD\/[A-Za-z0-9_-]+\.js/g, "/_next/static/BUILD/CHUNK.js")
+      // Stylesheet names embed a content hash too, and change whenever any class does.
+      .replace(/\/_next\/static\/BUILD\/[A-Za-z0-9_-]+\.css/g, "/_next/static/BUILD/CHUNK.css")
       .replace(/"buildId":"[^"]+"/g, '"buildId":"BUILD"')
       // The build id also travels inside the RSC payload as `"b":"<id>"` (JSON-escaped quotes).
       .replace(/\\"b\\":\\"[A-Za-z0-9_-]{15,}\\"/g, '\\"b\\":\\"BUILD\\"')

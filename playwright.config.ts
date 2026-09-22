@@ -14,6 +14,7 @@ export default defineConfig({
     command: "npm run dev",
     timeout: 480 * 1000, // 2 minutes
     port: Number(process.env.PORT ?? 3000),
+    reuseExistingServer: !isCI,
     stdout: showServerLogs,
     stderr: showServerLogs,
   },
