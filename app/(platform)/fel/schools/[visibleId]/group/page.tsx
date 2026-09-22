@@ -26,10 +26,15 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
     .select({ id: school.id })
     .from(school)
     .where(eq(school.visibleId, visibleId));
-  const schoolGroupIds = db
+  const fellowGroupIds = db
     .select({ id: interventionGroup.id })
     .from(interventionGroup)
-    .where(inArray(interventionGroup.schoolId, schoolIds));
+    .where(
+      and(
+        inArray(interventionGroup.schoolId, schoolIds),
+        fellowId === undefined ? sql`false` : eq(interventionGroup.leaderId, fellowId),
+      ),
+    );
 
   const data = await Promise.all([
     selectSchoolGroups().where(
@@ -40,7 +45,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
     ),
     db.query.student.findMany({
       where: (st, { and, inArray, isNull }) =>
-        and(isNull(st.archivedAt), inArray(st.schoolId, schoolIds)),
+        and(isNull(st.archivedAt), inArray(st.assignedGroupId, fellowGroupIds)),
       extras: (st, { sql }) => ({
         clinicalCasesCount:
           sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
@@ -49,7 +54,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
       }),
     }),
     db.query.interventionGroupReport.findMany({
-      where: (r, { inArray }) => inArray(r.groupId, schoolGroupIds),
+      where: (r, { inArray }) => inArray(r.groupId, fellowGroupIds),
       with: { session: true },
     }),
   ]).then((values) => {
@@ -65,6 +70,14 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
       };
     });
   });
+
+  if (data.length === 0) {
+    return (
+      <div className="container w-full grow py-10">
+        <p>You don&apos;t have access to this school.</p>
+      </div>
+    );
+  }
 
   const schoolRow = await db.query.school.findFirst({
     where: (s, { eq }) => eq(s.visibleId, visibleId),
@@ -89,7 +102,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
           where: (r, { and, eq, inArray }) =>
             and(
               fellowId === undefined ? sql`false` : eq(r.fellowId, fellowId),
-              inArray(r.groupId, schoolGroupIds),
+              inArray(r.groupId, fellowGroupIds),
             ),
         })
       : [];
