@@ -9,7 +9,7 @@ export type EscalationGap = Awaited<ReturnType<typeof getEscalationGaps>>[number
 
 type TriageEventColumns = typeof triageEvent._.columns;
 
-/** Risk-positive triage events in the hub whose student has no clinical case (Prisma `none`). */
+/** Risk-positive triage events in the hub whose student has no clinical case. */
 const escalationGapsWhere = (hubId: string) => (t: TriageEventColumns) =>
   and(
     eq(t.riskScreenOutcome, "ANY_YES"),

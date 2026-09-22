@@ -1,5 +1,6 @@
 "use server";
 import { eq, sql } from "drizzle-orm";
+import { signOut } from "next-auth/react";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -19,6 +20,10 @@ export async function loadFellowsData() {
 
   const supervisorId = supervisorProfile.profile.id;
   const hubId = supervisorProfile.profile.hubId;
+  if (!hubId) {
+    await signOut({ callbackUrl: "/login" });
+    throw new Error("Unauthorised user");
+  }
 
   const [fellows, schools, fellowAverageRatings, supervisors] = await Promise.all([
     db.query.fellow.findMany({
@@ -100,7 +105,7 @@ export async function loadFellowsData() {
       .then((r) => r.rows),
 
     db.query.supervisor.findMany({
-      where: (s, { eq, isNull }) => (hubId === null ? isNull(s.hubId) : eq(s.hubId, hubId)),
+      where: (s, { eq }) => eq(s.hubId, hubId),
       with: { fellows: { columns: { id: true, fellowName: true } } },
     }),
   ]);

@@ -29,7 +29,7 @@ async function checkAuth() {
   return user;
 }
 
-/** Prisma's `update` failed when the row was gone; keep that behaviour. */
+/** Throws when the row was already deleted. */
 async function setArchivedAt(groupId: string, archivedAt: Date | null) {
   const [result] = await db
     .update(interventionGroup)

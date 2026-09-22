@@ -32,7 +32,8 @@ export default async function SchoolsPage(props: {
   }
   const assignedHubId = hubCoordinator?.profile?.assignedHubId;
   if (!assignedHubId) {
-    return <div>Hub coordinator has no assigned hub</div>;
+    await signOut({ callbackUrl: "/login" });
+    return null;
   }
 
   const [

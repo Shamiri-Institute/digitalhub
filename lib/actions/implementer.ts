@@ -56,7 +56,6 @@ export async function fetchImplementerSessionTypes(implementerId: string) {
   const projectId = await getActiveProjectId();
 
   try {
-    // One row per distinct session name, like Prisma's `distinct: ["sessionName"]`.
     const sessionTypes = await db
       .selectDistinctOn([sessionName.sessionName], getTableColumns(sessionName))
       .from(sessionName)
@@ -158,8 +157,7 @@ export async function fetchImplementerFellowRatings(implementerId: string) {
   const projectId = await getActiveProjectId();
 
   try {
-    // Typed `number` like the Prisma version although AVG over no ratings is NULL; the
-    // schedule components declare the same type. Tighten both together.
+    // AVG over no ratings is NULL, but the schedule components declare `number`; tighten both together.
     const { rows: fellowRatings } = await db.execute<{
       id: string;
       averageRating: number;

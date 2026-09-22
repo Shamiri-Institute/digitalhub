@@ -28,7 +28,7 @@ export type LoadStudentGroupEvaluationsOptions =
   | { scope: "hub"; hubId: string }
   | { scope?: "all" };
 
-/** Group reports with the group, its leader and the session, scoped like the Prisma `where`. */
+/** Group reports with the group, its leader and the session. */
 async function fetchEvaluations(options?: LoadStudentGroupEvaluationsOptions) {
   const leadersInScope =
     options?.scope === "supervisor"
@@ -55,8 +55,7 @@ async function fetchEvaluations(options?: LoadStudentGroupEvaluationsOptions) {
       group: { with: { leader: true } },
       session: true,
     },
-    // The page keeps the first report per fellow, so the order must be deterministic. Prisma
-    // returned insertion order; typeid ids are time-ordered, so this reproduces it.
+    // The page keeps the first report per fellow, so the order must be deterministic.
     orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
   });
 }

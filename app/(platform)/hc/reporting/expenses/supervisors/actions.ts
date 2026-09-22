@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, inArray, isNull } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { signOut } from "next-auth/react";
 
 import { currentHubCoordinator } from "#/app/auth";
@@ -28,13 +28,14 @@ export async function loadHubSupervisorExpenses() {
   }
 
   const hubId = hubCoordinator.profile?.assignedHubId;
+  if (!hubId) {
+    await signOut({ callbackUrl: "/login" });
+    throw new Error("Unauthorised user");
+  }
   return loadSupervisorExpenses(
     inArray(
       reimbursementRequest.supervisorId,
-      db
-        .select({ id: supervisor.id })
-        .from(supervisor)
-        .where(hubId === null ? isNull(supervisor.hubId) : eq(supervisor.hubId, hubId)),
+      db.select({ id: supervisor.id }).from(supervisor).where(eq(supervisor.hubId, hubId)),
     ),
     () => hubCoordinator.profile?.coordinatorName,
   );
@@ -67,11 +68,17 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
 
 export async function getSupervisorsInHub() {
   const hubCoordinator = await currentHubCoordinator();
-  const hubId = hubCoordinator?.profile?.assignedHubId;
+  if (!hubCoordinator) {
+    await signOut({ callbackUrl: "/login" });
+    throw new Error("Unauthorised user");
+  }
+  const hubId = hubCoordinator.profile.assignedHubId;
+  if (!hubId) {
+    await signOut({ callbackUrl: "/login" });
+    throw new Error("Unauthorised user");
+  }
   return await db.query.supervisor.findMany({
-    // No coordinator means no filter, like the Prisma `hubId: undefined` it replaces.
-    where: (s, { eq, isNull }) =>
-      hubId === undefined ? undefined : hubId === null ? isNull(s.hubId) : eq(s.hubId, hubId),
+    where: (s, { eq }) => eq(s.hubId, hubId),
   });
 }
 

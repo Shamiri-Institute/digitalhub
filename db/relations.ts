@@ -1,4 +1,4 @@
-// Generated from prisma/schema.prisma relation fields, so every relation keeps its Prisma name.
+// Relation fields mirror the schema table names.
 import { relations } from "drizzle-orm";
 
 import {

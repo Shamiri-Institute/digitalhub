@@ -163,7 +163,7 @@ function latestEscalationWithTicket(tx: Transaction, ticketId: string) {
   });
 }
 
-/** Prisma's `update` threw when the row was missing; keep that contract. */
+/** Throws when the row was already deleted. */
 async function setTicketStatus(
   tx: Transaction,
   ticketId: string,

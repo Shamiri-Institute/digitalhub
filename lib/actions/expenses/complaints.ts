@@ -17,8 +17,7 @@ import { fellow, fellowAttendance, fellowPaymentComplaints, payoutStatements } f
  * scope is identical across roles.
  */
 export async function loadPaymentComplaints(scope: Scope) {
-  // Ordered like Prisma's insertion order: the report lists complaints in received order and
-  // `payoutTotalForAttendance` takes the first executed statement.
+  // payoutTotalForAttendance reads the first executed statement, so keep statements oldest first.
   const fellows = await db.query.fellow.findMany({
     where: scope,
     with: {

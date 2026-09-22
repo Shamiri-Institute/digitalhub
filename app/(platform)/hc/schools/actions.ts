@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { eq, sql } from "drizzle-orm";
+import { signOut } from "next-auth/react";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
 
@@ -419,11 +420,10 @@ export async function editSchoolInformation(
   }
 }
 
-/** Supervisors of a hub. `null` matches supervisors without a hub; `undefined` matches all. */
-export async function fetchHubSupervisors({ hubId }: { hubId: string | null | undefined }) {
+/** Supervisors of a hub. */
+export async function fetchHubSupervisors({ hubId }: { hubId: string }) {
   return await db.query.supervisor.findMany({
-    where: (s, { eq, isNull }) =>
-      hubId === undefined ? undefined : hubId === null ? isNull(s.hubId) : eq(s.hubId, hubId),
+    where: (s, { eq }) => eq(s.hubId, hubId),
   });
 }
 
@@ -469,11 +469,15 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
     }
 
     const hubId = hubCoordinator.profile?.assignedHubId;
+    if (!hubId) {
+      await signOut({ callbackUrl: "/login" });
+      throw new Error("Unauthorised user");
+    }
     const parsedData = AddSchoolSchema.parse(data);
 
     // Get available fellows for the pre-session date
     const fellows = await db.query.fellow.findMany({
-      where: (f, { eq, isNull }) => (hubId === null ? isNull(f.hubId) : eq(f.hubId, hubId)),
+      where: (f, { eq }) => eq(f.hubId, hubId),
       with: { groups: { columns: { id: true, schoolId: true } } },
     });
 

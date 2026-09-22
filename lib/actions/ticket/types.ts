@@ -1,15 +1,15 @@
 import type { ImplementerRole } from "#/db/enums";
 import {
-  TicketCategory as PrismaTicketCategory,
-  TicketPriorityLevel as PrismaTicketPriorityLevel,
-  TicketStatus as PrismaTicketStatus,
+  TicketCategory as TicketCategoryValues,
+  TicketPriorityLevel as TicketPriorityLevelValues,
+  TicketStatus as TicketStatusValues,
 } from "#/db/enums";
 import { z } from "zod";
 import { stringValidation } from "#/lib/utils";
 
-export const TicketCategoryEnum = z.enum(PrismaTicketCategory);
-export const TicketStatusEnum = z.enum(PrismaTicketStatus);
-export const TicketPriorityLevelEnum = z.enum(PrismaTicketPriorityLevel);
+export const TicketCategoryEnum = z.enum(TicketCategoryValues);
+export const TicketStatusEnum = z.enum(TicketStatusValues);
+export const TicketPriorityLevelEnum = z.enum(TicketPriorityLevelValues);
 
 export const CreateTicketSchema = z.object({
   subject: stringValidation("Subject is required"),

@@ -21,8 +21,6 @@ export default async function FellowPage() {
   const projectId = await getActiveProjectId();
 
   const projectHubIds = db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId));
-  // Fellows of this implementer in the active project. Prisma dropped the implementer filter
-  // when the id was undefined; keep that.
   const projectFellowIds = db
     .select({ id: fellow.id })
     .from(fellow)
@@ -61,7 +59,6 @@ export default async function FellowPage() {
       .where(
         and(
           or(eq(hub.projectId, projectId), isNull(fellow.hubId)),
-          // The old raw query compared `implementer_id = NULL` here, which matches nothing.
           implementerId === undefined ? sql`false` : eq(fellow.implementerId, implementerId),
         ),
       )

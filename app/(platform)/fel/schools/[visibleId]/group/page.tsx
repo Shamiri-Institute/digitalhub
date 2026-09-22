@@ -35,7 +35,6 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
     selectSchoolGroups().where(
       and(
         eq(school.visibleId, visibleId),
-        // The old raw query compared `fel.id = NULL` here, which matches nothing.
         fellowId === undefined ? sql`false` : eq(fellow.id, fellowId),
       ),
     ),
@@ -87,10 +86,9 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
   const fellowGroupReports =
     role === ImplementerRole.FELLOW
       ? await db.query.fellowGroupReport.findMany({
-          // Prisma dropped the fellow filter when the id was undefined; keep that.
           where: (r, { and, eq, inArray }) =>
             and(
-              fellowId === undefined ? undefined : eq(r.fellowId, fellowId),
+              fellowId === undefined ? sql`false` : eq(r.fellowId, fellowId),
               inArray(r.groupId, schoolGroupIds),
             ),
         })

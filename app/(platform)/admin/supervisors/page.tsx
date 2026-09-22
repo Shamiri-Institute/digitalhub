@@ -19,7 +19,6 @@ export default async function SupervisorsPage() {
   const projectId = await getActiveProjectId();
 
   const supervisors = await db.query.supervisor.findMany({
-    // Prisma dropped the implementer filter when the id was undefined; keep that.
     where: (s, { and, eq, inArray }) =>
       and(
         implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
