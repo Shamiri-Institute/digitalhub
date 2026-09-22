@@ -80,23 +80,59 @@ largest single cost in the application. It is on the follow-up list in `findings
 
 ## Correctness
 
-Three instruments, all at identical data.
+Four instruments, all at identical data.
 
 **Rendered text, all 82 pages.** `npx tsx scripts/bench/text-diff.ts bench/dumps/prisma-aca22fc
 bench/dumps/drizzle-dev` reports 82 of 82 pages showing identical text. The script strips scripts,
 styles and tags from each dumped page and compares what is left.
 
-**Browser render, all 99 pages as all 7 roles.** The new `tests/e2e/platform-pages.spec.ts` opens
-every platform page as every role and records headings, table row counts and the text of `main`.
-Both checkouts produced 99 pages carrying 479 table rows in total. No page reached the error
-boundary and none redirected to the login screen. The only browser console errors are 208 copies of
-the Vercel Speed Insights script returning 404, which is local-environment noise.
+**Browser render, all 99 pages as all 7 roles.** `tests/e2e/platform-pages.spec.ts` opens every
+platform page as every role and records headings, table row counts and the text of `main`. Both
+checkouts produced 99 pages carrying 479 table rows in total. No page reached the error boundary
+and none redirected to the login screen. The only browser console errors are 208 copies of the
+Vercel Speed Insights script returning 404, which is local-environment noise.
 
-**Payload shape.** `npm run bench:diff` reports all 82 pages differing, and that is expected across
-this boundary rather than a defect. It compares the React Server Components payload, where Prisma
-wrote `"_count":{"students":350}` and Drizzle writes the same number under its own name. Forty of
-the 82 Prisma dumps carry a `_count` object. Use `text-diff.ts` when the two sides are different
-ORMs and `diff.ts` when they are not.
+**Payload data, all 82 pages.** Text covers only what the server rendered into the markup. A field
+that a client component reads after hydration never appears there, and several of these pages draw
+charts in the browser. `npx tsx scripts/bench/shape-diff.ts` therefore compares the payload itself.
+It counts every scalar leaf and every object key, then separates a value that disappeared from a
+value that is merely carried fewer times.
+
+|                                             | result   |
+| ------------------------------------------- | -------- |
+| pages carrying every value both sides carry | 81 of 82 |
+| pages carrying a value fewer times          | 28       |
+| pages using identical field names           | 42 of 82 |
+
+The 28 pages are the over-fetch. The same value is still present, just not repeated once per
+parent row. The admin school sessions page carried 4192 copies of `0` and eight copies of each
+admission number; it now carries one of each.
+
+**Three shape changes, none of them a loss.** The payload is not identical, and the differences are
+worth knowing.
+
+1. _Counts moved out of `_count`._ Prisma wrote `"_count":{"students":350}`; Drizzle writes the
+   number under its own name. `_count` appears on 40 pages, and the replacements are
+   `clinicalCasesCount` on 18, `studentsCount` on 5, and `fellowsCount`, `supervisorsCount`,
+   `groupCount` and `sessionsCount` on one each. In 18 further cases a whole `clinicalCases` array
+   became a count, which is where the payload savings come from.
+2. _BigInt became Number, which is a correction._ No column in this database is `bigint` or
+   `numeric`. `payout_statements.amount` is `integer`, and the counts are counts of rows. The
+   BigInt existed only because Postgres types `count(*)` and `sum(integer)` as `bigint` on the
+   wire, and Prisma returned that as a JavaScript BigInt. The payload then had to carry a type
+   that JSON cannot serialise, which is why it wrote `$n1014` instead of `1014`. The Drizzle
+   queries cast with `count(*)::int`, so the payload holds the same number in the type the column
+   already uses. The payload held 2229 BigInt scalars before and none after. The numbers are
+   equal: on `/admin/fellows` both sides give the same distribution of group counts, 110 twos,
+   242 threes, 111 fours and one five.
+3. _One rating lost precision beyond a double._ `/sc/schools/SOBHA_SCH/groups` is the only page
+   where a value disappears. Prisma returned the group rating as a full-precision numeric string,
+   `"3.21428571428571428571"`; Drizzle returns the double `3.2142857142857144`. The column is an
+   average of seven ratings. Both sides render `3.2`, because the table shows one decimal.
+
+`npm run bench:diff` reports all 82 pages differing. That is the first change above, not a defect.
+Use `text-diff.ts` and `shape-diff.ts` when the two sides are different ORMs, and `diff.ts` when
+they are not.
 
 ## Test suite
 
@@ -154,6 +190,9 @@ Prisma-built database loaded into the drizzle-kit-built schema with zero errors.
 - `tests/helpers.ts`: `signInAs(context, role)` picks a seeded user for a role from the database
   through the benchmark's own `pickUser`, instead of a hardcoded email.
 - `scripts/bench/text-diff.ts`: the visible-text comparison described above.
+- `scripts/bench/shape-diff.ts`: the payload comparison described above. It compares scalar values
+  and field names as multisets, so a rename does not hide a loss and a loss does not hide behind a
+  rename.
 - `scripts/bench/diff.ts`: stylesheet names are now normalised the way script names already were.
   Without it every page differed on a CSS content hash whenever the two builds differed.
 - `playwright.config.ts`: `reuseExistingServer` outside CI, so the suite can run against the
