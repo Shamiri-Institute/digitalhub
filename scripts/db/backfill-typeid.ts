@@ -1,22 +1,16 @@
-// Rewrites every primary key that is not a prefixed TypeID, so that all ids carry a uuidv7.
+// Reports which primary keys are not a prefixed TypeID, and checks that the rewrite in
+// `drizzle/0001_backfill_typeid_ids.sql` can run safely against this database.
 //
-//   npx dotenv -c development -- tsx scripts/db/backfill-typeid.ts            # report only
-//   npx dotenv -c development -- tsx scripts/db/backfill-typeid.ts --apply
+//   npm run db:backfill:typeid
+//   DATABASE_URL=... npx tsx scripts/db/backfill-typeid.ts
 //
-// Rows created under Prisma hold a cuid, and rows created between the Drizzle cutover and
-// ENG-2164 hold a uuid version 4. Neither is time-ordered, which is what ENG-2164 fixes for new
-// rows. This brings the existing rows to the same shape.
-//
-// Every foreign key in this database is ON UPDATE CASCADE, so updating a parent id rewrites each
-// child reference in the same statement. The script therefore only updates the owning table.
-//
-// The new id is built from the row's `created_at`, not from the clock, so the timestamp inside
-// the uuid stays true and the ids keep sorting in creation order.
+// It only reads. The rewrite itself is the migration, which `drizzle-kit migrate` applies.
+// Run this first against an environment you are about to migrate: it names any table the
+// migration does not cover, and any assumption that does not hold there.
 import { parseArgs } from "node:util";
 
 import { is } from "drizzle-orm";
 import { PgTable, getTableConfig } from "drizzle-orm/pg-core";
-import { TypeID } from "typeid-js";
 
 import { pool } from "#/db/client";
 import * as schema from "#/db/schema";
@@ -36,31 +30,7 @@ const PREFIX_BY_CALL_SITE: Record<string, string> = {
   student_outcomes: "outcome",
 };
 
-const { values: args } = parseArgs({
-  options: {
-    apply: { type: "boolean", default: false },
-    batch: { type: "string", default: "500" },
-    table: { type: "string" },
-  },
-});
-const batchSize = Number(args.batch);
-
-/** A uuid version 7 whose timestamp is `ms`, so a backfilled id sorts where the row belongs. */
-function uuidV7At(ms: number) {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  // The first 48 bits are the millisecond timestamp, big-endian. Plain division keeps this
-  // inside a safe integer, so it needs no BigInt.
-  let rest = Math.max(0, Math.trunc(ms));
-  for (let i = 5; i >= 0; i--) {
-    bytes[i] = rest % 256;
-    rest = Math.floor(rest / 256);
-  }
-  bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x70;
-  bytes[8] = ((bytes[8] ?? 0) & 0x3f) | 0x80;
-  const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-}
+const { values: args } = parseArgs({ options: { table: { type: "string" } } });
 
 /**
  * The prefix each table should use. The schema is the authority, because its default is what new
@@ -164,7 +134,7 @@ async function preflight(touched: string[]) {
 async function main() {
   const url = new URL(process.env.DATABASE_URL ?? "");
   console.log(`target: ${url.hostname}:${url.port || "5432"}${url.pathname}`);
-  console.log(args.apply ? "mode:   APPLY (rows will be rewritten)\n" : "mode:   report only\n");
+  console.log("mode:   read only\n");
 
   const schemaPrefixes = prefixesFromSchema();
   const tables = (await tablesWithTextIds()).filter(
@@ -172,7 +142,6 @@ async function main() {
   );
 
   let totalPending = 0;
-  let totalRewritten = 0;
   const skipped: string[] = [];
   const touched: string[] = [];
 
@@ -197,55 +166,13 @@ async function main() {
     totalPending += pending;
     touched.push(table);
     console.log(`${table.padEnd(46)} ${String(pending).padStart(7)} rows -> ${prefix}_`);
-    if (!args.apply) continue;
-
-    let rewritten = 0;
-    for (;;) {
-      const { rows } = await pool.query<{ id: string; created_at: Date | null }>(
-        `select id, ${hasCreatedAt ? "created_at" : "null::timestamptz as created_at"}
-         from public."${table}" where id !~ $1 limit $2`,
-        [TYPEID, batchSize],
-      );
-      if (rows.length === 0) break;
-
-      // One statement per batch, not per row. Each id still cascades to its children, but at
-      // this volume the round trips dominate: production has about 223k ids to rewrite and
-      // roughly 660k child rows that follow them.
-      const pairs = rows.map((row) => {
-        const ms = row.created_at ? row.created_at.getTime() : Date.now();
-        return [row.id, TypeID.fromUUID(prefix, uuidV7At(ms)).toString()];
-      });
-      const values = pairs.map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`).join(", ");
-
-      const client = await pool.connect();
-      try {
-        await client.query("begin");
-        await client.query(
-          `update public."${table}" as t set id = v.next
-           from (values ${values}) as v(current, next)
-           where t.id = v.current`,
-          pairs.flat(),
-        );
-        await client.query("commit");
-      } catch (error) {
-        await client.query("rollback");
-        throw error;
-      } finally {
-        client.release();
-      }
-      rewritten += rows.length;
-      process.stdout.write(`  ${rewritten}/${pending}\r`);
-    }
-    totalRewritten += rewritten;
-    console.log(`  ${rewritten}/${pending} done`);
   }
 
   const problems = await preflight(touched);
   console.log("");
 
   if (totalPending === 0) console.log("Every id is already a prefixed TypeID.");
-  else if (args.apply) console.log(`\nRewrote ${totalRewritten} ids.`);
-  else console.log(`\n${totalPending} ids would be rewritten. Re-run with --apply.`);
+  else console.log(`\n${totalPending} ids the migration will rewrite.`);
 
   if (skipped.length > 0) {
     console.log(`\nSkipped, decide a prefix first:\n  ${skipped.join("\n  ")}`);
