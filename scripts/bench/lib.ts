@@ -27,10 +27,7 @@ function packageVersion(name: string) {
 /** Which ORM this checkout runs on, read from what is installed. */
 export function ormLabel() {
   const drizzle = packageVersion("drizzle-orm");
-  if (drizzle) return `drizzle-orm ${drizzle}`;
-  const prisma = packageVersion("@prisma/client");
-  if (prisma) return `prisma ${prisma}`;
-  return "unknown";
+  return drizzle ? `drizzle-orm ${drizzle}` : "unknown";
 }
 
 export function meta(label: string, extra: Record<string, unknown> = {}) {

@@ -15,6 +15,13 @@
       "when": 1790153538509,
       "tag": "0001_backfill_typeid_ids",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790165851853,
+      "tag": "0002_drop_prisma_migrations_table",
+      "breakpoints": true
     }
   ]
 }

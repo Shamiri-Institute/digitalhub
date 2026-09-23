@@ -447,7 +447,6 @@ function ComplexForm() {
 - `npm run db:dev:migrate` - Apply pending migrations from `drizzle/`
 - `npm run db:dev:migrate:reset` - Drop everything, reapply all migrations and seed
 - `npm run db:seed` - Seed database with test data (`db/seed/seed.ts`)
-- `npm run db:parity` - Prove the Drizzle migrations rebuild the archived Prisma schema (runs in CI)
 - `npm run db:studio` - Browse the database with Drizzle Studio
 
 ### Code Quality
