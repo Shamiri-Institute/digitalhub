@@ -79,7 +79,7 @@ Get the platform running locally in under 5 minutes:
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) v22.x or later
-- [Docker Compose](https://docs.docker.com/compose/install/) (for local PostgreSQL)
+- [PostgreSQL](https://www.postgresql.org/download/) 18 running locally
 - npm (comes with Node.js)
 
 ### One-Command Setup
