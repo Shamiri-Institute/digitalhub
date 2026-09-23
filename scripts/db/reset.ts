@@ -1,5 +1,5 @@
 // Drops everything in the database so `drizzle-kit migrate` and the seed rebuild it from
-// scratch. Used by the seeded preview build and `npm run db:dev:migrate:reset`.
+// scratch. Used by the seeded preview build and `npm run db:reset`.
 //
 //   dotenv -c development -- tsx scripts/db/reset.ts
 import { pool } from "#/db/client";

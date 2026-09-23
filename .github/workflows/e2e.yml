@@ -69,7 +69,7 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
 
       - name: Migrate database
-        run: npm run db:dev:migrate
+        run: npm run db:migrate
       # ideally we might want to create a different seed script for these tests so that we have deterministic data
       - name: Seed test database
         run: npm run db:seed
