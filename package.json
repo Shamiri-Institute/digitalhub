@@ -26,7 +26,6 @@
     "db:migrate": "dotenv -c development -- drizzle-kit migrate",
     "db:reset": "dotenv -c development -- sh -c \"tsx scripts/db/reset.ts && drizzle-kit migrate && tsx db/seed/seed.ts\"",
     "db:generate": "dotenv -c development -- drizzle-kit generate",
-    "db:dump": "dotenv -c development -- ./scripts/db/dump-db.sh",
     "release": "commit-and-tag-version",
     "db:studio": "dotenv -c development -- drizzle-kit studio"
   },
