@@ -20,16 +20,11 @@ The Shamiri Digital Hub is a comprehensive digital platform designed to manage y
 
 ## Tech Stack
 
-- **Framework**: [Next.js](https://nextjs.org/) 16.x (App Router)
-- **Language**: TypeScript (Strict Mode)
-- **Database**: PostgreSQL with [Drizzle ORM](https://orm.drizzle.team/)
+- **Framework**: [Next.js](https://nextjs.org/)
+- **Language**: TypeScript
+- **Database**: PostgreSQL
 - **Authentication**: NextAuth.js with Google OAuth
 - **UI Components**: Radix UI + TailwindCSS
-- **Data Visualization**: Recharts
-- **File Storage**: AWS S3
-- **Hosting**: Vercel
-
----
 
 ## Open Science & Licensing
 
@@ -78,17 +73,13 @@ Get the platform running locally in under 5 minutes:
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v22.x or later
-- [PostgreSQL](https://www.postgresql.org/download/) 18 running locally
-- npm (comes with Node.js)
+- Node.js v22.x or later
+- PostgreSQL v18
+- npm
 
 ### One-Command Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/Shamiri-Institute/digitalhub.git
-cd digitalhub
-
 # Install dependencies
 npm install
 
@@ -113,17 +104,6 @@ npm run dev
 ---
 
 ## Detailed Installation
-
-### System Requirements
-
-| Requirement | Version | Notes                   |
-| ----------- | ------- | ----------------------- |
-| Node.js     | >=22.x  | Required for Next.js 16 |
-| npm         | >=10.x  | Comes with Node.js      |
-| Docker      | >=20.x  | For local PostgreSQL    |
-| PostgreSQL  | >=14.x  | If not using Docker     |
-
-### Environment Setup
 
 Create a `.env.development` file in the root directory:
 
@@ -216,46 +196,13 @@ NEXTAUTH_SECRET="any-random-string-for-dev"
 NEXT_PUBLIC_ENV="development"
 ```
 
-#### Error Monitoring (Sentry) — Optional
-
-Sentry is **disabled by default**. The app builds and runs without any Sentry
-configuration. To send errors to your own Sentry project, set
-`NEXT_PUBLIC_SENTRY_DSN` (the app automatically whitelists your DSN's ingest
-host in the Content-Security-Policy). To also upload source maps for readable
-stack traces, additionally set `SENTRY_ORG`, `SENTRY_PROJECT`, and
-`SENTRY_AUTH_TOKEN` in your build/CI environment. None of these values are
-hardcoded, so forks plug in their own account with zero code changes.
-
-### Database Setup
-
-Set `DATABASE_URL` in `.env.development` to a local PostgreSQL 18.
-
-```bash
-# Build the schema
-npm run db:migrate
-
-# Seed with test data
-npm run db:seed
-```
-
-#### Using Existing PostgreSQL
-
-1. Create a database named `shamiri_db_dev`
-2. Update `DATABASE_URL` in `.env.development`
-3. Run migrations and seed:
-
-```bash
-npm run db:migrate
-npm run db:seed
-```
-
 ### Authentication Options
 
 **Option 1: Email/Password (Recommended for Development)**
 
 When `NEXT_PUBLIC_ENV=development` and `TEST_USER_PASSWORD` is set, sign in as a seeded user:
 
-- Email: `martin.odegaard@test.com`
+- Email: `your-email@test.com`
 - Password: the value of `TEST_USER_PASSWORD`
 
 **Option 2: Google OAuth**
@@ -328,337 +275,6 @@ Clinical Case
  └── Progress Notes (many)
  └── Treatment Plans (many)
 ```
-
-### Object IDs
-
-The platform uses prefixed Object IDs rather than sequential integers or plain UUIDs. This approach improves security by preventing enumeration attacks and enhances debugging by making entity types identifiable in logs.
-
----
-
-## Development Guide
-
-### Available Scripts
-
-#### Development
-
-| Command         | Description              |
-| --------------- | ------------------------ |
-| `npm run dev`   | Start development server |
-| `npm run build` | Build for production     |
-| `npm run start` | Start production server  |
-
-#### Database
-
-| Command               | Description                         |
-| --------------------- | ----------------------------------- |
-| `npm run db:migrate`  | Apply pending Drizzle migrations    |
-| `npm run db:reset`    | Reset and reapply all migrations    |
-| `npm run db:seed`     | Seed with faker-generated test data |
-| `npm run db:generate` | Generate a migration from db/schema |
-
-#### Code Quality
-
-| Command              | Description                                            |
-| -------------------- | ------------------------------------------------------ |
-| `npm run lint`       | Run ESLint                                             |
-| `npm run typecheck`  | Run TypeScript type checking                           |
-| `npm run format`     | Format code with oxfmt                                 |
-| `npm run stylecheck` | Check formatting (oxfmt) and lint (oxlint, type-aware) |
-
-#### Testing
-
-| Command             | Description              |
-| ------------------- | ------------------------ |
-| `npm run test:unit` | Run Vitest unit tests    |
-| `npm test`          | Run Playwright E2E tests |
-| `npm run test:ui`   | Run Playwright with UI   |
-| `npm run test:ci`   | Run tests in CI mode     |
-
-### Code Quality Gates
-
-**All code changes must pass these checks before merging:**
-
-```bash
-npm run typecheck   # TypeScript type checking
-npm run lint        # ESLint code quality
-npm run stylecheck  # oxfmt formatting + oxlint
-npm run test:unit   # Unit tests
-```
-
-### Git Workflow
-
-This project uses [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat(auth): add Google OAuth integration
-fix(database): resolve migration rollback issue
-chore(deps): update Next.js to v16.0.10
-refactor(components): extract reusable form validation
-docs(readme): update installation instructions
-test(e2e): add hub coordinator flow tests
-```
-
-### Release Process
-
-```bash
-# On dev branch
-git checkout dev
-npm run release
-git push --follow-tags
-
-# Fast-forward merge to main
-git checkout main
-git merge --ff-only v<version>
-git push
-```
-
----
-
-## Deployment Guide
-
-### Vercel Deployment (Recommended)
-
-This project is optimized for [Vercel](https://vercel.com/) deployment.
-
-#### Environment Variables
-
-Configure these in your Vercel project settings:
-
-| Variable                           | Required      | Description                                               |
-| ---------------------------------- | ------------- | --------------------------------------------------------- |
-| `DATABASE_URL`                     | Yes           | PostgreSQL connection string                              |
-| `NEXTAUTH_URL`                     | Yes           | Production URL                                            |
-| `NEXTAUTH_SECRET`                  | Yes           | Authentication secret                                     |
-| `GOOGLE_ID`                        | Yes           | Google OAuth Client ID                                    |
-| `GOOGLE_SECRET`                    | Yes           | Google OAuth Client Secret                                |
-| `S3_UPLOAD_KEY`                    | Yes           | IAM access key used for all S3 buckets                    |
-| `S3_UPLOAD_SECRET`                 | Yes           | IAM secret key used for all S3 buckets                    |
-| `S3_RECORDINGS_BUCKET`             | Yes           | S3 bucket for session recordings                          |
-| `S3_RECORDINGS_REGION`             | No            | Recordings bucket region (defaults to `af-south-1`)       |
-| `S3_STUDENT_ATTENDANCE_BUCKET`     | No            | Bucket for attendance documents                           |
-| `S3_STUDENT_ATTENDANCE_REGION`     | No            | Attendance bucket region (defaults to `af-south-1`)       |
-| `RECORDINGS_API_KEY`               | For fidelity  | Shared secret for the recordings/fidelity worker          |
-| `METABASE_SECRET_KEY`              | For analytics | Metabase JWT signing key                                  |
-| `METABASE_MONITORING_DASHBOARD_ID` | For analytics | Metabase Monitoring and Evaluation dashboard ID (numeric) |
-
-#### Deployment Environments
-
-| Environment       | Branch      | Database                                                       |
-| ----------------- | ----------- | -------------------------------------------------------------- |
-| Production        | `main`      | Production DB                                                  |
-| Preview / Staging | `dev` / PRs | Dedicated DB rebuilt from faker seed data (no production data) |
-| Development       | local       | Local DB                                                       |
-
-### Database per Environment
-
-Vercel's Build Command is a single project-wide setting (it can't be set per
-environment), so `vercel:build` self-selects based on the `VERCEL_ENV` system
-variable. Set the project's **Build Command** to `npm run vercel:build` and it
-does the right thing everywhere:
-
-- **Production** (`VERCEL_ENV=production`) → `vercel:prod:build`: marks the Drizzle baseline on a database whose schema predates drizzle-kit (no-op afterwards) + `drizzle-kit migrate` + `next build` — applies pending migrations, never touches data.
-- **Preview / Staging / Training** (any non-production `VERCEL_ENV`) → `vercel:seeded:build`: `scripts/db/reset.ts` + `drizzle-kit migrate` + `npm run db:seed` + `next build` — rebuilds the database from faker-generated data on each deploy.
-- **Run locally with no `VERCEL_ENV` set** → falls back to `vercel:prod:build`, so it never wipes a local database by accident.
-
-The preview/staging database is **seeded with synthetic data and never cloned
-from production**, so it contains no real student, clinical, or financial
-information.
-
-> If staging/testing/training are separate Vercel **projects** (not custom
-> environments), set each project's Build Command directly to
-> `npm run vercel:seeded:build` instead — there `VERCEL_ENV` is `production` for
-> every project, so the auto-selector can't tell them apart.
-
----
-
-## Recordings API
-
-The platform includes API endpoints for processing session recordings with external AI fidelity services.
-
-### Authentication
-
-All API requests require the `x-api-key` header matching the `RECORDINGS_API_KEY` environment variable.
-
-### Endpoints
-
-#### GET /api/recordings/pending
-
-Returns recordings awaiting processing.
-
-```bash
-curl -H "x-api-key: your-api-key" \
-  "https://your-domain/api/recordings/pending?limit=50"
-```
-
-**Response:**
-
-```json
-{
-  "recordings": [
-    {
-      "id": "<recording-id>",
-      "s3Key": "recordings/2025/01/school/fellow/group/session.mp3",
-      "fileName": "session.mp3",
-      "fellowName": "John Doe",
-      "schoolName": "Example School",
-      "sessionDate": "2025-01-08T00:00:00.000Z"
-    }
-  ],
-  "count": 1
-}
-```
-
-#### PATCH /api/recordings/[id]/status
-
-Update recording status after processing.
-
-```bash
-curl -X PATCH \
-  -H "x-api-key: your-api-key" \
-  -H "Content-Type: application/json" \
-  -d '{"status": "COMPLETED", "overallScore": "85"}' \
-  "https://your-domain/api/recordings/<recording-id>/status"
-```
-
-**Status Values:** `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`
-
-### S3 Recordings Setup
-
-See [S3 Recordings Bucket Setup](#s3-recordings-bucket-setup) for detailed AWS configuration.
-
----
-
-## For Organizations & Adopters
-
-### Customization Guide
-
-This platform can be adapted for similar intervention programs:
-
-1. **Branding**: Update `tailwind.config.ts` for your color scheme
-2. **Roles**: Modify role definitions in `db/enums.ts`
-3. **Workflows**: Adapt server actions in `lib/actions/`
-4. **Data Models**: Extend `db/schema.ts` and `db/relations.ts` for your data requirements
-
-### Configuration Options
-
-| Feature       | Configuration                                             | Description                          |
-| ------------- | --------------------------------------------------------- | ------------------------------------ |
-| Debug Mode    | `DEBUG=1`                                                 | Log every SQL statement Drizzle runs |
-| Perf Profiler | `NEXT_PUBLIC_ENABLE_PERF_PROFILER=1`                      | Enable the performance profiler      |
-| OAuth         | `GOOGLE_ID/SECRET`                                        | Google authentication                |
-| File Storage  | `S3_*` variables                                          | AWS S3 configuration                 |
-| Analytics     | `METABASE_SECRET_KEY`, `METABASE_MONITORING_DASHBOARD_ID` | Embedded Metabase dashboards         |
-
-### Scaling Considerations
-
-- **Database**: Use connection pooling (PgBouncer) for high traffic
-- **File Storage**: Configure S3 lifecycle rules for cost optimization
-- **Caching**: Implement Redis for session/query caching at scale
-- **CDN**: Use Vercel's Edge Network for global distribution
-
----
-
-## Contributing
-
-We welcome contributions from the community!
-
-### How to Contribute
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feat/your-feature`
-3. Make your changes following our code style
-4. Run quality gates: `npm run typecheck && npm run lint && npm run stylecheck`
-5. Commit using conventional commits
-6. Open a Pull Request
-
-### Development Standards
-
-- Use TypeScript strict mode
-- Follow TailwindCSS-only styling
-- Reuse existing components from `components/ui/`
-- Write tests for new functionality
-- Document API changes
-
----
-
-## Support & Community
-
-### Getting Help
-
-- **Issues**: [GitHub Issues](https://github.com/Shamiri-Institute/digitalhub/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Shamiri-Institute/digitalhub/discussions)
-
-### Contact
-
-- **Website**: [shamiri.institute](https://www.shamiri.institute/)
-- **Email**: Contact through the website
-
----
-
-## Technical Notes
-
-### S3 Bucket Setup
-
-#### Creating the S3 Bucket
-
-1. **Create bucket** in AWS Console:
-   - **Bucket name**: Choose a descriptive name for your environment (e.g., `myorg-recordings-dev`)
-   - **Region**: Choose based on your target users' location
-   - **Block Public Access**: Enable ALL
-   - **Default encryption**: SSE-S3 (AES-256)
-
-2. **Create IAM Policy** named `ShamiriRecordingsBucketPolicy`:
-
-   ```json
-   {
-     "Version": "2012-10-17",
-     "Statement": [
-       {
-         "Sid": "RecordingsBucketAccess",
-         "Effect": "Allow",
-         "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:ListBucket"],
-         "Resource": [
-           "arn:aws:s3:::your-recordings-bucket-dev",
-           "arn:aws:s3:::your-recordings-bucket-dev/*",
-           "arn:aws:s3:::your-recordings-bucket-prod",
-           "arn:aws:s3:::your-recordings-bucket-prod/*"
-         ]
-       }
-     ]
-   }
-   ```
-
-3. **Configure CORS** (Permissions > CORS):
-
-   ```json
-   [
-     {
-       "AllowedHeaders": ["*"],
-       "AllowedMethods": ["PUT", "POST", "GET"],
-       "AllowedOrigins": [
-         "http://localhost:3000",
-         "https://your-production-domain.com",
-         "https://*.vercel.app"
-       ],
-       "ExposeHeaders": ["ETag"],
-       "MaxAgeSeconds": 3600
-     }
-   ]
-   ```
-
-4. **Set Lifecycle Rules** (optional):
-   - Archive recordings to S3 Glacier after 90 days
-   - Abort incomplete multipart uploads after 7 days
-
-#### S3 Key Structure
-
-```
-recordings/{year}/{month}/{school_name}/{fellow_name}/{group_name}/{session_type}_{recording_id}.{ext}
-```
-
-Example: `recordings/2025/01/example_school/facilitator_name/group_a/session_1.mp3`
-
----
 
 ## License
 
