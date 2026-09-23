@@ -15,21 +15,6 @@
     }
   },
   "rules": {
-    "no-restricted-imports": [
-      "error",
-      {
-        "paths": [
-          {
-            "name": "@prisma/client",
-            "message": "Prisma was removed in ENG-2137; use #/db/client, #/db/schema and #/db/enums."
-          },
-          {
-            "name": "#/lib/db",
-            "message": "Prisma was removed in ENG-2137; use #/db/client."
-          }
-        ]
-      }
-    ],
     "react/exhaustive-deps": "error",
     "react/rules-of-hooks": "error",
     "react/jsx-no-useless-fragment": [
