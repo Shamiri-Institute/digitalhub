@@ -621,7 +621,7 @@ const students = await db.query.student.findMany({
 });
 ```
 
-Rules learned in the migration (see `docs/drizzle-migration/findings.md`):
+Rules learned while building the query layer:
 
 - Inside `where`, `orderBy` and `extras` callbacks use the callback's table parameter, never the imported table; nested relations are aliased.
 - Counts of related rows go in `extras` through `countOf` from `db/sql.ts`; never `db.$count` inside `extras` (drizzle 0.45 rewrites every column reference to the current alias).
