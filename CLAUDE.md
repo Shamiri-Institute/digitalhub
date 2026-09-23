@@ -446,7 +446,6 @@ function ComplexForm() {
 - `npm run db:migrate` - Apply pending migrations from `drizzle/`
 - `npm run db:reset` - Drop everything, reapply all migrations and seed
 - `npm run db:seed` - Seed database with test data (`db/seed/seed.ts`)
-- `npm run db:studio` - Browse the database with Drizzle Studio
 
 ### Code Quality
 
