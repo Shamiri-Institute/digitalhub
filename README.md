@@ -95,9 +95,7 @@ npm install
 # Copy environment file (see Environment Setup section for details)
 cp .env.example .env.development
 
-# Start database and run migrations
-npm run db:dev:up &
-sleep 5  # Wait for database to start
+# Build the schema
 npm run db:dev:migrate
 npm run db:seed
 
@@ -230,13 +228,10 @@ hardcoded, so forks plug in their own account with zero code changes.
 
 ### Database Setup
 
-#### Using Docker (Recommended)
+Set `DATABASE_URL` in `.env.development` to a local PostgreSQL 18.
 
 ```bash
-# Start PostgreSQL container
-npm run db:dev:up
-
-# In a separate terminal, run migrations
+# Build the schema
 npm run db:dev:migrate
 
 # Seed with test data
@@ -356,7 +351,6 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 
 | Command                        | Description                         |
 | ------------------------------ | ----------------------------------- |
-| `npm run db:dev:up`            | Start local PostgreSQL (Docker)     |
 | `npm run db:dev:migrate`       | Apply pending Drizzle migrations    |
 | `npm run db:dev:migrate:reset` | Reset and reapply all migrations    |
 | `npm run db:seed`              | Seed with faker-generated test data |

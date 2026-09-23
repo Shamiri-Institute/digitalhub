@@ -1,0 +1,164 @@
+[
+  {
+    "path": "/fel",
+    "finalPath": "/fel/schedule",
+    "status": 200,
+    "headings": [
+      "Schedule"
+    ],
+    "tables": 2,
+    "tableRows": 5,
+    "text": "Schedule\nSessions\n9\nGroups\n1\nStudents\n11\nSeptember 2026\nDay\nWeek\nMonth\nList\nFilter by\nSunday\tMonday\tTuesday\tWednesday\tThursday\tFriday\tSaturday\n30\n\t\n31\n\t\n1\n\t\n2\nPre\nDicki Inc\n9:00 - 10:30AM\n\t\n3\n\t\n4\n\t\n5\n\n\n6\n\t\n7\n\t\n8\n\t\n9\nS1\nDicki Inc\n9:00 - 10:30AM\n\t\n10\n\t\n11\n\t\n12\n\n\n13\n\t\n14\n\t\n15\n\t\n16\nS2\nDicki Inc\n9:00 - 10:30AM\n\t\n17\n\t\n18\n\t\n19\n\n\n20\n\t\n21\n\t\n22\n\t\n23\nS3\nDicki Inc\n9:00 - 10:30AM\n\t\n24\n\t\n25\n\t\n26\n\n\n27\n\t\n28\n\t\n29\n\t\n30\nS4\nDicki Inc\n9:00 - 10:30AM\n\t\n1\n\t\n2\n\t\n3\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/fel/portal",
+    "finalPath": "/fel/portal",
+    "status": 200,
+    "headings": [
+      "Fellow Portal"
+    ],
+    "tables": 1,
+    "tableRows": 1,
+    "text": "Fellow Portal\nEdit columns\n\tName\tSessions Attended\tMPESA Number\t\n\n\tGenoveva Sipes\t0/9\t+254 756 222684\t\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/fel/profile",
+    "finalPath": "/fel/profile",
+    "status": 200,
+    "headings": [],
+    "tables": 0,
+    "tableRows": 0,
+    "text": "Fellow Profile Page",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/fel/schedule",
+    "finalPath": "/fel/schedule",
+    "status": 200,
+    "headings": [
+      "Schedule"
+    ],
+    "tables": 2,
+    "tableRows": 5,
+    "text": "Schedule\nSessions\n9\nGroups\n1\nStudents\n11\nSeptember 2026\nDay\nWeek\nMonth\nList\nFilter by\nSunday\tMonday\tTuesday\tWednesday\tThursday\tFriday\tSaturday\n30\n\t\n31\n\t\n1\n\t\n2\nPre\nDicki Inc\n9:00 - 10:30AM\n\t\n3\n\t\n4\n\t\n5\n\n\n6\n\t\n7\n\t\n8\n\t\n9\nS1\nDicki Inc\n9:00 - 10:30AM\n\t\n10\n\t\n11\n\t\n12\n\n\n13\n\t\n14\n\t\n15\n\t\n16\nS2\nDicki Inc\n9:00 - 10:30AM\n\t\n17\n\t\n18\n\t\n19\n\n\n20\n\t\n21\n\t\n22\n\t\n23\nS3\nDicki Inc\n9:00 - 10:30AM\n\t\n24\n\t\n25\n\t\n26\n\n\n27\n\t\n28\n\t\n29\n\t\n30\nS4\nDicki Inc\n9:00 - 10:30AM\n\t\n1\n\t\n2\n\t\n3\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/fel/schools",
+    "finalPath": "/fel/schools",
+    "status": 200,
+    "headings": [
+      "Schools"
+    ],
+    "tables": 1,
+    "tableRows": 1,
+    "text": "Schools\nSessions\n9\nGroups\n1\nStudents\n11\nEdit columns\nSchool name\tCounty\tExpected number of students\tPoint supervisor\tUpcoming session\tDate added\tType\t\nDicki Inc\tNyamira\t231\tMrs. Lana Keeling\tS4 - 30 Sep 2026\t23/09/2026\tSubcounty\t\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/fel/schools/GODSDW",
+    "finalPath": "/fel/schools/GODSDW/sessions",
+    "status": 200,
+    "headings": [
+      "TAS\nTowne and Sons",
+      "Towne and Sons",
+      "Contact details",
+      "Information",
+      "Dropout History"
+    ],
+    "tables": 1,
+    "tableRows": 9,
+    "text": "TAS\nTowne and Sons\nPre\nS1\nS2\nS3\nS4\nS5\nS6\nS7\nS8\nDFU1\nDFU2\nDFU3\nDFU4\nDFU5\nDFU6\nSessions\n9\nGroups\n17\nStudents\n260\nContact details\nInformation\nDropout History\nSchools\n/\nTowne and Sons\nSessions\nGroup\nStudents\nEdit columns\nDate of attendance\tLast updated\tSession type\tAssigned supervisor\tSession status\t\n01 Sep 2026\t23 Sep 2026\tPre\tJeannette Runolfsson\t\nAttended\n\t\n\n08 Sep 2026\t23 Sep 2026\tS1\tJeannette Runolfsson\t\nAttended\n\t\n\n15 Sep 2026\t23 Sep 2026\tS2\tJeannette Runolfsson\t\nAttended\n\t\n\n22 Sep 2026\t23 Sep 2026\tS3\tJeannette Runolfsson\t\nAttended\n\t\n\n29 Sep 2026\t23 Sep 2026\tS4\tJeannette Runolfsson\t\nNot marked\n\t\n\n06 Oct 2026\t23 Sep 2026\tS5\tJeannette Runolfsson\t\nNot marked\n\t\n\n13 Oct 2026\t23 Sep 2026\tS6\tJeannette Runolfsson\t\nNot marked\n\t\n\n20 Oct 2026\t23 Sep 2026\tS7\tJeannette Runolfsson\t\nNot marked\n\t\n\n27 Oct 2026\t23 Sep 2026\tS8\tJeannette Runolfsson\t\nNot marked\n\t\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/fel/schools/GODSDW/group",
+    "finalPath": "/fel/schools/GODSDW/group",
+    "status": 200,
+    "headings": [
+      "TAS\nTowne and Sons",
+      "Towne and Sons",
+      "Contact details",
+      "Information",
+      "Dropout History"
+    ],
+    "tables": 0,
+    "tableRows": 0,
+    "text": "TAS\nTowne and Sons\nPre\nS1\nS2\nS3\nS4\nS5\nS6\nS7\nS8\nDFU1\nDFU2\nDFU3\nDFU4\nDFU5\nDFU6\nSessions\n9\nGroups\n17\nStudents\n260\nContact details\nInformation\nDropout History\nSchools\n/\nTowne and Sons\nSessions\nGroup\nStudents\n\nYou don't have access to this school.\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/fel/schools/GODSDW/sessions",
+    "finalPath": "/fel/schools/GODSDW/sessions",
+    "status": 200,
+    "headings": [
+      "TAS\nTowne and Sons",
+      "Towne and Sons",
+      "Contact details",
+      "Information",
+      "Dropout History"
+    ],
+    "tables": 1,
+    "tableRows": 9,
+    "text": "TAS\nTowne and Sons\nPre\nS1\nS2\nS3\nS4\nS5\nS6\nS7\nS8\nDFU1\nDFU2\nDFU3\nDFU4\nDFU5\nDFU6\nSessions\n9\nGroups\n17\nStudents\n260\nContact details\nInformation\nDropout History\nSchools\n/\nTowne and Sons\nSessions\nGroup\nStudents\nEdit columns\nDate of attendance\tLast updated\tSession type\tAssigned supervisor\tSession status\t\n01 Sep 2026\t23 Sep 2026\tPre\tJeannette Runolfsson\t\nAttended\n\t\n\n08 Sep 2026\t23 Sep 2026\tS1\tJeannette Runolfsson\t\nAttended\n\t\n\n15 Sep 2026\t23 Sep 2026\tS2\tJeannette Runolfsson\t\nAttended\n\t\n\n22 Sep 2026\t23 Sep 2026\tS3\tJeannette Runolfsson\t\nAttended\n\t\n\n29 Sep 2026\t23 Sep 2026\tS4\tJeannette Runolfsson\t\nNot marked\n\t\n\n06 Oct 2026\t23 Sep 2026\tS5\tJeannette Runolfsson\t\nNot marked\n\t\n\n13 Oct 2026\t23 Sep 2026\tS6\tJeannette Runolfsson\t\nNot marked\n\t\n\n20 Oct 2026\t23 Sep 2026\tS7\tJeannette Runolfsson\t\nNot marked\n\t\n\n27 Oct 2026\t23 Sep 2026\tS8\tJeannette Runolfsson\t\nNot marked\n\t\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/fel/schools/GODSDW/students",
+    "finalPath": "/fel/schools/GODSDW/students",
+    "status": 200,
+    "headings": [
+      "TAS\nTowne and Sons",
+      "Towne and Sons",
+      "Contact details",
+      "Information",
+      "Dropout History"
+    ],
+    "tables": 1,
+    "tableRows": 0,
+    "text": "TAS\nTowne and Sons\nPre\nS1\nS2\nS3\nS4\nS5\nS6\nS7\nS8\nDFU1\nDFU2\nDFU3\nDFU4\nDFU5\nDFU6\nSessions\n9\nGroups\n17\nStudents\n260\nContact details\nInformation\nDropout History\nSchools\n/\nTowne and Sons\nSessions\nGroup\nStudents\nEdit columns\nStudent Name\n\t\nGroup Name\n\t\nAttendance history\n\tQuestionnaire\tStatus\t\nNo students found\n1\nPage\n1 of 0\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/fel/tickets",
+    "finalPath": "/fel/tickets",
+    "status": 200,
+    "headings": [],
+    "tables": 1,
+    "tableRows": 0,
+    "text": "New ticket\nEdit columns\nCreated Date\tSubject\tCategory\tPriority\tCurrent Tier\tStatus\t\nNo tickets found\n1\nPage\n1 of 0\nGo to page:\nShow 10",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  }
+]

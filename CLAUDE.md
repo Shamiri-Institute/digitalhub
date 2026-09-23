@@ -442,7 +442,6 @@ function ComplexForm() {
 
 ### Database Operations
 
-- `npm run db:dev:up` - Start local PostgreSQL database using Docker
 - `npm run db:dev:generate` - Generate a SQL migration in `drizzle/` from changes to `db/schema.ts`
 - `npm run db:dev:migrate` - Apply pending migrations from `drizzle/`
 - `npm run db:dev:migrate:reset` - Drop everything, reapply all migrations and seed

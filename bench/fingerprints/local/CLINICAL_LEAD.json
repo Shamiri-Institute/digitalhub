@@ -1,0 +1,192 @@
+[
+  {
+    "path": "/cl",
+    "finalPath": "/cl/clinical",
+    "status": 200,
+    "headings": [
+      "Clinical Cases by Case Status",
+      "Clinical Cases by Risk Status",
+      "Clinical Sessions",
+      "Clinical Cases by Supervisor",
+      "All Supervisor Cases In This Hub (4)",
+      "My Cases (0)"
+    ],
+    "tables": 2,
+    "tableRows": 4,
+    "text": "New case\nClinical Cases by Case Status\n4\n\nView Summary\n\nClinical Cases by Risk Status\n4\n\nView Summary\n\nClinical Sessions\nS1\nS2\nS3\nS4\nF1\nF2\n0\n1\n2\n3\n4\n\nView Summary\n\nClinical Cases by Supervisor\n0\n0.5\n1\n1.5\n2\n\nView Summary\n\nAll Supervisor Cases In This Hub (4)\nEdit columns\n\tHub\tSchool\tPseudonym\tSupervisor\tRisk Status\tCase Report\tTreatment Plan\t\n\n\tArsenal Hub\tSobha Academy\t\nfuchsia-ostrich\n\tDeclan Rice\tHIGH\t\nUploaded\n\t\nUnavailable\n\t\n\n\n\tArsenal Hub\tSobha Academy\t\nyellow-parrot\n\tDeclan Rice\tLOW\t\nUploaded\n\t\nUnavailable\n\t\n\n\n\tArsenal Hub\tEmirates Academy\t\nblack-lion\n\tMartin Ødegaard\tHIGH\t\nUploaded\n\t\nUploaded\n\t\n\n\n\tArsenal Hub\tEmirates Academy\t\nivory-panda\n\tMartin Ødegaard\tLOW\t\nUploaded\n\t\nUnavailable\n\t\n1\nPage\n1 of 1\nGo to page:\nShow 10\nMy Cases (0)\nEdit columns\n\tSchool\tPseudonym\tDate added\tCase Status\tRisk\tAge\tReferral From\t\nNo clinical cases created by you\n1\nPage\n1 of 0\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/cl/clinical",
+    "finalPath": "/cl/clinical",
+    "status": 200,
+    "headings": [
+      "Clinical Cases by Case Status",
+      "Clinical Cases by Risk Status",
+      "Clinical Sessions",
+      "Clinical Cases by Supervisor",
+      "All Supervisor Cases In This Hub (4)",
+      "My Cases (0)"
+    ],
+    "tables": 2,
+    "tableRows": 4,
+    "text": "New case\nClinical Cases by Case Status\n4\n\nView Summary\n\nClinical Cases by Risk Status\n4\n\nView Summary\n\nClinical Sessions\nS1\nS2\nS3\nS4\nF1\nF2\n0\n1\n2\n3\n4\n\nView Summary\n\nClinical Cases by Supervisor\n0\n0.5\n1\n1.5\n2\n\nView Summary\n\nAll Supervisor Cases In This Hub (4)\nEdit columns\n\tHub\tSchool\tPseudonym\tSupervisor\tRisk Status\tCase Report\tTreatment Plan\t\n\n\tArsenal Hub\tSobha Academy\t\nfuchsia-ostrich\n\tDeclan Rice\tHIGH\t\nUploaded\n\t\nUnavailable\n\t\n\n\n\tArsenal Hub\tSobha Academy\t\nyellow-parrot\n\tDeclan Rice\tLOW\t\nUploaded\n\t\nUnavailable\n\t\n\n\n\tArsenal Hub\tEmirates Academy\t\nblack-lion\n\tMartin Ødegaard\tHIGH\t\nUploaded\n\t\nUploaded\n\t\n\n\n\tArsenal Hub\tEmirates Academy\t\nivory-panda\n\tMartin Ødegaard\tLOW\t\nUploaded\n\t\nUnavailable\n\t\n1\nPage\n1 of 1\nGo to page:\nShow 10\nMy Cases (0)\nEdit columns\n\tSchool\tPseudonym\tDate added\tCase Status\tRisk\tAge\tReferral From\t\nNo clinical cases created by you\n1\nPage\n1 of 0\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/cl/fellows",
+    "finalPath": "/cl/fellows",
+    "status": 200,
+    "headings": [
+      "Fellows"
+    ],
+    "tables": 1,
+    "tableRows": 3,
+    "text": "Fellows\nEdit columns\nName\tAverage Rating\tActive Status\tCases Referred\tNo. of Groups\tPhone Number\tSupervisor\t\nBukayo Saka\t0\tActive\t\n0\n\t2\t254712345678\tMartin Ødegaard\t\n\nGabriel Jesus\t0\tActive\t\n0\n\t2\t254734567890\tWilliam Saliba\t\n\nGabriel Martinelli\t0\tActive\t\n0\n\t2\t254723456789\tDeclan Rice\t\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/cl/students",
+    "finalPath": "/cl/students",
+    "status": 200,
+    "headings": [
+      "Students",
+      "Total Students",
+      "Group Sessions",
+      "Clinical Cases",
+      "Clinical Sessions",
+      "Attendance",
+      "Drop-out reasons",
+      "Student information completion",
+      "Student group ratings",
+      "Clinical Cases by Case Status",
+      "Clinical Sessions",
+      "Clinical Cases by Supervisor",
+      "Clinical Cases by Initial Contact",
+      "Students grouped by form",
+      "Students grouped by age",
+      "Students grouped by gender"
+    ],
+    "tables": 0,
+    "tableRows": 0,
+    "text": "Students\nTotal Students\n380\nGroup Sessions\n18\nClinical Cases\n4\nClinical Sessions\n10\nAttendance\ns0\ns2\ns4\ns6\ns8\n0\n15\n30\n45\n60\nDrop-out reasons\nNo data available\nStudent information completion\n100%\nStudent group ratings\nNo data available\nClinical Cases by Case Status\n4\nClinical Sessions\nClinical Session 2\n0\n1\n2\n3\n4\nClinical Cases by Supervisor\nMartin Ødegaard\n0\n0.5\n1\n1.5\n2\nClinical Cases by Initial Contact\n4\nStudents grouped by form\n380\nStudents grouped by age\nStudents grouped by gender\n380\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/cl/supervisors",
+    "finalPath": "/cl/supervisors",
+    "status": 200,
+    "headings": [
+      "Supervisors"
+    ],
+    "tables": 1,
+    "tableRows": 3,
+    "text": "Supervisors\nEdit columns\nSupervisor Name\tActive Status\tNo. of Clinical Cases\tNo. of Treatment Plans\tNo. of Case Notes\nDeclan Rice\tActive\t2\t\n2/5\n\t5\nMartin Ødegaard\tActive\t2\t\n2/5\n\t5\nWilliam Saliba\tActive\t0\t\n0/0\n\t0\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/cl/tickets",
+    "finalPath": "/cl/tickets",
+    "status": 200,
+    "headings": [],
+    "tables": 1,
+    "tableRows": 0,
+    "text": "New ticket\nEdit columns\nCreated Date\tSubject\tCategory\tPriority\tCurrent Tier\tStatus\t\nNo tickets found\n1\nPage\n1 of 0\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/cl/triage",
+    "finalPath": "/cl/triage/gaps",
+    "status": 200,
+    "headings": [
+      "Escalation gap report",
+      "Unmatched escalations — sorted oldest first"
+    ],
+    "tables": 1,
+    "tableRows": 0,
+    "text": "Escalation gaps\nFidelity\nHandoff quality\nAudit trail\nEscalation gap report\n\nRisk-positive triage events with no open clinical case. Any non-zero list requires immediate attention.\n\nSafety-critical view\n\nTotal escalations\n\n4\n\nNo case opened\n\n0\n\nOverdue (>3 days)\n\n0\n\nCase conversion rate\n\n100%\n\nUnmatched escalations — sorted oldest first\n\nDays elapsed is shown in red when >3 days and dark red when >7 days.\n\nEdit columns\nStudent\tSchool\tDays elapsed\tReferred supervisor\tHandoff status\nAll escalations have open cases — every risk-positive triage event in this hub has a corresponding clinical case.\n1\nPage\n1 of 0\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/cl/triage/audits",
+    "finalPath": "/cl/triage/audits",
+    "status": 200,
+    "headings": [
+      "Triage audit trail"
+    ],
+    "tables": 1,
+    "tableRows": 0,
+    "text": "Escalation gaps\nFidelity\nHandoff quality\nAudit trail\nTriage audit trail\n\nTriage records that were edited after initial save. Edits >24 hours after the session are highlighted. This view is for pattern detection, not punitive use.\n\nEdit columns\nFellow\tEdit time\tHours after session\tEdited by\tWhat changed\nNo edited triage records in this hub yet.\n1\nPage\n1 of 0\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/cl/triage/fidelity",
+    "finalPath": "/cl/triage/fidelity",
+    "status": 200,
+    "headings": [
+      "Triage fidelity"
+    ],
+    "tables": 1,
+    "tableRows": 3,
+    "text": "Escalation gaps\nFidelity\nHandoff quality\nAudit trail\nTriage fidelity\n\nPer-fellow triage completion and quality metrics. Flagged values (⚠) fall outside expected ranges — triage rate <10% or >80%, escalation compliance <95%.\n\nEdit columns\nFellow\tSupervisor\tSessions\tTriage events\tTriage rate\tEscalation compliance\nBukayo Saka\tMartin Ødegaard\t16\t3\t19%\t0% ⚠\nGabriel Martinelli\tDeclan Rice\t13\t1\t8% ⚠\t0% ⚠\nGabriel Jesus\tWilliam Saliba\t17\t0\t0%\t100%\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/cl/triage/gaps",
+    "finalPath": "/cl/triage/gaps",
+    "status": 200,
+    "headings": [
+      "Escalation gap report",
+      "Unmatched escalations — sorted oldest first"
+    ],
+    "tables": 1,
+    "tableRows": 0,
+    "text": "Escalation gaps\nFidelity\nHandoff quality\nAudit trail\nEscalation gap report\n\nRisk-positive triage events with no open clinical case. Any non-zero list requires immediate attention.\n\nSafety-critical view\n\nTotal escalations\n\n4\n\nNo case opened\n\n0\n\nOverdue (>3 days)\n\n0\n\nCase conversion rate\n\n100%\n\nUnmatched escalations — sorted oldest first\n\nDays elapsed is shown in red when >3 days and dark red when >7 days.\n\nEdit columns\nStudent\tSchool\tDays elapsed\tReferred supervisor\tHandoff status\nAll escalations have open cases — every risk-positive triage event in this hub has a corresponding clinical case.\n1\nPage\n1 of 0\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/cl/triage/handoffs",
+    "finalPath": "/cl/triage/handoffs",
+    "status": 200,
+    "headings": [
+      "Handoff quality"
+    ],
+    "tables": 1,
+    "tableRows": 2,
+    "text": "Escalation gaps\nFidelity\nHandoff quality\nAudit trail\nHandoff quality\n\nDistribution of supervisor handoff outcomes per supervisor. A “Could not reach” rate >15% (⚠) indicates a structural contact problem.\n\nEdit columns\nSupervisor\tTotal escalations\tWarm handoff\tCould not reach\nMartin Ødegaard\t2\t0 (0%)\t0 (0%)\nDeclan Rice\t2\t0 (0%)\t0 (0%)\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  }
+]

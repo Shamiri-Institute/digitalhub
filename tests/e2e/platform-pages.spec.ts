@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { type ConsoleMessage, expect, test } from "@playwright/test";
 
-import { type Role, resolveRoutes } from "#/scripts/bench/routes";
+import { type Role, resolveRoutes } from "#/tests/platform-routes";
 import { signInAs } from "#/tests/helpers";
 import { dataRows, getUrl } from "#/tests/pages/helpers";
 
@@ -12,7 +12,7 @@ import { dataRows, getUrl } from "#/tests/pages/helpers";
  * (for example before and after a data-layer change) can be compared page by page.
  *
  * Pages come from the file system and users from the database, the same way the benchmark picks
- * them (`scripts/bench/routes.ts`), so both measure the same accounts. Assertions are soft: one
+ * them (`tests/platform-routes.ts`). Assertions are soft: one
  * broken page must not hide the state of the rest, and the fingerprint file is always written.
  */
 const ERROR_TEXTS = ["Oops! Something went wrong!", "Application error", "Internal Server Error"];

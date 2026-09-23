@@ -1,0 +1,234 @@
+[
+  {
+    "path": "/admin",
+    "finalPath": "/admin/schedule",
+    "status": 200,
+    "headings": [
+      "Schedule"
+    ],
+    "tables": 2,
+    "tableRows": 5,
+    "text": "Schedule\nHubs\n7\nSchools\n46\nStudents\n16,633\nSeptember 2026\nDay\nWeek\nMonth\nList\nFilter by\nSunday\tMonday\tTuesday\tWednesday\tThursday\tFriday\tSaturday\n30\n\t\n31\n\t\n1\nPre - 9:00AM\n- Mills and Sons\nPre - 9:00AM\n- O'Conner, Schmitt and Miller\n+ 15 more\n\t\n2\nPre - 9:00AM\n- Dicki Inc\nPre - 9:00AM\n- Bashirian Group\n+ 14 more\n\t\n3\nPre - 9:00AM\n- Ward, Labadie and Schmidt\nPre - 9:00AM\n- Toy Group\n+ 6 more\n\t\n4\nPre - 9:00AM\n- Torphy, Rolfson and Davis\nPre - 9:00AM\n- Will LLC\n+ 2 more\n\t\n5\n\n\n6\n\t\n7\n\t\n8\nS1 - 9:00AM\n- O'Conner, Schmitt and Miller\nS1 - 9:00AM\n- Runte - Gutkowski\n+ 15 more\n\t\n9\nS1 - 9:00AM\n- Oberbrunner Inc\nS1 - 9:00AM\n- Lind LLC\n+ 14 more\n\t\n10\nS1 - 9:00AM\n- Jenkins Group\nS1 - 9:00AM\n- Dooley, Green and Senger\n+ 6 more\n\t\n11\nS1 - 9:00AM\n- Reilly - Willms\nS1 - 9:00AM\n- Howe LLC\n+ 2 more\n\t\n12\n\n\n13\n\t\n14\n\t\n15\nS2 - 9:00AM\n- Romaguera - Rath\nS2 - 9:00AM\n- Auer - Orn\n+ 15 more\n\t\n16\nS2 - 9:00AM\n- Willms, Stark and Hintz\nS2 - 9:00AM\n- Haley - Bode\n+ 14 more\n\t\n17\nS2 - 9:00AM\n- Dooley, Green and Senger\nS2 - 9:00AM\n- Toy Group\n+ 6 more\n\t\n18\nS2 - 9:00AM\n- Will LLC\nS2 - 9:00AM\n- Torphy, Rolfson and Davis\n+ 2 more\n\t\n19\n\n\n20\n\t\n21\n\t\n22\nS3 - 9:00AM\n- Auer - Orn\nS3 - 9:00AM\n- Renner, Green and Hegmann\n+ 15 more\n\t\n23\nS3 - 9:00AM\n- Waters - Upton\nS3 - 9:00AM\n- Kihn - Runte\n+ 15 more\n\t\n24\nS3 - 9:00AM\n- Ward, Labadie and Schmidt\nS3 - 9:00AM\n- Rempel-Torphy - Koelpin\n+ 6 more\n\t\n25\nS3 - 9:00AM\n- Reilly - Willms\nS3 - 9:00AM\n- Will LLC\n+ 2 more\n\t\n26\n\n\n27\n\t\n28\n\t\n29\nS4 - 9:00AM\n- O'Conner, Schmitt and Miller\nS4 - 9:00AM\n- Russel Inc\n+ 15 more\n\t\n30\nS4 - 9:00AM\n- Oberbrunner Inc\nS4 - 9:00AM\n- Fahey - Schuppe\n+ 15 more\n\t\n1\n\t\n2\n\t\n3\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/fellows",
+    "finalPath": "/admin/fellows",
+    "status": 200,
+    "headings": [
+      "Fellows"
+    ],
+    "tables": 1,
+    "tableRows": 10,
+    "text": "Fellows\nEdit columns\n\tName\tAverage Rating\tStatus\tNo. of groups\tPhone Number\tSupervisor\t\n\n\tBukayo Saka\t\n0.0\n\tActive\t2\t0712 345678\t\nMartin Ødegaard\n\t\n\n\n\tGabriel Martinelli\t\n0.0\n\tActive\t2\t0723 456789\t\nDeclan Rice\n\t\n\n\n\tGabriel Jesus\t\n0.0\n\tActive\t2\t0734 567890\t\nWilliam Saliba\n\t\n\n\n\tCarlos Von\t\n0.0\n\tActive\t3\t0722 367745\t\nEvan Harvey\n\t\n\n\n\tEdmund Balistreri\t\n0.0\n\tActive\t3\t0738 655415\t\nEvan Harvey\n\t\n\n\n\tEleanor Sporer\t\n0.0\n\tActive\t3\t0718 481478\t\nEvan Harvey\n\t\n\n\n\tCarrie Bergstrom\t\n0.0\n\tActive\t3\t0777 795462\t\nEvan Harvey\n\t\n\n\n\tIris Runte DDS\t\n0.0\n\tActive\t3\t0773 616415\t\nEvan Harvey\n\t\n\n\n\tMs. Taya Bruen\t\n0.0\n\tActive\t3\t0721 316937\t\nEvan Harvey\n\t\n\n\n\tValentina Marvin V\t\n0.0\n\tActive\t3\t0758 533854\t\nEvan Harvey\n\t\n1\n2\nPage\n1 of 45\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/hubs",
+    "finalPath": "/admin/hubs",
+    "status": 200,
+    "headings": [
+      "Hubs"
+    ],
+    "tables": 1,
+    "tableRows": 7,
+    "text": "Hubs\nEdit columns\n\tHub name\tImplementer\tHub coordinator\tHub coordinator phone number\tSupervisors | Fellows\t\n\n\tArsenal Hub\tShamiri Institute\tMikel Arteta\t+254 712 345678\t3 | 3\t\n\n\n\tEmmerich - Reilly\tShamiri Institute\tMrs. Marsha Stehr\t+254 738 436187\t6 | 80\t\n\n\n\tConnelly, McClure and Heller\tShamiri Institute\tJabari Schiller\t+254 775 799457\t6 | 77\t\n\n\n\tVonRueden - Howe\tShamiri Institute\tDouglas Berge\t+254 754 146586\t6 | 76\t\n\n\n\tDach, Von and Williamson\tShamiri Institute\tBarbara Kirlin\t+254 795 951859\t6 | 71\t\n\n\n\tLemke-Marvin - Koelpin\tShamiri Institute\tAlbert Lang\t+254 764 447176\t6 | 73\t\n\n\n\tHamill Inc\tShamiri Institute\tNathaniel Gleichner\t+254 728 987518\t6 | 68\t\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/schedule",
+    "finalPath": "/admin/schedule",
+    "status": 200,
+    "headings": [
+      "Schedule"
+    ],
+    "tables": 2,
+    "tableRows": 5,
+    "text": "Schedule\nHubs\n7\nSchools\n46\nStudents\n16,633\nSeptember 2026\nDay\nWeek\nMonth\nList\nFilter by\nSunday\tMonday\tTuesday\tWednesday\tThursday\tFriday\tSaturday\n30\n\t\n31\n\t\n1\nPre - 9:00AM\n- Mills and Sons\nPre - 9:00AM\n- O'Conner, Schmitt and Miller\n+ 15 more\n\t\n2\nPre - 9:00AM\n- Dicki Inc\nPre - 9:00AM\n- Bashirian Group\n+ 14 more\n\t\n3\nPre - 9:00AM\n- Ward, Labadie and Schmidt\nPre - 9:00AM\n- Toy Group\n+ 6 more\n\t\n4\nPre - 9:00AM\n- Torphy, Rolfson and Davis\nPre - 9:00AM\n- Will LLC\n+ 2 more\n\t\n5\n\n\n6\n\t\n7\n\t\n8\nS1 - 9:00AM\n- O'Conner, Schmitt and Miller\nS1 - 9:00AM\n- Runte - Gutkowski\n+ 15 more\n\t\n9\nS1 - 9:00AM\n- Oberbrunner Inc\nS1 - 9:00AM\n- Lind LLC\n+ 14 more\n\t\n10\nS1 - 9:00AM\n- Jenkins Group\nS1 - 9:00AM\n- Dooley, Green and Senger\n+ 6 more\n\t\n11\nS1 - 9:00AM\n- Reilly - Willms\nS1 - 9:00AM\n- Howe LLC\n+ 2 more\n\t\n12\n\n\n13\n\t\n14\n\t\n15\nS2 - 9:00AM\n- Romaguera - Rath\nS2 - 9:00AM\n- Auer - Orn\n+ 15 more\n\t\n16\nS2 - 9:00AM\n- Willms, Stark and Hintz\nS2 - 9:00AM\n- Haley - Bode\n+ 14 more\n\t\n17\nS2 - 9:00AM\n- Dooley, Green and Senger\nS2 - 9:00AM\n- Toy Group\n+ 6 more\n\t\n18\nS2 - 9:00AM\n- Will LLC\nS2 - 9:00AM\n- Torphy, Rolfson and Davis\n+ 2 more\n\t\n19\n\n\n20\n\t\n21\n\t\n22\nS3 - 9:00AM\n- Auer - Orn\nS3 - 9:00AM\n- Renner, Green and Hegmann\n+ 15 more\n\t\n23\nS3 - 9:00AM\n- Waters - Upton\nS3 - 9:00AM\n- Kihn - Runte\n+ 15 more\n\t\n24\nS3 - 9:00AM\n- Ward, Labadie and Schmidt\nS3 - 9:00AM\n- Rempel-Torphy - Koelpin\n+ 6 more\n\t\n25\nS3 - 9:00AM\n- Reilly - Willms\nS3 - 9:00AM\n- Will LLC\n+ 2 more\n\t\n26\n\n\n27\n\t\n28\n\t\n29\nS4 - 9:00AM\n- O'Conner, Schmitt and Miller\nS4 - 9:00AM\n- Russel Inc\n+ 15 more\n\t\n30\nS4 - 9:00AM\n- Oberbrunner Inc\nS4 - 9:00AM\n- Fahey - Schuppe\n+ 15 more\n\t\n1\n\t\n2\n\t\n3\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/schools/ADXXYN",
+    "finalPath": "/admin/schools/ADXXYN/supervisors",
+    "status": 200,
+    "headings": [
+      "SI\nSchneider Inc",
+      "Schneider Inc",
+      "Contact details",
+      "Information",
+      "Dropout History"
+    ],
+    "tables": 1,
+    "tableRows": 6,
+    "text": "SI\nSchneider Inc\nPre\nS1\nS2\nS3\nS4\nS5\nS6\nS7\nS8\nDFU1\nDFU2\nDFU3\nDFU4\nDFU5\nDFU6\nSessions\n9\nGroups\n20\nStudents\n314\nContact details\nInformation\nDropout History\nHubs\n/\n/\nSessions\nSupervisors\nFellows\nStudents\nGroups\nEdit columns\nName\tAssigned school\tAttendance history\tNo. of fellows\nAlf Heathcote\t\t\nPre\nS1\nS2\nS3\nS4\n\t13/13\nDarrel Crist\t\t\nPre\nS1\nS2\nS3\nS4\n\t13/13\nDemarcus Kulas\t\nGislason - Daugherty,\n+1\n\t\nPre\nS1\nS2\nS3\nS4\n\t15/15\nFrankie Mann\t\nBartell-MacGyver, Simonis and Kuhic,\n+1\n\t\nPre\nS1\nS2\nS3\nS4\n\t11/11\nJoana Crist\t\nStanton Inc,\n+1\n\t\nPre\nS1\nS2\nS3\nS4\n\t14/14\nKendall Wuckert\t\nSchneider Group,\n+3\n\t\nPre\nS1\nS2\nS3\nS4\n\t13/13\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/schools/ADXXYN/fellows",
+    "finalPath": "/admin/schools/ADXXYN/fellows",
+    "status": 200,
+    "headings": [
+      "SI\nSchneider Inc",
+      "Schneider Inc",
+      "Contact details",
+      "Information",
+      "Dropout History"
+    ],
+    "tables": 1,
+    "tableRows": 10,
+    "text": "SI\nSchneider Inc\nPre\nS1\nS2\nS3\nS4\nS5\nS6\nS7\nS8\nDFU1\nDFU2\nDFU3\nDFU4\nDFU5\nDFU6\nSessions\n9\nGroups\n20\nStudents\n314\nContact details\nInformation\nDropout History\nHubs\n/\n/\nSessions\nSupervisors\nFellows\nStudents\nGroups\nEdit columns\nName\tAverage Rating\tActive Status\tGroup Name\tPhone Number\t\nReece Johnston-Legros\t\n0.0\n\tActive\t\t0791 698384\t\n\nMr. Cleora Funk\t\n0.0\n\tActive\t\t0746 617477\t\n\nShirley Stehr\t\n0.0\n\tActive\tGorczany Inc\t0799 248997\t\n\nBobbie Schmeler\t\n0.0\n\tActive\t\t0773 755647\t\n\nMr. Avis Rippin\t\n0.0\n\tActive\t\t0774 637722\t\n\nMrs. Daron Fay\t\n0.0\n\tActive\t\t0714 232866\t\n\nIrving Pouros\t\n0.0\n\tActive\t\t0766 756926\t\n\nAlverta Erdman\t\n0.0\n\tActive\tGislason - Douglas\t0745 953847\t\n\nMr. Charlie Kozey II\t\n0.0\n\tActive\t\t0715 358786\t\n\nRonald Hegmann\t\n0.0\n\tActive\t\t0746 452195\t\n1\n2\nPage\n1 of 8\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/schools/ADXXYN/groups",
+    "finalPath": "/admin/schools/ADXXYN/groups",
+    "status": 200,
+    "headings": [
+      "SI\nSchneider Inc",
+      "Schneider Inc",
+      "Contact details",
+      "Information",
+      "Dropout History"
+    ],
+    "tables": 1,
+    "tableRows": 10,
+    "text": "SI\nSchneider Inc\nPre\nS1\nS2\nS3\nS4\nS5\nS6\nS7\nS8\nDFU1\nDFU2\nDFU3\nDFU4\nDFU5\nDFU6\nSessions\n9\nGroups\n20\nStudents\n314\nContact details\nInformation\nDropout History\nHubs\n/\n/\nSessions\nSupervisors\nFellows\nStudents\nGroups\nEdit columns\nGroup\tGroup Rating\tSupervisor\tFellow\tActive Status\tNo. of students\t\nSchulist, Aufderhar and Macejkovic\t\n0.0\n\tDemarcus Kulas\tKaelyn Waelchi\tActive\t19/15\t\n\nNikolaus Inc\t\n0.0\n\tDemarcus Kulas\tNoemi Schmeler\tActive\t18/15\t\n\nVeum Group\t\n0.0\n\tDemarcus Kulas\tDee Smith\tActive\t12/15\t\n\nGorczany Inc\t\n0.0\n\tDemarcus Kulas\tShirley Stehr\tActive\t11/15\t\n\nGulgowski - Rolfson\t\n0.0\n\tDemarcus Kulas\tMiss Anita McGlynn\tActive\t11/15\t\n\nSawayn - Stamm\t\n0.0\n\tDemarcus Kulas\tTito Rath Jr.\tActive\t22/15\t\n\nKris, Pacocha and Sanford\t\n0.0\n\tDemarcus Kulas\tReese Paucek\tActive\t17/15\t\n\nRutherford - Adams\t\n0.0\n\tDemarcus Kulas\tMrs. Lela Lesch-Farrell I\tActive\t9/15\t\n\nPowlowski Group\t\n0.0\n\tAlf Heathcote\tLarue Rempel\tActive\t16/15\t\n\nLubowitz, Franecki and Altenwerth\t\n0.0\n\tAlf Heathcote\tDestiney Deckow\tActive\t11/15\t\n1\n2\nPage\n1 of 2\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/schools/ADXXYN/sessions",
+    "finalPath": "/admin/schools/ADXXYN/sessions",
+    "status": 200,
+    "headings": [
+      "SI\nSchneider Inc",
+      "Schneider Inc",
+      "Contact details",
+      "Information",
+      "Dropout History"
+    ],
+    "tables": 1,
+    "tableRows": 9,
+    "text": "SI\nSchneider Inc\nPre\nS1\nS2\nS3\nS4\nS5\nS6\nS7\nS8\nDFU1\nDFU2\nDFU3\nDFU4\nDFU5\nDFU6\nSessions\n9\nGroups\n20\nStudents\n314\nContact details\nInformation\nDropout History\nHubs\n/\n/\nSessions\nSupervisors\nFellows\nStudents\nGroups\nEdit columns\nDate of attendance\tLast updated\tSession type\tAssigned supervisor\tSession status\t\n01 Sep 2026\t23 Sep 2026\tPre\tKendall Wuckert\t\nAttended\n\t\n\n08 Sep 2026\t23 Sep 2026\tS1\tKendall Wuckert\t\nAttended\n\t\n\n15 Sep 2026\t23 Sep 2026\tS2\tKendall Wuckert\t\nAttended\n\t\n\n22 Sep 2026\t23 Sep 2026\tS3\tKendall Wuckert\t\nAttended\n\t\n\n29 Sep 2026\t23 Sep 2026\tS4\tKendall Wuckert\t\nNot marked\n\t\n\n06 Oct 2026\t23 Sep 2026\tS5\tKendall Wuckert\t\nNot marked\n\t\n\n13 Oct 2026\t23 Sep 2026\tS6\tKendall Wuckert\t\nNot marked\n\t\n\n20 Oct 2026\t23 Sep 2026\tS7\tKendall Wuckert\t\nNot marked\n\t\n\n27 Oct 2026\t23 Sep 2026\tS8\tKendall Wuckert\t\nNot marked\n\t\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/schools/ADXXYN/students",
+    "finalPath": "/admin/schools/ADXXYN/students",
+    "status": 200,
+    "headings": [
+      "SI\nSchneider Inc",
+      "Schneider Inc",
+      "Contact details",
+      "Information",
+      "Dropout History"
+    ],
+    "tables": 1,
+    "tableRows": 10,
+    "text": "SI\nSchneider Inc\nPre\nS1\nS2\nS3\nS4\nS5\nS6\nS7\nS8\nDFU1\nDFU2\nDFU3\nDFU4\nDFU5\nDFU6\nSessions\n9\nGroups\n20\nStudents\n314\nContact details\nInformation\nDropout History\nHubs\n/\n/\nSessions\nSupervisors\nFellows\nStudents\nGroups\nEdit columns\nStudent Name\n\t\nGroup Name\n\t\nAttendance history\n\tQuestionnaire\tStatus\t\nRita Hickle II\tKris, Pacocha and Sanford\t\nPre\nS1\nS2\nS3\nS4\n\tNone\tActive\t\n\nMiss Aiden Hilpert\tGislason - Douglas\t\nPre\nS1\nS2\nS3\nS4\n\tNone\tActive\t\n\nKeshawn Quigley\tGulgowski - Rolfson\t\nPre\nS1\nS2\nS3\nS4\n\tNone\tActive\t\n\nDr. Glenn Howell\tKeebler - Cassin\t\nPre\nS1\nS2\nS3\nS4\n\tNone\tActive\t\n\nJoey Koss\tGorczany Inc\t\nPre\nS1\nS2\nS3\nS4\n\tNone\tActive\t\n\nKatrina Nolan\tKeebler - Cassin\t\nPre\nS1\nS2\nS3\nS4\n\tNone\tActive\t\n\nMicheal Johnston-Stamm\tGislason - Douglas\t\nPre\nS1\nS2\nS3\nS4\n\tNone\tActive\t\n\nMrs. Opal Okuneva\tKozey, Konopelski and Harber\t\nPre\nS1\nS2\nS3\nS4\n\tNone\tActive\t\n\nDee Stroman\tSwaniawski - Nitzsche\t\nPre\nS1\nS2\nS3\nS4\n\tNone\tActive\t\n\nEinar Pouros\tSwaniawski - Nitzsche\t\nPre\nS1\nS2\nS3\nS4\n\tNone\tActive\t\n1\n2\nPage\n1 of 32\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/schools/ADXXYN/supervisors",
+    "finalPath": "/admin/schools/ADXXYN/supervisors",
+    "status": 200,
+    "headings": [
+      "SI\nSchneider Inc",
+      "Schneider Inc",
+      "Contact details",
+      "Information",
+      "Dropout History"
+    ],
+    "tables": 1,
+    "tableRows": 6,
+    "text": "SI\nSchneider Inc\nPre\nS1\nS2\nS3\nS4\nS5\nS6\nS7\nS8\nDFU1\nDFU2\nDFU3\nDFU4\nDFU5\nDFU6\nSessions\n9\nGroups\n20\nStudents\n314\nContact details\nInformation\nDropout History\nHubs\n/\n/\nSessions\nSupervisors\nFellows\nStudents\nGroups\nEdit columns\nName\tAssigned school\tAttendance history\tNo. of fellows\nAlf Heathcote\t\t\nPre\nS1\nS2\nS3\nS4\n\t13/13\nDarrel Crist\t\t\nPre\nS1\nS2\nS3\nS4\n\t13/13\nDemarcus Kulas\t\nGislason - Daugherty,\n+1\n\t\nPre\nS1\nS2\nS3\nS4\n\t15/15\nFrankie Mann\t\nBartell-MacGyver, Simonis and Kuhic,\n+1\n\t\nPre\nS1\nS2\nS3\nS4\n\t11/11\nJoana Crist\t\nStanton Inc,\n+1\n\t\nPre\nS1\nS2\nS3\nS4\n\t14/14\nKendall Wuckert\t\nSchneider Group,\n+3\n\t\nPre\nS1\nS2\nS3\nS4\n\t13/13\n1\nPage\n1 of 1\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/students",
+    "finalPath": "/admin/students",
+    "status": 200,
+    "headings": [
+      "Students",
+      "Total no. of students",
+      "Count of group sessions",
+      "No. of clinical cases",
+      "No. of clinical sessions",
+      "Attendance",
+      "Drop-out reasons",
+      "Student information completion",
+      "Student group ratings",
+      "Clinical cases by case status",
+      "Clinical sessions (39)",
+      "Clinical cases by supervisor",
+      "Clinical cases by initial contact",
+      "Students grouped by form",
+      "Students grouped by age",
+      "Students grouped by gender"
+    ],
+    "tables": 0,
+    "tableRows": 0,
+    "text": "Students\nTotal no. of students\n16633\nCount of group sessions\n414\nNo. of clinical cases\n16\nNo. of clinical sessions\n39\nAttendance\ns0\ns1\ns2\ns3\ns4\n0\n45\n90\n135\n180\nDrop-out reasons\nNo data available\nStudent information completion\n0%\nStudent group ratings\nNo data available\nClinical cases by case status\nActiveFollowUpTerminated\n12\nClinical sessions (39)\nPre\nS2\nS4\nF2\nF4\nF6\nF8\n0\n1\n2\n3\n4\nClinical cases by supervisor\n0\n2\n4\n6\n8\nClinical cases by initial contact\nStudents grouped by form\nNo data available\nStudents grouped by age\nStudents grouped by gender\nFemaleMale\n16633\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/supervisors",
+    "finalPath": "/admin/supervisors",
+    "status": 200,
+    "headings": [
+      "Supervisors"
+    ],
+    "tables": 1,
+    "tableRows": 10,
+    "text": "Supervisors\nEdit columns\nName\tAssigned school\tAverage Rating\tNo. of fellows\tPhone Number\t\nAlexandre Rogahn\t\t\n0.0\n\t11/11\t0768 856769\t\n\nAlexis Muller\t\t\n0.0\n\t12/12\t0795 735857\t\n\nAndres Torphy\t\nRunte - Gutkowski,\n+1\n\t\n0.0\n\t10/10\t0786 892366\t\n\nBrett Oberbrunner\tMills and Sons\t\n0.0\n\t11/11\t0794 577252\t\n\nBriana Funk\t\nRomaguera - Rath,\n+2\n\t\n0.0\n\t15/15\t0789 592366\t\n\nDale Homenick\tO'Conner, Schmitt and Miller\t\n0.0\n\t11/11\t0766 537846\t\n\nDaniel Wunsch\t\t\n0.0\n\t15/15\t0791 636936\t\n\nDeclan Rice\tSobha Academy\t\n0.0\n\t1/1\t0723 456789\t\n\nDr. Kara Schumm\t\nBashirian Group,\n+1\n\t\n0.0\n\t15/15\t0725 561482\t\n\nEloise Trantow\tFranecki Inc\t\n0.0\n\t11/11\t0736 219436\t\n1\n2\nPage\n1 of 4\nGo to page:\nShow 10\n\n© Copyright 2026 Shamiri Institute Inc.\n\nTerms of Use\nPrivacy Policy",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  },
+  {
+    "path": "/admin/tickets",
+    "finalPath": "/admin/tickets",
+    "status": 200,
+    "headings": [],
+    "tables": 1,
+    "tableRows": 0,
+    "text": "Edit columns\nCreated Date\tSubject\tCategory\tPriority\tCurrent Tier\tStatus\t\nNo tickets found\n1\nPage\n1 of 0\nGo to page:\nShow 10",
+    "consoleErrors": [
+      "eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.\nReact will never use eval() in production mode",
+      "Loading the script 'https://va.vercel-scripts.com/v1/speed-insights/script.debug.js' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob: https://unpkg.com\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked."
+    ]
+  }
+]
