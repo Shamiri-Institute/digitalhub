@@ -44,8 +44,6 @@ for (const flow of flows) {
 
     for (const tab of flow.tabs) {
       await page.getByRole("radio", { name: `Select ${tab}`, exact: true }).click();
-      // The development server compiles each route on its first request, which is how CI runs
-      // this, so the first visit to a tab can take longer than the default expect timeout.
       await expect(page).toHaveURL(new RegExp(`/${tab.toLowerCase()}$`), { timeout: 30_000 });
       await expect(page.getByText(errorBoundary)).toHaveCount(0);
       await expect(page.getByRole("main")).toContainText(schoolName);
