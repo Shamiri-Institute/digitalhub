@@ -52,17 +52,13 @@ function prefixesFromSchema() {
 }
 
 async function tablesWithTextIds() {
-  const { rows } = await pool.query<{ table_name: string; has_created_at: boolean }>(
-    `select c.table_name,
-            bool_or(x.column_name = 'created_at') as has_created_at
-     from information_schema.columns c
-     join information_schema.columns x
-       on x.table_schema = c.table_schema and x.table_name = c.table_name
-     where c.table_schema = 'public'
-       and c.column_name = 'id'
-       and c.data_type in ('text', 'character varying')
-     group by c.table_name
-     order by c.table_name`,
+  const { rows } = await pool.query<{ table_name: string }>(
+    `select table_name
+     from information_schema.columns
+     where table_schema = 'public'
+       and column_name = 'id'
+       and data_type in ('text', 'character varying')
+     order by table_name`,
   );
   return rows;
 }
@@ -145,7 +141,7 @@ async function main() {
   const skipped: string[] = [];
   const touched: string[] = [];
 
-  for (const { table_name: table, has_created_at: hasCreatedAt } of tables) {
+  for (const { table_name: table } of tables) {
     const { rows: countRows } = await pool.query<{ n: string }>(
       `select count(*)::int as n from public."${table}" where id !~ $1`,
       [TYPEID],
