@@ -16,7 +16,7 @@ describe("db client", () => {
           .values({ email: `db-client-test-${Date.now()}@example.com` })
           .returning();
         if (!created) throw new Error("insert returned no row");
-        expect(created.id).toMatch(/^[0-9a-f-]{36}$/);
+        expect(created.id).toMatch(/^user_[0-9a-hjkmnp-tv-z]{26}$/);
         expect(created.createdAt).toBeInstanceOf(Date);
         expect(created.updatedAt).toBeInstanceOf(Date);
 
