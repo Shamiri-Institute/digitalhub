@@ -18,17 +18,15 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test:ci": "playwright test",
-    "test:dev": "dotenv -c development -- playwright test",
-    "test:dev:ui": "dotenv -c development -- playwright test --ui",
+    "test": "dotenv -c development -- playwright test",
+    "test:ui": "dotenv -c development -- playwright test --ui",
     "test:unit": "dotenv -c development -- vitest",
     "next-auth:session": "dotenv -c development -- tsx scripts/auth/get-next-session.ts",
     "db:seed": "dotenv -c development -- tsx db/seed/seed.ts",
-    "db:dev:migrate": "dotenv -c development -- drizzle-kit migrate",
-    "db:dev:migrate:reset": "dotenv -c development -- sh -c \"tsx scripts/db/reset.ts && drizzle-kit migrate && tsx db/seed/seed.ts\"",
-    "db:dev:generate": "dotenv -c development -- drizzle-kit generate",
-    "db:dump:local": "dotenv -c development -- ./scripts/db/dump-db.sh",
-    "release": "commit-and-tag-version",
-    "db:studio": "dotenv -c development -- drizzle-kit studio"
+    "db:migrate": "dotenv -c development -- drizzle-kit migrate",
+    "db:reset": "dotenv -c development -- sh -c \"tsx scripts/db/reset.ts && drizzle-kit migrate && tsx db/seed/seed.ts\"",
+    "db:generate": "dotenv -c development -- drizzle-kit generate",
+    "release": "commit-and-tag-version"
   },
   "commit-and-tag-version": {
     "scripts": {

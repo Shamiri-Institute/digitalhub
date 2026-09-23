@@ -442,11 +442,10 @@ function ComplexForm() {
 
 ### Database Operations
 
-- `npm run db:dev:generate` - Generate a SQL migration in `drizzle/` from changes to `db/schema.ts`
-- `npm run db:dev:migrate` - Apply pending migrations from `drizzle/`
-- `npm run db:dev:migrate:reset` - Drop everything, reapply all migrations and seed
+- `npm run db:generate` - Generate a SQL migration in `drizzle/` from changes to `db/schema.ts`
+- `npm run db:migrate` - Apply pending migrations from `drizzle/`
+- `npm run db:reset` - Drop everything, reapply all migrations and seed
 - `npm run db:seed` - Seed database with test data (`db/seed/seed.ts`)
-- `npm run db:studio` - Browse the database with Drizzle Studio
 
 ### Code Quality
 
@@ -457,8 +456,8 @@ function ComplexForm() {
 
 ### Testing
 
-- `npm run test:dev` - Run Playwright tests in development
-- `npm run test:dev:ui` - Run Playwright tests with UI
+- `npm test` - Run Playwright tests in development
+- `npm run test:ui` - Run Playwright tests with UI
 - `npm run test:unit` - Run Vitest unit tests
 - `npm run test:ci` - Run tests in CI mode
 
@@ -560,8 +559,8 @@ refactor(components): extract reusable form validation
 ### Database Changes
 
 1. Modify `db/schema.ts` (and `db/relations.ts` or `db/enums.ts` when relations or enums change)
-2. Run `npm run db:dev:generate` to write the SQL migration into `drizzle/`; review the SQL. Use `npx drizzle-kit generate --custom --name <what>` for a data migration
-3. Run `npm run db:dev:migrate` to apply it; test from scratch with `npm run db:dev:migrate:reset`
+2. Run `npm run db:generate` to write the SQL migration into `drizzle/`; review the SQL. Use `npx drizzle-kit generate --custom --name <what>` for a data migration
+3. Run `npm run db:migrate` to apply it; test from scratch with `npm run db:reset`
 4. Update seed data in `db/seed/` if needed
 5. **MANDATORY**: Run `npm run typecheck` after schema changes. Never run `drizzle-kit pull` over `db/schema.ts`; it is hand-maintained
 

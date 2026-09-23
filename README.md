@@ -79,7 +79,7 @@ Get the platform running locally in under 5 minutes:
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) v22.x or later
-- [Docker Compose](https://docs.docker.com/compose/install/) (for local PostgreSQL)
+- [PostgreSQL](https://www.postgresql.org/download/) 18 running locally
 - npm (comes with Node.js)
 
 ### One-Command Setup
@@ -96,7 +96,7 @@ npm install
 cp .env.example .env.development
 
 # Build the schema
-npm run db:dev:migrate
+npm run db:migrate
 npm run db:seed
 
 # Start development server
@@ -232,7 +232,7 @@ Set `DATABASE_URL` in `.env.development` to a local PostgreSQL 18.
 
 ```bash
 # Build the schema
-npm run db:dev:migrate
+npm run db:migrate
 
 # Seed with test data
 npm run db:seed
@@ -245,7 +245,7 @@ npm run db:seed
 3. Run migrations and seed:
 
 ```bash
-npm run db:dev:migrate
+npm run db:migrate
 npm run db:seed
 ```
 
@@ -349,12 +349,12 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 
 #### Database
 
-| Command                        | Description                         |
-| ------------------------------ | ----------------------------------- |
-| `npm run db:dev:migrate`       | Apply pending Drizzle migrations    |
-| `npm run db:dev:migrate:reset` | Reset and reapply all migrations    |
-| `npm run db:seed`              | Seed with faker-generated test data |
-| `npm run db:dev:generate`      | Generate a migration from db/schema |
+| Command               | Description                         |
+| --------------------- | ----------------------------------- |
+| `npm run db:migrate`  | Apply pending Drizzle migrations    |
+| `npm run db:reset`    | Reset and reapply all migrations    |
+| `npm run db:seed`     | Seed with faker-generated test data |
+| `npm run db:generate` | Generate a migration from db/schema |
 
 #### Code Quality
 
@@ -367,12 +367,12 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 
 #### Testing
 
-| Command               | Description              |
-| --------------------- | ------------------------ |
-| `npm run test:unit`   | Run Vitest unit tests    |
-| `npm run test:dev`    | Run Playwright E2E tests |
-| `npm run test:dev:ui` | Run Playwright with UI   |
-| `npm run test:ci`     | Run tests in CI mode     |
+| Command             | Description              |
+| ------------------- | ------------------------ |
+| `npm run test:unit` | Run Vitest unit tests    |
+| `npm test`          | Run Playwright E2E tests |
+| `npm run test:ui`   | Run Playwright with UI   |
+| `npm run test:ci`   | Run tests in CI mode     |
 
 ### Code Quality Gates
 
