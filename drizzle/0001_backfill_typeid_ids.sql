@@ -32,6 +32,60 @@ END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 --> statement-breakpoint
 
+--
+-- The rewrite cascades through foreign keys, and 43 of the child columns carry no index. Without
+-- one, each parent row makes Postgres scan the whole child table: rewriting 9,142 intervention
+-- groups would scan a 670 MB table 9,142 times, which is about 6 TB of reads. A first attempt on
+-- production spent 41 minutes on that single statement and was cancelled.
+--
+-- So the indexes are built first and dropped at the end. They exist only for the rewrite. Keeping
+-- any of them permanently is a separate decision, because every index costs on each write; the
+-- missing-index note in docs/drizzle-migration/findings.md tracks that.
+
+CREATE INDEX tmp_bf_attendance_documents_group_id ON "attendance_documents" ("group_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_attendance_documents_uploaded_by ON "attendance_documents" ("uploaded_by");--> statement-breakpoint
+CREATE INDEX tmp_bf_clinical_case_notes_created_by ON "clinical_case_notes" ("created_by");--> statement-breakpoint
+CREATE INDEX tmp_bf_clinical_case_notes_session_id ON "clinical_case_notes" ("session_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_clinical_case_termination_case_id ON "clinical_case_termination" ("case_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_clinical_case_termination_created_by ON "clinical_case_termination" ("created_by");--> statement-breakpoint
+CREATE INDEX tmp_bf_clinical_case_termination_session_id ON "clinical_case_termination" ("session_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_clinical_screening_info_clinicalLeadId ON "clinical_screening_info" ("clinicalLeadId");--> statement-breakpoint
+CREATE INDEX tmp_bf_clinical_screening_info_current_supervisor_id ON "clinical_screening_info" ("current_supervisor_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_clinical_screening_info_referredTo_supervisor_id ON "clinical_screening_info" ("referredTo_supervisor_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_clinical_screening_info_student_id ON "clinical_screening_info" ("student_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_clinical_session_attendance_caseId ON "clinical_session_attendance" ("caseId");--> statement-breakpoint
+CREATE INDEX tmp_bf_fellow_attendances_fellow_id ON "fellow_attendances" ("fellow_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_fellow_attendances_group_id ON "fellow_attendances" ("group_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_fellow_attendances_marked_by ON "fellow_attendances" ("marked_by");--> statement-breakpoint
+CREATE INDEX tmp_bf_fellow_attendances_project_id ON "fellow_attendances" ("project_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_fellow_attendances_school_id ON "fellow_attendances" ("school_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_fellow_attendances_supervisor_id ON "fellow_attendances" ("supervisor_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_intervention_group_reports_group_id ON "intervention_group_reports" ("group_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_intervention_session_ratings_supervisor_id ON "intervention_session_ratings" ("supervisor_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_intervention_sessions_hub_id ON "intervention_sessions" ("hub_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_intervention_sessions_project_id ON "intervention_sessions" ("project_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_intervention_sessions_session_id ON "intervention_sessions" ("session_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_payout_statements_confirmed_by ON "payout_statements" ("confirmed_by");--> statement-breakpoint
+CREATE INDEX tmp_bf_payout_statements_created_by ON "payout_statements" ("created_by");--> statement-breakpoint
+CREATE INDEX tmp_bf_payout_statements_fellow_id ON "payout_statements" ("fellow_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_payout_statements_special_payout_request_id ON "payout_statements" ("special_payout_request_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_session_recordings_group_id ON "session_recordings" ("group_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_session_recordings_school_id ON "session_recordings" ("school_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_session_recordings_uploaded_by ON "session_recordings" ("uploaded_by");--> statement-breakpoint
+CREATE INDEX tmp_bf_student_attendances_fellow_id ON "student_attendances" ("fellow_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_student_attendances_group_id ON "student_attendances" ("group_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_student_attendances_marked_by ON "student_attendances" ("marked_by");--> statement-breakpoint
+CREATE INDEX tmp_bf_student_attendances_project_id ON "student_attendances" ("project_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_student_attendances_school_id ON "student_attendances" ("school_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_students_fellow_id ON "students" ("fellow_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_students_implementer_id ON "students" ("implementer_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_students_supervisor_id ON "students" ("supervisor_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_supervisor_attendances_marked_by ON "supervisor_attendances" ("marked_by");--> statement-breakpoint
+CREATE INDEX tmp_bf_supervisor_attendances_project_id ON "supervisor_attendances" ("project_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_supervisor_attendances_school_id ON "supervisor_attendances" ("school_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_supervisor_attendances_supervisor_id ON "supervisor_attendances" ("supervisor_id");--> statement-breakpoint
+CREATE INDEX tmp_bf_weekly_fellow_ratings_supervisor_id ON "weekly_fellow_ratings" ("supervisor_id");--> statement-breakpoint
+
 UPDATE "accounts" SET id = 'account_' || typeid_suffix(uuidv7()) WHERE id !~ '^[a-z]+_[0-9a-hjkmnp-tv-z]{26}$';--> statement-breakpoint
 UPDATE "sessions" SET id = 'authsession_' || typeid_suffix(uuidv7()) WHERE id !~ '^[a-z]+_[0-9a-hjkmnp-tv-z]{26}$';--> statement-breakpoint
 UPDATE "users" SET id = 'user_' || typeid_suffix(uuidv7(coalesce(created_at, now()) - now())) WHERE id !~ '^[a-z]+_[0-9a-hjkmnp-tv-z]{26}$';--> statement-breakpoint
@@ -85,5 +139,50 @@ UPDATE "ticket_reassignments" SET id = 'reassignment_' || typeid_suffix(uuidv7(c
 UPDATE "payout_statements" SET id = 'payout_' || typeid_suffix(uuidv7(coalesce(created_at, now()) - now())) WHERE id !~ '^[a-z]+_[0-9a-hjkmnp-tv-z]{26}$';--> statement-breakpoint
 UPDATE "repayment_requests" SET id = 'repayment_' || typeid_suffix(uuidv7(coalesce(created_at, now()) - now())) WHERE id !~ '^[a-z]+_[0-9a-hjkmnp-tv-z]{26}$';--> statement-breakpoint
 UPDATE "delayed_payment_requests" SET id = 'delayedpayment_' || typeid_suffix(uuidv7(coalesce(created_at, now()) - now())) WHERE id !~ '^[a-z]+_[0-9a-hjkmnp-tv-z]{26}$';--> statement-breakpoint
+
+-- The indexes above existed only to make the cascade cheap.
+DROP INDEX tmp_bf_attendance_documents_group_id;--> statement-breakpoint
+DROP INDEX tmp_bf_attendance_documents_uploaded_by;--> statement-breakpoint
+DROP INDEX tmp_bf_clinical_case_notes_created_by;--> statement-breakpoint
+DROP INDEX tmp_bf_clinical_case_notes_session_id;--> statement-breakpoint
+DROP INDEX tmp_bf_clinical_case_termination_case_id;--> statement-breakpoint
+DROP INDEX tmp_bf_clinical_case_termination_created_by;--> statement-breakpoint
+DROP INDEX tmp_bf_clinical_case_termination_session_id;--> statement-breakpoint
+DROP INDEX tmp_bf_clinical_screening_info_clinicalLeadId;--> statement-breakpoint
+DROP INDEX tmp_bf_clinical_screening_info_current_supervisor_id;--> statement-breakpoint
+DROP INDEX tmp_bf_clinical_screening_info_referredTo_supervisor_id;--> statement-breakpoint
+DROP INDEX tmp_bf_clinical_screening_info_student_id;--> statement-breakpoint
+DROP INDEX tmp_bf_clinical_session_attendance_caseId;--> statement-breakpoint
+DROP INDEX tmp_bf_fellow_attendances_fellow_id;--> statement-breakpoint
+DROP INDEX tmp_bf_fellow_attendances_group_id;--> statement-breakpoint
+DROP INDEX tmp_bf_fellow_attendances_marked_by;--> statement-breakpoint
+DROP INDEX tmp_bf_fellow_attendances_project_id;--> statement-breakpoint
+DROP INDEX tmp_bf_fellow_attendances_school_id;--> statement-breakpoint
+DROP INDEX tmp_bf_fellow_attendances_supervisor_id;--> statement-breakpoint
+DROP INDEX tmp_bf_intervention_group_reports_group_id;--> statement-breakpoint
+DROP INDEX tmp_bf_intervention_session_ratings_supervisor_id;--> statement-breakpoint
+DROP INDEX tmp_bf_intervention_sessions_hub_id;--> statement-breakpoint
+DROP INDEX tmp_bf_intervention_sessions_project_id;--> statement-breakpoint
+DROP INDEX tmp_bf_intervention_sessions_session_id;--> statement-breakpoint
+DROP INDEX tmp_bf_payout_statements_confirmed_by;--> statement-breakpoint
+DROP INDEX tmp_bf_payout_statements_created_by;--> statement-breakpoint
+DROP INDEX tmp_bf_payout_statements_fellow_id;--> statement-breakpoint
+DROP INDEX tmp_bf_payout_statements_special_payout_request_id;--> statement-breakpoint
+DROP INDEX tmp_bf_session_recordings_group_id;--> statement-breakpoint
+DROP INDEX tmp_bf_session_recordings_school_id;--> statement-breakpoint
+DROP INDEX tmp_bf_session_recordings_uploaded_by;--> statement-breakpoint
+DROP INDEX tmp_bf_student_attendances_fellow_id;--> statement-breakpoint
+DROP INDEX tmp_bf_student_attendances_group_id;--> statement-breakpoint
+DROP INDEX tmp_bf_student_attendances_marked_by;--> statement-breakpoint
+DROP INDEX tmp_bf_student_attendances_project_id;--> statement-breakpoint
+DROP INDEX tmp_bf_student_attendances_school_id;--> statement-breakpoint
+DROP INDEX tmp_bf_students_fellow_id;--> statement-breakpoint
+DROP INDEX tmp_bf_students_implementer_id;--> statement-breakpoint
+DROP INDEX tmp_bf_students_supervisor_id;--> statement-breakpoint
+DROP INDEX tmp_bf_supervisor_attendances_marked_by;--> statement-breakpoint
+DROP INDEX tmp_bf_supervisor_attendances_project_id;--> statement-breakpoint
+DROP INDEX tmp_bf_supervisor_attendances_school_id;--> statement-breakpoint
+DROP INDEX tmp_bf_supervisor_attendances_supervisor_id;--> statement-breakpoint
+DROP INDEX tmp_bf_weekly_fellow_ratings_supervisor_id;--> statement-breakpoint
 
 DROP FUNCTION typeid_suffix(uuid);
