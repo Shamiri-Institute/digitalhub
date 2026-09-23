@@ -95,9 +95,63 @@ async function prefixFromRows(table: string) {
   return rows[0]?.prefix ?? null;
 }
 
+/**
+ * The assumptions this rewrite depends on. They hold on the development database; an environment
+ * that answers differently needs a closer look before `--apply` runs there.
+ */
+async function preflight(touched: string[]) {
+  const problems: string[] = [];
+
+  const { rows: fks } = await pool.query<{ rule: string; n: number }>(
+    `select confupdtype as rule, count(*)::int as n from pg_constraint where contype = 'f' group by 1`,
+  );
+  const total = fks.reduce((sum, r) => sum + r.n, 0);
+  const cascading = fks.find((r) => r.rule === "c")?.n ?? 0;
+  console.log(`foreign keys:       ${cascading}/${total} are ON UPDATE CASCADE`);
+  if (cascading !== total) {
+    const { rows: bad } = await pool.query<{ name: string; child: string; parent: string }>(
+      `select c.conname as name, c.conrelid::regclass::text as child, c.confrelid::regclass::text as parent
+       from pg_constraint c where c.contype = 'f' and c.confupdtype <> 'c'
+       order by 2 limit 20`,
+    );
+    const list = bad.map((b) => `${b.child} -> ${b.parent} (${b.name})`).join("\n    ");
+    problems.push(
+      `${total - cascading} foreign keys do not cascade on update, so a parent id cannot be rewritten safely:\n    ${list}`,
+    );
+  }
+
+  const { rows: triggers } = await pool.query<{ table: string; name: string }>(
+    `select c.relname as table, t.tgname as name
+     from pg_trigger t join pg_class c on c.oid = t.tgrelid
+     join pg_namespace n on n.oid = c.relnamespace
+     where not t.tgisinternal and n.nspname = 'public' and c.relname = any($1)`,
+    [touched],
+  );
+  console.log(`triggers:           ${triggers.length} on the tables to rewrite`);
+  if (triggers.length > 0) {
+    const list = triggers.map((t) => `${t.table}.${t.name}`).join("\n    ");
+    problems.push(`these triggers fire on the rewrite:\n    ${list}`);
+  }
+
+  const { rows: publications } = await pool.query<{ pubname: string; n: number }>(
+    `select p.pubname, count(*)::int as n from pg_publication p
+     left join pg_publication_tables t on t.pubname = p.pubname
+     group by 1`,
+  );
+  console.log(`replication:        ${publications.length} publications`);
+  if (publications.length > 0) {
+    const list = publications.map((p) => `${p.pubname} (${p.n} tables)`).join("\n    ");
+    problems.push(
+      `logical replication is on, so every rewritten row ships downstream:\n    ${list}`,
+    );
+  }
+
+  return problems;
+}
+
 async function main() {
   const url = new URL(process.env.DATABASE_URL ?? "");
-  console.log(`target: ${url.hostname}${url.pathname}`);
+  console.log(`target: ${url.hostname}:${url.port || "5432"}${url.pathname}`);
   console.log(args.apply ? "mode:   APPLY (rows will be rewritten)\n" : "mode:   report only\n");
 
   const schemaPrefixes = prefixesFromSchema();
@@ -108,6 +162,7 @@ async function main() {
   let totalPending = 0;
   let totalRewritten = 0;
   const skipped: string[] = [];
+  const touched: string[] = [];
 
   for (const { table_name: table, has_created_at: hasCreatedAt } of tables) {
     const { rows: countRows } = await pool.query<{ n: string }>(
@@ -124,6 +179,7 @@ async function main() {
     }
 
     totalPending += pending;
+    touched.push(table);
     console.log(`${table.padEnd(46)} ${String(pending).padStart(7)} rows -> ${prefix}_`);
     if (!args.apply) continue;
 
@@ -158,12 +214,20 @@ async function main() {
     console.log(`  ${rewritten}/${pending} done`);
   }
 
+  const problems = await preflight(touched);
+  console.log("");
+
   if (totalPending === 0) console.log("Every id is already a prefixed TypeID.");
   else if (args.apply) console.log(`\nRewrote ${totalRewritten} ids.`);
   else console.log(`\n${totalPending} ids would be rewritten. Re-run with --apply.`);
 
   if (skipped.length > 0) {
     console.log(`\nSkipped, decide a prefix first:\n  ${skipped.join("\n  ")}`);
+    process.exitCode = 1;
+  }
+
+  if (problems.length > 0) {
+    console.log(`\nCheck these before --apply on this database:\n  ${problems.join("\n  ")}`);
     process.exitCode = 1;
   }
 }
