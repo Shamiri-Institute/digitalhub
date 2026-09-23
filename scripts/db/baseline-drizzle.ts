@@ -1,5 +1,5 @@
-// Marks the Drizzle baseline migration as applied on a database that was built by the Prisma
-// migrations, so `drizzle-kit migrate` applies only what comes after it. Idempotent: it does
+// Marks the Drizzle baseline migration as applied on a database whose schema already exists but
+// predates drizzle-kit, so `drizzle-kit migrate` applies only what comes after it. Idempotent: it does
 // nothing when the migrations log already has rows, and nothing on an empty database (there
 // `drizzle-kit migrate` creates everything from the baseline itself).
 //

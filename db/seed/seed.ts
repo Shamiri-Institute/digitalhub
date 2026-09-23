@@ -204,18 +204,12 @@ async function insertManyReturning<T extends PgTable>(table: T, rows: InferInser
 async function truncateTables() {
   console.log("Truncating tables");
 
-  const excludedTables = ["_prisma_migrations"];
-
-  // Exclusion is applied in JS: interpolating a joined string into a query
-  // binds it as one literal parameter, so a SQL NOT IN never matched and
-  // _prisma_migrations was truncated along with everything else.
-  const { rows: allTables } = await db.execute<{ table_name: string }>(sql`
+  const { rows: tables } = await db.execute<{ table_name: string }>(sql`
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
     AND table_type = 'BASE TABLE';
   `);
-  const tables = allTables.filter((t) => !excludedTables.includes(t.table_name));
 
   if (tables.length > 0) {
     const truncateCommand = `TRUNCATE TABLE ${tables.map((t) => `"${t.table_name}"`).join(", ")} CASCADE;`;
