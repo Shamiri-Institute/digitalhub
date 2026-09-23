@@ -9,8 +9,7 @@ import { dataRows, getUrl } from "#/tests/pages/helpers";
 
 /**
  * Renders every platform page as every role and records what each page showed, so two checkouts
- * (for example before and after a data-layer change) can be compared page by page with
- * `scripts/bench/fingerprint-diff.ts`.
+ * (for example before and after a data-layer change) can be compared page by page.
  *
  * Pages come from the file system and users from the database, the same way the benchmark picks
  * them (`scripts/bench/routes.ts`), so both measure the same accounts. Assertions are soft: one
