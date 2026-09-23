@@ -29,6 +29,7 @@
     "bench:diff": "tsx scripts/bench/diff.ts",
     "bench:cold": "dotenv -c development -- tsx scripts/bench/cold.ts",
     "db:seed": "dotenv -c development -- tsx db/seed/seed.ts",
+    "db:backfill:typeid": "dotenv -c development -- tsx scripts/db/backfill-typeid.ts",
     "db:dev:migrate": "dotenv -c development -- drizzle-kit migrate",
     "db:dev:migrate:reset": "dotenv -c development -- sh -c \"tsx scripts/db/reset.ts && drizzle-kit migrate && tsx db/seed/seed.ts\"",
     "db:dev:generate": "dotenv -c development -- drizzle-kit generate",
