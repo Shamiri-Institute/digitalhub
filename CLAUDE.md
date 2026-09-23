@@ -478,7 +478,7 @@ The platform uses a sophisticated RBAC system with the following roles:
 
 ### Database Schema
 
-- Uses Drizzle ORM (`drizzle-orm` 0.45, `pg` driver) with PostgreSQL. `db/schema.ts` is the source of truth; table variables are lowerCamel model names (`interventionSession`), column keys and relation names are the former Prisma field names. `db/relations.ts` declares relations, `db/enums.ts` the enums as plain objects (safe to import in client components), `db/client.ts` the `db` instance, the `Transaction` type, `isUniqueViolation` and `isSerializationFailure`.
+- Uses Drizzle ORM (`drizzle-orm` 0.45, `pg` driver) with PostgreSQL. `db/schema.ts` is the source of truth; table variables are lowerCamel model names (`interventionSession`), column keys and relation names are camelCase. `db/relations.ts` declares relations, `db/enums.ts` the enums as plain objects (safe to import in client components), `db/client.ts` the `db` instance, the `Transaction` type, `isUniqueViolation` and `isSerializationFailure`.
 - Implements prefixed Object IDs (e.g., `sup_xxxxx`, `hc_xxxxx`) for better readability and security
 - Key entities: Users, Schools, Students, Fellows, Supervisors, Clinical Cases, Sessions
 

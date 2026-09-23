@@ -462,7 +462,7 @@ environment), so `vercel:build` self-selects based on the `VERCEL_ENV` system
 variable. Set the project's **Build Command** to `npm run vercel:build` and it
 does the right thing everywhere:
 
-- **Production** (`VERCEL_ENV=production`) → `vercel:prod:build`: marks the Drizzle baseline on a database built by the old Prisma migrations (no-op afterwards) + `drizzle-kit migrate` + `next build` — applies pending migrations, never touches data.
+- **Production** (`VERCEL_ENV=production`) → `vercel:prod:build`: marks the Drizzle baseline on a database whose schema predates drizzle-kit (no-op afterwards) + `drizzle-kit migrate` + `next build` — applies pending migrations, never touches data.
 - **Preview / Staging / Training** (any non-production `VERCEL_ENV`) → `vercel:seeded:build`: `scripts/db/reset.ts` + `drizzle-kit migrate` + `npm run db:seed` + `next build` — rebuilds the database from faker-generated data on each deploy.
 - **Run locally with no `VERCEL_ENV` set** → falls back to `vercel:prod:build`, so it never wipes a local database by accident.
 

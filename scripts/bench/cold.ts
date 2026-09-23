@@ -1,6 +1,6 @@
 // Cold-start proxy: fresh Node processes that import the DB client and run one
 // query, plus the on-disk size of the ORM and the server build.
-//   npm run bench:cold -- --label prisma-cold [--runs 10]
+//   npm run bench:cold -- --label before [--runs 10]
 import { execSync, spawnSync } from "node:child_process";
 import { existsSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -43,9 +43,6 @@ function sizeKb(rel: string) {
 }
 const sizesKb: Record<string, number> = {};
 for (const p of [
-  "node_modules/@prisma",
-  "node_modules/.prisma",
-  "node_modules/prisma",
   "node_modules/drizzle-orm",
   "node_modules/drizzle-kit",
   "node_modules/pg",

@@ -2,7 +2,7 @@
 // production server and records TTFB and full-body time per page.
 //
 //   npm run build && npm start            (in another terminal)
-//   npm run bench -- --label prisma-baseline [--runs 20] [--warmup 3] [--base-url http://localhost:3000] [--dump DIR]
+//   npm run bench -- --label before [--runs 20] [--warmup 3] [--base-url http://localhost:3000] [--dump DIR]
 //
 // --dump saves each page's first response body to DIR so two runs can be compared with
 // `npm run bench:diff -- DIR_A DIR_B` to prove the rendered data did not change.

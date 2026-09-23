@@ -9,8 +9,7 @@ import { TypeID } from "typeid-js";
 /**
  * Every id column that generates its own value must produce a prefixed TypeID, whose suffix is a
  * UUID version 7. Version 7 is time-ordered, so new primary keys land at the end of the index
- * instead of scattering across it. That is what Prisma's `cuid()` provided and what the earlier
- * `randomUUID()` default, a version 4, did not.
+ * instead of scattering across it. The earlier `randomUUID()` default, a version 4, did not.
  */
 
 /** The base32 alphabet TypeID uses: Crockford without i, l, o and u. */

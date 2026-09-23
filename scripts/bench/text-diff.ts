@@ -3,10 +3,10 @@
 //
 //   npx tsx scripts/bench/text-diff.ts bench/dumps/before bench/dumps/after
 //
-// `diff.ts` compares the RSC payload, which is the right tool within one ORM but not across a
-// change of ORM: a renamed field (Prisma's `_count: { students }` versus a named count) changes
-// the payload while the page still shows the same number. Scripts and styles are stripped, so
-// only what the server rendered into the markup is left.
+// `diff.ts` compares the RSC payload, which is the right tool when both sides build the payload
+// the same way. It is the wrong one when a field has been renamed, because the payload changes
+// while the page still shows the same number. Scripts and styles are stripped, so only what the
+// server rendered into the markup is left.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 

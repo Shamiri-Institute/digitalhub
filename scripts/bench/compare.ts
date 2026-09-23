@@ -1,5 +1,5 @@
 // Prints a markdown comparison of two `bench` runs, worst regression first.
-//   npm run bench:compare -- prisma-baseline drizzle-auth
+//   npm run bench:compare -- before after
 import { ms, readResult, round } from "./lib";
 import type { BenchResult, PageResult } from "./run";
 

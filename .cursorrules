@@ -1,4 +1,4 @@
-# CLAUDE.md
+# Cursor rules
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -63,7 +63,7 @@ ast-grep is available for advanced code search and analysis. Use it for:
 1. **Finding Patterns**: `ast-grep --pattern 'function $NAME($$$) { $$$ }'`
 2. **Code Refactoring**: `ast-grep --pattern 'console.log($$$)' --rewrite 'logger.info($$$)'`
 3. **Type Analysis**: `ast-grep --pattern 'interface $NAME { $$$ }'`
-4. **Database Query Patterns**: `ast-grep --pattern 'prisma.$TABLE.findMany({ $$$ })'`
+4. **Database Query Patterns**: `ast-grep --pattern 'db.query.$TABLE.findMany({ $$$ })'`
 
 ### Common Search Patterns for This Project
 
@@ -71,8 +71,12 @@ ast-grep is available for advanced code search and analysis. Use it for:
 # Find all Server Actions
 ast-grep --pattern 'export async function $NAME($$$) { $$$ }' --lang typescript
 
-# Find Prisma queries with includes
-ast-grep --pattern 'prisma.$TABLE.findMany({ include: { $$$ } })' --lang typescript
+# Find relational queries that load relations
+ast-grep --pattern 'db.query.$TABLE.findMany({ with: { $$$ } })' --lang typescript
+
+# Find core-builder writes
+ast-grep --pattern 'db.insert($TABLE).values($$$)' --lang typescript
+ast-grep --pattern 'db.update($TABLE).set($$$)' --lang typescript
 
 # Find React components
 ast-grep --pattern 'export default function $NAME($$$) { $$$ }' --lang typescript
@@ -439,10 +443,11 @@ function ComplexForm() {
 ### Database Operations
 
 - `npm run db:dev:up` - Start local PostgreSQL database using Docker
-- `npm run db:dev:migrate` - Run Prisma migrations in development
-- `npm run db:dev:migrate:reset` - Reset and reapply all migrations
-- `npm run db:dev:seed` - Seed database with test data
-- `npm run db:dev:types` - Generate Prisma client types
+- `npm run db:dev:generate` - Generate a SQL migration in `drizzle/` from changes to `db/schema.ts`
+- `npm run db:dev:migrate` - Apply pending migrations from `drizzle/`
+- `npm run db:dev:migrate:reset` - Drop everything, reapply all migrations and seed
+- `npm run db:seed` - Seed database with test data (`db/seed/seed.ts`)
+- `npm run db:studio` - Browse the database with Drizzle Studio
 
 ### Code Quality
 
@@ -473,7 +478,7 @@ The platform uses a sophisticated RBAC system with the following roles:
 
 ### Database Schema
 
-- Uses Prisma ORM with PostgreSQL
+- Uses Drizzle ORM (`drizzle-orm` 0.45, `pg` driver) with PostgreSQL. `db/schema.ts` is the source of truth; table variables are lowerCamel model names (`interventionSession`), column keys and relation names are camelCase. `db/relations.ts` declares relations, `db/enums.ts` the enums as plain objects (safe to import in client components), `db/client.ts` the `db` instance, the `Transaction` type, `isUniqueViolation` and `isSerializationFailure`.
 - Implements prefixed Object IDs (e.g., `sup_xxxxx`, `hc_xxxxx`) for better readability and security
 - Key entities: Users, Schools, Students, Fellows, Supervisors, Clinical Cases, Sessions
 
@@ -504,8 +509,9 @@ app/
 #### Data Fetching
 
 - Server Actions for data mutations
-- Prisma queries with comprehensive `include` statements for related data
-- Transaction support via `TransactionCursor` type
+- Relational queries (`db.query.<table>.findMany({ with })`) for reads that load relations, the core builder (`db.select/insert/update/delete`) for aggregates and writes, `db.execute(sql`…`)` (rows come back raw: cast `count(*)::int`, and prefer the builder for date columns) only where the builder cannot express the query
+- Transaction support via `db.transaction(async (tx) => ...)`; helpers that run inside one take a `Transaction` from `#/db/client`
+- Export the result type next to each query function (`export type X = Awaited<ReturnType<typeof fn>>`) and type consumers with it
 
 #### UI Components
 
@@ -554,11 +560,11 @@ refactor(components): extract reusable form validation
 
 ### Database Changes
 
-1. Modify `prisma/schema.prisma`
-2. Run `npm run db:dev:migrate` to create migration
-3. Test migration with `npm run db:dev:migrate:reset`
-4. Update seed data if needed
-5. **MANDATORY**: Run `npm run typecheck` after schema changes
+1. Modify `db/schema.ts` (and `db/relations.ts` or `db/enums.ts` when relations or enums change)
+2. Run `npm run db:dev:generate` to write the SQL migration into `drizzle/`; review the SQL. Use `npx drizzle-kit generate --custom --name <what>` for a data migration
+3. Run `npm run db:dev:migrate` to apply it; test from scratch with `npm run db:dev:migrate:reset`
+4. Update seed data in `db/seed/` if needed
+5. **MANDATORY**: Run `npm run typecheck` after schema changes. Never run `drizzle-kit pull` over `db/schema.ts`; it is hand-maintained
 
 ### Adding New Features
 
@@ -597,36 +603,39 @@ refactor(components): extract reusable form validation
 
 ### SQL and Database Optimization
 
-#### Prisma Query Patterns
+#### Drizzle Query Patterns
 
 ```typescript
-// Good: Selective includes
-const users = await prisma.user.findMany({
-  include: {
-    profile: true,
-    role: true,
-  },
-  where: { active: true },
+// Good: relational query, columns narrowed, relation filtered through the callback parameter
+const schools = await db.query.school.findMany({
+  where: (s, { eq, isNull, and }) => and(eq(s.hubId, hubId), isNull(s.archivedAt)),
+  columns: { id: true, schoolName: true },
+  with: { assignedSupervisor: { columns: { id: true, supervisorName: true } } },
+  orderBy: (s, { asc }) => asc(s.createdAt),
 });
 
-// Bad: Over-fetching
-const users = await prisma.user.findMany({
-  include: {
-    profile: { include: { address: true } },
-    sessions: { include: { attendances: true } },
-  },
+// Bad: a to-one relation with a heavy subtree under every row. Drizzle recomputes it per row;
+// load it once and attach it in JS instead.
+const students = await db.query.student.findMany({
+  with: { school: { with: { interventionSessions: { with: { session: true } } } } },
 });
 ```
+
+Rules learned in the migration (see `docs/drizzle-migration/findings.md`):
+
+- Inside `where`, `orderBy` and `extras` callbacks use the callback's table parameter, never the imported table; nested relations are aliased.
+- Counts of related rows go in `extras` through `countOf` from `db/sql.ts`; never `db.$count` inside `extras` (drizzle 0.45 rewrites every column reference to the current alias).
+- Any `findMany` whose consumer takes the first row, dedupes by key or renders in received order needs an explicit `orderBy`.
+- In `sql` templates a JavaScript array expands to `$1, $2, ...`; use `inArray(sql.raw("col"), ids)` or `sql.param(ids)`, and guard empty lists.
+- `update`/`delete` return zero rows silently; check `.returning()` and throw where the caller expects a not-found error.
 
 #### Transaction Patterns
 
 ```typescript
-// Use TransactionCursor for complex operations
-await prisma.$transaction(async (tx) => {
-  const user = await tx.user.create({ data: userData });
-  await tx.profile.create({
-    data: { ...profileData, userId: user.id },
-  });
+// Two statements that must succeed together
+await db.transaction(async (tx) => {
+  const [user] = await tx.insert(userTable).values(userData).returning();
+  await tx.insert(profile).values({ ...profileData, userId: user.id });
 });
 ```
 
@@ -634,7 +643,7 @@ await prisma.$transaction(async (tx) => {
 
 - Always use `where` clauses for filtering
 - Leverage database indexes for frequently queried fields
-- Use `select` when you only need specific fields
+- Use `columns` (relational) or an explicit select object (core) when you only need specific fields
 - Batch operations when possible
 
 ### Next.js Performance Patterns
@@ -649,7 +658,8 @@ export async function createUser(formData: FormData) {
     email: formData.get("email"),
   });
 
-  return await prisma.user.create({ data: validatedData });
+  const [created] = await db.insert(userTable).values(validatedData).returning();
+  return created;
 }
 ```
 
@@ -668,8 +678,8 @@ try {
   const result = await serverAction(data);
   return { success: true, data: result };
 } catch (error) {
-  if (error instanceof PrismaClientKnownRequestError) {
-    return { success: false, error: "Database error" };
+  if (isUniqueViolation(error)) {
+    return { success: false, error: "Already exists" };
   }
   return { success: false, error: "Unknown error" };
 }
@@ -681,18 +691,18 @@ try {
 
 ```typescript
 // Good: Self-documenting
-async function getCurrentUserSupervisorRole(userId: string) {
-  return await prisma.user.findUnique({
-    where: { id: userId },
-    include: { supervisor: true },
+async function getCurrentUserMemberships(userId: string) {
+  return await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.id, userId),
+    with: { memberships: true },
   });
 }
 
 // Bad: Unclear purpose
 async function getUser(id: string) {
-  return await prisma.user.findUnique({
-    where: { id },
-    include: { supervisor: true },
+  return await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.id, id),
+    with: { memberships: true },
   });
 }
 ```
@@ -741,12 +751,12 @@ await requireRole(currentUser, ["SUPERVISOR", "HUB_COORDINATOR"]);
 async function getSchoolsForUser(user: User) {
   switch (user.role) {
     case "HUB_COORDINATOR":
-      return await prisma.school.findMany({
-        where: { hubId: user.hubCoordinator?.hubId },
+      return await db.query.school.findMany({
+        where: (s, { eq }) => eq(s.hubId, hubId),
       });
     case "SUPERVISOR":
-      return await prisma.school.findMany({
-        where: { supervisors: { some: { id: user.supervisor?.id } } },
+      return await db.query.school.findMany({
+        where: (s, { eq }) => eq(s.assignedSupervisorId, supervisorId),
       });
     default:
       throw new Error("Unauthorized access");
@@ -770,3 +780,13 @@ Requires `.env.development` file with:
 - Uses preview deployments for feature branches
 - Production migrations run automatically via `vercel:build` script
 - Supports multiple environments (development, preview, production)
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

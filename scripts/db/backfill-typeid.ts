@@ -19,7 +19,7 @@ import * as schema from "#/db/schema";
 const TYPEID = "^[a-z]+_[0-9a-hjkmnp-tv-z]{26}$";
 
 /** Bookkeeping tables that carry an id but hold no application data. */
-const NOT_APPLICATION_DATA = new Set(["_prisma_migrations", "__drizzle_migrations"]);
+const NOT_APPLICATION_DATA = new Set(["__drizzle_migrations"]);
 
 /**
  * Tables whose id is always supplied by a call site, and whose rows are all still pre-TypeID, so

@@ -53,8 +53,8 @@ function bump(counts: Counts, key: string) {
 }
 
 /**
- * The flight protocol writes a BigInt as `$n123`. Prisma returns BigInt for a raw `count(*)` and
- * for BigInt columns; Drizzle returns a Number. Compare them by the digits, and count the markers
+ * The flight protocol writes a BigInt as `$n123`. A payload built elsewhere may carry a count as
+ * a BigInt where this one carries a Number. Compare them by the digits, and count the markers
  * separately, so the number is checked and the change of type is still reported.
  */
 function collect(value: unknown, values: Counts, keys: Counts, bigints: Counts, depth = 0) {

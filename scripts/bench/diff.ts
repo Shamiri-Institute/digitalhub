@@ -66,7 +66,7 @@ function flightPayloads(html: string) {
   return payloads;
 }
 
-/** JSON with object keys sorted, so column order (Prisma schema order vs table order) does not matter. */
+/** JSON with object keys sorted, so column order does not matter. */
 function stable(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stable);
   if (value && typeof value === "object") {
