@@ -24,6 +24,18 @@ import * as schema from "#/db/schema";
 /** A prefixed TypeID: a lowercase prefix and 26 characters of Crockford base32. */
 const TYPEID = "^[a-z]+_[0-9a-hjkmnp-tv-z]{26}$";
 
+/** Bookkeeping tables that carry an id but hold no application data. */
+const NOT_APPLICATION_DATA = new Set(["_prisma_migrations", "__drizzle_migrations"]);
+
+/**
+ * Tables whose id is always supplied by a call site, and whose rows are all still pre-TypeID, so
+ * neither the schema default nor an existing row can name the prefix. The value is the prefix
+ * that call site passes to `objectId`.
+ */
+const PREFIX_BY_CALL_SITE: Record<string, string> = {
+  student_outcomes: "outcome",
+};
+
 const { values: args } = parseArgs({
   options: {
     apply: { type: "boolean", default: false },
@@ -156,7 +168,7 @@ async function main() {
 
   const schemaPrefixes = prefixesFromSchema();
   const tables = (await tablesWithTextIds()).filter(
-    (t) => !args.table || t.table_name === args.table,
+    (t) => !NOT_APPLICATION_DATA.has(t.table_name) && (!args.table || t.table_name === args.table),
   );
 
   let totalPending = 0;
@@ -172,7 +184,11 @@ async function main() {
     const pending = Number(countRows[0]?.n ?? 0);
     if (pending === 0) continue;
 
-    const prefix = schemaPrefixes.get(table) ?? (await prefixFromRows(table));
+    const prefix =
+      schemaPrefixes.get(table) ??
+      (await prefixFromRows(table)) ??
+      PREFIX_BY_CALL_SITE[table] ??
+      null;
     if (!prefix) {
       skipped.push(`${table} (${pending} rows, no prefix: no schema default and no TypeID row)`);
       continue;
@@ -192,14 +208,24 @@ async function main() {
       );
       if (rows.length === 0) break;
 
+      // One statement per batch, not per row. Each id still cascades to its children, but at
+      // this volume the round trips dominate: production has about 223k ids to rewrite and
+      // roughly 660k child rows that follow them.
+      const pairs = rows.map((row) => {
+        const ms = row.created_at ? row.created_at.getTime() : Date.now();
+        return [row.id, TypeID.fromUUID(prefix, uuidV7At(ms)).toString()];
+      });
+      const values = pairs.map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`).join(", ");
+
       const client = await pool.connect();
       try {
         await client.query("begin");
-        for (const row of rows) {
-          const ms = row.created_at ? row.created_at.getTime() : Date.now();
-          const next = TypeID.fromUUID(prefix, uuidV7At(ms)).toString();
-          await client.query(`update public."${table}" set id = $1 where id = $2`, [next, row.id]);
-        }
+        await client.query(
+          `update public."${table}" as t set id = v.next
+           from (values ${values}) as v(current, next)
+           where t.id = v.current`,
+          pairs.flat(),
+        );
         await client.query("commit");
       } catch (error) {
         await client.query("rollback");
