@@ -442,7 +442,6 @@ function ComplexForm() {
 
 ### Database Operations
 
-- `npm run db:dev:up` - Start local PostgreSQL database using Docker
 - `npm run db:dev:generate` - Generate a SQL migration in `drizzle/` from changes to `db/schema.ts`
 - `npm run db:dev:migrate` - Apply pending migrations from `drizzle/`
 - `npm run db:dev:migrate:reset` - Drop everything, reapply all migrations and seed
@@ -478,7 +477,7 @@ The platform uses a sophisticated RBAC system with the following roles:
 
 ### Database Schema
 
-- Uses Drizzle ORM (`drizzle-orm` 0.45, `pg` driver) with PostgreSQL. `db/schema.ts` is the source of truth; table variables are lowerCamel model names (`interventionSession`), column keys and relation names are the former Prisma field names. `db/relations.ts` declares relations, `db/enums.ts` the enums as plain objects (safe to import in client components), `db/client.ts` the `db` instance, the `Transaction` type, `isUniqueViolation` and `isSerializationFailure`.
+- Uses Drizzle ORM (`drizzle-orm` 0.45, `pg` driver) with PostgreSQL. `db/schema.ts` is the source of truth; table variables are lowerCamel model names (`interventionSession`), column keys and relation names are camelCase. `db/relations.ts` declares relations, `db/enums.ts` the enums as plain objects (safe to import in client components), `db/client.ts` the `db` instance, the `Transaction` type, `isUniqueViolation` and `isSerializationFailure`.
 - Implements prefixed Object IDs (e.g., `sup_xxxxx`, `hc_xxxxx`) for better readability and security
 - Key entities: Users, Schools, Students, Fellows, Supervisors, Clinical Cases, Sessions
 
@@ -621,7 +620,7 @@ const students = await db.query.student.findMany({
 });
 ```
 
-Rules learned in the migration (see `docs/drizzle-migration/findings.md`):
+Rules learned while building the query layer:
 
 - Inside `where`, `orderBy` and `extras` callbacks use the callback's table parameter, never the imported table; nested relations are aliased.
 - Counts of related rows go in `extras` through `countOf` from `db/sql.ts`; never `db.$count` inside `extras` (drizzle 0.45 rewrites every column reference to the current alias).

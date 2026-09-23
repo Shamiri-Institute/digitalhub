@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import type { Role } from "#/scripts/bench/routes";
+import type { Role } from "#/tests/platform-routes";
 import { signInAs } from "#/tests/helpers";
 import { dataRows, getUrl } from "#/tests/pages/helpers";
 

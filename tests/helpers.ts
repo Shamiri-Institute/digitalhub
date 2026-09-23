@@ -4,7 +4,7 @@ import type { BrowserContext } from "@playwright/test";
 
 import { db } from "#/db/client";
 import { createSession } from "#/lib/auth/session";
-import { type Role, pickUser } from "#/scripts/bench/routes";
+import { type Role, pickUser } from "#/tests/platform-routes";
 
 export const PersonnelFixtures = {
   supervisor: {

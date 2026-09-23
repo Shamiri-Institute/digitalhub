@@ -95,9 +95,7 @@ npm install
 # Copy environment file (see Environment Setup section for details)
 cp .env.example .env.development
 
-# Start database and run migrations
-npm run db:dev:up &
-sleep 5  # Wait for database to start
+# Build the schema
 npm run db:dev:migrate
 npm run db:seed
 
@@ -230,13 +228,10 @@ hardcoded, so forks plug in their own account with zero code changes.
 
 ### Database Setup
 
-#### Using Docker (Recommended)
+Set `DATABASE_URL` in `.env.development` to a local PostgreSQL 18.
 
 ```bash
-# Start PostgreSQL container
-npm run db:dev:up
-
-# In a separate terminal, run migrations
+# Build the schema
 npm run db:dev:migrate
 
 # Seed with test data
@@ -356,7 +351,6 @@ The platform uses prefixed Object IDs rather than sequential integers or plain U
 
 | Command                        | Description                         |
 | ------------------------------ | ----------------------------------- |
-| `npm run db:dev:up`            | Start local PostgreSQL (Docker)     |
 | `npm run db:dev:migrate`       | Apply pending Drizzle migrations    |
 | `npm run db:dev:migrate:reset` | Reset and reapply all migrations    |
 | `npm run db:seed`              | Seed with faker-generated test data |
@@ -462,7 +456,7 @@ environment), so `vercel:build` self-selects based on the `VERCEL_ENV` system
 variable. Set the project's **Build Command** to `npm run vercel:build` and it
 does the right thing everywhere:
 
-- **Production** (`VERCEL_ENV=production`) → `vercel:prod:build`: marks the Drizzle baseline on a database built by the old Prisma migrations (no-op afterwards) + `drizzle-kit migrate` + `next build` — applies pending migrations, never touches data.
+- **Production** (`VERCEL_ENV=production`) → `vercel:prod:build`: marks the Drizzle baseline on a database whose schema predates drizzle-kit (no-op afterwards) + `drizzle-kit migrate` + `next build` — applies pending migrations, never touches data.
 - **Preview / Staging / Training** (any non-production `VERCEL_ENV`) → `vercel:seeded:build`: `scripts/db/reset.ts` + `drizzle-kit migrate` + `npm run db:seed` + `next build` — rebuilds the database from faker-generated data on each deploy.
 - **Run locally with no `VERCEL_ENV` set** → falls back to `vercel:prod:build`, so it never wipes a local database by accident.
 

@@ -1,7 +1,15 @@
+// The platform's pages, and a seeded user for each role, both read from what actually exists:
+// pages from the `app/(platform)` tree, users from the database. The end-to-end tests use this so
+// they exercise real accounts rather than fixture emails, which the seed reassigns.
 import { readdirSync } from "node:fs";
 import path from "node:path";
 
-import { query } from "./db";
+import { pool } from "#/db/client";
+
+async function query<T>(text: string, params: unknown[] = []): Promise<T[]> {
+  const result = await pool.query(text, params);
+  return result.rows as T[];
+}
 
 export type Role =
   | "HUB_COORDINATOR"
