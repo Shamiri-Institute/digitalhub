@@ -532,7 +532,7 @@ async function createHubCoordinators(
   const staticHub = hubs[0];
   const staticCoordinators = [
     {
-      id: objectId("hubcoordinator"),
+      id: objectId("coord"),
       visibleId: "HC_ARTETA",
       coordinatorName: "Mikel Arteta",
       coordinatorEmail: "mikel.arteta@test.com",
@@ -553,7 +553,7 @@ async function createHubCoordinators(
       idNumber: "12345678",
     },
     {
-      id: objectId("hubcoordinator"),
+      id: objectId("coord"),
       visibleId: "HC_GASPAR",
       coordinatorName: "Edu Gaspar",
       coordinatorEmail: "edu.gaspar@test.com",
@@ -612,7 +612,7 @@ async function createHubCoordinators(
     emails.add(uniqueEmail);
 
     const userId = objectId("user");
-    const coordinatorId = objectId("hubcoordinator");
+    const coordinatorId = objectId("coord");
 
     // Create user
     await db.insert(schema.user).values({
@@ -771,7 +771,7 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
     userId: user.id,
     implementerId: supervisors.find((supervisor) => supervisor.id === user.id)?.implementerId ?? "",
     role: ImplementerRole.SUPERVISOR,
-    identifier: objectId("supervisor"),
+    identifier: objectId("sup"),
   }));
 
   await insertMany(schema.implementerMember, membershipData);
@@ -826,7 +826,7 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
   // Add static operations user for static hub
   const staticHub = hubs[0];
   const staticOps = {
-    id: objectId("opsuser"),
+    id: objectId("user"),
     email: "kai.havertz@test.com",
     implementerId: staticHub?.implementerId ?? "",
     name: "Kai Havertz",
@@ -1325,7 +1325,7 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
   staticGroups.forEach((group, groupIndex) => {
     for (let i = 0; i < 10; i++) {
       students.push({
-        id: objectId("student"),
+        id: objectId("stu"),
         visibleId: `STATIC_STU_${groupIndex + 1}_${i + 1}`,
         studentName: `Student ${groupIndex + 1}.${i + 1}`,
         admissionNumber: `ADM_${groupIndex + 1}_${i + 1}`,
@@ -1346,7 +1346,7 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
     for (let i = 0; i < numStudents; i++) {
       // consider making the form + year of birth more realistic
       students.push({
-        id: objectId("student"),
+        id: objectId("stu"),
         visibleId: objectId("student"), // use short id?
         studentName: faker.person.fullName(),
         admissionNumber: faker.string.numeric({ length: 5 }),
@@ -1901,7 +1901,7 @@ async function createPayoutRecords(
   for (const [supervisorId, hubId] of supervisorHubPairs) {
     if (!hubId) continue;
     reimbursementData.push({
-      id: objectId("reim"),
+      id: objectId("reimb"),
       supervisorId,
       hubId,
       incurredAt: faker.date.recent({ days: 30 }),

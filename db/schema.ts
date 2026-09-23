@@ -1,6 +1,6 @@
-import { randomUUID } from "node:crypto";
-
 import { sql } from "drizzle-orm";
+
+import { objectId } from "#/lib/crypto";
 import {
   boolean,
   date,
@@ -114,7 +114,7 @@ export const account = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("account")),
     userId: text("user_id").notNull(),
     type: text().notNull(),
     provider: text().notNull(),
@@ -149,7 +149,7 @@ export const session = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("authsession")),
     sessionToken: text("session_token").notNull(),
     userId: text("user_id").notNull(),
     expires: timestamp({ precision: 3, mode: "date" }).notNull(),
@@ -976,7 +976,7 @@ export const user = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("user")),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1212,7 +1212,7 @@ export const studentReportingNotes = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("studentnote")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1256,7 +1256,7 @@ export const fellowReportingNotes = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("fellownote")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1292,7 +1292,7 @@ export const overallFellowEvaluation = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("fellowevaluation")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1332,7 +1332,7 @@ export const repaymentRequest = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("repayment")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1418,7 +1418,7 @@ export const clinicalExpertCaseNotes = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("expertnote")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1447,7 +1447,7 @@ export const clinicalCaseTransferTrail = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("casetransfer")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1482,7 +1482,7 @@ export const fellowComplaints = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("fellowcomplaint")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1527,7 +1527,7 @@ export const delayedPaymentRequest = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("delayedpayment")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1580,7 +1580,7 @@ export const clinicalSessionAttendance = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("csess")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1614,7 +1614,7 @@ export const project = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("proj")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1643,7 +1643,7 @@ export const weeklyFellowRatings = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("fellowrating")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1693,7 +1693,7 @@ export const clinicalScreeningInfo = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("case")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1847,7 +1847,7 @@ export const weeklyTeamMeetingReport = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("teammeeting")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -1969,7 +1969,7 @@ export const studentGroupTransferTrail = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("grouptransfer")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2005,7 +2005,7 @@ export const weeklyHubReport = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("hubreport")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2062,7 +2062,7 @@ export const schoolDropoutHistory = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("schooldropout")),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2099,7 +2099,7 @@ export const supervisorAttendance = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("supattendance")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2161,7 +2161,7 @@ export const supervisorComplaints = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("supcomplaint")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2206,7 +2206,7 @@ export const monthlySupervisorEvaluation = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("supevaluation")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2274,7 +2274,7 @@ export const sessionName = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("sessionname")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2306,7 +2306,7 @@ export const specialApprovalRequests = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("approval")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2434,7 +2434,7 @@ export const fellowPaymentComplaints = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("paycomplaint")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2470,7 +2470,7 @@ export const sessionComment = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("sessioncomment")),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2506,7 +2506,7 @@ export const payoutStatements = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("payout")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2571,7 +2571,7 @@ export const schoolFeedback = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("feedback")),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2610,7 +2610,7 @@ export const clinicalFollowUpTreatmentPlan = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("treatmentplan")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2646,7 +2646,7 @@ export const clinicalFollowUpTreatmentPlanAuditTrail = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("treatmentaudit")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2680,7 +2680,7 @@ export const adminUser = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("admin")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2700,7 +2700,7 @@ export const opsUser = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("opsuser")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2740,7 +2740,7 @@ export const clinicalCaseNotes = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("casenote")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2798,7 +2798,7 @@ export const clinicalCaseTermination = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("casetermination")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2844,7 +2844,7 @@ export const clinicalLead = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("clinicallead")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2895,7 +2895,7 @@ export const clinicalTeam = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("clinicalteam")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -2933,7 +2933,7 @@ export const tickets = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("ticket")),
     visibleId: serial("visible_id").notNull(),
     createdById: varchar("created_by", { length: 255 }).notNull(),
     subject: varchar({ length: 100 }).notNull(),
@@ -2968,7 +2968,7 @@ export const ticketEscalations = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("escalation")),
     ticketId: varchar("ticket_id", { length: 255 }).notNull(),
     escalatedById: varchar("escalated_by", { length: 255 }).notNull(),
     escalatedToId: varchar("escalated_to", { length: 255 }).notNull(),
@@ -3013,7 +3013,7 @@ export const triageEventAudit = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("triageaudit")),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -3046,7 +3046,7 @@ export const triageEvent = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("triage")),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -3231,7 +3231,7 @@ export const attendanceDocuments = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("attendancedoc")),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -3276,7 +3276,7 @@ export const ticketResolutions = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("resolution")),
     ticketId: varchar("ticket_id", { length: 255 }).notNull(),
     resolvedById: varchar("resolved_by", { length: 255 }).notNull(),
     resolutionReason: text("resolution_reason").notNull(),
@@ -3382,7 +3382,7 @@ export const ticketReassignments = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => randomUUID()),
+      .$defaultFn(() => objectId("reassignment")),
     ticketId: varchar("ticket_id", { length: 255 }).notNull(),
     escalationId: varchar("escalation_id", { length: 255 }).notNull(),
     reassignedFrom: varchar("reassigned_from", { length: 255 }).notNull(),
