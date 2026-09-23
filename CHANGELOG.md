@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.38.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.37.0...v1.38.0) (2026-09-23)
+
+### Features
+
+- **bench:** add page benchmark harness and Prisma baseline ([#845](https://github.com/Shamiri-Institute/digitalhub/issues/845)) ([acc4c74](https://github.com/Shamiri-Institute/digitalhub/commit/acc4c74d44297f9fd09a7d63dfe8d61b6109fa07))
+- **bench:** dump page bodies and diff two dumps ([#848](https://github.com/Shamiri-Institute/digitalhub/issues/848)) ([b509a8a](https://github.com/Shamiri-Institute/digitalhub/commit/b509a8ab36089d4d5d96fdc3511fd229578c9185))
+- **db:** add Drizzle schema, client, enums and schema parity check ([#846](https://github.com/Shamiri-Institute/digitalhub/issues/846)) ([d4867c5](https://github.com/Shamiri-Institute/digitalhub/commit/d4867c5da234efdfbdd5c647a8bdbf2bb9432e6f))
+- **db:** cut over migrations and seeding to drizzle-kit, remove prisma ([#855](https://github.com/Shamiri-Institute/digitalhub/issues/855)) ([f2914cd](https://github.com/Shamiri-Institute/digitalhub/commit/f2914cdd6f713fa213185636a08d59aa08f69417))
+- **db:** generate prefixed uuidv7 ids instead of uuid v4 ([#860](https://github.com/Shamiri-Institute/digitalhub/issues/860)) ([d2a093f](https://github.com/Shamiri-Institute/digitalhub/commit/d2a093fb5677aec3c4b3d5e18cb59f3afdd6b509))
+
+### Bug Fixes
+
+- **admin:** restore group student counts in fetchImplementerSupervisors ([#849](https://github.com/Shamiri-Institute/digitalhub/issues/849)) ([9543466](https://github.com/Shamiri-Institute/digitalhub/commit/9543466cabffb4b9b6696ca2c91309ec8a5866ff))
+- **auth:** fail operations when hub scope is missing for fellows, supervisor and hub coordinators ([#859](https://github.com/Shamiri-Institute/digitalhub/issues/859)) ([0e699f0](https://github.com/Shamiri-Institute/digitalhub/commit/0e699f0e1d139e6e76acb0b3606e24636d99cc59))
+
 ## [1.37.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.36.7...v1.37.0) (2026-09-21)
 
 ### Features
