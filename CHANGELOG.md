@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.38.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.0...v1.38.1) (2026-09-23)
+
+### Bug Fixes
+
+- **db:** index the cascade before rewriting ids (ENG-2164) ([0771fd1](https://github.com/Shamiri-Institute/digitalhub/commit/0771fd11d1bdcfd298bb5321e0a03fe7aac9f5d9))
+
 ## [1.38.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.37.0...v1.38.0) (2026-09-23)
 
 ### Features
