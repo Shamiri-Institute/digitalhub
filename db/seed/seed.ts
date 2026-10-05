@@ -1871,9 +1871,11 @@ async function createPayoutRecords(
     });
   }
 
-  await insertMany(schema.payoutStatements, payoutStatementData);
-  await insertMany(schema.payoutReconciliation, reconciliationData);
-  await insertMany(schema.repaymentRequest, repaymentData);
+  await Promise.all([
+    insertMany(schema.payoutStatements, payoutStatementData),
+    insertMany(schema.payoutReconciliation, reconciliationData),
+    insertMany(schema.repaymentRequest, repaymentData),
+  ]);
 }
 
 // Pools used to generate varied (V1-shaped) fidelity feedback per recording so
