@@ -13,7 +13,6 @@ import {
   clinicalScreeningInfo,
   clinicalSessionAttendance,
   clinicalTeam,
-  delayedPaymentRequest,
   fellow,
   fellowAttendance,
   fellowComplaints,
@@ -264,29 +263,6 @@ export const clinicalTeamRelations = relations(clinicalTeam, ({ one }) => ({
   }),
 }));
 
-export const delayedPaymentRequestRelations = relations(delayedPaymentRequest, ({ one }) => ({
-  fellow: one(fellow, {
-    fields: [delayedPaymentRequest.fellowId],
-    references: [fellow.id],
-    relationName: "DelayedPaymentRequest_fellow",
-  }),
-  supervisor: one(supervisor, {
-    fields: [delayedPaymentRequest.supervisorId],
-    references: [supervisor.id],
-    relationName: "DelayedPaymentRequest_supervisor",
-  }),
-  interventionSession: one(interventionSession, {
-    fields: [delayedPaymentRequest.interventionSessionId],
-    references: [interventionSession.id],
-    relationName: "DelayedPaymentRequest_interventionSession",
-  }),
-  fellowAttendance: one(fellowAttendance, {
-    fields: [delayedPaymentRequest.fellowAttendanceId],
-    references: [fellowAttendance.id],
-    relationName: "DelayedPaymentRequest_fellowAttendance",
-  }),
-}));
-
 export const fellowRelations = relations(fellow, ({ one, many }) => ({
   students: many(student, { relationName: "Student_fellow" }),
   studentAttendances: many(studentAttendance, { relationName: "StudentAttendance_fellow" }),
@@ -312,9 +288,6 @@ export const fellowRelations = relations(fellow, ({ one, many }) => ({
   }),
   fellowComplaints: many(fellowComplaints, { relationName: "FellowComplaints_fellow" }),
   weeklyFellowRatings: many(weeklyFellowRatings, { relationName: "WeeklyFellowRatings_fellow" }),
-  delayedPaymentRequests: many(delayedPaymentRequest, {
-    relationName: "DelayedPaymentRequest_fellow",
-  }),
   payoutReconciliations: many(payoutReconciliation, {
     relationName: "PayoutReconciliation_fellow",
   }),
@@ -359,9 +332,6 @@ export const fellowAttendanceRelations = relations(fellowAttendance, ({ one, man
     relationName: "FellowAttendance_user",
   }),
   repaymentRequests: many(repaymentRequest, { relationName: "RepaymentRequest_fellowAttendance" }),
-  delayedPaymentRequests: many(delayedPaymentRequest, {
-    relationName: "DelayedPaymentRequest_fellowAttendance",
-  }),
   PayoutStatements: many(payoutStatements, { relationName: "PayoutStatements_fellowAttendance" }),
   SpecialApprovalRequests: many(specialApprovalRequests, {
     relationName: "SpecialApprovalRequests_fellowAttendance",
@@ -613,9 +583,6 @@ export const interventionSessionRelations = relations(interventionSession, ({ on
   sessionComments: many(sessionComment, { relationName: "SessionComment_session" }),
   clinicalCases: many(clinicalScreeningInfo, {
     relationName: "ClinicalScreeningInfo_sessionWhenCaseIsFlagged",
-  }),
-  delayedPaymentRequests: many(delayedPaymentRequest, {
-    relationName: "DelayedPaymentRequest_interventionSession",
   }),
   sessionRecordings: many(sessionRecording, { relationName: "SessionRecording_session" }),
   attendanceDocuments: many(attendanceDocuments, { relationName: "AttendanceDocuments_session" }),
@@ -1099,9 +1066,6 @@ export const supervisorRelations = relations(supervisor, ({ one, many }) => ({
   fellowComplaints: many(fellowComplaints, { relationName: "FellowComplaints_supervisor" }),
   weeklyFellowRatings: many(weeklyFellowRatings, {
     relationName: "WeeklyFellowRatings_supervisor",
-  }),
-  delayedPaymentRequests: many(delayedPaymentRequest, {
-    relationName: "DelayedPaymentRequest_supervisor",
   }),
   SpecialApprovalRequests: many(specialApprovalRequests, {
     relationName: "SpecialApprovalRequests_supervisor",
