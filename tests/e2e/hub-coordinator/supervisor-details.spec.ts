@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "#/db/client";
 import { supervisor, user } from "#/db/schema";
 import { emailForProfile, signInWithEmail } from "#/tests/helpers";
-import { getUrl } from "#/tests/pages/helpers";
+import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A hub coordinator edits the supervisors of their own hub through the UI. The edit form also
@@ -65,9 +65,9 @@ test.afterAll(async () => {
 test("a hub coordinator edits a supervisor in their hub", async ({ page, context }) => {
   const supervisorName = `${target.supervisorName} E2E`;
   await signInWithEmail(context, ownHubEmail);
-  await page.goto(getUrl("/hc/supervisors"));
+  await page.goto(getUrl("/hc/supervisors"), { waitUntil: "networkidle" });
 
-  const row = page.getByRole("row").filter({ hasText: target.supervisorName ?? "" });
+  const row = await searchRows(page, target.supervisorName ?? "");
   await row.getByRole("cell").last().click();
   await page.getByRole("menuitem", { name: "Edit supervisor information" }).click();
   const dialog = page.getByRole("dialog", { name: "Edit supervisor information" });
@@ -82,8 +82,8 @@ test("a hub coordinator edits a supervisor in their hub", async ({ page, context
   await dialog.getByRole("button", { name: "Update & Save" }).click();
   await expect(dialog).toBeHidden();
 
-  await page.reload();
-  await expect(page.getByRole("row").filter({ hasText: supervisorName })).toBeVisible();
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(await searchRows(page, supervisorName)).toBeVisible();
   const login = await db.query.user.findFirst({
     where: (u, { eq }) => eq(u.id, targetUserId),
     columns: { email: true },
@@ -93,10 +93,8 @@ test("a hub coordinator edits a supervisor in their hub", async ({ page, context
 
 test("a hub coordinator in another hub does not list the supervisor", async ({ page, context }) => {
   await signInWithEmail(context, otherHubEmail);
-  await page.goto(getUrl("/hc/supervisors"));
+  await page.goto(getUrl("/hc/supervisors"), { waitUntil: "networkidle" });
 
   await expect(page.getByRole("button", { name: "Add supervisor" })).toBeVisible();
-  await expect(page.getByRole("row").filter({ hasText: target.supervisorName ?? "" })).toHaveCount(
-    0,
-  );
+  await expect(await searchRows(page, target.supervisorName ?? "")).toHaveCount(0);
 });

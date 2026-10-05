@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "#/db/client";
 import { clinicalScreeningInfo, student } from "#/db/schema";
 import { emailForProfile, signInWithEmail } from "#/tests/helpers";
-import { getUrl } from "#/tests/pages/helpers";
+import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A supervisor works on the clinical cases they hold, through the UI. Each test saves, reloads and
@@ -73,12 +73,8 @@ test.beforeAll(async () => {
   if (!clinicalLead) throw new Error("seed the database first: no clinical lead with a hub");
 });
 
-function caseRow(page: Page, name: string) {
-  return page.getByRole("row").filter({ hasText: name });
-}
-
 async function openCaseAction(page: Page, name: string, action: string) {
-  await caseRow(page, name).getByRole("cell").last().click();
+  await (await searchRows(page, name)).getByRole("cell").last().click();
   await page.getByRole("menu").getByText(action, { exact: true }).click();
 }
 
@@ -128,12 +124,14 @@ async function deleteCase(casePseudonym: string) {
 test("a supervisor's new case is listed as theirs", async ({ page, context }) => {
   const casePseudonym = `e2e-sc-${Date.now()}`;
   await signInWithEmail(context, owner.email);
-  await page.goto(getUrl("/sc/clinical"));
+  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
 
   try {
     await createCaseForNewStudent(page, casePseudonym);
-    await page.reload();
-    await expect(caseRow(page, casePseudonym)).toContainText("ACTIVE", { ignoreCase: true });
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(await searchRows(page, casePseudonym)).toContainText("ACTIVE", {
+      ignoreCase: true,
+    });
 
     // The creator comes from the session: the case belongs to this supervisor and no lead.
     const created = await db.query.clinicalScreeningInfo.findFirst({
@@ -149,12 +147,12 @@ test("a supervisor's new case is listed as theirs", async ({ page, context }) =>
 test("a clinical lead's new case is assigned to them", async ({ page, context }) => {
   const casePseudonym = `e2e-cl-${Date.now()}`;
   await signInWithEmail(context, clinicalLead.email);
-  await page.goto(getUrl("/cl/clinical"));
+  await page.goto(getUrl("/cl/clinical"), { waitUntil: "networkidle" });
 
   try {
     await createCaseForNewStudent(page, casePseudonym);
-    await page.reload();
-    await expect(caseRow(page, casePseudonym)).toBeVisible();
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(await searchRows(page, casePseudonym)).toBeVisible();
 
     const created = await db.query.clinicalScreeningInfo.findFirst({
       where: (c, { eq }) => eq(c.pseudonym, casePseudonym),
@@ -178,7 +176,7 @@ test("a supervisor edits their case's student and the change survives a reload",
   const original = ownCase.student;
   const studentName = `E2E student ${Date.now()}`;
   await signInWithEmail(context, owner.email);
-  await page.goto(getUrl("/sc/clinical"));
+  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
 
   try {
     await openCaseAction(page, pseudonym, "Edit student information");
@@ -192,7 +190,7 @@ test("a supervisor edits their case's student and the change survives a reload",
     await dialog.getByRole("button", { name: "Save Changes" }).click();
     await expect(dialog).toBeHidden();
 
-    await page.reload();
+    await page.reload({ waitUntil: "networkidle" });
     await openCaseAction(page, pseudonym, "Edit student information");
     await expect(dialog.getByRole("textbox", { name: "Student Name" })).toHaveValue(studentName);
   } finally {
@@ -205,7 +203,7 @@ test("a supervisor edits their case's student and the change survives a reload",
 
 test("a supervisor moves their case to follow-up", async ({ page, context }) => {
   await signInWithEmail(context, owner.email);
-  await page.goto(getUrl("/sc/clinical"));
+  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
 
   try {
     await openCaseAction(page, pseudonym, "Follow up");
@@ -213,8 +211,8 @@ test("a supervisor moves their case to follow-up", async ({ page, context }) => 
     await dialog.getByRole("button", { name: "Confirm" }).click();
     await expect(dialog).toBeHidden();
 
-    await page.reload();
-    await expect(caseRow(page, pseudonym)).toContainText("FollowUp");
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(await searchRows(page, pseudonym)).toContainText("FollowUp");
   } finally {
     await db
       .update(clinicalScreeningInfo)
@@ -225,8 +223,8 @@ test("a supervisor moves their case to follow-up", async ({ page, context }) => 
 
 test("a supervisor in another hub does not see the case", async ({ page, context }) => {
   await signInWithEmail(context, outsider.email);
-  await page.goto(getUrl("/sc/clinical"));
+  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
 
   await expect(page.getByRole("button", { name: "New case" })).toBeVisible();
-  await expect(caseRow(page, pseudonym)).toHaveCount(0);
+  await expect(await searchRows(page, pseudonym)).toHaveCount(0);
 });
