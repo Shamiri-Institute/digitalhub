@@ -3,7 +3,12 @@
 import { count, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
-import { currentSupervisor, getCurrentPersonnel } from "#/app/auth";
+import {
+  currentClinicalLead,
+  currentSupervisor,
+  currentSupervisorLite,
+  getCurrentUserSession,
+} from "#/app/auth";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
@@ -32,6 +37,71 @@ function requireUpdated<T>(rows: T[], what: string): T {
   }
   return row;
 }
+
+/** The signed-in supervisor or clinical lead. Every other role is refused. */
+async function requireClinicalActor() {
+  const session = await getCurrentUserSession();
+  const userId = session?.user.id;
+  const role = session?.user.activeMembership?.role;
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  if (role === ImplementerRole.SUPERVISOR) {
+    const supervisor = await currentSupervisorLite();
+    if (supervisor) {
+      return {
+        role,
+        userId,
+        profileId: supervisor.profile.id,
+        hubId: supervisor.profile.hubId,
+      };
+    }
+  }
+
+  if (role === ImplementerRole.CLINICAL_LEAD) {
+    const clinicalLead = await currentClinicalLead();
+    if (clinicalLead) {
+      return {
+        role,
+        userId,
+        profileId: clinicalLead.profile.id,
+        hubId: clinicalLead.profile.assignedHubId,
+      };
+    }
+  }
+
+  throw new Error("Unauthorized");
+}
+
+/**
+ * The actor and the case, after checking the actor may act on it. A supervisor may act on the
+ * cases they hold. A clinical lead may act on the cases assigned to them and on every case held
+ * by a supervisor in their hub, which is what their hub table lists.
+ */
+async function requireCaseAccess(caseId: string) {
+  const actor = await requireClinicalActor();
+  const clinicalCase = await db.query.clinicalScreeningInfo.findFirst({
+    where: (c, { eq }) => eq(c.id, caseId),
+    columns: { id: true, studentId: true, currentSupervisorId: true, clinicalLeadId: true },
+    with: { currentSupervisor: { columns: { hubId: true } } },
+  });
+
+  const allowed =
+    actor.role === ImplementerRole.SUPERVISOR
+      ? clinicalCase?.currentSupervisorId === actor.profileId
+      : clinicalCase?.clinicalLeadId === actor.profileId ||
+        (actor.hubId !== null && clinicalCase?.currentSupervisor?.hubId === actor.hubId);
+  // The same message for a missing case and a forbidden one, so the error does not reveal
+  // which case ids exist.
+  if (!clinicalCase || !allowed) {
+    throw new Error("Clinical case not found");
+  }
+  return { actor, clinicalCase };
+}
+
+const clinicalHome = (role: ImplementerRole) =>
+  role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical";
 
 export async function getClinicalCases() {
   const supervisor = await currentSupervisor();
@@ -158,6 +228,7 @@ export async function supSubmitConsultClinicalexpert(data: {
   comment: string;
 }) {
   try {
+    await requireCaseAccess(data.caseId);
     await db.insert(clinicalExpertCaseNotes).values({
       caseId: data.caseId,
       comment: data.comment,
@@ -175,15 +246,14 @@ export async function updateClinicalSessionAttendance(
   sessionId: string,
   attendanceStatus: boolean | null,
 ) {
-  const user = await getCurrentPersonnel();
-  if (!user) {
-    throw new Error("User not found");
+  const attendance = await db.query.clinicalSessionAttendance.findFirst({
+    where: (a, { eq }) => eq(a.id, sessionId),
+    columns: { caseId: true },
+  });
+  if (!attendance) {
+    throw new Error("Clinical session attendance not found");
   }
-
-  const role = user.session.user.activeMembership?.role;
-  if (!role || (role !== ImplementerRole.CLINICAL_LEAD && role !== ImplementerRole.SUPERVISOR)) {
-    throw new Error("You are not authorized to update clinical session attendance");
-  }
+  const { actor } = await requireCaseAccess(attendance.caseId);
 
   try {
     requireUpdated(
@@ -195,11 +265,7 @@ export async function updateClinicalSessionAttendance(
       "Clinical session attendance",
     );
 
-    if (role === ImplementerRole.CLINICAL_LEAD) {
-      revalidatePath("/cl/clinical");
-    } else {
-      revalidatePath("/sc/clinical");
-    }
+    revalidatePath(clinicalHome(actor.role));
 
     return {
       success: true,
@@ -227,6 +293,7 @@ export async function referClinicalCaseToSupervisor(data: {
   supervisorName: string;
 }) {
   try {
+    await requireCaseAccess(data.caseId);
     await db.transaction(async (tx) => {
       requireUpdated(
         await tx
@@ -339,13 +406,11 @@ export async function getSchoolsInHub() {
 export async function createStudentClinicalCase(data: {
   studentId?: string;
   schoolId: string;
-  creatorId: string;
   pseudonym: string;
   initialContact: string;
   supervisorId?: string;
   fellowId?: string;
   sessionId: string;
-  role: "CLINICAL_LEAD" | "SUPERVISOR";
   newStudent?: {
     studentName: string;
     admissionNumber: string;
@@ -364,6 +429,30 @@ export async function createStudentClinicalCase(data: {
   }
 
   try {
+    // The creator and their role come from the session, never from the request.
+    const actor = await requireClinicalActor();
+    const { hubId } = actor;
+    if (!hubId) {
+      throw new Error("You have no assigned hub");
+    }
+    const school = await db.query.school.findFirst({
+      where: (s, { and, eq }) => and(eq(s.id, data.schoolId), eq(s.hubId, hubId)),
+      columns: { id: true },
+    });
+    if (!school) {
+      throw new Error("School not found in your hub");
+    }
+    if (data.studentId) {
+      const { studentId } = data;
+      const existing = await db.query.student.findFirst({
+        where: (s, { and, eq }) => and(eq(s.id, studentId), eq(s.schoolId, school.id)),
+        columns: { id: true },
+      });
+      if (!existing) {
+        throw new Error("Student not found in the selected school");
+      }
+    }
+
     await db.transaction(async (tx) => {
       let studentId = data.studentId;
 
@@ -395,7 +484,7 @@ export async function createStudentClinicalCase(data: {
       await tx.insert(clinicalScreeningInfo).values({
         studentId,
         schoolId: data.schoolId,
-        currentSupervisorId: data.role === "SUPERVISOR" ? data.creatorId : null,
+        currentSupervisorId: actor.role === ImplementerRole.SUPERVISOR ? actor.profileId : null,
         pseudonym: data.pseudonym,
         initialReferredFromSpecified: data.initialContact,
         initialReferredFrom: data.fellowId ?? data.supervisorId,
@@ -403,11 +492,11 @@ export async function createStudentClinicalCase(data: {
         riskStatus: "No",
         caseStatus: "Active",
         sessionWhenCaseIsFlaggedId: data.sessionId,
-        clinicalLeadId: data.role === "CLINICAL_LEAD" ? data.creatorId : null,
+        clinicalLeadId: actor.role === ImplementerRole.CLINICAL_LEAD ? actor.profileId : null,
       });
     });
 
-    revalidatePath(`${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`);
+    revalidatePath(clinicalHome(actor.role));
     return { success: true, message: "Clinical case created successfully" };
   } catch (error) {
     console.error(error);
@@ -431,64 +520,11 @@ type TreatmentPlanData = {
 /** A row stored in a jsonb audit column; the driver JSON-serialises it (dates become strings). */
 const asJson = (value: unknown) => value as JsonValue;
 
-export async function updateTreatmentPlan(
-  data: TreatmentPlanData & { beforeData: TreatmentPlanData },
-) {
-  try {
-    const user = await getCurrentPersonnel();
-    const userId = user?.session?.user.id;
-    if (!user || !userId) {
-      throw new Error("User not found");
-    }
-
-    await db.transaction(async (tx) => {
-      const treatmentPlan = requireUpdated(
-        await tx
-          .update(clinicalFollowUpTreatmentPlan)
-          .set({
-            currentORSScore: data.currentOrsScore,
-            plannedSessions: data.plannedSessions,
-            sessionFrequency: data.sessionFrequency,
-            plannedTreatmentIntervention: data.treatmentInterventions,
-            otherTreatmentIntervention: data.otherIntervention,
-            plannedTreatmentInterventionExplanation: data.interventionExplanation,
-            caseId: data.caseId,
-          })
-          .where(eq(clinicalFollowUpTreatmentPlan.id, data.caseId))
-          .returning(),
-        "Treatment plan",
-      );
-
-      await tx.insert(clinicalFollowUpTreatmentPlanAuditTrail).values({
-        caseId: data.caseId,
-        action: "Update",
-        userId: userId,
-        afterData: asJson(treatmentPlan),
-        beforeData: asJson(data.beforeData),
-      });
-    });
-
-    revalidatePath("/sc/clinical");
-    return { success: true };
-  } catch (error) {
-    console.error(error);
-    return { success: false };
-  }
-}
-
 export async function createTreatmentPlan(
   data: TreatmentPlanData & { role: "CLINICAL_LEAD" | "SUPERVISOR" },
 ) {
   try {
-    const user = await getCurrentPersonnel();
-    const userId = user?.session?.user.id;
-    if (!user || !userId) {
-      throw new Error("User not found");
-    }
-    const role = user.session.user.activeMembership?.role;
-    if (!role || (role !== ImplementerRole.CLINICAL_LEAD && role !== ImplementerRole.SUPERVISOR)) {
-      throw new Error("You are not authorized to create a treatment plan");
-    }
+    const { actor } = await requireCaseAccess(data.caseId);
 
     await db.transaction(async (tx) => {
       const [treatmentPlan] = await tx
@@ -507,12 +543,12 @@ export async function createTreatmentPlan(
       await tx.insert(clinicalFollowUpTreatmentPlanAuditTrail).values({
         caseId: data.caseId,
         action: "Create",
-        userId: userId,
+        userId: actor.userId,
         afterData: asJson(treatmentPlan),
       });
     });
 
-    revalidatePath(`${role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical"}`);
+    revalidatePath(clinicalHome(actor.role));
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -522,6 +558,11 @@ export async function createTreatmentPlan(
 
 export async function updateStudentInfo(data: EditStudentInfoFormValues) {
   try {
+    // Edit the case's own student; a client-supplied student id could name any student.
+    const {
+      clinicalCase: { studentId },
+    } = await requireCaseAccess(data.caseId);
+
     await db.transaction(async (tx) => {
       requireUpdated(
         await tx
@@ -533,7 +574,7 @@ export async function updateStudentInfo(data: EditStudentInfoFormValues) {
             form: Number.parseInt(data.classForm, 10),
             stream: data.stream,
           })
-          .where(eq(student.id, data.studentId))
+          .where(eq(student.id, studentId))
           .returning({ id: student.id }),
         "Student",
       );
@@ -568,6 +609,7 @@ export async function updateClinicalCaseGeneralPresentingIssue(data: {
   caseStatus: string;
 }) {
   try {
+    await requireCaseAccess(data.caseId);
     const updateData =
       data.caseStatus === "Active"
         ? {
@@ -602,6 +644,7 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
   caseStatus: string;
 }) {
   try {
+    await requireCaseAccess(data.caseId);
     const updateData =
       data.caseStatus === "Active"
         ? {
@@ -635,15 +678,7 @@ export async function terminateClinicalCase(data: {
   sessionId: string;
 }) {
   try {
-    const user = await getCurrentPersonnel();
-    const userId = user?.session?.user.id;
-    if (!user || !userId) {
-      throw new Error("User not found");
-    }
-    const role = user.session.user.activeMembership?.role;
-    if (!role || (role !== ImplementerRole.CLINICAL_LEAD && role !== ImplementerRole.SUPERVISOR)) {
-      throw new Error("You are not authorized to terminate this case");
-    }
+    const { actor } = await requireCaseAccess(data.caseId);
 
     await db.transaction(async (tx) => {
       requireUpdated(
@@ -661,7 +696,7 @@ export async function terminateClinicalCase(data: {
         terminationReason: data.terminationReason,
         terminationReasonExplanation: data.terminationReasonExplanation,
         sessionId: data.sessionId,
-        createdBy: userId,
+        createdBy: actor.userId,
       });
     });
 
@@ -675,13 +710,8 @@ export async function terminateClinicalCase(data: {
 
 export async function unterminateClinicalCase(data: { caseId: string }) {
   try {
-    const user = await getCurrentPersonnel();
-    const userId = user?.session?.user.id;
-    if (!user || !userId) {
-      throw new Error("User not found");
-    }
-    const role = user.session.user.activeMembership?.role;
-    if (!role || role !== ImplementerRole.CLINICAL_LEAD) {
+    const { actor } = await requireCaseAccess(data.caseId);
+    if (actor.role !== ImplementerRole.CLINICAL_LEAD) {
       throw new Error("You are not authorized to un-terminate this case");
     }
 
@@ -709,11 +739,7 @@ export async function unterminateClinicalCase(data: { caseId: string }) {
 }
 
 export async function getClinicalCaseNotes(caseId: string) {
-  const user = await getCurrentPersonnel();
-  const role = user?.session?.user.activeMembership?.role;
-  if (!role || (role !== ImplementerRole.CLINICAL_LEAD && role !== ImplementerRole.SUPERVISOR)) {
-    throw new Error("You are not authorized to view clinical case notes");
-  }
+  await requireCaseAccess(caseId);
 
   return db.query.clinicalCaseNotes.findMany({
     where: (n, { eq }) => eq(n.caseId, caseId),
@@ -737,21 +763,12 @@ export async function createClinicalCaseNotes(data: {
   role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   try {
-    const user = await getCurrentPersonnel();
-    const userId = user?.session?.user.id;
-    if (!user || !userId) {
-      throw new Error("User not found");
-    }
-
-    const role = user.session.user.activeMembership?.role;
-    if (!role || (role !== ImplementerRole.CLINICAL_LEAD && role !== ImplementerRole.SUPERVISOR)) {
-      throw new Error("You are not authorized to create clinical case notes");
-    }
+    const { actor } = await requireCaseAccess(data.caseId);
 
     await db.insert(clinicalCaseNotes).values({
       caseId: data.caseId,
       sessionId: data.sessionId,
-      createdBy: userId,
+      createdBy: actor.userId,
       presentingIssues: data.presentingIssues,
       orsAssessment: data.orsAssessment,
       riskLevel: data.riskLevel,
@@ -764,7 +781,7 @@ export async function createClinicalCaseNotes(data: {
       followUpPlanExplanation: data.followUpPlanExplanation,
     });
 
-    revalidatePath(`${role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical"}`);
+    revalidatePath(clinicalHome(actor.role));
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -782,16 +799,7 @@ export async function updateClinicalCaseAttendance(data: {
   clinicalLeadId: string | null;
 }) {
   try {
-    const user = await getCurrentPersonnel();
-    const userId = user?.session?.user.id;
-    if (!user || !userId) {
-      throw new Error("User not found");
-    }
-
-    const role = user.session.user.activeMembership?.role;
-    if (!role || (role !== ImplementerRole.CLINICAL_LEAD && role !== ImplementerRole.SUPERVISOR)) {
-      throw new Error("You are not authorized to create clinical case notes");
-    }
+    const { actor } = await requireCaseAccess(data.caseId);
 
     await db.insert(clinicalSessionAttendance).values({
       caseId: data.caseId,
@@ -802,7 +810,7 @@ export async function updateClinicalCaseAttendance(data: {
       attendanceStatus: data.attendanceStatus,
     });
 
-    revalidatePath(`${role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical"}`);
+    revalidatePath(clinicalHome(actor.role));
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -851,6 +859,7 @@ export async function referClinicalCaseToClinicalLead(data: {
   referredToPersonId: string;
 }) {
   try {
+    await requireCaseAccess(data.caseId);
     await db.transaction(async (tx) => {
       requireUpdated(
         await tx
@@ -904,6 +913,7 @@ export async function getReferredCasesToSupervisor() {
 
 export async function triggerCaseStatusToFollowup(data: { caseId: string }) {
   try {
+    await requireCaseAccess(data.caseId);
     requireUpdated(
       await db
         .update(clinicalScreeningInfo)

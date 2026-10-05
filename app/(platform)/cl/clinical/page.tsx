@@ -30,9 +30,7 @@ export default async function ClinicalPage() {
           schools={schools}
           fellowsInProject={fellowsInProject}
           supervisorsInHub={supervisorsInHub}
-          creatorId={currentClinicalLeadId}
           hubs={hubs}
-          userRole="CLINICAL_LEAD"
         >
           <DialogTrigger asChild={true}>
             <Button variant="brand">

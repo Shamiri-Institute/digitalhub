@@ -27,9 +27,17 @@ import { objectId } from "#/lib/crypto";
 
 export async function submitWeeklyTeamMeeting(data: z.infer<typeof WeeklyHubTeamMeetingSchema>) {
   try {
+    const hubCoordinator = await checkAuth();
+    const hubId = hubCoordinator.profile.assignedHubId;
+    if (!hubId) {
+      throw new Error("Hub coordinator has no assigned hub");
+    }
     const parsedData = WeeklyHubTeamMeetingSchema.parse(data);
 
-    await db.insert(weeklyTeamMeetingReport).values(parsedData);
+    // The hub and the author come from the session, never from the request.
+    await db
+      .insert(weeklyTeamMeetingReport)
+      .values({ ...parsedData, hubId, submittedBy: hubCoordinator.profile.id });
     //TODO: If there will be a view for the weekly report, we should add a revalidation here
     return {
       success: true,
@@ -53,9 +61,25 @@ async function checkAuth() {
   return hubCoordinator;
 }
 
+/** The hub coordinator, after checking the supervisor belongs to their hub. */
+async function checkSupervisorInHub(supervisorId: string) {
+  const hubCoordinator = await checkAuth();
+  const hubId = hubCoordinator.profile.assignedHubId;
+  const inHub =
+    hubId !== null &&
+    (await db.query.supervisor.findFirst({
+      where: (s, { and, eq }) => and(eq(s.id, supervisorId), eq(s.hubId, hubId)),
+      columns: { id: true },
+    })) !== undefined;
+  if (!inHub) {
+    throw new Error("Supervisor not found in your hub");
+  }
+  return hubCoordinator;
+}
+
 export async function dropoutSupervisor(supervisorId: string, dropoutReason: string) {
   try {
-    await checkAuth();
+    await checkSupervisorInHub(supervisorId);
 
     const data = DropoutSupervisorSchema.parse({ supervisorId, dropoutReason });
     const [result] = await db
@@ -88,7 +112,7 @@ export async function dropoutSupervisor(supervisorId: string, dropoutReason: str
 
 export async function undropSupervisor(supervisorId: string) {
   try {
-    await checkAuth();
+    await checkSupervisorInHub(supervisorId);
     const [result] = await db
       .update(supervisor)
       .set({
@@ -119,14 +143,14 @@ export async function undropSupervisor(supervisorId: string) {
 
 export async function submitSupervisorComplaint(data: z.infer<typeof SubmitComplaintSchema>) {
   try {
-    const hubCoordinator = await checkAuth();
+    const parsedData = SubmitComplaintSchema.parse(data);
+    const hubCoordinator = await checkSupervisorInHub(parsedData.supervisorId);
 
     const projectId = hubCoordinator.profile?.assignedHub?.projectId;
     if (!projectId) {
       throw new Error("Assigned hub has no project");
     }
 
-    const parsedData = SubmitComplaintSchema.parse(data);
     const [result] = await db
       .insert(supervisorComplaints)
       .values({
@@ -198,6 +222,7 @@ export async function markSupervisorAttendance(
     });
 
     if (attendance !== undefined) {
+      await checkSupervisorInHub(attendance.supervisorId);
       await db
         .update(supervisorAttendance)
         .set({
@@ -225,8 +250,6 @@ export async function markSupervisorAttendance(
 
 export async function updateSupervisorDetails(data: z.infer<typeof EditSupervisorSchema>) {
   try {
-    await checkAuth();
-
     const {
       supervisorId,
       personalEmail,
@@ -240,6 +263,8 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
       idNumber,
       dateOfBirth,
     } = EditSupervisorSchema.parse(data);
+    // This action also changes the supervisor's login email, so the hub check matters.
+    await checkSupervisorInHub(supervisorId);
 
     // Get the current supervisor's user ID
     const supervisorMember = await db.query.implementerMember.findFirst({
@@ -397,12 +422,6 @@ export async function submitMonthlySupervisorEvaluation(
   data: z.infer<typeof MonthlySupervisorEvaluationSchema>,
 ) {
   try {
-    const hc = await currentHubCoordinator();
-
-    if (!hc) {
-      throw new Error("The session has not been authenticated");
-    }
-
     const {
       respectfulness,
       attitude,
@@ -425,6 +444,7 @@ export async function submitMonthlySupervisorEvaluation(
       supervisorId,
       month,
     } = MonthlySupervisorEvaluationSchema.parse(data);
+    const hc = await checkSupervisorInHub(supervisorId);
 
     const projectId = hc.profile?.assignedHub?.projectId;
     if (!projectId) {
