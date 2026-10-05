@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.38.4](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.3...v1.38.4) (2026-10-05)
+
+### Bug Fixes
+
+- **auth:** check caller and ownership in clinical and supervisor actions ([#869](https://github.com/Shamiri-Institute/digitalhub/issues/869)) ([05649b6](https://github.com/Shamiri-Institute/digitalhub/commit/05649b6361b783c2c4f5878fce4ee3c80d75a0d5))
+- **auth:** scope payout, expense and fellow attendance actions to the caller ([#871](https://github.com/Shamiri-Institute/digitalhub/issues/871)) ([f2baa76](https://github.com/Shamiri-Institute/digitalhub/commit/f2baa76fc8ad39bfc77149ba9cecfcf1b0d595e4))
+- **auth:** scope student, fellow, session, group and triage writes to the caller's hub ([#872](https://github.com/Shamiri-Institute/digitalhub/issues/872)) ([14a4c8c](https://github.com/Shamiri-Institute/digitalhub/commit/14a4c8c48748105266f74af3dec42673e67794a1))
+- standardise the status(es) for the reimbursement_request table ([#873](https://github.com/Shamiri-Institute/digitalhub/issues/873)) ([ccbbf75](https://github.com/Shamiri-Institute/digitalhub/commit/ccbbf75cfe72d93727e4300325b0fa34afbe5785))
+
 ## [1.38.3](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.2...v1.38.3) (2026-09-23)
 
 ## [1.38.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.1...v1.38.2) (2026-09-23)
