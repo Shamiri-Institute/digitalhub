@@ -443,14 +443,6 @@ export async function assignSchoolPointSupervisor(
     }
 
     const parsedData = AssignPointSupervisorSchema.parse(schoolInfo);
-    const hubId = await requireSchoolInCoordinatorHub(schoolId);
-    const pointSupervisor = await db.query.supervisor.findFirst({
-      where: (s, { and, eq }) => and(eq(s.id, parsedData.assignedSupervisorId), eq(s.hubId, hubId)),
-      columns: { id: true },
-    });
-    if (!pointSupervisor) {
-      throw new Error("Supervisor not found");
-    }
 
     const [updated] = await db
       .update(school)
