@@ -19,29 +19,6 @@ export const FellowSchema = z.object({
 
 export type FellowSchema = z.infer<typeof FellowSchema>;
 
-export const WeeklyFellowRatingSchema = z.object({
-  week: z.coerce.date({ error: "Please select a week" }),
-  behaviourNotes: stringValidation("Please input behaviour notes"),
-  programDeliveryNotes: stringValidation("Please input program delivery notes"),
-  dressingAndGroomingNotes: stringValidation("Please input dressing and grooming notes"),
-  punctualityNotes: stringValidation("Please input punctuality notes"),
-  fellowId: stringValidation(),
-  behaviourRating: z.number().min(1, {
-    error: "Please input a rating ",
-  }),
-  programDeliveryRating: z.number().min(1, {
-    error: "Please input a rating ",
-  }),
-  dressingAndGroomingRating: z.number().min(1, {
-    error: "Please input a rating ",
-  }),
-  punctualityRating: z.number().min(1, {
-    error: "Please input a rating ",
-  }),
-});
-
-export type WeeklyFellowRatingSchema = z.infer<typeof WeeklyFellowRatingSchema>;
-
 export const SupervisorSchema = z.object({
   supervisorEmail: z.email(),
   supervisorName: z.string().min(1),

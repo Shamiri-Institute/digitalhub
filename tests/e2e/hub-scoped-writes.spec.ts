@@ -1,5 +1,5 @@
 import { type BrowserContext, expect, type Locator, type Page, test } from "@playwright/test";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { interventionSession, student, triageEvent, triageEventAudit } from "#/db/schema";
@@ -34,6 +34,10 @@ type TriageFixture = {
   sessionLabel: string;
   studentId: string;
   admissionNumber: string;
+  /** A fellow who leads another group at the same school, with no triage at the session yet. */
+  otherFellowEmail: string;
+  otherStudentId: string;
+  otherAdmissionNumber: string;
 };
 
 let coordinator: Coordinator;
@@ -100,7 +104,9 @@ test.beforeAll(async () => {
   } = await db.execute<TriageFixture>(sql`
     select u.email, s.visible_id as "visibleId", i.id as "sessionId",
       sn.session_name as "sessionLabel", st.id as "studentId",
-      st.admission_number as "admissionNumber"
+      st.admission_number as "admissionNumber", other_user.email as "otherFellowEmail",
+      other_student.id as "otherStudentId",
+      other_student.admission_number as "otherAdmissionNumber"
     from intervention_groups g
     join implementer_members m on m.identifier = g.leader_id and m.role = 'FELLOW'
     join users u on u.id = m.user_id and u.email is not null
@@ -109,10 +115,21 @@ test.beforeAll(async () => {
     join session_names sn on sn.id = i.session_id
     join students st on st.assigned_group_id = g.id and st.archived_at is null
       and st.admission_number is not null
+    join intervention_groups other_group on other_group.school_id = s.id
+      and other_group.leader_id <> g.leader_id
+    join implementer_members other_member on other_member.identifier = other_group.leader_id
+      and other_member.role = 'FELLOW'
+      and (select count(*) from implementer_members o where o.user_id = other_member.user_id) = 1
+    join users other_user on other_user.id = other_member.user_id and other_user.email is not null
+    join students other_student on other_student.assigned_group_id = other_group.id
+      and other_student.archived_at is null and other_student.admission_number is not null
     where ${singleMembership} and m.implementer_id = ${coordinator.implementerId}
       and not exists (
         select 1 from triage_events t where t.student_id = st.id and t.session_id = i.id)
-    order by u.email, i.session_date, st.id
+      and not exists (
+        select 1 from triage_events t join students s2 on s2.id = t.student_id
+        where s2.assigned_group_id = other_group.id and t.session_id = i.id)
+    order by u.email, i.session_date, st.id, other_user.email, other_student.id
     limit 1`);
   if (!fellowRow) throw new Error("seed the database first: no fellow with an occurred session");
   triage = {
@@ -241,20 +258,40 @@ test("a hub coordinator in another hub does not see the school", async ({ page, 
   await expect(await rowWithCell(page, main, school.schoolName)).toHaveCount(0);
 });
 
-test("a fellow documents a triage event and edits its note", async ({ page, context }) => {
+test("a fellow documents a triage event; another fellow at the school does not see it", async ({
+  page,
+  context,
+}) => {
   const note = `e2e-2212-${Date.now()}`;
   await signIn(context, triage.email);
   const sessionsPage = getUrl(`/fel/schools/${triage.visibleId}/sessions`);
 
-  async function openStudentMenu() {
+  async function openAttendance() {
     await page.goto(sessionsPage, { waitUntil: "networkidle" });
     await openRowMenu(page, await sessionRow(page, page.getByRole("main"), triage.sessionLabel));
     await page.getByRole("menuitem", { name: "Mark student attendance" }).click();
     const attendance = page.getByRole("dialog", { name: "Mark student attendance" });
     // The student list loads after the dialog opens; search only once it has rows.
     await expect(attendance.getByRole("checkbox", { name: "Select row" }).first()).toBeVisible();
+    return attendance;
+  }
+
+  async function openStudentMenu(admissionNumber = triage.admissionNumber) {
+    const attendance = await openAttendance();
     // The name column is not searchable; the admission number column is.
-    await openRowMenu(page, await rowWithCell(page, attendance, triage.admissionNumber));
+    await openRowMenu(page, await rowWithCell(page, attendance, admissionNumber));
+  }
+
+  const form = page.getByRole("dialog", { name: "Document triage" });
+  async function documentTriage(admissionNumber: string) {
+    await openStudentMenu(admissionNumber);
+    await page.getByRole("menuitem", { name: "Triage occurred" }).click();
+    await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
+    await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
+    await form.getByRole("combobox", { name: "Action taken (required)" }).click();
+    await page.getByRole("option", { name: "Provided peer counselling" }).click();
+    await form.getByRole("button", { name: "Save triage" }).click();
+    await expect(form).toBeHidden();
   }
 
   undo.push(async () => {
@@ -263,7 +300,7 @@ test("a fellow documents a triage event and edits its note", async ({ page, cont
       .from(triageEvent)
       .where(
         and(
-          eq(triageEvent.studentId, triage.studentId),
+          inArray(triageEvent.studentId, [triage.studentId, triage.otherStudentId]),
           eq(triageEvent.sessionId, triage.sessionId),
         ),
       );
@@ -273,15 +310,7 @@ test("a fellow documents a triage event and edits its note", async ({ page, cont
     }
   });
 
-  await openStudentMenu();
-  await page.getByRole("menuitem", { name: "Triage occurred" }).click();
-  const form = page.getByRole("dialog", { name: "Document triage" });
-  await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
-  await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
-  await form.getByRole("combobox", { name: "Action taken (required)" }).click();
-  await page.getByRole("option", { name: "Provided peer counselling" }).click();
-  await form.getByRole("button", { name: "Save triage" }).click();
-  await expect(form).toBeHidden();
+  await documentTriage(triage.admissionNumber);
 
   await openStudentMenu();
   await page.getByRole("menuitem", { name: "Edit triage" }).click();
@@ -297,4 +326,11 @@ test("a fellow documents a triage event and edits its note", async ({ page, cont
   await page.getByRole("menuitem", { name: "View triage" }).click();
   const view = page.getByRole("dialog", { name: "View triage" });
   await expect(view.getByRole("textbox", { name: /Short note/ })).toHaveValue(note);
+
+  // Another fellow at the school documents triage for a student of their own group. Their
+  // session summary counts only that event, not the first fellow's ("2 students triaged").
+  await signIn(context, triage.otherFellowEmail);
+  await documentTriage(triage.otherAdmissionNumber);
+  const otherAttendance = await openAttendance();
+  await expect(otherAttendance.getByText("1 student triaged", { exact: true })).toBeVisible();
 });
