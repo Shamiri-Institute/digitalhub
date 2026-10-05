@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { columns } from "#/components/common/expenses/complaints/columns";
+import { columns } from "#/components/common/fellow-reports/complaints/columns";
 import type { FellowComplaintsType } from "#/components/common/fellow-reports/complaints/actions";
 import DataTable from "#/components/data-table";
 import { SkeletonCell } from "#/components/ui/skeleton";
@@ -20,13 +20,7 @@ export default function ComplaintsTableSkeleton() {
   const emptyData: FellowComplaintsType[] = Array.from(Array(10).keys()).map(() => ({
     id: "",
     fellowName: "",
-    hub: "",
     supervisorName: "",
-    specialSession: 0,
-    preVsMain: "",
-    trainingSupervision: "",
-    paidAmount: 0,
-    totalAmount: 0,
     complaints: [],
   }));
 

@@ -17,7 +17,6 @@ import {
   fellowAttendance,
   fellowComplaints,
   fellowGroupReport,
-  fellowPaymentComplaints,
   fellowReportingNotes,
   file,
   hub,
@@ -336,9 +335,6 @@ export const fellowAttendanceRelations = relations(fellowAttendance, ({ one, man
   SpecialApprovalRequests: many(specialApprovalRequests, {
     relationName: "SpecialApprovalRequests_fellowAttendance",
   }),
-  fellowPaymentComplaints: many(fellowPaymentComplaints, {
-    relationName: "FellowPaymentComplaints_fellowAttendance",
-  }),
 }));
 
 export const fellowComplaintsRelations = relations(fellowComplaints, ({ one }) => ({
@@ -374,14 +370,6 @@ export const fellowGroupReportRelations = relations(fellowGroupReport, ({ one })
     fields: [fellowGroupReport.projectId],
     references: [project.id],
     relationName: "FellowGroupReport_project",
-  }),
-}));
-
-export const fellowPaymentComplaintsRelations = relations(fellowPaymentComplaints, ({ one }) => ({
-  fellowAttendance: one(fellowAttendance, {
-    fields: [fellowPaymentComplaints.fellowAttendanceId],
-    references: [fellowAttendance.id],
-    relationName: "FellowPaymentComplaints_fellowAttendance",
   }),
 }));
 

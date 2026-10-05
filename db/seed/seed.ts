@@ -1511,7 +1511,6 @@ const DEMO_GROUPS_PER_SCHOOL = 6; // cap groups enriched per school
 const DEMO_STUDENTS_PER_SCHOOL = 25; // students given attendance/outcomes per school
 const DEMO_CLINICAL_CASES_PER_SCHOOL = 2; // clinical cases opened per school
 const DEMO_PAYOUT_SAMPLE = 80; // fellow-attendance rows backing payout flows
-const DEMO_PAYMENT_COMPLAINT_SAMPLE = 12; // fellow payment complaints on the expenses report
 const TREATMENT_INTERVENTIONS = [
   "CBT",
   "Behavioural Activation",
@@ -2300,7 +2299,7 @@ async function createDemoRecords(
     ),
     createPayoutRecords(fellowAttendances, hubIdBySchoolId, seederUserId),
     createSessionRecordings(schools, sessionsBySchool, seederUserId),
-    createReportRecords(schools, sessionsBySchool, fellowAttendances, seederUserId),
+    createReportRecords(schools, sessionsBySchool, seederUserId),
   ]);
 }
 
@@ -2310,13 +2309,11 @@ async function createDemoRecords(
  * (fellow-reports/student-group-evaluation),
  * fellow group reports
  * (fellow-reports/group-report; seeded for alternate groups so both the
- * "View report" and "Not yet submitted" states appear),
- * fellow payment complaints (expenses/complaints).
+ * "View report" and "Not yet submitted" states appear).
  */
 async function createReportRecords(
   schools: DemoSchool[],
   sessionsBySchool: Map<string, DemoSessions>,
-  fellowAttendances: DemoFellowAttendances,
   seederUserId: string,
 ) {
   console.log("creating report records");
@@ -2398,25 +2395,9 @@ async function createReportRecords(
     });
   }
 
-  // Payment complaints hang off fellow attendance rows (see expenses/complaints)
-  const paymentComplaintData: (typeof schema.fellowPaymentComplaints.$inferInsert)[] =
-    fellowAttendances.slice(0, DEMO_PAYMENT_COMPLAINT_SAMPLE).map((fa, index) => ({
-      reason: faker.helpers.arrayElement(["Received less payment", "Not paid", "Wrong amount"]),
-      statement: "mpesa statement",
-      status: (["PENDING", "APPROVED", "REJECTED"] as const)[index % 3],
-      dateOfComplaint: faker.date.recent({ days: 30 }),
-      differenceInAmount: faker.number.int({ min: 50, max: 500 }),
-      confirmedAmountReceived: faker.number.int({ min: 100, max: 1000 }),
-      comments: faker.lorem.sentence(),
-      reasonForAcceptance: index % 3 === 1 ? "Verified against payout statement" : null,
-      reasonForRejection: index % 3 === 2 ? "Inaccurate reporting" : null,
-      fellowAttendanceId: fa.id,
-    }));
-
   await Promise.all([
     insertMany(schema.fellowComplaints, fellowComplaintData),
     insertMany(schema.interventionGroupReport, groupEvaluationData),
-    insertMany(schema.fellowPaymentComplaints, paymentComplaintData),
     insertMany(schema.fellowGroupReport, fellowGroupReportData),
   ]);
 }

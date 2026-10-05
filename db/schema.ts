@@ -2326,42 +2326,6 @@ export const studentAttendance = pgTable(
   ],
 );
 
-export const fellowPaymentComplaints = pgTable(
-  "fellow_payment_complaints",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("paycomplaint")),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-    dateOfComplaint: timestamp("date_of_complaint", { withTimezone: true, mode: "date" }),
-    reason: varchar({ length: 255 }).notNull(),
-    statement: varchar({ length: 255 }).notNull(),
-    confirmedAmountReceived: integer("confirmed_amount_received"),
-    differenceInAmount: integer("difference_in_amount"),
-    status: approvalStatusEnum().default("PENDING").notNull(),
-    comments: text(),
-    reasonForRejection: text("reason_for_rejection"),
-    reasonForAcceptance: text("reason_for_acceptance"),
-    fellowAttendanceId: integer("fellow_attendance_id").notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.fellowAttendanceId],
-      foreignColumns: [fellowAttendance.id],
-      name: "fellow_payment_complaints_fellow_attendance_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
-
 export const sessionComment = pgTable(
   "session_comments",
   {
