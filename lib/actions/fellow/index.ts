@@ -932,8 +932,8 @@ export async function markManyFellowAttendance(
 export async function submitFellowComplaint(data: z.infer<typeof SubmitComplaintSchema>) {
   try {
     const { id, complaint, comments } = SubmitComplaintSchema.parse(data);
-    const caller = await requireFellowInHub(
-      id,
+    // No hub check on the fellow: hubs borrow fellows from each other.
+    const caller = await requireHubRole(
       ImplementerRole.SUPERVISOR,
       ImplementerRole.HUB_COORDINATOR,
     );
