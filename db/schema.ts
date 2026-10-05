@@ -3,7 +3,6 @@ import { sql } from "drizzle-orm";
 import { objectId } from "#/lib/crypto";
 import {
   boolean,
-  check,
   date,
   doublePrecision,
   foreignKey,
@@ -333,59 +332,6 @@ export const interventionSessionRating = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-  ],
-);
-
-export const reimbursementRequest = pgTable(
-  "reimbursement_requests",
-  {
-    id: varchar({ length: 255 }).primaryKey().notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-    archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    kind: varchar({ length: 255 }).notNull(),
-    status: varchar({ length: 100 }).default(ApprovalStatus.PENDING).notNull(),
-    details: jsonb().$type<JsonValue>().notNull(),
-    hubId: varchar("hub_id", { length: 255 }).notNull(),
-    supervisorId: varchar("supervisor_id", { length: 255 }).notNull(),
-    incurredAt: timestamp("incurred_at", { withTimezone: true, mode: "date" }).notNull(),
-    amount: integer().notNull(),
-    currency: varchar({ length: 10 }).default("KES").notNull(),
-    hubCoordinatorId: varchar("hub_coordinator_id", { length: 255 }),
-    mpesaName: varchar("mpesa_name", { length: 255 }).notNull(),
-    mpesaNumber: varchar("mpesa_number", { length: 20 }).notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.supervisorId],
-      foreignColumns: [supervisor.id],
-      name: "reimbursement_requests_supervisor_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.hubId],
-      foreignColumns: [hub.id],
-      name: "reimbursement_requests_hub_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.hubCoordinatorId],
-      foreignColumns: [hubCoordinator.id],
-      name: "reimbursement_requests_hub_coordinator_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
-    check(
-      "reimbursement_requests_status_check",
-      sql`${table.status} IN ('PENDING', 'APPROVED', 'REJECTED')`,
-    ),
   ],
 );
 

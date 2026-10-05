@@ -3,7 +3,6 @@ import { sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import {
-  ApprovalStatus,
   caseStatusOptions,
   FollowUpPlanOptions,
   ImplementerRole,
@@ -146,10 +145,9 @@ import {
 
 // STEP 8: FINANCIAL RECORDS
 // -----------------------
-// Set up payment and reimbursement records
+// Set up payment records
 
 // 8.1 Create Payment Records
-// - Create ReimbursementRequest
 // - Create RepaymentRequest
 // - Create PayoutReconciliation
 
@@ -1886,34 +1884,10 @@ async function createPayoutRecords(
     }
   }
 
-  // A handful of reimbursement requests, one per unique supervisor in the sample
-  const reimbursementData: (typeof schema.reimbursementRequest.$inferInsert)[] = [];
-  const supervisorHubPairs = Array.from(
-    new Map(
-      sample.map((fa) => [fa.supervisorId as string, hubIdBySchoolId.get(fa.schoolId as string)]),
-    ).entries(),
-  ).slice(0, 20);
-  for (const [supervisorId, hubId] of supervisorHubPairs) {
-    if (!hubId) continue;
-    reimbursementData.push({
-      id: objectId("reimb"),
-      supervisorId,
-      hubId,
-      incurredAt: faker.date.recent({ days: 30 }),
-      amount: faker.number.int({ min: 200, max: 5000 }),
-      kind: faker.helpers.arrayElement(["travel", "internet", "airtime", "materials"]),
-      status: faker.helpers.arrayElement(Object.values(ApprovalStatus)),
-      details: { subtype: "materials", receipt_link: faker.internet.url() },
-      mpesaName: faker.person.fullName(),
-      mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-    });
-  }
-
   await insertMany(schema.payoutStatements, payoutStatementData);
   await insertMany(schema.payoutReconciliation, reconciliationData);
   await insertMany(schema.repaymentRequest, repaymentData);
   await insertMany(schema.delayedPaymentRequest, delayedData);
-  await insertMany(schema.reimbursementRequest, reimbursementData);
 }
 
 // Pools used to generate varied (V1-shaped) fidelity feedback per recording so
