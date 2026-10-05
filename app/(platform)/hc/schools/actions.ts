@@ -9,7 +9,7 @@ import type { z } from "zod";
 
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/db/client";
-import { sessionTypes } from "#/db/enums";
+import { ImplementerRole, sessionTypes } from "#/db/enums";
 import {
   interventionGroup,
   interventionSession,
@@ -17,6 +17,7 @@ import {
   schoolDropoutHistory,
   weeklyHubReport,
 } from "#/db/schema";
+import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { getSchoolInitials } from "#/lib/utils";
 import {
@@ -140,6 +141,14 @@ export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
 }
 
 /** Updates the school and records the change; returns the school with its dropout history. */
+/** The coordinator's hub, after checking the school is in it; other hubs' schools read as missing. */
+/** The coordinator's hub id, after checking the school is in that hub. */
+async function requireSchoolInCoordinatorHub(schoolId: string) {
+  const { hubId: coordinatorHubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+  await requireSchoolInHub(schoolId, coordinatorHubId);
+  return coordinatorHubId;
+}
+
 function setSchoolDropout(
   schoolId: string,
   data: { dropoutReason: string | null; droppedOut: boolean; droppedOutAt: Date | null },
@@ -174,6 +183,7 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
     const userId = hubCoordinator.session.user.id;
 
     const data = DropoutSchoolSchema.parse({ schoolId, dropoutReason });
+    await requireSchoolInCoordinatorHub(data.schoolId);
     const result = await setSchoolDropout(
       data.schoolId,
       { dropoutReason: data.dropoutReason, droppedOut: true, droppedOutAt: new Date() },
@@ -203,6 +213,7 @@ export async function undoDropoutSchool(schoolId: string) {
     if (!hubCoordinator) {
       throw new Error("The session has not been authenticated");
     }
+    await requireSchoolInCoordinatorHub(schoolId);
 
     const result = await setSchoolDropout(
       schoolId,
@@ -375,6 +386,7 @@ export async function editSchoolInformation(
     }
 
     const parsedData = EditSchoolSchema.parse(schoolInfo);
+    await requireSchoolInCoordinatorHub(schoolId);
 
     const [updated] = await db
       .update(school)
@@ -432,6 +444,16 @@ export async function assignSchoolPointSupervisor(
     }
 
     const parsedData = AssignPointSupervisorSchema.parse(schoolInfo);
+    // Both the school and the new point supervisor must be in the coordinator's hub.
+    const coordinatorHubId = await requireSchoolInCoordinatorHub(schoolId);
+    const supervisorInCoordinatorHub = await db.query.supervisor.findFirst({
+      where: (s, { and, eq }) =>
+        and(eq(s.id, parsedData.assignedSupervisorId), eq(s.hubId, coordinatorHubId)),
+      columns: { id: true },
+    });
+    if (!supervisorInCoordinatorHub) {
+      throw new Error("Supervisor not found");
+    }
 
     const [updated] = await db
       .update(school)

@@ -2,17 +2,10 @@
 
 import { eq } from "drizzle-orm";
 
-import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
 import { fellow } from "#/db/schema";
-
-async function checkAuth() {
-  const hc = await currentHubCoordinator();
-
-  if (!hc) {
-    throw new Error("User not authorised to perform this function");
-  }
-}
+import { requireHubRole } from "#/lib/auth/require-hub-role";
 
 export async function assignFellowSupervisor({
   fellowId,
@@ -22,7 +15,17 @@ export async function assignFellowSupervisor({
   supervisorId: string;
 }) {
   try {
-    await checkAuth();
+    // The new supervisor must be in the coordinator's hub. The fellow may come from another hub:
+    // hubs borrow fellows from each other.
+    const { hubId: coordinatorHubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+    const supervisorInCoordinatorHub = await db.query.supervisor.findFirst({
+      where: (s, { and, eq }) => and(eq(s.id, supervisorId), eq(s.hubId, coordinatorHubId)),
+      columns: { supervisorName: true },
+    });
+    if (!supervisorInCoordinatorHub) {
+      throw new Error("Supervisor not found");
+    }
+
     const [updated] = await db
       .update(fellow)
       .set({ supervisorId })
@@ -31,13 +34,9 @@ export async function assignFellowSupervisor({
     if (!updated) {
       throw new Error(`Fellow ${fellowId} not found`);
     }
-    const assigned = await db.query.supervisor.findFirst({
-      where: (s, { eq }) => eq(s.id, supervisorId),
-      columns: { supervisorName: true },
-    });
     return {
       success: true,
-      message: `Successfully assigned ${updated.fellowName} to ${assigned ? assigned.supervisorName : "supervisor"}.`,
+      message: `Successfully assigned ${updated.fellowName} to ${supervisorInCoordinatorHub.supervisorName ?? "supervisor"}.`,
     };
   } catch (error: unknown) {
     console.error(error);

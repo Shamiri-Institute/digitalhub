@@ -19,6 +19,7 @@ import {
   studentAttendance,
 } from "#/db/schema";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 
 async function checkAuth() {
@@ -42,6 +43,24 @@ async function findSessionWithSchoolOrThrow(id: string) {
     throw new Error("No InterventionSession found");
   }
   return session;
+}
+
+/**
+ * Throws unless the session belongs to the caller's hub, the only sessions their schedule lists.
+ * A session in another hub gets the same message as a missing one.
+ */
+async function requireSessionInCallerHub(session: {
+  hubId: string | null;
+  school: { hubId: string | null } | null;
+}) {
+  const { hubId: callerHubId } = await requireHubRole(
+    ImplementerRole.HUB_COORDINATOR,
+    ImplementerRole.SUPERVISOR,
+  );
+  const sessionHubId = session.hubId ?? session.school?.hubId;
+  if (sessionHubId !== callerHubId) {
+    throw new Error("No InterventionSession found");
+  }
 }
 
 async function updateSessionOrThrow(
@@ -72,6 +91,16 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
     }
 
     const { hub } = hubSessionType;
+    const { hubId: callerHubId } = await requireHubRole(
+      ImplementerRole.HUB_COORDINATOR,
+      ImplementerRole.SUPERVISOR,
+    );
+    if (hub.id !== callerHubId) {
+      throw new Error("Session type not found.");
+    }
+    if (parsedData.schoolId) {
+      await requireSchoolInHub(parsedData.schoolId, callerHubId);
+    }
     if (
       hubSessionType.sessionType === "SUPERVISION" ||
       hubSessionType.sessionType === "TRAINING" ||
@@ -136,6 +165,7 @@ export async function cancelSession(id: string) {
   try {
     const user = await checkAuth();
     const session = await findSessionWithSchoolOrThrow(id);
+    await requireSessionInCallerHub(session);
 
     if (
       user.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR &&
@@ -165,6 +195,7 @@ export async function rescheduleSession(id: string, data: z.infer<typeof Resched
     const parsedData = RescheduleSessionSchema.parse(data);
 
     const session = await findSessionWithSchoolOrThrow(id);
+    await requireSessionInCallerHub(session);
 
     if (
       user.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR &&
@@ -304,6 +335,7 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
     const parsedData = MarkSessionOccurrenceSchema.parse(data);
 
     const session = await findSessionWithSchoolOrThrow(parsedData.sessionId);
+    await requireSessionInCallerHub(session);
 
     if (session.sessionDate > new Date()) {
       throw new Error("This session's date has not arrived yet. Please check the date and time.");

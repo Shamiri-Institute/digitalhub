@@ -27,6 +27,7 @@ import {
   user,
   weeklyFellowRatings,
 } from "#/db/schema";
+import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 
 async function checkAuth() {
@@ -369,6 +370,22 @@ export async function submitWeeklyFellowEvaluation(
   }
 }
 
+/** The caller, after checking the fellow belongs to their hub, which is how hub pages list fellows. */
+async function requireFellowInHub(
+  fellowId: string,
+  ...roles: (typeof ImplementerRole.SUPERVISOR | typeof ImplementerRole.HUB_COORDINATOR)[]
+) {
+  const caller = await requireHubRole(...roles);
+  const fellowInHub = await db.query.fellow.findFirst({
+    where: (f, { and, eq }) => and(eq(f.id, fellowId), eq(f.hubId, caller.hubId)),
+    columns: { id: true },
+  });
+  if (!fellowInHub) {
+    throw new Error("Fellow not found");
+  }
+  return caller;
+}
+
 export async function replaceGroupLeader({
   leaderId,
   groupId,
@@ -377,7 +394,15 @@ export async function replaceGroupLeader({
   groupId: string;
 }) {
   try {
-    await checkAuth();
+    const caller = await requireHubRole(
+      ImplementerRole.SUPERVISOR,
+      ImplementerRole.HUB_COORDINATOR,
+    );
+    const groupToReassign = await db.query.interventionGroup.findFirst({
+      where: (g, { eq }) => eq(g.id, groupId),
+      columns: { schoolId: true },
+    });
+    await requireSchoolInHub(groupToReassign?.schoolId, caller.hubId);
 
     const [updated] = await db
       .update(interventionGroup)
@@ -418,9 +443,9 @@ export async function replaceGroupLeader({
 
 export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
   try {
-    await checkAuth();
-
     const { fellowId, mode, dropoutReason } = DropoutFellowSchema.parse(data);
+    // Only the hub coordinator's fellows table offers this.
+    await requireFellowInHub(fellowId, ImplementerRole.HUB_COORDINATOR);
     if (mode === "dropout") {
       const groups = await db.$count(
         interventionGroup,
@@ -906,18 +931,15 @@ export async function markManyFellowAttendance(
 
 export async function submitFellowComplaint(data: z.infer<typeof SubmitComplaintSchema>) {
   try {
-    const { session: userSession } = await checkAuth();
-    if (!userSession) {
-      return {
-        success: false,
-        message: "Something went wrong. Missing user information",
-      };
-    }
-
     const { id, complaint, comments } = SubmitComplaintSchema.parse(data);
+    // No hub check on the fellow: hubs borrow fellows from each other.
+    const caller = await requireHubRole(
+      ImplementerRole.SUPERVISOR,
+      ImplementerRole.HUB_COORDINATOR,
+    );
     const [result] = await db
       .insert(fellowComplaints)
-      .values({ fellowId: id, complaint, comments, createdBy: userSession.user.id })
+      .values({ fellowId: id, complaint, comments, createdBy: caller.userId })
       .returning();
 
     return {
