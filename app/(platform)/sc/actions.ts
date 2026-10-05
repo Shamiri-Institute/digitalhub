@@ -1,13 +1,12 @@
 "use server";
 import { eq, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
 import { db } from "#/db/client";
-import { fellow, interventionGroup, supervisor, weeklyFellowRatings } from "#/db/schema";
-import { SupervisorSchema, WeeklyFellowRatingSchema } from "./schemas";
+import { fellow, interventionGroup, supervisor } from "#/db/schema";
+import { SupervisorSchema } from "./schemas";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
@@ -179,34 +178,6 @@ export async function loadFellowsData() {
       averageRating: Number(averageRatingById.get(fellowRow.id) ?? 0),
     };
   });
-}
-
-export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
-  try {
-    const supervisorProfile = await currentSupervisor();
-
-    if (!supervisorProfile) {
-      return {
-        success: false,
-        message: "User is not authorised",
-      };
-    }
-    const parsedData = WeeklyFellowRatingSchema.parse(data);
-
-    await db.insert(weeklyFellowRatings).values({
-      ...parsedData,
-      supervisorId: supervisorProfile.profile.id,
-    });
-
-    revalidatePath("/sc/fellows");
-    return {
-      success: true,
-      message: "successfully recorded fellow's weekly rating",
-    };
-  } catch (e) {
-    console.error(e);
-    return { success: false, message: "something went wrong" };
-  }
 }
 
 export async function updateSupervisorProfile(formData: z.infer<typeof SupervisorSchema>) {

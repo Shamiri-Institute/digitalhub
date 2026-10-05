@@ -237,6 +237,8 @@ export async function submitQualitativeFeedback({
       throw new Error("User not authorized to perform this action");
     }
 
+    await requireSessionInCallerHub(await findSessionWithSchoolOrThrow(sessionId));
+
     await db.insert(sessionComment).values({
       sessionId,
       content: notes,

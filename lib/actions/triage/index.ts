@@ -1,10 +1,17 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
 import { currentFellow, getCurrentPersonnel } from "#/app/auth";
 import { db, type Transaction } from "#/db/client";
-import { type JsonValue, triageEvent, triageEventAudit } from "#/db/schema";
+import {
+  interventionGroup,
+  interventionSession,
+  type JsonValue,
+  student,
+  triageEvent,
+  triageEventAudit,
+} from "#/db/schema";
 
 const triageEventWith = {
   session: true,
@@ -44,6 +51,21 @@ async function getFellowContext() {
     hubId: fellow.profile.hubId ?? undefined,
     userId,
   };
+}
+
+/**
+ * The students a fellow triages at a session: the students of the groups the fellow leads at the
+ * session's school. It is a subquery, so each read or write stays one statement.
+ */
+function studentsInLedGroupsAtSession(callerFellowId: string, sessionId: string) {
+  return db
+    .select({ id: student.id })
+    .from(student)
+    .innerJoin(interventionGroup, eq(interventionGroup.id, student.assignedGroupId))
+    .innerJoin(interventionSession, eq(interventionSession.schoolId, interventionGroup.schoolId))
+    .where(
+      and(eq(interventionGroup.leaderId, callerFellowId), eq(interventionSession.id, sessionId)),
+    );
 }
 
 export async function getSupervisorsInFellowHub(
@@ -90,18 +112,27 @@ export async function getSupervisorsInFellowHub(
 }
 
 export async function getTriageEventByStudentAndSession(studentId: string, sessionId: string) {
-  await getFellowContext();
+  const { fellowId: callerFellowId } = await getFellowContext();
   const event = await db.query.triageEvent.findFirst({
-    where: (t, { and, eq }) => and(eq(t.studentId, studentId), eq(t.sessionId, sessionId)),
+    where: (t, { and, eq, inArray }) =>
+      and(
+        eq(t.studentId, studentId),
+        eq(t.sessionId, sessionId),
+        inArray(t.studentId, studentsInLedGroupsAtSession(callerFellowId, sessionId)),
+      ),
     with: triageEventWith,
   });
   return event ?? null;
 }
 
 export async function getTriageEventsForSession(sessionId: string) {
-  await getFellowContext();
+  const { fellowId: callerFellowId } = await getFellowContext();
   const events = await db.query.triageEvent.findMany({
-    where: (t, { eq }) => eq(t.sessionId, sessionId),
+    where: (t, { and, eq, inArray }) =>
+      and(
+        eq(t.sessionId, sessionId),
+        inArray(t.studentId, studentsInLedGroupsAtSession(callerFellowId, sessionId)),
+      ),
     with: triageEventWith,
   });
   return events;
@@ -138,6 +169,18 @@ export async function createTriageEvent(
     }
     if (!session.occurred) {
       return { success: false, message: "This session has not occurred yet." };
+    }
+
+    // A student outside the fellow's groups gets the same message as a missing student.
+    const studentInLedGroup = await db.$count(
+      student,
+      and(
+        eq(student.id, parsed.studentId),
+        inArray(student.id, studentsInLedGroupsAtSession(fellowId, parsed.sessionId)),
+      ),
+    );
+    if (!studentInLedGroup) {
+      throw new Error("Student not found.");
     }
 
     const existing = await db.query.triageEvent.findFirst({
