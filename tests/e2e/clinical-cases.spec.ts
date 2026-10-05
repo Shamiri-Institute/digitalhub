@@ -90,8 +90,7 @@ async function createCaseForNewStudent(page: Page, casePseudonym: string) {
     .getByRole("textbox", { name: "Enter student name" })
     .fill(`${casePseudonym} student`);
   await dialog.getByRole("textbox", { name: "Pseudonym*" }).fill(casePseudonym);
-  const admissionNumber = dialog.getByRole("textbox", { name: "School Admission Number*" });
-  await admissionNumber.fill("ADM/9001");
+  await dialog.getByRole("spinbutton", { name: "School Admission Number*" }).fill("9001");
   await dialog.getByRole("button", { name: "Pick a date" }).click();
   const picker = page.getByRole("dialog").last();
   await picker.getByRole("combobox", { name: "Choose the Year" }).selectOption("2010");
@@ -109,10 +108,6 @@ async function createCaseForNewStudent(page: Page, casePseudonym: string) {
   await page.getByRole("option", { name: "Student", exact: true }).click();
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
   await page.getByRole("option").first().click();
-  // A non-numeric admission number shows an error; it must not fail silently.
-  await dialog.getByRole("button", { name: "Save" }).click();
-  await expect(dialog.getByText("Admission number must contain digits only")).toBeVisible();
-  await admissionNumber.fill("09001");
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toBeHidden();
 }
@@ -171,8 +166,8 @@ test("a clinical lead's new case is assigned to them", async ({ page, context })
 });
 
 // The form once copied an existing student's admission number into a hidden numeric field. A
-// legacy value with letters became NaN and the form refused to save without an error (ENG-2218).
-test("a supervisor opens a case for an existing student with a legacy non-numeric admission number", async ({
+// value with letters became NaN and the form refused to save without an error (ENG-2218).
+test("a supervisor opens a case for an existing student with a non-numeric admission number", async ({
   page,
   context,
 }) => {

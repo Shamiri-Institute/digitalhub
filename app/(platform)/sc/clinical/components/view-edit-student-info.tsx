@@ -31,11 +31,7 @@ import {
 } from "#/components/ui/select";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
-import {
-  isNumericAdmissionNumber,
-  NUMERIC_ADMISSION_NUMBER_MESSAGE,
-  stringValidation,
-} from "#/lib/utils";
+import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
 const EditStudentSchema = z.object({
@@ -44,10 +40,7 @@ const EditStudentSchema = z.object({
   school: stringValidation("School is required"),
   gender: stringValidation("Gender is required"),
   shamiriId: stringValidation("Shamiri ID is required"),
-  admissionNumber: stringValidation("Admission number is required").refine(
-    isNumericAdmissionNumber,
-    NUMERIC_ADMISSION_NUMBER_MESSAGE,
-  ),
+  admissionNumber: stringValidation("Admission number is required"),
   classForm: stringValidation("Grade/Form is required"),
   stream: stringValidation("Stream is required"),
   group: stringValidation("Group is required"),

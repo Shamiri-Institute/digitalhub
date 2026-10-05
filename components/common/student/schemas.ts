@@ -1,11 +1,7 @@
 import type { QuestionnaireType } from "#/db/enums";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
-import {
-  isNumericAdmissionNumber,
-  NUMERIC_ADMISSION_NUMBER_MESSAGE,
-  stringValidation,
-} from "#/lib/utils";
+import { stringValidation } from "#/lib/utils";
 
 export const QUESTIONNAIRE_TYPE_OPTIONS: [QuestionnaireType, ...QuestionnaireType[]] = [
   "QA",
@@ -83,15 +79,6 @@ export const StudentDetailsSchema = z
       });
 
       return z.NEVER;
-    }
-
-    // Only new students: a fellow cannot edit the field, so an old bad value must not block edits.
-    if (val.mode === "add" && !isNumericAdmissionNumber(val.admissionNumber ?? "")) {
-      ctx.addIssue({
-        code: "custom",
-        message: NUMERIC_ADMISSION_NUMBER_MESSAGE,
-        path: ["admissionNumber"],
-      });
     }
 
     if (val.mode === "add" && val.schoolId === undefined) {

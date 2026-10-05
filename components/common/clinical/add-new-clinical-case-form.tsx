@@ -42,12 +42,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
-import {
-  cn,
-  isNumericAdmissionNumber,
-  NUMERIC_ADMISSION_NUMBER_MESSAGE,
-  stringValidation,
-} from "#/lib/utils";
+import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
 function isValidStudentAge(date: Date) {
@@ -63,7 +58,7 @@ const formSchema = z
     isNewStudent: z.boolean(),
     studentName: z.string().optional(),
     pseudonym: stringValidation("Pseudonym is required"),
-    admissionNumber: z.string().optional(),
+    admissionNumber: z.number().optional(),
     yearOfBirth: z.date().optional(),
     gender: z.enum(GENDER_OPTIONS).optional(),
     classForm: z.string().optional(),
@@ -81,17 +76,11 @@ const formSchema = z
     if (!data.studentName) {
       ctx.addIssue({ code: "custom", path: ["studentName"], message: "Student name is required" });
     }
-    if (!data.admissionNumber?.trim()) {
+    if (!data.admissionNumber || data.admissionNumber < 1) {
       ctx.addIssue({
         code: "custom",
         path: ["admissionNumber"],
         message: "Admission number is required",
-      });
-    } else if (!isNumericAdmissionNumber(data.admissionNumber)) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["admissionNumber"],
-        message: NUMERIC_ADMISSION_NUMBER_MESSAGE,
       });
     }
     if (!data.yearOfBirth) {
@@ -149,7 +138,7 @@ export function AddNewClinicalCaseForm({
       studentName: "",
       pseudonym: "",
       stream: "",
-      admissionNumber: "",
+      admissionNumber: undefined,
     },
   });
 
@@ -178,7 +167,7 @@ export function AddNewClinicalCaseForm({
     form.setValue("isNewStudent", nextIsNewStudent);
     setSelectedStudentId("");
     form.setValue("studentName", "");
-    form.setValue("admissionNumber", "");
+    form.setValue("admissionNumber", undefined);
     form.setValue("yearOfBirth", undefined);
     form.setValue("gender", undefined);
     form.setValue("classForm", "");
@@ -231,7 +220,7 @@ export function AddNewClinicalCaseForm({
           isNewStudent && data.yearOfBirth
             ? {
                 studentName: data.studentName ?? "",
-                admissionNumber: data.admissionNumber?.trim() ?? "",
+                admissionNumber: String(data.admissionNumber),
                 yearOfBirth: data.yearOfBirth.getFullYear(),
                 age: new Date().getFullYear() - data.yearOfBirth.getFullYear(),
                 gender: data.gender ?? "",
@@ -383,7 +372,17 @@ export function AddNewClinicalCaseForm({
                               <span className="text-shamiri-light-red">*</span>
                             </FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter admission number" {...field} />
+                              <Input
+                                type="number"
+                                placeholder="Enter admission number"
+                                {...field}
+                                value={field.value || ""}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value ? Number(e.target.value) : undefined,
+                                  )
+                                }
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

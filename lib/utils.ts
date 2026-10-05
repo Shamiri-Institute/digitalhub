@@ -29,16 +29,6 @@ export function stringValidation(message: string | undefined = "Required*") {
   return z.string({ error: message }).trim().min(1, { error: message });
 }
 
-/**
- * Kenyan schools use numeric admission numbers. The column is text, so the value stays a string:
- * Number() would drop leading zeros and turn letters into NaN.
- */
-export function isNumericAdmissionNumber(admissionNumber: string) {
-  return /^\d+$/.test(admissionNumber.trim());
-}
-
-export const NUMERIC_ADMISSION_NUMBER_MESSAGE = "Admission number must contain digits only";
-
 export function sessionDisplayName(sessionType?: string) {
   switch (sessionType) {
     case "s0":
