@@ -25,6 +25,7 @@ type SchoolFixture = {
   studentName: string;
   sessionId: string;
   sessionLabel: string;
+  sessionOccurred: boolean;
 };
 type TriageFixture = {
   email: string;
@@ -58,11 +59,11 @@ test.beforeAll(async () => {
     } = await db.execute<SchoolFixture>(sql`
       select s.visible_id as "visibleId", s.school_name as "schoolName",
         st.id as "studentId", st.student_name as "studentName",
-        i.id as "sessionId", sn.session_name as "sessionLabel"
+        i.id as "sessionId", sn.session_name as "sessionLabel", i.occurred as "sessionOccurred"
       from schools s
       join students st on st.school_id = s.id and st.archived_at is null
         and coalesce(st.dropped_out, false) = false and st.student_name is not null
-      join intervention_sessions i on i.school_id = s.id and i.occurred = false
+      join intervention_sessions i on i.school_id = s.id
         and i.session_date < now() and coalesce(i.status::text, '') <> 'Cancelled'
       join session_names sn on sn.id = i.session_id
       where s.hub_id = ${candidate.hubId} and s.archived_at is null
@@ -81,7 +82,18 @@ test.beforeAll(async () => {
       break;
     }
   }
-  if (!school) throw new Error("seed the database first: no coordinator school with students");
+  if (!school) {
+    throw new Error(
+      "seed the database first: no coordinator with a school that has students and a past session, " +
+        "and another coordinator in the same organisation",
+    );
+  }
+  // The seed marks every past session as occurred, so make the chosen one "not yet occurred" for
+  // the mark-occurred test. afterAll puts the original value back.
+  await db
+    .update(interventionSession)
+    .set({ occurred: false })
+    .where(eq(interventionSession.id, school.sessionId));
 
   const {
     rows: [fellowRow],
@@ -107,6 +119,25 @@ test.beforeAll(async () => {
     ...fellowRow,
     sessionLabel: sessionDisplayName(fellowRow.sessionLabel) ?? fellowRow.sessionLabel,
   };
+});
+
+test.afterAll(async () => {
+  if (school) {
+    await db
+      .update(interventionSession)
+      .set({ occurred: school.sessionOccurred })
+      .where(eq(interventionSession.id, school.sessionId));
+  }
+});
+
+// Each test's undo steps run in afterEach, not in a finally block: when a test times out,
+// Playwright abandons its body but still runs the hooks.
+let undo: (() => Promise<unknown>)[] = [];
+test.afterEach(async () => {
+  for (const step of undo.reverse()) {
+    await step();
+  }
+  undo = [];
 });
 
 async function signIn(context: BrowserContext, email: string) {
@@ -155,28 +186,27 @@ test("a hub coordinator drops out a student in their hub", async ({ page, contex
   await signIn(context, coordinator.email);
   const studentsPage = getUrl(`/hc/schools/${school.visibleId}/students`);
   await page.goto(studentsPage, { waitUntil: "networkidle" });
-
-  try {
-    const main = page.getByRole("main");
-    await openRowMenu(page, await rowWithCell(page, main, school.studentName));
-    await page.getByRole("menuitem", { name: "Drop-out student" }).click();
-    const dialog = page.getByRole("dialog", { name: "Drop out student" });
-    await dialog.getByRole("combobox", { name: "Select reason *" }).click();
-    await page.getByRole("option").first().click();
-    await dialog.getByRole("button", { name: "Submit" }).click();
-    // Submit only opens a confirmation; Confirm saves.
-    const confirm = page.getByRole("dialog", { name: "Confirm drop out" });
-    await confirm.getByRole("button", { name: "Confirm" }).click();
-    await expect(confirm).toBeHidden();
-
-    await page.reload({ waitUntil: "networkidle" });
-    await expect(await rowWithCell(page, main, school.studentName)).toContainText("Inactive");
-  } finally {
-    await db
+  undo.push(() =>
+    db
       .update(student)
       .set({ droppedOut: false, dropOutReason: null, droppedOutAt: null })
-      .where(eq(student.id, school.studentId));
-  }
+      .where(eq(student.id, school.studentId)),
+  );
+
+  const main = page.getByRole("main");
+  await openRowMenu(page, await rowWithCell(page, main, school.studentName));
+  await page.getByRole("menuitem", { name: "Drop-out student" }).click();
+  const dialog = page.getByRole("dialog", { name: "Drop out student" });
+  await dialog.getByRole("combobox", { name: "Select reason *" }).click();
+  await page.getByRole("option").first().click();
+  await dialog.getByRole("button", { name: "Submit" }).click();
+  // Submit only opens a confirmation; Confirm saves.
+  const confirm = page.getByRole("dialog", { name: "Confirm drop out" });
+  await confirm.getByRole("button", { name: "Confirm" }).click();
+  await expect(confirm).toBeHidden();
+
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(await rowWithCell(page, main, school.studentName)).toContainText("Inactive");
 });
 
 test("a hub coordinator marks a session in their hub as occurred", async ({ page, context }) => {
@@ -185,29 +215,22 @@ test("a hub coordinator marks a session in their hub as occurred", async ({ page
     waitUntil: "networkidle",
   });
 
-  try {
-    const main = page.getByRole("main");
-    await openRowMenu(page, await sessionRow(page, main, school.sessionLabel));
-    await page.getByRole("menuitem", { name: "Mark session occurrence" }).click();
-    const dialog = page
-      .getByRole("dialog")
-      .filter({ has: page.getByRole("heading", { name: "Mark session occurrence" }) });
-    // The radios are unlabelled; "Attended" is the first option.
-    await dialog.getByRole("radio").first().click();
-    await dialog.getByRole("button", { name: "Submit" }).click();
-    // Submit only opens a confirmation, whose title is not linked to the dialog; Confirm saves.
-    const confirm = page.getByRole("dialog").filter({ hasText: "Are you sure?" });
-    await confirm.getByRole("button", { name: "Confirm" }).click();
-    await expect(confirm).toBeHidden();
+  const main = page.getByRole("main");
+  await openRowMenu(page, await sessionRow(page, main, school.sessionLabel));
+  await page.getByRole("menuitem", { name: "Mark session occurrence" }).click();
+  const dialog = page
+    .getByRole("dialog")
+    .filter({ has: page.getByRole("heading", { name: "Mark session occurrence" }) });
+  // The radios are unlabelled; "Attended" is the first option.
+  await dialog.getByRole("radio").first().click();
+  await dialog.getByRole("button", { name: "Submit" }).click();
+  // Submit only opens a confirmation, whose title is not linked to the dialog; Confirm saves.
+  const confirm = page.getByRole("dialog").filter({ hasText: "Are you sure?" });
+  await confirm.getByRole("button", { name: "Confirm" }).click();
+  await expect(confirm).toBeHidden();
 
-    await page.reload({ waitUntil: "networkidle" });
-    await expect(await sessionRow(page, main, school.sessionLabel)).toContainText("Attended");
-  } finally {
-    await db
-      .update(interventionSession)
-      .set({ occurred: false })
-      .where(eq(interventionSession.id, school.sessionId));
-  }
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(await sessionRow(page, main, school.sessionLabel)).toContainText("Attended");
 });
 
 test("a hub coordinator in another hub does not see the school", async ({ page, context }) => {
@@ -234,32 +257,7 @@ test("a fellow documents a triage event and edits its note", async ({ page, cont
     await openRowMenu(page, await rowWithCell(page, attendance, triage.admissionNumber));
   }
 
-  try {
-    await openStudentMenu();
-    await page.getByRole("menuitem", { name: "Triage occurred" }).click();
-    const form = page.getByRole("dialog", { name: "Document triage" });
-    await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
-    await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
-    await form.getByRole("combobox", { name: "Action taken (required)" }).click();
-    await page.getByRole("option", { name: "Provided peer counselling" }).click();
-    await form.getByRole("button", { name: "Save triage" }).click();
-    await expect(form).toBeHidden();
-
-    await openStudentMenu();
-    await page.getByRole("menuitem", { name: "Edit triage" }).click();
-    await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
-    await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
-    await form.getByRole("combobox", { name: "Action taken (required)" }).click();
-    await page.getByRole("option", { name: "Provided peer counselling" }).click();
-    await form.getByRole("textbox", { name: /Short note/ }).fill(note);
-    await form.getByRole("button", { name: "Save triage" }).click();
-    await expect(form).toBeHidden();
-
-    await openStudentMenu();
-    await page.getByRole("menuitem", { name: "View triage" }).click();
-    const view = page.getByRole("dialog", { name: "View triage" });
-    await expect(view.getByRole("textbox", { name: /Short note/ })).toHaveValue(note);
-  } finally {
+  undo.push(async () => {
     const events = await db
       .select({ id: triageEvent.id })
       .from(triageEvent)
@@ -273,5 +271,30 @@ test("a fellow documents a triage event and edits its note", async ({ page, cont
       await db.delete(triageEventAudit).where(eq(triageEventAudit.triageEventId, id));
       await db.delete(triageEvent).where(eq(triageEvent.id, id));
     }
-  }
+  });
+
+  await openStudentMenu();
+  await page.getByRole("menuitem", { name: "Triage occurred" }).click();
+  const form = page.getByRole("dialog", { name: "Document triage" });
+  await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
+  await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
+  await form.getByRole("combobox", { name: "Action taken (required)" }).click();
+  await page.getByRole("option", { name: "Provided peer counselling" }).click();
+  await form.getByRole("button", { name: "Save triage" }).click();
+  await expect(form).toBeHidden();
+
+  await openStudentMenu();
+  await page.getByRole("menuitem", { name: "Edit triage" }).click();
+  await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
+  await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
+  await form.getByRole("combobox", { name: "Action taken (required)" }).click();
+  await page.getByRole("option", { name: "Provided peer counselling" }).click();
+  await form.getByRole("textbox", { name: /Short note/ }).fill(note);
+  await form.getByRole("button", { name: "Save triage" }).click();
+  await expect(form).toBeHidden();
+
+  await openStudentMenu();
+  await page.getByRole("menuitem", { name: "View triage" }).click();
+  const view = page.getByRole("dialog", { name: "View triage" });
+  await expect(view.getByRole("textbox", { name: /Short note/ })).toHaveValue(note);
 });
