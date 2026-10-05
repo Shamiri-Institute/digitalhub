@@ -110,16 +110,12 @@ export function AddNewClinicalCaseForm({
   schools,
   fellowsInProject,
   supervisorsInHub,
-  creatorId,
-  userRole,
   hubs,
 }: {
   children?: React.ReactNode;
   schools: SchoolsInHubData["schools"];
   fellowsInProject: SchoolsInHubData["fellowsInProject"];
   supervisorsInHub: SchoolsInHubData["supervisorsInHub"];
-  creatorId: string;
-  userRole: "CLINICAL_LEAD" | "SUPERVISOR";
   hubs: SchoolsInHubData["hubs"];
 }) {
   const [open, setOpen] = useState(false);
@@ -239,7 +235,6 @@ export function AddNewClinicalCaseForm({
     try {
       const response = await createStudentClinicalCase({
         schoolId: selectedSchoolId,
-        creatorId,
         studentId: isNewStudent ? undefined : selectedStudentId,
         newStudent:
           isNewStudent && data.yearOfBirth
@@ -258,7 +253,6 @@ export function AddNewClinicalCaseForm({
         supervisorId: data.supervisor,
         fellowId: data.fellow,
         sessionId: data.session,
-        role: userRole,
       });
 
       if (response.success) {

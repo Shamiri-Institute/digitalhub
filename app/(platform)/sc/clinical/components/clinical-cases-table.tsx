@@ -14,14 +14,12 @@ export default function ClinicalCasesTable({
   schools,
   fellowsInProject,
   supervisorsInHub,
-  currentSupervisorId,
   hubs,
 }: {
   cases: ClinicalCases[];
   schools: SchoolsInHubData["schools"];
   fellowsInProject: SchoolsInHubData["fellowsInProject"];
   supervisorsInHub: SchoolsInHubData["supervisorsInHub"];
-  currentSupervisorId: string;
   hubs: SchoolsInHubData["hubs"];
 }) {
   const renderTableActions = (
@@ -29,8 +27,6 @@ export default function ClinicalCasesTable({
       schools={schools}
       fellowsInProject={fellowsInProject}
       supervisorsInHub={supervisorsInHub}
-      creatorId={currentSupervisorId}
-      userRole="SUPERVISOR"
       hubs={hubs}
     >
       <DialogTrigger asChild={true}>
