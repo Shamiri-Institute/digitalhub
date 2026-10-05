@@ -9,14 +9,4 @@ export default class HubCoordinatorSchoolsPage extends AppPage {
   constructor(public readonly page: Page) {
     super(page);
   }
-
-  checkKeyComponentsAreVisible() {}
-
-  openWeeklyHubReportDialog() {
-    this.page.getByRole("button", {});
-  }
-
-  checkTableHasData() {}
-
-  correctlyFillWeeklyHubReportDialog() {}
 }
