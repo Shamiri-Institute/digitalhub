@@ -3,12 +3,12 @@ import { differenceInCalendarWeeks } from "date-fns";
 import { and, eq, gte, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { fellowAttendance, payoutStatements, reimbursementRequest } from "#/db/schema";
+import { fellowAttendance, payoutStatements } from "#/db/schema";
 import { generateSessionToken } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
- * Money flows through the UI: supervisor expenses, payout confirmation and fellow attendance
+ * Money flows through the UI: payout confirmation and fellow attendance
  * (which writes payout statements). Each test saves, reloads and checks what the page shows. The
  * database is read only to pick fixtures and to restore what a test changed.
  */
@@ -49,74 +49,6 @@ async function searchRows(page: Page, scope: Page | Locator, text: string) {
   }
   return scope.getByRole("row").filter({ hasText: text });
 }
-
-test.describe("supervisor expenses", () => {
-  // The amount is the visible marker; the M-Pesa name tags the row for cleanup.
-  const amount = String(90_000 + (Date.now() % 9_000));
-  const mpesaName = `e2e-2211-${Date.now()}`;
-  let ownHubEmail: string;
-  let otherHubEmail: string;
-
-  test.beforeAll(async () => {
-    const coordinators = await signableProfiles(
-      "hub_coordinators",
-      "HUB_COORDINATOR",
-      "assigned_hub_id",
-    );
-    const supervisors = await signableProfiles("supervisors", "SUPERVISOR", "hub_id");
-    const own = coordinators.find((c) => supervisors.some((s) => s.hubId === c.hubId));
-    const other = coordinators.find((c) => own && c.hubId !== own.hubId);
-    if (!own || !other) throw new Error("seed the database first: no coordinators in two hubs");
-    ownHubEmail = own.email;
-    otherHubEmail = other.email;
-  });
-
-  test.afterAll(async () => {
-    await db.delete(reimbursementRequest).where(eq(reimbursementRequest.mpesaName, mpesaName));
-  });
-
-  test("a hub coordinator adds and approves an expense", async ({ page, context }) => {
-    await signIn(context, ownHubEmail);
-    await page.goto(getUrl("/hc/reporting/expenses/supervisors"), { waitUntil: "networkidle" });
-
-    await page.getByRole("button", { name: "Add expense" }).click();
-    const add = page.getByRole("dialog").filter({ hasText: "Add Expense" });
-    for (const placeholder of [
-      "Select a date/time",
-      "Select supervisor",
-      "Select reason",
-      "Select session",
-    ]) {
-      await add.getByRole("combobox").filter({ hasText: placeholder }).click();
-      await page.getByRole("option").first().click();
-    }
-    await add.getByRole("textbox", { name: "Total Amount (KES) *" }).fill(amount);
-    await add.getByRole("textbox", { name: "M-Pesa name. *" }).fill(mpesaName);
-    await add.getByRole("textbox", { name: "M-Pesa no. *" }).fill("0712345678");
-    await add.getByRole("button", { name: "Submit" }).click();
-    await expect(add).toBeHidden();
-
-    await page.reload({ waitUntil: "networkidle" });
-    const row = await searchRows(page, page, amount);
-    await expect(row).toContainText("Pending");
-
-    await row.getByRole("cell").last().click();
-    await page.getByRole("menu").getByText("Approve", { exact: true }).click();
-    const approve = page.getByRole("dialog").filter({ hasText: "Approve expense" });
-    await approve.getByRole("button", { name: "Accept" }).click();
-    await expect(approve).toBeHidden();
-
-    await page.reload({ waitUntil: "networkidle" });
-    await expect(await searchRows(page, page, amount)).toContainText("Approved");
-  });
-
-  test("a hub coordinator in another hub does not list the expense", async ({ page, context }) => {
-    await signIn(context, otherHubEmail);
-    await page.goto(getUrl("/hc/reporting/expenses/supervisors"), { waitUntil: "networkidle" });
-
-    await expect(await searchRows(page, page, amount)).toHaveCount(0);
-  });
-});
 
 test.describe("payout confirmation", () => {
   const startedAt = new Date();

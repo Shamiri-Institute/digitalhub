@@ -29,6 +29,13 @@
       "when": 1791204146824,
       "tag": "0003_reimbursement_status_uppercase",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791206263171,
+      "tag": "0004_drop_reimbursement_requests",
+      "breakpoints": true
     }
   ]
 }

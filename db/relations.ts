@@ -39,7 +39,6 @@ import {
   payoutStatements,
   project,
   projectImplementer,
-  reimbursementRequest,
   repaymentRequest,
   school,
   schoolDropoutHistory,
@@ -451,7 +450,6 @@ export const hubRelations = relations(hub, ({ one, many }) => ({
   }),
   coordinators: many(hubCoordinator, { relationName: "HubCoordinator_assignedHub" }),
   hubSessions: many(interventionSession, { relationName: "InterventionSession_hub" }),
-  reimbursementRequests: many(reimbursementRequest, { relationName: "ReimbursementRequest_hub" }),
   repaymentRequests: many(repaymentRequest, { relationName: "RepaymentRequest_hub" }),
   weeklyHubReports: many(weeklyHubReport, { relationName: "WeeklyHubReport_hub" }),
   WeeklyTeamMeetingReport: many(weeklyTeamMeetingReport, {
@@ -479,9 +477,6 @@ export const hubCoordinatorRelations = relations(hubCoordinator, ({ one, many })
     fields: [hubCoordinator.assignedHubId],
     references: [hub.id],
     relationName: "HubCoordinator_assignedHub",
-  }),
-  reimbursementRequests: many(reimbursementRequest, {
-    relationName: "ReimbursementRequest_hubCoordinator",
   }),
   weeklyHubReports: many(weeklyHubReport, { relationName: "WeeklyHubReport_hubCoordinator" }),
   WeeklyTeamMeetingReport: many(weeklyTeamMeetingReport, {
@@ -768,24 +763,6 @@ export const projectImplementerRelations = relations(projectImplementer, ({ one 
     fields: [projectImplementer.implementerId],
     references: [implementer.id],
     relationName: "ProjectImplementer_implementer",
-  }),
-}));
-
-export const reimbursementRequestRelations = relations(reimbursementRequest, ({ one }) => ({
-  supervisor: one(supervisor, {
-    fields: [reimbursementRequest.supervisorId],
-    references: [supervisor.id],
-    relationName: "ReimbursementRequest_supervisor",
-  }),
-  hub: one(hub, {
-    fields: [reimbursementRequest.hubId],
-    references: [hub.id],
-    relationName: "ReimbursementRequest_hub",
-  }),
-  hubCoordinator: one(hubCoordinator, {
-    fields: [reimbursementRequest.hubCoordinatorId],
-    references: [hubCoordinator.id],
-    relationName: "ReimbursementRequest_hubCoordinator",
   }),
 }));
 
@@ -1104,9 +1081,6 @@ export const supervisorRelations = relations(supervisor, ({ one, many }) => ({
   }),
   sessionNotes: many(interventionSessionNote, {
     relationName: "InterventionSessionNote_supervisor",
-  }),
-  reimbursementRequests: many(reimbursementRequest, {
-    relationName: "ReimbursementRequest_supervisor",
   }),
   repaymentRequests: many(repaymentRequest, { relationName: "RepaymentRequest_supervisor" }),
   studentReportingNotes: many(studentReportingNotes, {
