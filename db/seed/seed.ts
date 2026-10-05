@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import {
+  ApprovalStatus,
   caseStatusOptions,
   FollowUpPlanOptions,
   ImplementerRole,
@@ -1901,7 +1902,7 @@ async function createPayoutRecords(
       incurredAt: faker.date.recent({ days: 30 }),
       amount: faker.number.int({ min: 200, max: 5000 }),
       kind: faker.helpers.arrayElement(["travel", "internet", "airtime", "materials"]),
-      status: faker.helpers.arrayElement(["pending", "approved", "rejected"]),
+      status: faker.helpers.arrayElement(Object.values(ApprovalStatus)),
       details: { subtype: "materials", receipt_link: faker.internet.url() },
       mpesaName: faker.person.fullName(),
       mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
