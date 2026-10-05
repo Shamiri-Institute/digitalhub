@@ -41,14 +41,27 @@ export async function loadHubSupervisorExpenses() {
   );
 }
 
+/** The coordinator, their hub, and the condition that limits expenses to that hub's supervisors. */
+async function requireHubScope() {
+  const hubCoordinator = await currentHubCoordinator();
+  const hubId = hubCoordinator?.profile.assignedHubId;
+  if (!hubCoordinator || !hubId) {
+    throw new Error("Unauthorised user");
+  }
+  const hubSupervisors = db
+    .select({ id: supervisor.id })
+    .from(supervisor)
+    .where(eq(supervisor.hubId, hubId));
+  return {
+    hubCoordinator,
+    hubId,
+    scope: inArray(reimbursementRequest.supervisorId, hubSupervisors),
+  };
+}
+
 export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-
-    if (!hubCoordinator) {
-      await signOut({ callbackUrl: "/login" });
-      throw new Error("Unauthorised user");
-    }
+    const { hubCoordinator, scope } = await requireHubScope();
     if (name !== hubCoordinator.profile?.coordinatorName) {
       return {
         success: false,
@@ -56,7 +69,7 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
       };
     }
 
-    return await deleteSupervisorExpense(id);
+    return await deleteSupervisorExpense(id, scope);
   } catch (error) {
     console.error(error);
     return {
@@ -84,14 +97,8 @@ export async function getSupervisorsInHub() {
 
 export async function approveSupervisorExpense({ id }: { id: string }) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-
-    if (!hubCoordinator) {
-      await signOut({ callbackUrl: "/login" });
-      throw new Error("Unauthorised user");
-    }
-
-    return await approveSupervisorExpenseRequest(id);
+    const { scope } = await requireHubScope();
+    return await approveSupervisorExpenseRequest(id, scope);
   } catch (error) {
     console.error(error);
     return {
@@ -103,19 +110,17 @@ export async function approveSupervisorExpense({ id }: { id: string }) {
 
 export async function addSupervisorExpense({ data }: { data: SupervisorExpenseInput }) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-
-    if (!hubCoordinator) {
-      await signOut({ callbackUrl: "/login" });
-      throw new Error("Unauthorised user");
-    }
-
-    if (!hubCoordinator.profile?.assignedHubId) {
-      throw new Error("Hub coordinator has no assigned hub");
+    const { hubCoordinator, hubId } = await requireHubScope();
+    const inHub = await db.query.supervisor.findFirst({
+      where: (s, { and, eq }) => and(eq(s.id, data.supervisor), eq(s.hubId, hubId)),
+      columns: { id: true },
+    });
+    if (!inHub) {
+      throw new Error("Supervisor not found in your hub");
     }
 
     return await createSupervisorExpense(data, {
-      hubId: hubCoordinator.profile.assignedHubId,
+      hubId,
       hubCoordinatorId: hubCoordinator.profile.id,
     });
   } catch (error) {
@@ -135,14 +140,8 @@ export async function updateSupervisorExpense({
   data: Omit<SupervisorExpenseInput, "supervisor">;
 }) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-
-    if (!hubCoordinator) {
-      await signOut({ callbackUrl: "/login" });
-      throw new Error("Unauthorised user");
-    }
-
-    return await updateSupervisorExpenseRequest(id, data);
+    const { scope } = await requireHubScope();
+    return await updateSupervisorExpenseRequest(id, data, scope);
   } catch (error) {
     console.error(error);
     return {

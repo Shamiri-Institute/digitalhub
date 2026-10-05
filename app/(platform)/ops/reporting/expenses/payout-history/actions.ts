@@ -208,15 +208,26 @@ export async function confirmPayoutAction(executedAt: Date) {
     throw new Error("Unauthorised user");
   }
 
+  const projectId = await getActiveProjectId();
   const currentTime = new Date();
 
   try {
     return await db.transaction(async (tx) => {
+      // Only the active project's statements, the same set the payout history lists.
+      const projectFellowIds = tx
+        .select({ id: fellow.id })
+        .from(fellow)
+        .innerJoin(hub, eq(hub.id, fellow.hubId))
+        .where(eq(hub.projectId, projectId));
       const executedPayouts = await tx
         .select({ id: payoutStatements.id })
         .from(payoutStatements)
         .where(
-          and(eq(payoutStatements.executedAt, executedAt), isNull(payoutStatements.confirmedAt)),
+          and(
+            eq(payoutStatements.executedAt, executedAt),
+            isNull(payoutStatements.confirmedAt),
+            inArray(payoutStatements.fellowId, projectFellowIds),
+          ),
         );
 
       if (executedPayouts.length === 0) {

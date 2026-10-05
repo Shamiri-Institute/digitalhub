@@ -463,9 +463,36 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
   }
 }
 
+/**
+ * Fellow attendance creates payout statements, so a supervisor or hub coordinator may mark only
+ * fellows in their own hub. A missing and a forbidden fellow give the same error.
+ */
+async function requireFellowsInCallerHub(
+  personnel: Awaited<ReturnType<typeof checkAuth>>,
+  fellowIds: string[],
+) {
+  const { profile } = personnel;
+  const hubId =
+    personnel.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR
+      ? (profile as NonNullable<CurrentSupervisor>["profile"]).hubId
+      : (profile as NonNullable<CurrentHubCoordinator>["profile"]).assignedHubId;
+  const uniqueIds = [...new Set(fellowIds)];
+  const inHub =
+    hubId === null || uniqueIds.length === 0
+      ? []
+      : await db
+          .select({ id: fellow.id })
+          .from(fellow)
+          .where(and(inArray(fellow.id, uniqueIds), eq(fellow.hubId, hubId)));
+  if (inHub.length !== uniqueIds.length) {
+    throw new Error("Fellow not found in your hub");
+  }
+}
+
 export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
-    const { session: userSession } = await checkAuth();
+    const personnel = await checkAuth();
+    const { session: userSession } = personnel;
     if (!userSession) {
       return {
         success: false,
@@ -488,6 +515,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
     if (!id) {
       throw new Error("Fellow id is required");
     }
+    await requireFellowsInCallerHub(personnel, [id]);
 
     return await db.transaction(async (tx) => {
       const fellowRow = await requireFellow(tx, id);
@@ -648,7 +676,8 @@ export async function markManyFellowAttendance(
   data: z.infer<typeof MarkAttendanceSchema>,
 ) {
   try {
-    const { session: userSession } = await checkAuth();
+    const personnel = await checkAuth();
+    const { session: userSession } = personnel;
     if (!userSession) {
       return {
         success: false,
@@ -668,6 +697,7 @@ export async function markManyFellowAttendance(
     }
 
     const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
+    await requireFellowsInCallerHub(personnel, ids);
 
     return await db.transaction(async (tx) => {
       const session = await requireSessionWithName(tx, sessionId);

@@ -19,7 +19,11 @@ export type HubSupervisorExpensesType = Awaited<
   ReturnType<typeof loadHubsSupervisorExpenses>
 >[number];
 
-export async function loadHubsSupervisorExpenses() {
+/**
+ * The ops user and the requests they may see and change: the active project's hubs, and their
+ * implementer's supervisors. `supervisorScope` is the same rule for a supervisor row.
+ */
+async function requireOpsScope() {
   const opsUser = await currentOpsUser();
 
   if (!opsUser) {
@@ -28,35 +32,36 @@ export async function loadHubsSupervisorExpenses() {
 
   const projectId = await getActiveProjectId();
   const implementerId = opsUser.session.user.activeMembership?.implementerId;
-
-  const inProject = inArray(
-    reimbursementRequest.hubId,
-    db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
-  );
-  const scope =
+  const projectHubs = db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId));
+  const implementerSupervisors =
     implementerId === undefined
-      ? inProject
-      : and(
-          inArray(
-            reimbursementRequest.supervisorId,
-            db
-              .select({ id: supervisor.id })
-              .from(supervisor)
-              .where(eq(supervisor.implementerId, implementerId)),
-          ),
-          inProject,
-        );
+      ? undefined
+      : db
+          .select({ id: supervisor.id })
+          .from(supervisor)
+          .where(eq(supervisor.implementerId, implementerId));
 
+  return {
+    opsUser,
+    scope: and(
+      inArray(reimbursementRequest.hubId, projectHubs),
+      implementerSupervisors && inArray(reimbursementRequest.supervisorId, implementerSupervisors),
+    ),
+    supervisorScope: and(
+      inArray(supervisor.hubId, projectHubs),
+      implementerId === undefined ? undefined : eq(supervisor.implementerId, implementerId),
+    ),
+  };
+}
+
+export async function loadHubsSupervisorExpenses() {
+  const { scope } = await requireOpsScope();
   return loadSupervisorExpenses(scope, (expense) => expense.hub.hubName);
 }
 
 export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
   try {
-    const opsUser = await currentOpsUser();
-
-    if (!opsUser) {
-      throw new Error("Unauthorised user");
-    }
+    const { opsUser, scope } = await requireOpsScope();
 
     if (name !== opsUser.profile.name) {
       return {
@@ -65,7 +70,7 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
       };
     }
 
-    return await deleteSupervisorExpense(id);
+    return await deleteSupervisorExpense(id, scope);
   } catch (error) {
     console.error(error);
     return {
@@ -87,13 +92,8 @@ export async function getSupervisorsInImplementation() {
 
 export async function approveSupervisorExpense({ id }: { id: string }) {
   try {
-    const opsUser = await currentOpsUser();
-
-    if (!opsUser) {
-      throw new Error("Unauthorised user");
-    }
-
-    return await approveSupervisorExpenseRequest(id);
+    const { scope } = await requireOpsScope();
+    return await approveSupervisorExpenseRequest(id, scope);
   } catch (error) {
     console.error(error);
     return {
@@ -105,10 +105,13 @@ export async function approveSupervisorExpense({ id }: { id: string }) {
 
 export async function addSupervisorExpense({ data }: { data: SupervisorExpenseInput }) {
   try {
-    const opsUser = await currentOpsUser();
-
-    if (!opsUser) {
-      throw new Error("Unauthorised user");
+    const { opsUser, supervisorScope } = await requireOpsScope();
+    const inScope = await db
+      .select({ id: supervisor.id })
+      .from(supervisor)
+      .where(and(eq(supervisor.id, data.supervisor), supervisorScope));
+    if (inScope.length === 0) {
+      throw new Error("Supervisor not found in your project");
     }
 
     return await createSupervisorExpense(data, {
@@ -132,13 +135,8 @@ export async function updateSupervisorExpense({
   data: Omit<SupervisorExpenseInput, "supervisor">;
 }) {
   try {
-    const opsUser = await currentOpsUser();
-
-    if (!opsUser) {
-      throw new Error("Unauthorised user");
-    }
-
-    return await updateSupervisorExpenseRequest(id, data);
+    const { scope } = await requireOpsScope();
+    return await updateSupervisorExpenseRequest(id, data, scope);
   } catch (error) {
     console.error(error);
     return {
