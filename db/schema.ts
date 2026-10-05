@@ -1472,59 +1472,6 @@ export const fellowComplaints = pgTable(
   ],
 );
 
-export const delayedPaymentRequest = pgTable(
-  "delayed_payment_requests",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("delayedpayment")),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-    fellowId: varchar("fellow_id", { length: 255 }).notNull(),
-    supervisorId: varchar("supervisor_id", { length: 255 }).notNull(),
-    interventionSessionId: varchar("intervention_session_id", { length: 255 }).notNull(),
-    fellowAttendanceId: integer("fellow_attendance_id").notNull(),
-    fulfilledAt: timestamp("fulfilled_at", { withTimezone: true, mode: "date" }),
-    rejectedAt: timestamp("rejected_at", { withTimezone: true, mode: "date" }),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.fellowId],
-      foreignColumns: [fellow.id],
-      name: "delayed_payment_requests_fellow_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.supervisorId],
-      foreignColumns: [supervisor.id],
-      name: "delayed_payment_requests_supervisor_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.interventionSessionId],
-      foreignColumns: [interventionSession.id],
-      name: "delayed_payment_requests_intervention_session_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.fellowAttendanceId],
-      foreignColumns: [fellowAttendance.id],
-      name: "delayed_payment_requests_fellow_attendance_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
-
 export const clinicalSessionAttendance = pgTable(
   "clinical_session_attendance",
   {
