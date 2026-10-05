@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { objectId } from "#/lib/crypto";
 import {
   boolean,
+  check,
   date,
   doublePrecision,
   foreignKey,
@@ -348,7 +349,7 @@ export const reimbursementRequest = pgTable(
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
     kind: varchar({ length: 255 }).notNull(),
-    status: varchar({ length: 100 }).default("pending").notNull(),
+    status: varchar({ length: 100 }).default(ApprovalStatus.PENDING).notNull(),
     details: jsonb().$type<JsonValue>().notNull(),
     hubId: varchar("hub_id", { length: 255 }).notNull(),
     supervisorId: varchar("supervisor_id", { length: 255 }).notNull(),
@@ -381,6 +382,10 @@ export const reimbursementRequest = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    check(
+      "reimbursement_requests_status_check",
+      sql`${table.status} IN ('PENDING', 'APPROVED', 'REJECTED')`,
+    ),
   ],
 );
 
