@@ -1,4 +1,4 @@
-import { type ConsoleMessage, expect, test } from "@playwright/test";
+import { type ConsoleMessage, expect, type Response, test } from "@playwright/test";
 
 import { signInAs } from "#/tests/helpers";
 import { type Role, resolveRoutes } from "#/tests/platform-routes";
@@ -34,13 +34,24 @@ for (const role of ROLES) {
         const onConsole = (message: ConsoleMessage) => {
           if (message.type() === "error") consoleErrors.push(message.text());
         };
+        // A server action the page fires on its own (on mount) that throws answers with a 5xx; the
+        // page can still render, so check the responses (#844).
+        const failedActions: string[] = [];
+        const onResponse = (response: Response) => {
+          if (response.status() >= 500 && response.request().headers()["next-action"]) {
+            failedActions.push(`${response.status()} ${response.url()}`);
+          }
+        };
         page.on("console", onConsole);
+        page.on("response", onResponse);
         await page.goto(getUrl(route.path));
         await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => null);
         page.off("console", onConsole);
+        page.off("response", onResponse);
 
         const finalPath = new URL(page.url()).pathname;
         expect.soft(finalPath, `${route.path} redirected to login`).not.toContain("/login");
+        expect.soft(failedActions, `${route.path} had a failed server action`).toEqual([]);
         const text = await page.getByRole("main").first().innerText();
         for (const errorText of ERROR_TEXTS) {
           expect.soft(text, `${route.path} rendered an error`).not.toContain(errorText);
