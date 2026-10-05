@@ -519,7 +519,6 @@ async function createHubCoordinators(
   emails: Set<string>,
 ) {
   console.log("creating hub coordinators");
-  const _hubCoordinators = [];
 
   // Add two static hub coordinators for the static hub
   const staticHub = hubs[0];
@@ -575,7 +574,7 @@ async function createHubCoordinators(
   }));
 
   // Create users in database
-  const _createdUsers = await insertManyReturning(schema.user, staticUsers);
+  await insertManyReturning(schema.user, staticUsers);
 
   // Create membership records for static coordinators
   const staticMembershipData = staticUsers.map((user, index) => ({
@@ -1838,7 +1837,6 @@ async function createPayoutRecords(
   const payoutStatementData: (typeof schema.payoutStatements.$inferInsert)[] = [];
   const reconciliationData: (typeof schema.payoutReconciliation.$inferInsert)[] = [];
   const repaymentData: (typeof schema.repaymentRequest.$inferInsert)[] = [];
-  const delayedData: (typeof schema.delayedPaymentRequest.$inferInsert)[] = [];
 
   for (const fa of sample) {
     const hubId = hubIdBySchoolId.get(fa.schoolId as string) as string;
@@ -1865,29 +1863,17 @@ async function createPayoutRecords(
       description: faker.lorem.sentence(),
     });
 
-    // Spread the remaining sample between repayments and delayed payments
-    const flow = faker.number.int({ min: 0, max: 2 });
-    if (flow === 0) {
-      repaymentData.push({
-        supervisorId,
-        fellowId: fa.fellowId,
-        hubId,
-        fellowAttendanceId: fa.id,
-      });
-    } else if (flow === 1 && fa.sessionId) {
-      delayedData.push({
-        fellowId: fa.fellowId,
-        supervisorId,
-        interventionSessionId: fa.sessionId,
-        fellowAttendanceId: fa.id,
-      });
-    }
+    repaymentData.push({
+      supervisorId,
+      fellowId: fa.fellowId,
+      hubId,
+      fellowAttendanceId: fa.id,
+    });
   }
 
   await insertMany(schema.payoutStatements, payoutStatementData);
   await insertMany(schema.payoutReconciliation, reconciliationData);
   await insertMany(schema.repaymentRequest, repaymentData);
-  await insertMany(schema.delayedPaymentRequest, delayedData);
 }
 
 // Pools used to generate varied (V1-shaped) fidelity feedback per recording so
