@@ -36,7 +36,6 @@ export default function RenderReportingTabs() {
   const expensesReportOptions: TabType[] = [
     { name: "Fellows", href: "/hc/reporting/expenses/fellows" },
     { name: "Payout history", href: "/hc/reporting/expenses/payout-history" },
-    { name: "Complaints", href: "/hc/reporting/expenses/complaints" },
   ];
   return (
     <>

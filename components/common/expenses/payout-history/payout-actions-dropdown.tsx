@@ -1,6 +1,5 @@
 "use client";
 
-import AddFellowComplaint from "#/components/common/expenses/complaints/add-complaint";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Icons } from "#/components/icons";
 import {
@@ -66,10 +65,6 @@ export default function PayoutActionsDropdown({ payout }: { payout: PayoutHistor
         <DropdownMenuLabel>
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
-
-        <AddFellowComplaint payout={payout}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">Add complaint</div>
-        </AddFellowComplaint>
 
         <DropdownMenuItem onSelect={downloadCSV}>Download .csv</DropdownMenuItem>
       </DropdownMenuContent>

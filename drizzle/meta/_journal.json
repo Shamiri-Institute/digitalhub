@@ -43,6 +43,13 @@
       "when": 1791207901724,
       "tag": "0005_tearful_scarlet_spider",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791209729052,
+      "tag": "0006_outstanding_ink",
+      "breakpoints": true
     }
   ]
 }

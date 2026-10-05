@@ -1,0 +1,1 @@
+DROP TABLE "fellow_payment_complaints" CASCADE;
