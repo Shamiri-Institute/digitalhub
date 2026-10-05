@@ -42,7 +42,12 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
-import { cn, stringValidation } from "#/lib/utils";
+import {
+  cn,
+  isNumericAdmissionNumber,
+  NUMERIC_ADMISSION_NUMBER_MESSAGE,
+  stringValidation,
+} from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
 function isValidStudentAge(date: Date) {
@@ -58,7 +63,7 @@ const formSchema = z
     isNewStudent: z.boolean(),
     studentName: z.string().optional(),
     pseudonym: stringValidation("Pseudonym is required"),
-    admissionNumber: z.number().optional(),
+    admissionNumber: z.string().optional(),
     yearOfBirth: z.date().optional(),
     gender: z.enum(GENDER_OPTIONS).optional(),
     classForm: z.string().optional(),
@@ -76,11 +81,17 @@ const formSchema = z
     if (!data.studentName) {
       ctx.addIssue({ code: "custom", path: ["studentName"], message: "Student name is required" });
     }
-    if (!data.admissionNumber || data.admissionNumber < 1) {
+    if (!data.admissionNumber?.trim()) {
       ctx.addIssue({
         code: "custom",
         path: ["admissionNumber"],
         message: "Admission number is required",
+      });
+    } else if (!isNumericAdmissionNumber(data.admissionNumber)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["admissionNumber"],
+        message: NUMERIC_ADMISSION_NUMBER_MESSAGE,
       });
     }
     if (!data.yearOfBirth) {
@@ -138,7 +149,7 @@ export function AddNewClinicalCaseForm({
       studentName: "",
       pseudonym: "",
       stream: "",
-      admissionNumber: undefined,
+      admissionNumber: "",
     },
   });
 
@@ -161,33 +172,13 @@ export function AddNewClinicalCaseForm({
     }
   };
 
-  const handleStudentSelect = (studentId: string) => {
-    setSelectedStudentId(studentId);
-    form.setValue("studentName", studentId);
-
-    const selectedStudent = students.find((student) => student.id === studentId);
-    if (selectedStudent) {
-      form.setValue("studentName", selectedStudent.studentName || "");
-      form.setValue("admissionNumber", Number(selectedStudent.admissionNumber));
-      if (selectedStudent.yearOfBirth) {
-        form.setValue("yearOfBirth", new Date(selectedStudent.yearOfBirth, 0, 1));
-      }
-      const genderValue = selectedStudent.gender as (typeof GENDER_OPTIONS)[number] | null;
-      if (genderValue) {
-        form.setValue("gender", genderValue);
-      }
-      form.setValue("classForm", selectedStudent.form?.toString() || "");
-      form.setValue("stream", selectedStudent.stream || "");
-    }
-  };
-
   const toggleNewStudent = () => {
     const nextIsNewStudent = !isNewStudent;
     setIsNewStudent(nextIsNewStudent);
     form.setValue("isNewStudent", nextIsNewStudent);
     setSelectedStudentId("");
     form.setValue("studentName", "");
-    form.setValue("admissionNumber", undefined);
+    form.setValue("admissionNumber", "");
     form.setValue("yearOfBirth", undefined);
     form.setValue("gender", undefined);
     form.setValue("classForm", "");
@@ -240,7 +231,7 @@ export function AddNewClinicalCaseForm({
           isNewStudent && data.yearOfBirth
             ? {
                 studentName: data.studentName ?? "",
-                admissionNumber: String(data.admissionNumber),
+                admissionNumber: data.admissionNumber?.trim() ?? "",
                 yearOfBirth: data.yearOfBirth.getFullYear(),
                 age: new Date().getFullYear() - data.yearOfBirth.getFullYear(),
                 gender: data.gender ?? "",
@@ -356,7 +347,7 @@ export function AddNewClinicalCaseForm({
                           label: student.studentName || "Unknown Student",
                         }))}
                         activeItemId={selectedStudentId}
-                        onSelectItem={handleStudentSelect}
+                        onSelectItem={setSelectedStudentId}
                         placeholder="Select a student..."
                         inputPlaceholder="Search students..."
                       />
@@ -392,17 +383,7 @@ export function AddNewClinicalCaseForm({
                               <span className="text-shamiri-light-red">*</span>
                             </FormLabel>
                             <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="Enter admission number"
-                                {...field}
-                                value={field.value || ""}
-                                onChange={(e) =>
-                                  field.onChange(
-                                    e.target.value ? Number(e.target.value) : undefined,
-                                  )
-                                }
-                              />
+                              <Input placeholder="Enter admission number" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

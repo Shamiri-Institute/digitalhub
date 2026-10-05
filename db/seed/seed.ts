@@ -1320,7 +1320,8 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
         id: objectId("stu"),
         visibleId: `STATIC_STU_${groupIndex + 1}_${i + 1}`,
         studentName: `Student ${groupIndex + 1}.${i + 1}`,
-        admissionNumber: `ADM_${groupIndex + 1}_${i + 1}`,
+        // Schools use numeric admission numbers: group 1, student 2 gets 102.
+        admissionNumber: `${groupIndex + 1}${String(i + 1).padStart(2, "0")}`,
         schoolId: staticSchool?.id,
         assignedGroupId: group.id,
         gender: i % 2 === 0 ? "Male" : "Female",

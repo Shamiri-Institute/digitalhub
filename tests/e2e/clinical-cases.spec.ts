@@ -2,7 +2,8 @@ import { expect, type Page, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { clinicalScreeningInfo, student } from "#/db/schema";
+import { clinicalScreeningInfo, interventionSession, student } from "#/db/schema";
+import { objectId } from "#/lib/crypto";
 import { emailForProfile, signInWithEmail } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
@@ -89,7 +90,8 @@ async function createCaseForNewStudent(page: Page, casePseudonym: string) {
     .getByRole("textbox", { name: "Enter student name" })
     .fill(`${casePseudonym} student`);
   await dialog.getByRole("textbox", { name: "Pseudonym*" }).fill(casePseudonym);
-  await dialog.getByRole("spinbutton", { name: "School Admission Number*" }).fill("9001");
+  const admissionNumber = dialog.getByRole("textbox", { name: "School Admission Number*" });
+  await admissionNumber.fill("ADM/9001");
   await dialog.getByRole("button", { name: "Pick a date" }).click();
   const picker = page.getByRole("dialog").last();
   await picker.getByRole("combobox", { name: "Choose the Year" }).selectOption("2010");
@@ -107,6 +109,10 @@ async function createCaseForNewStudent(page: Page, casePseudonym: string) {
   await page.getByRole("option", { name: "Student", exact: true }).click();
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
   await page.getByRole("option").first().click();
+  // A non-numeric admission number shows an error; it must not fail silently.
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog.getByText("Admission number must contain digits only")).toBeVisible();
+  await admissionNumber.fill("09001");
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toBeHidden();
 }
@@ -162,6 +168,62 @@ test("a clinical lead's new case is assigned to them", async ({ page, context })
     columns: { currentSupervisorId: true, clinicalLeadId: true },
   });
   expect(created).toEqual({ currentSupervisorId: null, clinicalLeadId: clinicalLead.profileId });
+});
+
+// The form once copied an existing student's admission number into a hidden numeric field. A
+// legacy value with letters became NaN and the form refused to save without an error (ENG-2218).
+test("a supervisor opens a case for an existing student with a legacy non-numeric admission number", async ({
+  page,
+  context,
+}) => {
+  const casePseudonym = `e2e-existing-${Date.now()}`;
+  const schoolWithSessions = await db.query.school.findFirst({
+    where: (s, { and, eq, exists }) =>
+      and(
+        eq(s.hubId, owner.hubId),
+        exists(
+          db
+            .select({ id: interventionSession.id })
+            .from(interventionSession)
+            .where(eq(interventionSession.schoolId, s.id)),
+        ),
+      ),
+    columns: { id: true, schoolName: true },
+    orderBy: (s, { asc }) => asc(s.id),
+  });
+  if (!schoolWithSessions) throw new Error("seed the database first: no school with sessions");
+  const existingStudentName = `${casePseudonym} student`;
+  await db.insert(student).values({
+    id: objectId("stu"),
+    visibleId: `E2E-${Date.now()}`,
+    studentName: existingStudentName,
+    schoolId: schoolWithSessions.id,
+    admissionNumber: "ADM/0042-A",
+  });
+  undo.push(() => deleteCase(casePseudonym));
+
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "New case" }).click();
+  const dialog = page.getByRole("dialog", { name: "Add clinical case" });
+  await dialog.getByRole("button", { name: "Select a school..." }).click();
+  await page.getByPlaceholder("Search schools...").fill(schoolWithSessions.schoolName);
+  await page.getByRole("option", { name: schoolWithSessions.schoolName, exact: true }).click();
+  await dialog.getByRole("button", { name: "Select a student..." }).click();
+  await page.getByPlaceholder("Search students...").fill(existingStudentName);
+  await page.getByRole("option", { name: existingStudentName, exact: true }).click();
+  await dialog.getByRole("textbox", { name: "Pseudonym*" }).fill(casePseudonym);
+  await dialog.getByRole("combobox").filter({ hasText: "Select initial contact" }).click();
+  await page.getByRole("option", { name: "Student", exact: true }).click();
+  await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
+  await page.getByRole("option").first().click();
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(await searchRows(page, casePseudonym)).toContainText("ACTIVE", {
+    ignoreCase: true,
+  });
 });
 
 test("a supervisor edits their case's student and the change survives a reload", async ({
