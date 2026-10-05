@@ -47,7 +47,7 @@ type StudentRole =
  */
 async function requireStudentAccess(studentId: string, ...roles: StudentRole[]) {
   const caller = await requireHubRole(...roles);
-  const row = await db.query.student.findFirst({
+  const targetStudent = await db.query.student.findFirst({
     where: (s, { eq }) => eq(s.id, studentId),
     columns: { id: true, schoolId: true },
     with: {
@@ -55,14 +55,14 @@ async function requireStudentAccess(studentId: string, ...roles: StudentRole[]) 
       assignedGroup: { columns: { leaderId: true } },
     },
   });
-  const allowed =
+  const callerMayChangeStudent =
     caller.role === ImplementerRole.FELLOW
-      ? row?.assignedGroup?.leaderId === caller.profileId
-      : row?.school?.hubId === caller.hubId;
-  if (!row || !allowed) {
+      ? targetStudent?.assignedGroup?.leaderId === caller.profileId
+      : targetStudent?.school?.hubId === caller.hubId;
+  if (!targetStudent || !callerMayChangeStudent) {
     throw new Error("Student not found");
   }
-  return { caller, student: row };
+  return { caller, student: targetStudent };
 }
 
 const attendedFlag = (attended: string | undefined) =>
@@ -468,7 +468,7 @@ export async function transferStudentToGroup(id: string, groupId: string) {
       ImplementerRole.SUPERVISOR,
       ImplementerRole.HUB_COORDINATOR,
     );
-    const [group, studentRow] = await Promise.all([
+    const [targetGroup, studentToMove] = await Promise.all([
       db.query.interventionGroup.findFirst({
         where: (g, { eq }) => eq(g.id, groupId),
         columns: { groupName: true, schoolId: true, leaderId: true },
@@ -479,13 +479,13 @@ export async function transferStudentToGroup(id: string, groupId: string) {
         columns: { schoolId: true },
       }),
     ]);
-    const allowed =
-      group !== undefined &&
-      studentRow?.schoolId === group.schoolId &&
+    const callerMayUseGroup =
+      targetGroup !== undefined &&
+      studentToMove?.schoolId === targetGroup.schoolId &&
       (caller.role === ImplementerRole.FELLOW
-        ? group.leaderId === caller.profileId
-        : group.school.hubId === caller.hubId);
-    if (!allowed) {
+        ? targetGroup.leaderId === caller.profileId
+        : targetGroup.school.hubId === caller.hubId);
+    if (!callerMayUseGroup) {
       throw new Error("Student or group not found");
     }
 
@@ -500,7 +500,7 @@ export async function transferStudentToGroup(id: string, groupId: string) {
 
     return {
       success: true,
-      message: `Successfully transferred ${updated.studentName} to group ${group.groupName}`,
+      message: `Successfully transferred ${updated.studentName} to group ${targetGroup.groupName}`,
     };
   } catch {
     return { error: "Something went wrong while adding student to the group." };

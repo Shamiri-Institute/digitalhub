@@ -142,10 +142,11 @@ export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
 
 /** Updates the school and records the change; returns the school with its dropout history. */
 /** The coordinator's hub, after checking the school is in it; other hubs' schools read as missing. */
+/** The coordinator's hub id, after checking the school is in that hub. */
 async function requireSchoolInCoordinatorHub(schoolId: string) {
-  const { hubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
-  await requireSchoolInHub(schoolId, hubId);
-  return hubId;
+  const { hubId: coordinatorHubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+  await requireSchoolInHub(schoolId, coordinatorHubId);
+  return coordinatorHubId;
 }
 
 function setSchoolDropout(
@@ -443,6 +444,16 @@ export async function assignSchoolPointSupervisor(
     }
 
     const parsedData = AssignPointSupervisorSchema.parse(schoolInfo);
+    // Both the school and the new point supervisor must be in the coordinator's hub.
+    const coordinatorHubId = await requireSchoolInCoordinatorHub(schoolId);
+    const supervisorInCoordinatorHub = await db.query.supervisor.findFirst({
+      where: (s, { and, eq }) =>
+        and(eq(s.id, parsedData.assignedSupervisorId), eq(s.hubId, coordinatorHubId)),
+      columns: { id: true },
+    });
+    if (!supervisorInCoordinatorHub) {
+      throw new Error("Supervisor not found");
+    }
 
     const [updated] = await db
       .update(school)

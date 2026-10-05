@@ -376,11 +376,11 @@ async function requireFellowInHub(
   ...roles: (typeof ImplementerRole.SUPERVISOR | typeof ImplementerRole.HUB_COORDINATOR)[]
 ) {
   const caller = await requireHubRole(...roles);
-  const row = await db.query.fellow.findFirst({
+  const fellowInHub = await db.query.fellow.findFirst({
     where: (f, { and, eq }) => and(eq(f.id, fellowId), eq(f.hubId, caller.hubId)),
     columns: { id: true },
   });
-  if (!row) {
+  if (!fellowInHub) {
     throw new Error("Fellow not found");
   }
   return caller;
@@ -398,11 +398,11 @@ export async function replaceGroupLeader({
       ImplementerRole.SUPERVISOR,
       ImplementerRole.HUB_COORDINATOR,
     );
-    const group = await db.query.interventionGroup.findFirst({
+    const groupToReassign = await db.query.interventionGroup.findFirst({
       where: (g, { eq }) => eq(g.id, groupId),
       columns: { schoolId: true },
     });
-    await requireSchoolInHub(group?.schoolId, caller.hubId);
+    await requireSchoolInHub(groupToReassign?.schoolId, caller.hubId);
 
     const [updated] = await db
       .update(interventionGroup)

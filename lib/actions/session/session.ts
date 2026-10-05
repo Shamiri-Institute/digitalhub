@@ -53,11 +53,12 @@ async function requireSessionInCallerHub(session: {
   hubId: string | null;
   school: { hubId: string | null } | null;
 }) {
-  const { hubId } = await requireHubRole(
+  const { hubId: callerHubId } = await requireHubRole(
     ImplementerRole.HUB_COORDINATOR,
     ImplementerRole.SUPERVISOR,
   );
-  if ((session.hubId ?? session.school?.hubId) !== hubId) {
+  const sessionHubId = session.hubId ?? session.school?.hubId;
+  if (sessionHubId !== callerHubId) {
     throw new Error("No InterventionSession found");
   }
 }
@@ -90,15 +91,15 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
     }
 
     const { hub } = hubSessionType;
-    const { hubId } = await requireHubRole(
+    const { hubId: callerHubId } = await requireHubRole(
       ImplementerRole.HUB_COORDINATOR,
       ImplementerRole.SUPERVISOR,
     );
-    if (hub.id !== hubId) {
+    if (hub.id !== callerHubId) {
       throw new Error("Session type not found.");
     }
     if (parsedData.schoolId) {
-      await requireSchoolInHub(parsedData.schoolId, hubId);
+      await requireSchoolInHub(parsedData.schoolId, callerHubId);
     }
     if (
       hubSessionType.sessionType === "SUPERVISION" ||

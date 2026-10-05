@@ -17,12 +17,12 @@ export async function assignFellowSupervisor({
   try {
     // The new supervisor must be in the coordinator's hub. The fellow may come from another hub:
     // hubs borrow fellows from each other.
-    const { hubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
-    const assigned = await db.query.supervisor.findFirst({
-      where: (s, { and, eq }) => and(eq(s.id, supervisorId), eq(s.hubId, hubId)),
+    const { hubId: coordinatorHubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+    const supervisorInCoordinatorHub = await db.query.supervisor.findFirst({
+      where: (s, { and, eq }) => and(eq(s.id, supervisorId), eq(s.hubId, coordinatorHubId)),
       columns: { supervisorName: true },
     });
-    if (!assigned) {
+    if (!supervisorInCoordinatorHub) {
       throw new Error("Supervisor not found");
     }
 
@@ -36,7 +36,7 @@ export async function assignFellowSupervisor({
     }
     return {
       success: true,
-      message: `Successfully assigned ${updated.fellowName} to ${assigned.supervisorName ?? "supervisor"}.`,
+      message: `Successfully assigned ${updated.fellowName} to ${supervisorInCoordinatorHub.supervisorName ?? "supervisor"}.`,
     };
   } catch (error: unknown) {
     console.error(error);

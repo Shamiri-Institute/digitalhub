@@ -7,20 +7,21 @@ type HubRole =
   | typeof ImplementerRole.HUB_COORDINATOR
   | typeof ImplementerRole.FELLOW;
 
-async function hubOf(role: HubRole, profileId: string) {
+/** The hub a supervisor, hub coordinator or fellow profile belongs to, or null. */
+async function hubIdOfProfile(role: HubRole, profileId: string) {
   if (role === ImplementerRole.HUB_COORDINATOR) {
-    const row = await db.query.hubCoordinator.findFirst({
+    const coordinator = await db.query.hubCoordinator.findFirst({
       where: (hc, { eq }) => eq(hc.id, profileId),
       columns: { assignedHubId: true },
     });
-    return row?.assignedHubId ?? null;
+    return coordinator?.assignedHubId ?? null;
   }
-  const table = role === ImplementerRole.SUPERVISOR ? db.query.supervisor : db.query.fellow;
-  const row = await table.findFirst({
+  const profileQuery = role === ImplementerRole.SUPERVISOR ? db.query.supervisor : db.query.fellow;
+  const profile = await profileQuery.findFirst({
     where: (p, { eq }) => eq(p.id, profileId),
     columns: { hubId: true },
   });
-  return row?.hubId ?? null;
+  return profile?.hubId ?? null;
 }
 
 /**
@@ -29,14 +30,14 @@ async function hubOf(role: HubRole, profileId: string) {
  * their ids.
  */
 export async function requireHubRole(...allowedRoles: HubRole[]) {
-  const auth = await requireAuthRole(...allowedRoles);
-  const role = auth.role as HubRole;
-  const profileId = auth.identifier;
-  const hubId = profileId ? await hubOf(role, profileId) : null;
+  const membership = await requireAuthRole(...allowedRoles);
+  const role = membership.role as HubRole;
+  const profileId = membership.identifier;
+  const hubId = profileId ? await hubIdOfProfile(role, profileId) : null;
   if (!profileId || !hubId) {
     throw new ForbiddenRoleError("You have no assigned hub");
   }
-  return { userId: auth.userId, role, profileId, hubId };
+  return { userId: membership.userId, role, profileId, hubId };
 }
 
 /**
@@ -44,13 +45,13 @@ export async function requireHubRole(...allowedRoles: HubRole[]) {
  * the same message, so the error does not reveal which ids exist.
  */
 export async function requireSchoolInHub(schoolId: string | null | undefined, hubId: string) {
-  const row = schoolId
+  const schoolInHub = schoolId
     ? await db.query.school.findFirst({
         where: (s, { and, eq }) => and(eq(s.id, schoolId), eq(s.hubId, hubId)),
         columns: { id: true },
       })
     : undefined;
-  if (!row) {
+  if (!schoolInHub) {
     throw new Error("School not found");
   }
 }

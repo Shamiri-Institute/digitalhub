@@ -32,15 +32,15 @@ async function checkAuth() {
 
 /** Throws when the row was already deleted or belongs to another hub's school. */
 async function setArchivedAt(groupId: string, archivedAt: Date | null) {
-  const { hubId } = await requireHubRole(
+  const { hubId: callerHubId } = await requireHubRole(
     ImplementerRole.HUB_COORDINATOR,
     ImplementerRole.SUPERVISOR,
   );
-  const group = await db.query.interventionGroup.findFirst({
+  const groupToChange = await db.query.interventionGroup.findFirst({
     where: (g, { eq }) => eq(g.id, groupId),
     columns: { schoolId: true },
   });
-  await requireSchoolInHub(group?.schoolId, hubId);
+  await requireSchoolInHub(groupToChange?.schoolId, callerHubId);
 
   const [result] = await db
     .update(interventionGroup)
@@ -94,11 +94,11 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
   try {
     await checkAuth();
     const { schoolId, fellowId } = CreateGroupSchema.parse(data);
-    const { hubId } = await requireHubRole(
+    const { hubId: callerHubId } = await requireHubRole(
       ImplementerRole.HUB_COORDINATOR,
       ImplementerRole.SUPERVISOR,
     );
-    await requireSchoolInHub(schoolId, hubId);
+    await requireSchoolInHub(schoolId, callerHubId);
     const school = await db.query.school.findFirst({
       where: (s, { eq }) => eq(s.id, schoolId),
       with: { hub: { columns: { projectId: true } } },
