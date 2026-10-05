@@ -7,7 +7,7 @@ import { z } from "zod";
 import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
 import { db } from "#/db/client";
 import { fellow, interventionGroup, supervisor, weeklyFellowRatings } from "#/db/schema";
-import { DropoutFellowSchema, SupervisorSchema, WeeklyFellowRatingSchema } from "./schemas";
+import { SupervisorSchema, WeeklyFellowRatingSchema } from "./schemas";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
@@ -206,62 +206,6 @@ export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
   } catch (e) {
     console.error(e);
     return { success: false, message: "something went wrong" };
-  }
-}
-
-export async function dropoutFellowWithReason(
-  fellowId: (typeof fellow.$inferSelect)["id"],
-  dropoutReason: (typeof fellow.$inferSelect)["dropOutReason"],
-  revalidationPath: string,
-) {
-  try {
-    const supervisorProfile = await currentSupervisor();
-
-    if (!supervisorProfile) {
-      return {
-        success: false,
-        message: "User is not authorised",
-      };
-    }
-
-    const schema = DropoutFellowSchema.pick({
-      fellowId: true,
-      dropoutReason: true,
-    });
-
-    const data = schema.parse({
-      fellowId,
-      dropoutReason,
-    });
-
-    const [updated] = await db
-      .update(fellow)
-      .set({
-        droppedOut: true,
-        droppedOutAt: new Date(),
-        dropOutReason: data.dropoutReason,
-      })
-      .where(eq(fellow.id, data.fellowId))
-      .returning();
-    if (!updated) {
-      throw new Error(`Fellow ${data.fellowId} not found`);
-    }
-
-    revalidatePath(revalidationPath);
-    return {
-      success: true,
-      message: "Successfully dropped out the fellow",
-      fellow: updated,
-    };
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error(error.message);
-      return {
-        error: error.message,
-      };
-    }
-    console.error(error);
-    return { error: "Something went wrong" };
   }
 }
 

@@ -15,6 +15,7 @@ import {
   StudentDetailsSchema,
 } from "#/components/common/student/schemas";
 import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
 import {
   school,
   student,
@@ -22,6 +23,7 @@ import {
   studentGroupTransferTrail,
   studentReportingNotes,
 } from "#/db/schema";
+import { requireHubRole } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { generateStudentVisibleID } from "#/lib/utils";
 
@@ -31,6 +33,36 @@ async function checkAuth() {
     throw new Error("The session has not been authenticated");
   }
   return user;
+}
+
+type StudentRole =
+  | typeof ImplementerRole.FELLOW
+  | typeof ImplementerRole.SUPERVISOR
+  | typeof ImplementerRole.HUB_COORDINATOR;
+
+/**
+ * The caller and the student, after checking the caller may change the student: a fellow only the
+ * students of the groups they lead, a supervisor or hub coordinator the students of their hub's
+ * schools. These are the students each role's pages list.
+ */
+async function requireStudentAccess(studentId: string, ...roles: StudentRole[]) {
+  const caller = await requireHubRole(...roles);
+  const row = await db.query.student.findFirst({
+    where: (s, { eq }) => eq(s.id, studentId),
+    columns: { id: true, schoolId: true },
+    with: {
+      school: { columns: { hubId: true } },
+      assignedGroup: { columns: { leaderId: true } },
+    },
+  });
+  const allowed =
+    caller.role === ImplementerRole.FELLOW
+      ? row?.assignedGroup?.leaderId === caller.profileId
+      : row?.school?.hubId === caller.hubId;
+  if (!row || !allowed) {
+    throw new Error("Student not found");
+  }
+  return { caller, student: row };
 }
 
 const attendedFlag = (attended: string | undefined) =>
@@ -328,9 +360,13 @@ export async function markManyStudentsAttendance(
 
 export async function dropoutStudent(data: z.infer<typeof DropoutStudentSchema>) {
   try {
-    await checkAuth();
-
     const { studentId, mode, dropoutReason } = DropoutStudentSchema.parse(data);
+    await requireStudentAccess(
+      studentId,
+      ImplementerRole.FELLOW,
+      ImplementerRole.SUPERVISOR,
+      ImplementerRole.HUB_COORDINATOR,
+    );
     const [result] = await db
       .update(student)
       .set({
@@ -362,9 +398,9 @@ export async function dropoutStudent(data: z.infer<typeof DropoutStudentSchema>)
 
 export async function archiveStudent(data: z.infer<typeof ArchiveStudentSchema>) {
   try {
-    await checkAuth();
-
     const { studentId } = ArchiveStudentSchema.parse(data);
+    // Only hub coordinators see "Archive student" in the UI.
+    await requireStudentAccess(studentId, ImplementerRole.HUB_COORDINATOR);
     const [result] = await db
       .update(student)
       .set({ archivedAt: new Date() })
@@ -391,15 +427,15 @@ export async function submitStudentReportingNotes(
   data: z.infer<typeof StudentReportingNotesSchema>,
 ) {
   try {
-    const auth = await checkAuth();
-    const userId = auth.session.user.id;
-    if (!userId) {
-      throw new Error("The session has not been authenticated");
-    }
-
     const { studentId, notes } = StudentReportingNotesSchema.parse(data);
+    const { caller } = await requireStudentAccess(
+      studentId,
+      ImplementerRole.FELLOW,
+      ImplementerRole.SUPERVISOR,
+      ImplementerRole.HUB_COORDINATOR,
+    );
 
-    await db.insert(studentReportingNotes).values({ studentId, notes, addedBy: userId });
+    await db.insert(studentReportingNotes).values({ studentId, notes, addedBy: caller.userId });
     return {
       success: true,
       message: "Successfully submitted reporting notes",
@@ -424,7 +460,35 @@ export async function checkExistingStudents(admissionNumber: string, schoolId: s
 
 export async function transferStudentToGroup(id: string, groupId: string) {
   try {
-    await checkAuth();
+    // The student usually sits in someone else's group (a fellow pulls a matched student into
+    // their own), so the check is on the target group: it must be in the student's school and,
+    // for a fellow, be one they lead.
+    const caller = await requireHubRole(
+      ImplementerRole.FELLOW,
+      ImplementerRole.SUPERVISOR,
+      ImplementerRole.HUB_COORDINATOR,
+    );
+    const [group, studentRow] = await Promise.all([
+      db.query.interventionGroup.findFirst({
+        where: (g, { eq }) => eq(g.id, groupId),
+        columns: { groupName: true, schoolId: true, leaderId: true },
+        with: { school: { columns: { hubId: true } } },
+      }),
+      db.query.student.findFirst({
+        where: (s, { eq }) => eq(s.id, id),
+        columns: { schoolId: true },
+      }),
+    ]);
+    const allowed =
+      group !== undefined &&
+      studentRow?.schoolId === group.schoolId &&
+      (caller.role === ImplementerRole.FELLOW
+        ? group.leaderId === caller.profileId
+        : group.school.hubId === caller.hubId);
+    if (!allowed) {
+      throw new Error("Student or group not found");
+    }
+
     const [updated] = await db
       .update(student)
       .set({ assignedGroupId: groupId })
@@ -433,14 +497,10 @@ export async function transferStudentToGroup(id: string, groupId: string) {
     if (!updated) {
       throw new Error(`Student ${id} not found`);
     }
-    const group = await db.query.interventionGroup.findFirst({
-      where: (g, { eq }) => eq(g.id, groupId),
-      columns: { groupName: true },
-    });
 
     return {
       success: true,
-      message: `Successfully transferred ${updated.studentName} to group ${group?.groupName}`,
+      message: `Successfully transferred ${updated.studentName} to group ${group.groupName}`,
     };
   } catch {
     return { error: "Something went wrong while adding student to the group." };
@@ -497,8 +557,10 @@ export async function moveStudentToSchool(data: z.infer<typeof MoveStudentToScho
     const studentRow = await db.query.student.findFirst({
       where: (s, { eq }) => eq(s.id, studentId),
       columns: { id: true, studentName: true, schoolId: true, assignedGroupId: true },
+      with: { school: { columns: { hubId: true } } },
     });
-    if (!studentRow) {
+    // The target group is checked against the hub below; the student must come from it too.
+    if (!studentRow || studentRow.school?.hubId !== hubId) {
       throw new Error(`Student ${studentId} not found`);
     }
 

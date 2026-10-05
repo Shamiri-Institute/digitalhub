@@ -12,6 +12,7 @@ import {
 import { db, isUniqueViolation } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fellowGroupReport, interventionGroup, interventionGroupReport } from "#/db/schema";
+import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { getSchoolInitials } from "#/lib/utils";
 
@@ -29,8 +30,18 @@ async function checkAuth() {
   return user;
 }
 
-/** Throws when the row was already deleted. */
+/** Throws when the row was already deleted or belongs to another hub's school. */
 async function setArchivedAt(groupId: string, archivedAt: Date | null) {
+  const { hubId } = await requireHubRole(
+    ImplementerRole.HUB_COORDINATOR,
+    ImplementerRole.SUPERVISOR,
+  );
+  const group = await db.query.interventionGroup.findFirst({
+    where: (g, { eq }) => eq(g.id, groupId),
+    columns: { schoolId: true },
+  });
+  await requireSchoolInHub(group?.schoolId, hubId);
+
   const [result] = await db
     .update(interventionGroup)
     .set({ archivedAt })
@@ -83,6 +94,11 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
   try {
     await checkAuth();
     const { schoolId, fellowId } = CreateGroupSchema.parse(data);
+    const { hubId } = await requireHubRole(
+      ImplementerRole.HUB_COORDINATOR,
+      ImplementerRole.SUPERVISOR,
+    );
+    await requireSchoolInHub(schoolId, hubId);
     const school = await db.query.school.findFirst({
       where: (s, { eq }) => eq(s.id, schoolId),
       with: { hub: { columns: { projectId: true } } },

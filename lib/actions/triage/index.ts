@@ -191,7 +191,7 @@ export async function updateTriageEvent(
   studentAttendanceId?: number,
 ): Promise<{ success: boolean; message: string; data?: TriageEventWithRelations }> {
   try {
-    const { userId } = await getFellowContext();
+    const { fellowId, userId } = await getFellowContext();
     const parsed = TriageEventSchema.parse(data);
     if (!data.id) {
       return { success: false, message: "Triage event ID is required for update." };
@@ -200,7 +200,8 @@ export async function updateTriageEvent(
     const existing = await db.query.triageEvent.findFirst({
       where: (t, { eq }) => eq(t.id, data.id),
     });
-    if (!existing) {
+    // A fellow edits only the events they documented; another fellow's event reads as missing.
+    if (!existing || existing.fellowId !== fellowId) {
       throw new Error("Triage event not found.");
     }
 
