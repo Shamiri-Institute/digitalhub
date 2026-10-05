@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { reimbursementRequest } from "#/db/schema";
@@ -65,11 +65,15 @@ export async function loadSupervisorExpenses(
   });
 }
 
-export async function deleteSupervisorExpense(id: string) {
+/**
+ * The write helpers below act only on a request inside `scope`, the same condition the caller
+ * passes to `loadSupervisorExpenses`. A request outside it reads as not found.
+ */
+export async function deleteSupervisorExpense(id: string, scope: SQL | undefined) {
   try {
     const deleted = await db
       .delete(reimbursementRequest)
-      .where(eq(reimbursementRequest.id, id))
+      .where(and(eq(reimbursementRequest.id, id), scope))
       .returning({ id: reimbursementRequest.id });
     if (deleted.length === 0) {
       throw new Error(`Expense ${id} not found`);
@@ -88,12 +92,12 @@ export async function deleteSupervisorExpense(id: string) {
   }
 }
 
-export async function approveSupervisorExpenseRequest(id: string) {
+export async function approveSupervisorExpenseRequest(id: string, scope: SQL | undefined) {
   try {
     const updated = await db
       .update(reimbursementRequest)
       .set({ status: "APPROVED" })
-      .where(eq(reimbursementRequest.id, id))
+      .where(and(eq(reimbursementRequest.id, id), scope))
       .returning({ id: reimbursementRequest.id });
     if (updated.length === 0) {
       throw new Error(`Expense ${id} not found`);
@@ -160,6 +164,7 @@ export async function createSupervisorExpense(
 export async function updateSupervisorExpenseRequest(
   id: string,
   data: Omit<SupervisorExpenseInput, "supervisor">,
+  scope: SQL | undefined,
 ) {
   try {
     const updated = await db
@@ -175,7 +180,7 @@ export async function updateSupervisorExpenseRequest(
         mpesaName: data.mpesaName,
         mpesaNumber: data.mpesaNumber,
       })
-      .where(eq(reimbursementRequest.id, id))
+      .where(and(eq(reimbursementRequest.id, id), scope))
       .returning({ id: reimbursementRequest.id });
     if (updated.length === 0) {
       throw new Error(`Expense ${id} not found`);
