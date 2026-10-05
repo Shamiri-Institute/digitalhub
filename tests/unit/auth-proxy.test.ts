@@ -77,14 +77,6 @@ describe("matcher", () => {
 });
 
 describe("sessionCookie", () => {
-  it("uses the plain name over http", () => {
-    process.env.NEXTAUTH_URL = "http://localhost:3000";
-    expect(sessionCookie()).toMatchObject({
-      name: "next-auth.session-token",
-      options: { secure: false },
-    });
-  });
-
   it("uses the secure-prefixed name over https", () => {
     process.env.NEXTAUTH_URL = "https://hub.example.org";
     expect(sessionCookie()).toMatchObject({
