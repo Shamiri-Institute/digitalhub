@@ -20,7 +20,7 @@ export default async function HubCoordinatorSchedulePage() {
   const hubId = coordinator.profile.assignedHubId;
 
   const values = await Promise.all([
-    fetchSchoolData(hubId),
+    fetchSchoolData(),
     getHubScheduleStats(hubId),
     fetchScheduleSupervisors(hubId),
     fetchHubFellowRatings(hubId),

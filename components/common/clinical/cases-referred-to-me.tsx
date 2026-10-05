@@ -1,6 +1,9 @@
 "use client";
 
-import { AcceptRefferedClinicalCase, RejectRefferedClinicalCase } from "#/app/actions";
+import {
+  acceptReferredClinicalCase,
+  rejectReferredClinicalCase,
+} from "#/app/(platform)/sc/clinical/action";
 import { Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { toastOnError, useToast } from "#/components/ui/use-toast";
@@ -10,13 +13,7 @@ type CasesType = typeof clinicalScreeningInfo.$inferSelect & {
   student: typeof student.$inferSelect;
 };
 
-export function CasesReferredToMe({
-  cases,
-  currentSupervisorId,
-}: {
-  cases: CasesType[];
-  currentSupervisorId: string | undefined;
-}) {
+export function CasesReferredToMe({ cases }: { cases: CasesType[] }) {
   return (
     <div className="w-full">
       <span className="text-sm font-medium">Cases referred to you : {cases.length}</span>
@@ -25,8 +22,6 @@ export function CasesReferredToMe({
           key={stud.id}
           name={stud?.student.studentName}
           caseId={stud.id}
-          currentSupervisorId={currentSupervisorId || ""}
-          referredToSupervisorId={stud.referredToSupervisorId}
           referralNotes={stud.referralNotes}
         />
       ))}
@@ -37,48 +32,30 @@ export function CasesReferredToMe({
 export function RefferedCasesTab({
   name,
   caseId,
-  currentSupervisorId,
-  referredToSupervisorId,
   referralNotes,
 }: {
   name: string | null;
   caseId: string;
-  currentSupervisorId: string;
-  referredToSupervisorId: string | null;
   referralNotes: string | null;
 }) {
   const { toast } = useToast();
 
   const handleAcceptReferredCase = async () => {
-    if (caseId) {
-      try {
-        await AcceptRefferedClinicalCase(currentSupervisorId, referredToSupervisorId, caseId);
-        toast({
-          variant: "default",
-          title: "Referred case accepted",
-        });
-      } catch {
-        toast({
-          variant: "destructive",
-          title: "Error accepting referred case. Please try again",
-        });
-      }
-    }
+    const response = await acceptReferredClinicalCase(caseId);
+    toast(
+      response.success
+        ? { variant: "default", title: "Referred case accepted" }
+        : { variant: "destructive", title: "Error accepting referred case. Please try again" },
+    );
   };
 
   const handleRejectReferredCase = async () => {
-    try {
-      await RejectRefferedClinicalCase(caseId);
-      toast({
-        variant: "default",
-        title: "Referred case rejected",
-      });
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Error rejecting referred case. Please try again",
-      });
-    }
+    const response = await rejectReferredClinicalCase(caseId);
+    toast(
+      response.success
+        ? { variant: "default", title: "Referred case rejected" }
+        : { variant: "destructive", title: "Error rejecting referred case. Please try again" },
+    );
   };
 
   function handleWordLimit(text: string | null, limit: number) {
@@ -100,6 +77,7 @@ export function RefferedCasesTab({
           type="button"
           onClick={toastOnError(handleAcceptReferredCase)}
           className="cursor-pointer"
+          aria-label="Accept referred case"
         >
           <Icons.check className="mx-2 h-6 w-6 align-baseline text-muted-green xl:h-7 xl:w-7" />
         </button>
@@ -107,6 +85,7 @@ export function RefferedCasesTab({
           type="button"
           onClick={toastOnError(handleRejectReferredCase)}
           className="cursor-pointer"
+          aria-label="Reject referred case"
         >
           <Icons.xIcon className="mx-2 h-6 w-6 align-baseline text-shamiri-red xl:h-7 xl:w-7" />
         </button>

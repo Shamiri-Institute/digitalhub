@@ -19,17 +19,10 @@ export default async function SupervisorChartsWrapper({
       return null;
     }
 
-    const dropoutData = fetchSupervisorDropoutReasons(coordinator.assignedHubId);
-
-    const supervisorDataCompletenessPercentage = fetchSupervisorDataCompletenessData(
-      coordinator?.assignedHubId,
-    );
-
-    const supervisorsSessionRatings = fetchSupervisorSessionRatingAverages(
-      coordinator?.assignedHubId,
-    );
-
-    const supervisorAttendanceData = fetchSupervisorAttendanceData(coordinator?.assignedHubId);
+    const dropoutData = fetchSupervisorDropoutReasons();
+    const supervisorDataCompletenessPercentage = fetchSupervisorDataCompletenessData();
+    const supervisorsSessionRatings = fetchSupervisorSessionRatingAverages();
+    const supervisorAttendanceData = fetchSupervisorAttendanceData();
 
     const data = await Promise.all([
       dropoutData,

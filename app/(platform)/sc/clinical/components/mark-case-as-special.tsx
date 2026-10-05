@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { flagClinicalCaseForFollowUp } from "#/app/actions";
+import { flagClinicalCaseForFollowUp } from "#/app/(platform)/sc/clinical/action";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -28,12 +28,10 @@ export default function MarkCaseAsSpecial({
   caseId,
   reason,
   children,
-  role,
 }: {
   caseId: string;
   reason: string | null;
   children: React.ReactNode;
-  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const { toast } = useToast();
@@ -50,7 +48,6 @@ export default function MarkCaseAsSpecial({
       const response = await flagClinicalCaseForFollowUp({
         caseId,
         reason: data.reason,
-        role,
       });
 
       if (response.success) {

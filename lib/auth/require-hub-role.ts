@@ -1,5 +1,8 @@
+import { eq, or } from "drizzle-orm";
+
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
+import { fellow, supervisor } from "#/db/schema";
 import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
 
 type HubRole =
@@ -54,4 +57,26 @@ export async function requireSchoolInHub(schoolId: string | null | undefined, hu
   if (!schoolInHub) {
     throw new Error("School not found");
   }
+}
+
+/**
+ * The ids of the fellows a caller from requireHubRole may see in reports. A supervisor sees the
+ * fellows they supervise. A hub coordinator sees the fellows of their hub and the fellows that a
+ * supervisor of their hub supervises, because hubs borrow fellows from other hubs.
+ */
+export function fellowsInCallerScope(caller: Awaited<ReturnType<typeof requireHubRole>>) {
+  if (caller.role === ImplementerRole.SUPERVISOR) {
+    return db
+      .select({ id: fellow.id })
+      .from(fellow)
+      .where(eq(fellow.supervisorId, caller.profileId));
+  }
+  if (caller.role === ImplementerRole.HUB_COORDINATOR) {
+    return db
+      .select({ id: fellow.id })
+      .from(fellow)
+      .leftJoin(supervisor, eq(fellow.supervisorId, supervisor.id))
+      .where(or(eq(fellow.hubId, caller.hubId), eq(supervisor.hubId, caller.hubId)));
+  }
+  return db.select({ id: fellow.id }).from(fellow).where(eq(fellow.id, caller.profileId));
 }

@@ -66,11 +66,7 @@ export default function ViewEditWeeklyFellowEvaluation({
 
   const onSubmit = async (data: WeeklyEvaluationFormValues) => {
     try {
-      const response = await updateWeeklyEvaluation(
-        weeklyFellowEvaluation.userId,
-        weeklyFellowEvaluation.evaluationId,
-        data,
-      );
+      const response = await updateWeeklyEvaluation(weeklyFellowEvaluation.evaluationId, data);
 
       if (response.success) {
         toast({

@@ -7,9 +7,7 @@ import { db } from "#/db/client";
 export async function loadWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluation[]> {
   try {
     const supervisor = await currentSupervisor();
-
-    const userId = supervisor?.session.user.id;
-    if (!supervisor || !userId) {
+    if (!supervisor) {
       throw new Error("Supervisor not found");
     }
 
@@ -34,7 +32,6 @@ export async function loadWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluati
           fellow.weeklyFellowRatings.reduce((a, b) => a + (b?.dressingAndGroomingRating ?? 0), 0) /
           fellow.weeklyFellowRatings.length,
         week: fellow.weeklyFellowRatings.map((rating) => ({
-          userId,
           evaluationId: rating.id,
           week: rating.week,
           behaviour: rating.behaviourRating ?? 0,

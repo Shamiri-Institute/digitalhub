@@ -23,6 +23,8 @@ import {
   user,
   weeklyTeamMeetingReport,
 } from "#/db/schema";
+import { ImplementerRole } from "#/db/enums";
+import { requireHubRole } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 
 export async function submitWeeklyTeamMeeting(data: z.infer<typeof WeeklyHubTeamMeetingSchema>) {
@@ -50,6 +52,12 @@ export async function submitWeeklyTeamMeeting(data: z.infer<typeof WeeklyHubTeam
       message: "Something went wrong. Please try again",
     };
   }
+}
+
+/** The signed-in coordinator's hub. The chart reads below never take a hub id from the client. */
+async function requireCoordinatorHub() {
+  const { hubId: coordinatorHubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+  return coordinatorHubId;
 }
 
 async function checkAuth() {
@@ -173,37 +181,6 @@ export async function submitSupervisorComplaint(data: z.infer<typeof SubmitCompl
       success: false,
       message: "Something went wrong while trying to submit a complaint",
     };
-  }
-}
-
-export async function getSessionAndSupervisorAttendances({
-  projectId,
-  supervisorId,
-  schoolId,
-}: {
-  projectId: string;
-  supervisorId: string;
-  schoolId: string;
-}) {
-  try {
-    const data = await db.query.interventionSession.findMany({
-      where: (s, { and, eq }) =>
-        and(eq(s.schoolId, schoolId), eq(s.projectId, projectId), eq(s.occurred, true)),
-      with: {
-        supervisorAttendances: {
-          where: (a, { eq }) => eq(a.supervisorId, supervisorId),
-        },
-      },
-      orderBy: (s, { asc }) => asc(s.sessionDate),
-    });
-    return {
-      success: true,
-      message: "Successfully fetched supervisor attendances.",
-      data,
-    };
-  } catch (error: unknown) {
-    console.error(error);
-    return { error: "Something went wrong while scheduling a new session" };
   }
 }
 
@@ -526,7 +503,8 @@ export type SupervisorDropoutReasonsGraphData = {
   value: number;
 };
 
-export async function fetchSupervisorDropoutReasons(hudId: string) {
+export async function fetchSupervisorDropoutReasons() {
+  const coordinatorHubId = await requireCoordinatorHub();
   const { rows: dropoutData } = await db.execute<SupervisorDropoutReasonsGraphData>(sql`
     SELECT
       COUNT(*)::int AS value,
@@ -535,7 +513,7 @@ export async function fetchSupervisorDropoutReasons(hudId: string) {
     WHERE
       drop_out_reason IS NOT NULL
       AND dropped_out = true
-      AND hub_id = ${hudId}
+      AND hub_id = ${coordinatorHubId}
     GROUP BY
       drop_out_reason
   `);
@@ -547,7 +525,8 @@ export async function fetchSupervisorDropoutReasons(hudId: string) {
   return dropoutData;
 }
 
-export async function fetchSupervisorDataCompletenessData(hubId: string) {
+export async function fetchSupervisorDataCompletenessData() {
+  const coordinatorHubId = await requireCoordinatorHub();
   const {
     rows: [supervisorData],
   } = await db.execute<{ percentage: number | string | null }>(sql`
@@ -561,7 +540,7 @@ export async function fetchSupervisorDataCompletenessData(hubId: string) {
         + (CASE WHEN personal_email IS NOT NULL THEN 1 ELSE 0 END)
       ) / 6.0 * 100) AS percentage
     FROM supervisors
-    WHERE hub_id = ${hubId}
+    WHERE hub_id = ${coordinatorHubId}
   `);
 
   if (!supervisorData) {
@@ -583,7 +562,8 @@ export type SessionRatingAverages = {
   workload: number;
 };
 
-export async function fetchSupervisorSessionRatingAverages(hubId: string) {
+export async function fetchSupervisorSessionRatingAverages() {
+  const coordinatorHubId = await requireCoordinatorHub();
   const { rows: ratingAverages } = await db.execute<{
     session_type: "s0" | "s1" | "s2" | "s3" | "s4";
     student_behavior: number | string | null;
@@ -599,7 +579,7 @@ export async function fetchSupervisorSessionRatingAverages(hubId: string) {
     INNER JOIN supervisors AS sup ON isr.supervisor_id = sup.id
     INNER JOIN intervention_sessions AS ses ON isr.session_id = ses.id
     WHERE
-      sup.hub_id = ${hubId}
+      sup.hub_id = ${coordinatorHubId}
     GROUP BY
       ses.session_type
     ORDER BY
@@ -624,7 +604,8 @@ export type SupervisorAttendanceData = {
   attended: number;
 };
 
-export async function fetchSupervisorAttendanceData(hubId: string) {
+export async function fetchSupervisorAttendanceData() {
+  const coordinatorHubId = await requireCoordinatorHub();
   const { rows: supervisorAttendanceData } = await db.execute<{
     supervisor_name: string;
     attended: number | string | null;
@@ -634,7 +615,7 @@ export async function fetchSupervisorAttendanceData(hubId: string) {
       COUNT(sa.attended)::integer AS attended
     FROM supervisor_attendances sa
     INNER JOIN supervisors sup ON sa.supervisor_id = sup.id
-    WHERE sup.hub_id = ${hubId} AND (sa.attended IS NOT NULL AND sa.attended = true)
+    WHERE sup.hub_id = ${coordinatorHubId} AND (sa.attended IS NOT NULL AND sa.attended = true)
     GROUP BY sup.supervisor_name
   `);
 

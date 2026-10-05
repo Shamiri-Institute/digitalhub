@@ -15,6 +15,5 @@ export type WeeklyFellowEvaluation = {
     dressingGroomingNotes: string | null;
     attendancePunctuality: number;
     attendancePunctualityNotes: string | null;
-    userId: string;
   }[];
 };

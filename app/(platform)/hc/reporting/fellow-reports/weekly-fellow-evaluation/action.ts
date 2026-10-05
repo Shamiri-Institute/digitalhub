@@ -12,8 +12,6 @@ export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvalu
       throw new Error("Hub Coordinator not found");
     }
 
-    const userId = hubCoordinator.session.user.id;
-
     const hubId = hubCoordinator.profile?.assignedHubId;
     if (!hubId) {
       await signOut({ callbackUrl: "/login" });
@@ -49,7 +47,6 @@ export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvalu
           dressingGroomingNotes: rating.dressingAndGroomingNotes,
           attendancePunctuality: rating.punctualityRating ?? 0,
           attendancePunctualityNotes: rating.punctualityNotes,
-          userId,
         })),
       };
     });

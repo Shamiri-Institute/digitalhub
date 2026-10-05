@@ -1,12 +1,12 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-import { getCurrentPersonnel } from "#/app/auth";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { fellow, fellowComplaints } from "#/db/schema";
+import { fellowComplaints } from "#/db/schema";
+import { fellowsInCallerScope, requireHubRole } from "#/lib/auth/require-hub-role";
 
 export type FellowComplaintsType = Awaited<ReturnType<typeof loadFellowComplaints>>[number];
 
@@ -23,25 +23,12 @@ type FellowComplaintsGroupedByFellow = {
   }[];
 };
 
-export type LoadFellowComplaintsOptions =
-  | { scope: "supervisor"; supervisorId: string }
-  | { scope: "hub"; hubId: string }
-  | { scope?: "all" };
-
-export async function loadFellowComplaints(options?: LoadFellowComplaintsOptions) {
+/** Complaints about the fellows the caller supervises, or about their hub's fellows. */
+export async function loadFellowComplaints() {
+  const caller = await requireHubRole(ImplementerRole.SUPERVISOR, ImplementerRole.HUB_COORDINATOR);
   try {
-    const fellowsInScope =
-      options?.scope === "supervisor"
-        ? db
-            .select({ id: fellow.id })
-            .from(fellow)
-            .where(eq(fellow.supervisorId, options.supervisorId))
-        : options?.scope === "hub"
-          ? db.select({ id: fellow.id }).from(fellow).where(eq(fellow.hubId, options.hubId))
-          : undefined;
-
     const complaints = await db.query.fellowComplaints.findMany({
-      where: (c, { inArray }) => (fellowsInScope ? inArray(c.fellowId, fellowsInScope) : undefined),
+      where: (c, { inArray }) => inArray(c.fellowId, fellowsInCallerScope(caller)),
       with: {
         supervisor: true,
         fellow: { with: { supervisor: true } },
@@ -91,18 +78,18 @@ export async function loadFellowComplaints(options?: LoadFellowComplaintsOptions
 
 export async function editFellowComplaint(complaintId: string, complaint: string) {
   try {
-    const user = await getCurrentPersonnel();
-    if (user && user?.session?.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR) {
-      return {
-        success: false,
-        message: "You are not authorized to perform this action",
-      };
-    }
+    const coordinator = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
 
+    // A complaint about a fellow outside the coordinator's scope reads as missing.
     const updated = await db
       .update(fellowComplaints)
       .set({ complaint })
-      .where(eq(fellowComplaints.id, complaintId))
+      .where(
+        and(
+          eq(fellowComplaints.id, complaintId),
+          inArray(fellowComplaints.fellowId, fellowsInCallerScope(coordinator)),
+        ),
+      )
       .returning({ id: fellowComplaints.id });
     if (updated.length === 0) {
       throw new Error(`Complaint ${complaintId} not found`);

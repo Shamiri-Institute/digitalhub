@@ -44,9 +44,14 @@ const clinicalCasesCount = (st: { id: unknown }) =>
     "clinical_cases_count",
   );
 
-export async function fetchSchoolData(hubId: string) {
+/** The schools of the caller's hub. Supervisors and hub coordinators both list them. */
+export async function fetchSchoolData() {
+  const { hubId: callerHubId } = await requireHubRole(
+    ImplementerRole.SUPERVISOR,
+    ImplementerRole.HUB_COORDINATOR,
+  );
   return db.query.school.findMany({
-    where: (s, { eq }) => eq(s.hubId, hubId),
+    where: (s, { eq }) => eq(s.hubId, callerHubId),
     with: {
       assignedSupervisor: true,
       interventionSessions: { with: { sessionRatings: true, session: true } },
@@ -63,7 +68,8 @@ export async function revalidatePageAction(pathname: string, mode?: "layout" | "
   revalidatePath(pathname, mode);
 }
 
-export async function fetchSchoolDataCompletenessData(hubId: string, schoolId?: string) {
+export async function fetchSchoolDataCompletenessData(schoolId?: string) {
+  const coordinatorHubId = await requireCoordinatorHub();
   // TODO: uncomment the school_sub_county query and adjust division from 6.0 -> 7.0
   const {
     rows: [schoolAttendanceData],
@@ -93,7 +99,7 @@ export async function fetchSchoolDataCompletenessData(hubId: string, schoolId?: 
           ) / 6.0 * 100`
       } AS percentage
     FROM schools
-    WHERE hub_id = ${hubId}
+    WHERE hub_id = ${coordinatorHubId}
       ${schoolId ? sql`AND id = ${schoolId}` : sql.empty()}
   `);
 
@@ -114,7 +120,8 @@ export type DropoutReasonsGraphData = {
   value: number;
 };
 
-export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
+export async function fetchDropoutReasons(schoolId?: string) {
+  const coordinatorHubId = await requireCoordinatorHub();
   const { rows: dropoutData } = await db.execute<{
     name: string;
     value: number | string | null;
@@ -126,7 +133,7 @@ export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
     WHERE
       dropout_reason IS NOT NULL
       AND dropped_out = true
-      AND hub_id = ${hubId}
+      AND hub_id = ${coordinatorHubId}
       ${schoolId ? sql`AND id = ${schoolId}` : sql.empty()}
     GROUP BY
       dropout_reason
@@ -140,15 +147,20 @@ export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
   return mapped;
 }
 
-/** Updates the school and records the change; returns the school with its dropout history. */
-/** The coordinator's hub, after checking the school is in it; other hubs' schools read as missing. */
+/** The signed-in hub coordinator's hub. The reads below never take a hub id from the client. */
+async function requireCoordinatorHub() {
+  const { hubId: coordinatorHubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+  return coordinatorHubId;
+}
+
 /** The coordinator's hub id, after checking the school is in that hub. */
 async function requireSchoolInCoordinatorHub(schoolId: string) {
-  const { hubId: coordinatorHubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+  const coordinatorHubId = await requireCoordinatorHub();
   await requireSchoolInHub(schoolId, coordinatorHubId);
   return coordinatorHubId;
 }
 
+/** Updates the school and records the change; returns the school with its dropout history. */
 function setSchoolDropout(
   schoolId: string,
   data: { dropoutReason: string | null; droppedOut: boolean; droppedOutAt: Date | null },
@@ -239,9 +251,13 @@ export async function undoDropoutSchool(schoolId: string) {
 
 export async function submitWeeklyHubReport(data: z.infer<typeof WeeklyHubReportSchema>) {
   try {
+    // The hub and the author come from the session, never from the request.
+    const coordinator = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
     const parsedData = WeeklyHubReportSchema.parse(data);
 
-    await db.insert(weeklyHubReport).values(parsedData);
+    await db
+      .insert(weeklyHubReport)
+      .values({ ...parsedData, hubId: coordinator.hubId, submittedBy: coordinator.profileId });
 
     // TODO:
     // this should revalidate the reports page
@@ -262,7 +278,8 @@ export type SessionRatingAverages = {
   workload: number | string | null;
 };
 
-export async function fetchSessionRatingAverages(hubId: string, schoolId?: string) {
+export async function fetchSessionRatingAverages(schoolId?: string) {
+  const coordinatorHubId = await requireCoordinatorHub();
   const { rows: ratingAverages } = await db.execute<{
     session_type: "s0" | "s1" | "s2" | "s3" | "s4";
     student_behavior: number | string | null;
@@ -281,7 +298,7 @@ export async function fetchSessionRatingAverages(hubId: string, schoolId?: strin
         INNER JOIN supervisors AS sup ON isr.supervisor_id = sup.id
         INNER JOIN intervention_sessions AS ses ON isr.session_id = ses.id
         WHERE
-          sup.hub_id = ${hubId}
+          sup.hub_id = ${coordinatorHubId}
           AND ses.school_id = ${schoolId}
         GROUP BY
           ses.session_type
@@ -298,7 +315,7 @@ export async function fetchSessionRatingAverages(hubId: string, schoolId?: strin
         INNER JOIN supervisors AS sup ON isr.supervisor_id = sup.id
         INNER JOIN intervention_sessions AS ses ON isr.session_id = ses.id
         WHERE
-          sup.hub_id = ${hubId}
+          sup.hub_id = ${coordinatorHubId}
         GROUP BY
           ses.session_type
         ORDER BY
@@ -327,7 +344,8 @@ export type SchoolAttendances = {
   count_attendance_unmarked: number;
 };
 
-export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
+export async function fetchSchoolAttendances(schoolId?: string) {
+  const coordinatorHubId = await requireCoordinatorHub();
   const {
     rows: [schoolCount],
   } = await db.execute<{
@@ -338,7 +356,7 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
     FROM
       schools
     WHERE
-      hub_id = ${hubId}
+      hub_id = ${coordinatorHubId}
       ${schoolId ? sql`AND id = ${schoolId}` : sql.empty()}
   `);
 
@@ -356,7 +374,7 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
     LEFT JOIN schools ON sa.school_id = schools.id
     LEFT JOIN intervention_sessions ON sa.session_id = intervention_sessions.id
     WHERE
-      schools.hub_id = ${hubId}
+      schools.hub_id = ${coordinatorHubId}
       ${schoolId ? sql`AND schools.id = ${schoolId}` : sql.empty()}
     GROUP BY
       session_type
@@ -426,9 +444,14 @@ export async function editSchoolInformation(
   }
 }
 
-export async function fetchHubSupervisors({ hubId }: { hubId: string }) {
+/** The supervisors of the caller's hub. Supervisors and hub coordinators both list them. */
+export async function fetchHubSupervisors() {
+  const { hubId: callerHubId } = await requireHubRole(
+    ImplementerRole.SUPERVISOR,
+    ImplementerRole.HUB_COORDINATOR,
+  );
   return db.query.supervisor.findMany({
-    where: (s, { eq }) => eq(s.hubId, hubId),
+    where: (s, { eq }) => eq(s.hubId, callerHubId),
   });
 }
 

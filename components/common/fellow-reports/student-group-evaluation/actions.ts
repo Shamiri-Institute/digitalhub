@@ -1,10 +1,12 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
+import { z } from "zod";
 
 import { db } from "#/db/client";
-import { fellow, interventionGroup, interventionGroupReport } from "#/db/schema";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import { ImplementerRole } from "#/db/enums";
+import { interventionGroup, interventionGroupReport } from "#/db/schema";
+import { fellowsInCallerScope, requireHubRole } from "#/lib/auth/require-hub-role";
 
 export type StudentGroupEvaluationType = {
   id: string;
@@ -23,34 +25,20 @@ export type StudentGroupEvaluationType = {
   }[];
 };
 
-export type LoadStudentGroupEvaluationsOptions =
-  | { scope: "supervisor"; supervisorId: string }
-  | { scope: "hub"; hubId: string }
-  | { scope?: "all" };
+type ReportCaller = Awaited<ReturnType<typeof requireHubRole>>;
+
+/** The groups led by a fellow in the caller's scope; their reports are the ones the caller sees. */
+function groupsInCallerScope(caller: ReportCaller) {
+  return db
+    .select({ id: interventionGroup.id })
+    .from(interventionGroup)
+    .where(inArray(interventionGroup.leaderId, fellowsInCallerScope(caller)));
+}
 
 /** Group reports with the group, its leader and the session. */
-function fetchEvaluations(options?: LoadStudentGroupEvaluationsOptions) {
-  const leadersInScope =
-    options?.scope === "supervisor"
-      ? db
-          .select({ id: fellow.id })
-          .from(fellow)
-          .where(eq(fellow.supervisorId, options.supervisorId))
-      : options?.scope === "hub"
-        ? db.select({ id: fellow.id }).from(fellow).where(eq(fellow.hubId, options.hubId))
-        : undefined;
-
+function fetchEvaluations(caller: ReportCaller) {
   return db.query.interventionGroupReport.findMany({
-    where: (r, { inArray }) =>
-      leadersInScope
-        ? inArray(
-            r.groupId,
-            db
-              .select({ id: interventionGroup.id })
-              .from(interventionGroup)
-              .where(inArray(interventionGroup.leaderId, leadersInScope)),
-          )
-        : undefined,
+    where: (r, { inArray }) => inArray(r.groupId, groupsInCallerScope(caller)),
     with: {
       group: { with: { leader: true } },
       session: true,
@@ -109,10 +97,10 @@ const calculateAverage = (numbers: number[]): number => {
   return Number((sum / validNumbers.length).toFixed(1));
 };
 
-export async function loadStudentGroupEvaluations(options?: LoadStudentGroupEvaluationsOptions) {
-  await requireAuthRole();
+export async function loadStudentGroupEvaluations() {
+  const caller = await requireHubRole(ImplementerRole.SUPERVISOR, ImplementerRole.HUB_COORDINATOR);
   try {
-    const evaluations = await fetchEvaluations(options);
+    const evaluations = await fetchEvaluations(caller);
 
     return transformEvaluationData(evaluations);
   } catch (error) {
@@ -121,16 +109,30 @@ export async function loadStudentGroupEvaluations(options?: LoadStudentGroupEval
   }
 }
 
+// Only the comments are editable; the group, session and ratings stay as the fellow reported them.
+const EditStudentGroupEvaluationSchema = z.object({
+  engagementComment: z.string(),
+  cooperationComment: z.string(),
+  contentComment: z.string(),
+});
+
 export async function editStudentGroupEvaluation(
   evaluationId: string,
-  data: Partial<typeof interventionGroupReport.$inferInsert>,
+  data: z.infer<typeof EditStudentGroupEvaluationSchema>,
 ) {
-  await requireAuthRole();
+  const caller = await requireHubRole(ImplementerRole.SUPERVISOR, ImplementerRole.HUB_COORDINATOR);
   try {
+    const comments = EditStudentGroupEvaluationSchema.parse(data);
+    // A report on a group outside the caller's scope reads as missing.
     const updated = await db
       .update(interventionGroupReport)
-      .set(data)
-      .where(eq(interventionGroupReport.id, evaluationId))
+      .set(comments)
+      .where(
+        and(
+          eq(interventionGroupReport.id, evaluationId),
+          inArray(interventionGroupReport.groupId, groupsInCallerScope(caller)),
+        ),
+      )
       .returning({ id: interventionGroupReport.id });
     if (updated.length === 0) {
       throw new Error(`Evaluation ${evaluationId} not found`);
