@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import type { BrowserContext } from "@playwright/test";
+import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { createSession } from "#/lib/auth/session";
@@ -45,7 +46,29 @@ export async function generateSessionToken(email: string) {
  */
 export async function signInAs(context: BrowserContext, role: Role) {
   const user = await pickUser(role);
-  const token = await generateSessionToken(user.email);
+  await signInWithEmail(context, user.email);
+  return user;
+}
+
+/**
+ * The email of the user behind a profile (a supervisor, hub coordinator, ...). Only users with one
+ * membership qualify, so the session's active role is the one asked for.
+ */
+export async function emailForProfile(identifier: string, role: Role) {
+  const {
+    rows: [row],
+  } = await db.execute<{ email: string }>(sql`
+    select u.email from implementer_members m
+    join users u on u.id = m.user_id
+    where m.identifier = ${identifier} and m.role = ${role} and u.email is not null
+      and (select count(*) from implementer_members o where o.user_id = m.user_id) = 1
+    order by u.email
+    limit 1`);
+  return row?.email ?? null;
+}
+
+export async function signInWithEmail(context: BrowserContext, email: string) {
+  const token = await generateSessionToken(email);
   await context.addCookies([
     {
       name: "next-auth.session-token",
@@ -57,5 +80,4 @@ export async function signInAs(context: BrowserContext, role: Role) {
       expires: Math.floor(Date.now() / 1000) + 60 * 60,
     },
   ]);
-  return user;
 }
