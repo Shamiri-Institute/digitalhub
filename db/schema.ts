@@ -1277,59 +1277,6 @@ export const overallFellowEvaluation = pgTable(
   ],
 );
 
-export const repaymentRequest = pgTable(
-  "repayment_requests",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("repayment")),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-    supervisorId: varchar("supervisor_id", { length: 255 }).notNull(),
-    fellowId: varchar("fellow_id", { length: 255 }).notNull(),
-    hubId: varchar("hub_id", { length: 255 }).notNull(),
-    fellowAttendanceId: integer("fellow_attendance_id").notNull(),
-    fulfilledAt: timestamp("fulfilled_at", { withTimezone: true, mode: "date" }),
-    rejectedAt: timestamp("rejected_at", { withTimezone: true, mode: "date" }),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.supervisorId],
-      foreignColumns: [supervisor.id],
-      name: "repayment_requests_supervisor_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.fellowId],
-      foreignColumns: [fellow.id],
-      name: "repayment_requests_fellow_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.hubId],
-      foreignColumns: [hub.id],
-      name: "repayment_requests_hub_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.fellowAttendanceId],
-      foreignColumns: [fellowAttendance.id],
-      name: "repayment_requests_fellow_attendance_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
-
 export const implementerMember = pgTable(
   "implementer_members",
   {
@@ -1778,35 +1725,6 @@ export const weeklyTeamMeetingReport = pgTable(
       columns: [table.hubId],
       foreignColumns: [hub.id],
       name: "weekly_team_meeting_reports_hub_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
-
-export const payoutReconciliation = pgTable(
-  "payout_reconciliations",
-  {
-    id: serial().primaryKey().notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-    executedAt: timestamp("executed_at", { withTimezone: true, mode: "date" }),
-    amount: integer().notNull(),
-    currency: varchar({ length: 3 }).default("KES").notNull(),
-    description: text(),
-    fellowId: text("fellow_id").notNull(),
-    relatedDetails: jsonb("related_details").$type<JsonValue>(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.fellowId],
-      foreignColumns: [fellow.id],
-      name: "payout_reconciliations_fellow_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),

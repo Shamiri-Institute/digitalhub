@@ -1833,48 +1833,22 @@ async function createPayoutRecords(
   );
   const sample = eligible.slice(0, DEMO_PAYOUT_SAMPLE);
 
-  const payoutStatementData: (typeof schema.payoutStatements.$inferInsert)[] = [];
-  const reconciliationData: (typeof schema.payoutReconciliation.$inferInsert)[] = [];
-  const repaymentData: (typeof schema.repaymentRequest.$inferInsert)[] = [];
+  const payoutStatementData = sample.map((fa) => ({
+    fellowAttendanceId: fa.id,
+    fellowId: fa.fellowId,
+    amount: faker.number.int({ min: 500, max: 3000 }),
+    reason: faker.helpers.arrayElement([
+      "timely_attendance",
+      "delayed_attendance",
+      "reconciliation",
+    ]),
+    notes: faker.lorem.sentence(),
+    createdBy: seederUserId,
+    executedAt: faker.date.recent({ days: 30 }),
+    mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+  }));
 
-  for (const fa of sample) {
-    const hubId = hubIdBySchoolId.get(fa.schoolId as string) as string;
-    const supervisorId = fa.supervisorId as string;
-
-    payoutStatementData.push({
-      fellowAttendanceId: fa.id,
-      fellowId: fa.fellowId,
-      amount: faker.number.int({ min: 500, max: 3000 }),
-      reason: faker.helpers.arrayElement([
-        "timely_attendance",
-        "delayed_attendance",
-        "reconciliation",
-      ]),
-      notes: faker.lorem.sentence(),
-      createdBy: seederUserId,
-      executedAt: faker.date.recent({ days: 30 }),
-      mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-    });
-
-    reconciliationData.push({
-      amount: faker.number.int({ min: -1000, max: 3000 }),
-      fellowId: fa.fellowId,
-      description: faker.lorem.sentence(),
-    });
-
-    repaymentData.push({
-      supervisorId,
-      fellowId: fa.fellowId,
-      hubId,
-      fellowAttendanceId: fa.id,
-    });
-  }
-
-  await Promise.all([
-    insertMany(schema.payoutStatements, payoutStatementData),
-    insertMany(schema.payoutReconciliation, reconciliationData),
-    insertMany(schema.repaymentRequest, repaymentData),
-  ]);
+  await insertMany(schema.payoutStatements, payoutStatementData);
 }
 
 // Pools used to generate varied (V1-shaped) fidelity feedback per recording so
