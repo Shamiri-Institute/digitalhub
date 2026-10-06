@@ -14,24 +14,17 @@ export default async function SupervisorChartsWrapper({
     assignedHubId: string | null;
   };
 }) {
-  const fetchGraphData = async () => {
+  const fetchGraphData = () => {
     if (!coordinator?.assignedHubId) {
       return null;
     }
 
-    const dropoutData = fetchSupervisorDropoutReasons();
-    const supervisorDataCompletenessPercentage = fetchSupervisorDataCompletenessData();
-    const supervisorsSessionRatings = fetchSupervisorSessionRatingAverages();
-    const supervisorAttendanceData = fetchSupervisorAttendanceData();
-
-    const data = await Promise.all([
-      dropoutData,
-      supervisorDataCompletenessPercentage,
-      supervisorsSessionRatings,
-      supervisorAttendanceData,
+    return Promise.all([
+      fetchSupervisorDropoutReasons(),
+      fetchSupervisorDataCompletenessData(),
+      fetchSupervisorSessionRatingAverages(),
+      fetchSupervisorAttendanceData(),
     ]);
-
-    return data;
   };
 
   const graphData = await fetchGraphData();
