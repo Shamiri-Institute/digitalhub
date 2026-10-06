@@ -299,11 +299,18 @@ test("a supervisor in another hub does not see the case", async ({ page, context
 async function addClinicalSession(sessionLabel: string) {
   const [clinicalSession] = await db
     .insert(clinicalSessionAttendance)
-    .values({ caseId, session: sessionLabel, supervisorId: owner.profileId, attendanceStatus: true })
+    .values({
+      caseId,
+      session: sessionLabel,
+      supervisorId: owner.profileId,
+      attendanceStatus: true,
+    })
     .returning({ id: clinicalSessionAttendance.id });
   if (!clinicalSession) throw new Error("could not insert the clinical session fixture");
   undo.push(() =>
-    db.delete(clinicalSessionAttendance).where(eq(clinicalSessionAttendance.id, clinicalSession.id)),
+    db
+      .delete(clinicalSessionAttendance)
+      .where(eq(clinicalSessionAttendance.id, clinicalSession.id)),
   );
   return clinicalSession.id;
 }

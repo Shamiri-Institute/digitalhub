@@ -293,7 +293,10 @@ test.describe("fellow attendance", () => {
     await expect(await searchRows(page, reopened, fixture.fellowName)).toContainText("Missed");
 
     const [markedFellowAttendance] = await db
-      .select({ attended: fellowAttendance.attended, absenceReason: fellowAttendance.absenceReason })
+      .select({
+        attended: fellowAttendance.attended,
+        absenceReason: fellowAttendance.absenceReason,
+      })
       .from(fellowAttendance)
       .where(eq(fellowAttendance.id, fixture.attendanceId));
     expect(markedFellowAttendance).toEqual({ attended: false, absenceReason });
