@@ -1,8 +1,10 @@
 "use client";
 import { format } from "date-fns";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { ImplementerRole } from "#/db/enums";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import type { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -43,6 +45,9 @@ export default function ViewEditQualitativeFeedback({
   action: "view" | "edit";
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
+  const { data: authSession } = useSession();
+  // submitQualitativeFeedback accepts supervisors only; other roles read the notes.
+  const canAddNotes = authSession?.user?.activeMembership?.role === ImplementerRole.SUPERVISOR;
 
   const form = useForm<z.infer<typeof QualitativeFeedbackSchema>>({
     resolver: zodResolver(QualitativeFeedbackSchema),
@@ -113,7 +118,7 @@ export default function ViewEditQualitativeFeedback({
         <p className="text-shamiri-black"> Notes</p>
         <Form {...form}>
           <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
-            <div className="space-y-4">
+            {canAddNotes && (
               <FormField
                 control={form.control}
                 name="notes"
@@ -127,7 +132,7 @@ export default function ViewEditQualitativeFeedback({
                   </FormItem>
                 )}
               />
-            </div>
+            )}
             <Separator className="my-4" />
             {sessionReport.sessionComments.map((comment) => (
               <div key={comment.sessionCommentId}>
@@ -151,14 +156,16 @@ export default function ViewEditQualitativeFeedback({
               >
                 Cancel
               </Button>
-              <Button
-                variant="brand"
-                type="submit"
-                loading={form.formState.isSubmitting}
-                disabled={form.formState.isSubmitting}
-              >
-                Add notes
-              </Button>
+              {canAddNotes && (
+                <Button
+                  variant="brand"
+                  type="submit"
+                  loading={form.formState.isSubmitting}
+                  disabled={form.formState.isSubmitting}
+                >
+                  Add notes
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </Form>

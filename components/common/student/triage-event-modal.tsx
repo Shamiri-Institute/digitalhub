@@ -79,7 +79,6 @@ export default function TriageEventModal({
   studentName,
   sessionId,
   sessionName,
-  hubId,
   existingEvent,
   readOnly = false,
   onSuccess,
@@ -90,7 +89,6 @@ export default function TriageEventModal({
   studentName?: string | null;
   sessionId: string;
   sessionName?: string;
-  hubId?: string | null;
   existingEvent?: TriageEventWithRelations | null;
   readOnly?: boolean;
   onSuccess?: () => void;
@@ -124,9 +122,7 @@ export default function TriageEventModal({
 
   const loadSupervisors = async () => {
     try {
-      const supervisors = hubId
-        ? await getSupervisorsInFellowHub(hubId, { useAsHubId: true })
-        : await getSupervisorsInFellowHub(sessionId);
+      const supervisors = await getSupervisorsInFellowHub(sessionId);
       setSupervisorsInHub(supervisors);
     } catch {
       setSupervisorsInHub([]);
@@ -142,7 +138,7 @@ export default function TriageEventModal({
   // effect: loads the hub's supervisors when the parent opens the modal
   useEffect(() => {
     loadSupervisorsOnOpen();
-  }, [isOpen, sessionId, hubId]);
+  }, [isOpen, sessionId]);
 
   // effect: forces the action to ESCALATED when the risk screen outcome requires it
   useEffect(() => {
@@ -329,7 +325,7 @@ export default function TriageEventModal({
                 name="referredSupervisorId"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-sm">Supervisor (in your hub)</FormLabel>
+                    <FormLabel className="text-sm">Supervisor (in the session hub)</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value ?? ""}

@@ -41,14 +41,18 @@ test.beforeAll(async () => {
 
   interventionSessionId = fixture.interventionSessionId;
   schoolName = fixture.schoolName;
-  await db.insert(interventionSessionRating).values({
-    id: ratingId,
-    sessionId: interventionSessionId,
-    supervisorId: fixture.supervisorId,
-    studentBehaviorRating: 4,
-    adminSupportRating: 3,
-    workloadRating: 2,
-  });
+  await db
+    .insert(interventionSessionRating)
+    .values({
+      id: ratingId,
+      sessionId: interventionSessionId,
+      supervisorId: fixture.supervisorId,
+      studentBehaviorRating: 4,
+      adminSupportRating: 3,
+      workloadRating: 2,
+    })
+    // The seed rates sessions that have occurred; keep its rating if this session has one.
+    .onConflictDoNothing();
 });
 
 test.afterAll(async () => {
@@ -57,12 +61,17 @@ test.afterAll(async () => {
   await db.delete(interventionSessionRating).where(eq(interventionSessionRating.id, ratingId));
 });
 
-async function openFeedbackDialog(page: Page, menuItem: string) {
-  await page.getByRole("row").filter({ hasText: schoolName }).getByRole("button").first().click();
+async function openFeedbackDialog(page: Page, menuItem: string, rowSchoolName = schoolName) {
+  await page
+    .getByRole("row")
+    .filter({ hasText: rowSchoolName })
+    .getByRole("button")
+    .first()
+    .click();
   // The expanded school row shows its sessions in a nested table; the last cell opens the menu.
   await page.locator("table table tbody tr").first().locator("td").last().click();
   await page.getByText(menuItem).click();
-  return page.getByRole("dialog").filter({ hasText: schoolName });
+  return page.getByRole("dialog").filter({ hasText: rowSchoolName });
 }
 
 test("a supervisor saves session feedback and sees it after a reload", async ({
@@ -81,4 +90,30 @@ test("a supervisor saves session feedback and sees it after a reload", async ({
   await page.reload({ waitUntil: "networkidle" });
   const viewDialog = await openFeedbackDialog(page, "View qualitative feedback");
   await expect(viewDialog.getByText(notes)).toBeVisible();
+});
+
+test("a hub coordinator reads session feedback but cannot add notes", async ({ context, page }) => {
+  const coordinatorEmail = "mikel.arteta@test.com";
+  // Any rated session in the coordinator's hub: the form is hidden by role, not by session.
+  const {
+    rows: [ratedSchool],
+  } = await db.execute<{ schoolName: string }>(sql`
+    select s.school_name as "schoolName"
+    from users u
+    join implementer_members m on m.user_id = u.id and m.role = 'HUB_COORDINATOR'
+    join hub_coordinators h on h.id = m.identifier
+    join schools s on s.hub_id = h.assigned_hub_id
+    join intervention_sessions i on i.school_id = s.id and i.occurred
+    join intervention_session_ratings r on r.session_id = i.id
+    where u.email = ${coordinatorEmail}
+    order by s.school_name
+    limit 1`);
+  if (!ratedSchool) throw new Error(`No rated session in the hub of ${coordinatorEmail}`);
+
+  await signInWithEmail(context, coordinatorEmail);
+  await page.goto(getUrl("/hc/reporting/school-reports/session"), { waitUntil: "networkidle" });
+  const dialog = await openFeedbackDialog(page, "Edit school report", ratedSchool.schoolName);
+  await expect(dialog.getByText("Workload (1 unacceptable to 5 outstanding)")).toBeVisible();
+  await expect(dialog.getByLabel("Add your notes")).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Add notes" })).toHaveCount(0);
 });

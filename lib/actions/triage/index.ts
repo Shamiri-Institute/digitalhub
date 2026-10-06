@@ -53,13 +53,8 @@ async function getFellowContext() {
  * The hub where a session takes place: the session's hub, else its school's hub. Hubs borrow
  * fellows, so the fellow's home hub is not the hub of their work.
  */
-async function getSessionHubId(sessionId: string): Promise<string | null> {
-  const session = await db.query.interventionSession.findFirst({
-    where: (s, { eq }) => eq(s.id, sessionId),
-    columns: { hubId: true },
-    with: { school: { columns: { hubId: true } } },
-  });
-  return session?.hubId ?? session?.school?.hubId ?? null;
+function hubOfSession(session: { hubId: string | null; school: { hubId: string | null } | null }) {
+  return session.hubId ?? session.school?.hubId ?? null;
 }
 
 /**
@@ -77,35 +72,30 @@ function studentsInLedGroupsAtSession(callerFellowId: string, sessionId: string)
     );
 }
 
+/**
+ * The supervisors a fellow can refer a student to at a session. The hub comes from the session,
+ * never from the client: a borrowed fellow refers to the supervisors of the hub where they work.
+ */
 export async function getSupervisorsInFellowHub(
-  sessionIdOrHubId?: string,
-  options?: { useAsHubId?: boolean },
+  sessionId: string,
 ): Promise<{ id: string; supervisorName: string | null }[]> {
-  if (!sessionIdOrHubId) {
+  try {
+    await getFellowContext();
+  } catch {
     return [];
   }
-  let supervisorHubId: string | null;
-  if (options?.useAsHubId) {
-    const user = await getCurrentPersonnel();
-    if (!user) return [];
-    supervisorHubId = sessionIdOrHubId;
-  } else {
-    try {
-      await getFellowContext();
-    } catch {
-      return [];
-    }
-    // The session's hub, not the fellow's home hub: a borrowed fellow refers to the supervisors
-    // of the hub where they work.
-    supervisorHubId = await getSessionHubId(sessionIdOrHubId);
-  }
-  if (!supervisorHubId) {
+  const session = await db.query.interventionSession.findFirst({
+    where: (s, { eq }) => eq(s.id, sessionId),
+    columns: { hubId: true },
+    with: { school: { columns: { hubId: true } } },
+  });
+  const sessionHubId = session ? hubOfSession(session) : null;
+  if (!sessionHubId) {
     return [];
   }
-  const resolvedHubId = supervisorHubId;
 
   const supervisors = await db.query.supervisor.findMany({
-    where: (s, { eq }) => eq(s.hubId, resolvedHubId),
+    where: (s, { eq }) => eq(s.hubId, sessionHubId),
     columns: { id: true, supervisorName: true },
     orderBy: (s, { asc }) => asc(s.supervisorName),
   });
@@ -166,7 +156,8 @@ export async function createTriageEvent(
 
     const session = await db.query.interventionSession.findFirst({
       where: (s, { eq }) => eq(s.id, parsed.sessionId),
-      columns: { occurred: true },
+      columns: { occurred: true, hubId: true },
+      with: { school: { columns: { hubId: true } } },
     });
     if (!session) {
       throw new Error("Intervention session not found.");
@@ -198,7 +189,7 @@ export async function createTriageEvent(
       );
     }
 
-    const sessionHubId = await getSessionHubId(parsed.sessionId);
+    const sessionHubId = hubOfSession(session);
 
     const [created] = await db
       .insert(triageEvent)

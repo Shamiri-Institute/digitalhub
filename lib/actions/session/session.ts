@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import type { z } from "zod";
 
 import { getCurrentPersonnel } from "#/app/auth";
@@ -244,6 +245,7 @@ export async function submitQualitativeFeedback({
       content: notes,
       userId: user.session.user.id,
     });
+    revalidatePath("/sc/reporting/school-reports/session");
     return { success: true, message: "Notes submitted successfully" };
   } catch (error) {
     console.error(error);

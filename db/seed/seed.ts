@@ -2304,6 +2304,36 @@ async function createDemoRecords(
 }
 
 /**
+ * Session ratings (school-reports/session): the school's supervisor rates every session that has
+ * occurred. The supervisor and hub coordinator session reports list rated sessions only.
+ */
+async function createSessionRatings(schools: DemoSchool[], sessions: DemoSessions) {
+  console.log("creating session ratings");
+  const supervisorBySchoolId = new Map(
+    schools.flatMap((school) =>
+      school.assignedSupervisorId ? [[school.id, school.assignedSupervisorId] as const] : [],
+    ),
+  );
+  const sessionRatings: (typeof schema.interventionSessionRating.$inferInsert)[] = [];
+  for (const session of sessions) {
+    const supervisorId = session.schoolId && supervisorBySchoolId.get(session.schoolId);
+    if (!session.occurred || !supervisorId) continue;
+    sessionRatings.push({
+      id: objectId("isr"),
+      sessionId: session.id,
+      supervisorId,
+      studentBehaviorRating: faker.number.int({ min: 1, max: 5 }),
+      adminSupportRating: faker.number.int({ min: 1, max: 5 }),
+      workloadRating: faker.number.int({ min: 1, max: 5 }),
+      positiveHighlights: faker.lorem.sentence(),
+      challenges: faker.lorem.sentence(),
+      recommendations: faker.lorem.sentence(),
+    });
+  }
+  await insertMany(schema.interventionSessionRating, sessionRatings);
+}
+
+/**
  * fellow complaints (fellow-reports/complaints),
  * group evaluations
  * (fellow-reports/student-group-evaluation),
@@ -2446,6 +2476,8 @@ async function main() {
     schoolsWithGroupsAndFellows,
     interventionSessionsNames,
   );
+
+  await createSessionRatings(schoolsWithGroupsAndFellows, interventionSessions);
 
   // Comprehensive demo data (attendance, clinical cases, payouts, recordings)
   // for a bounded sample of schools so staging looks realistic end-to-end.
