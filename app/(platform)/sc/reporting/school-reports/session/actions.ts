@@ -11,6 +11,7 @@ type SchoolGroup = {
   avgAdminSupport: number;
   avgWorkload: number;
   session: {
+    interventionSessionId: string;
     session: string;
     avgStudentBehaviour: number;
     avgAdminSupport: number;
@@ -85,6 +86,7 @@ export async function loadSessionReport() {
         "N/A";
 
       schoolGroup.session.push({
+        interventionSessionId: session.sessionId,
         session: sessionLabel,
         avgStudentBehaviour: session.studentBehaviorRating || 0,
         avgAdminSupport: session.adminSupportRating || 0,
