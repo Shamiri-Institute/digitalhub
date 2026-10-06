@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.38.5](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.4...v1.38.5) (2026-10-06)
+
+### Bug Fixes
+
+- **auth:** scope triage reads, triage creation and session feedback ([#877](https://github.com/Shamiri-Institute/digitalhub/issues/877)) ([1d01ab3](https://github.com/Shamiri-Institute/digitalhub/commit/1d01ab3615e971e474e38290555e2feb4975ce6a))
+- **auth:** take hub, author and referral recipient from the session in report and referral actions ([#879](https://github.com/Shamiri-Institute/digitalhub/issues/879)) ([560db20](https://github.com/Shamiri-Institute/digitalhub/commit/560db20814c937a91845379df3c03fc5cc07489f))
+- **clinical:** save cases for existing students with any admission number ([#878](https://github.com/Shamiri-Institute/digitalhub/issues/878)) ([6adbf92](https://github.com/Shamiri-Institute/digitalhub/commit/6adbf92656938e8f447521541180a33d5c001ca0))
+- **recordings:** move recording status writes out of the "use server" file ([#880](https://github.com/Shamiri-Institute/digitalhub/issues/880)) ([12c1a6c](https://github.com/Shamiri-Institute/digitalhub/commit/12c1a6c3c8e4038eda3988767dbf2baac2a027c5))
+- **reports:** let supervisors edit complaints about the fellows they supervise ([#886](https://github.com/Shamiri-Institute/digitalhub/issues/886)) ([98a6d56](https://github.com/Shamiri-Institute/digitalhub/commit/98a6d56344657abfa8dc30f9cd7234745c36a821))
+- **reports:** save supervisor session feedback against the intervention session id ([#881](https://github.com/Shamiri-Institute/digitalhub/issues/881)) ([c9b1a0f](https://github.com/Shamiri-Institute/digitalhub/commit/c9b1a0ff6ce7575418c0565437a18941bc6e3c62))
+- session feedback and triage follow-ups, seed session ratings ([#884](https://github.com/Shamiri-Institute/digitalhub/issues/884)) ([5c6fb73](https://github.com/Shamiri-Institute/digitalhub/commit/5c6fb73eef8cdde8dbce7aacc312c9fb007183ee))
+- **triage:** store triage events and list supervisors under the session's hub (ENG-2232) ([#882](https://github.com/Shamiri-Institute/digitalhub/issues/882)) ([d2772e2](https://github.com/Shamiri-Institute/digitalhub/commit/d2772e21d8663d3c88e53ff442cb6631e892d7c6))
+
 ## [1.38.4](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.3...v1.38.4) (2026-10-05)
 
 ### Bug Fixes
