@@ -1,9 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import {
-  type BatchRecordingUpdate,
-  updateRecordingsStatusBatch,
-} from "#/app/(platform)/sc/reporting/recordings/actions";
+import { type BatchRecordingUpdate, updateRecordingsStatusBatch } from "#/lib/recordings/status";
 import { db } from "#/db/client";
 import type { JsonValue } from "#/db/schema";
 import type { RecordingResult } from "#/lib/fidelity-ratings-api";

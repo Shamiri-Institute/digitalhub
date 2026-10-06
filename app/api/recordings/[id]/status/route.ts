@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { updateRecordingStatus } from "#/app/(platform)/sc/reporting/recordings/actions";
+import { updateRecordingStatus } from "#/lib/recordings/status";
 import type { JsonValue } from "#/db/schema";
 import { RecordingStatusUpdateSchema, verifyRecordingsApiKey } from "#/lib/recordings-api";
 
