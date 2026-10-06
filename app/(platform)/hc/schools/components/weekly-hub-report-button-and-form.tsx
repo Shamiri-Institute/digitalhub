@@ -59,13 +59,7 @@ function generateWeekFieldValues() {
   return selectValues;
 }
 
-export default function WeeklyHubReportButtonAndForm({
-  hubCoordinatorId,
-  hubId,
-}: {
-  hubCoordinatorId: string;
-  hubId: string;
-}) {
+export default function WeeklyHubReportButtonAndForm() {
   const [open, setDialogOpen] = useState<boolean>(false);
   const form = useForm<z.infer<typeof WeeklyHubReportSchema>>({
     resolver: zodResolver(WeeklyHubReportSchema),
@@ -81,8 +75,6 @@ export default function WeeklyHubReportButtonAndForm({
       fellowRelatedIssuesAndObservations: "",
       fellowRelatedIssuesAndObservationsRating: 0,
       recommendations: "",
-      submittedBy: hubCoordinatorId,
-      hubId,
     },
   });
 

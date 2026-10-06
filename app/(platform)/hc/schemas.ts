@@ -65,8 +65,6 @@ export const SubmitComplaintSchema = z.object({
 });
 
 export const WeeklyHubReportSchema = z.object({
-  hubId: stringValidation("Missing hub ID"),
-  submittedBy: stringValidation("Missing hub coordinator ID"),
   week: z.coerce.date({ error: "Please select a week" }),
   recommendations: stringValidation("Please input recommendations"),
   schoolRelatedIssuesAndObservations: stringValidation(),

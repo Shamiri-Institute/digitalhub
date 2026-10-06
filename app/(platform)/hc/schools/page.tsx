@@ -44,12 +44,12 @@ export default async function SchoolsPage(props: {
     schoolAttendanceData,
     supervisors,
   ] = await Promise.all([
-    fetchSchoolData(assignedHubId),
-    fetchDropoutReasons(assignedHubId, queryAsSchoolId),
-    fetchSchoolDataCompletenessData(assignedHubId, queryAsSchoolId),
-    fetchSessionRatingAverages(assignedHubId, queryAsSchoolId),
-    fetchSchoolAttendances(assignedHubId, queryAsSchoolId),
-    fetchHubSupervisors({ hubId: assignedHubId }),
+    fetchSchoolData(),
+    fetchDropoutReasons(queryAsSchoolId),
+    fetchSchoolDataCompletenessData(queryAsSchoolId),
+    fetchSessionRatingAverages(queryAsSchoolId),
+    fetchSchoolAttendances(queryAsSchoolId),
+    fetchHubSupervisors(),
   ]);
 
   return (
@@ -63,10 +63,7 @@ export default async function SchoolsPage(props: {
             {/* <SchoolsFilterToggle schools={data} /> */}
           </div>
           <div className="flex items-center gap-3">
-            <WeeklyHubReportButtonAndForm
-              hubCoordinatorId={hubCoordinator?.profile?.id}
-              hubId={assignedHubId}
-            />
+            <WeeklyHubReportButtonAndForm />
             {/* TODO: display options button */}
           </div>
         </div>

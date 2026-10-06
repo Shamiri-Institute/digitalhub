@@ -1,6 +1,6 @@
 "use server";
 
-import { count, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import {
@@ -9,7 +9,7 @@ import {
   currentSupervisorLite,
   getCurrentUserSession,
 } from "#/app/auth";
-import { db } from "#/db/client";
+import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
   clinicalCaseNotes,
@@ -909,6 +909,105 @@ export async function getReferredCasesToSupervisor() {
   });
 
   return referredCases;
+}
+
+/** The latest transfer trail row of a case; the referral decision is recorded on it. */
+async function latestTransferTrail(tx: Transaction, caseId: string) {
+  const [trail] = await tx
+    .select({ id: clinicalCaseTransferTrail.id })
+    .from(clinicalCaseTransferTrail)
+    .where(eq(clinicalCaseTransferTrail.caseId, caseId))
+    .orderBy(desc(clinicalCaseTransferTrail.createdAt))
+    .limit(1);
+  if (!trail) {
+    throw new Error(`No transfer trail for case ${caseId}`);
+  }
+  return trail;
+}
+
+/**
+ * Records the signed-in supervisor's answer to a case referred to them. Only the supervisor the
+ * case was referred to may answer, and only while the referral is open. A case referred to someone
+ * else reads as missing.
+ */
+async function answerReferral(caseId: string, decision: "Approved" | "Declined") {
+  const supervisor = await currentSupervisorLite();
+  if (!supervisor) {
+    throw new Error("Unauthorized");
+  }
+  const referralRecipientId = supervisor.profile.id;
+  // An accepted case moves to the recipient; a declined one stays with the referring supervisor.
+  const caseChanges =
+    decision === "Approved"
+      ? {
+          currentSupervisorId: referralRecipientId,
+          referredToSupervisorId: null,
+          acceptCase: true,
+          referralStatus: null,
+        }
+      : { referredToSupervisorId: null, acceptCase: false, referralStatus: decision };
+  await db.transaction(async (tx) => {
+    requireUpdated(
+      await tx
+        .update(clinicalScreeningInfo)
+        .set(caseChanges)
+        .where(
+          and(
+            eq(clinicalScreeningInfo.id, caseId),
+            eq(clinicalScreeningInfo.referredToSupervisorId, referralRecipientId),
+            eq(clinicalScreeningInfo.acceptCase, false),
+          ),
+        )
+        .returning({ id: clinicalScreeningInfo.id }),
+      "Clinical case",
+    );
+    const trail = await latestTransferTrail(tx, caseId);
+    await tx
+      .update(clinicalCaseTransferTrail)
+      .set({ referralStatus: decision })
+      .where(eq(clinicalCaseTransferTrail.id, trail.id));
+  });
+  revalidatePath("/sc/clinical");
+}
+
+export async function acceptReferredClinicalCase(caseId: string) {
+  try {
+    await answerReferral(caseId, "Approved");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Something went wrong" };
+  }
+}
+
+export async function rejectReferredClinicalCase(caseId: string) {
+  try {
+    await answerReferral(caseId, "Declined");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Something went wrong" };
+  }
+}
+
+export async function flagClinicalCaseForFollowUp(data: { caseId: string; reason: string }) {
+  try {
+    const { actor } = await requireCaseAccess(data.caseId);
+    requireUpdated(
+      await db
+        .update(clinicalScreeningInfo)
+        .set({ flagged: true, flaggedReason: data.reason })
+        .where(eq(clinicalScreeningInfo.id, data.caseId))
+        .returning({ id: clinicalScreeningInfo.id }),
+      "Clinical case",
+    );
+
+    revalidatePath(clinicalHome(actor.role));
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Something went wrong" };
+  }
 }
 
 export async function triggerCaseStatusToFollowup(data: { caseId: string }) {

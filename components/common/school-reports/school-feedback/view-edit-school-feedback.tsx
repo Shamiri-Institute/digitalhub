@@ -58,7 +58,7 @@ export default function ViewEditSchoolFeedback({
 
   const onSubmit = async (data: SchoolFeedbackFormValues) => {
     try {
-      const response = await editSchoolFeedback(feedback.userId, feedback.feedbackId, data);
+      const response = await editSchoolFeedback(feedback.feedbackId, data);
       if (response.success) {
         toast({
           title: response.message,

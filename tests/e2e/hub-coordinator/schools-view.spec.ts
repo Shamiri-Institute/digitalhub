@@ -1,9 +1,21 @@
 import { expect, test } from "@playwright/test";
+import { eq } from "drizzle-orm";
+
+import { db } from "#/db/client";
+import { weeklyHubReport } from "#/db/schema";
 import { PersonnelFixtures } from "#/tests/helpers";
 import HubCoordinatorSchoolsPage from "#/tests/pages/hub-coordinator/school-page";
 
 test.use({ storageState: PersonnelFixtures.hubCoordinator.stateFile });
 test.describe.configure({ mode: "parallel" });
+
+const recommendations = `E2E weekly hub report ${Date.now()}`;
+
+// Cleanup runs in afterAll, not in a finally block: when a test times out, Playwright abandons
+// its body but still runs the hooks.
+test.afterAll(async () => {
+  await db.delete(weeklyHubReport).where(eq(weeklyHubReport.recommendations, recommendations));
+});
 
 test("Hub Coordinator can view the /schools page", async ({ page }) => {
   // given
@@ -38,7 +50,7 @@ test("Hub Coordinator can submit a weekly hub report", async ({ page }) => {
     hubRelatedIssuesAndObservationsRating: 4,
     successes: "It has generally been successful",
     challenges: "I don't have any challenges to report",
-    recommendations: "I would recommend continued behaviour",
+    recommendations,
   };
 
   // when
@@ -95,4 +107,30 @@ test("Hub Coordinator can submit a weekly hub report", async ({ page }) => {
   // then
   // dialog only dismissed upon successful entry
   await expect(page.getByTestId("weekly-hub-report-dialog")).not.toBeVisible();
+
+  // No page lists weekly hub reports yet, so the test reads the saved report from the database.
+  // The hub and the author must come from the session, not from the form.
+  const coordinatorMembership = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.email, PersonnelFixtures.hubCoordinator.email),
+    columns: {},
+    with: { memberships: { columns: { identifier: true, role: true } } },
+  });
+  const coordinatorId = coordinatorMembership?.memberships.find(
+    (m) => m.role === "HUB_COORDINATOR",
+  )?.identifier;
+  if (!coordinatorId) throw new Error("the hub coordinator fixture has no membership");
+  const coordinator = await db.query.hubCoordinator.findFirst({
+    where: (hc, { eq }) => eq(hc.id, coordinatorId),
+    columns: { id: true, assignedHubId: true },
+  });
+
+  const savedReport = await db.query.weeklyHubReport.findFirst({
+    where: (r, { eq }) => eq(r.recommendations, recommendations),
+    columns: { hubId: true, submittedBy: true, successes: true },
+  });
+  expect(savedReport).toEqual({
+    hubId: coordinator?.assignedHubId,
+    submittedBy: coordinator?.id,
+    successes: data.successes,
+  });
 });

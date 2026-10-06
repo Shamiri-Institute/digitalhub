@@ -23,8 +23,8 @@ export default async function SchoolsPage() {
   }
 
   const [data, supervisors, schoolsStats] = await Promise.all([
-    fetchSchoolData(hubId),
-    fetchHubSupervisors({ hubId }),
+    fetchSchoolData(),
+    fetchHubSupervisors(),
     getHubScheduleStats(hubId),
   ]);
 

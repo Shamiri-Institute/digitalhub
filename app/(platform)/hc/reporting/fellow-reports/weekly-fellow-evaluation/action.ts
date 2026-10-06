@@ -1,26 +1,16 @@
 "use server";
 
-import { currentHubCoordinator } from "#/app/auth";
-import { signOut } from "next-auth/react";
 import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
+import { fellowsInCallerScope, requireHubRole } from "#/lib/auth/require-hub-role";
 
 export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluation[]> {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-    if (!hubCoordinator?.session?.user.id) {
-      throw new Error("Hub Coordinator not found");
-    }
-
-    const userId = hubCoordinator.session.user.id;
-
-    const hubId = hubCoordinator.profile?.assignedHubId;
-    if (!hubId) {
-      await signOut({ callbackUrl: "/login" });
-      throw new Error("Unauthorised user");
-    }
+    const coordinator = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+    // The same fellows as the other hub reports, borrowed fellows included.
     const fellows = await db.query.fellow.findMany({
-      where: (f, { eq }) => eq(f.hubId, hubId),
+      where: (f, { inArray }) => inArray(f.id, fellowsInCallerScope(coordinator)),
       with: { weeklyFellowRatings: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] } },
       orderBy: (f, { asc }) => [asc(f.createdAt), asc(f.id)],
     });
@@ -49,7 +39,6 @@ export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvalu
           dressingGroomingNotes: rating.dressingAndGroomingNotes,
           attendancePunctuality: rating.punctualityRating ?? 0,
           attendancePunctualityNotes: rating.punctualityNotes,
-          userId,
         })),
       };
     });
