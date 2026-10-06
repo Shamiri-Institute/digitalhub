@@ -18,6 +18,7 @@ env:
   S3_RECORDINGS_REGION: af-south-1
   S3_STUDENT_ATTENDANCE_BUCKET: mock-s3-attendance-bucket
   S3_STUDENT_ATTENDANCE_REGION: af-south-1
+  RECORDINGS_API_KEY: e2e-recordings-api-key
   NEXTAUTH_URL: http://localhost:3000
   NEXTAUTH_SECRET: test-auth-secret
   PLAYWRIGHT_VERSION: ""
