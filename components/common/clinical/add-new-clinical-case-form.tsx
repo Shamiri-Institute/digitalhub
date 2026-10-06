@@ -161,26 +161,6 @@ export function AddNewClinicalCaseForm({
     }
   };
 
-  const handleStudentSelect = (studentId: string) => {
-    setSelectedStudentId(studentId);
-    form.setValue("studentName", studentId);
-
-    const selectedStudent = students.find((student) => student.id === studentId);
-    if (selectedStudent) {
-      form.setValue("studentName", selectedStudent.studentName || "");
-      form.setValue("admissionNumber", Number(selectedStudent.admissionNumber));
-      if (selectedStudent.yearOfBirth) {
-        form.setValue("yearOfBirth", new Date(selectedStudent.yearOfBirth, 0, 1));
-      }
-      const genderValue = selectedStudent.gender as (typeof GENDER_OPTIONS)[number] | null;
-      if (genderValue) {
-        form.setValue("gender", genderValue);
-      }
-      form.setValue("classForm", selectedStudent.form?.toString() || "");
-      form.setValue("stream", selectedStudent.stream || "");
-    }
-  };
-
   const toggleNewStudent = () => {
     const nextIsNewStudent = !isNewStudent;
     setIsNewStudent(nextIsNewStudent);
@@ -356,7 +336,7 @@ export function AddNewClinicalCaseForm({
                           label: student.studentName || "Unknown Student",
                         }))}
                         activeItemId={selectedStudentId}
-                        onSelectItem={handleStudentSelect}
+                        onSelectItem={setSelectedStudentId}
                         placeholder="Select a student..."
                         inputPlaceholder="Search students..."
                       />
