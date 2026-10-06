@@ -54,7 +54,7 @@ export default function ViewEditQualitativeFeedback({
   const onSubmit = async (data: z.infer<typeof QualitativeFeedbackSchema>) => {
     const response = await submitQualitativeFeedback({
       notes: data.notes,
-      sessionId: sessionReport.session,
+      sessionId: sessionReport.interventionSessionId,
     });
     if (!response.success) {
       toast({

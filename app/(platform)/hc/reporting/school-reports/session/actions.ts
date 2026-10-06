@@ -69,7 +69,10 @@ export async function loadSessionReport() {
           (session.sessionType ? `Session ${session.sessionType}` : "N/A");
 
         if (!acc[sessionName]) {
+          // ponytail: rows group sessions by label, so the row keeps the first session's id,
+          // the same session whose notes, comments and date it shows.
           acc[sessionName] = {
+            interventionSessionId: session.id,
             session: sessionName,
             ratings: [],
             sessionNotes: session.sessionNotes || [],
@@ -95,6 +98,7 @@ export async function loadSessionReport() {
       {} as Record<
         string,
         {
+          interventionSessionId: string;
           session: string;
           ratings: Array<{
             studentBehaviorRating: number | null;
@@ -138,6 +142,7 @@ export async function loadSessionReport() {
           : 0;
 
       return {
+        interventionSessionId: sessionGroup.interventionSessionId,
         session: sessionGroup.session,
         avgStudentBehaviour: Math.round(avgStudentBehaviour * 10) / 10, // Round to 1 decimal place
         avgAdminSupport: Math.round(avgAdminSupport * 10) / 10,
