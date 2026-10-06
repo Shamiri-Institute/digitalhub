@@ -78,16 +78,20 @@ export async function loadFellowComplaints() {
 
 export async function editFellowComplaint(complaintId: string, complaint: string) {
   try {
-    const coordinator = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+    // Edit scope is read scope: a supervisor edits complaints about the fellows they supervise.
+    const caller = await requireHubRole(
+      ImplementerRole.SUPERVISOR,
+      ImplementerRole.HUB_COORDINATOR,
+    );
 
-    // A complaint about a fellow outside the coordinator's scope reads as missing.
+    // A complaint about a fellow outside the caller's scope reads as missing.
     const updated = await db
       .update(fellowComplaints)
       .set({ complaint })
       .where(
         and(
           eq(fellowComplaints.id, complaintId),
-          inArray(fellowComplaints.fellowId, fellowsInCallerScope(coordinator)),
+          inArray(fellowComplaints.fellowId, fellowsInCallerScope(caller)),
         ),
       )
       .returning({ id: fellowComplaints.id });
@@ -95,7 +99,8 @@ export async function editFellowComplaint(complaintId: string, complaint: string
       throw new Error(`Complaint ${complaintId} not found`);
     }
 
-    revalidatePath("/hc/schools/fellow-reports/complaints");
+    const rolePrefix = caller.role === ImplementerRole.SUPERVISOR ? "sc" : "hc";
+    revalidatePath(`/${rolePrefix}/reporting/fellow-reports/complaints`);
     return {
       success: true,
       message: "Complaint updated successfully",

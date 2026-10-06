@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import {
   editFellowComplaint,
@@ -61,7 +60,6 @@ export default function ViewEditFellowComplaints({
           title: "Success",
           description: "Complaint updated successfully",
         });
-        await revalidatePageAction("hc/reporting/fellow-reports/complaints");
         setDialogOpen(false);
       } else {
         toast({
