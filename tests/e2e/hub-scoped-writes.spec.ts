@@ -6,6 +6,7 @@ import {
   fellow,
   interventionSession,
   student,
+  studentAttendance,
   supervisor,
   triageEvent,
   triageEventAudit,
@@ -16,9 +17,10 @@ import { sessionDisplayName } from "#/lib/utils";
 
 /**
  * Hub coordinators and fellows change their own hub's records through the UI: drop out a student,
- * mark a session as occurred, document and edit a triage event. Each test saves, reloads and checks
- * what the page shows, and a coordinator in another hub does not see the school at all. The
- * database is read only to pick fixtures and to put rows back.
+ * mark a session as occurred, mark student attendance, document and edit a triage event. Each test
+ * saves, reloads and checks what the page shows, and a coordinator in another hub does not see the
+ * school at all. The database is read only to pick fixtures, to read a saved value back and to put
+ * rows back.
  */
 
 // The dev server compiles each page on first use, which can take longer than the default.
@@ -206,6 +208,19 @@ async function openRowMenu(page: Page, row: Locator) {
   }).toPass({ timeout: 30_000 });
 }
 
+/** The triage fellow's "Mark student attendance" dialog for the fixture session. */
+async function openStudentAttendance(page: Page) {
+  await page.goto(getUrl(`/fel/schools/${triage.visibleId}/sessions`), {
+    waitUntil: "networkidle",
+  });
+  await openRowMenu(page, await sessionRow(page, page.getByRole("main"), triage.sessionLabel));
+  await page.getByRole("menuitem", { name: "Mark student attendance" }).click();
+  const attendance = page.getByRole("dialog", { name: "Mark student attendance" });
+  // The student list loads after the dialog opens; search only once it has rows.
+  await expect(attendance.getByRole("checkbox", { name: "Select row" }).first()).toBeVisible();
+  return attendance;
+}
+
 test("a hub coordinator drops out a student in their hub", async ({ page, context }) => {
   await signIn(context, coordinator.email);
   const studentsPage = getUrl(`/hc/schools/${school.visibleId}/students`);
@@ -255,6 +270,11 @@ test("a hub coordinator marks a session in their hub as occurred", async ({ page
 
   await page.reload({ waitUntil: "networkidle" });
   await expect(await sessionRow(page, main, school.sessionLabel)).toContainText("Attended");
+  const [markedSession] = await db
+    .select({ occurred: interventionSession.occurred })
+    .from(interventionSession)
+    .where(eq(interventionSession.id, school.sessionId));
+  expect(markedSession?.occurred).toBe(true);
 });
 
 test("a hub coordinator in another hub does not see the school", async ({ page, context }) => {
@@ -265,23 +285,101 @@ test("a hub coordinator in another hub does not see the school", async ({ page, 
   await expect(await rowWithCell(page, main, school.schoolName)).toHaveCount(0);
 });
 
+test("a fellow marks one student missed and two students attended at once", async ({
+  page,
+  context,
+}) => {
+  // Three students of the fellow's group, with their attendance at the session as it is now.
+  const groupStudents = await db
+    .select({ id: student.id, admissionNumber: student.admissionNumber })
+    .from(student)
+    .where(
+      and(
+        eq(
+          student.assignedGroupId,
+          sql`(select assigned_group_id from students where id = ${triage.studentId})`,
+        ),
+        sql`${student.archivedAt} is null and ${student.admissionNumber} is not null`,
+      ),
+    )
+    .orderBy(asc(student.id))
+    .limit(3);
+  const [missedStudent, ...attendedStudents] = groupStudents;
+  if (!missedStudent || attendedStudents.length < 2) {
+    throw new Error("seed the database first: the triage fellow's group has under 3 students");
+  }
+  const studentIds = groupStudents.map(({ id }) => id);
+  const attendanceAtSession = and(
+    eq(studentAttendance.sessionId, triage.sessionId),
+    inArray(studentAttendance.studentId, studentIds),
+  );
+  const originalAttendances = await db.select().from(studentAttendance).where(attendanceAtSession);
+  undo.push(async () => {
+    await db.delete(studentAttendance).where(attendanceAtSession);
+    if (originalAttendances.length > 0) {
+      await db.insert(studentAttendance).values(originalAttendances);
+    }
+  });
+  await signIn(context, triage.email);
+
+  let attendance = await openStudentAttendance(page);
+  await openRowMenu(page, await rowWithCell(page, attendance, missedStudent.admissionNumber ?? ""));
+  await page.getByRole("menuitem", { name: "Mark attendance" }).click();
+  // The mark dialog's heading is not linked to it, so it has no accessible name.
+  const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
+  // The radios are unlabelled: Attended, Missed, Unmarked.
+  await mark.getByRole("radio").nth(1).click();
+  await mark.getByRole("combobox", { name: "Select reason for above" }).click();
+  const absenceReason = (await page.getByRole("option").first().innerText()).trim();
+  await page.getByRole("option").first().click();
+  await mark.getByRole("button", { name: "Submit" }).click();
+  await expect(mark).toBeHidden();
+
+  attendance = await openStudentAttendance(page);
+  for (const { admissionNumber } of attendedStudents) {
+    const studentRow = await rowWithCell(page, attendance, admissionNumber ?? "");
+    await studentRow.getByRole("checkbox", { name: "Select row" }).check();
+  }
+  await attendance.getByRole("button", { name: "Mark student attendance" }).click();
+  await expect(mark).toContainText("2 students");
+  await mark.getByRole("radio").first().click();
+  await mark.getByRole("button", { name: "Submit" }).click();
+  await expect(mark).toBeHidden();
+
+  attendance = await openStudentAttendance(page);
+  await expect(
+    await rowWithCell(page, attendance, missedStudent.admissionNumber ?? ""),
+  ).toContainText("Missed");
+  for (const { admissionNumber } of attendedStudents) {
+    await expect(await rowWithCell(page, attendance, admissionNumber ?? "")).toContainText(
+      "Attended",
+    );
+  }
+
+  const markedStudentAttendances = await db
+    .select({
+      studentId: studentAttendance.studentId,
+      attended: studentAttendance.attended,
+      absenceReason: studentAttendance.absenceReason,
+    })
+    .from(studentAttendance)
+    .where(attendanceAtSession)
+    .orderBy(asc(studentAttendance.studentId));
+  expect(markedStudentAttendances).toEqual(
+    [
+      { studentId: missedStudent.id, attended: false, absenceReason },
+      ...attendedStudents.map(({ id }) => ({ studentId: id, attended: true, absenceReason: null })),
+    ].toSorted((a, b) => a.studentId.localeCompare(b.studentId)),
+  );
+});
+
 test("a fellow documents a triage event; another fellow at the school does not see it", async ({
   page,
   context,
 }) => {
   const note = `e2e-2212-${Date.now()}`;
   await signIn(context, triage.email);
-  const sessionsPage = getUrl(`/fel/schools/${triage.visibleId}/sessions`);
-
-  async function openAttendance() {
-    await page.goto(sessionsPage, { waitUntil: "networkidle" });
-    await openRowMenu(page, await sessionRow(page, page.getByRole("main"), triage.sessionLabel));
-    await page.getByRole("menuitem", { name: "Mark student attendance" }).click();
-    const attendance = page.getByRole("dialog", { name: "Mark student attendance" });
-    // The student list loads after the dialog opens; search only once it has rows.
-    await expect(attendance.getByRole("checkbox", { name: "Select row" }).first()).toBeVisible();
-    return attendance;
-  }
+  const openAttendance = () => openStudentAttendance(page);
 
   async function openStudentMenu(admissionNumber = triage.admissionNumber) {
     const attendance = await openAttendance();

@@ -2,14 +2,22 @@ import { expect, type Page, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { clinicalScreeningInfo, interventionSession, student } from "#/db/schema";
+import {
+  clinicalCaseNotes,
+  clinicalCaseTermination,
+  clinicalScreeningInfo,
+  clinicalSessionAttendance,
+  interventionSession,
+  student,
+} from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { emailForProfile, signInWithEmail } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A supervisor works on the clinical cases they hold, through the UI. Each test saves, reloads and
- * checks what the page shows; the database is read only to find fixtures and to clean up.
+ * checks what the page shows; the database is used only to find or add fixtures, to read a saved
+ * value back and to clean up.
  */
 
 type Fixture = { profileId: string; hubId: string; email: string };
@@ -282,4 +290,156 @@ test("a supervisor in another hub does not see the case", async ({ page, context
 
   await expect(page.getByRole("button", { name: "New case" })).toBeVisible();
   await expect(await searchRows(page, pseudonym)).toHaveCount(0);
+});
+
+/**
+ * Gives the fixture case a clinical session dated today, labelled so the test can pick it, and
+ * queues its removal. Notes and terminations must name one of the case's sessions.
+ */
+async function addClinicalSession(sessionLabel: string) {
+  const [clinicalSession] = await db
+    .insert(clinicalSessionAttendance)
+    .values({
+      caseId,
+      session: sessionLabel,
+      supervisorId: owner.profileId,
+      attendanceStatus: true,
+    })
+    .returning({ id: clinicalSessionAttendance.id });
+  if (!clinicalSession) throw new Error("could not insert the clinical session fixture");
+  undo.push(() =>
+    db
+      .delete(clinicalSessionAttendance)
+      .where(eq(clinicalSessionAttendance.id, clinicalSession.id)),
+  );
+  return clinicalSession.id;
+}
+
+test("a supervisor writes case notes and reads them back after a reload", async ({
+  page,
+  context,
+}) => {
+  const sessionLabel = `e2e-notes-${Date.now()}`;
+  const presentingIssues = `${sessionLabel} presenting issues`;
+  const clinicalSessionId = await addClinicalSession(sessionLabel);
+  undo.push(() =>
+    db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.sessionId, clinicalSessionId)),
+  );
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+
+  // The dialog's heading is not linked to it, so it has no accessible name.
+  const dialog = page
+    .getByRole("dialog")
+    .filter({ has: page.getByRole("heading", { name: "Case Notes" }) });
+  async function openNotesForSession() {
+    await openCaseAction(page, pseudonym, "Case notes");
+    await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
+    await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  }
+
+  await openNotesForSession();
+  await dialog.getByRole("textbox", { name: /Situation/ }).fill(presentingIssues);
+  await dialog.getByRole("spinbutton", { name: "ORS Assessment" }).fill("27");
+  await dialog.getByRole("checkbox", { name: /^medium$/i }).click();
+  await dialog.getByRole("textbox", { name: "Necessary Conditions" }).fill("Quiet room");
+  await dialog.getByRole("checkbox", { name: "Interpersonal Therapy" }).click();
+  await dialog.getByRole("textbox", { name: /^Intervention:/ }).fill("Role play");
+  await dialog.getByRole("textbox", { name: /Student Behavioural/ }).fill("Calmer");
+  await dialog.getByRole("checkbox", { name: "Group Session" }).click();
+  await dialog.getByRole("textbox", { name: /^Explanation/ }).fill("Join the next group");
+  await dialog.getByRole("button", { name: "Submit" }).click();
+  await expect(dialog).toBeHidden();
+
+  // A saved session's notes open read-only with the stored text.
+  await page.reload({ waitUntil: "networkidle" });
+  await openNotesForSession();
+  await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue(presentingIssues);
+  await expect(dialog.getByRole("button", { name: "Submit" })).toBeHidden();
+
+  const savedNotes = await db.query.clinicalCaseNotes.findMany({
+    where: (n, { eq }) => eq(n.sessionId, clinicalSessionId),
+    columns: {
+      caseId: true,
+      presentingIssues: true,
+      orsAssessment: true,
+      riskLevel: true,
+      necessaryConditions: true,
+      treatmentInterventions: true,
+      interventionExplanation: true,
+      studentResponseExplanations: true,
+      followUpPlan: true,
+      followUpPlanExplanation: true,
+    },
+  });
+  expect(savedNotes).toEqual([
+    {
+      caseId,
+      presentingIssues,
+      orsAssessment: 27,
+      riskLevel: "medium",
+      necessaryConditions: "Quiet room",
+      treatmentInterventions: ["Interpersonal Therapy"],
+      interventionExplanation: "Role play",
+      studentResponseExplanations: "Calmer",
+      followUpPlan: "GROUP",
+      followUpPlanExplanation: "Join the next group",
+    },
+  ]);
+});
+
+test("a supervisor terminates their case", async ({ page, context }) => {
+  const sessionLabel = `e2e-termination-${Date.now()}`;
+  const terminationReasonExplanation = `${sessionLabel} explanation`;
+  const clinicalSessionId = await addClinicalSession(sessionLabel);
+  undo.push(
+    () =>
+      db
+        .delete(clinicalCaseTermination)
+        .where(eq(clinicalCaseTermination.sessionId, clinicalSessionId)),
+    () =>
+      db
+        .update(clinicalScreeningInfo)
+        .set({ caseStatus: "Active" })
+        .where(eq(clinicalScreeningInfo.id, caseId)),
+  );
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+
+  await openCaseAction(page, pseudonym, "Terminate case");
+  const dialog = page
+    .getByRole("dialog")
+    .filter({ has: page.getByRole("heading", { name: "Terminate Case" }) });
+  await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
+  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await dialog.getByRole("combobox").filter({ hasText: "Student no-show" }).click();
+  await page.getByRole("option", { name: "Student refused to return to sessions" }).click();
+  await dialog
+    .getByRole("textbox", { name: /Termination Explanation/ })
+    .fill(terminationReasonExplanation);
+  await dialog.getByRole("button", { name: "Terminate Case" }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(await searchRows(page, pseudonym)).toContainText("Terminated");
+
+  const terminatedCase = await db.query.clinicalScreeningInfo.findFirst({
+    where: (c, { eq }) => eq(c.id, caseId),
+    columns: { caseStatus: true },
+    with: {
+      clinicalCaseTermination: {
+        columns: { sessionId: true, terminationReason: true, terminationReasonExplanation: true },
+      },
+    },
+  });
+  expect(terminatedCase).toEqual({
+    caseStatus: "Terminated",
+    clinicalCaseTermination: [
+      {
+        sessionId: clinicalSessionId,
+        terminationReason: "Student refused to return to sessions",
+        terminationReasonExplanation,
+      },
+    ],
+  });
 });
