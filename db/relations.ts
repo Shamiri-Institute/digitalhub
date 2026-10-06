@@ -33,11 +33,9 @@ import {
   monthlySupervisorEvaluation,
   opsUser,
   overallFellowEvaluation,
-  payoutReconciliation,
   payoutStatements,
   project,
   projectImplementer,
-  repaymentRequest,
   school,
   schoolDropoutHistory,
   schoolFeedback,
@@ -280,16 +278,12 @@ export const fellowRelations = relations(fellow, ({ one, many }) => ({
   fellowAttendances: many(fellowAttendance, { relationName: "FellowAttendance_fellow" }),
   groups: many(interventionGroup, { relationName: "InterventionGroup_leader" }),
   fellowGroupReports: many(fellowGroupReport, { relationName: "FellowGroupReport_fellow" }),
-  repaymentRequests: many(repaymentRequest, { relationName: "RepaymentRequest_fellow" }),
   fellowReportingNotes: many(fellowReportingNotes, { relationName: "FellowReportingNotes_fellow" }),
   overallFellowEvaluation: many(overallFellowEvaluation, {
     relationName: "OverallFellowEvaluation_fellow",
   }),
   fellowComplaints: many(fellowComplaints, { relationName: "FellowComplaints_fellow" }),
   weeklyFellowRatings: many(weeklyFellowRatings, { relationName: "WeeklyFellowRatings_fellow" }),
-  payoutReconciliations: many(payoutReconciliation, {
-    relationName: "PayoutReconciliation_fellow",
-  }),
   PayoutStatements: many(payoutStatements, { relationName: "PayoutStatements_fellow" }),
   sessionRecordings: many(sessionRecording, { relationName: "SessionRecording_fellow" }),
 }));
@@ -330,7 +324,6 @@ export const fellowAttendanceRelations = relations(fellowAttendance, ({ one, man
     references: [user.id],
     relationName: "FellowAttendance_user",
   }),
-  repaymentRequests: many(repaymentRequest, { relationName: "RepaymentRequest_fellowAttendance" }),
   PayoutStatements: many(payoutStatements, { relationName: "PayoutStatements_fellowAttendance" }),
   SpecialApprovalRequests: many(specialApprovalRequests, {
     relationName: "SpecialApprovalRequests_fellowAttendance",
@@ -408,7 +401,6 @@ export const hubRelations = relations(hub, ({ one, many }) => ({
   }),
   coordinators: many(hubCoordinator, { relationName: "HubCoordinator_assignedHub" }),
   hubSessions: many(interventionSession, { relationName: "InterventionSession_hub" }),
-  repaymentRequests: many(repaymentRequest, { relationName: "RepaymentRequest_hub" }),
   weeklyHubReports: many(weeklyHubReport, { relationName: "WeeklyHubReport_hub" }),
   WeeklyTeamMeetingReport: many(weeklyTeamMeetingReport, {
     relationName: "WeeklyTeamMeetingReport_hub",
@@ -652,14 +644,6 @@ export const overallFellowEvaluationRelations = relations(overallFellowEvaluatio
   }),
 }));
 
-export const payoutReconciliationRelations = relations(payoutReconciliation, ({ one }) => ({
-  fellow: one(fellow, {
-    fields: [payoutReconciliation.fellowId],
-    references: [fellow.id],
-    relationName: "PayoutReconciliation_fellow",
-  }),
-}));
-
 export const payoutStatementsRelations = relations(payoutStatements, ({ one }) => ({
   fellowAttendance: one(fellowAttendance, {
     fields: [payoutStatements.fellowAttendanceId],
@@ -718,29 +702,6 @@ export const projectImplementerRelations = relations(projectImplementer, ({ one 
     fields: [projectImplementer.implementerId],
     references: [implementer.id],
     relationName: "ProjectImplementer_implementer",
-  }),
-}));
-
-export const repaymentRequestRelations = relations(repaymentRequest, ({ one }) => ({
-  supervisor: one(supervisor, {
-    fields: [repaymentRequest.supervisorId],
-    references: [supervisor.id],
-    relationName: "RepaymentRequest_supervisor",
-  }),
-  fellow: one(fellow, {
-    fields: [repaymentRequest.fellowId],
-    references: [fellow.id],
-    relationName: "RepaymentRequest_fellow",
-  }),
-  hub: one(hub, {
-    fields: [repaymentRequest.hubId],
-    references: [hub.id],
-    relationName: "RepaymentRequest_hub",
-  }),
-  fellowAttendance: one(fellowAttendance, {
-    fields: [repaymentRequest.fellowAttendanceId],
-    references: [fellowAttendance.id],
-    relationName: "RepaymentRequest_fellowAttendance",
   }),
 }));
 
@@ -1037,7 +998,6 @@ export const supervisorRelations = relations(supervisor, ({ one, many }) => ({
   sessionNotes: many(interventionSessionNote, {
     relationName: "InterventionSessionNote_supervisor",
   }),
-  repaymentRequests: many(repaymentRequest, { relationName: "RepaymentRequest_supervisor" }),
   studentReportingNotes: many(studentReportingNotes, {
     relationName: "StudentReportingNotes_supervisor",
   }),

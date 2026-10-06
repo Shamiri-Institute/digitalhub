@@ -99,25 +99,11 @@ export const currentSupervisor = cache(async () => {
       fellows: {
         with: {
           hub: true,
-          fellowAttendances: {
-            with: {
-              repaymentRequests: true,
-            },
-          },
+          fellowAttendances: true,
           fellowComplaints: true,
           fellowReportingNotes: {
             with: {
               supervisor: true,
-            },
-          },
-          repaymentRequests: {
-            with: {
-              fellowAttendance: {
-                with: {
-                  group: true,
-                  school: true,
-                },
-              },
             },
           },
           overallFellowEvaluation: true,
