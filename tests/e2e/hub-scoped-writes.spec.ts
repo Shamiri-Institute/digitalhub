@@ -380,7 +380,7 @@ test("a borrowed fellow's triage event and supervisor list use the session's hub
     join session_names sn on sn.id = i.session_id
     join students st on st.assigned_group_id = g.id and st.archived_at is null
       and st.admission_number is not null
-    where ${singleMembership}
+    where ${singleMembership} and m.implementer_id = ${coordinator.implementerId}
       and not exists (
         select 1 from triage_events t where t.student_id = st.id and t.session_id = i.id)
     order by u.email, other_hub.id, i.session_date, st.id
@@ -448,7 +448,7 @@ test("a borrowed fellow's triage event and supervisor list use the session's hub
   await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
   await form.getByRole("combobox", { name: "Action taken (required)" }).click();
   await page.getByRole("option", { name: "Referred to supervisor (risk-negative)" }).click();
-  await form.getByRole("combobox", { name: "Supervisor (in your hub)" }).click();
+  await form.getByRole("combobox", { name: "Supervisor (in the session hub)" }).click();
   // The list holds the supervisors of the session's hub, not of the fellow's home hub.
   await expect(page.getByRole("option")).toHaveText(sessionHubSupervisors.map((s) => s.name ?? ""));
   await page.getByRole("option").first().click();

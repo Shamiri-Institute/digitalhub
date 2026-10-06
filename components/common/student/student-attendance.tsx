@@ -410,7 +410,6 @@ export default function StudentAttendance({
             studentName={triageStudent.studentName}
             sessionId={session.id}
             sessionName={sessionDisplayName(session.session?.sessionName ?? "")}
-            hubId={session.hubId ?? undefined}
             existingEvent={triageExistingEvent ?? undefined}
             readOnly={triageReadOnly}
             onSuccess={toastOnError(async () => {
