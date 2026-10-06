@@ -46,11 +46,20 @@ async function getFellowContext() {
   if (!userId) {
     throw new Error("User ID not found");
   }
-  return {
-    fellowId: fellow.profile.id,
-    hubId: fellow.profile.hubId ?? undefined,
-    userId,
-  };
+  return { fellowId: fellow.profile.id, userId };
+}
+
+/**
+ * The hub where a session takes place: the session's hub, else its school's hub. Hubs borrow
+ * fellows, so the fellow's home hub is not the hub of their work.
+ */
+async function getSessionHubId(sessionId: string): Promise<string | null> {
+  const session = await db.query.interventionSession.findFirst({
+    where: (s, { eq }) => eq(s.id, sessionId),
+    columns: { hubId: true },
+    with: { school: { columns: { hubId: true } } },
+  });
+  return session?.hubId ?? session?.school?.hubId ?? null;
 }
 
 /**
@@ -72,33 +81,28 @@ export async function getSupervisorsInFellowHub(
   sessionIdOrHubId?: string,
   options?: { useAsHubId?: boolean },
 ): Promise<{ id: string; supervisorName: string | null }[]> {
-  let hubId: string | undefined;
-
-  if (options?.useAsHubId && sessionIdOrHubId) {
+  if (!sessionIdOrHubId) {
+    return [];
+  }
+  let supervisorHubId: string | null;
+  if (options?.useAsHubId) {
     const user = await getCurrentPersonnel();
     if (!user) return [];
-    hubId = sessionIdOrHubId;
+    supervisorHubId = sessionIdOrHubId;
   } else {
     try {
-      const ctx = await getFellowContext();
-      hubId = ctx.hubId;
+      await getFellowContext();
     } catch {
       return [];
     }
-
-    if (!hubId && sessionIdOrHubId) {
-      const session = await db.query.interventionSession.findFirst({
-        where: (s, { eq }) => eq(s.id, sessionIdOrHubId),
-        columns: { hubId: true },
-      });
-      hubId = session?.hubId ?? undefined;
-    }
+    // The session's hub, not the fellow's home hub: a borrowed fellow refers to the supervisors
+    // of the hub where they work.
+    supervisorHubId = await getSessionHubId(sessionIdOrHubId);
   }
-
-  if (!hubId) {
+  if (!supervisorHubId) {
     return [];
   }
-  const resolvedHubId = hubId;
+  const resolvedHubId = supervisorHubId;
 
   const supervisors = await db.query.supervisor.findMany({
     where: (s, { eq }) => eq(s.hubId, resolvedHubId),
@@ -157,12 +161,12 @@ export async function createTriageEvent(
   studentAttendanceId?: number,
 ): Promise<{ success: boolean; message: string; data?: TriageEventWithRelations }> {
   try {
-    const { fellowId, hubId, userId } = await getFellowContext();
+    const { fellowId, userId } = await getFellowContext();
     const parsed = TriageEventSchema.parse(data);
 
     const session = await db.query.interventionSession.findFirst({
       where: (s, { eq }) => eq(s.id, parsed.sessionId),
-      columns: { occurred: true, hubId: true },
+      columns: { occurred: true },
     });
     if (!session) {
       throw new Error("Intervention session not found.");
@@ -194,7 +198,7 @@ export async function createTriageEvent(
       );
     }
 
-    const effectiveHubId = hubId ?? session.hubId;
+    const sessionHubId = await getSessionHubId(parsed.sessionId);
 
     const [created] = await db
       .insert(triageEvent)
@@ -202,7 +206,7 @@ export async function createTriageEvent(
         studentId: parsed.studentId,
         sessionId: parsed.sessionId,
         fellowId,
-        hubId: effectiveHubId,
+        hubId: sessionHubId,
         studentAttendanceId: studentAttendanceId ?? null,
         triageOccurred: true,
         riskScreenOutcome: parsed.riskScreenOutcome,
