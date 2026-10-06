@@ -36,7 +36,9 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
       ),
     );
 
-  const data = await Promise.all([
+  const role = fellowUser?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW;
+
+  const [groups, students, reports, schoolRow, fellowGroupReports] = await Promise.all([
     selectSchoolGroups().where(
       and(
         eq(school.visibleId, visibleId),
@@ -57,19 +59,26 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
       where: (r, { inArray }) => inArray(r.groupId, fellowGroupIds),
       with: { session: true },
     }),
-  ]).then((values) => {
-    return values[0].map((group) => {
-      return {
-        ...group,
-        students: values[1].filter((student) => {
-          return student.assignedGroupId === group.id;
-        }),
-        reports: values[2].filter((report) => {
-          return report.groupId === group.id;
-        }),
-      };
-    });
-  });
+    db.query.school.findFirst({
+      where: (s, { eq }) => eq(s.visibleId, visibleId),
+      with: { interventionSessions: { with: { session: true } } },
+    }),
+    role === ImplementerRole.FELLOW
+      ? db.query.fellowGroupReport.findMany({
+          where: (r, { and, eq, inArray }) =>
+            and(
+              fellowId === undefined ? sql`false` : eq(r.fellowId, fellowId),
+              inArray(r.groupId, fellowGroupIds),
+            ),
+        })
+      : [],
+  ]);
+
+  const data = groups.map((group) => ({
+    ...group,
+    students: students.filter((student) => student.assignedGroupId === group.id),
+    reports: reports.filter((report) => report.groupId === group.id),
+  }));
 
   if (data.length === 0) {
     return (
@@ -79,15 +88,9 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
     );
   }
 
-  const schoolRow = await db.query.school.findFirst({
-    where: (s, { eq }) => eq(s.visibleId, visibleId),
-    with: { interventionSessions: { with: { session: true } } },
-  });
   if (!schoolRow) {
     throw new Error(`School ${visibleId} not found`);
   }
-
-  const role = fellowUser?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW;
 
   const occurredSubstantiveCount = schoolRow.interventionSessions.filter(
     (session) =>
@@ -95,17 +98,6 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
       session.sessionType !== null &&
       SUBSTANTIVE_SESSION_TYPES.includes(session.sessionType),
   ).length;
-
-  const fellowGroupReports =
-    role === ImplementerRole.FELLOW
-      ? await db.query.fellowGroupReport.findMany({
-          where: (r, { and, eq, inArray }) =>
-            and(
-              fellowId === undefined ? sql`false` : eq(r.fellowId, fellowId),
-              inArray(r.groupId, fellowGroupIds),
-            ),
-        })
-      : [];
 
   return (
     <div className="flex flex-col gap-4">

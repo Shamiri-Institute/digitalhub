@@ -82,12 +82,13 @@ export default async function StudentsPage() {
       .groupBy(clinicalSessionAttendance.session),
     db
       .select({
-        currentSupervisorId: clinicalScreeningInfo.currentSupervisorId,
+        supervisorName: supervisor.supervisorName,
         count: count(clinicalScreeningInfo.currentSupervisorId),
       })
       .from(clinicalScreeningInfo)
+      .leftJoin(supervisor, eq(supervisor.id, clinicalScreeningInfo.currentSupervisorId))
       .where(hubCaseFilter)
-      .groupBy(clinicalScreeningInfo.currentSupervisorId),
+      .groupBy(clinicalScreeningInfo.currentSupervisorId, supervisor.supervisorName),
     db
       .select({
         initialReferredFromSpecified: clinicalScreeningInfo.initialReferredFromSpecified,
@@ -128,21 +129,8 @@ export default async function StudentsPage() {
       .groupBy(student.dropOutReason),
   ]);
 
-  const supervisorIds = hubClinicalSessionsBySupervisor.map((item) => item.currentSupervisorId);
-
-  const supervisors = await db.query.supervisor.findMany({
-    where: (s, { inArray }) =>
-      inArray(
-        s.id,
-        supervisorIds.filter((id): id is string => id !== null),
-      ),
-    columns: { id: true, supervisorName: true },
-  });
-
-  const supervisorMap = new Map(supervisors.map((s) => [s.id, s.supervisorName]));
-
   const clinicalCasesBySupervisors = hubClinicalSessionsBySupervisor.map((item) => ({
-    supervisorName: supervisorMap.get(item.currentSupervisorId ?? "") || "Unknown",
+    supervisorName: item.supervisorName || "Unknown",
     count: item.count,
   }));
 

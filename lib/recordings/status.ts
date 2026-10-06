@@ -31,17 +31,6 @@ export async function updateRecordingStatus(
   },
 ) {
   try {
-    const recording = await db.query.sessionRecording.findFirst({
-      where: (r, { eq }) => eq(r.id, recordingId),
-    });
-
-    if (!recording) {
-      return {
-        success: false,
-        message: "Recording not found",
-      };
-    }
-
     const updated = await db
       .update(sessionRecording)
       .set({
@@ -61,7 +50,10 @@ export async function updateRecordingStatus(
       .where(eq(sessionRecording.id, recordingId))
       .returning({ id: sessionRecording.id });
     if (updated.length === 0) {
-      throw new Error(`Recording ${recordingId} not found`);
+      return {
+        success: false,
+        message: "Recording not found",
+      };
     }
 
     revalidatePath("/sc/reporting/recordings");

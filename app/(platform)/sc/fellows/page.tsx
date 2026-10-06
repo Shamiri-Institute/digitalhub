@@ -16,14 +16,15 @@ export default async function FellowsPage() {
     return <div>Supervisor has no assigned hub</div>;
   }
 
-  const fellows = await loadFellowsData();
-
   const projectId = supervisor?.profile?.hub?.projectId;
   if (!projectId) {
     return <div>Supervisor&apos;s hub has no assigned project</div>;
   }
 
-  const project = await db.query.project.findFirst({ where: (p, { eq }) => eq(p.id, projectId) });
+  const [fellows, project] = await Promise.all([
+    loadFellowsData(),
+    db.query.project.findFirst({ where: (p, { eq }) => eq(p.id, projectId) }),
+  ]);
 
   return (
     <div className="px-6 py-5">

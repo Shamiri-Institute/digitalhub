@@ -13,11 +13,17 @@ import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 
 export default async function ClinicalPage() {
-  const cases = await getClinicalCasesInHub();
+  // The chart data alone runs 5 queries, a full pool.
   const casesData = await getClinicalCasesData();
-  const allClinicalLeadCases = await getClinicalCasesCreatedByClinicalLead();
-  const { schools, fellowsInProject, supervisorsInHub, currentClinicalLeadId, hubs } =
-    await getSchoolsInClinicalLeadHub();
+  const [
+    cases,
+    allClinicalLeadCases,
+    { schools, fellowsInProject, supervisorsInHub, currentClinicalLeadId, hubs },
+  ] = await Promise.all([
+    getClinicalCasesInHub(),
+    getClinicalCasesCreatedByClinicalLead(),
+    getSchoolsInClinicalLeadHub(),
+  ]);
 
   if (!currentClinicalLeadId) {
     throw new Error("Clinical lead not found");
