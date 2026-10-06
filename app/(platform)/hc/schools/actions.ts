@@ -346,11 +346,15 @@ export type SchoolAttendances = {
 
 export async function fetchSchoolAttendances(schoolId?: string) {
   const coordinatorHubId = await requireCoordinatorHub();
-  const {
-    rows: [schoolCount],
-  } = await db.execute<{
-    count: number | string | null;
-  }>(sql`
+  const [
+    {
+      rows: [schoolCount],
+    },
+    { rows: schoolAttendances },
+  ] = await Promise.all([
+    db.execute<{
+      count: number | string | null;
+    }>(sql`
     SELECT
       COUNT(*)::int AS "count"
     FROM
@@ -358,14 +362,11 @@ export async function fetchSchoolAttendances(schoolId?: string) {
     WHERE
       hub_id = ${coordinatorHubId}
       ${schoolId ? sql`AND id = ${schoolId}` : sql.empty()}
-  `);
-
-  const numSchools = Number(schoolCount?.count ?? 0);
-
-  const { rows: schoolAttendances } = await db.execute<{
-    count: number | string | null;
-    session_type: string;
-  }>(sql`
+  `),
+    db.execute<{
+      count: number | string | null;
+      session_type: string;
+    }>(sql`
     SELECT
       session_type,
       count(distinct sa.school_id)::int AS "count"
@@ -379,7 +380,10 @@ export async function fetchSchoolAttendances(schoolId?: string) {
     GROUP BY
       session_type
     ORDER BY
-      session_type ASC`);
+      session_type ASC`),
+  ]);
+
+  const numSchools = Number(schoolCount?.count ?? 0);
 
   return schoolAttendances.map<{
     session_type: string;

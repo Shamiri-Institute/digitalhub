@@ -481,27 +481,27 @@ export async function updateSessionRecording(input: {
   }
 
   const supervisorId = supervisor.profile.id;
-  const recording = await db.query.sessionRecording.findFirst({
-    where: (r, { and, eq }) => and(eq(r.id, input.recordingId), eq(r.supervisorId, supervisorId)),
-  });
+  const [recording, authorizedFellow, group] = await Promise.all([
+    db.query.sessionRecording.findFirst({
+      where: (r, { and, eq }) => and(eq(r.id, input.recordingId), eq(r.supervisorId, supervisorId)),
+    }),
+    db.query.fellow.findFirst({
+      where: (f, { and, eq }) => and(eq(f.id, input.fellowId), eq(f.supervisorId, supervisorId)),
+      columns: { id: true },
+    }),
+    db.query.interventionGroup.findFirst({
+      where: (g, { eq }) => eq(g.id, input.groupId),
+      columns: { schoolId: true },
+    }),
+  ]);
 
   if (!recording) {
     return { success: false, message: "Recording not found or unauthorized" };
   }
 
-  const authorizedFellow = await db.query.fellow.findFirst({
-    where: (f, { and, eq }) => and(eq(f.id, input.fellowId), eq(f.supervisorId, supervisorId)),
-    columns: { id: true },
-  });
-
   if (!authorizedFellow) {
     return { success: false, message: "Fellow not found or unauthorized" };
   }
-
-  const group = await db.query.interventionGroup.findFirst({
-    where: (g, { eq }) => eq(g.id, input.groupId),
-    columns: { schoolId: true },
-  });
 
   if (!group) {
     return { success: false, message: "Invalid intervention group" };

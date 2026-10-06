@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
 
 import type { FellowsData } from "#/app/(platform)/sc/actions";
@@ -9,6 +9,7 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
+import { interventionGroup } from "#/db/schema";
 
 export default async function FellowsPage() {
   const fellow = await currentFellow();
@@ -17,50 +18,55 @@ export default async function FellowsPage() {
   }
 
   const fellowId = fellow?.profile.id;
-  const fellowRow = await db.query.fellow.findFirst({
-    where: (f, { eq }) => (fellowId === undefined ? sql`false` : eq(f.id, fellowId)),
-    with: {
-      hub: { with: { project: true } },
-      fellowAttendances: {
-        with: {
-          session: { with: { session: true, school: true } },
-          group: true,
-          PayoutStatements: { orderBy: (p, { desc }) => desc(p.createdAt) },
-        },
-      },
-      weeklyFellowRatings: true,
-      groups: {
-        with: {
-          interventionGroupReports: { with: { session: true } },
-          students: {
-            extras: (st, { sql }) => ({
-              clinicalCasesCount:
-                sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
-                  "clinical_cases_count",
-                ),
-            }),
+  const [fellowRow, schools] = await Promise.all([
+    db.query.fellow.findFirst({
+      where: (f, { eq }) => (fellowId === undefined ? sql`false` : eq(f.id, fellowId)),
+      with: {
+        hub: { with: { project: true } },
+        fellowAttendances: {
+          with: {
+            session: { with: { session: true, school: true } },
+            group: true,
+            PayoutStatements: { orderBy: (p, { desc }) => desc(p.createdAt) },
           },
         },
-      },
-      supervisor: true,
-    },
-  });
-
-  // The groups' schools with their sessions, loaded once and attached per group below instead
-  // of being recomputed for every group row by a lateral join.
-  const schoolIds = [...new Set(fellowRow?.groups.map((g) => g.schoolId) ?? [])];
-  const schools =
-    schoolIds.length === 0
-      ? []
-      : await db.query.school.findMany({
-          where: (s, { inArray }) => inArray(s.id, schoolIds),
+        weeklyFellowRatings: true,
+        groups: {
           with: {
-            interventionSessions: {
-              orderBy: (s, { asc }) => asc(s.sessionDate),
-              with: { session: true },
+            interventionGroupReports: { with: { session: true } },
+            students: {
+              extras: (st, { sql }) => ({
+                clinicalCasesCount:
+                  sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
+                    "clinical_cases_count",
+                  ),
+              }),
             },
           },
-        });
+        },
+        supervisor: true,
+      },
+    }),
+
+    // The groups' schools with their sessions, loaded once and attached per group below instead
+    // of being recomputed for every group row by a lateral join.
+    db.query.school.findMany({
+      where: (s, { inArray }) =>
+        inArray(
+          s.id,
+          db
+            .select({ id: interventionGroup.schoolId })
+            .from(interventionGroup)
+            .where(fellowId === undefined ? sql`false` : eq(interventionGroup.leaderId, fellowId)),
+        ),
+      with: {
+        interventionSessions: {
+          orderBy: (s, { asc }) => asc(s.sessionDate),
+          with: { session: true },
+        },
+      },
+    }),
+  ]);
   const schoolById = new Map(schools.map((s) => [s.id, s]));
   const schoolOf = (schoolId: string) => {
     const found = schoolById.get(schoolId);

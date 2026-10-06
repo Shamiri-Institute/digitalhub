@@ -185,20 +185,22 @@ export async function createAttendanceDocument(
       throw new Error("Upload does not match authorized scope");
     }
 
-    const markedStudentCount = await db.$count(
-      studentAttendance,
-      and(
-        eq(studentAttendance.sessionId, payload.sessionId),
-        eq(studentAttendance.groupId, payload.groupId),
+    const [markedStudentCount, verified] = await Promise.all([
+      db.$count(
+        studentAttendance,
+        and(
+          eq(studentAttendance.sessionId, payload.sessionId),
+          eq(studentAttendance.groupId, payload.groupId),
+        ),
       ),
-    );
+      verifyUploadedObject(payload.link, "student-attendance"),
+    ]);
 
     if (markedStudentCount < 2) {
       await discardOrphanedUpload(payload.link, "student-attendance");
       throw new Error("At least 2 students must have attendance marked before uploading");
     }
 
-    const verified = await verifyUploadedObject(payload.link, "student-attendance");
     if (verified.status === "not-found") {
       throw new Error("Uploaded file not found");
     }

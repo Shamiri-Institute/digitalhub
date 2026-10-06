@@ -31,7 +31,7 @@ export default async function FellowPage() {
       ),
     );
 
-  const data = await Promise.all([
+  const [fellowRows, complaints, groups, supervisors, weeklyFellowEvaluations] = await Promise.all([
     db
       .select({
         id: fellow.id,
@@ -71,32 +71,24 @@ export default async function FellowPage() {
       where: (g, { inArray }) => inArray(g.leaderId, projectFellowIds),
       with: { school: true },
     }),
-  ]).then((values) => {
-    return values[0].map((fellowRow) => {
-      return {
-        ...fellowRow,
-        complaints: values[1].filter((_complaints) => {
-          return _complaints.fellowId === fellowRow.id;
-        }),
-        groups: values[2].filter((_groups) => {
-          return _groups.leaderId === fellowRow.id;
-        }),
-      };
-    });
-  });
+    db.query.supervisor.findMany({
+      where: (s, { and, eq, inArray }) =>
+        and(
+          implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
+          inArray(s.hubId, projectHubIds),
+        ),
+      with: { fellows: true },
+    }),
+    db.query.weeklyFellowRatings.findMany({
+      where: (w, { inArray }) => inArray(w.fellowId, projectFellowIds),
+    }),
+  ]);
 
-  const supervisors = await db.query.supervisor.findMany({
-    where: (s, { and, eq, inArray }) =>
-      and(
-        implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
-        inArray(s.hubId, projectHubIds),
-      ),
-    with: { fellows: true },
-  });
-
-  const weeklyFellowEvaluations = await db.query.weeklyFellowRatings.findMany({
-    where: (w, { inArray }) => inArray(w.fellowId, projectFellowIds),
-  });
+  const data = fellowRows.map((fellowRow) => ({
+    ...fellowRow,
+    complaints: complaints.filter((c) => c.fellowId === fellowRow.id),
+    groups: groups.filter((g) => g.leaderId === fellowRow.id),
+  }));
 
   return (
     <div className="flex h-full flex-col">

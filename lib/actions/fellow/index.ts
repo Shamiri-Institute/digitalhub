@@ -965,11 +965,31 @@ type FellowGroupStats = {
 export async function getFellowGroupsAndHubData(fellowId: string) {
   if (!fellowId) return null;
 
-  const fellowRow = await db.query.fellow.findFirst({
-    where: (f, { eq }) => eq(f.id, fellowId),
-    columns: { hubId: true },
-    with: { groups: { columns: { id: true, schoolId: true } } },
-  });
+  const [fellowRow, statsRows] = await Promise.all([
+    db.query.fellow.findFirst({
+      where: (f, { eq }) => eq(f.id, fellowId),
+      columns: { hubId: true },
+      with: { groups: { columns: { id: true, schoolId: true } } },
+    }),
+    db
+      .execute<FellowGroupStats>(sql`
+      SELECT
+        COUNT(*)::int                 AS group_count,
+        COALESCE(SUM(sc.c), 0)::int   AS total_students,
+        COALESCE(SUM(ic.c), 0)::int   AS total_sessions
+      FROM intervention_groups ig
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS c FROM students
+        WHERE assigned_group_id = ig.id
+      ) sc ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS c FROM intervention_sessions
+        WHERE school_id = ig.school_id
+      ) ic ON TRUE
+      WHERE ig.leader_id = ${fellowId}
+    `)
+      .then((r) => r.rows),
+  ]);
 
   if (!fellowRow) return null;
 
@@ -977,27 +997,7 @@ export async function getFellowGroupsAndHubData(fellowId: string) {
   const fellowGroupIds = fellowRow.groups.map((group) => group.id);
   const fellowSchoolIds = Array.from(new Set(fellowRow.groups.map((group) => group.schoolId)));
 
-  const statsPromise = db
-    .execute<FellowGroupStats>(sql`
-    SELECT
-      COUNT(*)::int                 AS group_count,
-      COALESCE(SUM(sc.c), 0)::int   AS total_students,
-      COALESCE(SUM(ic.c), 0)::int   AS total_sessions
-    FROM intervention_groups ig
-    LEFT JOIN LATERAL (
-      SELECT COUNT(*)::int AS c FROM students
-      WHERE assigned_group_id = ig.id
-    ) sc ON TRUE
-    LEFT JOIN LATERAL (
-      SELECT COUNT(*)::int AS c FROM intervention_sessions
-      WHERE school_id = ig.school_id
-    ) ic ON TRUE
-    WHERE ig.leader_id = ${fellowId}
-  `)
-    .then((r) => r.rows);
-
-  const [statsRows, schoolRows, sessions] = await Promise.all([
-    statsPromise,
+  const [schoolRows, sessions] = await Promise.all([
     fellowSchoolIds.length
       ? db.query.school.findMany({
           where: (s, { inArray }) => inArray(s.id, fellowSchoolIds),

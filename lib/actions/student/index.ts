@@ -132,21 +132,23 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
     if (!assignedGroupId || !schoolId) {
       throw new Error("A group and a school are required to add a student");
     }
-    const group = await db.query.interventionGroup.findFirst({
-      where: (g, { eq }) => eq(g.id, assignedGroupId),
-      with: { leader: { with: { supervisor: true } } },
-    });
+    const [group, schoolRow, studentCount] = await Promise.all([
+      db.query.interventionGroup.findFirst({
+        where: (g, { eq }) => eq(g.id, assignedGroupId),
+        with: { leader: { with: { supervisor: true } } },
+      }),
+      db.query.school.findFirst({
+        where: (s, { eq }) => eq(s.id, schoolId),
+      }),
+      db.$count(student),
+    ]);
     if (!group) {
       throw new Error(`Group ${assignedGroupId} not found`);
     }
-    const schoolRow = await db.query.school.findFirst({
-      where: (s, { eq }) => eq(s.id, schoolId),
-    });
     if (!schoolRow) {
       throw new Error(`School ${schoolId} not found`);
     }
 
-    const studentCount = await db.$count(student);
     const [created] = await db
       .insert(student)
       .values({

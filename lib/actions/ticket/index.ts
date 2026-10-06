@@ -397,17 +397,21 @@ export async function getTicketEscalationStatus(
   try {
     const { userId, role } = await requireAuthRole(...Object.values(ImplementerRole));
 
-    const ticket = await db.query.tickets.findFirst({
-      where: (t, { eq }) => eq(t.id, ticketId),
-      columns: { status: true },
-    });
+    const [ticket, latestEscalation, existingResolution] = await Promise.all([
+      db.query.tickets.findFirst({
+        where: (t, { eq }) => eq(t.id, ticketId),
+        columns: { status: true },
+      }),
+      db.query.ticketEscalations.findFirst({
+        where: (e, { eq }) => eq(e.ticketId, ticketId),
+        orderBy: (e, { desc }) => desc(e.createdAt),
+      }),
+      db.query.ticketResolutions.findFirst({
+        where: (r, { eq }) => eq(r.ticketId, ticketId),
+      }),
+    ]);
 
     if (!ticket) throw new Error("Ticket not found");
-
-    const latestEscalation = await db.query.ticketEscalations.findFirst({
-      where: (e, { eq }) => eq(e.ticketId, ticketId),
-      orderBy: (e, { desc }) => desc(e.createdAt),
-    });
 
     const isCurrentRecipient = latestEscalation?.escalatedToId === userId;
 
@@ -418,10 +422,6 @@ export async function getTicketEscalationStatus(
       : null;
 
     const hasReassignment = Boolean(existingReassignment);
-
-    const existingResolution = await db.query.ticketResolutions.findFirst({
-      where: (r, { eq }) => eq(r.ticketId, ticketId),
-    });
 
     const hasResolution = Boolean(existingResolution);
 

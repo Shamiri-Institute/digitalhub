@@ -33,50 +33,52 @@ export async function loadOpsHubsPayoutHistory() {
     .innerJoin(hub, eq(hub.id, fellow.hubId))
     .where(eq(hub.projectId, projectId));
   const nextPayoutDate = sql`lead(${payoutStatements.executedAt}) over (order by ${payoutStatements.executedAt})`;
-  const payoutDates = await db
-    .select({
-      // Filtered to non-null below; `mapWith` keeps the column's timestamp decoding.
-      dateAdded: sql<Date>`${payoutStatements.executedAt}`.mapWith(payoutStatements.executedAt),
-      duration: sql<string>`concat(to_char(${payoutStatements.executedAt}, 'DD/MM/YYYY'), ' - ', coalesce(to_char(${nextPayoutDate}, 'DD/MM/YYYY'), 'N/A'))`,
-      totalPayoutAmount: sql<number>`sum(${payoutStatements.amount})`.mapWith(Number),
-      // Every statement of one payout is confirmed together, so the group shares one value.
-      confirmedAt: max(payoutStatements.confirmedAt),
-    })
-    .from(payoutStatements)
-    .where(
-      and(
-        inArray(payoutStatements.fellowId, projectFellowIds),
-        isNotNull(payoutStatements.executedAt),
-      ),
-    )
-    .groupBy(payoutStatements.executedAt)
-    .orderBy(desc(payoutStatements.executedAt));
+  const [payoutDates, details] = await Promise.all([
+    db
+      .select({
+        // Filtered to non-null below; `mapWith` keeps the column's timestamp decoding.
+        dateAdded: sql<Date>`${payoutStatements.executedAt}`.mapWith(payoutStatements.executedAt),
+        duration: sql<string>`concat(to_char(${payoutStatements.executedAt}, 'DD/MM/YYYY'), ' - ', coalesce(to_char(${nextPayoutDate}, 'DD/MM/YYYY'), 'N/A'))`,
+        totalPayoutAmount: sql<number>`sum(${payoutStatements.amount})`.mapWith(Number),
+        // Every statement of one payout is confirmed together, so the group shares one value.
+        confirmedAt: max(payoutStatements.confirmedAt),
+      })
+      .from(payoutStatements)
+      .where(
+        and(
+          inArray(payoutStatements.fellowId, projectFellowIds),
+          isNotNull(payoutStatements.executedAt),
+        ),
+      )
+      .groupBy(payoutStatements.executedAt)
+      .orderBy(desc(payoutStatements.executedAt)),
 
-  // One query for every payout date; rows are split per date in JS below.
-  const details = await db
-    .select({
-      executedAt: payoutStatements.executedAt,
-      fellowName: fellow.fellowName,
-      fellowMpesaName: fellow.mpesaName,
-      hub: hub.hubName,
-      supervisorName: supervisor.supervisorName,
-      mpesaNumber: payoutStatements.mpesaNumber,
-      totalAmount: sql<number>`sum(${payoutStatements.amount})`.mapWith(Number),
-    })
-    .from(payoutStatements)
-    .innerJoin(fellow, eq(fellow.id, payoutStatements.fellowId))
-    .innerJoin(hub, eq(hub.id, fellow.hubId))
-    .innerJoin(supervisor, eq(supervisor.id, fellow.supervisorId))
-    .where(and(isNotNull(payoutStatements.executedAt), eq(hub.projectId, projectId)))
-    .groupBy(
-      payoutStatements.executedAt,
-      fellow.id,
-      fellow.fellowName,
-      hub.hubName,
-      supervisor.supervisorName,
-      payoutStatements.mpesaNumber,
-    )
-    .orderBy(asc(fellow.fellowName));
+    // One query for every payout date; rows are split per date in JS below.
+    db
+      .select({
+        executedAt: payoutStatements.executedAt,
+        fellowName: fellow.fellowName,
+        fellowMpesaName: fellow.mpesaName,
+        hub: hub.hubName,
+        supervisorName: supervisor.supervisorName,
+        mpesaNumber: payoutStatements.mpesaNumber,
+        totalAmount: sql<number>`sum(${payoutStatements.amount})`.mapWith(Number),
+      })
+      .from(payoutStatements)
+      .innerJoin(fellow, eq(fellow.id, payoutStatements.fellowId))
+      .innerJoin(hub, eq(hub.id, fellow.hubId))
+      .innerJoin(supervisor, eq(supervisor.id, fellow.supervisorId))
+      .where(and(isNotNull(payoutStatements.executedAt), eq(hub.projectId, projectId)))
+      .groupBy(
+        payoutStatements.executedAt,
+        fellow.id,
+        fellow.fellowName,
+        hub.hubName,
+        supervisor.supervisorName,
+        payoutStatements.mpesaNumber,
+      )
+      .orderBy(asc(fellow.fellowName)),
+  ]);
 
   const detailsByDate = new Map<number, Omit<(typeof details)[number], "executedAt">[]>();
   for (const { executedAt, ...detail } of details) {
