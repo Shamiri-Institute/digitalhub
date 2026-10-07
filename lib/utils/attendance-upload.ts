@@ -7,7 +7,8 @@ async function fetchExistingDocument(url: string, attempts = 3): Promise<Respons
   /* oxlint-disable eslint/no-await-in-loop -- each retry waits for the previous attempt and its backoff */
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      const res = await fetch(url);
+      // Long enough for a large PDF on a slow connection; a stalled one fails instead of hanging.
+      const res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
       if (res.ok || (res.status < 500 && !RETRYABLE_STATUSES.has(res.status))) {
         return res;
       }

@@ -128,6 +128,7 @@ export function useS3Upload() {
 
     const presignedResponse = await fetch("/api/s3/presigned", {
       method: "POST",
+      signal: AbortSignal.timeout(15_000),
       redirect: "manual",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

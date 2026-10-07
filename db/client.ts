@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { DatabaseError, Pool } from "pg";
 
@@ -6,12 +7,19 @@ import * as schema from "./schema";
 import { databaseUrl } from "./url";
 
 function createPool() {
-  return new Pool({
+  const pool = new Pool({
     connectionString: databaseUrl(),
     // ponytail: fixed pool per instance; tune when RDS connection counts say so.
     max: 5,
     idleTimeoutMillis: 20_000,
+    connectionTimeoutMillis: 5_000,
   });
+  // An idle client that loses its connection emits "error" on the pool; unhandled, it crashes the process.
+  pool.on("error", (error) => {
+    console.error("Idle Postgres client error", error);
+    Sentry.captureException(error);
+  });
+  return pool;
 }
 
 // One pool per process; in development the module reloads on every edit, so keep it global.

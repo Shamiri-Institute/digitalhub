@@ -24,6 +24,12 @@ function createClient(bucket: S3Bucket): S3Client {
     region: requireBucket(bucket).region,
     credentials: getS3Credentials(),
     requestChecksumCalculation: "WHEN_REQUIRED",
+    // Uploads go from the browser straight to S3, so the server only makes small calls.
+    requestHandler: {
+      connectionTimeout: 3_000,
+      requestTimeout: 10_000,
+      throwOnRequestTimeout: true,
+    },
   });
   clients.set(bucket, client);
   return client;
