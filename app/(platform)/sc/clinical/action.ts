@@ -3,12 +3,7 @@
 import { and, count, desc, eq } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
-import {
-  currentClinicalLead,
-  currentSupervisor,
-  currentSupervisorLite,
-  getCurrentUserSession,
-} from "#/app/auth";
+import { currentSupervisor, getCurrentUserSession } from "#/app/auth";
 import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
@@ -43,31 +38,28 @@ async function requireClinicalActor() {
   const session = await getCurrentUserSession();
   const userId = session?.user.id;
   const role = session?.user.activeMembership?.role;
-  if (!userId) {
+  const identifier = session?.user.activeMembership?.identifier;
+  if (!userId || !identifier) {
     throw new Error("Unauthorized");
   }
 
   if (role === ImplementerRole.SUPERVISOR) {
-    const supervisor = await currentSupervisorLite();
+    const supervisor = await db.query.supervisor.findFirst({
+      where: (s, { eq }) => eq(s.id, identifier),
+      columns: { id: true, hubId: true },
+    });
     if (supervisor) {
-      return {
-        role,
-        userId,
-        profileId: supervisor.profile.id,
-        hubId: supervisor.profile.hubId,
-      };
+      return { role, userId, profileId: supervisor.id, hubId: supervisor.hubId };
     }
   }
 
   if (role === ImplementerRole.CLINICAL_LEAD) {
-    const clinicalLead = await currentClinicalLead();
+    const clinicalLead = await db.query.clinicalLead.findFirst({
+      where: (cl, { eq }) => eq(cl.id, identifier),
+      columns: { id: true, assignedHubId: true },
+    });
     if (clinicalLead) {
-      return {
-        role,
-        userId,
-        profileId: clinicalLead.profile.id,
-        hubId: clinicalLead.profile.assignedHubId,
-      };
+      return { role, userId, profileId: clinicalLead.id, hubId: clinicalLead.assignedHubId };
     }
   }
 
@@ -372,7 +364,7 @@ export async function getSchoolsInHub() {
     db.query.school.findMany({
       where: (s, { eq }) => eq(s.hubId, hubId),
       with: {
-        students: true,
+        students: { columns: { id: true, studentName: true } },
         interventionSessions: {
           columns: { id: true },
           with: { session: { columns: { sessionName: true, sessionLabel: true } } },
@@ -900,7 +892,7 @@ async function latestTransferTrail(tx: Transaction, caseId: string) {
  * else reads as missing.
  */
 async function answerReferral(caseId: string, decision: "Approved" | "Declined") {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (!supervisor) {
     throw new Error("Unauthorized");
   }

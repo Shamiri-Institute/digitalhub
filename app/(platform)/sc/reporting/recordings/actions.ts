@@ -3,7 +3,7 @@
 import { and, eq, isNull, notInArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { db, isUniqueViolation } from "#/db/client";
 import { fellow, sessionRecording } from "#/db/schema";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
@@ -26,10 +26,15 @@ export async function loadSupervisorFellows() {
     throw new Error("Unauthorized user");
   }
 
-  return supervisor.profile.fellows
-    .filter((f) => !f.droppedOut)
-    .map((f) => ({ id: f.id, fellowName: f.fellowName }))
-    .toSorted((a, b) => (a.fellowName ?? "").localeCompare(b.fellowName ?? ""));
+  return db.query.fellow.findMany({
+    where: (f, { and, eq, isNull, or }) =>
+      and(
+        eq(f.supervisorId, supervisor.profile.id),
+        or(eq(f.droppedOut, false), isNull(f.droppedOut)),
+      ),
+    columns: { id: true, fellowName: true },
+    orderBy: (f, { asc }) => asc(f.fellowName),
+  });
 }
 
 export async function loadFellowGroups(fellowId: string) {
@@ -39,8 +44,11 @@ export async function loadFellowGroups(fellowId: string) {
     throw new Error("Unauthorized user");
   }
 
-  const fellow = supervisor.profile.fellows.find((f) => f.id === fellowId);
-  if (!fellow) {
+  const supervisedFellow = await db.query.fellow.findFirst({
+    where: (f, { and, eq }) => and(eq(f.id, fellowId), eq(f.supervisorId, supervisor.profile.id)),
+    columns: { id: true },
+  });
+  if (!supervisedFellow) {
     throw new Error("Fellow not found or unauthorized");
   }
 
@@ -216,7 +224,7 @@ export async function createSessionRecording(input: {
   s3Key: string;
   token: string;
 }) {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
 
   if (!supervisor?.profile?.id || !supervisor.session?.user?.id) {
     return {

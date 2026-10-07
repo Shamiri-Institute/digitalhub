@@ -1,12 +1,11 @@
-import { avg, eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import type { Session } from "next-auth";
 import { cache } from "react";
 
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { hub, session as sessionTable, weeklyFellowRatings } from "#/db/schema";
-import { getActiveProjectId } from "#/lib/active-project-id";
+import { session as sessionTable } from "#/db/schema";
 import { roleHome } from "#/lib/auth/role-home";
 import { getCachedSession } from "#/lib/auth-options";
 
@@ -55,105 +54,7 @@ export const currentHubCoordinator = cache(async () => {
 
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
 
-const nullableNumber = (value: string | null) => (value === null ? null : Number(value));
-
 export const currentSupervisor = cache(async () => {
-  const session = await getCurrentUserSession();
-  if (!session) {
-    return null;
-  }
-  const membership = requireRole(session, ImplementerRole.SUPERVISOR);
-  if (!membership) {
-    return null;
-  }
-
-  const { identifier } = membership;
-  if (!identifier) {
-    return null;
-  }
-
-  const projectId = await getActiveProjectId();
-
-  const supervisor = await db.query.supervisor.findFirst({
-    where: (s, { eq }) => eq(s.id, identifier),
-    with: {
-      hub: {
-        with: {
-          schools: {
-            with: {
-              interventionSessions: true,
-            },
-          },
-        },
-      },
-      assignedSchools: {
-        where: (school, { inArray }) =>
-          inArray(
-            school.hubId,
-            db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
-          ),
-        with: {
-          interventionSessions: true,
-        },
-      },
-      fellows: {
-        with: {
-          hub: true,
-          fellowAttendances: true,
-          fellowComplaints: true,
-          fellowReportingNotes: {
-            with: {
-              supervisor: true,
-            },
-          },
-          overallFellowEvaluation: true,
-          weeklyFellowRatings: true,
-        },
-      },
-    },
-  });
-
-  if (!supervisor) {
-    return null;
-  }
-
-  const fellowIds = supervisor.fellows.map((fellow) => fellow.id);
-  const fellowAvgRatings =
-    fellowIds.length === 0
-      ? []
-      : await db
-          .select({
-            fellowId: weeklyFellowRatings.fellowId,
-            behaviourRating: avg(weeklyFellowRatings.behaviourRating).mapWith(nullableNumber),
-            programDeliveryRating: avg(weeklyFellowRatings.programDeliveryRating).mapWith(
-              nullableNumber,
-            ),
-            dressingAndGroomingRating: avg(weeklyFellowRatings.dressingAndGroomingRating).mapWith(
-              nullableNumber,
-            ),
-            punctualityRating: avg(weeklyFellowRatings.punctualityRating).mapWith(nullableNumber),
-          })
-          .from(weeklyFellowRatings)
-          .where(inArray(weeklyFellowRatings.fellowId, fellowIds))
-          .groupBy(weeklyFellowRatings.fellowId);
-
-  const newFellowsData = supervisor.fellows.map((fellow) => {
-    const ratings = fellowAvgRatings.find((i) => i.fellowId === fellow.id);
-    return {
-      ...fellow,
-      behaviourRating: ratings?.behaviourRating,
-      programDeliveryRating: ratings?.programDeliveryRating,
-      dressingAndGroomingRating: ratings?.dressingAndGroomingRating,
-      punctualityRating: ratings?.punctualityRating,
-    };
-  });
-
-  return { profile: supervisor, session, fellows: newFellowsData };
-});
-
-export type CurrentSupervisorLite = Awaited<ReturnType<typeof currentSupervisorLite>>;
-
-export const currentSupervisorLite = cache(async () => {
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -166,8 +67,7 @@ export const currentSupervisorLite = cache(async () => {
 
   const supervisor = await db.query.supervisor.findFirst({
     where: (s, { eq }) => eq(s.id, identifier),
-    columns: { id: true, hubId: true },
-    with: { hub: { columns: { projectId: true } } },
+    with: { hub: { columns: { projectId: true, hubName: true } } },
   });
 
   if (!supervisor) {
@@ -348,52 +248,48 @@ export async function getCurrentUserSession() {
 
 export type CurrentPersonnel = Awaited<ReturnType<typeof getCurrentPersonnel>>;
 
-export async function getCurrentPersonnel(): Promise<
-  | CurrentSupervisor
-  | CurrentHubCoordinator
-  | CurrentFellow
-  | CurrentClinicalLead
-  | CurrentOpsUser
-  | CurrentClinicalTeam
-  | CurrentAdminUser
-  | null
-> {
+/**
+ * The signed-in user's own profile, for the profile dialog in the platform layout. It shares the
+ * cached loader the page itself calls, and drops the relations the dialog never reads, so the
+ * layout does not send them to the browser.
+ */
+export const getCurrentPersonnel = cache(async () => {
   const session = await getCurrentUserSession();
-  if (!session) {
-    return null;
+  switch (session?.user.activeMembership?.role) {
+    case ImplementerRole.SUPERVISOR:
+      return currentSupervisor();
+    case ImplementerRole.HUB_COORDINATOR: {
+      const coordinator = await currentHubCoordinator();
+      return (
+        coordinator && {
+          session: coordinator.session,
+          profile: {
+            ...coordinator.profile,
+            assignedHub: coordinator.profile.assignedHub && {
+              hubName: coordinator.profile.assignedHub.hubName,
+            },
+          },
+        }
+      );
+    }
+    case ImplementerRole.FELLOW:
+      return currentFellow();
+    case ImplementerRole.CLINICAL_LEAD: {
+      const clinicalLead = await currentClinicalLead();
+      return (
+        clinicalLead && {
+          session: clinicalLead.session,
+          profile: { ...clinicalLead.profile, clinicalScreeningCases: undefined },
+        }
+      );
+    }
+    case ImplementerRole.OPERATIONS:
+      return currentOpsUser();
+    case ImplementerRole.CLINICAL_TEAM:
+      return currentClinicalTeam();
+    case ImplementerRole.ADMIN:
+      return currentAdminUser();
+    default:
+      return null;
   }
-  const role = session.user.activeMembership?.role;
-  if (!role) {
-    return null;
-  }
-
-  if (role === ImplementerRole.SUPERVISOR) {
-    return currentSupervisor();
-  }
-
-  if (role === ImplementerRole.HUB_COORDINATOR) {
-    return currentHubCoordinator();
-  }
-
-  if (role === ImplementerRole.FELLOW) {
-    return currentFellow();
-  }
-
-  if (role === ImplementerRole.CLINICAL_LEAD) {
-    return currentClinicalLead();
-  }
-
-  if (role === ImplementerRole.OPERATIONS) {
-    return currentOpsUser();
-  }
-
-  if (role === ImplementerRole.CLINICAL_TEAM) {
-    return currentClinicalTeam();
-  }
-
-  if (role === ImplementerRole.ADMIN) {
-    return currentAdminUser();
-  }
-
-  return null;
-}
+});

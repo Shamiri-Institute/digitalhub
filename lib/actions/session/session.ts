@@ -4,7 +4,6 @@ import { and, eq } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import type { z } from "zod";
 
-import { getCurrentPersonnel } from "#/app/auth";
 import {
   MarkSessionOccurrenceSchema,
   RescheduleSessionSchema,
@@ -25,16 +24,8 @@ import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 
-async function checkAuth() {
-  const personnel = await getCurrentPersonnel();
-  const role = personnel?.session?.user.activeMembership?.role;
-  if (
-    !personnel ||
-    (role !== ImplementerRole.HUB_COORDINATOR && role !== ImplementerRole.SUPERVISOR)
-  ) {
-    throw new Error("User not authenticated");
-  }
-  return personnel;
+function requireHubCoordinatorOrSupervisor() {
+  return requireHubRole(ImplementerRole.HUB_COORDINATOR, ImplementerRole.SUPERVISOR);
 }
 
 async function findSessionWithSchoolOrThrow(id: string) {
@@ -52,14 +43,10 @@ async function findSessionWithSchoolOrThrow(id: string) {
  * Throws unless the session belongs to the caller's hub, the only sessions their schedule lists.
  * A session in another hub gets the same message as a missing one.
  */
-async function requireSessionInCallerHub(session: {
-  hubId: string | null;
-  school: { hubId: string | null } | null;
-}) {
-  const { hubId: callerHubId } = await requireHubRole(
-    ImplementerRole.HUB_COORDINATOR,
-    ImplementerRole.SUPERVISOR,
-  );
+function requireSessionInCallerHub(
+  session: { hubId: string | null; school: { hubId: string | null } | null },
+  callerHubId: string,
+) {
   const sessionHubId = session.hubId ?? session.school?.hubId;
   if (sessionHubId !== callerHubId) {
     throw new Error("No InterventionSession found");
@@ -82,7 +69,7 @@ async function updateSessionOrThrow(
 
 export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSchema>) {
   try {
-    await checkAuth();
+    const { hubId: callerHubId } = await requireHubCoordinatorOrSupervisor();
     const parsedData = ScheduleNewSessionSchema.parse(data);
     const hubSessionType = await db.query.sessionName.findFirst({
       where: (s, { eq }) => eq(s.id, parsedData.sessionId),
@@ -94,10 +81,6 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
     }
 
     const { hub } = hubSessionType;
-    const { hubId: callerHubId } = await requireHubRole(
-      ImplementerRole.HUB_COORDINATOR,
-      ImplementerRole.SUPERVISOR,
-    );
     if (hub.id !== callerHubId) {
       throw new Error("Session type not found.");
     }
@@ -166,13 +149,13 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
 
 export async function cancelSession(id: string) {
   try {
-    const user = await checkAuth();
+    const caller = await requireHubCoordinatorOrSupervisor();
     const session = await findSessionWithSchoolOrThrow(id);
-    await requireSessionInCallerHub(session);
+    requireSessionInCallerHub(session, caller.hubId);
 
     if (
-      user.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR &&
-      session.school?.assignedSupervisorId !== user.profile?.id
+      caller.role === ImplementerRole.SUPERVISOR &&
+      session.school?.assignedSupervisorId !== caller.profileId
     ) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
@@ -194,15 +177,15 @@ export async function cancelSession(id: string) {
 
 export async function rescheduleSession(id: string, data: z.infer<typeof RescheduleSessionSchema>) {
   try {
-    const user = await checkAuth();
+    const caller = await requireHubCoordinatorOrSupervisor();
     const parsedData = RescheduleSessionSchema.parse(data);
 
     const session = await findSessionWithSchoolOrThrow(id);
-    await requireSessionInCallerHub(session);
+    requireSessionInCallerHub(session, caller.hubId);
 
     if (
-      user.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR &&
-      session.school?.assignedSupervisorId !== user.profile?.id
+      caller.role === ImplementerRole.SUPERVISOR &&
+      session.school?.assignedSupervisorId !== caller.profileId
     ) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
@@ -230,22 +213,13 @@ export async function submitQualitativeFeedback({
   sessionId: string;
 }) {
   try {
-    const user = await checkAuth();
-    if (!user?.session.user.id) {
-      return { success: false, message: "User not found" };
-    }
-
-    const role = user.session.user.activeMembership?.role;
-    if (role !== ImplementerRole.SUPERVISOR) {
-      throw new Error("User not authorized to perform this action");
-    }
-
-    await requireSessionInCallerHub(await findSessionWithSchoolOrThrow(sessionId));
+    const { userId, hubId } = await requireHubRole(ImplementerRole.SUPERVISOR);
+    requireSessionInCallerHub(await findSessionWithSchoolOrThrow(sessionId), hubId);
 
     await db.insert(sessionComment).values({
       sessionId,
       content: notes,
-      userId: user.session.user.id,
+      userId,
     });
     revalidatePath("/sc/reporting/school-reports/session");
     return { success: true, message: "Notes submitted successfully" };
@@ -257,17 +231,8 @@ export async function submitQualitativeFeedback({
 
 export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSchema>) {
   try {
-    const user = await checkAuth();
-    if (!user?.session.user.id) {
-      return { success: false, message: "User not found" };
-    }
-
-    const role = user.session.user.activeMembership?.role;
-    if (role !== ImplementerRole.SUPERVISOR) {
-      throw new Error("User not authorized to perform this action");
-    }
-
-    if (!user.profile?.id) {
+    const { identifier: supervisorId } = await requireAuthRole(ImplementerRole.SUPERVISOR);
+    if (!supervisorId) {
       return { success: false, message: "Supervisor not found" };
     }
 
@@ -284,13 +249,13 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
 
     const session = await findSessionWithSchoolOrThrow(sessionId);
 
-    if (session.school?.assignedSupervisorId !== user.profile?.id) {
+    if (session.school?.assignedSupervisorId !== supervisorId) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
     const rating = {
       sessionId,
-      supervisorId: user.profile.id,
+      supervisorId,
       studentBehaviorRating,
       workloadRating,
       adminSupportRating,
@@ -323,26 +288,11 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
 
 export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccurrenceSchema>) {
   try {
-    const user = await checkAuth();
-    if (!user?.session.user.id) {
-      return { success: false, message: "User not found" };
-    }
-
-    const role = user.session.user.activeMembership?.role;
-    if (!user.profile?.id) {
-      return {
-        success: false,
-        message:
-          role === ImplementerRole.SUPERVISOR
-            ? "Supervisor not found"
-            : "Hub coordinator not found",
-      };
-    }
-
+    const { role, profileId, hubId } = await requireHubCoordinatorOrSupervisor();
     const parsedData = MarkSessionOccurrenceSchema.parse(data);
 
     const session = await findSessionWithSchoolOrThrow(parsedData.sessionId);
-    await requireSessionInCallerHub(session);
+    requireSessionInCallerHub(session, hubId);
 
     if (session.sessionDate > new Date()) {
       throw new Error("This session's date has not arrived yet. Please check the date and time.");
@@ -353,7 +303,7 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
     if (
       session.session &&
       schoolSessionTypes.includes(session.session?.sessionType) &&
-      session.school?.assignedSupervisorId !== user.profile?.id &&
+      session.school?.assignedSupervisorId !== profileId &&
       role === ImplementerRole.SUPERVISOR
     ) {
       throw new Error(
@@ -431,7 +381,8 @@ async function requireSessionVisibleToCaller(sessionId: string) {
     }
     return { membership, fellowId };
   }
-  await requireSessionInCallerHub(session);
+  const { hubId } = await requireHubCoordinatorOrSupervisor();
+  requireSessionInCallerHub(session, hubId);
   return { membership, fellowId: undefined };
 }
 

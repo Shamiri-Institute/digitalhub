@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import { refresh } from "next/cache";
 
-import { currentFellow, getCurrentPersonnel } from "#/app/auth";
+import { currentFellow } from "#/app/auth";
 import {
   CreateGroupSchema,
   FellowGroupReportSchema,
@@ -13,23 +13,10 @@ import {
 import { db, isUniqueViolation } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fellowGroupReport, interventionGroup, interventionGroupReport } from "#/db/schema";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { getSchoolInitials } from "#/lib/utils";
-
-async function checkAuth() {
-  const user = await getCurrentPersonnel();
-
-  if (
-    !user ||
-    (user.session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
-      user.session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)
-  ) {
-    throw new Error("The session has not been authenticated");
-  }
-
-  return user;
-}
 
 /** Throws when the row was already deleted or belongs to another hub's school. */
 async function setArchivedAt(groupId: string, archivedAt: Date | null) {
@@ -56,7 +43,6 @@ async function setArchivedAt(groupId: string, archivedAt: Date | null) {
 
 export async function archiveInterventionGroup(groupId: string) {
   try {
-    await checkAuth();
     const result = await setArchivedAt(groupId, new Date());
     refresh();
     return {
@@ -74,10 +60,9 @@ export async function archiveInterventionGroup(groupId: string) {
 
 export async function unarchiveInterventionGroup(groupId: string) {
   try {
-    const user = await getCurrentPersonnel();
-    if (!user || user.session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR) {
+    await requireAuthRole(ImplementerRole.HUB_COORDINATOR).catch(() => {
       throw new Error("Only hub coordinators can unarchive groups.");
-    }
+    });
     const result = await setArchivedAt(groupId, null);
     refresh();
     return {
@@ -95,12 +80,11 @@ export async function unarchiveInterventionGroup(groupId: string) {
 
 export async function createInterventionGroup(data: z.infer<typeof CreateGroupSchema>) {
   try {
-    await checkAuth();
-    const { schoolId, fellowId } = CreateGroupSchema.parse(data);
     const { hubId: callerHubId } = await requireHubRole(
       ImplementerRole.HUB_COORDINATOR,
       ImplementerRole.SUPERVISOR,
     );
+    const { schoolId, fellowId } = CreateGroupSchema.parse(data);
     await requireSchoolInHub(schoolId, callerHubId);
     const school = await db.query.school.findFirst({
       where: (s, { eq }) => eq(s.id, schoolId),

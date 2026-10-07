@@ -2,7 +2,7 @@ import "server-only";
 
 import { and, eq, isNull, or } from "drizzle-orm";
 
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fellow as fellowTable } from "#/db/schema";
@@ -29,7 +29,7 @@ export async function authorizeRecordingUpload(
     throw error;
   });
 
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (!supervisor?.profile?.id) throw new UploadAuthorizationError("Forbidden", 403);
   const supervisorId = supervisor.profile.id;
 

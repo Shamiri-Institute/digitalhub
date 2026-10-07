@@ -1,13 +1,13 @@
 import { signOut } from "next-auth/react";
 
 import { loadFellowsData } from "#/app/(platform)/sc/actions";
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import FellowSchoolsDatatable from "../../../../components/common/fellow/fellow-schools-datatable";
 
 export default async function FellowsPage() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }

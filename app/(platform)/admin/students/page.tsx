@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, count, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
 
 import { currentAdminUser } from "#/app/auth";
@@ -13,7 +13,6 @@ import { db } from "#/db/client";
 import {
   clinicalLead,
   clinicalScreeningInfo,
-  clinicalSessionAttendance,
   hub,
   interventionSession,
   school,
@@ -21,6 +20,7 @@ import {
   supervisor,
 } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
+import { fetchStudentClinicalStats } from "#/lib/actions/clinical/students";
 
 export default async function StudentsPage() {
   const admin = await currentAdminUser();
@@ -51,60 +51,22 @@ export default async function StudentsPage() {
         .where(inArray(clinicalLead.assignedHubId, projectHubIds)),
     ),
   );
-  const projectCaseIds = db
-    .select({ id: clinicalScreeningInfo.id })
-    .from(clinicalScreeningInfo)
-    .where(projectCaseFilter);
   const activeProjectStudentFilter = and(
     isNull(student.archivedAt),
     inArray(student.schoolId, projectSchoolIds),
   );
 
   const [
-    totalNumberOfStudentsInHub,
     totalGroupSessions,
-    hubClinicalCases,
-    hubClinicalSessions,
-    hubClinicalSessionsBySession,
-    hubClinicalSessionsBySupervisor,
-    hubClinicalSessionsByInitialReferredFrom,
+    clinicalStats,
     studentAggregations,
     studentAttendanceBySessionType,
     studentsDropOutReasonsGroupedByReason,
     incompleteStudentCount,
     studentGroupRatingsRaw,
   ] = await Promise.all([
-    db.$count(student, activeProjectStudentFilter),
     db.$count(interventionSession, eq(interventionSession.projectId, projectId)),
-    db.query.clinicalScreeningInfo.findMany({ where: () => projectCaseFilter }),
-    db.query.clinicalSessionAttendance.findMany({
-      where: (a, { inArray }) => inArray(a.caseId, projectCaseIds),
-    }),
-    db
-      .select({
-        session: clinicalSessionAttendance.session,
-        count: count(clinicalSessionAttendance.session),
-      })
-      .from(clinicalSessionAttendance)
-      .where(inArray(clinicalSessionAttendance.caseId, projectCaseIds))
-      .groupBy(clinicalSessionAttendance.session),
-    db
-      .select({
-        supervisorName: supervisor.supervisorName,
-        count: count(clinicalScreeningInfo.currentSupervisorId),
-      })
-      .from(clinicalScreeningInfo)
-      .leftJoin(supervisor, eq(supervisor.id, clinicalScreeningInfo.currentSupervisorId))
-      .where(and(projectCaseFilter, isNotNull(clinicalScreeningInfo.currentSupervisorId)))
-      .groupBy(clinicalScreeningInfo.currentSupervisorId, supervisor.supervisorName),
-    db
-      .select({
-        initialReferredFromSpecified: clinicalScreeningInfo.initialReferredFromSpecified,
-        count: count(clinicalScreeningInfo.initialReferredFrom),
-      })
-      .from(clinicalScreeningInfo)
-      .where(projectCaseFilter)
-      .groupBy(clinicalScreeningInfo.initialReferredFromSpecified),
+    fetchStudentClinicalStats(projectCaseFilter),
     db.query.student.findMany({
       where: () => activeProjectStudentFilter,
       columns: { yearOfBirth: true, age: true, gender: true, form: true },
@@ -155,11 +117,7 @@ export default async function StudentsPage() {
     `)
       .then((r) => r.rows),
   ]);
-
-  const clinicalCasesBySupervisors = hubClinicalSessionsBySupervisor.map((item) => ({
-    supervisorName: item.supervisorName || "Unknown",
-    count: item.count,
-  }));
+  const totalNumberOfStudentsInHub = studentAggregations.length;
 
   const studentsGroupedByAge: Record<string, number> = {};
   const studentsGroupedByGender: Record<string, number> = {};
@@ -202,8 +160,8 @@ export default async function StudentsPage() {
       <StudentsStats
         totalNumberOfStudentsInHub={totalNumberOfStudentsInHub}
         totalGroupSessions={totalGroupSessions}
-        hubClinicalCases={hubClinicalCases}
-        hubClinicalSessions={hubClinicalSessions}
+        clinicalCaseCount={clinicalStats.caseCount}
+        clinicalSessionCount={clinicalStats.sessionCount}
       />
 
       <HubStudentsDetailsCharts
@@ -213,13 +171,7 @@ export default async function StudentsPage() {
         studentGroupRatings={studentGroupRatings}
       />
 
-      <HubStudentClinicalDataCharts
-        hubClinicalSessions={hubClinicalSessions}
-        hubClinicalCases={hubClinicalCases}
-        hubClinicalSessionsBySession={hubClinicalSessionsBySession}
-        clinicalCasesBySupervisors={clinicalCasesBySupervisors}
-        hubClinicalSessionsByInitialReferredFrom={hubClinicalSessionsByInitialReferredFrom}
-      />
+      <HubStudentClinicalDataCharts clinicalStats={clinicalStats} />
 
       <HubStudentDemographicsCharts
         studentsGroupedByAge={studentsGroupedByAge}

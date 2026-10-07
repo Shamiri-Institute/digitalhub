@@ -149,11 +149,11 @@ async function requireCoordinatorHub() {
   return coordinatorHubId;
 }
 
-/** The coordinator's hub id, after checking the school is in that hub. */
+/** The coordinator's user id and hub id, after checking the school is in that hub. */
 async function requireSchoolInCoordinatorHub(schoolId: string) {
-  const coordinatorHubId = await requireCoordinatorHub();
-  await requireSchoolInHub(schoolId, coordinatorHubId);
-  return coordinatorHubId;
+  const coordinator = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+  await requireSchoolInHub(schoolId, coordinator.hubId);
+  return coordinator;
 }
 
 /** Updates the school and records the change; returns the school with its dropout history. */
@@ -182,16 +182,8 @@ function setSchoolDropout(
 
 export async function dropoutSchool(schoolId: string, dropoutReason: string) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-
-    if (!hubCoordinator?.profile || !hubCoordinator.session?.user.id) {
-      throw new Error("The session has not been authenticated");
-    }
-
-    const userId = hubCoordinator.session.user.id;
-
     const data = DropoutSchoolSchema.parse({ schoolId, dropoutReason });
-    await requireSchoolInCoordinatorHub(data.schoolId);
+    const { userId } = await requireSchoolInCoordinatorHub(data.schoolId);
     const result = await setSchoolDropout(
       data.schoolId,
       { dropoutReason: data.dropoutReason, droppedOut: true, droppedOutAt: new Date() },
@@ -216,17 +208,12 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
 
 export async function undoDropoutSchool(schoolId: string) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-
-    if (!hubCoordinator) {
-      throw new Error("The session has not been authenticated");
-    }
-    await requireSchoolInCoordinatorHub(schoolId);
+    const { userId } = await requireSchoolInCoordinatorHub(schoolId);
 
     const result = await setSchoolDropout(
       schoolId,
       { dropoutReason: null, droppedOut: false, droppedOutAt: null },
-      hubCoordinator.session.user.id as string,
+      userId,
     );
 
     revalidatePath("/hc/schools");
@@ -397,12 +384,6 @@ export async function editSchoolInformation(
   schoolInfo: z.infer<typeof EditSchoolSchema>,
 ) {
   try {
-    const authedCoordinator = await currentHubCoordinator();
-
-    if (!authedCoordinator) {
-      throw new Error("User not authorised to perform this function");
-    }
-
     const parsedData = EditSchoolSchema.parse(schoolInfo);
     await requireSchoolInCoordinatorHub(schoolId);
 
@@ -461,15 +442,9 @@ export async function assignSchoolPointSupervisor(
   schoolInfo: z.infer<typeof AssignPointSupervisorSchema>,
 ) {
   try {
-    const authedCoordinator = await currentHubCoordinator();
-
-    if (!authedCoordinator) {
-      throw new Error("User not authorised to perform this function");
-    }
-
     const parsedData = AssignPointSupervisorSchema.parse(schoolInfo);
     // Both the school and the new point supervisor must be in the coordinator's hub.
-    const coordinatorHubId = await requireSchoolInCoordinatorHub(schoolId);
+    const { hubId: coordinatorHubId } = await requireSchoolInCoordinatorHub(schoolId);
     const supervisorInCoordinatorHub = await db.query.supervisor.findFirst({
       where: (s, { and, eq }) =>
         and(eq(s.id, parsedData.assignedSupervisorId), eq(s.hubId, coordinatorHubId)),

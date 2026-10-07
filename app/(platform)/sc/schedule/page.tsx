@@ -1,5 +1,5 @@
 import { signOut } from "next-auth/react";
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { ScheduleCalendar } from "#/components/common/session/schedule-calendar";
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
@@ -9,7 +9,7 @@ import { getHubScheduleStats } from "#/lib/actions/hub";
 import { fetchHubFellowRatings, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
 
 export default async function SupervisorSchedulePage() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }

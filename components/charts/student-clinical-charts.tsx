@@ -1,6 +1,5 @@
 "use client";
 
-import type { clinicalScreeningInfo, clinicalSessionAttendance } from "#/db/schema";
 import {
   Bar,
   BarChart,
@@ -16,48 +15,17 @@ import {
 } from "recharts";
 import { clinicalCasesColors, possibleSessions } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
-
-type CaseData = { name: "Active" | "FollowUp" | "Terminated"; value: number };
-type ClinicalScreeningInfo = typeof clinicalScreeningInfo.$inferSelect;
-type ClinicalSessionAttendance = typeof clinicalSessionAttendance.$inferSelect;
+import type { StudentClinicalStats } from "#/lib/actions/clinical/students";
 
 export default function HubStudentClinicalDataCharts({
-  hubClinicalCases,
-  hubClinicalSessions,
-  hubClinicalSessionsBySession,
-  clinicalCasesBySupervisors,
-  hubClinicalSessionsByInitialReferredFrom,
+  clinicalStats,
 }: {
-  hubClinicalCases: ClinicalScreeningInfo[];
-  hubClinicalSessions: ClinicalSessionAttendance[];
-  hubClinicalSessionsBySession: {
-    session: ClinicalSessionAttendance["session"];
-    count: number;
-  }[];
-  clinicalCasesBySupervisors: {
-    supervisorName: string;
-    count: number;
-  }[];
-  hubClinicalSessionsByInitialReferredFrom: {
-    initialReferredFromSpecified: ClinicalScreeningInfo["initialReferredFromSpecified"];
-    count: number;
-  }[];
+  clinicalStats: StudentClinicalStats;
 }) {
-  const caseStatusCounts: CaseData[] = [
-    { name: "Active", value: 0 },
-    { name: "FollowUp", value: 0 },
-    { name: "Terminated", value: 0 },
-  ];
-
-  hubClinicalCases.forEach((case_) => {
-    if (case_.caseStatus === "Active" && caseStatusCounts[0]) {
-      caseStatusCounts[0].value += 1;
-    } else if (case_.caseStatus === "FollowUp" && caseStatusCounts[1]) {
-      caseStatusCounts[1].value += 1;
-    } else if (case_.caseStatus === "Terminated" && caseStatusCounts[2]) {
-      caseStatusCounts[2].value += 1;
-    }
-  });
+  const caseStatusCounts = (["Active", "FollowUp", "Terminated"] as const).map((name) => ({
+    name,
+    value: clinicalStats.casesByStatus[name] ?? 0,
+  }));
 
   const emptyDataObject = [
     {
@@ -71,14 +39,14 @@ export default function HubStudentClinicalDataCharts({
   }, 0);
 
   const filteredFormatedSessions = possibleSessions.map((session) => {
-    const found = hubClinicalSessionsBySession.find((item) => item.session === session);
+    const found = clinicalStats.sessionsBySession.find((item) => item.session === session);
     return {
       session,
       count: found ? found.count : 0,
     };
   });
 
-  const filteredByInitialReferredFrom = hubClinicalSessionsByInitialReferredFrom.map((item) => {
+  const filteredByInitialReferredFrom = clinicalStats.casesByReferredFrom.map((item) => {
     return {
       initialReferredFrom: item.initialReferredFromSpecified,
       count: item.count,
@@ -123,7 +91,7 @@ export default function HubStudentClinicalDataCharts({
       </ChartCard>
 
       <ChartCard
-        title={`Clinical sessions  (${hubClinicalSessions?.length})`}
+        title={`Clinical sessions  (${clinicalStats.sessionCount})`}
         showCardFooter={false}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -142,7 +110,7 @@ export default function HubStudentClinicalDataCharts({
       <ChartCard title="Clinical cases by supervisor" showCardFooter={false}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={clinicalCasesBySupervisors}
+            data={clinicalStats.casesBySupervisor}
             margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
