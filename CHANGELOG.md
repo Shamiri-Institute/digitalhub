@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.38.6](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.5...v1.38.6) (2026-10-07)
+
+### Bug Fixes
+
+- **attendance:** stop duplicate fellow and supervisor attendances (ENG-2238) ([#889](https://github.com/Shamiri-Institute/digitalhub/issues/889)) ([9b514d5](https://github.com/Shamiri-Institute/digitalhub/commit/9b514d56ade284cdc9c72a582e5a46b28a3c1b6e))
+- **auth:** check session and group scope on writes ([#891](https://github.com/Shamiri-Institute/digitalhub/issues/891)) ([13f147c](https://github.com/Shamiri-Institute/digitalhub/commit/13f147caf95e99a01bcc2cb6d79aef00a7a5bf46))
+- **auth:** take action scope from the session ([#890](https://github.com/Shamiri-Institute/digitalhub/issues/890)) ([1344809](https://github.com/Shamiri-Institute/digitalhub/commit/134480940a4bc3766c3eeafcfcf6bbbb3edd30a8))
+- **db:** survive dropped pool connections and time out stalled I/O ([#892](https://github.com/Shamiri-Institute/digitalhub/issues/892)) ([51647f4](https://github.com/Shamiri-Institute/digitalhub/commit/51647f45b6d02c0adac80ee831030c2fba4e156b))
+
 ## [1.38.5](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.4...v1.38.5) (2026-10-06)
 
 ### Bug Fixes
