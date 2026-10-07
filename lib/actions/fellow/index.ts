@@ -170,7 +170,6 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
           throw new Error(`Fellow ${id} not found`);
         }
 
-        // Update the corresponding user's email
         const updatedUsers = await tx
           .update(user)
           .set({ email: fellowEmail })
@@ -187,7 +186,6 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
       };
     }
     if (mode === "add") {
-      // Check if email already exists
       const existingUser = await db.query.user.findFirst({
         where: (u, { eq }) => eq(u.email, fellowEmail),
         with: { memberships: true },
@@ -777,20 +775,13 @@ export async function markManyFellowAttendance(
         const attendanceStatus = attendedFlag(attended);
         const amount = session.session?.amount ?? 0;
 
-        // update existing attendances
         const attendances = await tx.query.fellowAttendance.findMany({
           where: (a, { and, eq, inArray }) =>
             and(inArray(a.fellowId, ids), eq(a.sessionId, sessionId)),
           with: { fellow: true, PayoutStatements: true },
         });
 
-        const data: {
-          payout: typeof payoutStatements.$inferInsert | undefined;
-          id: number;
-          fellowId: string;
-        }[] = [];
-
-        attendances.forEach((attendance) => {
+        const data = attendances.map((attendance) => {
           if (attendance.processedAt !== null) {
             throw new Error(
               `An error occurred while marking attendances. ${attendance.fellow.fellowName}'s attendance has already been processed on ${format(
@@ -828,11 +819,11 @@ export async function markManyFellowAttendance(
             };
           }
 
-          data.push({
+          return {
             payout,
             id: attendance.id,
             fellowId: attendance.fellow.id,
-          });
+          };
         });
 
         const payoutRows = data
