@@ -17,5 +17,5 @@ export async function getFellowClinicalCasesData() {
     throw new Error("Hub has no project");
   }
 
-  return await fetchFellowClinicalCasesData({ projectId });
+  return fetchFellowClinicalCasesData({ projectId });
 }

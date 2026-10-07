@@ -176,7 +176,7 @@ export async function createTriageEvent(
         and(eq(t.studentId, parsed.studentId), eq(t.sessionId, parsed.sessionId)),
     });
     if (existing) {
-      return updateTriageEvent(
+      return await updateTriageEvent(
         { ...parsed, id: existing.id },
         studentAttendanceId ?? existing.studentAttendanceId ?? undefined,
       );

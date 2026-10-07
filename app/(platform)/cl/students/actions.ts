@@ -16,17 +16,17 @@ async function hubScope() {
 }
 
 export async function getOverallStudentsDataBreakdown() {
-  return await fetchOverallStudentsDataBreakdown(await hubScope());
+  return fetchOverallStudentsDataBreakdown(await hubScope());
 }
 
 export async function getStudentsDataBreakdown() {
-  return await fetchStudentsDataBreakdown(await hubScope());
+  return fetchStudentsDataBreakdown(await hubScope());
 }
 
 export async function clinicalSessionsDataBreakdown() {
-  return await fetchClinicalSessionsDataBreakdown(await hubScope());
+  return fetchClinicalSessionsDataBreakdown(await hubScope());
 }
 
 export async function getStudentsStatsBreakdown() {
-  return await fetchStudentsStatsBreakdown(await hubScope());
+  return fetchStudentsStatsBreakdown(await hubScope());
 }

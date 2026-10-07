@@ -512,7 +512,7 @@ export async function submitStudentReportingNotes(
 export async function checkExistingStudents(admissionNumber: string, schoolId: string) {
   const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
   await requireCallerAtSchool(caller, schoolId);
-  return await db.query.student.findMany({
+  return db.query.student.findMany({
     where: (s, { and, eq, isNull }) =>
       and(isNull(s.archivedAt), eq(s.admissionNumber, admissionNumber), eq(s.schoolId, schoolId)),
     with: {
@@ -577,7 +577,7 @@ export async function getHubSchoolsForStudentTransfer() {
     return [];
   }
 
-  return await db.query.school.findMany({
+  return db.query.school.findMany({
     where: (s, { and, eq, isNull }) => and(eq(s.hubId, hubId), isNull(s.archivedAt)),
     columns: { id: true, schoolName: true, visibleId: true },
     orderBy: (s, { asc }) => asc(s.schoolName),
@@ -591,7 +591,7 @@ export async function getSchoolGroupsForStudentTransfer(schoolId: string) {
     return [];
   }
 
-  return await db.query.interventionGroup.findMany({
+  return db.query.interventionGroup.findMany({
     where: (g, { and, eq, inArray, isNull }) =>
       and(
         eq(g.schoolId, schoolId),
