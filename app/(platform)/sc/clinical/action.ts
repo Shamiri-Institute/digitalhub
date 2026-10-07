@@ -3,7 +3,7 @@
 import { and, count, desc, eq } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
-import { currentSupervisorLite, getCurrentUserSession } from "#/app/auth";
+import { currentSupervisor, getCurrentUserSession } from "#/app/auth";
 import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
@@ -102,7 +102,7 @@ const clinicalHome = (role: ImplementerRole) =>
   role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical";
 
 export async function getClinicalCases() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (!supervisor) throw new Error("Unauthorized");
   const supervisorId = supervisor.profile.id;
 
@@ -169,7 +169,7 @@ export async function getClinicalCases() {
 }
 
 export async function getClinicalCasesStats() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (!supervisor) throw new Error("Unauthorized");
 
   const caseStats = await db
@@ -331,7 +331,7 @@ export async function referClinicalCaseToSupervisor(data: {
 }
 
 export async function getSupervisorsInHub() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (!supervisor?.profile.hubId) throw new Error("Unauthorized");
   const { hubId, id: supervisorId } = supervisor.profile;
   const supervisors = await db.query.supervisor.findMany({
@@ -352,7 +352,7 @@ export async function getSupervisorsInHub() {
 }
 
 export async function getSchoolsInHub() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   const projectId = supervisor?.profile?.hub?.projectId;
   const hubId = supervisor?.profile.hubId;
   if (!supervisor || !projectId || !hubId) {
@@ -785,7 +785,7 @@ export async function updateClinicalCaseAttendance(data: {
 }
 
 export async function getClinicalLeads() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (!supervisor) {
     throw new Error("Supervisor not found");
   }
@@ -857,7 +857,7 @@ export async function referClinicalCaseToClinicalLead(data: {
 }
 
 export async function getReferredCasesToSupervisor() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (!supervisor) {
     throw new Error("Supervisor not found");
   }
@@ -892,7 +892,7 @@ async function latestTransferTrail(tx: Transaction, caseId: string) {
  * else reads as missing.
  */
 async function answerReferral(caseId: string, decision: "Approved" | "Declined") {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (!supervisor) {
     throw new Error("Unauthorized");
   }

@@ -52,9 +52,9 @@ export const currentHubCoordinator = cache(async () => {
   return { profile: hubCoordinator, session };
 });
 
-export type CurrentSupervisorLite = Awaited<ReturnType<typeof currentSupervisorLite>>;
+export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
 
-export const currentSupervisorLite = cache(async () => {
+export const currentSupervisor = cache(async () => {
   const session = await getCurrentUserSession();
   if (!session) {
     return null;
@@ -257,7 +257,7 @@ export const getCurrentPersonnel = cache(async () => {
   const session = await getCurrentUserSession();
   switch (session?.user.activeMembership?.role) {
     case ImplementerRole.SUPERVISOR:
-      return currentSupervisorLite();
+      return currentSupervisor();
     case ImplementerRole.HUB_COORDINATOR: {
       const coordinator = await currentHubCoordinator();
       return (

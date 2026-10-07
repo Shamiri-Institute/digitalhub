@@ -1,10 +1,10 @@
 import { ImplementerRole } from "#/db/enums";
 import { redirect } from "next/navigation";
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import TicketsDatatable from "#/components/common/ticket/tickets-datatable";
 import { getAllTickets } from "#/lib/actions/ticket";
 export default async function TicketsPage() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (supervisor === null) {
     redirect("/login");
   }

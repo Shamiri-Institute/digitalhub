@@ -2,7 +2,7 @@
 
 import { eq } from "drizzle-orm";
 
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { fellow } from "#/db/schema";
 import {
   type FellowPayoutDetail,
@@ -14,7 +14,7 @@ export type { FellowPayoutDetail };
 export type SupervisorPayoutHistoryType = PayoutHistoryEntry;
 
 export async function loadSupervisorPayoutHistory(): Promise<SupervisorPayoutHistoryType[]> {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
 
   if (!supervisor) {
     throw new Error("Unauthorised user");

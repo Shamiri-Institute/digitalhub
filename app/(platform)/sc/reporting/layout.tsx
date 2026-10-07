@@ -1,12 +1,12 @@
 import { signOut } from "next-auth/react";
 import type React from "react";
 import RenderSCReportingTabs from "#/app/(platform)/sc/reporting/components/render-reporting-tabs";
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 
 export default async function ReportingViewLayout({ children }: { children: React.ReactNode }) {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
 
   if (!supervisor) {
     await signOut({ callbackUrl: "/login" });

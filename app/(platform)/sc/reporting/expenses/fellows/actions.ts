@@ -1,6 +1,6 @@
 "use server";
 
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
 
 export type SupervisorFellowsAttendancesType = Awaited<
@@ -8,7 +8,7 @@ export type SupervisorFellowsAttendancesType = Awaited<
 >[number];
 
 export async function loadSupervisorFellowAttendance() {
-  const currentSupervisorData = await currentSupervisorLite();
+  const currentSupervisorData = await currentSupervisor();
 
   if (!currentSupervisorData) {
     throw new Error("Unauthorised user");
@@ -128,7 +128,7 @@ type FellowAttendance = {
 };
 
 export async function submitPaymentReversal(data: { id: number; name: string }) {
-  const currentSupervisorData = await currentSupervisorLite();
+  const currentSupervisorData = await currentSupervisor();
   if (!currentSupervisorData) {
     throw new Error("Unauthorised user");
   }
@@ -144,7 +144,7 @@ export async function submitRequestRepayment(data: {
   name: string;
   mpesaNumber: string;
 }) {
-  const currentSupervisorData = await currentSupervisorLite();
+  const currentSupervisorData = await currentSupervisor();
   if (!currentSupervisorData) {
     throw new Error("Unauthorised user");
   }

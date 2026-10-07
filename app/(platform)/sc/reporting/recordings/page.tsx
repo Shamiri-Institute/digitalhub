@@ -1,10 +1,10 @@
 import { signOut } from "next-auth/react";
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { loadSupervisorRecordings } from "./actions";
 import RecordingsDatatable from "./components/recordings-datatable";
 
 export default async function RecordingsPage() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }

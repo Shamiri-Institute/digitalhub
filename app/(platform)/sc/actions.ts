@@ -2,14 +2,14 @@
 import { eq, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
 
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
 import { fellow, interventionGroup } from "#/db/schema";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
 export async function loadFellowsData() {
-  const supervisorProfile = await currentSupervisorLite();
+  const supervisorProfile = await currentSupervisor();
 
   if (!supervisorProfile) {
     throw new Error("Unauthorised user");

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { signOut } from "next-auth/react";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { fetchHubSupervisors, fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -11,7 +11,7 @@ import { Separator } from "#/components/ui/separator";
 import { getHubScheduleStats } from "#/lib/actions/hub";
 
 export default async function SchoolsPage() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
 
   if (!supervisor) {
     redirect("/login");

@@ -8,7 +8,7 @@ import {
 import FellowActivitySection from "#/app/(platform)/sc/triage/components/fellow-activity-section";
 import RequiresActionSection from "#/app/(platform)/sc/triage/components/requires-action-section";
 import TriagePageLoading from "#/app/(platform)/sc/triage/loading";
-import { currentSupervisorLite } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
@@ -78,7 +78,7 @@ function StatsSkeleton() {
 }
 
 async function TriageContent() {
-  const supervisor = await currentSupervisorLite();
+  const supervisor = await currentSupervisor();
   if (!supervisor?.profile) {
     await signOut({ callbackUrl: "/login" });
     return null;
