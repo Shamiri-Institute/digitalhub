@@ -2,6 +2,7 @@
 
 import { and, eq, isNull, notInArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 import { currentSupervisor } from "#/app/auth";
 import { db, isUniqueViolation } from "#/db/client";
@@ -210,8 +211,6 @@ async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<
     } catch (dbError) {
       console.error(`Failed to mark recording ${recordingId} as FAILED:`, dbError);
     }
-
-    throw error;
   }
 }
 
@@ -329,9 +328,7 @@ export async function createSessionRecording(input: {
     };
   }
 
-  await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
-    console.error(`Non-blocking Fidelity submission failed for recording ${recording.id}:`, error);
-  });
+  after(() => submitToFidelityAPI(recording.id, recording.s3Key));
 
   revalidatePath("/sc/reporting/recordings");
 
@@ -453,12 +450,7 @@ export async function retryRecordingProcessing(recordingId: string) {
       throw new Error(`Recording ${recordingId} not found`);
     }
 
-    await submitToFidelityAPI(recording.id, recording.s3Key).catch((error) => {
-      console.error(
-        `Non-blocking Fidelity resubmission failed for recording ${recording.id}:`,
-        error,
-      );
-    });
+    after(() => submitToFidelityAPI(recording.id, recording.s3Key));
 
     revalidatePath("/sc/reporting/recordings");
 
