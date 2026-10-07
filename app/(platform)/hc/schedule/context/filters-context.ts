@@ -1,16 +1,12 @@
 import { SessionStatus } from "#/db/enums";
-import { createContext, type Dispatch, type SetStateAction } from "react";
+import { createContext, type Dispatch, type SetStateAction, useContext } from "react";
 
-const sessionTypeFilterOptions: { [key: string]: boolean } = {};
-
-const statusFilterOptions: { [key: string]: boolean } = {};
+export const statusFilterOptions: { [key: string]: boolean } = {};
 Object.keys(SessionStatus).forEach((status) => {
   statusFilterOptions[status] = true;
 });
 
 export type DateRangeType = "day" | "week" | "month";
-
-const dates: DateRangeType = "week";
 
 export type Filters = {
   sessionTypes: {
@@ -26,13 +22,12 @@ export type Filters = {
 export const FiltersContext = createContext<{
   filters: Filters;
   setFilters: Dispatch<SetStateAction<Filters>>;
-}>({
-  filters: {
-    sessionTypes: sessionTypeFilterOptions,
-    statusTypes: statusFilterOptions,
-    dates,
-  },
-  setFilters: () => {},
-});
+} | null>(null);
 
-export { sessionTypeFilterOptions, statusFilterOptions };
+export function useFilters() {
+  const context = useContext(FiltersContext);
+  if (!context) {
+    throw new Error("useFilters must be used within a FiltersContext provider");
+  }
+  return context;
+}

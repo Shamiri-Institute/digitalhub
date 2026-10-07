@@ -1,11 +1,10 @@
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
-import { type Dispatch, type SetStateAction, useContext, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { RescheduleSessionSchema } from "#/components/common/session/schema";
-import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -37,15 +36,15 @@ export default function RescheduleSession({
   session,
   open,
   onOpenChange,
+  onSaved,
   children,
 }: {
   session: Session;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
+  onSaved?: () => Promise<void>;
   children: React.ReactNode;
 }) {
-  const { refresh } = useContext(SessionsContext);
-
   const [hour, setHour] = useState(format(session.sessionDate, "h"));
   const [minutes, setMinutes] = useState(format(session.sessionDate, "mm"));
   const [time, setTime] = useState(format(session.sessionDate, "aa"));
@@ -76,7 +75,7 @@ export default function RescheduleSession({
       return;
     }
 
-    await refresh();
+    await onSaved?.();
     toast({
       description: response.message,
     });

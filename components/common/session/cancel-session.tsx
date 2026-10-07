@@ -1,7 +1,6 @@
 "use client";
 
-import { type Dispatch, type SetStateAction, useContext, useTransition } from "react";
-import { SessionsContext } from "#/components/common/session/sessions-provider";
+import { type Dispatch, type SetStateAction, useTransition } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -19,14 +18,15 @@ export default function CancelSession({
   sessionId,
   open,
   onOpenChange,
+  onSaved,
   children,
 }: {
   sessionId: string;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
+  onSaved?: () => Promise<void>;
   children: React.ReactNode;
 }) {
-  const { refresh } = useContext(SessionsContext);
   const [isPending, startTransition] = useTransition();
 
   function cancelSelectedSession() {
@@ -43,7 +43,7 @@ export default function CancelSession({
           return;
         }
 
-        await refresh();
+        await onSaved?.();
         toast({
           description: response.message,
         });

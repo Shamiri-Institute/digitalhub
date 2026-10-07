@@ -2,18 +2,11 @@
 
 import { format, isBefore } from "date-fns";
 import type React from "react";
-import {
-  type Dispatch,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-  useTransition,
-} from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema";
-import { SessionsContext } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
@@ -31,14 +24,17 @@ export function MarkSessionOccurrence({
   isOpen,
   setIsOpen,
   defaultOccurrence,
+  sessions,
+  onSaved,
 }: {
   id?: string;
   children: React.ReactNode;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   defaultOccurrence?: boolean | null;
+  sessions: Session[];
+  onSaved?: () => Promise<void>;
 }) {
-  const { sessions, refresh } = useContext(SessionsContext);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof MarkSessionOccurrenceSchema>>({
@@ -94,7 +90,7 @@ export function MarkSessionOccurrence({
           });
           return;
         }
-        await refresh();
+        await onSaved?.();
         setConfirmDialogOpen(false);
         setIsOpen(false);
         toast({

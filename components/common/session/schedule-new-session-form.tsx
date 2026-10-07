@@ -1,13 +1,13 @@
 import type { ImplementerRole } from "#/db/enums";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import RescheduleSession from "#/components/common/session/reschedule-session";
 import { ScheduleNewSessionSchema } from "#/components/common/session/schema";
 import { SessionDetail } from "#/components/common/session/session-list";
-import { SessionsContext } from "#/components/common/session/sessions-provider";
+import { useSessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -49,7 +49,7 @@ export function ScheduleNewSession({
   role: ImplementerRole;
 }) {
   const { toast } = useToast();
-  const { refresh } = useContext(SessionsContext);
+  const { refresh } = useSessionsContext();
 
   const [mode, setMode] = useState<"school" | "venue">("school");
 
@@ -470,6 +470,7 @@ export function ScheduleNewSession({
           session={existingSession}
           open={rescheduleDialog}
           onOpenChange={setRescheduleDialog}
+          onSaved={refresh}
         >
           <SessionDetail
             state={{ session: existingSession }}
