@@ -8,41 +8,42 @@ import { ImplementerRole, type SessionStatus } from "#/db/enums";
 import { hub, interventionGroup } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import { requireHubRole } from "#/lib/auth/require-hub-role";
 import { getDefaultSessionDateRange } from "#/lib/date-utils";
 import { clinicalCasesCountExtras } from "#/lib/actions/schedule-data";
 
 export async function fetchInterventionSessions({
-  activeProjectId: clientActiveProjectId,
-  hubId,
-  implementerId,
-  role,
   start,
   end,
   filters,
-  fellowId,
 }: {
-  activeProjectId?: string | null;
-  hubId?: string;
-  implementerId?: string;
-  role: ImplementerRole;
   start?: Date;
   end?: Date;
   filters?: Filters;
-  fellowId?: string;
 }) {
-  await requireAuthRole();
+  const membership = await requireAuthRole(
+    ImplementerRole.ADMIN,
+    ImplementerRole.HUB_COORDINATOR,
+    ImplementerRole.SUPERVISOR,
+    ImplementerRole.FELLOW,
+  );
   let projectId: string;
-  if (role === ImplementerRole.ADMIN) {
-    if (!implementerId) {
-      throw new Error("No implementer ID provided for admin");
-    }
-    projectId = clientActiveProjectId ?? (await getActiveProjectId());
+  let hubId: string | undefined;
+  let implementerId: string | undefined;
+  let fellowId: string | undefined;
+  if (membership.role === ImplementerRole.ADMIN) {
+    implementerId = membership.implementerId;
+    projectId = await getActiveProjectId();
   } else {
-    if (!hubId) {
-      throw new Error("No assigned hub ID provided");
-    }
+    const caller = await requireHubRole(
+      ImplementerRole.HUB_COORDINATOR,
+      ImplementerRole.SUPERVISOR,
+      ImplementerRole.FELLOW,
+    );
+    hubId = caller.hubId;
+    fellowId = caller.role === ImplementerRole.FELLOW ? caller.profileId : undefined;
     const hubRow = await db.query.hub.findFirst({
-      where: (h, { eq }) => eq(h.id, hubId),
+      where: (h, { eq }) => eq(h.id, caller.hubId),
       columns: { projectId: true },
     });
     if (!hubRow?.projectId) {
@@ -54,7 +55,6 @@ export async function fetchInterventionSessions({
   const { start: rangeStart, end: rangeEnd } =
     start && end ? { start, end } : getDefaultSessionDateRange();
 
-  const isFellow = role === ImplementerRole.FELLOW && !!fellowId;
   const statuses =
     filters &&
     (Object.keys(filters.statusTypes).filter((status) => {
@@ -80,7 +80,7 @@ export async function fetchInterventionSessions({
         lte(s.sessionDate, rangeEnd),
         inArray(s.hubId, hubIds),
         statuses ? inArray(s.status, statuses) : undefined,
-        isFellow
+        fellowId !== undefined
           ? inArray(
               s.schoolId,
               db
@@ -106,7 +106,7 @@ export async function fetchInterventionSessions({
           where: (sc, { inArray }) => inArray(sc.id, schoolIds),
           with: {
             interventionGroups: {
-              ...(isFellow ? { where: (g, { eq }) => eq(g.leaderId, fellowId) } : {}),
+              ...(fellowId !== undefined ? { where: (g, { eq }) => eq(g.leaderId, fellowId) } : {}),
               with: {
                 students: { extras: clinicalCasesCountExtras },
               },

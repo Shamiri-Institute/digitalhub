@@ -1,10 +1,9 @@
 "use server";
 
-import { eq } from "drizzle-orm";
-
 import { db } from "#/db/client";
-import { fellow, type fellowGroupReport } from "#/db/schema";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import { ImplementerRole } from "#/db/enums";
+import type { fellowGroupReport } from "#/db/schema";
+import { fellowsInCallerScope, requireHubRole } from "#/lib/auth/require-hub-role";
 
 export type FellowGroupReportRow = {
   groupId: string;
@@ -15,29 +14,14 @@ export type FellowGroupReportRow = {
   report: typeof fellowGroupReport.$inferSelect | null;
 };
 
-export type LoadFellowGroupReportsOptions =
-  | { scope: "supervisor"; supervisorId: string }
-  | { scope: "hub"; hubId: string }
-  | { scope?: "all" };
-
-export async function loadFellowGroupReports(options?: LoadFellowGroupReportsOptions) {
-  await requireAuthRole();
+export async function loadFellowGroupReports() {
+  const caller = await requireHubRole(ImplementerRole.SUPERVISOR, ImplementerRole.HUB_COORDINATOR);
   try {
-    const leadersInScope =
-      options?.scope === "supervisor"
-        ? db
-            .select({ id: fellow.id })
-            .from(fellow)
-            .where(eq(fellow.supervisorId, options.supervisorId))
-        : options?.scope === "hub"
-          ? db.select({ id: fellow.id }).from(fellow).where(eq(fellow.hubId, options.hubId))
-          : undefined;
-
     const groups = await db.query.interventionGroup.findMany({
       where: (g, { and, isNull, inArray }) =>
-        and(leadersInScope ? inArray(g.leaderId, leadersInScope) : undefined, isNull(g.archivedAt)),
+        and(inArray(g.leaderId, fellowsInCallerScope(caller)), isNull(g.archivedAt)),
       with: {
-        leader: true,
+        leader: { columns: { fellowName: true } },
         fellowGroupReports: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] },
       },
       orderBy: (g, { asc }) => asc(g.groupName),

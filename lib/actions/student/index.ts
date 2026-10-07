@@ -17,13 +17,14 @@ import {
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
+  interventionGroup,
   school,
   student,
   studentAttendance,
   studentGroupTransferTrail,
   studentReportingNotes,
 } from "#/db/schema";
-import { requireHubRole } from "#/lib/auth/require-hub-role";
+import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { generateStudentVisibleID } from "#/lib/utils";
 
@@ -63,6 +64,33 @@ async function requireStudentAccess(studentId: string, ...roles: StudentRole[]) 
     throw new Error("Student not found");
   }
   return { caller, student: targetStudent };
+}
+
+const STUDENT_WRITE_ROLES = [
+  ImplementerRole.FELLOW,
+  ImplementerRole.SUPERVISOR,
+  ImplementerRole.HUB_COORDINATOR,
+] as const;
+
+/**
+ * Throws unless the caller works at the school: a fellow leads a group there (hubs borrow fellows,
+ * so their own hub can differ), a supervisor or hub coordinator has the school in their hub.
+ */
+async function requireCallerAtSchool(
+  caller: Awaited<ReturnType<typeof requireHubRole>>,
+  schoolId: string,
+) {
+  if (caller.role !== ImplementerRole.FELLOW) {
+    await requireSchoolInHub(schoolId, caller.hubId);
+    return;
+  }
+  const ledGroup = await db.query.interventionGroup.findFirst({
+    where: (g, { and, eq }) => and(eq(g.schoolId, schoolId), eq(g.leaderId, caller.profileId)),
+    columns: { id: true },
+  });
+  if (!ledGroup) {
+    throw new Error("School not found");
+  }
 }
 
 const attendedFlag = (attended: string | undefined) =>
@@ -106,6 +134,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
       if (!id) {
         throw new Error("Student id is required to edit a student");
       }
+      await requireStudentAccess(id, ...STUDENT_WRITE_ROLES);
       const updated = await db
         .update(student)
         .set({
@@ -132,6 +161,8 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
     if (!assignedGroupId || !schoolId) {
       throw new Error("A group and a school are required to add a student");
     }
+    const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
+    await requireCallerAtSchool(caller, schoolId);
     const [group, schoolRow, studentCount] = await Promise.all([
       db.query.interventionGroup.findFirst({
         where: (g, { eq }) => eq(g.id, assignedGroupId),
@@ -142,7 +173,10 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
       }),
       db.$count(student),
     ]);
-    if (!group) {
+    const callerMayUseGroup =
+      group?.schoolId === schoolId &&
+      (caller.role !== ImplementerRole.FELLOW || group.leaderId === caller.profileId);
+    if (!group || !callerMayUseGroup) {
       throw new Error(`Group ${assignedGroupId} not found`);
     }
     if (!schoolRow) {
@@ -209,11 +243,12 @@ export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceS
     if (!id) {
       throw new Error("Student id is required");
     }
+    await requireStudentAccess(id, ...STUDENT_WRITE_ROLES);
     const studentRow = await db.query.student.findFirst({
       where: (s, { eq }) => eq(s.id, id),
       with: { assignedGroup: true },
     });
-    if (!studentRow) {
+    if (!studentRow || studentRow.schoolId !== session.schoolId) {
       throw new Error(`Student ${id} not found`);
     }
 
@@ -283,6 +318,29 @@ export async function markManyStudentsAttendance(
         success: false,
         message: "This session has not occurred yet.",
       };
+    }
+
+    const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
+    const uniqueIds = [...new Set(ids)];
+    const studentsInCallerScope =
+      session.schoolId === null || uniqueIds.length === 0
+        ? []
+        : await db
+            .select({ id: student.id })
+            .from(student)
+            .innerJoin(school, eq(school.id, student.schoolId))
+            .leftJoin(interventionGroup, eq(interventionGroup.id, student.assignedGroupId))
+            .where(
+              and(
+                inArray(student.id, uniqueIds),
+                eq(student.schoolId, session.schoolId),
+                caller.role === ImplementerRole.FELLOW
+                  ? eq(interventionGroup.leaderId, caller.profileId)
+                  : eq(school.hubId, caller.hubId),
+              ),
+            );
+    if (studentsInCallerScope.length !== uniqueIds.length) {
+      throw new Error("Student not found");
     }
 
     const status = attendedFlag(attended);
@@ -452,11 +510,14 @@ export async function submitStudentReportingNotes(
 }
 
 export async function checkExistingStudents(admissionNumber: string, schoolId: string) {
-  await checkAuth();
+  const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
+  await requireCallerAtSchool(caller, schoolId);
   return await db.query.student.findMany({
     where: (s, { and, eq, isNull }) =>
       and(isNull(s.archivedAt), eq(s.admissionNumber, admissionNumber), eq(s.schoolId, schoolId)),
-    with: { assignedGroup: { with: { leader: true } } },
+    with: {
+      assignedGroup: { with: { leader: { columns: { id: true, fellowName: true } } } },
+    },
   });
 }
 
