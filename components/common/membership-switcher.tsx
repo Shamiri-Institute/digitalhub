@@ -5,6 +5,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import type { Session } from "next-auth";
 import { useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";
+import { toast } from "#/components/ui/use-toast";
 import {
   Command,
   CommandEmpty,
@@ -64,6 +65,10 @@ export function MembershipSwitcher({
       window.location.assign("/");
     } catch (error) {
       console.error("Failed to switch membership:", error);
+      toast({
+        variant: "destructive",
+        description: "Could not switch membership. Please try again.",
+      });
     } finally {
       setLoading(false);
     }

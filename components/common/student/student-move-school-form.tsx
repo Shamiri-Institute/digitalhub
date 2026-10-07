@@ -79,6 +79,9 @@ export default function StudentMoveSchoolForm({
       .then((data) => {
         setSchools(data.filter((school) => school.id !== student.schoolId));
       })
+      .catch(() => {
+        toast({ variant: "destructive", description: "Could not load the schools." });
+      })
       .finally(() => setLoadingSchools(false));
   }, [isOpen, student.id, student.schoolId, form]);
 
@@ -89,10 +92,23 @@ export default function StudentMoveSchoolForm({
       return;
     }
 
+    let cancelled = false;
     setLoadingGroups(true);
     void getSchoolGroupsForStudentTransfer(selectedSchoolId)
-      .then((data) => setGroups(data))
-      .finally(() => setLoadingGroups(false));
+      .then((schoolGroups) => {
+        if (!cancelled) setGroups(schoolGroups);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          toast({ variant: "destructive", description: "Could not load the groups." });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingGroups(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedSchoolId]);
 
   async function onSubmit(values: z.infer<typeof MoveStudentToSchoolSchema>) {

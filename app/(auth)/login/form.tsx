@@ -58,7 +58,10 @@ export function LoginForm() {
         disabled={isLoading}
         onClick={() => {
           setClickedGoogle(true);
-          void signIn("google", { callbackUrl: "/?login=1" });
+          signIn("google", { callbackUrl: "/?login=1" }).catch(() => {
+            setClickedGoogle(false);
+            toast({ title: "Could not start Google sign-in", variant: "destructive" });
+          });
         }}
         className="flex gap-2"
         data-testid="google-login"

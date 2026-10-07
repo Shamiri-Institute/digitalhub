@@ -38,6 +38,7 @@ export function AdminScheduleHeader({ adminUser }: { adminUser: CurrentAdminUser
         }
       } catch (error) {
         console.error("Error loading stats:", error);
+        toast({ description: "Could not load the stats.", variant: "destructive" });
       } finally {
         setLoading(false);
       }
