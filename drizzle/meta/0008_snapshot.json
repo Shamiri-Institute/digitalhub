@@ -109,12 +109,8 @@
           "name": "accounts_user_id_fkey",
           "tableFrom": "accounts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -252,12 +248,8 @@
           "name": "attendance_documents_group_id_fkey",
           "tableFrom": "attendance_documents",
           "tableTo": "intervention_groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -265,12 +257,8 @@
           "name": "attendance_documents_session_id_fkey",
           "tableFrom": "attendance_documents",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -278,12 +266,8 @@
           "name": "attendance_documents_uploaded_by_fkey",
           "tableFrom": "attendance_documents",
           "tableTo": "users",
-          "columnsFrom": [
-            "uploaded_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["uploaded_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -425,12 +409,8 @@
           "name": "clinical_case_notes_case_id_fkey",
           "tableFrom": "clinical_case_notes",
           "tableTo": "clinical_screening_info",
-          "columnsFrom": [
-            "case_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["case_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -438,12 +418,8 @@
           "name": "clinical_case_notes_session_id_fkey",
           "tableFrom": "clinical_case_notes",
           "tableTo": "clinical_session_attendance",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -451,12 +427,8 @@
           "name": "clinical_case_notes_created_by_fkey",
           "tableFrom": "clinical_case_notes",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -533,12 +505,8 @@
           "name": "clinical_case_termination_case_id_fkey",
           "tableFrom": "clinical_case_termination",
           "tableTo": "clinical_screening_info",
-          "columnsFrom": [
-            "case_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["case_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -546,12 +514,8 @@
           "name": "clinical_case_termination_session_id_fkey",
           "tableFrom": "clinical_case_termination",
           "tableTo": "clinical_session_attendance",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -559,12 +523,8 @@
           "name": "clinical_case_termination_created_by_fkey",
           "tableFrom": "clinical_case_termination",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -649,12 +609,8 @@
           "name": "clinical_case_transfer_trail_caseId_fkey",
           "tableFrom": "clinical_case_transfer_trail",
           "tableTo": "clinical_screening_info",
-          "columnsFrom": [
-            "caseId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["caseId"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -713,12 +669,8 @@
           "name": "clinical_expert_case_notes_caseId_fkey",
           "tableFrom": "clinical_expert_case_notes",
           "tableTo": "clinical_screening_info",
-          "columnsFrom": [
-            "caseId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["caseId"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -817,12 +769,8 @@
           "name": "clinical_follow_up_treatment_plan_case_id_fkey",
           "tableFrom": "clinical_follow_up_treatment_plan",
           "tableTo": "clinical_screening_info",
-          "columnsFrom": [
-            "case_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["case_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -887,12 +835,8 @@
           "name": "clinical_follow_up_treatment_plan_audit_trail_user_id_fkey",
           "tableFrom": "clinical_follow_up_treatment_plan_audit_trail",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -900,12 +844,8 @@
           "name": "clinical_follow_up_treatment_plan_audit_trail_case_id_fkey",
           "tableFrom": "clinical_follow_up_treatment_plan_audit_trail",
           "tableTo": "clinical_screening_info",
-          "columnsFrom": [
-            "case_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["case_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -1054,12 +994,8 @@
           "name": "clinical_leads_assigned_hub_id_fkey",
           "tableFrom": "clinical_leads",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "assigned_hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -1067,12 +1003,8 @@
           "name": "clinical_leads_implementer_id_fkey",
           "tableFrom": "clinical_leads",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -1400,12 +1332,8 @@
           "name": "clinical_screening_info_student_id_fkey",
           "tableFrom": "clinical_screening_info",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -1413,12 +1341,8 @@
           "name": "clinical_screening_info_referredTo_supervisor_id_fkey",
           "tableFrom": "clinical_screening_info",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "referredTo_supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["referredTo_supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -1426,12 +1350,8 @@
           "name": "clinical_screening_info_session_when_case_is_flagged_id_fkey",
           "tableFrom": "clinical_screening_info",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "session_when_case_is_flagged_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_when_case_is_flagged_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -1439,12 +1359,8 @@
           "name": "clinical_screening_info_clinicalLeadId_fkey",
           "tableFrom": "clinical_screening_info",
           "tableTo": "clinical_leads",
-          "columnsFrom": [
-            "clinicalLeadId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinicalLeadId"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -1452,12 +1368,8 @@
           "name": "clinical_screening_info_current_supervisor_id_fkey",
           "tableFrom": "clinical_screening_info",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "current_supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["current_supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -1535,12 +1447,8 @@
           "name": "clinical_session_attendance_caseId_fkey",
           "tableFrom": "clinical_session_attendance",
           "tableTo": "clinical_screening_info",
-          "columnsFrom": [
-            "caseId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["caseId"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -1611,12 +1519,8 @@
           "name": "clinical_teams_assigned_hub_id_fkey",
           "tableFrom": "clinical_teams",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "assigned_hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -1624,12 +1528,8 @@
           "name": "clinical_teams_implementer_id_fkey",
           "tableFrom": "clinical_teams",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -1806,12 +1706,8 @@
           "name": "fellows_hub_id_fkey",
           "tableFrom": "fellows",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -1819,12 +1715,8 @@
           "name": "fellows_implementer_id_fkey",
           "tableFrom": "fellows",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -1832,12 +1724,8 @@
           "name": "fellows_supervisor_id_fkey",
           "tableFrom": "fellows",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -2012,12 +1900,8 @@
           "name": "fellow_attendances_fellow_id_fkey",
           "tableFrom": "fellow_attendances",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -2025,12 +1909,8 @@
           "name": "fellow_attendances_project_id_fkey",
           "tableFrom": "fellow_attendances",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -2038,12 +1918,8 @@
           "name": "fellow_attendances_session_id_fkey",
           "tableFrom": "fellow_attendances",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -2051,12 +1927,8 @@
           "name": "fellow_attendances_group_id_fkey",
           "tableFrom": "fellow_attendances",
           "tableTo": "intervention_groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -2064,12 +1936,8 @@
           "name": "fellow_attendances_marked_by_fkey",
           "tableFrom": "fellow_attendances",
           "tableTo": "users",
-          "columnsFrom": [
-            "marked_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["marked_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -2077,12 +1945,8 @@
           "name": "fellow_attendances_school_id_fkey",
           "tableFrom": "fellow_attendances",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -2090,12 +1954,8 @@
           "name": "fellow_attendances_supervisor_id_fkey",
           "tableFrom": "fellow_attendances",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -2166,12 +2026,8 @@
           "name": "fellow_complaints_fellow_id_fkey",
           "tableFrom": "fellow_complaints",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -2179,12 +2035,8 @@
           "name": "fellow_complaints_supervisor_id_fkey",
           "tableFrom": "fellow_complaints",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -2192,12 +2044,8 @@
           "name": "fellow_complaints_created_by_fkey",
           "tableFrom": "fellow_complaints",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -2454,12 +2302,8 @@
           "name": "fellow_group_reports_fellow_id_fkey",
           "tableFrom": "fellow_group_reports",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -2467,12 +2311,8 @@
           "name": "fellow_group_reports_group_id_fkey",
           "tableFrom": "fellow_group_reports",
           "tableTo": "intervention_groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -2480,12 +2320,8 @@
           "name": "fellow_group_reports_project_id_fkey",
           "tableFrom": "fellow_group_reports",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -2544,12 +2380,8 @@
           "name": "fellow_reporting_notes_supervisor_id_fkey",
           "tableFrom": "fellow_reporting_notes",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -2557,12 +2389,8 @@
           "name": "fellow_reporting_notes_fellow_id_fkey",
           "tableFrom": "fellow_reporting_notes",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -2735,12 +2563,8 @@
           "name": "hubs_implementer_id_fkey",
           "tableFrom": "hubs",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -2748,12 +2572,8 @@
           "name": "hubs_project_id_fkey",
           "tableFrom": "hubs",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -2951,12 +2771,8 @@
           "name": "hub_coordinators_implementer_id_fkey",
           "tableFrom": "hub_coordinators",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -2964,12 +2780,8 @@
           "name": "hub_coordinators_assigned_hub_id_fkey",
           "tableFrom": "hub_coordinators",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "assigned_hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -3065,9 +2877,7 @@
         "implementers_visible_id_key": {
           "name": "implementers_visible_id_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "visible_id"
-          ]
+          "columns": ["visible_id"]
         }
       },
       "policies": {},
@@ -3134,12 +2944,8 @@
           "name": "implementer_avatars_implementer_id_fkey",
           "tableFrom": "implementer_avatars",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -3147,12 +2953,8 @@
           "name": "implementer_avatars_file_id_fkey",
           "tableFrom": "implementer_avatars",
           "tableTo": "files",
-          "columnsFrom": [
-            "file_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["file_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -3252,12 +3054,8 @@
           "name": "implementer_invites_implementer_id_fkey",
           "tableFrom": "implementer_invites",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -3323,12 +3121,8 @@
           "name": "implementer_members_implementer_id_fkey",
           "tableFrom": "implementer_members",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -3336,12 +3130,8 @@
           "name": "implementer_members_user_id_fkey",
           "tableFrom": "implementer_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -3442,12 +3232,8 @@
           "name": "intervention_groups_project_id_fkey",
           "tableFrom": "intervention_groups",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -3455,12 +3241,8 @@
           "name": "intervention_groups_leader_id_fkey",
           "tableFrom": "intervention_groups",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "leader_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["leader_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -3468,12 +3250,8 @@
           "name": "intervention_groups_school_id_fkey",
           "tableFrom": "intervention_groups",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -3614,12 +3392,8 @@
           "name": "intervention_group_reports_group_id_fkey",
           "tableFrom": "intervention_group_reports",
           "tableTo": "intervention_groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -3627,12 +3401,8 @@
           "name": "intervention_group_reports_intervention_session_id_fkey",
           "tableFrom": "intervention_group_reports",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "intervention_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["intervention_session_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -3775,12 +3545,8 @@
           "name": "intervention_sessions_project_id_fkey",
           "tableFrom": "intervention_sessions",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -3788,12 +3554,8 @@
           "name": "intervention_sessions_session_id_fkey",
           "tableFrom": "intervention_sessions",
           "tableTo": "session_names",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -3801,12 +3563,8 @@
           "name": "intervention_sessions_school_id_fkey",
           "tableFrom": "intervention_sessions",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -3814,12 +3572,8 @@
           "name": "intervention_sessions_hub_id_fkey",
           "tableFrom": "intervention_sessions",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -3890,12 +3644,8 @@
           "name": "intervention_session_notes_session_id_fkey",
           "tableFrom": "intervention_session_notes",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -3903,12 +3653,8 @@
           "name": "intervention_session_notes_supervisor_id_fkey",
           "tableFrom": "intervention_session_notes",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -4031,12 +3777,8 @@
           "name": "intervention_session_ratings_session_id_fkey",
           "tableFrom": "intervention_session_ratings",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -4044,12 +3786,8 @@
           "name": "intervention_session_ratings_supervisor_id_fkey",
           "tableFrom": "intervention_session_ratings",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -4250,12 +3988,8 @@
           "name": "monthly_supervisor_evaluation_project_id_fkey",
           "tableFrom": "monthly_supervisor_evaluation",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -4263,12 +3997,8 @@
           "name": "monthly_supervisor_evaluation_supervisor_id_fkey",
           "tableFrom": "monthly_supervisor_evaluation",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -4276,12 +4006,8 @@
           "name": "monthly_supervisor_evaluation_hub_coordinator_id_fkey",
           "tableFrom": "monthly_supervisor_evaluation",
           "tableTo": "hub_coordinators",
-          "columnsFrom": [
-            "hub_coordinator_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hub_coordinator_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -4364,12 +4090,8 @@
           "name": "ops_users_implementer_id_fkey",
           "tableFrom": "ops_users",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -4377,12 +4099,8 @@
           "name": "ops_users_assigned_hub_id_fkey",
           "tableFrom": "ops_users",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "assigned_hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -4465,12 +4183,8 @@
           "name": "overall_fellow_evaluations_supervisor_id_fkey",
           "tableFrom": "overall_fellow_evaluations",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -4478,12 +4192,8 @@
           "name": "overall_fellow_evaluations_fellow_id_fkey",
           "tableFrom": "overall_fellow_evaluations",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -4590,12 +4300,8 @@
           "name": "payout_statements_fellow_attendance_id_fkey",
           "tableFrom": "payout_statements",
           "tableTo": "fellow_attendances",
-          "columnsFrom": [
-            "fellow_attendance_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_attendance_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -4603,12 +4309,8 @@
           "name": "payout_statements_fellow_id_fkey",
           "tableFrom": "payout_statements",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -4616,12 +4318,8 @@
           "name": "payout_statements_special_payout_request_id_fkey",
           "tableFrom": "payout_statements",
           "tableTo": "special_session_approval_requests",
-          "columnsFrom": [
-            "special_payout_request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["special_payout_request_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -4629,12 +4327,8 @@
           "name": "payout_statements_created_by_fkey",
           "tableFrom": "payout_statements",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -4642,12 +4336,8 @@
           "name": "payout_statements_confirmed_by_fkey",
           "tableFrom": "payout_statements",
           "tableTo": "users",
-          "columnsFrom": [
-            "confirmed_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["confirmed_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -4796,12 +4486,8 @@
           "name": "project_implementers_project_id_fkey",
           "tableFrom": "project_implementers",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -4809,12 +4495,8 @@
           "name": "project_implementers_implementer_id_fkey",
           "tableFrom": "project_implementers",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -4822,10 +4504,7 @@
       "compositePrimaryKeys": {
         "project_implementers_pkey": {
           "name": "project_implementers_pkey",
-          "columns": [
-            "project_id",
-            "implementer_id"
-          ]
+          "columns": ["project_id", "implementer_id"]
         }
       },
       "uniqueConstraints": {},
@@ -5107,12 +4786,8 @@
           "name": "schools_implementer_id_fkey",
           "tableFrom": "schools",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -5120,12 +4795,8 @@
           "name": "schools_hub_id_fkey",
           "tableFrom": "schools",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -5133,12 +4804,8 @@
           "name": "schools_assigned_supervisor_id_fkey",
           "tableFrom": "schools",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "assigned_supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -5203,12 +4870,8 @@
           "name": "school_dropout_history_user_id_fkey",
           "tableFrom": "school_dropout_history",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -5216,12 +4879,8 @@
           "name": "school_dropout_history_school_id_fkey",
           "tableFrom": "school_dropout_history",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -5298,12 +4957,8 @@
           "name": "school_feedbacks_schoolId_fkey",
           "tableFrom": "school_feedbacks",
           "tableTo": "schools",
-          "columnsFrom": [
-            "schoolId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["schoolId"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -5311,12 +4966,8 @@
           "name": "school_feedbacks_user_id_fkey",
           "tableFrom": "school_feedbacks",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -5378,12 +5029,8 @@
           "name": "sessions_user_id_fkey",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -5442,12 +5089,8 @@
           "name": "session_comments_session_id_fkey",
           "tableFrom": "session_comments",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -5455,12 +5098,8 @@
           "name": "session_comments_user_id_fkey",
           "tableFrom": "session_comments",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -5539,12 +5178,8 @@
           "name": "session_names_hub_id_fkey",
           "tableFrom": "session_names",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -5784,12 +5419,8 @@
           "name": "session_recordings_fellow_id_fkey",
           "tableFrom": "session_recordings",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -5797,12 +5428,8 @@
           "name": "session_recordings_school_id_fkey",
           "tableFrom": "session_recordings",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -5810,12 +5437,8 @@
           "name": "session_recordings_group_id_fkey",
           "tableFrom": "session_recordings",
           "tableTo": "intervention_groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -5823,12 +5446,8 @@
           "name": "session_recordings_intervention_session_id_fkey",
           "tableFrom": "session_recordings",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "intervention_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["intervention_session_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -5836,12 +5455,8 @@
           "name": "session_recordings_uploaded_by_fkey",
           "tableFrom": "session_recordings",
           "tableTo": "users",
-          "columnsFrom": [
-            "uploaded_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["uploaded_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -5849,12 +5464,8 @@
           "name": "session_recordings_supervisor_id_fkey",
           "tableFrom": "session_recordings",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -5939,12 +5550,8 @@
           "name": "special_session_approval_requests_approved_by_fkey",
           "tableFrom": "special_session_approval_requests",
           "tableTo": "hub_coordinators",
-          "columnsFrom": [
-            "approved_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["approved_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -5952,12 +5559,8 @@
           "name": "special_session_approval_requests_created_by_fkey",
           "tableFrom": "special_session_approval_requests",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -5965,12 +5568,8 @@
           "name": "special_session_approval_requests_fellow_attendance_id_fkey",
           "tableFrom": "special_session_approval_requests",
           "tableTo": "fellow_attendances",
-          "columnsFrom": [
-            "fellow_attendance_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_attendance_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -6265,12 +5864,8 @@
           "name": "students_fellow_id_fkey",
           "tableFrom": "students",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -6278,12 +5873,8 @@
           "name": "students_supervisor_id_fkey",
           "tableFrom": "students",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -6291,12 +5882,8 @@
           "name": "students_implementer_id_fkey",
           "tableFrom": "students",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -6304,12 +5891,8 @@
           "name": "students_school_id_fkey",
           "tableFrom": "students",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -6317,12 +5900,8 @@
           "name": "students_assigned_group_id_fkey",
           "tableFrom": "students",
           "tableTo": "intervention_groups",
-          "columnsFrom": [
-            "assigned_group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_group_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -6332,9 +5911,7 @@
         "students_visible_id_key": {
           "name": "students_visible_id_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "visible_id"
-          ]
+          "columns": ["visible_id"]
         }
       },
       "policies": {},
@@ -6468,12 +6045,8 @@
           "name": "student_attendances_project_id_fkey",
           "tableFrom": "student_attendances",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -6481,12 +6054,8 @@
           "name": "student_attendances_student_id_fkey",
           "tableFrom": "student_attendances",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -6494,12 +6063,8 @@
           "name": "student_attendances_session_id_fkey",
           "tableFrom": "student_attendances",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -6507,12 +6072,8 @@
           "name": "student_attendances_group_id_fkey",
           "tableFrom": "student_attendances",
           "tableTo": "intervention_groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -6520,12 +6081,8 @@
           "name": "student_attendances_school_id_fkey",
           "tableFrom": "student_attendances",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -6533,12 +6090,8 @@
           "name": "student_attendances_fellow_id_fkey",
           "tableFrom": "student_attendances",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -6546,12 +6099,8 @@
           "name": "student_attendances_marked_by_fkey",
           "tableFrom": "student_attendances",
           "tableTo": "users",
-          "columnsFrom": [
-            "marked_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["marked_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -6610,12 +6159,8 @@
           "name": "student_group_transfer_trail_student_id_fkey",
           "tableFrom": "student_group_transfer_trail",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -6623,12 +6168,8 @@
           "name": "student_group_transfer_trail_from_group_id_fkey",
           "tableFrom": "student_group_transfer_trail",
           "tableTo": "intervention_groups",
-          "columnsFrom": [
-            "from_group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["from_group_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -7702,12 +7243,8 @@
           "name": "student_outcomes_shamiri_id_fkey",
           "tableFrom": "student_outcomes",
           "tableTo": "students",
-          "columnsFrom": [
-            "shamiri_id"
-          ],
-          "columnsTo": [
-            "visible_id"
-          ],
+          "columnsFrom": ["shamiri_id"],
+          "columnsTo": ["visible_id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -7715,12 +7252,8 @@
           "name": "student_outcomes_implementer_id_fkey",
           "tableFrom": "student_outcomes",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "visible_id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["visible_id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -7785,12 +7318,8 @@
           "name": "student_reporting_notes_supervisor_id_fkey",
           "tableFrom": "student_reporting_notes",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -7798,12 +7327,8 @@
           "name": "student_reporting_notes_student_id_fkey",
           "tableFrom": "student_reporting_notes",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -7811,12 +7336,8 @@
           "name": "student_reporting_notes_addedBy_fkey",
           "tableFrom": "student_reporting_notes",
           "tableTo": "users",
-          "columnsFrom": [
-            "addedBy"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["addedBy"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -8023,12 +7544,8 @@
           "name": "supervisors_hub_id_fkey",
           "tableFrom": "supervisors",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -8036,12 +7553,8 @@
           "name": "supervisors_implementer_id_fkey",
           "tableFrom": "supervisors",
           "tableTo": "implementers",
-          "columnsFrom": [
-            "implementer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["implementer_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -8152,12 +7665,8 @@
           "name": "supervisor_attendances_project_id_fkey",
           "tableFrom": "supervisor_attendances",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8165,12 +7674,8 @@
           "name": "supervisor_attendances_supervisor_id_fkey",
           "tableFrom": "supervisor_attendances",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8178,12 +7683,8 @@
           "name": "supervisor_attendances_session_id_fkey",
           "tableFrom": "supervisor_attendances",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8191,12 +7692,8 @@
           "name": "supervisor_attendances_marked_by_fkey",
           "tableFrom": "supervisor_attendances",
           "tableTo": "users",
-          "columnsFrom": [
-            "marked_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["marked_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8204,12 +7701,8 @@
           "name": "supervisor_attendances_school_id_fkey",
           "tableFrom": "supervisor_attendances",
           "tableTo": "schools",
-          "columnsFrom": [
-            "school_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["school_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -8280,12 +7773,8 @@
           "name": "supervisor_complaints_project_id_fkey",
           "tableFrom": "supervisor_complaints",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8293,12 +7782,8 @@
           "name": "supervisor_complaints_supervisor_id_fkey",
           "tableFrom": "supervisor_complaints",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8306,12 +7791,8 @@
           "name": "supervisor_complaints_hub_coordinator_id_fkey",
           "tableFrom": "supervisor_complaints",
           "tableTo": "hub_coordinators",
-          "columnsFrom": [
-            "hub_coordinator_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hub_coordinator_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -8382,12 +7863,8 @@
           "name": "ticket_escalations_ticket_id_fkey",
           "tableFrom": "ticket_escalations",
           "tableTo": "tickets",
-          "columnsFrom": [
-            "ticket_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ticket_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8395,12 +7872,8 @@
           "name": "ticket_escalations_escalated_by_fkey",
           "tableFrom": "ticket_escalations",
           "tableTo": "users",
-          "columnsFrom": [
-            "escalated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["escalated_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8408,12 +7881,8 @@
           "name": "ticket_escalations_escalated_to_fkey",
           "tableFrom": "ticket_escalations",
           "tableTo": "users",
-          "columnsFrom": [
-            "escalated_to"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["escalated_to"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -8506,12 +7975,8 @@
           "name": "ticket_reassignments_ticket_id_fkey",
           "tableFrom": "ticket_reassignments",
           "tableTo": "tickets",
-          "columnsFrom": [
-            "ticket_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ticket_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8519,12 +7984,8 @@
           "name": "ticket_reassignments_escalation_id_fkey",
           "tableFrom": "ticket_reassignments",
           "tableTo": "ticket_escalations",
-          "columnsFrom": [
-            "escalation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["escalation_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8532,12 +7993,8 @@
           "name": "ticket_reassignments_reassigned_from_fkey",
           "tableFrom": "ticket_reassignments",
           "tableTo": "users",
-          "columnsFrom": [
-            "reassigned_from"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reassigned_from"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8545,12 +8002,8 @@
           "name": "ticket_reassignments_reassigned_to_fkey",
           "tableFrom": "ticket_reassignments",
           "tableTo": "users",
-          "columnsFrom": [
-            "reassigned_to"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reassigned_to"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -8615,12 +8068,8 @@
           "name": "ticket_resolutions_ticket_id_fkey",
           "tableFrom": "ticket_resolutions",
           "tableTo": "tickets",
-          "columnsFrom": [
-            "ticket_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ticket_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -8628,12 +8077,8 @@
           "name": "ticket_resolutions_resolved_by_fkey",
           "tableFrom": "ticket_resolutions",
           "tableTo": "users",
-          "columnsFrom": [
-            "resolved_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resolved_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -8643,9 +8088,7 @@
         "ticket_resolutions_ticket_id_key": {
           "name": "ticket_resolutions_ticket_id_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "ticket_id"
-          ]
+          "columns": ["ticket_id"]
         }
       },
       "policies": {},
@@ -8751,12 +8194,8 @@
           "name": "tickets_created_by_fkey",
           "tableFrom": "tickets",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -8934,12 +8373,8 @@
           "name": "triage_events_student_attendance_id_fkey",
           "tableFrom": "triage_events",
           "tableTo": "student_attendances",
-          "columnsFrom": [
-            "student_attendance_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_attendance_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -8947,12 +8382,8 @@
           "name": "triage_events_session_id_fkey",
           "tableFrom": "triage_events",
           "tableTo": "intervention_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -8960,12 +8391,8 @@
           "name": "triage_events_student_id_fkey",
           "tableFrom": "triage_events",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -8973,12 +8400,8 @@
           "name": "triage_events_fellow_id_fkey",
           "tableFrom": "triage_events",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -8986,12 +8409,8 @@
           "name": "triage_events_hub_id_fkey",
           "tableFrom": "triage_events",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -8999,12 +8418,8 @@
           "name": "triage_events_referred_supervisor_id_fkey",
           "tableFrom": "triage_events",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "referred_supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["referred_supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
@@ -9012,12 +8427,8 @@
           "name": "triage_events_reviewed_by_id_fkey",
           "tableFrom": "triage_events",
           "tableTo": "users",
-          "columnsFrom": [
-            "reviewed_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewed_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "cascade"
         }
@@ -9076,12 +8487,8 @@
           "name": "triage_event_audits_triage_event_id_fkey",
           "tableFrom": "triage_event_audits",
           "tableTo": "triage_events",
-          "columnsFrom": [
-            "triage_event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["triage_event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -9089,12 +8496,8 @@
           "name": "triage_event_audits_edited_by_id_fkey",
           "tableFrom": "triage_event_audits",
           "tableTo": "users",
-          "columnsFrom": [
-            "edited_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["edited_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -9187,12 +8590,8 @@
           "name": "users_active_project_id_fkey",
           "tableFrom": "users",
           "tableTo": "projects",
-          "columnsFrom": [
-            "active_project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["active_project_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -9263,12 +8662,8 @@
           "name": "user_avatars_user_id_fkey",
           "tableFrom": "user_avatars",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -9276,12 +8671,8 @@
           "name": "user_avatars_file_id_fkey",
           "tableFrom": "user_avatars",
           "tableTo": "files",
-          "columnsFrom": [
-            "file_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["file_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -9350,12 +8741,8 @@
           "name": "user_recent_opens_user_id_fkey",
           "tableFrom": "user_recent_opens",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -9558,12 +8945,8 @@
           "name": "weekly_fellow_ratings_fellow_id_fkey",
           "tableFrom": "weekly_fellow_ratings",
           "tableTo": "fellows",
-          "columnsFrom": [
-            "fellow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fellow_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -9571,12 +8954,8 @@
           "name": "weekly_fellow_ratings_supervisor_id_fkey",
           "tableFrom": "weekly_fellow_ratings",
           "tableTo": "supervisors",
-          "columnsFrom": [
-            "supervisor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -9701,12 +9080,8 @@
           "name": "weekly_hub_reports_submitted_by_fkey",
           "tableFrom": "weekly_hub_reports",
           "tableTo": "hub_coordinators",
-          "columnsFrom": [
-            "submitted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["submitted_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -9714,12 +9089,8 @@
           "name": "weekly_hub_reports_hub_id_fkey",
           "tableFrom": "weekly_hub_reports",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -9832,12 +9203,8 @@
           "name": "weekly_team_meeting_reports_submitted_by_fkey",
           "tableFrom": "weekly_team_meeting_reports",
           "tableTo": "hub_coordinators",
-          "columnsFrom": [
-            "submitted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["submitted_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -9845,12 +9212,8 @@
           "name": "weekly_team_meeting_reports_hub_id_fkey",
           "tableFrom": "weekly_team_meeting_reports",
           "tableTo": "hubs",
-          "columnsFrom": [
-            "hub_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hub_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -9866,48 +9229,27 @@
     "public.adaptation_types": {
       "name": "adaptation_types",
       "schema": "public",
-      "values": [
-        "CONTENT",
-        "PACING",
-        "LANGUAGE",
-        "FORMAT",
-        "OTHER"
-      ]
+      "values": ["CONTENT", "PACING", "LANGUAGE", "FORMAT", "OTHER"]
     },
     "public.approval_status": {
       "name": "approval_status",
       "schema": "public",
-      "values": [
-        "PENDING",
-        "REJECTED",
-        "APPROVED"
-      ]
+      "values": ["PENDING", "REJECTED", "APPROVED"]
     },
     "public.caseStatusOptions": {
       "name": "caseStatusOptions",
       "schema": "public",
-      "values": [
-        "Active",
-        "Terminated",
-        "FollowUp",
-        "Referred"
-      ]
+      "values": ["Active", "Terminated", "FollowUp", "Referred"]
     },
     "public.FollowUpPlanOptions": {
       "name": "FollowUpPlanOptions",
       "schema": "public",
-      "values": [
-        "GROUP",
-        "INDIVIDUAL"
-      ]
+      "values": ["GROUP", "INDIVIDUAL"]
     },
     "public.GroupType": {
       "name": "GroupType",
       "schema": "public",
-      "values": [
-        "TREATMENT",
-        "CONTROL"
-      ]
+      "values": ["TREATMENT", "CONTROL"]
     },
     "public.implementer_roles": {
       "name": "implementer_roles",
@@ -9925,67 +9267,37 @@
     "public.questionnaire_types": {
       "name": "questionnaire_types",
       "schema": "public",
-      "values": [
-        "QA",
-        "JSS"
-      ]
+      "values": ["QA", "JSS"]
     },
     "public.recording_processing_status": {
       "name": "recording_processing_status",
       "schema": "public",
-      "values": [
-        "PENDING",
-        "PROCESSING",
-        "COMPLETED",
-        "FAILED"
-      ]
+      "values": ["PENDING", "PROCESSING", "COMPLETED", "FAILED"]
     },
     "public.referralStatusOptions": {
       "name": "referralStatusOptions",
       "schema": "public",
-      "values": [
-        "Approved",
-        "Declined",
-        "Pending"
-      ]
+      "values": ["Approved", "Declined", "Pending"]
     },
     "public.risk_not_completed_reasons": {
       "name": "risk_not_completed_reasons",
       "schema": "public",
-      "values": [
-        "STUDENT_LEFT",
-        "NO_PRIVACY",
-        "TIME_CONSTRAINTS",
-        "OTHER"
-      ]
+      "values": ["STUDENT_LEFT", "NO_PRIVACY", "TIME_CONSTRAINTS", "OTHER"]
     },
     "public.risk_screen_outcomes": {
       "name": "risk_screen_outcomes",
       "schema": "public",
-      "values": [
-        "ALL_NO",
-        "ANY_YES",
-        "NOT_COMPLETED"
-      ]
+      "values": ["ALL_NO", "ANY_YES", "NOT_COMPLETED"]
     },
     "public.riskStatusOptions": {
       "name": "riskStatusOptions",
       "schema": "public",
-      "values": [
-        "No",
-        "Low",
-        "Medium",
-        "High"
-      ]
+      "values": ["No", "Low", "Medium", "High"]
     },
     "public.SessionStatus": {
       "name": "SessionStatus",
       "schema": "public",
-      "values": [
-        "Scheduled",
-        "Rescheduled",
-        "Cancelled"
-      ]
+      "values": ["Scheduled", "Rescheduled", "Cancelled"]
     },
     "public.session_types": {
       "name": "session_types",
@@ -10012,55 +9324,27 @@
     "public.support_types": {
       "name": "support_types",
       "schema": "public",
-      "values": [
-        "TRAINING",
-        "CHECK_INS",
-        "MATERIALS",
-        "PEER_SUPPORT",
-        "SUFFICIENT",
-        "OTHER"
-      ]
+      "values": ["TRAINING", "CHECK_INS", "MATERIALS", "PEER_SUPPORT", "SUFFICIENT", "OTHER"]
     },
     "public.ticket_category": {
       "name": "ticket_category",
       "schema": "public",
-      "values": [
-        "TECH",
-        "RESEARCH",
-        "OPERATIONS",
-        "CARE",
-        "CLINICAL"
-      ]
+      "values": ["TECH", "RESEARCH", "OPERATIONS", "CARE", "CLINICAL"]
     },
     "public.ticket_priority_level": {
       "name": "ticket_priority_level",
       "schema": "public",
-      "values": [
-        "LOW",
-        "MEDIUM",
-        "HIGH"
-      ]
+      "values": ["LOW", "MEDIUM", "HIGH"]
     },
     "public.ticket_status": {
       "name": "ticket_status",
       "schema": "public",
-      "values": [
-        "OPEN",
-        "ESCALATED",
-        "RESOLVED",
-        "CANCELLED"
-      ]
+      "values": ["OPEN", "ESCALATED", "RESOLVED", "CANCELLED"]
     },
     "public.triage_action_taken": {
       "name": "triage_action_taken",
       "schema": "public",
-      "values": [
-        "SUPPORTED",
-        "REFERRED",
-        "ESCALATED",
-        "REFUSED",
-        "INTERRUPTED"
-      ]
+      "values": ["SUPPORTED", "REFERRED", "ESCALATED", "REFUSED", "INTERRUPTED"]
     }
   },
   "schemas": {},
