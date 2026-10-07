@@ -51,6 +51,18 @@ export async function signInAs(context: BrowserContext, role: Role) {
 }
 
 /**
+ * SQL that holds when the implementer member `alias` can sign in as its role: the user has one
+ * membership, so the session's active role is that one, and its organisation runs a hub in the
+ * default project, without which sign-in fails with "No active membership".
+ */
+export function signableMember(alias = "m") {
+  const member = sql.raw(alias);
+  return sql`(select count(*) from implementer_members o where o.user_id = ${member}.user_id) = 1
+    and exists (select 1 from hubs h join projects p on p.id = h.project_id
+      where h.implementer_id = ${member}.implementer_id and p.is_default)`;
+}
+
+/**
  * The email of the user behind a profile (a supervisor, hub coordinator, ...). Only users with one
  * membership qualify, so the session's active role is the one asked for.
  */
@@ -61,7 +73,7 @@ export async function emailForProfile(identifier: string, role: Role) {
     select u.email from implementer_members m
     join users u on u.id = m.user_id
     where m.identifier = ${identifier} and m.role = ${role} and u.email is not null
-      and (select count(*) from implementer_members o where o.user_id = m.user_id) = 1
+      and ${signableMember()}
     order by u.email
     limit 1`);
   return row?.email ?? null;

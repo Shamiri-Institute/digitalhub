@@ -11,7 +11,7 @@ import {
   triageEvent,
   triageEventAudit,
 } from "#/db/schema";
-import { generateSessionToken } from "#/tests/helpers";
+import { generateSessionToken, signableMember } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 import { sessionDisplayName } from "#/lib/utils";
 
@@ -54,16 +54,13 @@ let otherCoordinator: Coordinator;
 let school: SchoolFixture;
 let triage: TriageFixture;
 
-/** Only users with one membership, so the session's active role is the one the test needs. */
-const singleMembership = sql`(select count(*) from implementer_members o where o.user_id = m.user_id) = 1`;
-
 test.beforeAll(async () => {
   const { rows: coordinators } = await db.execute<Coordinator>(sql`
     select u.email, h.assigned_hub_id as "hubId", h.implementer_id as "implementerId"
     from hub_coordinators h
     join implementer_members m on m.identifier = h.id and m.role = 'HUB_COORDINATOR'
     join users u on u.id = m.user_id and u.email is not null
-    where h.assigned_hub_id is not null and ${singleMembership}
+    where h.assigned_hub_id is not null and ${signableMember()}
     order by u.email`);
 
   for (const candidate of coordinators) {
@@ -128,11 +125,11 @@ test.beforeAll(async () => {
       and other_group.leader_id <> g.leader_id
     join implementer_members other_member on other_member.identifier = other_group.leader_id
       and other_member.role = 'FELLOW'
-      and (select count(*) from implementer_members o where o.user_id = other_member.user_id) = 1
+      and ${signableMember("other_member")}
     join users other_user on other_user.id = other_member.user_id and other_user.email is not null
     join students other_student on other_student.assigned_group_id = other_group.id
       and other_student.archived_at is null and other_student.admission_number is not null
-    where ${singleMembership} and m.implementer_id = ${coordinator.implementerId}
+    where ${signableMember()} and m.implementer_id = ${coordinator.implementerId}
       and not exists (
         select 1 from triage_events t where t.student_id = st.id and t.session_id = i.id)
       and not exists (
@@ -478,7 +475,7 @@ test("a borrowed fellow's triage event and supervisor list use the session's hub
     join session_names sn on sn.id = i.session_id
     join students st on st.assigned_group_id = g.id and st.archived_at is null
       and st.admission_number is not null
-    where ${singleMembership} and m.implementer_id = ${coordinator.implementerId}
+    where ${signableMember()} and m.implementer_id = ${coordinator.implementerId}
       and not exists (
         select 1 from triage_events t where t.student_id = st.id and t.session_id = i.id)
     order by u.email, other_hub.id, i.session_date, st.id

@@ -4,7 +4,7 @@ import { and, eq, gte, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowAttendance, payoutStatements } from "#/db/schema";
-import { generateSessionToken } from "#/tests/helpers";
+import { generateSessionToken, signableMember } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
@@ -38,17 +38,13 @@ async function signableProfiles(table: string, role: string, hubColumn: string) 
     join implementer_members m on m.identifier = p.id and m.role = ${role}
     join users u on u.id = m.user_id and u.email is not null
     where p.${sql.raw(hubColumn)} is not null
-      and (select count(*) from implementer_members o where o.user_id = m.user_id) = 1
+      and ${signableMember()}
     order by p.id`,
   );
   return rows;
 }
 
 /** Only users with one membership, in an organisation that runs the default project. */
-const signableMember = sql`(select count(*) from implementer_members o where o.user_id = m.user_id) = 1
-  and exists (select 1 from hubs h join projects p on p.id = h.project_id
-    where h.implementer_id = m.implementer_id and p.is_default)`;
-
 /** Rows containing `text`, after typing it into every table search box in `scope`. */
 async function searchRows(page: Page, scope: Page | Locator, text: string) {
   await scope.getByPlaceholder("Search...").first().waitFor();
@@ -248,7 +244,7 @@ test.describe("fellow attendance", () => {
         and (sn."sessionType" <> 'INTERVENTION' or g.group_type = 'TREATMENT')
       join implementer_members m on m.identifier = f.supervisor_id and m.role = 'SUPERVISOR'
       join users u on u.id = m.user_id and u.email is not null
-      where fa.attended and fa.processed_at is null and ${signableMember}
+      where fa.attended and fa.processed_at is null and ${signableMember()}
         and (select ps.reason from payout_statements ps where ps.fellow_attendance_id = fa.id
           order by ps.created_at desc limit 1) <> 'UNMARK_SESSION_ATTENDANCE'
       order by s.session_date desc, fa.id
@@ -364,7 +360,7 @@ test.describe("bulk fellow attendance", () => {
         and sv.hub_id = s.hub_id
       join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
       join users u on u.id = m.user_id and u.email is not null
-      where i.occurred and ${signableMember}
+      where i.occurred and ${signableMember()}
         and not exists (
           select 1 from fellow_attendances fa where fa.session_id = i.id and fa.fellow_id = f.id)
         and not exists (

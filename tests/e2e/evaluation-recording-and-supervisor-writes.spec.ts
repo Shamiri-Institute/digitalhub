@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { fellow, interventionGroupReport, sessionRecording } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { generateSessionToken } from "#/tests/helpers";
+import { generateSessionToken, signableMember } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
@@ -46,10 +46,6 @@ let recording: RecordingFixture;
 let reassign: ReassignFixture;
 
 /** Only users with one membership, in an organisation that runs the default project. */
-const signableMember = sql`(select count(*) from implementer_members o where o.user_id = m.user_id) = 1
-  and exists (select 1 from hubs h join projects p on p.id = h.project_id
-    where h.implementer_id = m.implementer_id and p.is_default)`;
-
 test.beforeAll(async () => {
   // A group with no evaluations yet, and an occurred session whose name is unique at its school.
   const {
@@ -63,7 +59,7 @@ test.beforeAll(async () => {
     join schools s on s.id = g.school_id
     join intervention_sessions i on i.school_id = s.id and i.occurred
     join session_names sn on sn.id = i.session_id
-    where ${signableMember} and g.archived_at is null
+    where ${signableMember()} and g.archived_at is null
       and not exists (select 1 from intervention_group_reports r where r.group_id = g.id)
       and (select count(*) from intervention_groups o
         where o.school_id = g.school_id and o.group_name = g.group_name) = 1
@@ -93,7 +89,7 @@ test.beforeAll(async () => {
     join session_names sn on sn.id = i.session_id
     join implementer_members m on m.identifier = r.supervisor_id and m.role = 'SUPERVISOR'
     join users u on u.id = m.user_id and u.email is not null
-    where ${signableMember} and r.archived_at is null
+    where ${signableMember()} and r.archived_at is null
       and r.id not in (
         select o.id from session_recordings o where o.archived_at is null order by o.id limit 3)
     order by r.id desc
@@ -118,7 +114,7 @@ test.beforeAll(async () => {
       and f.supervisor_id is not null and f.fellow_name is not null
     join supervisors sv on sv.hub_id = h.id and sv.id <> f.supervisor_id
       and sv.supervisor_name is not null
-    where ${signableMember}
+    where ${signableMember()}
       and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
       and (select count(*) from supervisors o
         where o.hub_id = sv.hub_id and o.supervisor_name = sv.supervisor_name) = 1

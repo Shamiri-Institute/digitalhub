@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellow } from "#/db/schema";
-import { signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
@@ -36,7 +36,7 @@ test.beforeAll(async () => {
     join users u on u.id = m.user_id and u.email is not null
     join fellows f on f.hub_id = hc.assigned_hub_id and f.fellow_name is not null
       and f.fellow_email is not null
-    where (select count(*) from implementer_members o where o.user_id = m.user_id) = 1
+    where ${signableMember()}
       and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
       and exists (select 1 from implementer_members fm where fm.identifier = f.id and fm.role = 'FELLOW')
     order by f.id
