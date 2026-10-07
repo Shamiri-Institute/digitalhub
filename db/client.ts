@@ -15,7 +15,10 @@ function createPool() {
     connectionTimeoutMillis: 5_000,
   });
   // An idle client that loses its connection emits "error" on the pool; unhandled, it crashes the process.
-  pool.on("error", (error) => Sentry.captureException(error));
+  pool.on("error", (error) => {
+    console.error("Idle Postgres client error", error);
+    Sentry.captureException(error);
+  });
   return pool;
 }
 
