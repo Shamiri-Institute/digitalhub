@@ -2,14 +2,13 @@
 
 import { type CalendarDate, isToday } from "@internationalized/date";
 import type { ImplementerRole } from "#/db/enums";
-import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
+import { type Dispatch, type SetStateAction, useRef } from "react";
 import { useCalendarCell, useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 import { SessionList } from "./session-list";
 import { type Session, useSessions } from "./sessions-provider";
-import { useTitle } from "./title-provider";
 
 export function DayView({
   state,
@@ -47,16 +46,6 @@ export function DayView({
   }
 
   const headerLabel = `${currentDate.day} - ${dayFormatter.format(currentDate.toDate(state.timeZone))}`;
-
-  const { setTitle } = useTitle();
-  const titleFormatter = useDateFormatter({
-    day: "numeric",
-    month: "long",
-  });
-  // effect: publishes the visible date to the shared title context
-  useEffect(() => {
-    setTitle(`${titleFormatter.format(currentDate.toDate(state.timeZone))}`);
-  }, [currentDate, setTitle, state.timeZone, titleFormatter]);
 
   const { sessions } = useSessions({ date: currentDate });
   const hasSessions = sessions.length > 0;

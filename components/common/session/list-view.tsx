@@ -2,12 +2,10 @@
 
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
-import { type Dispatch, type SetStateAction, useEffect } from "react";
-import { useDateFormatter } from "react-aria";
+import type { Dispatch, SetStateAction } from "react";
 import type { CalendarState } from "react-stately";
 import { SessionDropDown } from "#/components/common/session/session-list";
 import { type Session, useSessionsContext } from "#/components/common/session/sessions-provider";
-import { useTitle } from "#/components/common/session/title-provider";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
@@ -47,24 +45,6 @@ export function ListView({
     sessionDays.add(today);
   }
   const sessionGroups = [...sessionDays].toSorted();
-
-  const { setTitle } = useTitle();
-
-  const startDate = state.visibleRange.start;
-  const dateFormatter = useDateFormatter({
-    dateStyle: "long",
-    calendar: startDate.calendar.identifier,
-  });
-
-  // effect: publishes the visible range to the shared title context
-  useEffect(() => {
-    setTitle(
-      dateFormatter.formatRange(
-        state.visibleRange.start.toDate(state.timeZone),
-        state.visibleRange.end.toDate(state.timeZone),
-      ),
-    );
-  }, [state.visibleRange.start, state.visibleRange.end, dateFormatter, setTitle, state.timeZone]);
 
   return (
     <div className="relative">
