@@ -149,35 +149,36 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
         };
       }
 
-      const updated = await db
-        .update(fellow)
-        .set({
-          fellowName,
-          fellowEmail,
-          county,
-          subCounty,
-          cellNumber,
-          mpesaName,
-          mpesaNumber,
-          gender,
-          idNumber,
-          dateOfBirth,
-        })
-        .where(eq(fellow.id, id))
-        .returning({ id: fellow.id });
-      if (updated.length === 0) {
-        throw new Error(`Fellow ${id} not found`);
-      }
+      await db.transaction(async (tx) => {
+        const updated = await tx
+          .update(fellow)
+          .set({
+            fellowName,
+            fellowEmail,
+            county,
+            subCounty,
+            cellNumber,
+            mpesaName,
+            mpesaNumber,
+            gender,
+            idNumber,
+            dateOfBirth,
+          })
+          .where(eq(fellow.id, id))
+          .returning({ id: fellow.id });
+        if (updated.length === 0) {
+          throw new Error(`Fellow ${id} not found`);
+        }
 
-      // Update the corresponding user's email
-      const updatedUsers = await db
-        .update(user)
-        .set({ email: fellowEmail })
-        .where(eq(user.id, fellowMember.userId))
-        .returning({ id: user.id });
-      if (updatedUsers.length === 0) {
-        throw new Error(`User ${fellowMember.userId} not found`);
-      }
+        const updatedUsers = await tx
+          .update(user)
+          .set({ email: fellowEmail })
+          .where(eq(user.id, fellowMember.userId))
+          .returning({ id: user.id });
+        if (updatedUsers.length === 0) {
+          throw new Error(`User ${fellowMember.userId} not found`);
+        }
+      });
 
       return {
         success: true,
@@ -185,7 +186,6 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
       };
     }
     if (mode === "add") {
-      // Check if email already exists
       const existingUser = await db.query.user.findFirst({
         where: (u, { eq }) => eq(u.email, fellowEmail),
         with: { memberships: true },
@@ -775,20 +775,13 @@ export async function markManyFellowAttendance(
         const attendanceStatus = attendedFlag(attended);
         const amount = session.session?.amount ?? 0;
 
-        // update existing attendances
         const attendances = await tx.query.fellowAttendance.findMany({
           where: (a, { and, eq, inArray }) =>
             and(inArray(a.fellowId, ids), eq(a.sessionId, sessionId)),
           with: { fellow: true, PayoutStatements: true },
         });
 
-        const data: {
-          payout: typeof payoutStatements.$inferInsert | undefined;
-          id: number;
-          fellowId: string;
-        }[] = [];
-
-        attendances.forEach((attendance) => {
+        const data = attendances.map((attendance) => {
           if (attendance.processedAt !== null) {
             throw new Error(
               `An error occurred while marking attendances. ${attendance.fellow.fellowName}'s attendance has already been processed on ${format(
@@ -826,11 +819,11 @@ export async function markManyFellowAttendance(
             };
           }
 
-          data.push({
+          return {
             payout,
             id: attendance.id,
             fellowId: attendance.fellow.id,
-          });
+          };
         });
 
         const payoutRows = data

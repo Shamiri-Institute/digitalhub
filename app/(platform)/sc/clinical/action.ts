@@ -83,7 +83,13 @@ async function requireCaseAccess(caseId: string) {
   const actor = await requireClinicalActor();
   const clinicalCase = await db.query.clinicalScreeningInfo.findFirst({
     where: (c, { eq }) => eq(c.id, caseId),
-    columns: { id: true, studentId: true, currentSupervisorId: true, clinicalLeadId: true },
+    columns: {
+      id: true,
+      studentId: true,
+      currentSupervisorId: true,
+      clinicalLeadId: true,
+      caseStatus: true,
+    },
     with: { currentSupervisor: { columns: { hubId: true } } },
   });
 
@@ -602,21 +608,29 @@ export async function updateStudentInfo(data: EditStudentInfoFormValues) {
   }
 }
 
-export async function updateClinicalCaseGeneralPresentingIssue(data: {
+export async function updateClinicalCasePresentingIssues(data: {
   caseId: string;
+  emergencyPresentingIssues: { [k: string]: string };
   generalPresentingIssues: { [k: string]: string };
   otherIssues: string;
-  caseStatus: string;
+  /** The columns the page showed. A case whose status changed since the page loaded is refused. */
+  phase: "baseline" | "endpoint";
 }) {
   try {
-    await requireCaseAccess(data.caseId);
+    const { clinicalCase } = await requireCaseAccess(data.caseId);
+    const currentPhase = clinicalCase.caseStatus === "Active" ? "baseline" : "endpoint";
+    if (data.phase !== currentPhase) {
+      return { success: false, message: "The case status changed. Reload the page." };
+    }
     const updateData =
-      data.caseStatus === "Active"
+      currentPhase === "baseline"
         ? {
+            emergencyPresentingIssuesBaseline: data.emergencyPresentingIssues,
             generalPresentingIssuesBaseline: data.generalPresentingIssues,
             generalPresentingIssuesOtherSpecifiedBaseline: data.otherIssues,
           }
         : {
+            emergencyPresentingIssuesEndpoint: data.emergencyPresentingIssues,
             generalPresentingIssuesEndpoint: data.generalPresentingIssues,
             generalPresentingIssuesOtherSpecifiedEndpoint: data.otherIssues,
           };
@@ -631,43 +645,10 @@ export async function updateClinicalCaseGeneralPresentingIssue(data: {
     );
 
     revalidatePath("/sc/clinical");
-    return { success: true };
+    return { success: true, message: null };
   } catch (error) {
     console.error(error);
-    return { error: "Something went wrong" };
-  }
-}
-
-export async function updateClinicalCaseEmergencyPresentingIssue(data: {
-  caseId: string;
-  presentingIssues: { [k: string]: string };
-  caseStatus: string;
-}) {
-  try {
-    await requireCaseAccess(data.caseId);
-    const updateData =
-      data.caseStatus === "Active"
-        ? {
-            emergencyPresentingIssuesBaseline: data.presentingIssues,
-          }
-        : {
-            emergencyPresentingIssuesEndpoint: data.presentingIssues,
-          };
-
-    requireUpdated(
-      await db
-        .update(clinicalScreeningInfo)
-        .set(updateData)
-        .where(eq(clinicalScreeningInfo.id, data.caseId))
-        .returning({ id: clinicalScreeningInfo.id }),
-      "Clinical case",
-    );
-
-    revalidatePath("/sc/clinical");
-    return { success: true };
-  } catch (error) {
-    console.error(error);
-    return { error: "Something went wrong" };
+    return { success: false, message: "Failed to update presenting issues" };
   }
 }
 

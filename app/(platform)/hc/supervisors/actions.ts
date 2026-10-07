@@ -269,35 +269,36 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
       };
     }
 
-    const updated = await db
-      .update(supervisor)
-      .set({
-        supervisorName,
-        personalEmail,
-        county,
-        subCounty,
-        cellNumber,
-        mpesaName,
-        mpesaNumber,
-        gender,
-        idNumber,
-        dateOfBirth,
-      })
-      .where(eq(supervisor.id, supervisorId))
-      .returning({ id: supervisor.id });
-    if (updated.length === 0) {
-      throw new Error(`Supervisor ${supervisorId} not found`);
-    }
+    await db.transaction(async (tx) => {
+      const updated = await tx
+        .update(supervisor)
+        .set({
+          supervisorName,
+          personalEmail,
+          county,
+          subCounty,
+          cellNumber,
+          mpesaName,
+          mpesaNumber,
+          gender,
+          idNumber,
+          dateOfBirth,
+        })
+        .where(eq(supervisor.id, supervisorId))
+        .returning({ id: supervisor.id });
+      if (updated.length === 0) {
+        throw new Error(`Supervisor ${supervisorId} not found`);
+      }
 
-    // Update the corresponding user's email
-    const updatedUsers = await db
-      .update(user)
-      .set({ email: personalEmail })
-      .where(eq(user.id, supervisorMember.userId))
-      .returning({ id: user.id });
-    if (updatedUsers.length === 0) {
-      throw new Error(`User ${supervisorMember.userId} not found`);
-    }
+      const updatedUsers = await tx
+        .update(user)
+        .set({ email: personalEmail })
+        .where(eq(user.id, supervisorMember.userId))
+        .returning({ id: user.id });
+      if (updatedUsers.length === 0) {
+        throw new Error(`User ${supervisorMember.userId} not found`);
+      }
+    });
 
     return {
       success: true,
