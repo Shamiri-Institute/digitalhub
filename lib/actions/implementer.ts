@@ -7,6 +7,15 @@ import { db } from "#/db/client";
 import { hub, school, sessionName } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
+async function requireAdminImplementerId() {
+  const admin = await currentAdminUser();
+  const implementerId = admin?.session.user.activeMembership?.implementerId;
+  if (!implementerId) {
+    throw new Error("Unauthorized");
+  }
+  return implementerId;
+}
+
 /** Ids of the hubs an implementer runs in the active project. */
 function implementerHubIds(implementerId: string, projectId: string) {
   return db
@@ -15,11 +24,8 @@ function implementerHubIds(implementerId: string, projectId: string) {
     .where(and(eq(hub.implementerId, implementerId), eq(hub.projectId, projectId)));
 }
 
-export async function fetchImplementerStats(implementerId: string) {
-  const admin = await currentAdminUser();
-  if (admin === null) {
-    throw new Error("Unauthorized");
-  }
+export async function fetchImplementerStats() {
+  const implementerId = await requireAdminImplementerId();
 
   const projectId = await getActiveProjectId();
 
@@ -47,11 +53,8 @@ export async function fetchImplementerStats(implementerId: string) {
   }
 }
 
-export async function fetchImplementerSessionTypes(implementerId: string) {
-  const admin = await currentAdminUser();
-  if (admin === null) {
-    throw new Error("Unauthorized");
-  }
+export async function fetchImplementerSessionTypes() {
+  const implementerId = await requireAdminImplementerId();
 
   const projectId = await getActiveProjectId();
 
@@ -73,11 +76,8 @@ export async function fetchImplementerSessionTypes(implementerId: string) {
   }
 }
 
-export async function fetchImplementerSchools(implementerId: string) {
-  const admin = await currentAdminUser();
-  if (admin === null) {
-    throw new Error("Unauthorized");
-  }
+export async function fetchImplementerSchools() {
+  const implementerId = await requireAdminImplementerId();
 
   const projectId = await getActiveProjectId();
 
@@ -99,11 +99,8 @@ export async function fetchImplementerSchools(implementerId: string) {
   }
 }
 
-export async function fetchImplementerSupervisors(implementerId: string) {
-  const admin = await currentAdminUser();
-  if (admin === null) {
-    throw new Error("Unauthorized");
-  }
+export async function fetchImplementerSupervisors() {
+  const implementerId = await requireAdminImplementerId();
 
   const projectId = await getActiveProjectId();
 
@@ -148,11 +145,8 @@ export type ImplementerSupervisor = NonNullable<
   Awaited<ReturnType<typeof fetchImplementerSupervisors>>["data"]
 >[number];
 
-export async function fetchImplementerFellowRatings(implementerId: string) {
-  const admin = await currentAdminUser();
-  if (admin === null) {
-    throw new Error("Unauthorized");
-  }
+export async function fetchImplementerFellowRatings() {
+  const implementerId = await requireAdminImplementerId();
 
   const projectId = await getActiveProjectId();
 

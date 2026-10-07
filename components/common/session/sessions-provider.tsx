@@ -54,16 +54,7 @@ export function SessionsProvider({
     if ((role === ImplementerRole.ADMIN && implementerId) || role !== ImplementerRole.ADMIN) {
       setLoading(true);
       const { start, end } = filters.dateRange ?? getDefaultSessionDateRange();
-      const fetchedSessions = await fetchInterventionSessions({
-        activeProjectId,
-        hubId,
-        implementerId,
-        role,
-        start,
-        end,
-        filters,
-        fellowId,
-      });
+      const fetchedSessions = await fetchInterventionSessions({ start, end, filters });
       setSessions(fetchedSessions);
       setLoading(false);
     }

@@ -14,9 +14,11 @@ import {
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
+  interventionGroup,
   interventionSession,
   interventionSessionRating,
   sessionComment,
+  student,
   studentAttendance,
 } from "#/db/schema";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
@@ -387,15 +389,67 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
   }
 }
 
-export async function fetchSessionAttendances(sessionId: string) {
-  await requireAuthRole(
+/**
+ * Throws unless the caller may see the session: an admin of the implementer that runs its hub, a
+ * supervisor or hub coordinator of its hub, or a fellow who leads a group at its school.
+ */
+async function requireSessionVisibleToCaller(sessionId: string) {
+  const membership = await requireAuthRole(
     ImplementerRole.FELLOW,
     ImplementerRole.SUPERVISOR,
     ImplementerRole.HUB_COORDINATOR,
     ImplementerRole.ADMIN,
   );
+  const session = await findSessionWithSchoolOrThrow(sessionId);
+  const sessionHubId = session.hubId ?? session.school?.hubId ?? null;
+  if (membership.role === ImplementerRole.ADMIN) {
+    const sessionHub = sessionHubId
+      ? await db.query.hub.findFirst({
+          where: (h, { eq }) => eq(h.id, sessionHubId),
+          columns: { implementerId: true },
+        })
+      : undefined;
+    if (sessionHub?.implementerId !== membership.implementerId) {
+      throw new Error("No InterventionSession found");
+    }
+    return { membership, fellowId: undefined };
+  }
+  if (membership.role === ImplementerRole.FELLOW) {
+    const fellowId = membership.identifier;
+    const ledGroup =
+      fellowId && session.schoolId
+        ? await db.query.interventionGroup.findFirst({
+            where: (g, { and, eq }) =>
+              and(eq(g.schoolId, session.schoolId ?? ""), eq(g.leaderId, fellowId)),
+            columns: { id: true },
+          })
+        : undefined;
+    if (!fellowId || !ledGroup) {
+      throw new Error("No InterventionSession found");
+    }
+    return { membership, fellowId };
+  }
+  await requireSessionInCallerHub(session);
+  return { membership, fellowId: undefined };
+}
+
+export async function fetchSessionAttendances(sessionId: string) {
+  const { fellowId } = await requireSessionVisibleToCaller(sessionId);
   return db.query.studentAttendance.findMany({
-    where: (a, { eq }) => eq(a.sessionId, sessionId),
+    where: (a, { and, eq, inArray }) =>
+      and(
+        eq(a.sessionId, sessionId),
+        fellowId
+          ? inArray(
+              a.studentId,
+              db
+                .select({ id: student.id })
+                .from(student)
+                .innerJoin(interventionGroup, eq(interventionGroup.id, student.assignedGroupId))
+                .where(eq(interventionGroup.leaderId, fellowId)),
+            )
+          : undefined,
+      ),
     columns: {
       id: true,
       studentId: true,
@@ -409,13 +463,8 @@ export async function fetchSessionAttendances(sessionId: string) {
 }
 
 export async function countSessionGroupAttendance(sessionId: string, fellowId: string) {
-  const { role, identifier } = await requireAuthRole(
-    ImplementerRole.FELLOW,
-    ImplementerRole.SUPERVISOR,
-    ImplementerRole.HUB_COORDINATOR,
-    ImplementerRole.ADMIN,
-  );
-  if (role === ImplementerRole.FELLOW && identifier !== fellowId) {
+  const { membership } = await requireSessionVisibleToCaller(sessionId);
+  if (membership.role === ImplementerRole.FELLOW && membership.identifier !== fellowId) {
     throw new Error("Unauthorized: fellows may only count their own group attendance");
   }
   return db.$count(

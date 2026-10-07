@@ -13,7 +13,7 @@ export default async function FellowSchedulePage() {
     await signOut({ callbackUrl: "/login" });
   }
 
-  const scheduleData = await getFellowGroupsAndHubData(fellow?.profile.id ?? "");
+  const scheduleData = await getFellowGroupsAndHubData();
 
   return (
     <div className="flex h-full w-full flex-col">

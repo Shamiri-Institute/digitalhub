@@ -43,7 +43,7 @@ export default function SchoolsBreadcrumb() {
     const fetchSchools = async () => {
       setLoading(true);
       if (implementerId && role === ImplementerRole.ADMIN) {
-        const response = await fetchImplementerSchools(implementerId);
+        const response = await fetchImplementerSchools();
         if (response.success && response.data) {
           setSchools(response.data);
         }
