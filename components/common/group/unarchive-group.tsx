@@ -1,7 +1,5 @@
-import { usePathname } from "next/navigation";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useState } from "react";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
@@ -20,7 +18,6 @@ export default function UnarchiveGroup({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
 }) {
-  const pathname = usePathname();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onConfirm = async () => {
@@ -36,7 +33,6 @@ export default function UnarchiveGroup({
       toast({
         description: response.message,
       });
-      await revalidatePageAction(pathname);
       onOpenChange(false);
     } finally {
       setIsSubmitting(false);

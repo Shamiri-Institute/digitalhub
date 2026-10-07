@@ -2,44 +2,26 @@
 
 import { ImplementerRole } from "#/db/enums";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
 import type { CurrentAdminUser } from "#/app/auth";
-import {
-  fetchImplementerFellowRatings,
-  fetchImplementerSessionTypes,
-  fetchImplementerSupervisors,
-  type ImplementerFellowRating,
-  type ImplementerSupervisor,
-} from "#/lib/actions/implementer";
+import type { ImplementerFellowRating, ImplementerSupervisor } from "#/lib/actions/implementer";
 import { ScheduleCalendar } from "./schedule-calendar";
 import type { sessionName } from "#/db/schema";
 
-export function AdminScheduleCalendar({ adminUser }: { adminUser: CurrentAdminUser }) {
+export function AdminScheduleCalendar({
+  adminUser,
+  hubSessionTypes,
+  supervisors,
+  fellowRatings,
+}: {
+  adminUser: CurrentAdminUser;
+  hubSessionTypes: (typeof sessionName.$inferSelect)[];
+  supervisors: ImplementerSupervisor[];
+  fellowRatings: ImplementerFellowRating[];
+}) {
   const { data: session } = useSession();
   const implementerId = adminUser?.session.user.activeMembership?.implementerId;
   const role = adminUser?.session.user.activeMembership?.role;
   const activeProjectId = session?.user?.activeProjectId ?? null;
-  const [hubSessionTypes, setHubSessionTypes] = useState<(typeof sessionName.$inferSelect)[]>([]);
-  const [supervisors, setSupervisors] = useState<ImplementerSupervisor[]>([]);
-  const [fellowRatings, setFellowRatings] = useState<ImplementerFellowRating[]>([]);
-
-  // effect: loads session types, supervisors and ratings for the admin's implementer
-  useEffect(() => {
-    const fetchSessionTypes = async () => {
-      if (!implementerId || !role || adminUser === null) return;
-
-      const response = await Promise.all([
-        fetchImplementerSessionTypes(),
-        fetchImplementerSupervisors(),
-        fetchImplementerFellowRatings(),
-      ]);
-      setHubSessionTypes(response[0].data || []);
-      setSupervisors(response[1].data || []);
-      setFellowRatings(response[2].data || []);
-    };
-
-    void fetchSessionTypes();
-  }, [implementerId, role, adminUser]);
 
   return (
     <ScheduleCalendar

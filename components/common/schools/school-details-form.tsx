@@ -2,7 +2,6 @@
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { Loader2 } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Resolver } from "react-hook-form";
 import { useForm } from "react-hook-form";
@@ -47,11 +46,7 @@ import {
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import { AddSchoolSchema, EditSchoolSchema } from "../../../app/(platform)/hc/schemas";
-import {
-  addSchool,
-  editSchoolInformation,
-  revalidatePageAction,
-} from "../../../app/(platform)/hc/schools/actions";
+import { addSchool, editSchoolInformation } from "../../../app/(platform)/hc/schools/actions";
 
 type FormData = z.infer<typeof AddSchoolSchema>;
 
@@ -64,7 +59,6 @@ export default function SchoolDetailsForm({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
-  const pathname = usePathname();
   const isEditing = !!school;
   const isCountySelectionValid = KENYAN_COUNTIES.some(
     (county) => county.name === school?.schoolCounty,
@@ -153,8 +147,6 @@ export default function SchoolDetailsForm({
         return;
       }
 
-      await revalidatePageAction(pathname);
-
       toast({
         description: response.message,
       });
@@ -169,8 +161,6 @@ export default function SchoolDetailsForm({
         });
         return;
       }
-
-      await revalidatePageAction(pathname);
 
       toast({
         description: response.message,

@@ -3,11 +3,9 @@
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import parsePhoneNumberFromString, { isValidPhoneNumber } from "libphonenumber-js";
-import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { updateSupervisorDetails } from "#/app/(platform)/hc/supervisors/actions";
 import type { SupervisorsData } from "#/app/(platform)/hc/supervisors/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -58,7 +56,6 @@ export default function SupervisorDetailsForm({
   mode?: "view" | "edit";
 }) {
   const counties = KENYAN_COUNTIES.map((county) => county.name);
-  const pathname = usePathname();
   const form = useForm<z.infer<typeof EditSupervisorSchema>>({
     resolver: zodResolver(EditSupervisorSchema),
   });
@@ -107,7 +104,6 @@ export default function SupervisorDetailsForm({
         return;
       }
 
-      void revalidatePageAction(pathname);
       toast({
         description: response.message,
       });

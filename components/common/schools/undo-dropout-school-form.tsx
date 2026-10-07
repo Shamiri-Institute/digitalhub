@@ -1,7 +1,6 @@
 "use client";
-import { usePathname } from "next/navigation";
 import { useTransition } from "react";
-import { revalidatePageAction, undoDropoutSchool } from "#/app/(platform)/hc/schools/actions";
+import { undoDropoutSchool } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import {
@@ -24,7 +23,6 @@ export function UndoDropoutSchool({
   setOpen: (open: boolean) => void;
 }) {
   const [isPending, startTransition] = useTransition();
-  const pathname = usePathname();
   function undoDropout() {
     if (!school) return;
     startTransition(() =>
@@ -38,7 +36,6 @@ export function UndoDropoutSchool({
         }
 
         toast({ description: response.message });
-        await revalidatePageAction(pathname);
         setOpen(false);
       }),
     );

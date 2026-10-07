@@ -1,12 +1,10 @@
 import type { fellow as fellowTable, supervisor } from "#/db/schema";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import { DropoutFellowSchema } from "#/components/common/fellow/schema";
@@ -57,7 +55,6 @@ export default function FellowDropoutForm({
   const [replaceGroupLeaderDialog, setReplaceGroupLeaderDialog] = useState(false);
   const [archiveGroupDialog, setArchiveGroupDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const pathname = usePathname();
 
   const activeGroups = fellow.groups?.filter((group) => !group.archivedAt) ?? [];
 
@@ -109,8 +106,6 @@ export default function FellowDropoutForm({
           description: response.message,
         });
         form.reset();
-
-        await revalidatePageAction(pathname);
         if (form.getValues("mode") === "dropout") {
           setConfirmDialog(false);
         } else {

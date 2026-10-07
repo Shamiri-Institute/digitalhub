@@ -3,7 +3,6 @@
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import type { ImplementerRole } from "#/db/enums";
 import { addDays, addHours, differenceInSeconds, format } from "date-fns";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import {
   type Dispatch,
@@ -16,7 +15,6 @@ import {
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import RatingStarsInput from "#/components/common/rating-stars-input";
 import { SessionRatingsSchema } from "#/components/common/session/schema";
@@ -88,7 +86,6 @@ export default function SessionRatings({
     rating,
   );
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
-  const pathname = usePathname();
 
   const form = useForm<z.infer<typeof SessionRatingsSchema>>({
     resolver: zodResolver(SessionRatingsSchema),
@@ -139,7 +136,6 @@ export default function SessionRatings({
     }
 
     await refresh();
-    await revalidatePageAction(pathname);
     toast({
       description: response.message,
     });

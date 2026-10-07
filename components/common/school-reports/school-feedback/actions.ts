@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq, inArray } from "drizzle-orm";
+import { refresh } from "next/cache";
 
 import type { SchoolFeedbackFormValues } from "#/components/common/school-reports/school-feedback/view-edit-school-feedback";
 import { db } from "#/db/client";
@@ -41,6 +42,7 @@ export async function editSchoolFeedback(feedbackId: string, data: SchoolFeedbac
       throw new Error(`School feedback ${feedbackId} not found`);
     }
 
+    refresh();
     return {
       success: true,
       message: "School feedback updated successfully",

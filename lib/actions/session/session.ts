@@ -1,7 +1,7 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { refresh, revalidatePath } from "next/cache";
 import type { z } from "zod";
 
 import { getCurrentPersonnel } from "#/app/auth";
@@ -306,6 +306,7 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
         target: [interventionSessionRating.sessionId, interventionSessionRating.supervisorId],
         set: { ...rating, updatedAt: new Date() },
       });
+    refresh();
 
     return {
       success: true,
@@ -375,6 +376,7 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
     await updateSessionOrThrow(parsedData.sessionId, {
       occurred: parsedData.occurrence === "attended",
     });
+    refresh();
 
     return {
       success: true,

@@ -4,11 +4,9 @@ import { ImplementerRole } from "#/db/enums";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { CurrentPersonnel } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { ProfileSchema } from "#/components/profile/schema";
@@ -58,7 +56,6 @@ interface ProfileDialogProps {
 }
 
 export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogProps) {
-  const pathname = usePathname();
   const counties = KENYAN_COUNTIES.map((c) => c.name);
   const personnelProfile = profile?.profile;
   const session = profile?.session;
@@ -160,8 +157,6 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
       });
       return;
     }
-
-    await revalidatePageAction(pathname, "layout");
     toast({
       description: response.message,
     });

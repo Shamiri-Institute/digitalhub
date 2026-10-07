@@ -57,10 +57,12 @@ export function LayoutClient({
   children,
   session,
   profile,
+  isAdminUser,
 }: {
   children: React.ReactNode;
   session: Session | null;
   profile: CurrentPersonnel | null;
+  isAdminUser: boolean;
 }) {
   const pathname = usePathname();
   const [mainRoute, subRoute] = pathname.slice(1).split("/");
@@ -90,13 +92,19 @@ export function LayoutClient({
           loading={loading}
           setLoading={setLoading}
           session={session}
+          isAdminUser={isAdminUser}
           className="nav-link"
         />
         <div className="nav-link">
           <RoleSwitcher loading={loading} setLoading={setLoading} session={session} />
         </div>
         <div className="nav-link">
-          <MembershipSwitcher loading={loading} setLoading={setLoading} session={session} />
+          <MembershipSwitcher
+            loading={loading}
+            setLoading={setLoading}
+            session={session}
+            isAdminUser={isAdminUser}
+          />
         </div>
         <div className="nav-link hidden w-full lg:flex lg:w-auto">
           <DropdownMenu>

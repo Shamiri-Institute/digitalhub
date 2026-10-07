@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq, inArray } from "drizzle-orm";
+import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { db } from "#/db/client";
@@ -133,6 +134,7 @@ export async function editStudentGroupEvaluation(
       throw new Error(`Evaluation ${evaluationId} not found`);
     }
 
+    refresh();
     return { success: true, message: "Evaluation updated successfully" };
   } catch (error) {
     console.error(error);

@@ -2,13 +2,11 @@
 
 import type { interventionSession, sessionName } from "#/db/schema";
 import { addHours, format } from "date-fns";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useEffect, useEffectEvent } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
@@ -88,8 +86,6 @@ export function MarkAttendance({
   selectedIds?: string[];
   onSuccess?: () => void;
 }) {
-  const pathname = usePathname();
-
   // Only occurred sessions are selectable. The default is the latest of those by date,
   // whatever order the caller passed them in.
   const selectableSessions = (sessions ?? [])
@@ -170,7 +166,6 @@ export function MarkAttendance({
       description: response.message,
     });
 
-    await revalidatePageAction(pathname);
     onSuccess?.();
     setIsOpen(false);
   };

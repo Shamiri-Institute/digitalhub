@@ -1,13 +1,11 @@
 import { format } from "date-fns";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useEffect, useEffectEvent } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -58,7 +56,6 @@ export default function FellowDetailsForm({
   children?: React.ReactNode;
 }) {
   const counties = KENYAN_COUNTIES.map((county) => county.name);
-  const pathname = usePathname();
   const form = useForm<z.infer<typeof FellowDetailsSchema>>({
     resolver: zodResolver(FellowDetailsSchema),
     defaultValues: getDefaultValues(),
@@ -117,8 +114,6 @@ export default function FellowDetailsForm({
       });
       return;
     }
-
-    await revalidatePageAction(pathname);
     toast({
       description: response.message,
     });

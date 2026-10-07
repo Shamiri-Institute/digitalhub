@@ -1,12 +1,8 @@
 import { ImplementerRole } from "#/db/enums";
 import type { fellow, student } from "#/db/schema";
 import type { ColumnDef, Row } from "@tanstack/react-table";
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
-import type { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
@@ -59,7 +55,6 @@ export default function StudentAttendance({
   fellows: (typeof fellow.$inferSelect)[];
   fellowId?: string;
 }) {
-  const pathname = usePathname();
   const isFellow = role === ImplementerRole.FELLOW;
   const [selectedGroup, setSelectedGroup] = useState<string>();
   const [attendance, setAttendance] = useState<StudentAttendanceData>();
@@ -217,40 +212,12 @@ export default function StudentAttendance({
     };
   }, [isFellow, session?.id]);
 
-  const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
-    const res = await markStudentAttendance(data);
-    await revalidatePageAction(pathname);
-    if (session?.id) {
-      try {
-        const rows = await fetchSessionAttendances(session.id);
-        setSessionAttendances(rows);
-      } catch {
-        setAttendanceFetchId(session.id);
-        setSessionAttendances([]);
-        toast({
-          variant: "destructive",
-          description: "Could not refresh attendance. Please close and reopen.",
-        });
-      }
-    }
-    return res;
-  };
-
-  const markBulkAttendance = async (ids: string[], data: z.infer<typeof MarkAttendanceSchema>) => {
-    const res = await markManyStudentsAttendance(ids, data);
-    await revalidatePageAction(pathname);
-    if (session?.id) {
-      try {
-        const rows = await fetchSessionAttendances(session.id);
-        setSessionAttendances(rows);
-      } catch {
-        setAttendanceFetchId(session.id);
-        setSessionAttendances([]);
-        toast({
-          variant: "destructive",
-          description: "Could not refresh attendance. Please close and reopen.",
-        });
-      }
+  const saveAttendance = async (
+    pending: ReturnType<typeof markStudentAttendance | typeof markManyStudentsAttendance>,
+  ) => {
+    const res = await pending;
+    if (res.attendances) {
+      setSessionAttendances(res.attendances);
     }
     return res;
   };
@@ -405,8 +372,10 @@ export default function StudentAttendance({
           sessionMode="single"
           isOpen={markAttendanceDialog}
           setIsOpen={setMarkAttendanceDialog}
-          markAttendanceAction={markAttendance}
-          markBulkAttendanceAction={markBulkAttendance}
+          markAttendanceAction={(data) => saveAttendance(markStudentAttendance(data))}
+          markBulkAttendanceAction={(ids, data) =>
+            saveAttendance(markManyStudentsAttendance(ids, data))
+          }
           bulkMode={bulkMode}
           setBulkMode={setBulkMode}
           onSuccess={() => {

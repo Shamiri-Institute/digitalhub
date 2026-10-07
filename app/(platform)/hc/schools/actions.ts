@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { eq, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
-import { revalidatePath } from "next/cache";
+import { refresh, revalidatePath } from "next/cache";
 import type { z } from "zod";
 
 import { currentHubCoordinator } from "#/app/auth";
@@ -17,7 +17,6 @@ import {
   schoolDropoutHistory,
   weeklyHubReport,
 } from "#/db/schema";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { getSchoolInitials } from "#/lib/utils";
@@ -63,11 +62,6 @@ export async function fetchSchoolData() {
       },
     },
   });
-}
-
-export async function revalidatePageAction(pathname: string, mode?: "layout" | "page") {
-  await requireAuthRole();
-  revalidatePath(pathname, mode);
 }
 
 export async function fetchSchoolDataCompletenessData(schoolId?: string) {
@@ -437,6 +431,7 @@ export async function editSchoolInformation(
     if (!updated) {
       throw new Error(`School ${schoolId} not found`);
     }
+    refresh();
     return {
       success: true,
       message: `Successfully updated school information for ${updated.schoolName}`,
@@ -492,6 +487,7 @@ export async function assignSchoolPointSupervisor(
     if (!updated) {
       throw new Error(`School ${schoolId} not found`);
     }
+    refresh();
     return {
       success: true,
       message: `Successfully updated point supervisor for ${updated.schoolName}`,
@@ -568,7 +564,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       };
     }
 
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       const [created] = await tx
         .insert(school)
         .values({
@@ -669,6 +665,8 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
         data: newSchool,
       };
     });
+    refresh();
+    return result;
   } catch (error) {
     console.error("Error adding school:", error);
     return {

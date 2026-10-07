@@ -1,13 +1,11 @@
 "use client";
 
 import { addDays, differenceInSeconds, eachWeekOfInterval, format, isEqual } from "date-fns";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/schema";
 import { Icons } from "#/components/icons";
@@ -66,7 +64,6 @@ export default function WeeklyFellowEvaluation({
     _evaluation,
   );
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
-  const pathname = usePathname();
 
   const weeks =
     mode === "view"
@@ -140,7 +137,6 @@ export default function WeeklyFellowEvaluation({
     toast({
       description: response.message,
     });
-    await revalidatePageAction(pathname);
     onOpenChange(false);
   };
 

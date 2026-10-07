@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   type ClinicalCases,
   getClinicalLeads,
@@ -151,7 +150,6 @@ export default function ReferClinicalCase({
           description: "Clinical case referred successfully",
         });
         setDialogOpen(false);
-        await revalidatePageAction("sc/clinical");
         form.reset();
       } else {
         toast({

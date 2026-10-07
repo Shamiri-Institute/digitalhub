@@ -1,11 +1,9 @@
 "use client";
 
 import { SupportType } from "#/db/enums";
-import { usePathname } from "next/navigation";
 import type * as React from "react";
 import { type Dispatch, type SetStateAction, useRef, useState } from "react";
 import { type Control, useForm } from "react-hook-form";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   ADAPTATION_TYPE_OPTIONS,
   CHALLENGE_IMPACT_OPTIONS,
@@ -223,7 +221,6 @@ export default function FellowGroupReportForm({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
 }) {
-  const pathname = usePathname();
   const [showDiscard, setShowDiscard] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -275,7 +272,6 @@ export default function FellowGroupReportForm({
       });
       return;
     }
-    await revalidatePageAction(pathname);
     toast({ description: response.message });
     form.reset();
     onOpenChange(false);

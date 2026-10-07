@@ -1,10 +1,8 @@
 import { InfoIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { DropoutStudentSchema } from "#/app/(platform)/hc/schemas";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
@@ -50,7 +48,6 @@ export default function StudentDropoutForm({
 }) {
   const [isPending, startTransition] = useTransition();
   const [confirmDialog, setConfirmDialog] = useState(false);
-  const pathname = usePathname();
 
   const form = useForm<z.infer<typeof DropoutStudentSchema>>({
     resolver: zodResolver(DropoutStudentSchema),
@@ -85,7 +82,6 @@ export default function StudentDropoutForm({
         });
         form.reset();
 
-        await revalidatePageAction(pathname);
         if (form.getValues("mode") === "dropout") {
           setConfirmDialog(false);
         } else {

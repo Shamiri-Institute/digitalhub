@@ -1,10 +1,8 @@
 import { InfoIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { DropoutSupervisorSchema } from "#/app/(platform)/hc/schemas";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { dropoutSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
@@ -50,7 +48,6 @@ export default function DropoutSupervisor({
   const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState<z.infer<typeof DropoutSupervisorSchema>>();
-  const pathname = usePathname();
 
   const form = useForm<z.infer<typeof DropoutSupervisorSchema>>({
     resolver: zodResolver(DropoutSupervisorSchema),
@@ -68,7 +65,6 @@ export default function DropoutSupervisor({
           return;
         }
 
-        await revalidatePageAction(pathname);
         toast({
           description: response.message,
         });

@@ -107,7 +107,7 @@ export async function triggerPayoutAction() {
   const currentTime = new Date();
 
   try {
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       const occurredSessionIds = tx
         .select({ id: interventionSession.id })
         .from(interventionSession)
@@ -188,12 +188,13 @@ export async function triggerPayoutAction() {
         };
       }
 
-      revalidatePath("/ops/reporting/expenses/payout-history");
       return {
         success: true,
         message: `Successfully processed ${processedCount} attendances and ${payoutStatementsCount} payout statements`,
       };
     });
+    revalidatePath("/ops/reporting/expenses/payout-history");
+    return result;
   } catch (error) {
     console.error("Error in triggerPayoutAction:", error);
     throw new Error(
@@ -214,7 +215,7 @@ export async function confirmPayoutAction(executedAt: Date) {
   const currentTime = new Date();
 
   try {
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       // Only the active project's statements, the same set the payout history lists.
       const projectFellowIds = tx
         .select({ id: fellow.id })
@@ -253,12 +254,13 @@ export async function confirmPayoutAction(executedAt: Date) {
         )
         .returning({ id: payoutStatements.id });
 
-      revalidatePath("/ops/reporting/expenses/payout-history");
       return {
         success: true,
         message: `Successfully confirmed ${updatedPayouts.length} payouts`,
       };
     });
+    revalidatePath("/ops/reporting/expenses/payout-history");
+    return result;
   } catch (error) {
     console.error("Error in confirmPayoutAction:", error);
     throw new Error(

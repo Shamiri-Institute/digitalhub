@@ -3,7 +3,7 @@
 import { ImplementerRole } from "#/db/enums";
 import { Check, ChevronsUpDown } from "lucide-react";
 import type { Session } from "next-auth";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "#/components/ui/button";
 import { toast } from "#/components/ui/use-toast";
 import {
@@ -16,7 +16,6 @@ import {
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { setActiveMembership } from "#/lib/actions/active-membership";
-import { isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
 import { cn } from "#/lib/utils";
 
 interface JWTMembership {
@@ -31,26 +30,16 @@ export function MembershipSwitcher({
   loading,
   setLoading,
   session,
+  isAdminUser,
 }: {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   session: Session | null;
+  isAdminUser: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const activeMembership = session?.user?.activeMembership ?? null;
   const memberships = session?.user?.memberships ?? [];
-  const [isAdminUser, setIsAdminUser] = useState(activeMembership?.role === ImplementerRole.ADMIN);
-
-  // effect: checks admin status with a server action after the session loads
-  useEffect(() => {
-    const checkIsAdminUser = async () => {
-      const checkIsAdminUser = await isCurrentUserAdmin();
-      if (checkIsAdminUser) {
-        setIsAdminUser(true);
-      }
-    };
-    void checkIsAdminUser();
-  }, [session]);
 
   if (!isAdminUser) {
     return null;

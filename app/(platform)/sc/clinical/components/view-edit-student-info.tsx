@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { type ClinicalCases, updateStudentInfo } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
@@ -85,7 +84,6 @@ export default function ViewEditClinicalCaseStudentInfo({
           title: "Success",
           description: response.message,
         });
-        await revalidatePageAction("sc/clinical");
         setDialogOpen(false);
       } else {
         toast({

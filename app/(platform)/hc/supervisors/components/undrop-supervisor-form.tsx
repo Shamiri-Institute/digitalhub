@@ -1,6 +1,4 @@
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useState } from "react";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { undropSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Button } from "#/components/ui/button";
 import {
@@ -24,7 +22,6 @@ export default function UndropSupervisor({
   setUndropDialog: Dispatch<SetStateAction<boolean>>;
 }) {
   const [loading, setLoading] = useState(false);
-  const pathname = usePathname();
 
   const onSubmit = async () => {
     if (supervisorId) {
@@ -40,7 +37,6 @@ export default function UndropSupervisor({
         description: response.message,
       });
 
-      await revalidatePageAction(pathname);
       setLoading(false);
       setUndropDialog(false);
     }

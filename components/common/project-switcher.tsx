@@ -1,6 +1,5 @@
 "use client";
 
-import { ImplementerRole } from "#/db/enums";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Session } from "next-auth";
@@ -17,7 +16,6 @@ import {
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
 import { fetchProjects, type ProjectOption, setActiveProject } from "#/lib/actions/project";
 import { cn } from "#/lib/utils";
 
@@ -25,11 +23,13 @@ export function ProjectSwitcher({
   loading,
   setLoading,
   session,
+  isAdminUser,
   className,
 }: {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   session: Session | null;
+  isAdminUser: boolean;
   className?: string;
 }) {
   const router = useRouter();
@@ -37,20 +37,7 @@ export function ProjectSwitcher({
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
-  const activeMembership = session?.user?.activeMembership ?? null;
-  const [isAdminUser, setIsAdminUser] = useState(activeMembership?.role === ImplementerRole.ADMIN);
   const activeProjectId = session?.user?.activeProjectId ?? null;
-
-  // effect: checks admin status with a server action after the session loads
-  useEffect(() => {
-    const checkIsAdminUser = async () => {
-      const isAdmin = await isCurrentUserAdmin();
-      if (isAdmin) {
-        setIsAdminUser(true);
-      }
-    };
-    void checkIsAdminUser();
-  }, [session?.user?.email]);
 
   const loadProjects = async () => {
     if (!session?.user?.email) return;
@@ -68,7 +55,7 @@ export function ProjectSwitcher({
     void loadProjects();
   });
 
-  // effect: loads the admin project list once admin status is known
+  // effect: loads the admin project list on mount
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- loads the admin project list on mount; server-side loading is a separate change
     loadProjectsForAdmin();

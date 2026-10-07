@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq, inArray } from "drizzle-orm";
+import { refresh } from "next/cache";
 import type { z } from "zod";
 
 import {
@@ -24,6 +25,7 @@ import {
   studentGroupTransferTrail,
   studentReportingNotes,
 } from "#/db/schema";
+import { fetchSessionAttendances } from "#/lib/actions/session/session";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { generateStudentVisibleID } from "#/lib/utils";
@@ -153,6 +155,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
       if (updated.length === 0) {
         throw new Error(`Student ${id} not found`);
       }
+      refresh();
       return {
         success: true,
         message: `Successfully updated details for ${studentName}`,
@@ -206,6 +209,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
     if (!created) {
       throw new Error("Could not create the student");
     }
+    refresh();
 
     return {
       success: true,
@@ -284,9 +288,11 @@ export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceS
           attended: status,
         },
       });
+    refresh();
     return {
       success: true,
       message: `Successfully marked attendance for ${studentRow.studentName}`,
+      attendances: await fetchSessionAttendances(sessionId),
     };
   } catch (err) {
     console.error(err);
@@ -404,9 +410,11 @@ export async function markManyStudentsAttendance(
           ),
         );
     });
+    refresh();
     return {
       success: true,
       message: `Successfully marked attendance for ${ids.length} students`,
+      attendances: await fetchSessionAttendances(sessionId),
     };
   } catch (err) {
     console.error(err);
@@ -439,6 +447,7 @@ export async function dropoutStudent(data: z.infer<typeof DropoutStudentSchema>)
     if (!result) {
       throw new Error(`Student ${studentId} not found`);
     }
+    refresh();
 
     return {
       success: true,
@@ -469,6 +478,7 @@ export async function archiveStudent(data: z.infer<typeof ArchiveStudentSchema>)
     if (!result) {
       throw new Error(`Student ${studentId} not found`);
     }
+    refresh();
 
     return {
       success: true,
@@ -496,6 +506,7 @@ export async function submitStudentReportingNotes(
     );
 
     await db.insert(studentReportingNotes).values({ studentId, notes, addedBy: caller.userId });
+    refresh();
     return {
       success: true,
       message: "Successfully submitted reporting notes",
@@ -560,6 +571,7 @@ export async function transferStudentToGroup(id: string, groupId: string) {
     if (!updated) {
       throw new Error(`Student ${id} not found`);
     }
+    refresh();
 
     return {
       success: true,
@@ -675,6 +687,7 @@ export async function moveStudentToSchool(data: z.infer<typeof MoveStudentToScho
         fromGroupId: studentRow.assignedGroupId,
       });
     });
+    refresh();
 
     return {
       success: true,

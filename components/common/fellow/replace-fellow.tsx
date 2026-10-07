@@ -1,10 +1,8 @@
 import type { fellow, supervisor } from "#/db/schema";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { ReplaceGroupLeaderSchema } from "#/components/common/fellow/schema";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
@@ -43,7 +41,6 @@ export default function ReplaceFellow({
   children?: React.ReactNode;
   supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
 }) {
-  const pathname = usePathname();
   const form = useForm<z.infer<typeof ReplaceGroupLeaderSchema>>({
     resolver: zodResolver(ReplaceGroupLeaderSchema),
   });
@@ -72,8 +69,6 @@ export default function ReplaceFellow({
       });
       return;
     }
-
-    await revalidatePageAction(pathname);
     toast({
       description: response.message,
     });

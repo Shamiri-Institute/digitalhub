@@ -1,14 +1,12 @@
 "use client";
 
 import type { fellow as fellowTable, supervisor } from "#/db/schema";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
@@ -39,7 +37,6 @@ export default function AssignFellowSupervisorDialog({
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   fellow: SchoolFellowTableData | null;
 }) {
-  const pathname = usePathname();
   const form = useForm<z.infer<typeof AssignPointSupervisorSchema>>({
     resolver: zodResolver(AssignPointSupervisorSchema),
     defaultValues: {
@@ -63,8 +60,6 @@ export default function AssignFellowSupervisorDialog({
         });
         return;
       }
-
-      await revalidatePageAction(pathname);
       toast({
         description: response.message,
       });

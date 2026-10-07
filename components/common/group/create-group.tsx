@@ -1,9 +1,7 @@
 import type { fellow, school as schoolTable, supervisor } from "#/db/schema";
-import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { CreateGroupSchema } from "#/components/common/group/schema";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -48,7 +46,6 @@ export default function CreateGroup({
   disabled?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
-  const pathname = usePathname();
   const form = useForm<z.infer<typeof CreateGroupSchema>>({
     resolver: zodResolver(CreateGroupSchema),
     defaultValues: {
@@ -74,8 +71,6 @@ export default function CreateGroup({
       });
       return;
     }
-
-    await revalidatePageAction(pathname);
     toast({
       description: response.message,
     });

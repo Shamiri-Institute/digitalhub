@@ -1,9 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useEffect, useEffectEvent, useState } from "react";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   Select,
   SelectContent,
@@ -26,7 +24,6 @@ export default function AssignFellowSupervisorSelect({
   supervisors: (typeof supervisor.$inferSelect)[];
   disabled?: boolean;
 }) {
-  const pathname = usePathname();
   const [selectedSupervisor, setSelectedSupervisor] = useState(supervisorId);
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +39,6 @@ export default function AssignFellowSupervisorSelect({
 
           if (result.success) {
             toast({ description: result.message });
-            void revalidatePageAction(pathname);
           } else {
             toast({ description: result.error });
           }
