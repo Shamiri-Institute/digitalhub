@@ -57,6 +57,13 @@
       "when": 1791282445726,
       "tag": "0007_fast_romulus",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791296195349,
+      "tag": "0008_attendance_unique_per_session",
+      "breakpoints": true
     }
   ]
 }

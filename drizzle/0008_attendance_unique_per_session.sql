@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "fellow_attendances_fellow_id_session_id_key" ON "fellow_attendances" USING btree ("fellow_id","session_id") WHERE "fellow_attendances"."created_at" >= '2024-09-01';--> statement-breakpoint
+CREATE UNIQUE INDEX "supervisor_attendances_supervisor_id_session_id_key" ON "supervisor_attendances" USING btree ("supervisor_id","session_id");

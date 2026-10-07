@@ -529,6 +529,10 @@ export const fellowAttendance = pgTable(
   },
   (table) => [
     uniqueIndex("fellow_attendances_visible_id_key").using("btree", table.visibleId),
+    // 2024 data holds 193 duplicate rows that predate payout statements; they stay as they are.
+    uniqueIndex("fellow_attendances_fellow_id_session_id_key")
+      .on(table.fellowId, table.sessionId)
+      .where(sql`${table.createdAt} >= '2024-09-01'`),
     foreignKey({
       columns: [table.fellowId],
       foreignColumns: [fellow.id],
@@ -1933,6 +1937,10 @@ export const supervisorAttendance = pgTable(
     markedBy: text("marked_by").notNull(),
   },
   (table) => [
+    uniqueIndex("supervisor_attendances_supervisor_id_session_id_key").on(
+      table.supervisorId,
+      table.sessionId,
+    ),
     foreignKey({
       columns: [table.projectId],
       foreignColumns: [project.id],
