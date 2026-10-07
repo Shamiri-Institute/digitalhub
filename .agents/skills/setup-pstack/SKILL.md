@@ -2,6 +2,7 @@
 name: setup-pstack
 description: Configure potetos-for-everyone model roles and capability preferences for the current agent/runtime. Use during initial setup or routing changes.
 ---
+
 # Setup pstack, portable
 
 1. Detect host capabilities and available model/delegation options. Do not assume model names.

@@ -2,6 +2,7 @@
 name: why
 description: Recover why a system or decision exists by triangulating source history and connected evidence. Use for rationale archaeology and historical questions.
 ---
+
 # Why
 
 Recover rationale without inventing intent.

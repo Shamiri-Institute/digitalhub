@@ -2,6 +2,7 @@
 name: interrogate
 description: Adversarially review a diff or design with independent lenses and evidence. Use before shipping contested or high-impact changes.
 ---
+
 # Interrogate
 
 Reviewers are attackers, not style voters.

@@ -2,6 +2,7 @@
 name: tdd
 description: Write a minimal failing test before implementation, make it pass with the simplest code, and refactor cleanly. Use when implementing bug fixes or features with clear verification targets.
 ---
+
 # Test-Driven Development (TDD)
 
 1. Understand the exact requirement or bug and identify the narrowest executable check.

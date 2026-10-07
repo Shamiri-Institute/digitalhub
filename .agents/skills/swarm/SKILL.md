@@ -2,6 +2,7 @@
 name: swarm
 description: Fan out independent slices or coverage partitions and aggregate them with owner verification. Use for large audits, races, and parallel work.
 ---
+
 # Swarm
 
 1. Define a partition with minimal shared mutable state and one owner per slice.

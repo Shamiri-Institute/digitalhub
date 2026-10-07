@@ -2,6 +2,7 @@
 name: teach
 description: Teach a subsystem or change so the reader can reason about it, combining how and why evidence. Use for real understanding rather than summary.
 ---
+
 # Teach
 
 1. Run the substance of `how` and, when historical rationale matters, `why`.

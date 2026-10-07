@@ -2,6 +2,7 @@
 name: automate-me
 description: Create a personal mode skill from recurring workflow patterns in available history. Use when the user wants their own agent style encoded.
 ---
+
 # Automate Me
 
 1. Gather a representative sample of the user's actual completed workflows from available, authorized history. Do not infer private history you cannot access.

@@ -1,4 +1,5 @@
 <!-- potetos-for-everyone:begin -->
+
 ## potetos-for-everyone
 
 For non-trivial engineering work, use the Agent Skill at `.agents/skills/poteto-mode/SKILL.md`.

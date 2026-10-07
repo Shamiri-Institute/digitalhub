@@ -2,6 +2,7 @@
 name: unslop
 description: Cut AI tells, filler prose, superficial -ing phrases, and bloated commentary from writing and code. Use for all written deliverables and code cleanup.
 ---
+
 # Unslop
 
 1. Scan text and code comments for AI tells: vague attributions, superficial -ing clauses, throat-clearing intros, and repetitive summaries.

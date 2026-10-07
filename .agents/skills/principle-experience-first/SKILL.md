@@ -2,6 +2,7 @@
 name: principle-experience-first
 description: Optimize for the end-user experience unless the cost violates an explicit constraint. Use when product, UX, API design, or feature-scope tradeoffs arise.
 ---
+
 # Experience First
 
 ## Trigger

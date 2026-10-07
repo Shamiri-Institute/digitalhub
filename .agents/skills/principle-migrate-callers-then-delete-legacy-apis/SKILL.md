@@ -2,6 +2,7 @@
 name: principle-migrate-callers-then-delete-legacy-apis
 description: Move callers to the new shape and delete the old path in the same migration wave instead of carrying a compatibility layer. Use when when replacing an internal api.
 ---
+
 # Migrate Callers Then Delete Legacy APIs
 
 ## Trigger

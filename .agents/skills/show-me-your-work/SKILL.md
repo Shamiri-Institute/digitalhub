@@ -2,6 +2,7 @@
 name: show-me-your-work
 description: Maintain a compact auditable decision trail during autonomous or high-stakes work. Use when the user will review decisions later.
 ---
+
 # Show Me Your Work
 
 Keep `.potetos/decisions.tsv` with columns:

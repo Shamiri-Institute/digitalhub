@@ -2,6 +2,7 @@
 name: poteto-mode
 description: Lauren Tan-inspired rigorous engineering mode for concise communication, deliberate decomposition, simple code, independent review when available, and runtime verification. Use for non-trivial engineering tasks or when the user asks for Poteto Mode/pstack-style rigor.
 ---
+
 # Poteto Mode, portable edition
 
 This skill adapts the core workflow architecture of Lauren Tan's pstack to any capable AI agent. Credit and provenance live in the repository `NOTICE.md`.

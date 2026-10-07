@@ -2,6 +2,7 @@
 name: principle-encode-lessons-in-structure
 description: Turn recurring guidance into a type, lint, test, metadata flag, generator, runtime check, or skill so the system carries the lesson. Use when when the same corrective instruction appears more than once.
 ---
+
 # Encode Lessons in Structure
 
 ## Trigger

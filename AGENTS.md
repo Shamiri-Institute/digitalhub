@@ -32,6 +32,7 @@ npm run lint         # ESLint, Next.js rules
 - Commits: Conventional Commits, with the Linear ticket ID in the message.
 
 <!-- potetos-for-everyone:begin -->
+
 ## potetos-for-everyone
 
 For non-trivial engineering work, use the Agent Skill at `.agents/skills/poteto-mode/SKILL.md`.

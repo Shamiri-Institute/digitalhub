@@ -2,6 +2,7 @@
 name: typescript-best-practices
 description: Apply disciplined TypeScript modeling and boundary parsing. Use when reading or editing TypeScript.
 ---
+
 # TypeScript Best Practices
 
 - Parse unknown external data at the boundary; keep `unknown` until validated.

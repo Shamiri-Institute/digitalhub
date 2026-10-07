@@ -2,6 +2,7 @@
 name: principle-subtract-before-you-add
 description: Remove dead weight and obsolete paths first; build on the simpler remaining system. Use when before an addition, rewrite, or structural refactor.
 ---
+
 # Subtract Before You Add
 
 ## Trigger

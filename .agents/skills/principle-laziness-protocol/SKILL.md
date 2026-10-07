@@ -2,6 +2,7 @@
 name: principle-laziness-protocol
 description: Bias toward deletion and the smallest change that fully solves the problem. Use when considering adding code, abstractions, dependencies, or speculative features.
 ---
+
 # Laziness Protocol
 
 ## Trigger

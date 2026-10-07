@@ -2,6 +2,7 @@
 name: principle-sequence-verifiable-units
 description: Break work into small units that each end with a proof and order delivery so every next unit builds on verified state. Use when for migrations, sweeps, repeated edits, and stacks.
 ---
+
 # Sequence Work into Verifiable Units
 
 ## Trigger

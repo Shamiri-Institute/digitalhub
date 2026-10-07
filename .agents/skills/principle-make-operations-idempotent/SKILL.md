@@ -2,6 +2,7 @@
 name: principle-make-operations-idempotent
 description: Design repeated execution to converge on the same correct end state rather than multiplying side effects. Use when for commands, lifecycle steps, retries, loops, or crash recovery.
 ---
+
 # Make Operations Idempotent
 
 ## Trigger

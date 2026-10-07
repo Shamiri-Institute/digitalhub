@@ -2,6 +2,7 @@
 name: principle-foundational-thinking
 description: Choose the core data structures, ownership, and sequencing first so downstream logic becomes simpler. Use when before writing logic, especially when state or concurrency is involved.
 ---
+
 # Foundational Thinking
 
 ## Trigger

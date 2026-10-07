@@ -2,6 +2,7 @@
 name: arena
 description: Spawn parallel candidate implementations for the same task, cross-judge, and graft the best parts into the winning base. Use when exploring competing designs or critical artifacts.
 ---
+
 # Arena
 
 Fan out N parallel attempts at the same task, score them against concrete criteria, pick a base, and graft the best ideas from the others.

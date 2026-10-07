@@ -2,6 +2,7 @@
 name: principle-prove-it-works
 description: Verify the requested behavior against the real artifact or surface whenever possible; a proxy check only proves the proxy. Use when verifying changes, completing tasks, or claiming something is fixed.
 ---
+
 # Prove It Works
 
 ## Trigger

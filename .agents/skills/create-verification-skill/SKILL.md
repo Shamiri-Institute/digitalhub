@@ -2,6 +2,7 @@
 name: create-verification-skill
 description: Generate a project-local verification skill that drives the real app and captures evidence. Use when setting up automated verification for a repo.
 ---
+
 # Create Verification Skill
 
 1. Interview the repository to discover primary user-facing surfaces (web UI, CLI, API, app).

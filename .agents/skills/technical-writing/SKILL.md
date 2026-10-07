@@ -2,6 +2,7 @@
 name: technical-writing
 description: Write maintainable technical docs, RFCs, READMEs, PR descriptions, and commit messages. Use for durable engineering prose.
 ---
+
 # Technical Writing
 
 1. Identify the reader and the action/decision the document should enable.

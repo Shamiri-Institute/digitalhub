@@ -2,6 +2,7 @@
 name: principle-exhaust-the-design-space
 description: Build a few materially different cheap prototypes and compare evidence before committing to one design. Use when for novel interactions or architecture with no strong precedent.
 ---
+
 # Exhaust the Design Space
 
 ## Trigger

@@ -2,6 +2,7 @@
 name: principle-outcome-oriented-execution
 description: Converge on the target architecture rather than preserving temporary compatibility states as permanent complexity. Use when during planned migrations or rewrites with explicit phases.
 ---
+
 # Outcome-Oriented Execution
 
 ## Trigger

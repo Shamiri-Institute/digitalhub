@@ -2,6 +2,7 @@
 name: principle-build-the-lever
 description: Prefer a script, codemod, generator, benchmark, or verifier that performs or proves the work repeatably over hand edits. Use when for repetitive, large, or verification-heavy work.
 ---
+
 # Build the Lever
 
 ## Trigger

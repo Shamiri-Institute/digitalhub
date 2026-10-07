@@ -2,6 +2,7 @@
 name: principle-redesign-from-first-principles
 description: Design the shape you would choose if the requirement had existed from day one, then migrate toward that shape. Use when when integrating a new requirement into a design that keeps fighting it.
 ---
+
 # Redesign from First Principles
 
 ## Trigger

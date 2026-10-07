@@ -2,6 +2,7 @@
 name: principle-separate-before-serializing-shared-state
 description: Eliminate unnecessary sharing or partition ownership before adding locks, queues, or coordination. Use when concurrency, locks, queues, shared state, or complex coordination are being considered.
 ---
+
 # Separate Before Serializing Shared State
 
 ## Trigger

@@ -2,6 +2,7 @@
 name: principle-fix-root-causes
 description: Reproduce the symptom, trace causality until one mechanism explains it, and fix that mechanism rather than compensating for downstream effects. Use when during debugging and incident repair.
 ---
+
 # Fix Root Causes
 
 ## Trigger

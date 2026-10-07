@@ -2,6 +2,7 @@
 name: principle-boundary-discipline
 description: Validate and normalize at boundaries, trust internal invariants, and keep business logic free of adapter noise. Use when at parsing, framework, process, network, storage, or user-input boundaries.
 ---
+
 # Boundary Discipline
 
 ## Trigger

@@ -790,6 +790,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 <!-- END:nextjs-agent-rules -->
 
 <!-- potetos-for-everyone:begin -->
+
 ## potetos-for-everyone
 
 For non-trivial engineering work, use the Agent Skill at `.agents/skills/poteto-mode/SKILL.md`.

@@ -2,6 +2,7 @@
 name: no-comments
 description: Remove redundant comments, dead workaround explanations, and AI tells from code while preserving necessary constraints. Use when cleaning up code or diffs.
 ---
+
 # No Comments
 
 1. Identify comments that explain obvious code, restate syntax, or explain temporary workarounds that should be deleted.

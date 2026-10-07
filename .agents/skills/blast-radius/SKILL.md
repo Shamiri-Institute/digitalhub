@@ -2,6 +2,7 @@
 name: blast-radius
 description: Prove what a small-looking change can affect before or after editing. Use for compatibility, caller, state, schema, or behavior impact analysis.
 ---
+
 # Blast Radius
 
 1. Name the changed contract: type, value, state transition, API, storage shape, timing, style token, or side effect.

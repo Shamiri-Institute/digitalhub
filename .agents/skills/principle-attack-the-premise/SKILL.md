@@ -2,6 +2,7 @@
 name: principle-attack-the-premise
 description: Inventory who actually owns or exhibits the imbalance, then challenge the shared premise before writing another patch. Use when two or more fixes that share one premise have failed the same gate.
 ---
+
 # Attack the Premise
 
 ## Trigger

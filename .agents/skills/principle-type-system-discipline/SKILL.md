@@ -2,6 +2,7 @@
 name: principle-type-system-discipline
 description: Make invalid states hard or impossible to represent and parse external primitives into meaningful internal types at the edge. Use at data modeling, API design, or external data ingestion points.
 ---
+
 # Type System Discipline
 
 ## Trigger

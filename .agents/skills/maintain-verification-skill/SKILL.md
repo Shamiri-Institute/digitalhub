@@ -2,6 +2,7 @@
 name: maintain-verification-skill
 description: Repair a project verification skill whose feature map or commands drifted. Use when app behavior and verification docs no longer agree.
 ---
+
 # Maintain Verification Skill
 
 1. Diff the current product surfaces against the verification feature map.

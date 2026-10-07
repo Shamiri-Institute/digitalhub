@@ -2,6 +2,7 @@
 name: make-bot-ui
 description: Build a small operator UI over an agent/webhook backend. Use when buttons or controls should trigger an agent workflow.
 ---
+
 # Make Bot UI
 
 1. Define the operator actions, payload schema, authentication boundary, and observable completion state before UI code.
