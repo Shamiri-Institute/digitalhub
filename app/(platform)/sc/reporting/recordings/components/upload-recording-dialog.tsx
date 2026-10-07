@@ -83,19 +83,19 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
   const [fileError, setFileError] = useState<string | null>(null);
   const [validatingFile, setValidatingFile] = useState(false);
 
-  const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const { uploadToS3, files } = useS3Upload();
+  const { isSubmitting } = form.formState;
 
   // effect: mirrors the S3 hook's upload progress into the dialog's progress bar
   useEffect(() => {
-    if (files.length > 0 && uploading) {
+    if (files.length > 0 && isSubmitting) {
       const lastFile = files[files.length - 1];
       if (lastFile) {
         setUploadProgress(Math.min(Math.round(lastFile.progress * 0.8), 80));
       }
     }
-  }, [files, uploading]);
+  }, [files, isSubmitting]);
 
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
@@ -296,7 +296,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
       return;
     }
 
-    setUploading(true);
     setUploadProgress(0);
 
     try {
@@ -339,7 +338,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         variant: "destructive",
       });
     } finally {
-      setUploading(false);
       setUploadProgress(0);
     }
   };
@@ -387,7 +385,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                       onSelectItem={field.onChange}
                       placeholder={loadingFellows ? "Loading..." : "Select a fellow"}
                       inputPlaceholder="Search fellows..."
-                      disabled={loadingFellows || uploading}
+                      disabled={loadingFellows || isSubmitting}
                       className="w-full"
                     />
                   </FormControl>
@@ -407,7 +405,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={!fellowId || loadingGroups || uploading}
+                    disabled={!fellowId || loadingGroups || isSubmitting}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -446,7 +444,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={!groupId || loadingSessions || uploading}
+                    disabled={!groupId || loadingSessions || isSubmitting}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -499,7 +497,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                     onDragOver={(e) => e.preventDefault()}
                     className={cn(
                       "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
-                      uploading || validatingFile
+                      isSubmitting || validatingFile
                         ? "cursor-not-allowed border-gray-200 bg-gray-50"
                         : "border-gray-300 hover:border-shamiri-new-blue",
                       fileError && "border-red-border",
@@ -528,7 +526,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                       type="file"
                       accept={ALLOWED_EXTENSIONS.join(",")}
                       onChange={handleFileInputChange}
-                      disabled={uploading || validatingFile}
+                      disabled={isSubmitting || validatingFile}
                       className="hidden"
                     />
                   </label>
@@ -538,7 +536,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
               </>
             )}
 
-            {uploading && (
+            {isSubmitting && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Uploading...</span>
@@ -554,16 +552,16 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
             )}
 
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={handleClose} disabled={uploading}>
+              <Button type="button" variant="ghost" onClick={handleClose} disabled={isSubmitting}>
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="brand"
-                disabled={!selectedFile || uploading || duplicateExists || validatingFile}
-                loading={uploading}
+                disabled={!selectedFile || isSubmitting || duplicateExists || validatingFile}
+                loading={isSubmitting}
               >
-                {uploading ? "Uploading..." : "Upload"}
+                {isSubmitting ? "Uploading..." : "Upload"}
               </Button>
             </DialogFooter>
           </form>

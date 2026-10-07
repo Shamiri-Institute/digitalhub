@@ -150,12 +150,7 @@ export function DropoutSchool({
               >
                 Cancel
               </Button>
-              <Button
-                variant="destructive"
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
+              <Button variant="destructive" type="submit">
                 Submit
               </Button>
             </DialogFooter>

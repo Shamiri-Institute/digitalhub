@@ -205,8 +205,8 @@ export default function FellowDropoutForm({
               <Button
                 variant={fellow.droppedOut ? "brand" : "destructive"}
                 type="submit"
-                disabled={fellow.droppedOut ? isPending : form.formState.isSubmitting}
-                loading={fellow.droppedOut ? isPending : form.formState.isSubmitting}
+                disabled={isPending}
+                loading={isPending}
               >
                 {fellow.droppedOut ? "Undo" : "Submit"}
               </Button>

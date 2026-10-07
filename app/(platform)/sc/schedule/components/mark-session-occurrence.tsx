@@ -164,13 +164,7 @@ export function MarkSessionOccurrence({
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  loading={form.formState.isSubmitting}
-                >
-                  Submit
-                </Button>
+                <Button type="submit">Submit</Button>
               </DialogFooter>
             </form>
           ) : (

@@ -162,8 +162,8 @@ export default function StudentDropoutForm({
               <Button
                 variant={student.droppedOut ? "brand" : "destructive"}
                 type="submit"
-                disabled={student.droppedOut ? isPending : form.formState.isSubmitting}
-                loading={student.droppedOut ? isPending : form.formState.isSubmitting}
+                disabled={isPending}
+                loading={isPending}
               >
                 {student.droppedOut ? "Undo" : "Submit"}
               </Button>
