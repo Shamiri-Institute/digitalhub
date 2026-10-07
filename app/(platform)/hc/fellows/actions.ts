@@ -3,15 +3,16 @@
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import { ImplementerRole } from "#/db/enums";
+import { requireHubRole } from "#/lib/auth/require-hub-role";
 
 export type FellowDropoutReasonsGraphData = {
   name: string;
   value: number;
 };
 
-export async function fetchFellowDropoutReasons(hudId: string) {
-  await requireAuthRole();
+export async function fetchFellowDropoutReasons() {
+  const { hubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
   const { rows: dropoutData } = await db.execute<FellowDropoutReasonsGraphData>(sql`
     SELECT
       COUNT(*)::int AS value,
@@ -20,7 +21,7 @@ export async function fetchFellowDropoutReasons(hudId: string) {
     WHERE
       drop_out_reason IS NOT NULL
       AND dropped_out = true
-      AND hub_id = ${hudId}
+      AND hub_id = ${hubId}
     GROUP BY
       drop_out_reason
   `);
@@ -32,8 +33,8 @@ export async function fetchFellowDropoutReasons(hudId: string) {
   return dropoutData;
 }
 
-export async function fetchFellowDataCompletenessData(hubId: string) {
-  await requireAuthRole();
+export async function fetchFellowDataCompletenessData() {
+  const { hubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
   const {
     rows: [fellowData],
   } = await db.execute<{ percentage: number | null }>(sql`
@@ -70,8 +71,8 @@ export type FellowSessionRatingAverages = {
   punctuality_rating: number;
 };
 
-export async function fetchFellowSessionRatingAverages(hubId: string) {
-  await requireAuthRole();
+export async function fetchFellowSessionRatingAverages() {
+  const { hubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
   const { rows: ratingAverages } = await db.execute<FellowSessionRatingAverages>(sql`
     SELECT
       CONCAT(TRIM(TO_CHAR(wfr.week, 'Month')), ' Week ', EXTRACT(WEEK FROM wfr.week)) AS session_date,

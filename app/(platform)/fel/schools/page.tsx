@@ -14,7 +14,7 @@ export default async function SchoolsPage() {
     await signOut({ callbackUrl: "/login" });
   }
 
-  const fellowData = await getFellowGroupsAndHubData(fellow?.profile.id ?? "");
+  const fellowData = await getFellowGroupsAndHubData();
 
   return (
     <div className="flex h-full flex-col">

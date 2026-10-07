@@ -27,7 +27,7 @@ export function AdminScheduleHeader({ adminUser }: { adminUser: CurrentAdminUser
 
     const loadStats = async () => {
       try {
-        const data = await fetchImplementerStats(implementerId);
+        const data = await fetchImplementerStats();
         if (data.success) {
           setStats(data.data || { hub_count: 0, school_count: 0, student_count: 0 });
         } else {

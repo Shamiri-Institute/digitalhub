@@ -29,9 +29,9 @@ export function AdminScheduleCalendar({ adminUser }: { adminUser: CurrentAdminUs
       if (!implementerId || !role || adminUser === null) return;
 
       const response = await Promise.all([
-        fetchImplementerSessionTypes(implementerId),
-        fetchImplementerSupervisors(implementerId),
-        fetchImplementerFellowRatings(implementerId),
+        fetchImplementerSessionTypes(),
+        fetchImplementerSupervisors(),
+        fetchImplementerFellowRatings(),
       ]);
       setHubSessionTypes(response[0].data || []);
       setSupervisors(response[1].data || []);

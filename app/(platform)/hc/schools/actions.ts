@@ -17,6 +17,7 @@ import {
   schoolDropoutHistory,
   weeklyHubReport,
 } from "#/db/schema";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { getSchoolInitials } from "#/lib/utils";
@@ -65,6 +66,7 @@ export async function fetchSchoolData() {
 }
 
 export async function revalidatePageAction(pathname: string, mode?: "layout" | "page") {
+  await requireAuthRole();
   revalidatePath(pathname, mode);
 }
 

@@ -8,6 +8,7 @@ import { FellowDetailsSchema, MarkAttendanceSchema } from "#/app/(platform)/hc/s
 import {
   type CurrentHubCoordinator,
   type CurrentSupervisor,
+  currentFellow,
   getCurrentPersonnel,
 } from "#/app/auth";
 import {
@@ -27,7 +28,11 @@ import {
   user,
   weeklyFellowRatings,
 } from "#/db/schema";
-import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
+import {
+  fellowsInCallerScope,
+  requireHubRole,
+  requireSchoolInHub,
+} from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 
 async function checkAuth() {
@@ -107,6 +112,17 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
     if (mode === "edit") {
       if (!id) {
         throw new Error("Fellow id is required to edit a fellow");
+      }
+      const caller = await requireHubRole(
+        ImplementerRole.SUPERVISOR,
+        ImplementerRole.HUB_COORDINATOR,
+      );
+      const [fellowInCallerScope] = await db
+        .select({ id: fellow.id })
+        .from(fellow)
+        .where(and(eq(fellow.id, id), inArray(fellow.id, fellowsInCallerScope(caller))));
+      if (!fellowInCallerScope) {
+        throw new Error("Fellow not found");
       }
       const fellowMember = await db.query.implementerMember.findFirst({
         where: (m, { and, eq }) => and(eq(m.identifier, id), eq(m.role, "FELLOW")),
@@ -988,7 +1004,8 @@ type FellowGroupStats = {
   total_sessions: number;
 };
 
-export async function getFellowGroupsAndHubData(fellowId: string) {
+export async function getFellowGroupsAndHubData() {
+  const fellowId = (await currentFellow())?.profile.id;
   if (!fellowId) return null;
 
   const [fellowRow, statsRows] = await Promise.all([

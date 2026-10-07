@@ -23,11 +23,11 @@ export default async function FellowsChartsWrapper({
     }
     const hubId = coordinator.assignedHubId;
 
-    const dropoutData = fetchFellowDropoutReasons(hubId);
+    const dropoutData = fetchFellowDropoutReasons();
 
-    const fellowsDataCompletenessPercentage = fetchFellowDataCompletenessData(hubId);
+    const fellowsDataCompletenessPercentage = fetchFellowDataCompletenessData();
 
-    const fellowsSessionRatings = fetchFellowSessionRatingAverages(hubId);
+    const fellowsSessionRatings = fetchFellowSessionRatingAverages();
 
     const fellowAttendanceData = db
       .select({
