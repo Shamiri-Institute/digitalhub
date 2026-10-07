@@ -1,4 +1,5 @@
 import { eq, or } from "drizzle-orm";
+import { cache } from "react";
 
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
@@ -11,7 +12,7 @@ type HubRole =
   | typeof ImplementerRole.FELLOW;
 
 /** The hub a supervisor, hub coordinator or fellow profile belongs to, or null. */
-async function hubIdOfProfile(role: HubRole, profileId: string) {
+const hubIdOfProfile = cache(async (role: HubRole, profileId: string) => {
   if (role === ImplementerRole.HUB_COORDINATOR) {
     const coordinator = await db.query.hubCoordinator.findFirst({
       where: (hc, { eq }) => eq(hc.id, profileId),
@@ -25,14 +26,14 @@ async function hubIdOfProfile(role: HubRole, profileId: string) {
     columns: { hubId: true },
   });
   return profile?.hubId ?? null;
-}
+});
 
 /**
  * The caller's role, profile id and hub, taken from the session. Actions compare the hub of the
  * record they write with this hub, so a caller cannot change another hub's records by sending
  * their ids.
  */
-export async function requireHubRole(...allowedRoles: HubRole[]) {
+export const requireHubRole = cache(async (...allowedRoles: HubRole[]) => {
   const membership = await requireAuthRole(...allowedRoles);
   const role = membership.role as HubRole;
   const profileId = membership.identifier;
@@ -41,7 +42,7 @@ export async function requireHubRole(...allowedRoles: HubRole[]) {
     throw new ForbiddenRoleError("You have no assigned hub");
   }
   return { userId: membership.userId, role, profileId, hubId };
-}
+});
 
 /**
  * The hub where a session takes place: the session's hub, else its school's hub. Hubs borrow

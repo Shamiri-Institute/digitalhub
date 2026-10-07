@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { signOut } from "next-auth/react";
 
@@ -13,12 +13,12 @@ import { Separator } from "#/components/ui/separator";
 import { db } from "#/db/client";
 import {
   clinicalScreeningInfo,
-  clinicalSessionAttendance,
   interventionSession,
   school,
   student,
   supervisor,
 } from "#/db/schema";
+import { fetchStudentClinicalStats } from "#/lib/actions/clinical/students";
 
 export default async function StudentsPage() {
   const hubCoordinator = await currentHubCoordinator();
@@ -43,67 +43,18 @@ export default async function StudentsPage() {
     .from(supervisor)
     .where(inHub(supervisor.hubId));
   const hubCaseFilter = inArray(clinicalScreeningInfo.currentSupervisorId, hubSupervisorIds);
-  const hubCaseIds = db
-    .select({ id: clinicalScreeningInfo.id })
-    .from(clinicalScreeningInfo)
-    .where(hubCaseFilter);
   const activeHubStudentFilter = and(
     isNull(student.archivedAt),
     inArray(student.schoolId, hubSchoolIds),
   );
 
   const [
-    totalNumberOfStudentsInHub,
-    totalGroupSessions,
-    hubClinicalCases,
-    hubClinicalSessions,
-    hubClinicalSessionsBySession,
-    hubClinicalSessionsBySupervisor,
-    hubClinicalSessionsByInitialReferredFrom,
+    clinicalStats,
     studentAggregations,
     studentsAttendanceGroupedBySession,
     studentsDropOutReasonsGroupedByReason,
   ] = await Promise.all([
-    db.$count(student, activeHubStudentFilter),
-    db.$count(interventionSession, inArray(interventionSession.schoolId, hubSchoolIds)),
-    db.query.clinicalScreeningInfo.findMany({
-      where: (c, { inArray }) => inArray(c.currentSupervisorId, hubSupervisorIds),
-    }),
-    db.query.clinicalSessionAttendance.findMany({
-      where: (a, { inArray }) => inArray(a.caseId, hubCaseIds),
-    }),
-    db
-      .select({
-        session: clinicalSessionAttendance.session,
-        count: count(clinicalSessionAttendance.session),
-      })
-      .from(clinicalSessionAttendance)
-      .where(inArray(clinicalSessionAttendance.caseId, hubCaseIds))
-      .groupBy(clinicalSessionAttendance.session),
-    db
-      .select({
-        supervisorName: supervisor.supervisorName,
-        count: count(clinicalScreeningInfo.currentSupervisorId),
-      })
-      .from(clinicalScreeningInfo)
-      .leftJoin(supervisor, eq(supervisor.id, clinicalScreeningInfo.currentSupervisorId))
-      .where(hubCaseFilter)
-      .groupBy(clinicalScreeningInfo.currentSupervisorId, supervisor.supervisorName),
-    db
-      .select({
-        initialReferredFromSpecified: clinicalScreeningInfo.initialReferredFromSpecified,
-        count: count(clinicalScreeningInfo.initialReferredFrom),
-      })
-      .from(clinicalScreeningInfo)
-      .where(
-        or(
-          hubCaseFilter,
-          hubId === null
-            ? isNull(clinicalScreeningInfo.clinicalLeadId)
-            : eq(clinicalScreeningInfo.clinicalLeadId, hubId),
-        ),
-      )
-      .groupBy(clinicalScreeningInfo.initialReferredFromSpecified),
+    fetchStudentClinicalStats(hubCaseFilter),
     db
       .select({
         age: student.age,
@@ -118,6 +69,7 @@ export default async function StudentsPage() {
       .select({
         sessionType: interventionSession.sessionType,
         count: count(interventionSession.sessionType),
+        sessions: count(),
       })
       .from(interventionSession)
       .where(inArray(interventionSession.schoolId, hubSchoolIds))
@@ -128,11 +80,11 @@ export default async function StudentsPage() {
       .where(and(activeHubStudentFilter, eq(student.droppedOut, true)))
       .groupBy(student.dropOutReason),
   ]);
-
-  const clinicalCasesBySupervisors = hubClinicalSessionsBySupervisor.map((item) => ({
-    supervisorName: item.supervisorName || "Unknown",
-    count: item.count,
-  }));
+  const totalNumberOfStudentsInHub = studentAggregations.reduce((total, g) => total + g.count, 0);
+  const totalGroupSessions = studentsAttendanceGroupedBySession.reduce(
+    (total, g) => total + g.sessions,
+    0,
+  );
 
   const studentsGroupedByAge: Record<string, number> = {};
   const studentsGroupedByGender: Record<string, number> = {};
@@ -157,8 +109,8 @@ export default async function StudentsPage() {
       <StudentsStats
         totalNumberOfStudentsInHub={totalNumberOfStudentsInHub}
         totalGroupSessions={totalGroupSessions}
-        hubClinicalCases={hubClinicalCases}
-        hubClinicalSessions={hubClinicalSessions}
+        clinicalCaseCount={clinicalStats.caseCount}
+        clinicalSessionCount={clinicalStats.sessionCount}
       />
 
       <HubStudentsDetailsCharts
@@ -166,13 +118,7 @@ export default async function StudentsPage() {
         studentsDropOutReasonsGroupedByReason={studentsDropOutReasonsGroupedByReason}
       />
 
-      <HubStudentClinicalDataCharts
-        hubClinicalSessions={hubClinicalSessions}
-        hubClinicalCases={hubClinicalCases}
-        hubClinicalSessionsBySession={hubClinicalSessionsBySession}
-        clinicalCasesBySupervisors={clinicalCasesBySupervisors}
-        hubClinicalSessionsByInitialReferredFrom={hubClinicalSessionsByInitialReferredFrom}
-      />
+      <HubStudentClinicalDataCharts clinicalStats={clinicalStats} />
 
       <HubStudentDemographicsCharts
         studentsGroupedByAge={studentsGroupedByAge}
