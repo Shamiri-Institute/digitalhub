@@ -20,15 +20,10 @@ export async function getAllClinicalCasesData() {
 }
 
 export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
-  try {
-    const clinicalTeam = await currentClinicalTeam();
-    if (!clinicalTeam) throw new Error("Unauthorized");
+  const clinicalTeam = await currentClinicalTeam();
+  if (!clinicalTeam) throw new Error("Unauthorized");
 
-    const projectId = await getActiveProjectId();
+  const projectId = await getActiveProjectId();
 
-    return await fetchClinicalCasesList({ projectId }, clinicalTeam.profile.id);
-  } catch (error) {
-    console.error("Error fetching clinical cases:", error);
-    return [];
-  }
+  return fetchClinicalCasesList({ projectId }, clinicalTeam.profile.id);
 }

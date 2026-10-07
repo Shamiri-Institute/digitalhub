@@ -34,106 +34,99 @@ type SchoolGroup = {
 };
 
 export async function loadSessionReport() {
-  try {
-    const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisor();
 
-    if (!supervisor) {
-      throw new Error("Unauthorised user");
-    }
+  if (!supervisor) {
+    throw new Error("Unauthorised user");
+  }
 
-    const supervisorId = supervisor.profile.id;
-    const sessions = await db.query.interventionSessionRating.findMany({
-      where: (r, { eq }) => eq(r.supervisorId, supervisorId),
-      with: {
-        session: {
-          with: {
-            school: true,
-            session: true,
-            sessionNotes: true,
-            sessionComments: {
-              with: {
-                user: { columns: { name: true } },
-              },
+  const supervisorId = supervisor.profile.id;
+  const sessions = await db.query.interventionSessionRating.findMany({
+    where: (r, { eq }) => eq(r.supervisorId, supervisorId),
+    with: {
+      session: {
+        with: {
+          school: true,
+          session: true,
+          sessionNotes: true,
+          sessionComments: {
+            with: {
+              user: { columns: { name: true } },
             },
           },
         },
       },
-      orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
+    },
+    orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
+  });
+
+  const groupedBySchool = sessions.reduce<SchoolGroup[]>((acc, session) => {
+    const schoolName = session?.session?.school?.schoolName || "N/A";
+
+    let schoolGroup = acc.find((group) => group.schoolName === schoolName);
+
+    if (!schoolGroup) {
+      schoolGroup = {
+        schoolName,
+        avgStudentBehaviour: 0,
+        avgAdminSupport: 0,
+        avgWorkload: 0,
+        session: [],
+        count: 0,
+      };
+      acc.push(schoolGroup);
+    }
+
+    const sessionLabel =
+      session.session?.session?.sessionLabel ||
+      session.session?.session?.sessionName ||
+      session.session?.sessionType ||
+      session.session?.sessionName ||
+      "N/A";
+
+    schoolGroup.session.push({
+      interventionSessionId: session.sessionId,
+      session: sessionLabel,
+      avgStudentBehaviour: session.studentBehaviorRating || 0,
+      avgAdminSupport: session.adminSupportRating || 0,
+      avgWorkload: session.workloadRating || 0,
+      sessionNotes:
+        session.session?.sessionNotes.map((note) => ({
+          kind: note.kind,
+          content: note.content,
+          sessionNoteId: note.id,
+        })) || [],
+      schoolName: session.session?.school?.schoolName || "N/A",
+      sessionComments:
+        session.session?.sessionComments.map((comment) => ({
+          content: comment.content,
+          sessionCommentId: comment.id,
+          name: comment.user?.name || "N/A",
+          date: comment.createdAt,
+        })) || [],
+      date: format(session.session?.sessionDate, "dd/MM/yyyy") || "N/A",
     });
 
-    const groupedBySchool = sessions.reduce<SchoolGroup[]>((acc, session) => {
-      const schoolName = session?.session?.school?.schoolName || "N/A";
+    schoolGroup.avgStudentBehaviour += session.studentBehaviorRating || 0;
+    schoolGroup.avgAdminSupport += session.adminSupportRating || 0;
+    schoolGroup.avgWorkload += session.workloadRating || 0;
+    schoolGroup.count++;
 
-      let schoolGroup = acc.find((group) => group.schoolName === schoolName);
+    return acc;
+  }, []);
 
-      if (!schoolGroup) {
-        schoolGroup = {
-          schoolName,
-          avgStudentBehaviour: 0,
-          avgAdminSupport: 0,
-          avgWorkload: 0,
-          session: [],
-          count: 0,
-        };
-        acc.push(schoolGroup);
-      }
+  groupedBySchool.forEach((school) => {
+    school.avgStudentBehaviour = Number.parseFloat(
+      (school.avgStudentBehaviour / school.count).toFixed(2),
+    );
+    school.avgAdminSupport = Number.parseFloat((school.avgAdminSupport / school.count).toFixed(2));
+    school.avgWorkload = Number.parseFloat((school.avgWorkload / school.count).toFixed(2));
 
-      const sessionLabel =
-        session.session?.session?.sessionLabel ||
-        session.session?.session?.sessionName ||
-        session.session?.sessionType ||
-        session.session?.sessionName ||
-        "N/A";
+    // @ts-expect-error
+    delete school.count;
+  });
 
-      schoolGroup.session.push({
-        interventionSessionId: session.sessionId,
-        session: sessionLabel,
-        avgStudentBehaviour: session.studentBehaviorRating || 0,
-        avgAdminSupport: session.adminSupportRating || 0,
-        avgWorkload: session.workloadRating || 0,
-        sessionNotes:
-          session.session?.sessionNotes.map((note) => ({
-            kind: note.kind,
-            content: note.content,
-            sessionNoteId: note.id,
-          })) || [],
-        schoolName: session.session?.school?.schoolName || "N/A",
-        sessionComments:
-          session.session?.sessionComments.map((comment) => ({
-            content: comment.content,
-            sessionCommentId: comment.id,
-            name: comment.user?.name || "N/A",
-            date: comment.createdAt,
-          })) || [],
-        date: format(session.session?.sessionDate, "dd/MM/yyyy") || "N/A",
-      });
-
-      schoolGroup.avgStudentBehaviour += session.studentBehaviorRating || 0;
-      schoolGroup.avgAdminSupport += session.adminSupportRating || 0;
-      schoolGroup.avgWorkload += session.workloadRating || 0;
-      schoolGroup.count++;
-
-      return acc;
-    }, []);
-
-    groupedBySchool.forEach((school) => {
-      school.avgStudentBehaviour = Number.parseFloat(
-        (school.avgStudentBehaviour / school.count).toFixed(2),
-      );
-      school.avgAdminSupport = Number.parseFloat(
-        (school.avgAdminSupport / school.count).toFixed(2),
-      );
-      school.avgWorkload = Number.parseFloat((school.avgWorkload / school.count).toFixed(2));
-
-      // @ts-expect-error
-      delete school.count;
-    });
-
-    return groupedBySchool || [];
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
+  return groupedBySchool || [];
 }
 
 export type SessionReportType = Awaited<ReturnType<typeof loadSessionReport>>[number];
