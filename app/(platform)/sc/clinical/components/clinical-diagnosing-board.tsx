@@ -181,9 +181,11 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
         emergencyPresentingIssues: emergencyData,
         generalPresentingIssues: generalData,
         otherIssues: otherIssues,
+        phase: isBaseline ? "baseline" : "endpoint",
       });
       if (!result.success) {
-        throw new Error("Failed to update presenting issues");
+        toast({ title: "Error", description: result.message, variant: "destructive" });
+        return;
       }
 
       toast({

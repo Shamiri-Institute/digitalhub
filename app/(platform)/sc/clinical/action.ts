@@ -613,11 +613,17 @@ export async function updateClinicalCasePresentingIssues(data: {
   emergencyPresentingIssues: { [k: string]: string };
   generalPresentingIssues: { [k: string]: string };
   otherIssues: string;
+  /** The columns the page showed. A case whose status changed since the page loaded is refused. */
+  phase: "baseline" | "endpoint";
 }) {
   try {
     const { clinicalCase } = await requireCaseAccess(data.caseId);
+    const currentPhase = clinicalCase.caseStatus === "Active" ? "baseline" : "endpoint";
+    if (data.phase !== currentPhase) {
+      return { success: false, message: "The case status changed. Reload the page." };
+    }
     const updateData =
-      clinicalCase.caseStatus === "Active"
+      currentPhase === "baseline"
         ? {
             emergencyPresentingIssuesBaseline: data.emergencyPresentingIssues,
             generalPresentingIssuesBaseline: data.generalPresentingIssues,
@@ -639,10 +645,10 @@ export async function updateClinicalCasePresentingIssues(data: {
     );
 
     revalidatePath("/sc/clinical");
-    return { success: true };
+    return { success: true, message: null };
   } catch (error) {
     console.error(error);
-    return { success: false };
+    return { success: false, message: "Failed to update presenting issues" };
   }
 }
 

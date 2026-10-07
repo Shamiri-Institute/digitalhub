@@ -149,6 +149,50 @@ test("a supervisor saves emergency, general and other presenting issues together
   await expect(page.getByRole("textbox", { name: "Other Issues" })).toHaveValue(otherIssues);
 });
 
+test("a save from a page loaded before the case was terminated changes nothing", async ({
+  page,
+  context,
+}) => {
+  const presentingIssueColumns = {
+    caseStatus: true,
+    emergencyPresentingIssuesBaseline: true,
+    generalPresentingIssuesBaseline: true,
+    generalPresentingIssuesOtherSpecifiedBaseline: true,
+    emergencyPresentingIssuesEndpoint: true,
+    generalPresentingIssuesEndpoint: true,
+    generalPresentingIssuesOtherSpecifiedEndpoint: true,
+  } as const;
+  const readCase = () =>
+    db.query.clinicalScreeningInfo.findFirst({
+      where: (c, { eq }) => eq(c.id, clinicalCase.caseId),
+      columns: presentingIssueColumns,
+    });
+  const original = await readCase();
+  if (!original) throw new Error(`case ${clinicalCase.caseId} is gone`);
+  undo.push(() =>
+    db
+      .update(clinicalScreeningInfo)
+      .set(original)
+      .where(eq(clinicalScreeningInfo.id, clinicalCase.caseId)),
+  );
+
+  await signInWithEmail(context, clinicalCase.email);
+  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+  await expandCase(page);
+  await issueRow(page, "Family issues").getByRole("checkbox").click();
+  // Another user terminates the case while this page still shows it as active.
+  await db
+    .update(clinicalScreeningInfo)
+    .set({ caseStatus: "Terminated" })
+    .where(eq(clinicalScreeningInfo.id, clinicalCase.caseId));
+  await page.getByRole("button", { name: "Save Baseline" }).click();
+
+  await expect(
+    page.getByText("The case status changed. Reload the page.", { exact: true }),
+  ).toBeVisible();
+  expect(await readCase()).toEqual({ ...original, caseStatus: "Terminated" });
+});
+
 test("a fellow deletes their group's attendance document even when the file store fails", async ({
   page,
   context,
