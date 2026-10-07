@@ -106,6 +106,7 @@ export default function EditRecordingDialog({
     if (!fellowId) return;
 
     const isInitialValue = fellowId === recording.fellowId;
+    let cancelled = false;
 
     setLoadingGroups(true);
     setGroups([]);
@@ -119,45 +120,65 @@ export default function EditRecordingDialog({
     const loadOriginalSessions = async () => {
       setLoadingSessions(true);
       try {
-        setSessions(await loadGroupSessions(recording.groupId));
+        const originalGroupSessions = await loadGroupSessions(recording.groupId);
+        if (!cancelled) setSessions(originalGroupSessions);
       } catch {
-        toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
+        if (!cancelled) {
+          toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
+        }
       } finally {
-        setLoadingSessions(false);
+        if (!cancelled) setLoadingSessions(false);
       }
     };
 
     loadFellowGroups(fellowId)
       .then((loadedGroups) => {
+        if (cancelled) return;
         setGroups(loadedGroups);
         if (isInitialValue && loadedGroups.some((g) => g.id === recording.groupId)) {
           void loadOriginalSessions();
         }
       })
-      .catch(() =>
+      .catch(() => {
+        if (cancelled) return;
         toast({
           title: "Error",
           description: "Failed to load intervention groups",
           variant: "destructive",
-        }),
-      )
-      .finally(() => setLoadingGroups(false));
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingGroups(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [fellowId, recording.fellowId, recording.groupId, form]);
 
   // effect: reloads sessions when the watched group field changes
   useEffect(() => {
     if (!groupId || groupId === recording.groupId) return;
 
+    let cancelled = false;
     setLoadingSessions(true);
     setSessions([]);
     form.setValue("sessionId", "");
 
     loadGroupSessions(groupId)
-      .then(setSessions)
-      .catch(() =>
-        toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" }),
-      )
-      .finally(() => setLoadingSessions(false));
+      .then((groupSessions) => {
+        if (!cancelled) setSessions(groupSessions);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSessions(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [groupId, recording.groupId, form]);
 
   const onSubmit = async (data: RecordingEditFormData) => {

@@ -563,3 +563,167 @@ test("a borrowed fellow's triage event and supervisor list use the session's hub
     );
   expect(stored?.hubId).toBe(borrowed.schoolHubId);
 });
+
+/** Adds network latency, so a test can act while a server action is still in flight. */
+async function setNetworkLatency(page: Page, latencyMs: number) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Network.enable");
+  await cdp.send("Network.emulateNetworkConditions", {
+    offline: false,
+    latency: latencyMs,
+    downloadThroughput: -1,
+    uploadThroughput: -1,
+  });
+}
+
+test("a fellow's triage form for one student never shows or saves another student's event", async ({
+  page,
+  context,
+}) => {
+  const [secondStudent] = await db
+    .select({ id: student.id, admissionNumber: student.admissionNumber })
+    .from(student)
+    .where(
+      and(
+        eq(
+          student.assignedGroupId,
+          sql`(select assigned_group_id from students where id = ${triage.studentId})`,
+        ),
+        sql`${student.id} <> ${triage.studentId} and ${student.archivedAt} is null
+          and ${student.admissionNumber} is not null
+          and not exists (select 1 from triage_events t
+            where t.student_id = ${student.id} and t.session_id = ${triage.sessionId})`,
+      ),
+    )
+    .orderBy(asc(student.id))
+    .limit(1);
+  if (!secondStudent?.admissionNumber) {
+    throw new Error("seed the database first: the triage fellow's group has one student");
+  }
+  const studentIds = [triage.studentId, secondStudent.id];
+  undo.push(async () => {
+    const events = await db
+      .select({ id: triageEvent.id })
+      .from(triageEvent)
+      .where(
+        and(
+          inArray(triageEvent.studentId, studentIds),
+          eq(triageEvent.sessionId, triage.sessionId),
+        ),
+      );
+    for (const { id } of events) {
+      await db.delete(triageEventAudit).where(eq(triageEventAudit.triageEventId, id));
+      await db.delete(triageEvent).where(eq(triageEvent.id, id));
+    }
+  });
+  await signIn(context, triage.email);
+
+  const form = page.getByRole("dialog", { name: "Document triage" });
+  const note = form.getByRole("textbox", { name: /Short note/ });
+  async function fillTriage(noteText: string) {
+    await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
+    await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
+    await form.getByRole("combobox", { name: "Action taken (required)" }).click();
+    await page.getByRole("option", { name: "Provided peer counselling" }).click();
+    await note.fill(noteText);
+    await form.getByRole("button", { name: "Save triage" }).click();
+    await expect(form).toBeHidden();
+  }
+
+  const firstNote = `e2e-2244-first-${Date.now()}`;
+  let attendance = await openStudentAttendance(page);
+  await openRowMenu(page, await rowWithCell(page, attendance, triage.admissionNumber));
+  await page.getByRole("menuitem", { name: "Triage occurred" }).click();
+  await fillTriage(firstNote);
+
+  attendance = await openStudentAttendance(page);
+  await openRowMenu(page, await rowWithCell(page, attendance, triage.admissionNumber));
+  await page.getByRole("menuitem", { name: "Edit triage" }).click();
+  await expect(note).toHaveValue(firstNote);
+  await form.getByRole("button", { name: "Cancel" }).click();
+  await expect(form).toBeHidden();
+
+  // While the second student's event loads, the form must not hold the first student's event.
+  await openRowMenu(page, await rowWithCell(page, attendance, secondStudent.admissionNumber));
+  await setNetworkLatency(page, 2000);
+  await page.getByRole("menuitem", { name: "Triage occurred" }).click();
+  await expect(form).toBeVisible();
+  expect(await note.inputValue()).toBe("");
+  await expect(form.getByRole("button", { name: "Loading…" })).toBeDisabled();
+  await setNetworkLatency(page, 0);
+
+  const secondNote = `e2e-2244-second-${Date.now()}`;
+  await expect(form.getByRole("button", { name: "Save triage" })).toBeEnabled();
+  await fillTriage(secondNote);
+
+  const savedNotes = await db
+    .select({ studentId: triageEvent.studentId, note: triageEvent.note })
+    .from(triageEvent)
+    .where(
+      and(inArray(triageEvent.studentId, studentIds), eq(triageEvent.sessionId, triage.sessionId)),
+    );
+  expect(savedNotes.toSorted((a, b) => a.studentId.localeCompare(b.studentId))).toEqual(
+    [
+      { studentId: triage.studentId, note: firstNote },
+      { studentId: secondStudent.id, note: secondNote },
+    ].toSorted((a, b) => a.studentId.localeCompare(b.studentId)),
+  );
+});
+
+test("a fellow who clicks Submit twice adds a student to the group once", async ({
+  page,
+  context,
+}) => {
+  const {
+    rows: [fellowGroup],
+  } = await db.execute<{ groupName: string; schoolId: string }>(sql`
+    select g.group_name as "groupName", g.school_id as "schoolId"
+    from students st join intervention_groups g on g.id = st.assigned_group_id
+    where st.id = ${triage.studentId}`);
+  if (!fellowGroup) throw new Error("the triage student has no group");
+  const studentName = `E2E Double Submit ${Date.now()}`;
+  const admissionNumber = `9${Date.now() % 100_000_000}`;
+  const addedStudents = and(
+    eq(student.schoolId, fellowGroup.schoolId),
+    eq(student.admissionNumber, admissionNumber),
+  );
+  undo.push(() => db.delete(student).where(addedStudents));
+  await signIn(context, triage.email);
+
+  await page.goto(getUrl(`/fel/schools/${triage.visibleId}/group`), { waitUntil: "networkidle" });
+  const main = page.getByRole("main");
+  await openRowMenu(page, await rowWithCell(page, main, fellowGroup.groupName));
+  await page.getByRole("menuitem", { name: "View students in group" }).click();
+  await page
+    .getByRole("dialog", { name: "Students in group" })
+    .getByRole("button", { name: "Add Student" })
+    .click();
+
+  const addForm = page.getByRole("dialog", { name: "Add student to group" });
+  await addForm.getByRole("textbox", { name: "Student name *" }).fill(studentName);
+  await addForm.getByRole("combobox", { name: "Gender *" }).click();
+  await page.getByRole("option", { name: "Female" }).click();
+  await addForm.getByLabel("Year of birth *").fill(String(new Date().getFullYear() - 15));
+  await addForm.getByRole("textbox", { name: "Admission number *" }).fill(admissionNumber);
+  await addForm.getByLabel("Grade/Form *").fill("2");
+  await addForm.getByRole("textbox", { name: "Stream *" }).fill("East");
+
+  await setNetworkLatency(page, 1500);
+  const submit = addForm.getByRole("button", { name: "Submit" });
+  await submit.click();
+  // A second click lands as soon as the button is enabled again, while the dialog may still be open.
+  await submit.click({ timeout: 8000 }).catch(() => {});
+  await expect(addForm).toBeHidden({ timeout: 20_000 });
+  const transferDialogShown = await page
+    .getByRole("dialog", { name: "Confirm transfer student" })
+    .waitFor({ state: "visible", timeout: 8000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  await setNetworkLatency(page, 0);
+
+  expect(transferDialogShown).toBe(false);
+  const added = await db.select({ id: student.id }).from(student).where(addedStudents);
+  expect(added).toHaveLength(1);
+});

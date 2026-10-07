@@ -122,83 +122,110 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
 
   // effect: resets dependent fields and reloads groups when the watched fellow field changes
   useEffect(() => {
-    if (fellowId) {
-      setLoadingGroups(true);
-      setGroups([]);
-      setSessions([]);
-      form.setValue("groupId", "");
-      form.setValue("sessionId", "");
-      form.setValue("schoolId", "");
-      setDuplicateExists(false);
-      setSelectedFile(null);
-      setFileError(null);
+    if (!fellowId) return;
+    let cancelled = false;
+    setLoadingGroups(true);
+    setGroups([]);
+    setSessions([]);
+    form.setValue("groupId", "");
+    form.setValue("sessionId", "");
+    form.setValue("schoolId", "");
+    setDuplicateExists(false);
+    setSelectedFile(null);
+    setFileError(null);
 
-      loadFellowGroups(fellowId)
-        .then(setGroups)
-        .catch((error) => {
-          console.error("Error loading groups:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load intervention groups",
-            variant: "destructive",
-          });
-        })
-        .finally(() => setLoadingGroups(false));
-    }
+    loadFellowGroups(fellowId)
+      .then((fellowGroups) => {
+        if (!cancelled) setGroups(fellowGroups);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Error loading groups:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load intervention groups",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingGroups(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [fellowId, form]);
 
   // effect: resets dependent fields and reloads sessions when the watched group field changes
   useEffect(() => {
-    if (groupId) {
-      setLoadingSessions(true);
-      setSessions([]);
-      form.setValue("sessionId", "");
-      setDuplicateExists(false);
-      setSelectedFile(null);
-      setFileError(null);
+    if (!groupId) return;
+    let cancelled = false;
+    setLoadingSessions(true);
+    setSessions([]);
+    form.setValue("sessionId", "");
+    setDuplicateExists(false);
+    setSelectedFile(null);
+    setFileError(null);
 
-      const selectedGroup = groups.find((g) => g.id === groupId);
-      if (selectedGroup) {
-        form.setValue("schoolId", selectedGroup.schoolId);
-      }
-
-      loadGroupSessions(groupId)
-        .then(setSessions)
-        .catch((error) => {
-          console.error("Error loading sessions:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load sessions",
-            variant: "destructive",
-          });
-        })
-        .finally(() => setLoadingSessions(false));
+    const selectedGroup = groups.find((g) => g.id === groupId);
+    if (selectedGroup) {
+      form.setValue("schoolId", selectedGroup.schoolId);
     }
+
+    loadGroupSessions(groupId)
+      .then((groupSessions) => {
+        if (!cancelled) setSessions(groupSessions);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Error loading sessions:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load sessions",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSessions(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [groupId, groups, form]);
 
   // effect: checks for a duplicate recording once all four watched fields are set
   useEffect(() => {
-    if (fellowId && groupId && sessionId && schoolId) {
-      setCheckingDuplicate(true);
-      setDuplicateExists(false);
+    if (!fellowId || !groupId || !sessionId || !schoolId) return;
+    let cancelled = false;
+    setCheckingDuplicate(true);
+    setDuplicateExists(false);
 
-      checkRecordingExists({ fellowId, groupId, sessionId, schoolId })
-        .then((existing) => {
-          if (existing) {
-            setDuplicateExists(true);
-            toast({
-              title: "Recording exists",
-              description:
-                "A recording already exists for this session. Please choose a different session.",
-              variant: "destructive",
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Error checking duplicate:", error);
-        })
-        .finally(() => setCheckingDuplicate(false));
-    }
+    checkRecordingExists({ fellowId, groupId, sessionId, schoolId })
+      .then((existing) => {
+        if (!cancelled && existing) {
+          setDuplicateExists(true);
+          toast({
+            title: "Recording exists",
+            description:
+              "A recording already exists for this session. Please choose a different session.",
+            variant: "destructive",
+          });
+        }
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Error checking duplicate:", error);
+        toast({
+          title: "Error",
+          description: "Could not check for an existing recording",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingDuplicate(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [fellowId, groupId, sessionId, schoolId]);
 
   const handleFileSelect = async (file: File) => {
