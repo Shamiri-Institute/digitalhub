@@ -26,14 +26,15 @@ export async function loadSupervisorFellows() {
     throw new Error("Unauthorized user");
   }
 
-  const fellows = await db.query.fellow.findMany({
-    where: (f, { eq }) => eq(f.supervisorId, supervisor.profile.id),
-    columns: { id: true, fellowName: true, droppedOut: true },
+  return db.query.fellow.findMany({
+    where: (f, { and, eq, isNull, or }) =>
+      and(
+        eq(f.supervisorId, supervisor.profile.id),
+        or(eq(f.droppedOut, false), isNull(f.droppedOut)),
+      ),
+    columns: { id: true, fellowName: true },
+    orderBy: (f, { asc }) => asc(f.fellowName),
   });
-  return fellows
-    .filter((f) => !f.droppedOut)
-    .map((f) => ({ id: f.id, fellowName: f.fellowName }))
-    .toSorted((a, b) => (a.fellowName ?? "").localeCompare(b.fellowName ?? ""));
 }
 
 export async function loadFellowGroups(fellowId: string) {
