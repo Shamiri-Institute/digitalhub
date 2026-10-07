@@ -74,9 +74,10 @@ export default function StudentAttendance({
   const [loadedTriageEvent, setLoadedTriageEvent] = useState<{
     event: Awaited<ReturnType<typeof getTriageEventByStudentAndSession>>;
   } | null>(null);
-  const [triageEventsByStudent, setTriageEventsByStudent] = useState<
-    Record<string, TriageEventWithRelations>
-  >({});
+  const [loadedTriageEvents, setLoadedTriageEvents] = useState<{
+    sessionId: string;
+    byStudent: Record<string, TriageEventWithRelations>;
+  } | null>(null);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [historyStudent, setHistoryStudent] = useState<StudentAttendanceData | undefined>();
 
@@ -161,6 +162,11 @@ export default function StudentAttendance({
     return { fellow, group };
   });
 
+  const triageEventsByStudent =
+    loadedTriageEvents && loadedTriageEvents.sessionId === session?.id
+      ? loadedTriageEvents.byStudent
+      : {};
+
   const memoizedColumns = columns({
     setAttendance,
     setAttendanceDialog: setMarkAttendanceDialog,
@@ -174,21 +180,31 @@ export default function StudentAttendance({
     role,
   });
 
-  const loadTriageEventsForSession = async () => {
+  const reloadTriageEventsAfterSave = async () => {
     if (!isFellow || !session?.id) return;
-    const events = await getTriageEventsForSession(session.id);
-    setTriageEventsByStudent(Object.fromEntries(events.map((e) => [e.studentId, e])));
+    const sessionId = session.id;
+    try {
+      const events = await getTriageEventsForSession(sessionId);
+      setLoadedTriageEvents({ sessionId, byStudent: triageEventsByStudentId(events) });
+    } catch {
+      toast({
+        variant: "destructive",
+        description:
+          "The triage was saved, but the triage records could not be reloaded. Reload the page.",
+      });
+    }
   };
 
   // effect: loads the session's triage events for the fellow view
   useEffect(() => {
     if (!isFellow || !session?.id) return;
 
+    const sessionId = session.id;
     let cancelled = false;
-    getTriageEventsForSession(session.id)
+    getTriageEventsForSession(sessionId)
       .then((events) => {
         if (!cancelled) {
-          setTriageEventsByStudent(Object.fromEntries(events.map((e) => [e.studentId, e])));
+          setLoadedTriageEvents({ sessionId, byStudent: triageEventsByStudentId(events) });
         }
       })
       .catch(() => {
@@ -431,7 +447,7 @@ export default function StudentAttendance({
             readOnly={triageReadOnly}
             onSuccess={toastOnError(async () => {
               await refresh();
-              await loadTriageEventsForSession();
+              await reloadTriageEventsAfterSave();
             })}
           />
         )}
@@ -641,3 +657,7 @@ const columns = (state: {
     enableHiding: false,
   },
 ];
+
+function triageEventsByStudentId(events: TriageEventWithRelations[]) {
+  return Object.fromEntries(events.map((event) => [event.studentId, event]));
+}
