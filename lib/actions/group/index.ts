@@ -2,6 +2,7 @@
 
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
+import { refresh } from "next/cache";
 
 import { currentFellow, getCurrentPersonnel } from "#/app/auth";
 import {
@@ -57,6 +58,7 @@ export async function archiveInterventionGroup(groupId: string) {
   try {
     await checkAuth();
     const result = await setArchivedAt(groupId, new Date());
+    refresh();
     return {
       success: true,
       message: `Successfully archived group ${result.groupName}`,
@@ -77,6 +79,7 @@ export async function unarchiveInterventionGroup(groupId: string) {
       throw new Error("Only hub coordinators can unarchive groups.");
     }
     const result = await setArchivedAt(groupId, null);
+    refresh();
     return {
       success: true,
       message: `Successfully unarchived group ${result.groupName}`,
@@ -123,6 +126,7 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
         groupName: `${getSchoolInitials(school.schoolName)}_${groupCount + 1}`,
       })
       .returning({ groupName: interventionGroup.groupName });
+    refresh();
     return {
       success: true,
       message: `Successfully created new group ${result?.groupName}`,
@@ -205,6 +209,7 @@ export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEva
         target: [interventionGroupReport.sessionId, interventionGroupReport.groupId],
         set: { ...scores, updatedAt: new Date() },
       });
+    refresh();
     return {
       success: true,
       message: `Successfully submitted evaluation for ${ledGroup.groupName}`,
@@ -272,6 +277,7 @@ export async function submitFellowGroupReport(data: z.infer<typeof FellowGroupRe
       supportDetail: parsed.supportDetail ?? null,
     });
 
+    refresh();
     return {
       success: true,
       message: `Group Report submitted for ${group.groupName}`,

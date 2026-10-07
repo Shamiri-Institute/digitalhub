@@ -1,14 +1,10 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
-import {
-  assignSchoolPointSupervisor,
-  revalidatePageAction,
-} from "#/app/(platform)/hc/schools/actions";
+import { assignSchoolPointSupervisor } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
@@ -44,7 +40,6 @@ export default function AssignPointSupervisor({
   setOpen: (open: boolean) => void;
   school: SchoolsTableData | null;
 }) {
-  const pathname = usePathname();
   const form = useForm<z.infer<typeof AssignPointSupervisorSchema>>({
     resolver: zodResolver(AssignPointSupervisorSchema),
   });
@@ -72,7 +67,6 @@ export default function AssignPointSupervisor({
         description: response.message,
       });
 
-      await revalidatePageAction(pathname);
       form.reset();
       setOpen(false);
     }

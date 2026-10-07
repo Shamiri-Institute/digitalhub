@@ -1,7 +1,6 @@
 "use client";
 
 import { format, isBefore } from "date-fns";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import {
   type Dispatch,
@@ -13,7 +12,6 @@ import {
 } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
@@ -40,7 +38,6 @@ export function MarkSessionOccurrence({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   defaultOccurrence?: boolean | null;
 }) {
-  const pathname = usePathname();
   const { sessions, refresh } = useContext(SessionsContext);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -97,7 +94,7 @@ export function MarkSessionOccurrence({
           });
           return;
         }
-        await Promise.all([refresh(), revalidatePageAction(pathname)]);
+        await refresh();
         setConfirmDialogOpen(false);
         setIsOpen(false);
         toast({

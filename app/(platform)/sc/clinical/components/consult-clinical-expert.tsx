@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   type ClinicalCases,
   supSubmitConsultClinicalexpert,
@@ -75,7 +74,6 @@ export default function ConsultClinicalExpert({
           title: "Success",
           description: "Clinical case referred successfully",
         });
-        await revalidatePageAction("sc/clinical");
         setDialogOpen(false);
       } else {
         toast({

@@ -1,12 +1,10 @@
 import { addDays, differenceInSeconds, eachMonthOfInterval, format, isEqual } from "date-fns";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import { MonthlySupervisorEvaluationSchema } from "#/app/(platform)/hc/schemas";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { submitMonthlySupervisorEvaluation } from "#/app/(platform)/hc/supervisors/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
@@ -73,7 +71,6 @@ export default function MonthlySupervisorEvaluation({
     MonthlySupervisorEvaluationType | undefined
   >();
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
-  const pathname = usePathname();
   const isViewMode = mode === "view";
 
   const form = useForm<z.infer<typeof MonthlySupervisorEvaluationSchema>>({
@@ -252,9 +249,7 @@ export default function MonthlySupervisorEvaluation({
     toast({
       description: response.message,
     });
-    void revalidatePageAction(pathname).then(() => {
-      setIsOpen(false);
-    });
+    setIsOpen(false);
   };
 
   const syncOpenState = useEffectEvent(() => {

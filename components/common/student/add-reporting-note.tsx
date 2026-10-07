@@ -1,11 +1,9 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { StudentReportingNotesSchema } from "#/app/(platform)/hc/schemas";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
@@ -35,8 +33,6 @@ export function AddReportingNote({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-
   const form = useForm<z.infer<typeof StudentReportingNotesSchema>>({
     resolver: zodResolver(StudentReportingNotesSchema),
     defaultValues: {
@@ -56,7 +52,6 @@ export function AddReportingNote({
       description: response.message,
     });
 
-    await revalidatePageAction(pathname);
     setIsOpen(false);
   };
 

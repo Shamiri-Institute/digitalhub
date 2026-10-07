@@ -1,8 +1,8 @@
 "use server";
 
 import { and, eq, inArray } from "drizzle-orm";
+import { refresh } from "next/cache";
 
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { WeeklyEvaluationFormValues } from "#/components/common/fellow-reports/weekly-fellow-evaluation/view-edit-weekly-fellow-evaluation";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
@@ -48,7 +48,7 @@ export const updateWeeklyEvaluation = async (
       throw new Error(`Weekly evaluation ${evaluationId} not found`);
     }
 
-    await revalidatePageAction("sc/reporting/fellow-reports/weekly-fellow-evaluation");
+    refresh();
     return {
       success: true,
       message: "Weekly evaluation updated successfully",

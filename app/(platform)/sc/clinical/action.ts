@@ -1,7 +1,7 @@
 "use server";
 
 import { and, count, desc, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { refresh, revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import {
   currentClinicalLead,
@@ -587,6 +587,7 @@ export async function updateStudentInfo(data: EditStudentInfoFormValues) {
       );
     });
 
+    refresh();
     return {
       success: true,
       message: "Student information updated successfully",

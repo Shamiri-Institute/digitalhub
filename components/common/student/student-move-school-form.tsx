@@ -1,10 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { MoveStudentToSchoolSchema } from "#/components/common/student/schemas";
 import { Icons } from "#/components/icons";
@@ -53,7 +51,6 @@ export default function StudentMoveSchoolForm({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
   const [schools, setSchools] = useState<HubSchool[]>([]);
   const [groups, setGroups] = useState<SchoolGroup[]>([]);
   const [loadingSchools, setLoadingSchools] = useState(false);
@@ -121,7 +118,6 @@ export default function StudentMoveSchoolForm({
       return;
     }
 
-    await revalidatePageAction(pathname);
     toast({ description: response.message });
     setIsOpen(false);
   }

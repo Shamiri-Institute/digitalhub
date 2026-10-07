@@ -3,6 +3,7 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { format } from "date-fns";
 import type { z } from "zod";
+import { refresh } from "next/cache";
 
 import { FellowDetailsSchema, MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import {
@@ -180,6 +181,7 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
         }
       });
 
+      refresh();
       return {
         success: true,
         message: `Successfully updated details for ${fellowName}`,
@@ -257,6 +259,7 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
 
         return created;
       });
+      refresh();
       return {
         success: true,
         message: `Successfully added ${fellowName}`,
@@ -346,6 +349,7 @@ export async function submitWeeklyFellowEvaluation(
             dressingAndGroomingRating,
             supervisorId,
           });
+          refresh();
           return {
             success: true,
             message: "Successfully submitted weekly evaluation",
@@ -364,6 +368,7 @@ export async function submitWeeklyFellowEvaluation(
             dressingAndGroomingRating,
           })
           .where(eq(weeklyFellowRatings.id, previousEvaluation.id));
+        refresh();
         return {
           success: true,
           message: `Successfully updated fellow's weekly evaluation`,
@@ -433,6 +438,7 @@ export async function replaceGroupLeader({
       where: (f, { eq }) => eq(f.id, leaderId),
       columns: { fellowName: true },
     });
+    refresh();
     return {
       success: true,
       message: `Group ${updated.groupName} successfully assigned to ${leader?.fellowName}`,
@@ -489,6 +495,7 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
       throw new Error(`Fellow ${fellowId} not found`);
     }
 
+    refresh();
     return {
       success: true,
       message:
@@ -563,7 +570,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
     }
     const callerHubId = await requireFellowsInCallerHub(personnel, [id]);
 
-    return await db.transaction(
+    const response = await db.transaction(
       async (tx) => {
         const fellowRow = await requireFellow(tx, id);
 
@@ -714,6 +721,8 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
       },
       { isolationLevel: "serializable" },
     );
+    refresh();
+    return response;
   } catch (err) {
     console.error(err);
     if (isSerializationFailure(err) || isUniqueViolation(err)) {
@@ -758,7 +767,7 @@ export async function markManyFellowAttendance(
     const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
     const callerHubId = await requireFellowsInCallerHub(personnel, ids);
 
-    return await db.transaction(
+    const response = await db.transaction(
       async (tx) => {
         const session = await requireSessionWithName(tx, sessionId, callerHubId);
 
@@ -953,6 +962,8 @@ export async function markManyFellowAttendance(
       },
       { isolationLevel: "serializable" },
     );
+    refresh();
+    return response;
   } catch (err) {
     console.error(err);
     if (isSerializationFailure(err) || isUniqueViolation(err)) {
@@ -982,6 +993,7 @@ export async function submitFellowComplaint(data: z.infer<typeof SubmitComplaint
       .values({ fellowId: id, complaint, comments, createdBy: caller.userId })
       .returning();
 
+    refresh();
     return {
       success: true,
       message: "Complaint submitted successfully.",

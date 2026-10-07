@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
 import { editSchoolFeedback } from "#/components/common/school-reports/school-feedback/actions";
 import { Button } from "#/components/ui/button";
@@ -64,8 +63,6 @@ export default function ViewEditSchoolFeedback({
           title: response.message,
           variant: "default",
         });
-
-        await revalidatePageAction("sc/reporting/school-reports/school-feedback");
         setDialogOpen(false);
       } else {
         toast({

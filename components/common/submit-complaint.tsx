@@ -1,10 +1,8 @@
 import { format } from "date-fns";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { SubmitComplaintSchema } from "#/components/common/schemas";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
@@ -58,8 +56,6 @@ export default function SubmitComplaint({
     createdAt: Date;
   }[];
 }) {
-  const pathname = usePathname();
-
   const form = useForm<z.infer<typeof SubmitComplaintSchema>>({
     resolver: zodResolver(SubmitComplaintSchema),
     defaultValues: {
@@ -78,7 +74,6 @@ export default function SubmitComplaint({
     toast({
       description: response.message,
     });
-    await revalidatePageAction(pathname);
     form.reset();
     onOpenChange(false);
   };

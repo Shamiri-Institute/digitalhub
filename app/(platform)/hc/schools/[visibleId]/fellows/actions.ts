@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
+import { refresh } from "next/cache";
 
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
@@ -42,6 +43,7 @@ export async function assignFellowSupervisor({
     if (!updated) {
       throw new Error(`Fellow ${fellowId} not found`);
     }
+    refresh();
     return {
       success: true,
       message: `Successfully assigned ${updated.fellowName} to ${supervisorInCoordinatorHub.supervisorName ?? "supervisor"}.`,

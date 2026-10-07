@@ -1,10 +1,9 @@
 "use client";
 import { InfoIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { dropoutSchool, revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import { dropoutSchool } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
@@ -49,7 +48,6 @@ export function DropoutSchool({
 }) {
   const [formData, setFormData] = useState<z.infer<typeof DropoutSchoolSchema>>();
   const [isPending, startTransition] = useTransition();
-  const pathname = usePathname();
   const form = useForm<z.infer<typeof DropoutSchoolSchema>>({
     resolver: zodResolver(DropoutSchoolSchema),
   });
@@ -66,7 +64,6 @@ export function DropoutSchool({
           return;
         }
 
-        await revalidatePageAction(pathname);
         toast({
           description: response.message,
         });

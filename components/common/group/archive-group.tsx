@@ -1,8 +1,6 @@
 import { InfoIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useTransition } from "react";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
@@ -22,7 +20,6 @@ export default function ArchiveGroup({
   onOpenChange: Dispatch<SetStateAction<boolean>>;
 }) {
   const [isPending, startTransition] = useTransition();
-  const pathname = usePathname();
 
   const onSubmit = () => {
     startTransition(() =>
@@ -37,8 +34,6 @@ export default function ArchiveGroup({
         toast({
           description: response.message,
         });
-
-        await revalidatePageAction(pathname);
         onOpenChange(false);
       }),
     );

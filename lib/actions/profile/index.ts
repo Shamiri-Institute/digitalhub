@@ -1,6 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
+import { refresh } from "next/cache";
 import type { z } from "zod";
 
 import { getCurrentUserSession } from "#/app/auth";
@@ -56,6 +57,7 @@ export async function updateSupervisorProfile(data: z.infer<typeof ProfileSchema
       };
     }
 
+    refresh();
     return {
       success: true,
       message: "Profile updated successfully",
@@ -117,6 +119,7 @@ export async function updateHubCoordinatorProfile(data: z.infer<typeof ProfileSc
       };
     }
 
+    refresh();
     return {
       success: true,
       message: "Profile updated successfully",
@@ -173,6 +176,7 @@ export async function updateFellowProfile(data: z.infer<typeof ProfileSchema>) {
       };
     }
 
+    refresh();
     return {
       success: true,
       message: "Profile updated successfully",
@@ -232,6 +236,7 @@ export async function updateClinicalLeadProfile(data: z.infer<typeof ProfileSche
       };
     }
 
+    refresh();
     return {
       success: true,
       message: "Profile updated successfully",

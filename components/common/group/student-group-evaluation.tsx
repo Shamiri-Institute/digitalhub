@@ -2,13 +2,11 @@
 
 import type { interventionGroupReport, interventionSession, sessionName } from "#/db/schema";
 import { addDays, differenceInSeconds, format } from "date-fns";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { StudentGroupEvaluationSchema } from "#/components/common/group/schema";
 import RatingStarsInput from "#/components/common/rating-stars-input";
@@ -146,7 +144,6 @@ export default function StudentGroupEvaluation({
   const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(
     _evaluation?.sessionId ?? undefined,
   );
-  const pathname = usePathname();
 
   const getDefaultValues = () => {
     return {
@@ -202,8 +199,6 @@ export default function StudentGroupEvaluation({
       });
       return;
     }
-
-    await revalidatePageAction(pathname);
     toast({
       description: response.message,
     });

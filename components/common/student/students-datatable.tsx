@@ -1,11 +1,7 @@
 "use client";
 
 import { ImplementerRole } from "#/db/enums";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
-import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
-import type { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { AddReportingNote } from "#/components/common/student/add-reporting-note";
@@ -26,7 +22,6 @@ export default function StudentsDatatable({
   students: SchoolStudentTableData[];
   role: ImplementerRole;
 }) {
-  const pathname = usePathname();
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState<boolean>(false);
@@ -37,11 +32,6 @@ export default function StudentsDatatable({
   const [archiveDialog, setArchiveDialog] = useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
   const [selectedSession, setSelectedSession] = useState<string>();
-
-  const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
-    const [res] = await Promise.all([markStudentAttendance(data), revalidatePageAction(pathname)]);
-    return res;
-  };
 
   const renderDialogAlert = () => {
     return (
@@ -123,7 +113,7 @@ export default function StudentsDatatable({
             id={student.id}
             isOpen={markAttendanceDialog}
             setIsOpen={setMarkAttendanceDialog}
-            markAttendanceAction={markAttendance}
+            markAttendanceAction={markStudentAttendance}
           >
             {renderDialogAlert()}
           </MarkAttendance>

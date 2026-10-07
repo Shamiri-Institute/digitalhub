@@ -1,9 +1,7 @@
-import { usePathname } from "next/navigation";
 import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { ArchiveStudentSchema } from "#/app/(platform)/hc/schemas";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Button } from "#/components/ui/button";
 import {
@@ -29,8 +27,6 @@ export default function StudentArchiveForm({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-
   const form = useForm<z.infer<typeof ArchiveStudentSchema>>({
     resolver: zodResolver(ArchiveStudentSchema),
     defaultValues: {
@@ -50,7 +46,6 @@ export default function StudentArchiveForm({
       description: response.message,
     });
     setIsOpen(false);
-    await revalidatePageAction(pathname);
   }
 
   return (

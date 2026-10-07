@@ -1,6 +1,7 @@
 "use server";
 
 import { eq, sql } from "drizzle-orm";
+import { refresh } from "next/cache";
 import type { z } from "zod";
 
 import {
@@ -104,6 +105,7 @@ export async function dropoutSupervisor(supervisorId: string, dropoutReason: str
       throw new Error(`Supervisor ${data.supervisorId} not found`);
     }
 
+    refresh();
     return {
       success: true,
       message: `${result.supervisorName} successfully dropped out.`,
@@ -135,6 +137,7 @@ export async function undropSupervisor(supervisorId: string) {
       throw new Error(`Supervisor ${supervisorId} not found`);
     }
 
+    refresh();
     return {
       success: true,
       message: `${result.supervisorName} successfully un-dropped.`,
@@ -300,6 +303,7 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
       }
     });
 
+    refresh();
     return {
       success: true,
       message: `Successfully updated details for ${supervisorName}`,
@@ -383,6 +387,7 @@ export async function createNewSupervisor(data: z.infer<typeof AddNewSupervisorS
       return created;
     });
 
+    refresh();
     return {
       success: true,
       message: `Successfully added ${result.supervisorName}`,
@@ -458,6 +463,7 @@ export async function submitMonthlySupervisorEvaluation(
         programSessionAttendance,
         programExecutionComments,
       });
+      refresh();
       return {
         success: true,
         message: "Successfully submitted monthly evaluation.",
@@ -486,6 +492,7 @@ export async function submitMonthlySupervisorEvaluation(
         programExecutionComments,
       })
       .where(eq(monthlySupervisorEvaluation.id, match.id));
+    refresh();
     return {
       success: true,
       message: "Successfully updated monthly evaluation.",

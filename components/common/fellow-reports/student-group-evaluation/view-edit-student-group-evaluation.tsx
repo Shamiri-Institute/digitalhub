@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   editStudentGroupEvaluation,
   type StudentGroupEvaluationType,
@@ -71,7 +70,6 @@ export default function ViewEditStudentGroupEvaluation({
           title: "Success",
           description: "Student group evaluation updated successfully",
         });
-        await revalidatePageAction("sc/reporting/fellow-reports/student-group-evaluation");
         setDialogOpen(false);
       } else {
         toast({

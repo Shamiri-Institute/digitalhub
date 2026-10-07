@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { updateWeeklyEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/action";
 import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { Button } from "#/components/ui/button";
@@ -73,7 +72,6 @@ export default function ViewEditWeeklyFellowEvaluation({
           title: "Success",
           description: "Weekly evaluation updated successfully",
         });
-        await revalidatePageAction("sc/reporting/fellow-reports/weekly-fellow-evaluation");
       } else {
         toast({
           title: "Error",

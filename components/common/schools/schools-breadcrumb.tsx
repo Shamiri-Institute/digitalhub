@@ -7,7 +7,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Icons } from "#/components/icons";
 import {
   Command,
@@ -78,11 +77,6 @@ export default function SchoolsBreadcrumb() {
     routeArray[3] = schoolVisibleId;
     router.replace(routeArray.join("/"));
   };
-
-  // effect: revalidates the page cache on every route change
-  useEffect(() => {
-    void revalidatePageAction(pathname);
-  }, [pathname]);
 
   const schoolIndex = schools.findIndex((school) => school.visibleId === schoolVisibleId);
   const previousSchool = schools[schoolIndex - 1];

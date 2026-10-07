@@ -1,7 +1,6 @@
 "use client";
 
 import { ImplementerRole, QuestionnaireType } from "#/db/enums";
-import { usePathname } from "next/navigation";
 import {
   type Dispatch,
   type SetStateAction,
@@ -12,7 +11,6 @@ import {
 } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import {
@@ -77,7 +75,6 @@ export default function StudentDetailsForm({
   groupName?: string;
   role: ImplementerRole;
 }) {
-  const pathname = usePathname();
   const [transferDialog, setTransferDialog] = useState(false);
   const [transferOption, setTransferOption] = useState<number | undefined>();
   const closeTransferDialog = () => {
@@ -159,7 +156,6 @@ export default function StudentDetailsForm({
           return;
         }
 
-        await revalidatePageAction(pathname);
         toast({
           description: response.message,
         });
@@ -181,7 +177,6 @@ export default function StudentDetailsForm({
       return false;
     }
 
-    await revalidatePageAction(pathname);
     toast({
       description: response.message,
     });

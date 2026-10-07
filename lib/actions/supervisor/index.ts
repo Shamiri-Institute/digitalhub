@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { refresh } from "next/cache";
 import type { z } from "zod";
 
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
@@ -87,6 +88,7 @@ export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendan
       throw new Error("Supervisor id is required");
     }
     const [marked] = await upsertSupervisorAttendances([data.id], data);
+    refresh();
     return {
       success: true,
       message: `Successfully marked attendance for ${marked?.supervisorName}`,
@@ -106,6 +108,7 @@ export async function markManySupervisorAttendance(
 ) {
   try {
     await upsertSupervisorAttendances(ids, data);
+    refresh();
     return {
       success: true,
       message: `Successfully marked attendances for ${ids.length} supervisors.`,
