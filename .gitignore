@@ -63,3 +63,6 @@ vscode
 # piolium audits
 /piolium
 
+# potetos-for-everyone:begin
+.potetos/
+# potetos-for-everyone:end
