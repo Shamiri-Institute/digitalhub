@@ -1,8 +1,7 @@
 import { useState } from "react";
 import {
   type ClinicalCases,
-  updateClinicalCaseEmergencyPresentingIssue,
-  updateClinicalCaseGeneralPresentingIssue,
+  updateClinicalCasePresentingIssues,
 } from "#/app/(platform)/sc/clinical/action";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -177,19 +176,16 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
         {} as Record<string, string>,
       );
 
-      await Promise.all([
-        updateClinicalCaseEmergencyPresentingIssue({
-          caseId: currentcase.id,
-          presentingIssues: emergencyData,
-          caseStatus: currentcase.caseStatus,
-        }),
-        updateClinicalCaseGeneralPresentingIssue({
-          caseId: currentcase.id,
-          generalPresentingIssues: generalData,
-          otherIssues: otherIssues,
-          caseStatus: currentcase.caseStatus,
-        }),
-      ]);
+      const result = await updateClinicalCasePresentingIssues({
+        caseId: currentcase.id,
+        emergencyPresentingIssues: emergencyData,
+        generalPresentingIssues: generalData,
+        otherIssues: otherIssues,
+        caseStatus: currentcase.caseStatus,
+      });
+      if (!result.success) {
+        throw new Error("Failed to update presenting issues");
+      }
 
       toast({
         title: "Success",

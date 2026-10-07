@@ -321,7 +321,10 @@ export async function deleteAttendanceFile(documentId: string): Promise<ActionRe
       .where(eq(attendanceDocuments.id, doc.id));
 
     if (doc.link) {
-      await deleteObject({ Key: doc.link }, "student-attendance");
+      const link = doc.link;
+      await deleteObject({ Key: link }, "student-attendance").catch((error) => {
+        console.error("Failed to delete archived attendance file:", link, error);
+      });
     }
     const response: ActionResponse = {
       success: true,

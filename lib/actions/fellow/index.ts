@@ -149,35 +149,37 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
         };
       }
 
-      const updated = await db
-        .update(fellow)
-        .set({
-          fellowName,
-          fellowEmail,
-          county,
-          subCounty,
-          cellNumber,
-          mpesaName,
-          mpesaNumber,
-          gender,
-          idNumber,
-          dateOfBirth,
-        })
-        .where(eq(fellow.id, id))
-        .returning({ id: fellow.id });
-      if (updated.length === 0) {
-        throw new Error(`Fellow ${id} not found`);
-      }
+      await db.transaction(async (tx) => {
+        const updated = await tx
+          .update(fellow)
+          .set({
+            fellowName,
+            fellowEmail,
+            county,
+            subCounty,
+            cellNumber,
+            mpesaName,
+            mpesaNumber,
+            gender,
+            idNumber,
+            dateOfBirth,
+          })
+          .where(eq(fellow.id, id))
+          .returning({ id: fellow.id });
+        if (updated.length === 0) {
+          throw new Error(`Fellow ${id} not found`);
+        }
 
-      // Update the corresponding user's email
-      const updatedUsers = await db
-        .update(user)
-        .set({ email: fellowEmail })
-        .where(eq(user.id, fellowMember.userId))
-        .returning({ id: user.id });
-      if (updatedUsers.length === 0) {
-        throw new Error(`User ${fellowMember.userId} not found`);
-      }
+        // Update the corresponding user's email
+        const updatedUsers = await tx
+          .update(user)
+          .set({ email: fellowEmail })
+          .where(eq(user.id, fellowMember.userId))
+          .returning({ id: user.id });
+        if (updatedUsers.length === 0) {
+          throw new Error(`User ${fellowMember.userId} not found`);
+        }
+      });
 
       return {
         success: true,

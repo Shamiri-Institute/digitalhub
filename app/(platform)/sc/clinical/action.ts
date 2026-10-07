@@ -602,8 +602,9 @@ export async function updateStudentInfo(data: EditStudentInfoFormValues) {
   }
 }
 
-export async function updateClinicalCaseGeneralPresentingIssue(data: {
+export async function updateClinicalCasePresentingIssues(data: {
   caseId: string;
+  emergencyPresentingIssues: { [k: string]: string };
   generalPresentingIssues: { [k: string]: string };
   otherIssues: string;
   caseStatus: string;
@@ -613,10 +614,12 @@ export async function updateClinicalCaseGeneralPresentingIssue(data: {
     const updateData =
       data.caseStatus === "Active"
         ? {
+            emergencyPresentingIssuesBaseline: data.emergencyPresentingIssues,
             generalPresentingIssuesBaseline: data.generalPresentingIssues,
             generalPresentingIssuesOtherSpecifiedBaseline: data.otherIssues,
           }
         : {
+            emergencyPresentingIssuesEndpoint: data.emergencyPresentingIssues,
             generalPresentingIssuesEndpoint: data.generalPresentingIssues,
             generalPresentingIssuesOtherSpecifiedEndpoint: data.otherIssues,
           };
@@ -634,40 +637,7 @@ export async function updateClinicalCaseGeneralPresentingIssue(data: {
     return { success: true };
   } catch (error) {
     console.error(error);
-    return { error: "Something went wrong" };
-  }
-}
-
-export async function updateClinicalCaseEmergencyPresentingIssue(data: {
-  caseId: string;
-  presentingIssues: { [k: string]: string };
-  caseStatus: string;
-}) {
-  try {
-    await requireCaseAccess(data.caseId);
-    const updateData =
-      data.caseStatus === "Active"
-        ? {
-            emergencyPresentingIssuesBaseline: data.presentingIssues,
-          }
-        : {
-            emergencyPresentingIssuesEndpoint: data.presentingIssues,
-          };
-
-    requireUpdated(
-      await db
-        .update(clinicalScreeningInfo)
-        .set(updateData)
-        .where(eq(clinicalScreeningInfo.id, data.caseId))
-        .returning({ id: clinicalScreeningInfo.id }),
-      "Clinical case",
-    );
-
-    revalidatePath("/sc/clinical");
-    return { success: true };
-  } catch (error) {
-    console.error(error);
-    return { error: "Something went wrong" };
+    return { success: false };
   }
 }
 
