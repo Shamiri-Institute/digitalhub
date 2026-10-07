@@ -568,7 +568,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       };
     }
 
-    return db.transaction(async (tx) => {
+    return await db.transaction(async (tx) => {
       const [created] = await tx
         .insert(school)
         .values({

@@ -43,6 +43,7 @@
     "typescript/no-wrapper-object-types": "error",
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",
+    "typescript/return-await": ["error", "in-try-catch"],
     "typescript/prefer-optional-chain": "error",
     "typescript/no-deprecated": "error",
     "unicorn/no-useless-undefined": "error",

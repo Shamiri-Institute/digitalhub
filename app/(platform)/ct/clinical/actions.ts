@@ -16,7 +16,7 @@ export async function getAllClinicalCasesData() {
 
   const projectId = await getActiveProjectId();
 
-  return await fetchClinicalCasesChartData({ projectId });
+  return fetchClinicalCasesChartData({ projectId });
 }
 
 export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {

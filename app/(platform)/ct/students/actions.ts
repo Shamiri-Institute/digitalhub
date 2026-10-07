@@ -20,17 +20,17 @@ async function projectScope() {
 }
 
 export async function getOverallStudentsDataBreakdown() {
-  return await fetchOverallStudentsDataBreakdown(await projectScope());
+  return fetchOverallStudentsDataBreakdown(await projectScope());
 }
 
 export async function getStudentsDataBreakdown() {
-  return await fetchStudentsDataBreakdown(await projectScope());
+  return fetchStudentsDataBreakdown(await projectScope());
 }
 
 export async function clinicalSessionsDataBreakdown() {
-  return await fetchClinicalSessionsDataBreakdown(await projectScope());
+  return fetchClinicalSessionsDataBreakdown(await projectScope());
 }
 
 export async function getStudentsStatsBreakdown() {
-  return await fetchStudentsStatsBreakdown(await projectScope());
+  return fetchStudentsStatsBreakdown(await projectScope());
 }

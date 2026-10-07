@@ -17,5 +17,5 @@ export async function getSupervisorClinicalCasesData() {
     throw new Error("Assigned hub has no project");
   }
 
-  return await fetchSupervisorClinicalCasesData({ projectId });
+  return fetchSupervisorClinicalCasesData({ projectId });
 }

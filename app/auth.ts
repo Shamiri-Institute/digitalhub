@@ -368,31 +368,31 @@ export async function getCurrentPersonnel(): Promise<
   }
 
   if (role === ImplementerRole.SUPERVISOR) {
-    return await currentSupervisor();
+    return currentSupervisor();
   }
 
   if (role === ImplementerRole.HUB_COORDINATOR) {
-    return await currentHubCoordinator();
+    return currentHubCoordinator();
   }
 
   if (role === ImplementerRole.FELLOW) {
-    return await currentFellow();
+    return currentFellow();
   }
 
   if (role === ImplementerRole.CLINICAL_LEAD) {
-    return await currentClinicalLead();
+    return currentClinicalLead();
   }
 
   if (role === ImplementerRole.OPERATIONS) {
-    return await currentOpsUser();
+    return currentOpsUser();
   }
 
   if (role === ImplementerRole.CLINICAL_TEAM) {
-    return await currentClinicalTeam();
+    return currentClinicalTeam();
   }
 
   if (role === ImplementerRole.ADMIN) {
-    return await currentAdminUser();
+    return currentAdminUser();
   }
 
   return null;

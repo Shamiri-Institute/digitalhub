@@ -17,7 +17,7 @@ export async function getClinicalCasesData() {
   const clinicalLead = await currentClinicalLead();
   if (!clinicalLead) throw new Error("Unauthorized");
 
-  return await fetchClinicalCasesChartData({
+  return fetchClinicalCasesChartData({
     hubId: clinicalLead.profile.assignedHubId,
     clinicalLeadId: clinicalLead.profile.id,
   });
