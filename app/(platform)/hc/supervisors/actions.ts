@@ -290,7 +290,6 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
         throw new Error(`Supervisor ${supervisorId} not found`);
       }
 
-      // Update the corresponding user's email
       const updatedUsers = await tx
         .update(user)
         .set({ email: personalEmail })
