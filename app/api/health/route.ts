@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export function GET() {
   const url = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL;
   if (!url) {
     throw new Error("No URL found");

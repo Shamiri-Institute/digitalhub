@@ -9,13 +9,7 @@ import { hubSessionTypes } from "#/db/seed/hub-session-types";
 import { getDefaultProjectId } from "#/lib/default-project-id";
 
 async function main() {
-  let projectId: string;
-  try {
-    projectId = await getDefaultProjectId();
-  } catch {
-    console.warn("No projects exist in the database. Skipping session name generation.");
-    return;
-  }
+  const projectId = await getDefaultProjectId();
 
   const project = await db.query.project.findFirst({
     where: (p, { eq }) => eq(p.id, projectId),

@@ -44,6 +44,7 @@
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",
     "typescript/return-await": ["error", "in-try-catch"],
+    "typescript/require-await": "error",
     "typescript/prefer-optional-chain": "error",
     "typescript/no-deprecated": "error",
     "unicorn/no-useless-undefined": "error",
@@ -115,6 +116,12 @@
       "files": ["tests/**"],
       "rules": {
         "typescript/unbound-method": "off"
+      }
+    },
+    {
+      "files": ["next.config.js"],
+      "rules": {
+        "typescript/require-await": "off"
       }
     }
   ],
