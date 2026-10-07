@@ -15,7 +15,7 @@ import {
   WeeklyFellowEvaluationSchema,
 } from "#/components/common/fellow/schema";
 import { SubmitComplaintSchema } from "#/components/common/schemas";
-import { db, isUniqueViolation, type Transaction } from "#/db/client";
+import { db, isSerializationFailure, isUniqueViolation, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
   fellow,
@@ -542,153 +542,166 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
     }
     await requireFellowsInCallerHub(personnel, [id]);
 
-    return await db.transaction(async (tx) => {
-      const fellowRow = await requireFellow(tx, id);
+    return await db.transaction(
+      async (tx) => {
+        const fellowRow = await requireFellow(tx, id);
 
-      const session = await requireSessionWithName(tx, sessionId);
+        const session = await requireSessionWithName(tx, sessionId);
 
-      if (!session.occurred) {
-        throw new Error(
-          `An error occurred while marking attendance for ${fellowRow.fellowName}. Session has not occurred.`,
-        );
-      }
-
-      const attendance = await tx.query.fellowAttendance.findFirst({
-        where: (a, { and, eq }) => and(eq(a.fellowId, fellowRow.id), eq(a.sessionId, sessionId)),
-        with: { session: { with: { session: true } } },
-      });
-
-      if (attendance) {
-        if (attendance.processedAt !== null) {
+        if (!session.occurred) {
           throw new Error(
-            `An error occurred while marking attendance for ${fellowRow.fellowName}. Attendance already processed on ${format(attendance.processedAt, "dd-MM-yyyy.")}`,
+            `An error occurred while marking attendance for ${fellowRow.fellowName}. Session has not occurred.`,
           );
         }
 
-        let amount = attendance.session?.session?.amount;
-        let reason = "MARK_SESSION_ATTENDANCE";
-        const attendanceStatus = attendedFlag(attended);
-
-        if (Number.isInteger(amount) && amount) {
-          if (!attendanceStatus) {
-            amount = -amount;
-            reason = "UNMARK_SESSION_ATTENDANCE";
-          }
-
-          const existingPayout = await tx.query.payoutStatements.findFirst({
-            where: (p, { and, eq }) =>
-              and(eq(p.fellowId, fellowRow.id), eq(p.fellowAttendanceId, attendance.id)),
-            orderBy: (p, { desc }) => desc(p.createdAt),
-          });
-
-          if (
-            (!existingPayout && attendanceStatus) ||
-            (existingPayout && existingPayout.reason !== reason)
-          ) {
-            if (!userSession.user.id) {
-              throw new Error("User ID is required to create payout statement");
-            }
-
-            await tx.insert(payoutStatements).values({
-              fellowId: fellowRow.id,
-              fellowAttendanceId: attendance.id,
-              createdBy: userSession.user.id,
-              amount,
-              reason,
-              mpesaNumber: fellowRow.mpesaNumber,
-            });
-          }
-        } else {
-          throw new Error(
-            "An error occurred while marking attendance. Session missing payout amount.",
-          );
-        }
-
-        await tx
-          .update(fellowAttendance)
-          .set({
-            markedBy: userSession.user.id,
-            fellowId: fellowRow.id,
-            absenceReason: attendanceStatus === false ? absenceReason : null,
-            absenceComments: attendanceStatus === false ? comments : null,
-            attended: attendanceStatus,
-          })
-          .where(eq(fellowAttendance.id, attendance.id));
-
-        return {
-          success: true,
-          message: `Successfully updated attendance for ${fellowRow.fellowName}`,
-        };
-      }
-      let groupId: string | undefined;
-      if (session.schoolId) {
-        const schoolId = session.schoolId;
-        const group = await tx.query.interventionGroup.findFirst({
-          where: (g, { and, eq }) => and(eq(g.schoolId, schoolId), eq(g.leaderId, fellowRow.id)),
+        const attendance = await tx.query.fellowAttendance.findFirst({
+          where: (a, { and, eq }) => and(eq(a.fellowId, fellowRow.id), eq(a.sessionId, sessionId)),
+          with: { session: { with: { session: true } } },
         });
-        if (group) {
-          if (group.groupType !== "TREATMENT" && session.session?.sessionType === "INTERVENTION") {
+
+        if (attendance) {
+          if (attendance.processedAt !== null) {
             throw new Error(
-              `An error occurred while marking attendance. ${fellowRow.fellowName}'s group is not a treatment group.`,
+              `An error occurred while marking attendance for ${fellowRow.fellowName}. Attendance already processed on ${format(attendance.processedAt, "dd-MM-yyyy.")}`,
             );
           }
-          groupId = group.id;
-        } else {
+
+          let amount = attendance.session?.session?.amount;
+          let reason = "MARK_SESSION_ATTENDANCE";
+          const attendanceStatus = attendedFlag(attended);
+
+          if (Number.isInteger(amount) && amount) {
+            if (!attendanceStatus) {
+              amount = -amount;
+              reason = "UNMARK_SESSION_ATTENDANCE";
+            }
+
+            const existingPayout = await tx.query.payoutStatements.findFirst({
+              where: (p, { and, eq }) =>
+                and(eq(p.fellowId, fellowRow.id), eq(p.fellowAttendanceId, attendance.id)),
+              orderBy: (p, { desc }) => desc(p.createdAt),
+            });
+
+            if (
+              (!existingPayout && attendanceStatus) ||
+              (existingPayout && existingPayout.reason !== reason)
+            ) {
+              if (!userSession.user.id) {
+                throw new Error("User ID is required to create payout statement");
+              }
+
+              await tx.insert(payoutStatements).values({
+                fellowId: fellowRow.id,
+                fellowAttendanceId: attendance.id,
+                createdBy: userSession.user.id,
+                amount,
+                reason,
+                mpesaNumber: fellowRow.mpesaNumber,
+              });
+            }
+          } else {
+            throw new Error(
+              "An error occurred while marking attendance. Session missing payout amount.",
+            );
+          }
+
+          await tx
+            .update(fellowAttendance)
+            .set({
+              markedBy: userSession.user.id,
+              fellowId: fellowRow.id,
+              absenceReason: attendanceStatus === false ? absenceReason : null,
+              absenceComments: attendanceStatus === false ? comments : null,
+              attended: attendanceStatus,
+            })
+            .where(eq(fellowAttendance.id, attendance.id));
+
+          return {
+            success: true,
+            message: `Successfully updated attendance for ${fellowRow.fellowName}`,
+          };
+        }
+        let groupId: string | undefined;
+        if (session.schoolId) {
+          const schoolId = session.schoolId;
+          const group = await tx.query.interventionGroup.findFirst({
+            where: (g, { and, eq }) => and(eq(g.schoolId, schoolId), eq(g.leaderId, fellowRow.id)),
+          });
+          if (group) {
+            if (
+              group.groupType !== "TREATMENT" &&
+              session.session?.sessionType === "INTERVENTION"
+            ) {
+              throw new Error(
+                `An error occurred while marking attendance. ${fellowRow.fellowName}'s group is not a treatment group.`,
+              );
+            }
+            groupId = group.id;
+          } else {
+            throw new Error(
+              `An error occurred while marking attendance. ${fellowRow.fellowName} has no assigned group`,
+            );
+          }
+        }
+
+        if (session.session?.amount === undefined || session.session?.amount === null) {
           throw new Error(
-            `An error occurred while marking attendance. ${fellowRow.fellowName} has no assigned group`,
+            `An error occurred while marking attendance for ${fellowRow.fellowName}. Session payout amount not found.`,
           );
         }
-      }
 
-      if (session.session?.amount === undefined || session.session?.amount === null) {
-        throw new Error(
-          `An error occurred while marking attendance for ${fellowRow.fellowName}. Session payout amount not found.`,
-        );
-      }
+        const attendanceStatus = attendedFlag(attended);
 
-      const attendanceStatus = attendedFlag(attended);
+        const projectId = session.projectId;
+        if (!projectId) {
+          throw new Error(
+            "Session has no project. Ensure the session is linked to a hub with a project.",
+          );
+        }
 
-      const projectId = session.projectId;
-      if (!projectId) {
-        throw new Error(
-          "Session has no project. Ensure the session is linked to a hub with a project.",
-        );
-      }
-
-      const [createdAttendance] = await tx
-        .insert(fellowAttendance)
-        .values({
-          fellowId: fellowRow.id,
-          groupId,
-          schoolId: session.schoolId,
-          projectId,
-          sessionId,
-          absenceReason,
-          absenceComments: comments,
-          markedBy: userSession.user.id,
-          attended: attendanceStatus,
-        })
-        .returning({ id: fellowAttendance.id });
-      if (!createdAttendance) {
-        throw new Error("Could not create the attendance record");
-      }
-      if (attendanceStatus && userSession.user.id) {
-        await tx.insert(payoutStatements).values({
-          fellowId: fellowRow.id,
-          fellowAttendanceId: createdAttendance.id,
-          createdBy: userSession.user.id,
-          amount: session.session?.amount ?? 0,
-          reason: "MARK_SESSION_ATTENDANCE",
-          mpesaNumber: fellowRow.mpesaNumber,
-        });
-      }
-      return {
-        success: true,
-        message: `Successfully marked attendance for ${fellowRow.fellowName}`,
-      };
-    });
+        const [createdAttendance] = await tx
+          .insert(fellowAttendance)
+          .values({
+            fellowId: fellowRow.id,
+            groupId,
+            schoolId: session.schoolId,
+            projectId,
+            sessionId,
+            absenceReason,
+            absenceComments: comments,
+            markedBy: userSession.user.id,
+            attended: attendanceStatus,
+          })
+          .returning({ id: fellowAttendance.id });
+        if (!createdAttendance) {
+          throw new Error("Could not create the attendance record");
+        }
+        if (attendanceStatus && userSession.user.id) {
+          await tx.insert(payoutStatements).values({
+            fellowId: fellowRow.id,
+            fellowAttendanceId: createdAttendance.id,
+            createdBy: userSession.user.id,
+            amount: session.session?.amount ?? 0,
+            reason: "MARK_SESSION_ATTENDANCE",
+            mpesaNumber: fellowRow.mpesaNumber,
+          });
+        }
+        return {
+          success: true,
+          message: `Successfully marked attendance for ${fellowRow.fellowName}`,
+        };
+      },
+      { isolationLevel: "serializable" },
+    );
   } catch (err) {
     console.error(err);
+    if (isSerializationFailure(err) || isUniqueViolation(err)) {
+      return {
+        success: false,
+        message:
+          "Someone else marked this attendance at the same time. Please refresh and try again.",
+      };
+    }
     return {
       success: false,
       message: (err as Error)?.message ?? "An error occurred while marking attendance.",
@@ -724,204 +737,217 @@ export async function markManyFellowAttendance(
     const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
     await requireFellowsInCallerHub(personnel, ids);
 
-    return await db.transaction(async (tx) => {
-      const session = await requireSessionWithName(tx, sessionId);
+    return await db.transaction(
+      async (tx) => {
+        const session = await requireSessionWithName(tx, sessionId);
 
-      if (!session.occurred) {
-        throw new Error("An error occurred while marking attendances. Session has not occurred.");
-      }
+        if (!session.occurred) {
+          throw new Error("An error occurred while marking attendances. Session has not occurred.");
+        }
 
-      if (!Number.isInteger(session.session?.amount)) {
-        throw new Error(
-          "An error occurred while marking attendances. Session payout amount not found.",
-        );
-      }
-
-      const attendanceStatus = attendedFlag(attended);
-      const amount = session.session?.amount ?? 0;
-
-      // update existing attendances
-      const attendances = await tx.query.fellowAttendance.findMany({
-        where: (a, { and, eq, inArray }) =>
-          and(inArray(a.fellowId, ids), eq(a.sessionId, sessionId)),
-        with: { fellow: true, PayoutStatements: true },
-      });
-
-      const data: {
-        payout: typeof payoutStatements.$inferInsert | undefined;
-        id: number;
-        fellowId: string;
-      }[] = [];
-
-      attendances.forEach((attendance) => {
-        if (attendance.processedAt !== null) {
+        if (!Number.isInteger(session.session?.amount)) {
           throw new Error(
-            `An error occurred while marking attendances. ${attendance.fellow.fellowName}'s attendance has already been processed on ${format(
-              attendance.processedAt,
-              "dd-MM-yyyy.",
-            )}`,
+            "An error occurred while marking attendances. Session payout amount not found.",
           );
         }
 
-        let reason = "MARK_SESSION_ATTENDANCE";
-        let _amount = amount;
-        if (!attendanceStatus && amount) {
-          _amount = -amount;
-          reason = "UNMARK_SESSION_ATTENDANCE";
-        }
+        const attendanceStatus = attendedFlag(attended);
+        const amount = session.session?.amount ?? 0;
 
-        const existingPayouts = attendance.PayoutStatements.toSorted((a, b) => {
-          return b.createdAt.getTime() - a.createdAt.getTime();
+        // update existing attendances
+        const attendances = await tx.query.fellowAttendance.findMany({
+          where: (a, { and, eq, inArray }) =>
+            and(inArray(a.fellowId, ids), eq(a.sessionId, sessionId)),
+          with: { fellow: true, PayoutStatements: true },
         });
 
-        let payout: typeof payoutStatements.$inferInsert | undefined;
-        if (
-          ((existingPayouts.length === 0 && attendanceStatus) ||
-            (existingPayouts.length !== 0 && existingPayouts[0]?.reason !== reason)) &&
-          amount &&
-          userSession.user.id
-        ) {
-          payout = {
+        const data: {
+          payout: typeof payoutStatements.$inferInsert | undefined;
+          id: number;
+          fellowId: string;
+        }[] = [];
+
+        attendances.forEach((attendance) => {
+          if (attendance.processedAt !== null) {
+            throw new Error(
+              `An error occurred while marking attendances. ${attendance.fellow.fellowName}'s attendance has already been processed on ${format(
+                attendance.processedAt,
+                "dd-MM-yyyy.",
+              )}`,
+            );
+          }
+
+          let reason = "MARK_SESSION_ATTENDANCE";
+          let _amount = amount;
+          if (!attendanceStatus && amount) {
+            _amount = -amount;
+            reason = "UNMARK_SESSION_ATTENDANCE";
+          }
+
+          const existingPayouts = attendance.PayoutStatements.toSorted((a, b) => {
+            return b.createdAt.getTime() - a.createdAt.getTime();
+          });
+
+          let payout: typeof payoutStatements.$inferInsert | undefined;
+          if (
+            ((existingPayouts.length === 0 && attendanceStatus) ||
+              (existingPayouts.length !== 0 && existingPayouts[0]?.reason !== reason)) &&
+            amount &&
+            userSession.user.id
+          ) {
+            payout = {
+              fellowId: attendance.fellow.id,
+              fellowAttendanceId: attendance.id,
+              createdBy: userSession.user.id,
+              amount: _amount,
+              reason,
+              mpesaNumber: attendance.fellow.mpesaNumber,
+            };
+          }
+
+          data.push({
+            payout,
+            id: attendance.id,
             fellowId: attendance.fellow.id,
-            fellowAttendanceId: attendance.id,
-            createdBy: userSession.user.id,
-            amount: _amount,
-            reason,
-            mpesaNumber: attendance.fellow.mpesaNumber,
-          };
+          });
+        });
+
+        const payoutRows = data
+          .map((x) => x.payout)
+          .filter((payout): payout is NonNullable<typeof payout> => payout !== undefined);
+        if (payoutRows.length > 0) {
+          await tx.insert(payoutStatements).values(payoutRows);
         }
 
-        data.push({
-          payout,
-          id: attendance.id,
-          fellowId: attendance.fellow.id,
+        if (data.length > 0) {
+          await tx
+            .update(fellowAttendance)
+            .set({
+              absenceReason: attendanceStatus === false ? absenceReason : null,
+              absenceComments: attendanceStatus === false ? comments : null,
+              attended: attendanceStatus,
+            })
+            .where(
+              inArray(
+                fellowAttendance.id,
+                data.map((attendance) => attendance.id),
+              ),
+            );
+        }
+
+        // create new attendances
+        const fellowIds = ids.filter((fellowId) => {
+          return !attendances.some((attendance) => attendance.fellowId === fellowId);
         });
-      });
 
-      const payoutRows = data
-        .map((x) => x.payout)
-        .filter((payout): payout is NonNullable<typeof payout> => payout !== undefined);
-      if (payoutRows.length > 0) {
-        await tx.insert(payoutStatements).values(payoutRows);
-      }
+        const fellows = await tx.query.fellow.findMany({
+          where: (f, { inArray }) => inArray(f.id, fellowIds),
+        });
 
-      if (data.length > 0) {
-        await tx
-          .update(fellowAttendance)
-          .set({
-            absenceReason: attendanceStatus === false ? absenceReason : null,
-            absenceComments: attendanceStatus === false ? comments : null,
-            attended: attendanceStatus,
-          })
-          .where(
-            inArray(
-              fellowAttendance.id,
-              data.map((attendance) => attendance.id),
-            ),
+        let validFellows: Array<{
+          fellow: (typeof fellows)[0];
+          groupId: string | undefined;
+        }> = [];
+
+        if (session.schoolId) {
+          const schoolId = session.schoolId;
+          const groups = await tx.query.interventionGroup.findMany({
+            where: (g, { and, eq, inArray }) =>
+              and(eq(g.schoolId, schoolId), inArray(g.leaderId, fellowIds)),
+          });
+
+          const groupsByFellowId = new Map(groups.map((group) => [group.leaderId, group]));
+
+          for (const fellowRow of fellows) {
+            const group = groupsByFellowId.get(fellowRow.id);
+
+            if (!group) {
+              throw new Error(
+                `An error occurred while marking attendance. ${fellowRow.fellowName} has no assigned group`,
+              );
+            }
+
+            if (
+              group.groupType !== "TREATMENT" &&
+              session.session?.sessionType === "INTERVENTION"
+            ) {
+              throw new Error(
+                `An error occurred while marking attendance. ${fellowRow.fellowName}'s group is not a treatment group.`,
+              );
+            }
+
+            validFellows.push({ fellow: fellowRow, groupId: group.id });
+          }
+        } else {
+          validFellows = fellows.map((fellowRow) => ({
+            fellow: fellowRow,
+            groupId: undefined,
+          }));
+        }
+
+        const projectId = session.projectId;
+        if (!projectId) {
+          throw new Error(
+            "Session has no project. Ensure the session is linked to a hub with a project.",
           );
-      }
-
-      // create new attendances
-      const fellowIds = ids.filter((fellowId) => {
-        return !attendances.some((attendance) => attendance.fellowId === fellowId);
-      });
-
-      const fellows = await tx.query.fellow.findMany({
-        where: (f, { inArray }) => inArray(f.id, fellowIds),
-      });
-
-      let validFellows: Array<{
-        fellow: (typeof fellows)[0];
-        groupId: string | undefined;
-      }> = [];
-
-      if (session.schoolId) {
-        const schoolId = session.schoolId;
-        const groups = await tx.query.interventionGroup.findMany({
-          where: (g, { and, eq, inArray }) =>
-            and(eq(g.schoolId, schoolId), inArray(g.leaderId, fellowIds)),
-        });
-
-        const groupsByFellowId = new Map(groups.map((group) => [group.leaderId, group]));
-
-        for (const fellowRow of fellows) {
-          const group = groupsByFellowId.get(fellowRow.id);
-
-          if (!group) {
-            throw new Error(
-              `An error occurred while marking attendance. ${fellowRow.fellowName} has no assigned group`,
-            );
-          }
-
-          if (group.groupType !== "TREATMENT" && session.session?.sessionType === "INTERVENTION") {
-            throw new Error(
-              `An error occurred while marking attendance. ${fellowRow.fellowName}'s group is not a treatment group.`,
-            );
-          }
-
-          validFellows.push({ fellow: fellowRow, groupId: group.id });
         }
-      } else {
-        validFellows = fellows.map((fellowRow) => ({
-          fellow: fellowRow,
-          groupId: undefined,
+
+        const attendanceRows = validFellows.map(({ fellow: fellowRow, groupId }) => ({
+          fellowId: fellowRow.id,
+          schoolId: session.schoolId,
+          groupId,
+          projectId,
+          absenceReason: attendanceStatus === false ? absenceReason : null,
+          absenceComments: attendanceStatus === false ? comments : null,
+          sessionId,
+          markedBy: userSession.user.id,
+          attended: attendanceStatus,
         }));
-      }
 
-      const projectId = session.projectId;
-      if (!projectId) {
-        throw new Error(
-          "Session has no project. Ensure the session is linked to a hub with a project.",
-        );
-      }
+        const newAttendances =
+          attendanceRows.length > 0
+            ? await tx
+                .insert(fellowAttendance)
+                .values(attendanceRows)
+                .returning({ id: fellowAttendance.id, fellowId: fellowAttendance.fellowId })
+            : [];
 
-      const attendanceRows = validFellows.map(({ fellow: fellowRow, groupId }) => ({
-        fellowId: fellowRow.id,
-        schoolId: session.schoolId,
-        groupId,
-        projectId,
-        absenceReason: attendanceStatus === false ? absenceReason : null,
-        absenceComments: attendanceStatus === false ? comments : null,
-        sessionId,
-        markedBy: userSession.user.id,
-        attended: attendanceStatus,
-      }));
+        if (attendanceStatus && userSession.user.id) {
+          const userId = userSession.user.id;
+          const fellowById = new Map(validFellows.map(({ fellow: f }) => [f.id, f]));
+          const payoutData = newAttendances.map((attendance) => {
+            const fellowRow = fellowById.get(attendance.fellowId);
+            return {
+              fellowId: attendance.fellowId,
+              fellowAttendanceId: attendance.id,
+              createdBy: userId,
+              amount: amount,
+              reason: "MARK_SESSION_ATTENDANCE",
+              mpesaNumber: fellowRow?.mpesaNumber ?? null,
+            };
+          });
 
-      const newAttendances =
-        attendanceRows.length > 0
-          ? await tx
-              .insert(fellowAttendance)
-              .values(attendanceRows)
-              .returning({ id: fellowAttendance.id, fellowId: fellowAttendance.fellowId })
-          : [];
-
-      if (attendanceStatus && userSession.user.id) {
-        const userId = userSession.user.id;
-        const fellowById = new Map(validFellows.map(({ fellow: f }) => [f.id, f]));
-        const payoutData = newAttendances.map((attendance) => {
-          const fellowRow = fellowById.get(attendance.fellowId);
-          return {
-            fellowId: attendance.fellowId,
-            fellowAttendanceId: attendance.id,
-            createdBy: userId,
-            amount: amount,
-            reason: "MARK_SESSION_ATTENDANCE",
-            mpesaNumber: fellowRow?.mpesaNumber ?? null,
-          };
-        });
-
-        if (payoutData.length > 0) {
-          await tx.insert(payoutStatements).values(payoutData);
+          if (payoutData.length > 0) {
+            await tx.insert(payoutStatements).values(payoutData);
+          }
         }
-      }
 
-      return {
-        success: true,
-        message: `Successfully marked attendances for ${ids.length} fellows.`,
-      };
-    });
+        return {
+          success: true,
+          message: `Successfully marked attendances for ${ids.length} fellows.`,
+        };
+      },
+      { isolationLevel: "serializable" },
+    );
   } catch (err) {
     console.error(err);
+    if (isSerializationFailure(err) || isUniqueViolation(err)) {
+      return {
+        success: false,
+        message:
+          "Someone else marked this attendance at the same time. Please refresh and try again.",
+      };
+    }
     return {
       success: false,
       message: (err as Error)?.message ?? "An error occurred while marking attendances.",

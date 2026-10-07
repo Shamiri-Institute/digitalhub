@@ -229,8 +229,9 @@ test.describe("fellow attendance", () => {
   const startedAt = new Date();
 
   test.beforeAll(async () => {
-    // An attended, unprocessed session marked for a fellow of a supervisor who can sign in. It
-    // already has a payout statement, so marking it missed writes a reversal.
+    // An attended, unprocessed session marked for a fellow of a supervisor who can sign in. The
+    // fellow leads a group the UI lets them mark: a treatment group for an intervention session.
+    // It already has a payout statement, so marking it missed writes a reversal.
     const {
       rows: [row],
     } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
@@ -242,6 +243,9 @@ test.describe("fellow attendance", () => {
       join session_names sn on sn.id = s.session_id and sn.amount > 0
       join schools sc on sc.id = s.school_id
       join fellows f on f.id = fa.fellow_id and f.hub_id = sc.hub_id
+        and coalesce(f.dropped_out, false) = false
+      join intervention_groups g on g.school_id = sc.id and g.leader_id = f.id
+        and (sn."sessionType" <> 'INTERVENTION' or g.group_type = 'TREATMENT')
       join implementer_members m on m.identifier = f.supervisor_id and m.role = 'SUPERVISOR'
       join users u on u.id = m.user_id and u.email is not null
       where fa.attended and fa.processed_at is null and ${signableMember}
@@ -428,5 +432,46 @@ test.describe("bulk fellow attendance", () => {
         PayoutStatements: [{ amount: fixture.sessionAmount, reason: "MARK_SESSION_ATTENDANCE" }],
       })),
     );
+  });
+
+  test("two tabs mark the same fellow attended at the same moment", async ({ page, context }) => {
+    await signIn(context, fixture.email);
+    const fellowName = fixture.fellowNames[0];
+    const fellowId = fixture.fellowIds[0];
+    if (!fellowName || !fellowId) throw new Error("fixture has no fellow");
+
+    const secondTab = await context.newPage();
+    const submitButtons = await Promise.all(
+      [page, secondTab].map(async (tab) => {
+        const dialog = await openFellowAttendance(tab, fixture.sessionDate, fixture.schoolName);
+        const fellowRow = await searchRows(tab, dialog, fellowName);
+        await fellowRow.getByRole("cell").last().click();
+        await tab.getByRole("menuitem", { name: "Mark attendance" }).click();
+        const mark = tab.getByRole("dialog").filter({ hasText: "Select attendance" });
+        await mark.getByRole("radio").first().click();
+        return mark.getByRole("button", { name: "Submit" });
+      }),
+    );
+    const actionResponses = [page, secondTab].map((tab) =>
+      tab.waitForResponse((response) => response.request().headers()["next-action"] !== undefined),
+    );
+    await Promise.all(submitButtons.map((submit) => submit.click()));
+    await Promise.all(actionResponses);
+
+    const markedFellowAttendances = await db.query.fellowAttendance.findMany({
+      where: (a, { and, eq }) => and(eq(a.sessionId, fixture.sessionId), eq(a.fellowId, fellowId)),
+      columns: { attended: true },
+      with: { PayoutStatements: { columns: { amount: true, reason: true } } },
+    });
+    expect(markedFellowAttendances).toEqual([
+      {
+        attended: true,
+        PayoutStatements: [{ amount: fixture.sessionAmount, reason: "MARK_SESSION_ATTENDANCE" }],
+      },
+    ]);
+
+    await page.reload({ waitUntil: "networkidle" });
+    const reopened = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
+    await expect(await searchRows(page, reopened, fellowName)).toContainText("Attended");
   });
 });

@@ -1,94 +1,94 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { z } from "zod";
 
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
-import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/db/client";
-import { supervisorAttendance } from "#/db/schema";
+import { ImplementerRole } from "#/db/enums";
+import { supervisor, supervisorAttendance } from "#/db/schema";
+import { requireHubRole } from "#/lib/auth/require-hub-role";
 
-async function checkAuth() {
-  const hubCoordinator = await currentHubCoordinator();
+async function upsertSupervisorAttendances(
+  supervisorIds: string[],
+  data: z.infer<typeof MarkAttendanceSchema>,
+) {
+  const coordinator = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+  const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
+  const uniqueSupervisorIds = [...new Set(supervisorIds)];
 
-  if (!hubCoordinator) {
-    throw new Error("The session has not been authenticated");
-  }
-
-  return hubCoordinator;
-}
-
-async function requireSession(sessionId: string) {
-  const session = await db.query.interventionSession.findFirst({
-    where: (s, { eq }) => eq(s.id, sessionId),
-  });
+  const [session, supervisorsInHub] = await Promise.all([
+    db.query.interventionSession.findFirst({
+      where: (s, { eq }) => eq(s.id, sessionId),
+      columns: { projectId: true, schoolId: true },
+    }),
+    uniqueSupervisorIds.length === 0
+      ? []
+      : db
+          .select({ id: supervisor.id, supervisorName: supervisor.supervisorName })
+          .from(supervisor)
+          .where(
+            and(
+              inArray(supervisor.id, uniqueSupervisorIds),
+              eq(supervisor.hubId, coordinator.hubId),
+            ),
+          ),
+  ]);
   if (!session) {
     throw new Error(`Intervention session ${sessionId} not found`);
   }
-  return session;
+  const { projectId, schoolId } = session;
+  if (!projectId) {
+    throw new Error(
+      "Session has no project. Ensure the session is linked to a hub with a project.",
+    );
+  }
+  if (supervisorsInHub.length !== uniqueSupervisorIds.length) {
+    throw new Error("Supervisor not found in your hub");
+  }
+
+  const attendanceStatus = attended === "attended" ? true : attended === "missed" ? false : null;
+  const markedFields = {
+    markedBy: coordinator.userId,
+    attended: attendanceStatus,
+    absenceReason: attendanceStatus === false ? absenceReason : null,
+    absenceComments: attendanceStatus === false ? comments : null,
+  };
+  if (uniqueSupervisorIds.length > 0) {
+    await db
+      .insert(supervisorAttendance)
+      .values(
+        uniqueSupervisorIds.map((supervisorId) => ({
+          ...markedFields,
+          supervisorId,
+          sessionId,
+          projectId,
+          schoolId,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [supervisorAttendance.supervisorId, supervisorAttendance.sessionId],
+        set: {
+          markedBy: sql`excluded.marked_by`,
+          attended: sql`excluded.attended`,
+          absenceReason: sql`excluded.absence_reason`,
+          absenceComments: sql`excluded.absence_comments`,
+          updatedAt: new Date(),
+        },
+      });
+  }
+  return supervisorsInHub;
 }
 
 export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
-    const auth = await checkAuth();
-    const userId = auth.session.user.id;
-    if (!userId) {
-      throw new Error("The session has not been authenticated");
-    }
-
-    const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
-    if (!id) {
+    if (!data.id) {
       throw new Error("Supervisor id is required");
     }
-    const supervisor = await db.query.supervisor.findFirst({ where: (s, { eq }) => eq(s.id, id) });
-    if (!supervisor) {
-      throw new Error(`Supervisor ${id} not found`);
-    }
-
-    const attendance = await db.query.supervisorAttendance.findFirst({
-      where: (a, { and, eq }) => and(eq(a.supervisorId, id), eq(a.sessionId, sessionId)),
-    });
-
-    if (attendance) {
-      const attendanceStatus =
-        attended === "attended" ? true : attended === "missed" ? false : null;
-      await db
-        .update(supervisorAttendance)
-        .set({
-          markedBy: userId,
-          supervisorId: id,
-          absenceReason: attendanceStatus === false ? absenceReason : null,
-          absenceComments: attendanceStatus === false ? comments : null,
-          attended: attended === "attended" ? true : attended === "missed" ? false : null,
-        })
-        .where(eq(supervisorAttendance.id, attendance.id));
-      return {
-        success: true,
-        message: `Successfully updated attendance for ${supervisor.supervisorName}`,
-      };
-    }
-    const session = await requireSession(sessionId);
-
-    const projectId = session.projectId;
-    if (!projectId) {
-      throw new Error(
-        "Session has no project. Ensure the session is linked to a hub with a project.",
-      );
-    }
-
-    await db.insert(supervisorAttendance).values({
-      supervisorId: id,
-      schoolId: session.schoolId ?? undefined,
-      projectId,
-      sessionId,
-      absenceReason,
-      absenceComments: comments,
-      markedBy: userId,
-      attended: attended === "attended" ? true : attended === "missed" ? false : null,
-    });
+    const [marked] = await upsertSupervisorAttendances([data.id], data);
     return {
       success: true,
-      message: `Successfully marked attendance for ${supervisor.supervisorName}`,
+      message: `Successfully marked attendance for ${marked?.supervisorName}`,
     };
   } catch (err) {
     console.error(err);
@@ -103,69 +103,17 @@ export async function markManySupervisorAttendance(
   ids: string[],
   data: z.infer<typeof MarkAttendanceSchema>,
 ) {
-  const auth = await checkAuth();
-  const userId = auth.session.user.id;
-  if (!userId) {
-    throw new Error("The session has not been authenticated");
+  try {
+    await upsertSupervisorAttendances(ids, data);
+    return {
+      success: true,
+      message: `Successfully marked attendances for ${ids.length} supervisors.`,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Something went wrong while updating supervisor attendance",
+    };
   }
-
-  const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
-
-  const session = await requireSession(sessionId);
-
-  const projectId = session.projectId;
-  if (!projectId) {
-    throw new Error(
-      "Session has no project. Ensure the session is linked to a hub with a project.",
-    );
-  }
-
-  return await Promise.all(
-    ids.map(async (supervisorId) => {
-      const attendance = await db.query.supervisorAttendance.findFirst({
-        where: (a, { and, eq }) =>
-          and(eq(a.supervisorId, supervisorId), eq(a.sessionId, sessionId)),
-      });
-
-      const attendanceStatus =
-        attended === "attended" ? true : attended === "missed" ? false : null;
-      if (attendance) {
-        await db
-          .update(supervisorAttendance)
-          .set({
-            markedBy: userId,
-            supervisorId,
-            absenceReason: attendanceStatus === false ? absenceReason : null,
-            absenceComments: attendanceStatus === false ? comments : null,
-            attended: attendanceStatus,
-          })
-          .where(eq(supervisorAttendance.id, attendance.id));
-      } else {
-        await db.insert(supervisorAttendance).values({
-          supervisorId,
-          schoolId: session.schoolId,
-          projectId,
-          absenceReason,
-          absenceComments: comments,
-          sessionId,
-          markedBy: userId,
-          attended: attended === "attended" ? true : attended === "missed" ? false : null,
-        });
-      }
-      return;
-    }),
-  )
-    .then(() => {
-      return {
-        success: true,
-        message: `Successfully marked attendances for ${ids.length} supervisors.`,
-      };
-    })
-    .catch((error: unknown) => {
-      console.error(error);
-      return {
-        success: false,
-        message: "Something went wrong while updating supervisor attendance",
-      };
-    });
 }
