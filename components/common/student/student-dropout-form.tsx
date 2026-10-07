@@ -1,6 +1,6 @@
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { DropoutStudentSchema } from "#/app/(platform)/hc/schemas";
@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError } from "#/components/ui/use-toast";
+import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { dropoutStudent } from "#/lib/actions/student";
 import { STUDENT_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
@@ -48,7 +48,7 @@ export default function StudentDropoutForm({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
 }) {
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [confirmDialog, setConfirmDialog] = useState(false);
   const pathname = usePathname();
 
@@ -70,27 +70,29 @@ export default function StudentDropoutForm({
     }
   }, [student, isOpen, form]);
 
-  async function confirmSubmit() {
-    setLoading(true);
-    const response = await dropoutStudent(form.getValues());
-    if (!response.success) {
-      toast({
-        description: response.message ?? "Something went wrong, please try again",
-      });
-      return;
-    }
-    toast({
-      description: response.message,
-    });
-    form.reset();
+  function confirmSubmit() {
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await dropoutStudent(form.getValues());
+        if (!response.success) {
+          toast({
+            description: response.message ?? "Something went wrong, please try again",
+          });
+          return;
+        }
+        toast({
+          description: response.message,
+        });
+        form.reset();
 
-    await revalidatePageAction(pathname);
-    if (form.getValues("mode") === "dropout") {
-      setConfirmDialog(false);
-    } else {
-      setIsOpen(false);
-    }
-    setLoading(false);
+        await revalidatePageAction(pathname);
+        if (form.getValues("mode") === "dropout") {
+          setConfirmDialog(false);
+        } else {
+          setIsOpen(false);
+        }
+      }),
+    );
   }
 
   const onSubmit = () => {
@@ -98,7 +100,7 @@ export default function StudentDropoutForm({
       setIsOpen(false);
       setConfirmDialog(true);
     } else {
-      void confirmSubmit();
+      confirmSubmit();
     }
   };
 
@@ -160,8 +162,8 @@ export default function StudentDropoutForm({
               <Button
                 variant={student.droppedOut ? "brand" : "destructive"}
                 type="submit"
-                disabled={student.droppedOut ? loading : form.formState.isSubmitting}
-                loading={student.droppedOut ? loading : form.formState.isSubmitting}
+                disabled={student.droppedOut ? isPending : form.formState.isSubmitting}
+                loading={student.droppedOut ? isPending : form.formState.isSubmitting}
               >
                 {student.droppedOut ? "Undo" : "Submit"}
               </Button>
@@ -200,10 +202,10 @@ export default function StudentDropoutForm({
             <Button
               type="submit"
               variant="destructive"
-              disabled={loading}
-              loading={loading}
+              disabled={isPending}
+              loading={isPending}
               onClick={() => {
-                void confirmSubmit();
+                confirmSubmit();
               }}
             >
               Confirm

@@ -17,6 +17,7 @@ import {
   CommandSeparator,
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { toast } from "#/components/ui/use-toast";
 import { fetchImplementerSchools } from "#/lib/actions/implementer";
 import { fetchHubSchools } from "#/lib/actions/school";
 import { cn } from "#/lib/utils";
@@ -40,27 +41,36 @@ export default function SchoolsBreadcrumb() {
 
   // effect: loads the school list the breadcrumb navigates through for the current role
   useEffect(() => {
+    let cancelled = false;
     const fetchSchools = async () => {
       setLoading(true);
-      if (implementerId && role === ImplementerRole.ADMIN) {
-        const response = await fetchImplementerSchools();
-        if (response.success && response.data) {
-          setSchools(response.data);
-        }
+      const response =
+        implementerId && role === ImplementerRole.ADMIN
+          ? await fetchImplementerSchools()
+          : role === ImplementerRole.HUB_COORDINATOR ||
+              role === ImplementerRole.SUPERVISOR ||
+              role === ImplementerRole.FELLOW
+            ? await fetchHubSchools()
+            : null;
+      if (cancelled || !response) return;
+      if (response.success && response.data) {
+        setSchools(response.data);
+      } else {
+        toast({ variant: "destructive", description: "Could not load the school list." });
       }
-      if (
-        role === ImplementerRole.HUB_COORDINATOR ||
-        role === ImplementerRole.SUPERVISOR ||
-        role === ImplementerRole.FELLOW
-      ) {
-        const response = await fetchHubSchools();
-        if (response.success && response.data) {
-          setSchools(response.data);
-        }
-      }
-      setLoading(false);
     };
-    void fetchSchools();
+    fetchSchools()
+      .catch(() => {
+        if (!cancelled) {
+          toast({ variant: "destructive", description: "Could not load the school list." });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [implementerId, role]);
 
   const handleSchoolSelect = (schoolVisibleId: string) => {

@@ -1,7 +1,7 @@
 "use client";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { dropoutSchool, revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError } from "#/components/ui/use-toast";
+import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { zodResolver } from "#/lib/zod-resolver";
 import { DropoutSchoolSchema } from "../../../app/(platform)/hc/schemas";
@@ -48,31 +48,32 @@ export function DropoutSchool({
   setOpen: (open: boolean) => void;
 }) {
   const [formData, setFormData] = useState<z.infer<typeof DropoutSchoolSchema>>();
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
   const form = useForm<z.infer<typeof DropoutSchoolSchema>>({
     resolver: zodResolver(DropoutSchoolSchema),
   });
 
-  async function confirmSubmit() {
-    setLoading(true);
-    if (formData) {
-      const response = await dropoutSchool(formData?.schoolId, formData?.dropoutReason);
-      if (!response.success) {
-        toast({
-          description: response.message ?? "Something went wrong, please try again",
-        });
-        return;
-      }
+  function confirmSubmit() {
+    if (!formData) return;
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await dropoutSchool(formData.schoolId, formData.dropoutReason);
+        if (!response.success) {
+          toast({
+            description: response.message ?? "Something went wrong, please try again",
+          });
+          return;
+        }
 
-      await revalidatePageAction(pathname);
-      toast({
-        description: response.message,
-      });
-      form.reset();
-      setConfirmDialogOpen(false);
-      setLoading(false);
-    }
+        await revalidatePageAction(pathname);
+        toast({
+          description: response.message,
+        });
+        form.reset();
+        setConfirmDialogOpen(false);
+      }),
+    );
   }
 
   const onSubmit = (data: z.infer<typeof DropoutSchoolSchema>) => {
@@ -193,10 +194,10 @@ export function DropoutSchool({
             <Button
               type="submit"
               variant="destructive"
-              disabled={loading}
-              loading={loading}
+              disabled={isPending}
+              loading={isPending}
               onClick={() => {
-                void confirmSubmit();
+                confirmSubmit();
               }}
             >
               Confirm

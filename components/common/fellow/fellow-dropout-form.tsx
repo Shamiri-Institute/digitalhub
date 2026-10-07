@@ -2,7 +2,7 @@ import type { fellow as fellowTable, supervisor } from "#/db/schema";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError } from "#/components/ui/use-toast";
+import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { dropoutFellow } from "#/lib/actions/fellow";
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
@@ -51,7 +51,7 @@ export default function FellowDropoutForm({
     fellows: (typeof fellowTable.$inferSelect)[];
   })[];
 }) {
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [confirmDialog, setConfirmDialog] = useState(false);
   const [replaceDialog, setReplaceDialog] = useState(false);
   const [replaceGroupLeaderDialog, setReplaceGroupLeaderDialog] = useState(false);
@@ -88,36 +88,36 @@ export default function FellowDropoutForm({
     }
   }, [activeGroups.length, replaceDialog]);
 
-  async function confirmSubmit() {
-    setLoading(true);
+  function confirmSubmit() {
     if (activeGroups.length > 0 && form.getValues("mode") === "dropout") {
       setReplaceDialog(true);
       setConfirmDialog(false);
-      setLoading(false);
       return;
     }
-    const response = await dropoutFellow(form.getValues());
-    if (!response.success) {
-      toast({
-        variant: "destructive",
-        description: response.message ?? "Something went wrong, please try again",
-      });
-      setConfirmDialog(false);
-      setLoading(false);
-      return;
-    }
-    toast({
-      description: response.message,
-    });
-    form.reset();
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await dropoutFellow(form.getValues());
+        if (!response.success) {
+          toast({
+            variant: "destructive",
+            description: response.message ?? "Something went wrong, please try again",
+          });
+          setConfirmDialog(false);
+          return;
+        }
+        toast({
+          description: response.message,
+        });
+        form.reset();
 
-    await revalidatePageAction(pathname);
-    if (form.getValues("mode") === "dropout") {
-      setConfirmDialog(false);
-    } else {
-      setIsOpen(false);
-    }
-    setLoading(false);
+        await revalidatePageAction(pathname);
+        if (form.getValues("mode") === "dropout") {
+          setConfirmDialog(false);
+        } else {
+          setIsOpen(false);
+        }
+      }),
+    );
   }
 
   const onSubmit = () => {
@@ -125,7 +125,7 @@ export default function FellowDropoutForm({
       setIsOpen(false);
       setConfirmDialog(true);
     } else {
-      void confirmSubmit();
+      confirmSubmit();
     }
   };
 
@@ -205,8 +205,8 @@ export default function FellowDropoutForm({
               <Button
                 variant={fellow.droppedOut ? "brand" : "destructive"}
                 type="submit"
-                disabled={fellow.droppedOut ? loading : form.formState.isSubmitting}
-                loading={fellow.droppedOut ? loading : form.formState.isSubmitting}
+                disabled={fellow.droppedOut ? isPending : form.formState.isSubmitting}
+                loading={fellow.droppedOut ? isPending : form.formState.isSubmitting}
               >
                 {fellow.droppedOut ? "Undo" : "Submit"}
               </Button>
@@ -245,10 +245,10 @@ export default function FellowDropoutForm({
             <Button
               type="submit"
               variant="destructive"
-              disabled={loading}
-              loading={loading}
+              disabled={isPending}
+              loading={isPending}
               onClick={() => {
-                void confirmSubmit();
+                confirmSubmit();
               }}
             >
               Confirm

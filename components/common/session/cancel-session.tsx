@@ -1,6 +1,6 @@
 "use client";
 
-import { type Dispatch, type SetStateAction, useContext, useState } from "react";
+import { type Dispatch, type SetStateAction, useContext, useTransition } from "react";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError } from "#/components/ui/use-toast";
+import { toast, toastOnFailure } from "#/components/ui/use-toast";
 import { cancelSession } from "#/lib/actions/session/session";
 
 export default function CancelSession({
@@ -27,27 +27,29 @@ export default function CancelSession({
   children: React.ReactNode;
 }) {
   const { refresh } = useContext(SessionsContext);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [isPending, startTransition] = useTransition();
 
-  async function cancelSelectedSession() {
-    setLoading(true);
-    const response = await cancelSession(sessionId);
-    if (!response.success) {
-      onOpenChange(false);
-      toast({
-        variant: "destructive",
-        description: response.message ?? "Something went wrong while trying to reschedule session.",
-      });
-      setLoading(false);
-      return;
-    }
+  function cancelSelectedSession() {
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await cancelSession(sessionId);
+        if (!response.success) {
+          onOpenChange(false);
+          toast({
+            variant: "destructive",
+            description:
+              response.message ?? "Something went wrong while trying to reschedule session.",
+          });
+          return;
+        }
 
-    await refresh();
-    toast({
-      description: response.message,
-    });
-    setLoading(false);
-    onOpenChange(false);
+        await refresh();
+        toast({
+          description: response.message,
+        });
+        onOpenChange(false);
+      }),
+    );
   }
 
   return (
@@ -82,9 +84,9 @@ export default function CancelSession({
               </Button>
               <Button
                 variant="destructive"
-                loading={loading}
-                disabled={loading}
-                onClick={toastOnError(cancelSelectedSession)}
+                loading={isPending}
+                disabled={isPending}
+                onClick={cancelSelectedSession}
               >
                 Confirm
               </Button>

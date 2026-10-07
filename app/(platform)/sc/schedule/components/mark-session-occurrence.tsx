@@ -3,7 +3,14 @@
 import { format, isBefore } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+  useTransition,
+} from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
@@ -15,7 +22,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "#/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError } from "#/components/ui/use-toast";
+import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { markSessionOccurrence } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -36,7 +43,7 @@ export function MarkSessionOccurrence({
   const pathname = usePathname();
   const { sessions, refresh } = useContext(SessionsContext);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof MarkSessionOccurrenceSchema>>({
     resolver: zodResolver(MarkSessionOccurrenceSchema),
     defaultValues: {
@@ -77,26 +84,27 @@ export function MarkSessionOccurrence({
     setConfirmDialogOpen(true);
   };
 
-  const onConfirmSubmit = async () => {
-    setLoading(true);
-    const data = form.getValues();
-    const response = await markSessionOccurrence(data);
+  const onConfirmSubmit = () => {
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await markSessionOccurrence(form.getValues());
 
-    if (!response.success) {
-      toast({
-        variant: "destructive",
-        description: response.message ?? "Something went wrong during submission, please try again",
-      });
-      setLoading(false);
-      return;
-    }
-    await Promise.all([refresh(), revalidatePageAction(pathname)]);
-    setLoading(false);
-    setConfirmDialogOpen(false);
-    setIsOpen(false);
-    toast({
-      description: response.message,
-    });
+        if (!response.success) {
+          toast({
+            variant: "destructive",
+            description:
+              response.message ?? "Something went wrong during submission, please try again",
+          });
+          return;
+        }
+        await Promise.all([refresh(), revalidatePageAction(pathname)]);
+        setConfirmDialogOpen(false);
+        setIsOpen(false);
+        toast({
+          description: response.message,
+        });
+      }),
+    );
   };
 
   return (
@@ -235,11 +243,9 @@ export function MarkSessionOccurrence({
             </Button>
             <Button
               variant="destructive"
-              disabled={loading}
-              loading={loading}
-              onClick={() => {
-                void onConfirmSubmit();
-              }}
+              disabled={isPending}
+              loading={isPending}
+              onClick={onConfirmSubmit}
             >
               Confirm
             </Button>

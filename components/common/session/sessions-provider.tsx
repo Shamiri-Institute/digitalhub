@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
+import { toast } from "#/components/ui/use-toast";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
 import { getCalendarDate, getDefaultSessionDateRange } from "#/lib/date-utils";
 
@@ -48,31 +49,11 @@ export function SessionsProvider({
   fellowId?: string;
 }>) {
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedFilterKey, setLoadedFilterKey] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchSessions = async () => {
-    if ((role === ImplementerRole.ADMIN && implementerId) || role !== ImplementerRole.ADMIN) {
-      setLoading(true);
-      const { start, end } = filters.dateRange ?? getDefaultSessionDateRange();
-      const fetchedSessions = await fetchInterventionSessions({ start, end, filters });
-      setSessions(fetchedSessions);
-      setLoading(false);
-    }
-  };
-
-  const dateRangeKey = filters.dateRange
-    ? `${filters.dateRange.start.toISOString()}-${filters.dateRange.end.toISOString()}`
-    : null;
-
-  const fetchForFilters = useEffectEvent(() => {
-    void fetchSessions();
-  });
-
-  // effect: fetches sessions whenever the filters change; server-side loading is a separate change
-  useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- fetches sessions whenever the filters change; server-side loading is a separate change
-    fetchForFilters();
-  }, [
+  const mayFetch = role !== ImplementerRole.ADMIN || !!implementerId;
+  const filterKey = JSON.stringify([
     activeProjectId,
     hubId,
     implementerId,
@@ -80,10 +61,48 @@ export function SessionsProvider({
     fellowId,
     filters.statusTypes,
     filters.dates,
-    dateRangeKey,
+    filters.dateRange?.start.toISOString(),
+    filters.dateRange?.end.toISOString(),
   ]);
+  const loading = loadedFilterKey !== filterKey || refreshing;
 
-  const refresh = () => fetchSessions();
+  const fetchSessions = () => {
+    const { start, end } = filters.dateRange ?? getDefaultSessionDateRange();
+    return fetchInterventionSessions({ start, end, filters });
+  };
+
+  const fetchForFilters = useEffectEvent(fetchSessions);
+
+  // effect: fetches sessions whenever the filters change; server-side loading is a separate change
+  useEffect(() => {
+    if (!mayFetch) return;
+    let cancelled = false;
+    fetchForFilters()
+      .then((fetchedSessions) => {
+        if (!cancelled) setSessions(fetchedSessions);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          toast({ variant: "destructive", description: "Could not load sessions. Please reload." });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadedFilterKey(filterKey);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [mayFetch, filterKey]);
+
+  const refresh = async () => {
+    if (!mayFetch) return;
+    setRefreshing(true);
+    try {
+      setSessions(await fetchSessions());
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <SessionsContext.Provider value={{ sessions, loading, setSessions, refresh }}>

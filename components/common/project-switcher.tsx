@@ -16,6 +16,7 @@ import {
   CommandSeparator,
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
 import { fetchProjects, type ProjectOption, setActiveProject } from "#/lib/actions/project";
 import { cn } from "#/lib/utils";
@@ -79,16 +80,21 @@ export function ProjectSwitcher({
 
   const activeProject = projects.find((p) => p.id === activeProjectId);
 
-  const handleProjectChange = async (project: ProjectOption) => {
+  const handleProjectChange = toastOnError(async (project: ProjectOption) => {
     if (activeProjectId === project.id) return;
     setLoading(true);
-    const result = await setActiveProject(project.id);
-    if (result.success) {
+    try {
+      const result = await setActiveProject(project.id);
+      if (!result.success) {
+        toast({ variant: "destructive", description: result.error ?? "Could not switch project." });
+        return;
+      }
       await update();
       router.refresh();
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  });
 
   return (
     <div className={className}>
@@ -130,7 +136,7 @@ export function ProjectSwitcher({
                   key={project.id}
                   value={`${project.name} - ${project.visibleId}`}
                   onSelect={() => {
-                    void handleProjectChange(project);
+                    handleProjectChange(project);
                     setOpen(false);
                   }}
                   className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"
