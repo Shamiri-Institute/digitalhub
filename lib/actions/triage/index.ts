@@ -12,6 +12,7 @@ import {
   triageEvent,
   triageEventAudit,
 } from "#/db/schema";
+import { hubOfSession } from "#/lib/auth/require-hub-role";
 
 const triageEventWith = {
   session: true,
@@ -47,14 +48,6 @@ async function getFellowContext() {
     throw new Error("User ID not found");
   }
   return { fellowId: fellow.profile.id, userId };
-}
-
-/**
- * The hub where a session takes place: the session's hub, else its school's hub. Hubs borrow
- * fellows, so the fellow's home hub is not the hub of their work.
- */
-function hubOfSession(session: { hubId: string | null; school: { hubId: string | null } | null }) {
-  return session.hubId ?? session.school?.hubId ?? null;
 }
 
 /**

@@ -7,7 +7,7 @@ import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { supervisor, supervisorAttendance } from "#/db/schema";
-import { requireHubRole } from "#/lib/auth/require-hub-role";
+import { hubOfSession, requireHubRole } from "#/lib/auth/require-hub-role";
 
 async function upsertSupervisorAttendances(
   supervisorIds: string[],
@@ -20,7 +20,8 @@ async function upsertSupervisorAttendances(
   const [session, supervisorsInHub] = await Promise.all([
     db.query.interventionSession.findFirst({
       where: (s, { eq }) => eq(s.id, sessionId),
-      columns: { projectId: true, schoolId: true },
+      columns: { projectId: true, schoolId: true, hubId: true },
+      with: { school: { columns: { hubId: true } } },
     }),
     uniqueSupervisorIds.length === 0
       ? []
@@ -34,7 +35,7 @@ async function upsertSupervisorAttendances(
             ),
           ),
   ]);
-  if (!session) {
+  if (!session || hubOfSession(session) !== coordinator.hubId) {
     throw new Error(`Intervention session ${sessionId} not found`);
   }
   const { projectId, schoolId } = session;
