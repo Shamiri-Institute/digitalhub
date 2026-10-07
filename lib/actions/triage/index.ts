@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq, inArray } from "drizzle-orm";
+import { refresh } from "next/cache";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
 import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
@@ -198,6 +199,7 @@ export async function createTriageEvent(
     if (!event) {
       throw new Error("Failed to save triage event.");
     }
+    refresh();
 
     return { success: true, message: "Triage documented.", data: event };
   } catch (err) {
@@ -278,6 +280,7 @@ export async function updateTriageEvent(
       }
       return withRelations;
     });
+    refresh();
 
     return { success: true, message: "Triage updated.", data: event };
   } catch (err) {

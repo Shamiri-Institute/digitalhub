@@ -6,7 +6,8 @@ import type { CalendarState } from "react-stately";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 import { SessionList } from "./session-list";
-import { type Session, useSessions } from "./sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
+import { sessionsAt } from "#/lib/schedule-view";
 import { syncScrollLeft } from "./sync-scroll";
 
 export function WeekView({
@@ -15,6 +16,7 @@ export function WeekView({
   dialogState,
   supervisorId,
   fellowId,
+  sessions,
 }: {
   state: CalendarState;
   role: ImplementerRole;
@@ -30,6 +32,7 @@ export function WeekView({
   };
   supervisorId?: string;
   fellowId?: string;
+  sessions: Session[];
 }) {
   const headerScrollRef = useRef<HTMLDivElement>(null);
   const bodyScrollRef = useRef<HTMLDivElement>(null);
@@ -69,6 +72,7 @@ export function WeekView({
                       date={date}
                       state={state}
                       dayFormatter={dayFormatter}
+                      sessions={sessionsAt(sessions, date)}
                     />
                   ) : (
                     // oxlint-disable-next-line react/no-array-index-key -- fixed 7-column calendar grid; column index is the stable position
@@ -103,13 +107,13 @@ export function WeekView({
                       <WeekCalendarCell
                         key={`${date.toString()}-${hour}`}
                         colIdx={colIdx}
-                        hour={hour}
                         date={date}
                         state={state}
                         role={role}
                         dialogState={dialogState}
                         fellowId={fellowId}
                         supervisorId={supervisorId}
+                        sessions={sessionsAt(sessions, date, hour)}
                       />
                     ) : (
                       // oxlint-disable-next-line react/no-array-index-key -- fixed 7-column calendar grid; column index is the stable position
@@ -131,13 +135,14 @@ function WeekCalendarHeaderCell({
   state,
   dayFormatter,
   colIdx,
+  sessions,
 }: {
   date: CalendarDate;
   state: CalendarState;
   dayFormatter: Intl.DateTimeFormat;
   colIdx: number;
+  sessions: Session[];
 }) {
-  const { sessions } = useSessions({ date });
   const hasSessions = sessions.length > 0;
   return date ? (
     <th
@@ -163,16 +168,15 @@ function WeekCalendarHeaderCell({
 
 function WeekCalendarCell({
   colIdx,
-  hour,
   date,
   state,
   role,
   dialogState,
   fellowId,
   supervisorId,
+  sessions,
 }: {
   colIdx: number;
-  hour: number;
   date: CalendarDate;
   state: CalendarState;
   role: ImplementerRole;
@@ -188,6 +192,7 @@ function WeekCalendarCell({
   };
   fellowId?: string;
   supervisorId?: string;
+  sessions: Session[];
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { cellProps, buttonProps, isSelected, isDisabled, isUnavailable } = useCalendarCell(
@@ -195,8 +200,6 @@ function WeekCalendarCell({
     state,
     ref,
   );
-
-  const { sessions } = useSessions({ date, hour });
 
   return (
     <td {...cellProps}>

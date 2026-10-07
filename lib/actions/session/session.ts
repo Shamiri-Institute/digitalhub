@@ -133,6 +133,7 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
       hubId: hub.id,
       venue: parsedData.venue,
     });
+    refresh();
 
     return {
       success: true,
@@ -161,6 +162,7 @@ export async function cancelSession(id: string) {
     }
 
     await updateSessionOrThrow(id, { status: "Cancelled" });
+    refresh();
 
     return {
       success: true,
@@ -191,6 +193,7 @@ export async function rescheduleSession(id: string, data: z.infer<typeof Resched
     }
 
     await updateSessionOrThrow(id, { sessionDate: parsedData.sessionDate, status: "Rescheduled" });
+    refresh();
 
     return {
       success: true,

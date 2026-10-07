@@ -6,7 +6,7 @@ import { type Dispatch, type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
-import type { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";

@@ -6,14 +6,23 @@ import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { getFellowGroupsAndHubData } from "#/lib/actions/fellow";
+import { loadScheduleSessions, type ScheduleSearchParams } from "#/lib/schedule-sessions";
 
-export default async function FellowSchedulePage() {
+export default async function FellowSchedulePage({
+  searchParams,
+}: {
+  searchParams: ScheduleSearchParams;
+}) {
   const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
 
-  const scheduleData = await getFellowGroupsAndHubData();
+  const role = fellow?.session.user.activeMembership?.role ?? "FELLOW";
+  const [scheduleData, schedule] = await Promise.all([
+    getFellowGroupsAndHubData(),
+    loadScheduleSessions(searchParams, role),
+  ]);
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -33,10 +42,11 @@ export default async function FellowSchedulePage() {
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
         <ScheduleCalendar
-          hubId={fellow?.profile.hubId ?? ""}
           aria-label="Session schedule"
+          sessions={schedule.sessions}
+          timeZone={schedule.timeZone}
           schools={scheduleData?.hub?.schools ?? []}
-          role={fellow?.session.user.activeMembership?.role ?? "FELLOW"}
+          role={role}
           hubSessionTypes={scheduleData?.hub?.sessions}
           fellowId={fellow?.profile.id}
         />

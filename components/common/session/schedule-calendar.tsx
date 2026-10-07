@@ -1,17 +1,26 @@
 "use client";
 
-import { createCalendar, type DateValue, getLocalTimeZone, today } from "@internationalized/date";
+import {
+  createCalendar,
+  type DateValue,
+  getLocalTimeZone,
+  toCalendarDate,
+  today,
+} from "@internationalized/date";
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
-import { ImplementerRole, SessionStatus } from "#/db/enums";
-import { useSearchParams } from "next/navigation";
+import { ImplementerRole } from "#/db/enums";
+import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import {
   type Dispatch,
   type SetStateAction,
+  Suspense,
+  use,
   useEffect,
-  useEffectEvent,
+  useOptimistic,
   useRef,
   useState,
+  useTransition,
 } from "react";
 import {
   type AriaButtonProps,
@@ -24,7 +33,6 @@ import {
 } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { type CalendarState, useCalendarState } from "react-stately";
-import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
@@ -44,20 +52,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
-import { getDateRangeForCalendar } from "#/lib/date-utils";
-import { type DateRangeType, type Filters, statusFilterOptions } from "#/lib/schedule-filters";
-import { cn, sessionDisplayName } from "#/lib/utils";
+import type { Session } from "#/lib/actions/fetch-sessions";
+import {
+  type Mode,
+  parseScheduleView,
+  sameRange,
+  type ScheduleView,
+  scheduleSearch,
+  TIME_ZONE_COOKIE,
+} from "#/lib/schedule-view";
+import { cn } from "#/lib/utils";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { MonthView } from "./month-view";
-import { type Mode, ScheduleModeToggle } from "./schedule-mode-toggle";
-import {
-  type Session,
-  SessionsProvider,
-  useSessions,
-  useSessionsContext,
-} from "./sessions-provider";
+import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import { TableView } from "./table-view";
 import { WeekView } from "./week-view";
 import type { school, sessionName } from "#/db/schema";
@@ -66,9 +74,9 @@ type School = typeof school.$inferSelect;
 type SessionName = typeof sessionName.$inferSelect;
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
-  activeProjectId?: string | null;
-  hubId?: string;
-  implementerId?: string;
+  /** Sessions in the range the URL names; null until the server knows the viewer's time zone. */
+  sessions: Promise<Session[]> | null;
+  timeZone: string | null;
   schools: School[];
   supervisors?: ScheduleSupervisor[];
   fellowRatings?: {
@@ -82,155 +90,58 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
-  const { activeProjectId, hubId, implementerId, schools, ...calendarStateProps } = props;
+  const { sessions, timeZone: serverTimeZone, schools, ...calendarStateProps } = props;
   const { locale } = useLocale();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  // The URL can name a mode the role cannot use (only hub coordinators get "table"), so
-  // fall back to the default view instead of throwing in the mode switch.
-  const allowedModes: Mode[] = ["day", "week", "month", "list"];
-  if (props.role === ImplementerRole.HUB_COORDINATOR) allowedModes.push("table");
-  const requestedMode = searchParams.get("mode") as Mode | null;
-  const mode: Mode =
-    requestedMode && allowedModes.includes(requestedMode) ? requestedMode : "month";
-
-  const sessionTypes: { [key: string]: boolean } = {};
-
-  props.hubSessionTypes?.forEach((sessionType) => {
-    sessionTypes[sessionType.sessionName] = true;
-  });
-  const datesFromMode = ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week";
-  const [filters, setFilters] = useState<Filters>({
-    sessionTypes,
-    statusTypes: statusFilterOptions,
-    dates: datesFromMode,
-    dateRange: getDateRangeForCalendar(today(getLocalTimeZone()), datesFromMode),
-  });
+  const browserTimeZone = getLocalTimeZone();
+  const timeZone = serverTimeZone ?? browserTimeZone;
+  const urlView = parseScheduleView((name) => searchParams.get(name), props.role, timeZone);
+  const [view, setOptimisticView] = useOptimistic(urlView);
+  const [navigating, startNavigation] = useTransition();
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
+  const loading = navigating || sessions === null;
 
-  const syncFiltersFromProps = useEffectEvent(() => {
-    setFilters((prev) => ({
-      ...prev,
-      sessionTypes,
-      statusTypes: statusFilterOptions,
-      dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
-    }));
-  });
-
-  // effect: resyncs filter state when the hub session types arrive from the server
+  // effect: the server reads the browser's time zone from this cookie to work out the visible days
   useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- resyncs filter state when the hub session types arrive from the server
-    syncFiltersFromProps();
-  }, [props.hubSessionTypes]);
+    if (browserTimeZone === serverTimeZone) return;
+    // oxlint-disable-next-line unicorn/no-document-cookie -- one cookie, no Cookie Store API in all browsers yet
+    document.cookie = `${TIME_ZONE_COOKIE}=${encodeURIComponent(browserTimeZone)}; path=/; max-age=31536000; samesite=lax`;
+    router.refresh();
+  }, [browserTimeZone, serverTimeZone, router]);
 
-  const monthState = useCalendarState({
-    ...calendarStateProps,
-    value: today(getLocalTimeZone()),
-    locale,
-    createCalendar,
-  });
-
-  const weekState = useCalendarState({
-    value: today(getLocalTimeZone()),
-    visibleDuration: { weeks: 1 },
-    locale,
-    createCalendar,
-  });
-
-  const listState = useCalendarState({
-    value: today(getLocalTimeZone()),
-    visibleDuration:
-      filters.dates === "week"
-        ? { weeks: 1 }
-        : filters.dates === "day"
-          ? { days: 1 }
-          : { months: 1 },
-    locale,
-    createCalendar,
-  });
-
-  const dayState = useCalendarState({
-    value: today(getLocalTimeZone()),
-    visibleDuration: { days: 1 },
-    locale,
-    createCalendar,
-  });
-
-  const tableState = useCalendarState({
-    value: today(getLocalTimeZone()),
-    visibleDuration: { weeks: 1 },
-    locale,
-    createCalendar,
-  });
-
-  const visibleStart =
-    mode === "month"
-      ? monthState.visibleRange.start
-      : mode === "week"
-        ? weekState.visibleRange.start
-        : mode === "day"
-          ? dayState.visibleRange.start
-          : mode === "list"
-            ? listState.visibleRange.start
-            : tableState.visibleRange.start;
-
-  const rangeType: DateRangeType =
-    mode === "list"
-      ? filters.dates
-      : ["day", "week", "month"].includes(mode)
-        ? (mode as DateRangeType)
-        : "week";
-  const visibleStartKey = visibleStart?.toString();
-  const syncDateRange = useEffectEvent(() => {
-    if (!visibleStart) return;
-    const dateRange = getDateRangeForCalendar(visibleStart, rangeType);
-    setFilters((prev) => ({ ...prev, dateRange }));
-  });
-
-  // effect: mirrors the react-aria calendar visible range into the shared filters
-  useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- mirrors the react-aria calendar visible range into the shared filters
-    syncDateRange();
-  }, [visibleStartKey, rangeType, mode]);
-
-  const prevModeRef = useRef<string>(mode);
-  const syncListMode = useEffectEvent(() => {
-    const prevMode = prevModeRef.current;
-    prevModeRef.current = mode;
-    if (mode !== "list" || prevMode === "list") return;
-
-    let syncStart: DateValue | null = null;
-    let syncDates: DateRangeType | null = null;
-    switch (prevMode) {
-      case "month":
-        syncStart = monthState.visibleRange.start;
-        syncDates = "month";
-        break;
-      case "week":
-        syncStart = weekState.visibleRange.start;
-        syncDates = "week";
-        break;
-      case "day":
-        syncStart = dayState.visibleRange.start;
-        syncDates = "day";
-        break;
-      case "table":
-        syncStart = tableState.visibleRange.start;
-        syncDates = "week";
-        break;
+  function navigate(next: Partial<ScheduleView>, history: "push" | "replace") {
+    const search = scheduleSearch({ ...view, ...next });
+    const params = new URLSearchParams(search);
+    const target = parseScheduleView((name) => params.get(name), props.role, timeZone);
+    if (history === "replace" && !navigating && sameRange(target, view)) {
+      window.history.replaceState(null, "", search);
+      return;
     }
-    if (syncDates) {
-      const nextDates = syncDates;
-      setFilters((prev) => ({ ...prev, dates: nextDates }));
-    }
-    if (syncStart) {
-      listState.setFocusedDate(syncStart);
-    }
+    startNavigation(() => {
+      setOptimisticView(target);
+      router[history](search, { scroll: false });
+    });
+  }
+
+  const calendarState = (visibleDuration?: { days?: number; weeks?: number; months?: number }) => ({
+    value: today(timeZone),
+    focusedValue: view.date,
+    onFocusChange: (date: DateValue) => navigate({ date: toCalendarDate(date) }, "replace"),
+    visibleDuration,
+    locale,
+    createCalendar,
   });
 
-  // effect: carries the previous view's visible range over when switching to list mode
-  useEffect(() => {
-    syncListMode();
-  }, [mode]);
+  const monthState = useCalendarState({ ...calendarStateProps, ...calendarState() });
+  const weekState = useCalendarState(calendarState({ weeks: 1 }));
+  const listState = useCalendarState(
+    calendarState(
+      view.span === "day" ? { days: 1 } : view.span === "week" ? { weeks: 1 } : { months: 1 },
+    ),
+  );
+  const dayState = useCalendarState(calendarState({ days: 1 }));
+  const tableState = useCalendarState(calendarState({ weeks: 1 }));
 
   const month = useCalendar(calendarStateProps, monthState);
 
@@ -254,6 +165,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       state.visibleRange.end.toDate(state.timeZone),
     );
 
+  const mode = view.mode;
   let title = "";
   let prevButtonProps: AriaButtonProps = {};
   let nextButtonProps: AriaButtonProps = {};
@@ -287,63 +199,63 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       throw new Error(`Invalid mode: ${mode}`);
   }
 
+  const calendarView = {
+    monthProps: { state: monthState, weekdayStyle: "long" as const },
+    weekProps: { state: weekState },
+    dayProps: { state: dayState },
+    listProps: { state: listState },
+    tableProps: { state: tableState },
+    supervisors: props.supervisors,
+    fellowRatings: props.fellowRatings,
+    role: props.role,
+    supervisorId: props.supervisorId,
+    fellowId: props.fellowId,
+    mode,
+    loading,
+  };
+
   return (
-    <SessionsProvider
-      activeProjectId={activeProjectId}
-      hubId={hubId}
-      implementerId={implementerId}
-      filters={filters}
-      role={props.role}
-      fellowId={props.fellowId}
-    >
+    <>
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
           <div className="flex items-start justify-between gap-6 lg:items-center">
-            <div className="text-2xl font-semibold leading-8">{title}</div>
+            <h3 className="text-2xl font-semibold leading-8">{title}</h3>
             <NavigationButtons prevProps={prevButtonProps} nextProps={nextButtonProps} />
           </div>
           <div className="flex lg:mx-2">
-            <ScheduleModeToggle role={props.role} mode={mode} />
+            <ScheduleModeToggle
+              role={props.role}
+              mode={mode}
+              onModeChange={(nextMode) => navigate({ mode: nextMode }, "push")}
+            />
           </div>
-          <ScheduleFilterToggle
-            sessionFilters={props.hubSessionTypes ?? []}
-            filters={filters}
-            setFilters={setFilters}
-            mode={mode}
-          />
         </div>
         {props.role === "HUB_COORDINATOR" || props.role === "SUPERVISOR" ? (
           <div className="flex items-center gap-4">
-            <SessionsLoader />
+            <SessionsLoader loading={loading} />
             <CreateSessionButton
               open={newScheduleDialog}
               setDialogOpen={setNewScheduleDialog}
               schools={schools}
               hubSessionTypes={props.hubSessionTypes}
               role={props.role}
+              loading={loading}
             />
           </div>
         ) : props.role === "ADMIN" ? (
-          <SessionsLoader />
+          <SessionsLoader loading={loading} />
         ) : null}
       </div>
       <div className="mt-4 w-full">
-        <CalendarView
-          monthProps={{ state: monthState, weekdayStyle: "long" }}
-          weekProps={{ state: weekState }}
-          dayProps={{ state: dayState }}
-          listProps={{ state: listState }}
-          tableProps={{ state: tableState }}
-          supervisors={props.supervisors}
-          fellowRatings={props.fellowRatings}
-          role={props.role}
-          supervisorId={props.supervisorId}
-          fellowId={props.fellowId}
-          mode={mode}
-          filters={filters}
-        />
+        {sessions ? (
+          <Suspense fallback={<CalendarView {...calendarView} sessions={[]} loading />}>
+            <LoadedCalendarView {...calendarView} sessions={sessions} />
+          </Suspense>
+        ) : (
+          <CalendarView {...calendarView} sessions={[]} />
+        )}
       </div>
-    </SessionsProvider>
+    </>
   );
 }
 
@@ -353,14 +265,15 @@ function CreateSessionButton({
   schools,
   hubSessionTypes,
   role,
+  loading,
 }: {
   open: boolean;
   setDialogOpen: Dispatch<SetStateAction<boolean>>;
   schools: School[];
   hubSessionTypes?: SessionName[];
   role: ImplementerRole;
+  loading: boolean;
 }) {
-  const { loading } = useSessions({});
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
@@ -386,9 +299,7 @@ function CreateSessionButton({
   );
 }
 
-function SessionsLoader() {
-  const { loading } = useSessions({});
-
+function SessionsLoader({ loading }: { loading: boolean }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center gap-2 px-4 text-shamiri-new-blue">
@@ -433,7 +344,8 @@ function CalendarView({
   supervisorId,
   fellowId,
   mode,
-  filters,
+  loading,
+  sessions,
 }: {
   monthProps: {
     state: CalendarState;
@@ -460,9 +372,9 @@ function CalendarView({
   supervisorId?: string;
   fellowId?: string;
   mode: Mode;
-  filters: Filters;
+  loading: boolean;
+  sessions: Session[];
 }) {
-  const { sessions, loading, refresh } = useSessionsContext();
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
@@ -501,6 +413,7 @@ function CalendarView({
               setCancelSessionDialog,
             }}
             fellowId={fellowId}
+            sessions={sessions}
           />
         );
       case "week":
@@ -520,6 +433,7 @@ function CalendarView({
               setCancelSessionDialog,
             }}
             fellowId={fellowId}
+            sessions={sessions}
           />
         ) : (
           <div>Loading...</div>
@@ -541,6 +455,7 @@ function CalendarView({
             }}
             supervisorId={supervisorId}
             fellowId={fellowId}
+            sessions={sessions}
           />
         ) : (
           <div>Loading...</div>
@@ -562,6 +477,7 @@ function CalendarView({
               setCancelSessionDialog,
             }}
             fellowId={fellowId}
+            sessions={sessions}
           />
         );
       case "table":
@@ -572,7 +488,7 @@ function CalendarView({
               supervisors={supervisors}
               role={role}
               supervisorId={supervisorId}
-              filters={filters}
+              sessions={sessions}
             />
           );
         }
@@ -591,7 +507,6 @@ function CalendarView({
             session={session}
             open={rescheduleSessionDialog}
             onOpenChange={setRescheduleSessionDialog}
-            onSaved={refresh}
           >
             <SessionDetail
               state={{ session }}
@@ -604,7 +519,6 @@ function CalendarView({
             sessionId={session.id}
             open={cancelSessionDialog}
             onOpenChange={setCancelSessionDialog}
-            onSaved={refresh}
           >
             <SessionDetail
               state={{ session }}
@@ -638,7 +552,6 @@ function CalendarView({
         session={session}
         fellows={fellowsForStudentAttendance}
         fellowId={fellowId}
-        onSaved={refresh}
       />
       {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
         <SessionRatings
@@ -655,7 +568,6 @@ function CalendarView({
                 : undefined
           }
           role={role}
-          onSaved={refresh}
         >
           {session && (
             <SessionDetail
@@ -673,7 +585,6 @@ function CalendarView({
         isOpen={sessionOccurrenceDialog}
         setIsOpen={setSessionOccurrenceDialog}
         sessions={sessions}
-        onSaved={refresh}
       >
         {session && (
           <SessionDetail state={{ session }} layout={"compact"} withDropdown={false} role={role} />
@@ -722,272 +633,9 @@ function NavigationButton({ children, ...props }: { children: React.ReactNode })
   );
 }
 
-function ScheduleFilterToggle({
-  sessionFilters,
-  filters,
-  setFilters,
-  mode,
-}: {
-  sessionFilters: SessionName[];
-  filters: Filters;
-  setFilters: Dispatch<SetStateAction<Filters>>;
-  mode: Mode;
-}) {
-  const [open, setOpen] = useState(false);
-  const _sessionTypes: { [key: string]: boolean } = {};
-  Object.keys(filters.sessionTypes).forEach((sessionType) => {
-    _sessionTypes[sessionType] = true;
-  });
-  const defaultFilterSettings = {
-    sessionTypes: _sessionTypes,
-    statusTypes: statusFilterOptions,
-    dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
-  };
-
-  const [sessionTypes, setSessionTypes] = useState(filters.sessionTypes);
-  const [statusTypes, setStatusTypes] = useState(filters.statusTypes);
-  const [filterIsActive, setFilterIsActive] = useState(false);
-
-  const dateFilterOptions: { label: string; value: DateRangeType }[] = [
-    { label: "Today", value: "day" },
-    { label: "This week", value: "week" },
-    { label: "This month", value: "month" },
-  ];
-  const [dates, setDates] = useState(filters.dates);
-  // effect: keeps the date filter in step with the calendar mode chosen elsewhere
-  useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- keeps the date filter in step with the calendar mode chosen elsewhere
-    setDates(["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week");
-  }, [mode]);
-
-  const syncActiveFilter = useEffectEvent(() => {
-    const sessionTypes = Object.keys(filters.sessionTypes).filter(
-      (key) => !filters.sessionTypes[key],
-    );
-    const statusTypes = Object.keys(filters.statusTypes).filter((key) => !filters.statusTypes[key]);
-
-    if (sessionTypes.length > 0 || statusTypes.length > 0) {
-      setFilterIsActive(true);
-    } else {
-      setFilterIsActive(false);
-      setSessionTypes(defaultFilterSettings.sessionTypes);
-      setStatusTypes(defaultFilterSettings.statusTypes);
-    }
-  });
-
-  // effect: derives the active-filter flag and resets local toggles when filters return to defaults
-  useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- derives the active-filter flag and resets local toggles when filters return to defaults
-    syncActiveFilter();
-  }, [filters]);
-
-  return (
-    <div className="flex items-center gap-3 lg:p-2">
-      <FilterToggle
-        filterIsActive={filterIsActive}
-        setDefaultFilters={() => setFilters(defaultFilterSettings)}
-        open={open}
-        setOpen={setOpen}
-      >
-        <div className="flex flex-col gap-x-4 gap-y-2 lg:grid lg:grid-cols-5">
-          <div className="lg:col-span-5">
-            <DropdownMenuLabel>
-              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                SESSION TYPE
-              </span>
-            </DropdownMenuLabel>
-            <div className="gap-x-4 lg:grid lg:grid-cols-5">
-              <div>
-                {sessionFilters
-                  .filter((sessionType) => sessionType.sessionType === "INTERVENTION")
-                  .map((sessionType) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={sessionType.sessionName}
-                        checked={sessionTypes[sessionType.sessionName]}
-                        onCheckedChange={(value) => {
-                          const state = { ...sessionTypes };
-                          state[sessionType.sessionName] = value;
-                          setSessionTypes(state);
-                        }}
-                        onSelect={(e) => {
-                          e.preventDefault();
-                        }}
-                      >
-                        <span className="uppercase">
-                          {sessionDisplayName(sessionType.sessionName)}
-                        </span>
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </div>
-              <div>
-                {sessionFilters
-                  .filter((sessionType) => sessionType.sessionType === "DATA_COLLECTION")
-                  .map((sessionType) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={sessionType.sessionName}
-                        checked={sessionTypes[sessionType.sessionName]}
-                        onCheckedChange={(value) => {
-                          const state = { ...sessionTypes };
-                          state[sessionType.sessionName] = value;
-                          setSessionTypes(state);
-                        }}
-                        onSelect={(e) => {
-                          e.preventDefault();
-                        }}
-                      >
-                        <span className="uppercase">
-                          {sessionDisplayName(sessionType.sessionName)}
-                        </span>
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </div>
-              <div>
-                {sessionFilters
-                  .filter((sessionType) => sessionType.sessionType === "SUPERVISION")
-                  .map((sessionType) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={sessionType.sessionName}
-                        checked={sessionTypes[sessionType.sessionName]}
-                        onCheckedChange={(value) => {
-                          const state = { ...sessionTypes };
-                          state[sessionType.sessionName] = value;
-                          setSessionTypes(state);
-                        }}
-                        onSelect={(e) => {
-                          e.preventDefault();
-                        }}
-                      >
-                        <span className="uppercase">
-                          {sessionDisplayName(sessionType.sessionName)}
-                        </span>
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </div>
-              <div>
-                {sessionFilters
-                  .filter((sessionType) => sessionType.sessionType === "TRAINING")
-                  .map((sessionType) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={sessionType.sessionName}
-                        checked={sessionTypes[sessionType.sessionName]}
-                        onCheckedChange={(value) => {
-                          const state = { ...sessionTypes };
-                          state[sessionType.sessionName] = value;
-                          setSessionTypes(state);
-                        }}
-                        onSelect={(e) => {
-                          e.preventDefault();
-                        }}
-                      >
-                        <span className="uppercase">
-                          {sessionDisplayName(sessionType.sessionName)}
-                        </span>
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </div>
-              <div>
-                {sessionFilters
-                  .filter((sessionType) => sessionType.sessionType === "CLINICAL")
-                  .map((sessionType) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={sessionType.sessionName}
-                        checked={sessionTypes[sessionType.sessionName]}
-                        onCheckedChange={(value) => {
-                          const state = { ...sessionTypes };
-                          state[sessionType.sessionName] = value;
-                          setSessionTypes(state);
-                        }}
-                        onSelect={(e) => {
-                          e.preventDefault();
-                        }}
-                      >
-                        <span className="uppercase">
-                          {sessionDisplayName(sessionType.sessionName)}
-                        </span>
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </div>
-            </div>
-          </div>
-          <div>
-            <DropdownMenuLabel>
-              <span className="text-xs font-medium uppercase text-shamiri-text-grey">Status</span>
-            </DropdownMenuLabel>
-            {Object.keys(SessionStatus).map((status) => {
-              return (
-                <DropdownMenuCheckboxItem
-                  key={status}
-                  checked={statusTypes[status]}
-                  onCheckedChange={(value) => {
-                    const state = { ...statusTypes };
-                    state[status] = value;
-                    setStatusTypes(state);
-                  }}
-                  onSelect={(e) => {
-                    e.preventDefault();
-                  }}
-                >
-                  <span className="">{status}</span>
-                </DropdownMenuCheckboxItem>
-              );
-            })}
-          </div>
-          <div>
-            <DropdownMenuLabel>
-              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                Date Scheduled
-              </span>
-            </DropdownMenuLabel>
-            {dateFilterOptions.map((date) => {
-              return (
-                <DropdownMenuCheckboxItem
-                  key={date.value}
-                  checked={dates === date.value}
-                  onCheckedChange={(_value) => {
-                    setDates(date.value);
-                  }}
-                  onSelect={(e) => {
-                    e.preventDefault();
-                  }}
-                  disabled={
-                    mode === "day" || mode === "month" || mode === "week" || mode === "table"
-                  }
-                >
-                  <span className="">{date.label}</span>
-                </DropdownMenuCheckboxItem>
-              );
-            })}
-          </div>
-        </div>
-        <div className="flex justify-end gap-4 pt-4">
-          <Button variant="ghost" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="brand"
-            onClick={() => {
-              setFilters({
-                sessionTypes,
-                statusTypes,
-                dates,
-              });
-              setOpen(false);
-            }}
-          >
-            Filter sessions
-          </Button>
-        </div>
-      </FilterToggle>
-    </div>
-  );
+function LoadedCalendarView({
+  sessions,
+  ...props
+}: Omit<React.ComponentProps<typeof CalendarView>, "sessions"> & { sessions: Promise<Session[]> }) {
+  return <CalendarView {...props} sessions={use(sessions)} />;
 }

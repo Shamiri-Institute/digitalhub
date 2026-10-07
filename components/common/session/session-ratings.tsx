@@ -11,7 +11,7 @@ import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import RatingStarsInput from "#/components/common/rating-stars-input";
 import { SessionRatingsSchema } from "#/components/common/session/schema";
-import type { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -55,7 +55,6 @@ export default function SessionRatings({
   supervisorId,
   supervisors,
   role,
-  onSaved,
 }: {
   selectedSession: Session;
   open: boolean;
@@ -65,7 +64,6 @@ export default function SessionRatings({
   supervisorId?: string;
   role: ImplementerRole;
   supervisors?: ScheduleSupervisor[];
-  onSaved?: () => Promise<void>;
 }) {
   const sessionRatings = selectedSession.sessionRatings;
   const rating =
@@ -129,7 +127,6 @@ export default function SessionRatings({
       return;
     }
 
-    await onSaved?.();
     toast({
       description: response.message,
     });

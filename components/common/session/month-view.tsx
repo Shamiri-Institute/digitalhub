@@ -6,7 +6,8 @@ import type { CalendarGridProps } from "react-aria-components";
 import type { CalendarState } from "react-stately";
 import { cn } from "#/lib/utils";
 import { SessionList } from "./session-list";
-import { type Session, useSessions } from "./sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
+import { sessionsAt } from "#/lib/schedule-view";
 import { syncScrollLeft } from "./sync-scroll";
 
 export function MonthView({
@@ -28,6 +29,7 @@ export function MonthView({
   };
   supervisorId?: string;
   fellowId?: string;
+  sessions: Session[];
 }) {
   const { locale } = useLocale();
   const { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
@@ -82,6 +84,7 @@ export function MonthView({
                         dialogState={props.dialogState}
                         fellowId={props.fellowId}
                         supervisorId={props.supervisorId}
+                        sessions={sessionsAt(props.sessions, date)}
                       />
                     ) : (
                       // oxlint-disable-next-line react/no-array-index-key -- empty calendar cell
@@ -106,6 +109,7 @@ export function MonthCalendarCell({
   dialogState,
   fellowId,
   supervisorId,
+  sessions,
 }: {
   state: CalendarState;
   date: CalendarDate;
@@ -123,6 +127,7 @@ export function MonthCalendarCell({
   };
   fellowId?: string;
   supervisorId?: string;
+  sessions: Session[];
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const {
@@ -134,8 +139,6 @@ export function MonthCalendarCell({
     isUnavailable,
     formattedDate,
   } = useCalendarCell({ date }, state, ref);
-
-  const { sessions } = useSessions({ date });
 
   return (
     <td

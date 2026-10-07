@@ -30,19 +30,17 @@ import { toast, toastOnError } from "#/components/ui/use-toast";
 import { rescheduleSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
-import type { Session } from "./sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 
 export default function RescheduleSession({
   session,
   open,
   onOpenChange,
-  onSaved,
   children,
 }: {
   session: Session;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  onSaved?: () => Promise<void>;
   children: React.ReactNode;
 }) {
   const [hour, setHour] = useState(format(session.sessionDate, "h"));
@@ -75,7 +73,6 @@ export default function RescheduleSession({
       return;
     }
 
-    await onSaved?.();
     toast({
       description: response.message,
     });

@@ -4,7 +4,7 @@ import type { ImplementerRole } from "#/db/enums";
 import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 import { SessionDetail } from "#/components/common/session/session-list";
-import type { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 import UploadStudentAttendanceDocument from "#/components/common/student/student-attendance-files/upload-student-attendance";
 import ViewAttendanceDocument from "#/components/common/student/student-attendance-files/view-attendance-document";
 import {

@@ -1,18 +1,22 @@
 import type { ImplementerRole } from "#/db/enums";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
+import type { Mode } from "#/lib/schedule-view";
 
-export type Mode = "day" | "week" | "month" | "list" | "table";
-
-export function ScheduleModeToggle({ role, mode }: { role: ImplementerRole; mode: Mode }) {
+export function ScheduleModeToggle({
+  role,
+  mode,
+  onModeChange,
+}: {
+  role: ImplementerRole;
+  mode: Mode;
+  onModeChange: (mode: Mode) => void;
+}) {
   return (
     <ToggleGroup
       type="single"
       value={mode}
       onValueChange={(nextMode) => {
-        if (!nextMode) return;
-        const params = new URLSearchParams(window.location.search);
-        params.set("mode", nextMode);
-        window.history.pushState(null, "", `?${params.toString()}`);
+        if (nextMode) onModeChange(nextMode as Mode);
       }}
       className="gap-0 divide-x divide-gray-300 overflow-hidden rounded-lg border border-gray-300 py-0 shadow-xs"
     >

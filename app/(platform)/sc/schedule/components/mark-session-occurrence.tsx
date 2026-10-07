@@ -6,7 +6,7 @@ import { type Dispatch, type SetStateAction, useEffect, useState, useTransition 
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema";
-import type { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
@@ -25,7 +25,6 @@ export function MarkSessionOccurrence({
   setIsOpen,
   defaultOccurrence,
   sessions,
-  onSaved,
 }: {
   id?: string;
   children: React.ReactNode;
@@ -33,7 +32,6 @@ export function MarkSessionOccurrence({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   defaultOccurrence?: boolean | null;
   sessions: Session[];
-  onSaved?: () => Promise<void>;
 }) {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -90,7 +88,6 @@ export function MarkSessionOccurrence({
           });
           return;
         }
-        await onSaved?.();
         setConfirmDialogOpen(false);
         setIsOpen(false);
         toast({

@@ -1,26 +1,14 @@
-"use server";
-
 import { and, eq } from "drizzle-orm";
 
-import type { Filters } from "#/lib/schedule-filters";
 import { db } from "#/db/client";
-import { ImplementerRole, type SessionStatus } from "#/db/enums";
+import { ImplementerRole } from "#/db/enums";
 import { hub, interventionGroup } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole } from "#/lib/auth/require-hub-role";
-import { getDefaultSessionDateRange } from "#/lib/date-utils";
 import { clinicalCasesCountExtras } from "#/lib/actions/schedule-data";
 
-export async function fetchInterventionSessions({
-  start,
-  end,
-  filters,
-}: {
-  start?: Date;
-  end?: Date;
-  filters?: Filters;
-}) {
+export async function fetchInterventionSessions({ start, end }: { start: Date; end: Date }) {
   const membership = await requireAuthRole(
     ImplementerRole.ADMIN,
     ImplementerRole.HUB_COORDINATOR,
@@ -52,15 +40,6 @@ export async function fetchInterventionSessions({
     projectId = hubRow.projectId;
   }
 
-  const { start: rangeStart, end: rangeEnd } =
-    start && end ? { start, end } : getDefaultSessionDateRange();
-
-  const statuses =
-    filters &&
-    (Object.keys(filters.statusTypes).filter((status) => {
-      return filters.statusTypes[status];
-    }) as SessionStatus[]);
-
   // Hubs of this project, narrowed to the caller's hub and/or implementer when given.
   const hubIds = db
     .select({ id: hub.id })
@@ -74,12 +53,12 @@ export async function fetchInterventionSessions({
     );
 
   const sessions = await db.query.interventionSession.findMany({
-    where: (s, { and, gte, lte, inArray }) =>
+    where: (s, { and, gte, lt, inArray, isNotNull }) =>
       and(
-        gte(s.sessionDate, rangeStart),
-        lte(s.sessionDate, rangeEnd),
+        gte(s.sessionDate, start),
+        lt(s.sessionDate, end),
         inArray(s.hubId, hubIds),
-        statuses ? inArray(s.status, statuses) : undefined,
+        isNotNull(s.status),
         fellowId !== undefined
           ? inArray(
               s.schoolId,
@@ -120,3 +99,5 @@ export async function fetchInterventionSessions({
     school: s.schoolId === null ? null : (schoolById.get(s.schoolId) ?? null),
   }));
 }
+
+export type Session = Awaited<ReturnType<typeof fetchInterventionSessions>>[number];
