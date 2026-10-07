@@ -84,10 +84,12 @@ export default async function FellowPage() {
     }),
   ]);
 
+  const complaintsByFellow = Map.groupBy(complaints, (c) => c.fellowId);
+  const groupsByLeader = Map.groupBy(groups, (g) => g.leaderId);
   const data = fellowRows.map((fellowRow) => ({
     ...fellowRow,
-    complaints: complaints.filter((c) => c.fellowId === fellowRow.id),
-    groups: groups.filter((g) => g.leaderId === fellowRow.id),
+    complaints: complaintsByFellow.get(fellowRow.id) ?? [],
+    groups: groupsByLeader.get(fellowRow.id) ?? [],
   }));
 
   return (

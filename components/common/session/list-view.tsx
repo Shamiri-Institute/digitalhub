@@ -2,10 +2,9 @@
 
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
-import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { SessionDropDown } from "#/components/common/session/session-list";
 import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
 import { useTitle } from "#/components/common/session/title-provider";
@@ -36,9 +35,18 @@ export function ListView({
   fellowId?: string;
 }) {
   const { sessions } = useContext(SessionsContext);
-  const [sessionGroups, setSessionGroups] = useState<string[]>([]);
-
   const today = format(new Date(), "yyyy-MM-dd");
+  const rangeStart = state.visibleRange.start.toDate(state.timeZone);
+  const rangeEnd = addDays(state.visibleRange.end.toDate(state.timeZone), 1);
+  const sessionDays = new Set(
+    sessions
+      .filter((session) => session.sessionDate > rangeStart && session.sessionDate < rangeEnd)
+      .map((session) => format(session.sessionDate, "yyyy-MM-dd")),
+  );
+  if (isAfter(new Date(today), rangeStart) && isBefore(new Date(today), rangeEnd)) {
+    sessionDays.add(today);
+  }
+  const sessionGroups = [...sessionDays].toSorted();
 
   const { setTitle } = useTitle();
 
@@ -47,8 +55,6 @@ export function ListView({
     dateStyle: "long",
     calendar: startDate.calendar.identifier,
   });
-
-  const { filters } = useContext(FiltersContext);
 
   // effect: publishes the visible range to the shared title context
   useEffect(() => {
@@ -59,39 +65,6 @@ export function ListView({
       ),
     );
   }, [state.visibleRange.start, state.visibleRange.end, dateFormatter, setTitle, state.timeZone]);
-
-  // effect: groups the sessions in the visible range by day
-  useEffect(() => {
-    const fetchSessions = async () => {
-      const start = state.visibleRange.start.toDate(state.timeZone);
-      const end = addDays(state.visibleRange.end.toDate(state.timeZone), 1);
-
-      const _sessions = sessions.filter((session) => {
-        return session.sessionDate > start && session.sessionDate < end;
-      });
-
-      const groupedSessions: {
-        [key: string]: Session[];
-      } = {};
-
-      _sessions.forEach((session) => {
-        const date = format(session.sessionDate, "yyyy-MM-dd");
-        if (!groupedSessions[date]) {
-          groupedSessions[date] = [];
-        }
-      });
-
-      if (
-        !groupedSessions[today] &&
-        isAfter(new Date(today), start) &&
-        isBefore(new Date(today), end)
-      ) {
-        groupedSessions[today] = [];
-      }
-      setSessionGroups(Object.keys(groupedSessions).toSorted());
-    };
-    void fetchSessions();
-  }, [filters, sessions, state.timeZone, state.visibleRange.end, state.visibleRange.start, today]);
 
   return (
     <div className="relative">

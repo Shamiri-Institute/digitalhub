@@ -11,7 +11,7 @@ export type SupervisorClinicalCasesData = {
   sessionsHad: number;
 };
 
-export async function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
+export function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
   const s = hubScope(scope, "s");
 
   return db

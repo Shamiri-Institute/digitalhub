@@ -20,7 +20,7 @@ export const clinicalCasesCountExtras = (s: { id: typeof student.id }) => ({
 });
 
 /** Supervisors of a hub with the attendance, fellow and group data the schedule views read. */
-export async function fetchScheduleSupervisors(hubId: string) {
+export function fetchScheduleSupervisors(hubId: string) {
   return db.query.supervisor.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
     with: {

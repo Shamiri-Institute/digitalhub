@@ -13,7 +13,7 @@ export type FellowClinicalCasesData = {
   noOfClinicalCases: number;
 };
 
-export async function fetchFellowClinicalCasesData(scope: ClinicalScope) {
+export function fetchFellowClinicalCasesData(scope: ClinicalScope) {
   const f = hubScope(scope, "f");
 
   return db
