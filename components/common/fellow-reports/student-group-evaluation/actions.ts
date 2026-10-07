@@ -99,14 +99,9 @@ const calculateAverage = (numbers: number[]): number => {
 
 export async function loadStudentGroupEvaluations() {
   const caller = await requireHubRole(ImplementerRole.SUPERVISOR, ImplementerRole.HUB_COORDINATOR);
-  try {
-    const evaluations = await fetchEvaluations(caller);
+  const evaluations = await fetchEvaluations(caller);
 
-    return transformEvaluationData(evaluations);
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
+  return transformEvaluationData(evaluations);
 }
 
 // Only the comments are editable; the group, session and ratings stay as the fellow reported them.

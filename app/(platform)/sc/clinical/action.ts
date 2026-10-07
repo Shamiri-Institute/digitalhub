@@ -339,32 +339,24 @@ export async function referClinicalCaseToSupervisor(data: {
 }
 
 export async function getSupervisorsInHub() {
-  try {
-    const supervisor = await currentSupervisor();
-    if (!supervisor?.profile.hubId) throw new Error("Unauthorized");
-    const { hubId, id: supervisorId } = supervisor.profile;
-    const supervisors = await db.query.supervisor.findMany({
-      where: (s, { and, eq, ne }) => and(eq(s.hubId, hubId), ne(s.id, supervisorId)),
-    });
-    const allSupervisors =
-      supervisors.map((supervisor) => ({
-        id: supervisor.id,
-        name: supervisor.supervisorName,
-      })) || [];
-    return {
-      currentSupervisor: {
-        id: supervisor.profile.id,
-        name: supervisor.profile.supervisorName,
-      },
-      allSupervisors: allSupervisors,
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      currentSupervisor: null,
-      allSupervisors: [],
-    };
-  }
+  const supervisor = await currentSupervisor();
+  if (!supervisor?.profile.hubId) throw new Error("Unauthorized");
+  const { hubId, id: supervisorId } = supervisor.profile;
+  const supervisors = await db.query.supervisor.findMany({
+    where: (s, { and, eq, ne }) => and(eq(s.hubId, hubId), ne(s.id, supervisorId)),
+  });
+  const allSupervisors =
+    supervisors.map((supervisor) => ({
+      id: supervisor.id,
+      name: supervisor.supervisorName,
+    })) || [];
+  return {
+    currentSupervisor: {
+      id: supervisor.profile.id,
+      name: supervisor.profile.supervisorName,
+    },
+    allSupervisors: allSupervisors,
+  };
 }
 
 export async function getSchoolsInHub() {
@@ -800,33 +792,28 @@ export async function updateClinicalCaseAttendance(data: {
 }
 
 export async function getClinicalLeads() {
-  try {
-    const supervisor = await currentSupervisor();
-    if (!supervisor) {
-      throw new Error("Supervisor not found");
-    }
-    const projectId = supervisor.profile?.hub?.projectId;
-    if (!projectId) {
-      throw new Error("Assigned hub has no project");
-    }
-
-    const clinicalLeads = await db.query.clinicalLead.findMany({
-      where: (cl, { inArray }) =>
-        inArray(
-          cl.assignedHubId,
-          db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
-        ),
-    });
-    const clinicalLeadsWithSupervisor = clinicalLeads.map((lead) => ({
-      name: lead.clinicalLeadName,
-      id: lead.id,
-      hubId: lead.assignedHubId,
-    }));
-    return clinicalLeadsWithSupervisor || [];
-  } catch (error) {
-    console.error(error);
-    return [];
+  const supervisor = await currentSupervisor();
+  if (!supervisor) {
+    throw new Error("Supervisor not found");
   }
+  const projectId = supervisor.profile?.hub?.projectId;
+  if (!projectId) {
+    throw new Error("Assigned hub has no project");
+  }
+
+  const clinicalLeads = await db.query.clinicalLead.findMany({
+    where: (cl, { inArray }) =>
+      inArray(
+        cl.assignedHubId,
+        db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
+      ),
+  });
+  const clinicalLeadsWithSupervisor = clinicalLeads.map((lead) => ({
+    name: lead.clinicalLeadName,
+    id: lead.id,
+    hubId: lead.assignedHubId,
+  }));
+  return clinicalLeadsWithSupervisor || [];
 }
 
 export async function referClinicalCaseToClinicalLead(data: {

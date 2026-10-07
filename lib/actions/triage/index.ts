@@ -72,11 +72,7 @@ function studentsInLedGroupsAtSession(callerFellowId: string, sessionId: string)
 export async function getSupervisorsInFellowHub(
   sessionId: string,
 ): Promise<{ id: string; supervisorName: string | null }[]> {
-  try {
-    await getFellowContext();
-  } catch {
-    return [];
-  }
+  await getFellowContext();
   const session = await db.query.interventionSession.findFirst({
     where: (s, { eq }) => eq(s.id, sessionId),
     columns: { hubId: true },

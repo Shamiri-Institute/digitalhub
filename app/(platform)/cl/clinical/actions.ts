@@ -24,18 +24,13 @@ export async function getClinicalCasesData() {
 }
 
 export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
-  try {
-    const clinicalLead = await currentClinicalLead();
-    if (!clinicalLead) throw new Error("Unauthorized");
+  const clinicalLead = await currentClinicalLead();
+  if (!clinicalLead) throw new Error("Unauthorized");
 
-    return await fetchClinicalCasesList(
-      { hubId: clinicalLead.profile.assignedHubId, clinicalLeadId: clinicalLead.profile.id },
-      clinicalLead.profile.id,
-    );
-  } catch (error) {
-    console.error("Error fetching clinical cases:", error);
-    return [];
-  }
+  return fetchClinicalCasesList(
+    { hubId: clinicalLead.profile.assignedHubId, clinicalLeadId: clinicalLead.profile.id },
+    clinicalLead.profile.id,
+  );
 }
 
 export async function getSchoolsInClinicalLeadHub() {

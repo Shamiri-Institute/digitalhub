@@ -26,54 +26,49 @@ type FellowComplaintsGroupedByFellow = {
 /** Complaints about the fellows the caller supervises, or about their hub's fellows. */
 export async function loadFellowComplaints() {
   const caller = await requireHubRole(ImplementerRole.SUPERVISOR, ImplementerRole.HUB_COORDINATOR);
-  try {
-    const complaints = await db.query.fellowComplaints.findMany({
-      where: (c, { inArray }) => inArray(c.fellowId, fellowsInCallerScope(caller)),
-      with: {
-        supervisor: true,
-        fellow: { with: { supervisor: true } },
-      },
-      orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)],
-    });
+  const complaints = await db.query.fellowComplaints.findMany({
+    where: (c, { inArray }) => inArray(c.fellowId, fellowsInCallerScope(caller)),
+    with: {
+      supervisor: true,
+      fellow: { with: { supervisor: true } },
+    },
+    orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)],
+  });
 
-    const groupedByFellow = complaints.reduce<Record<string, FellowComplaintsGroupedByFellow>>(
-      (acc, item) => {
-        const fellowId = item.fellowId;
-        const supervisorName =
-          item.fellow.supervisor?.supervisorName ?? item.supervisor?.supervisorName ?? "";
+  const groupedByFellow = complaints.reduce<Record<string, FellowComplaintsGroupedByFellow>>(
+    (acc, item) => {
+      const fellowId = item.fellowId;
+      const supervisorName =
+        item.fellow.supervisor?.supervisorName ?? item.supervisor?.supervisorName ?? "";
 
-        if (!acc[fellowId]) {
-          acc[fellowId] = {
-            id: fellowId,
-            fellowName: item.fellow.fellowName ?? "",
-            supervisorName,
-            complaints: [],
-          };
-        }
-
-        const formattedDate = (() => {
-          if (!item.createdAt) return new Date().toISOString().split("T")[0];
-          const date = new Date(String(item.createdAt));
-          return date.toISOString().split("T")[0];
-        })();
-
-        acc[fellowId].complaints.push({
-          complaintId: item.id,
-          date: formattedDate ?? "",
-          complaint: item.complaint ?? "",
-          additionalComments: item.comments ?? "",
+      if (!acc[fellowId]) {
+        acc[fellowId] = {
+          id: fellowId,
           fellowName: item.fellow.fellowName ?? "",
-        });
-        return acc;
-      },
-      {},
-    );
+          supervisorName,
+          complaints: [],
+        };
+      }
 
-    return Object.values(groupedByFellow);
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
+      const formattedDate = (() => {
+        if (!item.createdAt) return new Date().toISOString().split("T")[0];
+        const date = new Date(String(item.createdAt));
+        return date.toISOString().split("T")[0];
+      })();
+
+      acc[fellowId].complaints.push({
+        complaintId: item.id,
+        date: formattedDate ?? "",
+        complaint: item.complaint ?? "",
+        additionalComments: item.comments ?? "",
+        fellowName: item.fellow.fellowName ?? "",
+      });
+      return acc;
+    },
+    {},
+  );
+
+  return Object.values(groupedByFellow);
 }
 
 export async function editFellowComplaint(complaintId: string, complaint: string) {

@@ -86,10 +86,10 @@ export default function ReferClinicalCase({
   useEffect(() => {
     const fetchSupervisorsInHub = async () => {
       const data = await getSupervisorsInHub();
-      setSupervisorsInHub(data?.allSupervisors ?? []);
-      setCurrentSupervisor(data?.currentSupervisor ?? null);
+      setSupervisorsInHub(data.allSupervisors);
+      setCurrentSupervisor(data.currentSupervisor);
     };
-    void fetchSupervisorsInHub();
+    toastOnError(fetchSupervisorsInHub)();
   }, []);
 
   // effect: loads clinical leads when the watched referral target switches to Clinical Lead
@@ -97,10 +97,10 @@ export default function ReferClinicalCase({
     const fetchClinicalLeads = async () => {
       if (selectedReferTo === "Clinical Lead") {
         const data = await getClinicalLeads();
-        setClinicalLeads(data ?? []);
+        setClinicalLeads(data);
       }
     };
-    void fetchClinicalLeads();
+    toastOnError(fetchClinicalLeads)();
   }, [selectedReferTo]);
 
   const form = useForm<ComplaintFormValues>({
