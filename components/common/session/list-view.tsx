@@ -2,11 +2,11 @@
 
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
-import { type Dispatch, type SetStateAction, useContext, useEffect } from "react";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import { SessionDropDown } from "#/components/common/session/session-list";
-import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
+import { type Session, useSessionsContext } from "#/components/common/session/sessions-provider";
 import { useTitle } from "#/components/common/session/title-provider";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -34,7 +34,7 @@ export function ListView({
   supervisorId?: string;
   fellowId?: string;
 }) {
-  const { sessions } = useContext(SessionsContext);
+  const { sessions } = useSessionsContext();
   const today = format(new Date(), "yyyy-MM-dd");
   const rangeStart = state.visibleRange.start.toDate(state.timeZone);
   const rangeEnd = addDays(state.visibleRange.end.toDate(state.timeZone), 1);

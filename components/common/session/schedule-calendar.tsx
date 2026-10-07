@@ -8,7 +8,6 @@ import * as React from "react";
 import {
   type Dispatch,
   type SetStateAction,
-  useContext,
   useEffect,
   useEffectEvent,
   useRef,
@@ -30,6 +29,7 @@ import {
   type Filters,
   FiltersContext,
   statusFilterOptions,
+  useFilters,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
@@ -58,7 +58,12 @@ import { ListView } from "./list-view";
 import { type Mode, ModeProvider, useMode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { type Session, SessionsContext, SessionsProvider, useSessions } from "./sessions-provider";
+import {
+  type Session,
+  SessionsProvider,
+  useSessions,
+  useSessionsContext,
+} from "./sessions-provider";
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
@@ -456,7 +461,7 @@ function CalendarView({
   fellowId?: string;
 }) {
   const { mode } = useMode();
-  const { loading } = useContext(SessionsContext);
+  const { sessions, loading, refresh } = useSessionsContext();
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
@@ -464,7 +469,10 @@ function CalendarView({
   const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
-  const [session, setSession] = React.useState<Session | null>(null);
+  const [selectedSession, setSession] = React.useState<Session | null>(null);
+  const session = selectedSession
+    ? (sessions.find((s) => s.id === selectedSession.id) ?? selectedSession)
+    : null;
 
   const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
   const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
@@ -581,6 +589,7 @@ function CalendarView({
             session={session}
             open={rescheduleSessionDialog}
             onOpenChange={setRescheduleSessionDialog}
+            onSaved={refresh}
           >
             <SessionDetail
               state={{ session }}
@@ -593,6 +602,7 @@ function CalendarView({
             sessionId={session.id}
             open={cancelSessionDialog}
             onOpenChange={setCancelSessionDialog}
+            onSaved={refresh}
           >
             <SessionDetail
               state={{ session }}
@@ -626,6 +636,7 @@ function CalendarView({
         session={session}
         fellows={fellowsForStudentAttendance}
         fellowId={fellowId}
+        onSaved={refresh}
       />
       {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
         <SessionRatings
@@ -642,6 +653,7 @@ function CalendarView({
                 : undefined
           }
           role={role}
+          onSaved={refresh}
         >
           {session && (
             <SessionDetail
@@ -658,6 +670,8 @@ function CalendarView({
         defaultOccurrence={session?.occurred}
         isOpen={sessionOccurrenceDialog}
         setIsOpen={setSessionOccurrenceDialog}
+        sessions={sessions}
+        onSaved={refresh}
       >
         {session && (
           <SessionDetail state={{ session }} layout={"compact"} withDropdown={false} role={role} />
@@ -708,7 +722,7 @@ function NavigationButton({ children, ...props }: { children: React.ReactNode })
 
 function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[] }) {
   const [open, setOpen] = useState(false);
-  const { filters, setFilters } = useContext(FiltersContext);
+  const { filters, setFilters } = useFilters();
   const { mode } = useMode();
   const _sessionTypes: { [key: string]: boolean } = {};
   Object.keys(filters.sessionTypes).forEach((sessionType) => {

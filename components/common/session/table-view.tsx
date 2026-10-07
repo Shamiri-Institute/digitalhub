@@ -3,10 +3,10 @@ import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
-import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
+import { useFilters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import {
   FellowAttendanceDataTable,
@@ -14,7 +14,7 @@ import {
 } from "#/components/common/fellow/fellow-attendance";
 import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-menu";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
-import { SessionsContext } from "#/components/common/session/sessions-provider";
+import { useSessionsContext } from "#/components/common/session/sessions-provider";
 import { useTitle } from "#/components/common/session/title-provider";
 import {
   SupervisorAttendanceDataTable,
@@ -284,8 +284,8 @@ export function TableView({
     calendar: state.visibleRange.start.calendar.identifier,
   });
   const [roleToggle, setRoleToggle] = useState<Role>("supervisors");
-  const { filters } = useContext(FiltersContext);
-  const { sessions } = useContext(SessionsContext);
+  const { filters } = useFilters();
+  const { sessions } = useSessionsContext();
 
   const selectedDay = (() => {
     const today = getCalendarDate(new Date());

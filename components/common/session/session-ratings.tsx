@@ -4,21 +4,14 @@ import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import type { ImplementerRole } from "#/db/enums";
 import { addDays, addHours, differenceInSeconds, format } from "date-fns";
 import type React from "react";
-import {
-  type Dispatch,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useEffectEvent,
-  useState,
-} from "react";
+import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import RatingStarsInput from "#/components/common/rating-stars-input";
 import { SessionRatingsSchema } from "#/components/common/session/schema";
-import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/components/common/session/sessions-provider";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -62,6 +55,7 @@ export default function SessionRatings({
   supervisorId,
   supervisors,
   role,
+  onSaved,
 }: {
   selectedSession: Session;
   open: boolean;
@@ -71,8 +65,8 @@ export default function SessionRatings({
   supervisorId?: string;
   role: ImplementerRole;
   supervisors?: ScheduleSupervisor[];
+  onSaved?: () => Promise<void>;
 }) {
-  const { refresh } = useContext(SessionsContext);
   const sessionRatings = selectedSession.sessionRatings;
   const rating =
     role === "SUPERVISOR"
@@ -135,7 +129,7 @@ export default function SessionRatings({
       return;
     }
 
-    await refresh();
+    await onSaved?.();
     toast({
       description: response.message,
     });

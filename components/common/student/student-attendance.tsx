@@ -1,13 +1,13 @@
 import { ImplementerRole } from "#/db/enums";
 import type { fellow, student } from "#/db/schema";
 import type { ColumnDef, Row } from "@tanstack/react-table";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
-import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/components/common/session/sessions-provider";
 import ViewAttendanceDocument from "#/components/common/student/student-attendance-files/view-attendance-document";
 import StudentAttendanceMenu from "#/components/common/student/student-attendance-menu";
 import StudentTriageHistoryModal from "#/components/common/student/student-triage-history-modal";
@@ -47,6 +47,7 @@ export default function StudentAttendance({
   session,
   fellows,
   fellowId,
+  onSaved,
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
@@ -54,12 +55,12 @@ export default function StudentAttendance({
   session: Session | null;
   fellows: (typeof fellow.$inferSelect)[];
   fellowId?: string;
+  onSaved?: () => Promise<void>;
 }) {
   const isFellow = role === ImplementerRole.FELLOW;
   const [selectedGroup, setSelectedGroup] = useState<string>();
   const [attendance, setAttendance] = useState<StudentAttendanceData>();
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState(false);
-  const { sessions, refresh } = useContext(SessionsContext);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<StudentAttendanceData>[]>([]);
   const [resetSelectionTrigger, setResetSelectionTrigger] = useState<number>(0);
@@ -150,10 +151,7 @@ export default function StudentAttendance({
   });
 
   const groups = fellows.map((fellow) => {
-    const _session = sessions.length > 0 ? sessions.find((x) => x.id === session?.id) : session;
-    const group = _session?.school?.interventionGroups.find(
-      (group) => group.leaderId === fellow.id,
-    );
+    const group = session?.school?.interventionGroups.find((group) => group.leaderId === fellow.id);
     return { fellow, group };
   });
 
@@ -330,9 +328,6 @@ export default function StudentAttendance({
           editColumns={true}
           data={
             groups.find((group) => group.group?.id === selectedGroup)?.group?.students ??
-            sessions
-              .find((x) => x.id === session?.id)
-              ?.school?.interventionGroups.find((group) => group.leaderId === fellowId)?.students ??
             session?.school?.interventionGroups.find((group) => group.leaderId === fellowId)
               ?.students ??
             []
@@ -415,7 +410,7 @@ export default function StudentAttendance({
             loadingExistingEvent={!loadedTriageEvent}
             readOnly={triageReadOnly}
             onSuccess={toastOnError(async () => {
-              await refresh();
+              await onSaved?.();
               await reloadTriageEventsAfterSave();
             })}
           />

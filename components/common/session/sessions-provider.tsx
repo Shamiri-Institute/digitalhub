@@ -2,9 +2,7 @@ import { type CalendarDate, isSameDay } from "@internationalized/date";
 import { ImplementerRole } from "#/db/enums";
 import {
   createContext,
-  type Dispatch,
   type PropsWithChildren,
-  type SetStateAction,
   useContext,
   useEffect,
   useEffectEvent,
@@ -19,16 +17,10 @@ import { getCalendarDate, getDefaultSessionDateRange } from "#/lib/date-utils";
 type SessionsContextType = {
   sessions: Session[];
   loading: boolean;
-  setSessions: Dispatch<SetStateAction<Session[]>>;
   refresh: () => Promise<void>;
 };
 
-export const SessionsContext = createContext<SessionsContextType>({
-  sessions: [],
-  loading: false,
-  setSessions: () => {},
-  refresh: () => Promise.resolve(),
-});
+const SessionsContext = createContext<SessionsContextType | null>(null);
 
 export type Session = Awaited<ReturnType<typeof fetchInterventionSessions>>[number];
 
@@ -105,19 +97,22 @@ export function SessionsProvider({
   };
 
   return (
-    <SessionsContext.Provider value={{ sessions, loading, setSessions, refresh }}>
+    <SessionsContext.Provider value={{ sessions, loading, refresh }}>
       {children}
     </SessionsContext.Provider>
   );
 }
 
-export function useSessions({ date, hour }: { date?: CalendarDate; hour?: number }) {
+export function useSessionsContext() {
   const context = useContext(SessionsContext);
-  if (context === undefined) {
-    throw new Error("useSessions must be used within a SessionsProvider");
+  if (!context) {
+    throw new Error("useSessionsContext must be used within a SessionsProvider");
   }
+  return context;
+}
 
-  const { sessions, loading } = context;
+export function useSessions({ date, hour }: { date?: CalendarDate; hour?: number }) {
+  const { sessions, loading } = useSessionsContext();
 
   if (!date) {
     return { sessions, loading };

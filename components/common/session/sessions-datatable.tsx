@@ -89,6 +89,7 @@ export default function SessionsDatatable({
             defaultOccurrence={session?.occurred}
             isOpen={sessionOccurrenceDialog}
             setIsOpen={setSessionOccurrenceDialog}
+            sessions={sessions}
           >
             <SessionDetail
               state={{ session }}
