@@ -4,7 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { supervisorAttendance } from "#/db/schema";
-import { signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
@@ -42,7 +42,7 @@ test.beforeAll(async () => {
       and coalesce(i.status::text, '') <> 'Cancelled'
     join supervisors sv on sv.hub_id = hc.assigned_hub_id and sv.supervisor_name is not null
       and coalesce(sv.dropped_out, false) = false
-    where (select count(*) from implementer_members o where o.user_id = m.user_id) = 1
+    where ${signableMember()}
       and not exists (
         select 1 from supervisor_attendances a where a.session_id = i.id and a.supervisor_id = sv.id)
       and not exists (

@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowComplaints } from "#/db/schema";
-import { signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
@@ -49,7 +49,7 @@ test.beforeAll(async () => {
       and u.email <> ${supervisorEmail}
       and not exists (select 1 from fellows f where f.id = ${supervisedFellow.fellowId}
         and f.supervisor_id = s.id)
-      and (select count(*) from implementer_members o where o.user_id = m.user_id) = 1
+      and ${signableMember()}
     order by u.email
     limit 1`);
   if (!otherSupervisor) throw new Error("No second supervisor in the same organisation");

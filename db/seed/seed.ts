@@ -13,10 +13,18 @@ import {
   sessionTypes,
   TriageActionTaken,
 } from "#/db/enums";
-import { isBefore, startOfMonth } from "date-fns";
-import { fromZonedTime } from "date-fns-tz";
+import {
+  addDays,
+  addHours,
+  addWeeks,
+  isBefore,
+  startOfDay,
+  startOfMonth,
+  subWeeks,
+} from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { TypeID } from "typeid-js";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
-import { objectId } from "#/lib/crypto";
 import { db, pool } from "#/db/client";
 import * as schema from "#/db/schema";
 import { hubSessionTypes } from "#/db/seed/hub-session-types";
@@ -175,6 +183,28 @@ type Supervisor = InferSelectModel<typeof schema.supervisor>;
 
 faker.seed(7634912);
 
+// Dates count from the start of today in Nairobi, not from the current hour or month, so the seed
+// has the same past and future sessions whenever it runs.
+const SEED_TIME_ZONE = "Africa/Nairobi";
+const seedToday = fromZonedTime(
+  startOfDay(toZonedTime(new Date(), SEED_TIME_ZONE)),
+  SEED_TIME_ZONE,
+);
+faker.setDefaultRefDate(seedToday);
+const SESSION_WEEKS_BEFORE_TODAY = 4;
+
+// The same ids on every run, in creation order, so fixtures that order by id pick the same rows.
+let seedIdCount = 0;
+function objectId(prefix: string) {
+  seedIdCount += 1;
+  const time = seedToday.getTime().toString(16).padStart(12, "0");
+  const count = seedIdCount.toString(16).padStart(12, "0");
+  return TypeID.fromUUID(
+    prefix,
+    `${time.slice(0, 8)}-${time.slice(8)}-7000-8000-${count}`,
+  ).toString();
+}
+
 const INSERT_CHUNK = 1000;
 
 function* chunk<T>(rows: T[]) {
@@ -266,8 +296,8 @@ function createProjects() {
       id: objectId("proj"),
       visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
       name: faker.company.name(),
-      actualStartDate: startOfMonth(new Date()),
-      actualEndDate: startOfMonth(new Date()),
+      actualStartDate: startOfMonth(seedToday),
+      actualEndDate: startOfMonth(seedToday),
       isDefault: i === 0,
     });
   }
@@ -642,7 +672,7 @@ async function createHubCoordinators(
       dateOfBirth: faker.date.birthdate(),
       cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
       mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-      gender: Math.random() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
+      gender: faker.number.float() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
       idNumber: faker.string.numeric({ length: 8 }),
       assignedHubId: hub.id,
     });
@@ -802,7 +832,7 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
       dateOfBirth: faker.date.birthdate(),
       cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
       mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-      gender: Math.random() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
+      gender: faker.number.float() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
       idNumber: faker.string.numeric({ length: 8 }),
       hubId: _user.hubId,
     };
@@ -1070,7 +1100,7 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
         visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         fellowName,
         fellowEmail: uniqueEmail,
-        mpesaName: Math.random() > 0.5 ? fellowName : faker.person.fullName(),
+        mpesaName: faker.number.float() > 0.5 ? fellowName : faker.person.fullName(),
         // NOTE: if we ever need to make this real, we would have to control the formatting
         mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
         // TODO: should we allow some fellows to have no supervisor?
@@ -1081,7 +1111,8 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
         subCounty: subCounties ? faker.helpers.arrayElement(subCounties) : supervisor.subCounty,
         dateOfBirth: faker.date.birthdate(),
         cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        gender: Math.random() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
+        gender:
+          faker.number.float() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
         idNumber: faker.string.numeric({ length: 8 }),
       });
     }
@@ -1226,7 +1257,7 @@ async function createInterventionGroups(schools: SchoolCreationResult, fellows: 
       schoolId: staticSchool?.id ?? "",
       leaderId: fellow.id,
       projectId: staticSchool?.hub?.projectId as string,
-      groupType: Math.random() > 0.95 ? "TREATMENT" : "CONTROL",
+      groupType: faker.number.float() > 0.95 ? "TREATMENT" : "CONTROL",
     });
   });
 
@@ -1332,7 +1363,7 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
   // Continue with dynamic students for other schools
   for (const school of schools.slice(1)) {
     const numStudents = faker.number.int({
-      min: school.numbersExpected || 1000 - Math.ceil(Math.random() * 60),
+      min: school.numbersExpected || 1000 - Math.ceil(faker.number.float() * 60),
       max: school.numbersExpected || 1000,
     });
     for (let i = 0; i < numStudents; i++) {
@@ -1403,9 +1434,7 @@ async function createInterventionSessionsForSchools(
     (sn) => sn.hubId === staticSchool?.hub?.id,
   );
 
-  // Start from a fixed date for static sessions
-  const staticDate = new Date();
-  staticDate.setHours(16, 0, 0, 0); // Set to 4 PM today
+  let staticDate = addHours(subWeeks(seedToday, SESSION_WEEKS_BEFORE_TODAY), 16);
 
   // Create a Set to track used session types for the static school
   const usedStaticSessionTypes = new Set<string>();
@@ -1417,19 +1446,18 @@ async function createInterventionSessionsForSchools(
 
     interventionSessions.push({
       id: objectId("session"),
-      sessionDate: fromZonedTime(new Date(staticDate), "Africa/Nairobi"),
+      sessionDate: staticDate,
       status: "Scheduled",
       sessionType: sessionName.sessionName,
       sessionId: sessionName.id,
       schoolId: staticSchool?.id,
-      occurred: isBefore(staticDate, new Date()),
+      occurred: isBefore(staticDate, seedToday),
       yearOfImplementation: 2024,
       projectId: staticSchool?.hub?.projectId || undefined,
       hubId: staticSchool?.hubId,
     });
 
-    // Move to next week for next static session
-    staticDate.setDate(staticDate.getDate() + 7);
+    staticDate = addWeeks(staticDate, 1);
   }
 
   // Continue with dynamic sessions for other schools
@@ -1447,9 +1475,7 @@ async function createInterventionSessionsForSchools(
     const fellowsInSchool = school.interventionGroups.map((group) => group.leader);
     const fellowIds = new Set(fellowsInSchool.map((f) => f.id));
 
-    // Start from current date for this school
-    const currentDate = startOfMonth(new Date());
-    currentDate.setHours(9, 0, 0, 0); // Set to 9 AM
+    let currentDate = addHours(subWeeks(seedToday, SESSION_WEEKS_BEFORE_TODAY), 9);
 
     for (const sessionName of schoolSessionNames) {
       // Skip if we've already used this session type for this school
@@ -1464,19 +1490,19 @@ async function createInterventionSessionsForSchools(
         })
       ) {
         // If conflict exists, move to next day
-        currentDate.setDate(currentDate.getDate() + 1);
+        currentDate = addDays(currentDate, 1);
       }
 
       // Create session for this school
       interventionSessions.push({
         id: objectId("session"),
-        sessionDate: fromZonedTime(new Date(currentDate), "Africa/Nairobi"),
+        sessionDate: currentDate,
         status: "Scheduled",
         sessionType: sessionName.sessionName,
         sessionId: sessionName.id,
         schoolId: school.id,
-        occurred: isBefore(new Date(currentDate), new Date()),
-        yearOfImplementation: new Date().getFullYear(),
+        occurred: isBefore(currentDate, seedToday),
+        yearOfImplementation: seedToday.getFullYear(),
         projectId: school.hub?.projectId || undefined,
         hubId: school.hubId,
       });
@@ -1489,8 +1515,7 @@ async function createInterventionSessionsForSchools(
         fellowSessionDates.get(fellow.id)?.add(currentDate.toISOString().split("T")[0] ?? "");
       });
 
-      // Move to next week for next session
-      currentDate.setDate(currentDate.getDate() + 7);
+      currentDate = addWeeks(currentDate, 1);
     }
   }
 
@@ -1626,7 +1651,7 @@ async function createStudentOutcomes(
           id: objectId("outcome"),
           shamiriId: student.visibleId,
           timePoint,
-          yearOfImplementation: new Date().getFullYear(),
+          yearOfImplementation: seedToday.getFullYear(),
           condition,
           phq1: score(),
           phq2: score(),

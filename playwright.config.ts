@@ -24,6 +24,7 @@ export default defineConfig({
   retries: isCI ? 2 : 0,
   workers: isCI ? 1 : undefined,
   globalSetup: "./tests/global-setup.ts",
+  use: { trace: "retain-on-failure" },
   projects: [
     {
       name: "chromium",

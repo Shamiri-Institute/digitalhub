@@ -82,7 +82,7 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: playwright-artifacts
-          path: .artifacts
+          path: test-results
           retention-days: 30
 
   # Opens every page on a production build, where bugs like #844 show that `next dev` hides.
@@ -144,5 +144,5 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: playwright-artifacts-production-build
-          path: .artifacts
+          path: test-results
           retention-days: 30
