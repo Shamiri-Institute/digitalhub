@@ -83,7 +83,13 @@ async function requireCaseAccess(caseId: string) {
   const actor = await requireClinicalActor();
   const clinicalCase = await db.query.clinicalScreeningInfo.findFirst({
     where: (c, { eq }) => eq(c.id, caseId),
-    columns: { id: true, studentId: true, currentSupervisorId: true, clinicalLeadId: true },
+    columns: {
+      id: true,
+      studentId: true,
+      currentSupervisorId: true,
+      clinicalLeadId: true,
+      caseStatus: true,
+    },
     with: { currentSupervisor: { columns: { hubId: true } } },
   });
 
@@ -607,12 +613,11 @@ export async function updateClinicalCasePresentingIssues(data: {
   emergencyPresentingIssues: { [k: string]: string };
   generalPresentingIssues: { [k: string]: string };
   otherIssues: string;
-  caseStatus: string;
 }) {
   try {
-    await requireCaseAccess(data.caseId);
+    const { clinicalCase } = await requireCaseAccess(data.caseId);
     const updateData =
-      data.caseStatus === "Active"
+      clinicalCase.caseStatus === "Active"
         ? {
             emergencyPresentingIssuesBaseline: data.emergencyPresentingIssues,
             generalPresentingIssuesBaseline: data.generalPresentingIssues,

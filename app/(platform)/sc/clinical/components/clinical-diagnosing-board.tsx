@@ -181,7 +181,6 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
         emergencyPresentingIssues: emergencyData,
         generalPresentingIssues: generalData,
         otherIssues: otherIssues,
-        caseStatus: currentcase.caseStatus,
       });
       if (!result.success) {
         throw new Error("Failed to update presenting issues");
