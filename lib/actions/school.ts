@@ -1,8 +1,7 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
-import { getCurrentPersonnel } from "#/app/auth";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { hub, interventionGroup, school } from "#/db/schema";
@@ -89,34 +88,7 @@ export async function fetchSchool(visibleId: string) {
 export type SchoolData = Awaited<ReturnType<typeof fetchSchool>>["data"];
 
 export async function fetchHubSchools() {
-  const user = await getCurrentPersonnel();
-  if (user === null) {
-    throw new Error("Unauthorized");
-  }
-
-  const role = user.session.user.activeMembership?.role;
-  const allowedRoles: ImplementerRole[] = [
-    ImplementerRole.HUB_COORDINATOR,
-    ImplementerRole.SUPERVISOR,
-    ImplementerRole.FELLOW,
-  ];
-
-  if (!role || !allowedRoles.includes(role)) {
-    throw new Error("Unauthorized");
-  }
-
-  let hubId: string | null = null;
-  if (role === ImplementerRole.HUB_COORDINATOR) {
-    const profile = user.profile as { assignedHubId?: string | null } | null;
-    hubId = profile?.assignedHubId ?? null;
-  } else {
-    const profile = user.profile as { hubId?: string | null } | null;
-    hubId = profile?.hubId ?? null;
-  }
-
-  if (!hubId) {
-    throw new Error("Personnel has no assigned hub");
-  }
+  const visibleSchools = await visibleSchoolIds();
 
   try {
     const schools = await db
@@ -127,7 +99,7 @@ export async function fetchHubSchools() {
       })
       .from(school)
       .leftJoin(hub, eq(school.hubId, hub.id))
-      .where(eq(school.hubId, hubId));
+      .where(inArray(school.id, visibleSchools.ids));
 
     return { success: true, data: schools };
   } catch (error) {
