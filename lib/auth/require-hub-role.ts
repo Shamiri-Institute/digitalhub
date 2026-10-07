@@ -44,6 +44,17 @@ export async function requireHubRole(...allowedRoles: HubRole[]) {
 }
 
 /**
+ * The hub where a session takes place: the session's hub, else its school's hub. Hubs borrow
+ * fellows, so the fellow's home hub is not the hub of their work.
+ */
+export function hubOfSession(session: {
+  hubId: string | null;
+  school: { hubId: string | null } | null;
+}) {
+  return session.hubId ?? session.school?.hubId ?? null;
+}
+
+/**
  * Throws unless the school belongs to the hub. A missing school and a school in another hub get
  * the same message, so the error does not reveal which ids exist.
  */

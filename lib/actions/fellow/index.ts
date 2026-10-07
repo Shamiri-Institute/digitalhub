@@ -30,6 +30,7 @@ import {
 } from "#/db/schema";
 import {
   fellowsInCallerScope,
+  hubOfSession,
   requireHubRole,
   requireSchoolInHub,
 } from "#/lib/auth/require-hub-role";
@@ -55,12 +56,12 @@ async function requireFellow(tx: Transaction | typeof db, id: string) {
   return row;
 }
 
-async function requireSessionWithName(tx: Transaction, sessionId: string) {
+async function requireSessionWithName(tx: Transaction, sessionId: string, hubId: string) {
   const row = await tx.query.interventionSession.findFirst({
     where: (s, { eq }) => eq(s.id, sessionId),
-    with: { session: true },
+    with: { session: true, school: { columns: { hubId: true } } },
   });
-  if (!row) {
+  if (!row || hubOfSession(row) !== hubId) {
     throw new Error(`Intervention session ${sessionId} not found`);
   }
   return row;
@@ -517,9 +518,12 @@ async function requireFellowsInCallerHub(
     personnel.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR
       ? (profile as NonNullable<CurrentSupervisor>["profile"]).hubId
       : (profile as NonNullable<CurrentHubCoordinator>["profile"]).assignedHubId;
+  if (hubId === null) {
+    throw new Error("Fellow not found in your hub");
+  }
   const uniqueIds = [...new Set(fellowIds)];
   const inHub =
-    hubId === null || uniqueIds.length === 0
+    uniqueIds.length === 0
       ? []
       : await db
           .select({ id: fellow.id })
@@ -528,6 +532,7 @@ async function requireFellowsInCallerHub(
   if (inHub.length !== uniqueIds.length) {
     throw new Error("Fellow not found in your hub");
   }
+  return hubId;
 }
 
 export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
@@ -556,13 +561,13 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
     if (!id) {
       throw new Error("Fellow id is required");
     }
-    await requireFellowsInCallerHub(personnel, [id]);
+    const callerHubId = await requireFellowsInCallerHub(personnel, [id]);
 
     return await db.transaction(
       async (tx) => {
         const fellowRow = await requireFellow(tx, id);
 
-        const session = await requireSessionWithName(tx, sessionId);
+        const session = await requireSessionWithName(tx, sessionId, callerHubId);
 
         if (!session.occurred) {
           throw new Error(
@@ -751,11 +756,11 @@ export async function markManyFellowAttendance(
     }
 
     const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
-    await requireFellowsInCallerHub(personnel, ids);
+    const callerHubId = await requireFellowsInCallerHub(personnel, ids);
 
     return await db.transaction(
       async (tx) => {
-        const session = await requireSessionWithName(tx, sessionId);
+        const session = await requireSessionWithName(tx, sessionId, callerHubId);
 
         if (!session.occurred) {
           throw new Error("An error occurred while marking attendances. Session has not occurred.");

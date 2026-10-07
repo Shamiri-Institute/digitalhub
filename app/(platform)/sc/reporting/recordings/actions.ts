@@ -490,7 +490,7 @@ export async function updateSessionRecording(input: {
       columns: { id: true },
     }),
     db.query.interventionGroup.findFirst({
-      where: (g, { eq }) => eq(g.id, input.groupId),
+      where: (g, { and, eq }) => and(eq(g.id, input.groupId), eq(g.leaderId, input.fellowId)),
       columns: { schoolId: true },
     }),
   ]);
@@ -509,17 +509,28 @@ export async function updateSessionRecording(input: {
 
   const schoolId = group.schoolId;
 
-  const conflict = await db.query.sessionRecording.findFirst({
-    where: (r, { and, eq, ne }) =>
-      and(
-        eq(r.fellowId, input.fellowId),
-        eq(r.schoolId, schoolId),
-        eq(r.groupId, input.groupId),
-        eq(r.sessionId, input.sessionId),
-        ne(r.id, input.recordingId),
-      ),
-    columns: { id: true },
-  });
+  const [occurredSessionAtSchool, conflict] = await Promise.all([
+    db.query.interventionSession.findFirst({
+      where: (s, { and, eq }) =>
+        and(eq(s.id, input.sessionId), eq(s.schoolId, schoolId), eq(s.occurred, true)),
+      columns: { id: true },
+    }),
+    db.query.sessionRecording.findFirst({
+      where: (r, { and, eq, ne }) =>
+        and(
+          eq(r.fellowId, input.fellowId),
+          eq(r.schoolId, schoolId),
+          eq(r.groupId, input.groupId),
+          eq(r.sessionId, input.sessionId),
+          ne(r.id, input.recordingId),
+        ),
+      columns: { id: true },
+    }),
+  ]);
+
+  if (!occurredSessionAtSchool) {
+    return { success: false, message: "Invalid intervention session" };
+  }
 
   if (conflict) {
     return {

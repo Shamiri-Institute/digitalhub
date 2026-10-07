@@ -151,14 +151,11 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
 
 export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEvaluationSchema>) {
   try {
-    const user = await getCurrentPersonnel();
-    if (user === null) {
-      throw new Error("The session has not been authenticated");
-    }
-
-    if (user.session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
+    const fellow = await currentFellow();
+    if (!fellow?.profile || fellow.session.user.activeMembership?.role !== ImplementerRole.FELLOW) {
       throw new Error("User not authorised to perform this action");
     }
+    const fellowId = fellow.profile.id;
 
     const {
       sessionId,
@@ -186,6 +183,21 @@ export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEva
       engagement3,
       engagementComment,
     };
+
+    const [ledGroup, session] = await Promise.all([
+      db.query.interventionGroup.findFirst({
+        where: (g, { and, eq }) => and(eq(g.id, groupId), eq(g.leaderId, fellowId)),
+        columns: { groupName: true, schoolId: true },
+      }),
+      db.query.interventionSession.findFirst({
+        where: (s, { eq }) => eq(s.id, sessionId),
+        columns: { schoolId: true },
+      }),
+    ]);
+    if (!ledGroup || session?.schoolId !== ledGroup.schoolId) {
+      throw new Error("No InterventionGroup found");
+    }
+
     await db
       .insert(interventionGroupReport)
       .values({ id: objectId("ige"), sessionId, groupId, ...scores })
@@ -193,16 +205,9 @@ export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEva
         target: [interventionGroupReport.sessionId, interventionGroupReport.groupId],
         set: { ...scores, updatedAt: new Date() },
       });
-    const group = await db.query.interventionGroup.findFirst({
-      where: (g, { eq }) => eq(g.id, groupId),
-      columns: { groupName: true },
-    });
-    if (!group) {
-      throw new Error("No InterventionGroup found");
-    }
     return {
       success: true,
-      message: `Successfully submitted evaluation for ${group.groupName}`,
+      message: `Successfully submitted evaluation for ${ledGroup.groupName}`,
     };
   } catch (err) {
     console.error(err);
