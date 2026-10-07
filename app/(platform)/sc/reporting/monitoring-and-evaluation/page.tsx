@@ -1,10 +1,10 @@
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import MetabaseDashboardEmbed from "#/components/common/metabase-dashboard-embed";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { buildMetabaseDashboardEmbedUrl, getMetabaseEmbedConfig } from "#/lib/metabase-embed";
 
 export default async function MonitoringAndEvaluationPage() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor) {
     return (

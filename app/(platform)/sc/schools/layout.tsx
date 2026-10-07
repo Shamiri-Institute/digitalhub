@@ -1,9 +1,9 @@
 import { signOut } from "next-auth/react";
 import type { ReactNode } from "react";
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 
 export default async function SupervisorSchoolData({ children }: { children: ReactNode }) {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }

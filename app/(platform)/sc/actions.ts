@@ -1,12 +1,10 @@
 "use server";
 import { eq, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
-import { z } from "zod";
 
-import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import { db } from "#/db/client";
-import { fellow, interventionGroup, supervisor } from "#/db/schema";
-import { SupervisorSchema } from "./schemas";
+import { fellow, interventionGroup } from "#/db/schema";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
@@ -178,53 +176,4 @@ export async function loadFellowsData() {
       averageRating: Number(averageRatingById.get(fellowRow.id) ?? 0),
     };
   });
-}
-
-export async function updateSupervisorProfile(formData: z.infer<typeof SupervisorSchema>) {
-  try {
-    const user = await currentSupervisor();
-    if (!user?.session.user.id) {
-      return { success: false, message: "Unauthorized" };
-    }
-
-    const data = SupervisorSchema.parse(formData);
-
-    const dateValue = data.dateOfBirth ? new Date(data.dateOfBirth) : null;
-    if (dateValue && Number.isNaN(dateValue.getTime())) {
-      return { success: false, message: "Invalid date format" };
-    }
-
-    const [updated] = await db
-      .update(supervisor)
-      .set({
-        supervisorEmail: data.supervisorEmail,
-        supervisorName: data.supervisorName,
-        idNumber: data.idNumber,
-        cellNumber: data.cellNumber,
-        mpesaNumber: data.mpesaNumber,
-        dateOfBirth: dateValue,
-        gender: data.gender,
-        county: data.county,
-        subCounty: data.subCounty,
-        bankName: data.bankName,
-        bankBranch: data.bankBranch,
-      })
-      .where(eq(supervisor.id, user.session.user.id))
-      .returning();
-    if (!updated) {
-      throw new Error(`Supervisor ${user.session.user.id} not found`);
-    }
-
-    return { success: true, data: updated };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        errors: error.issues,
-        message: "Validation Error",
-      };
-    }
-    console.error("Error updating supervisor profile:", error);
-    return { success: false, message: "Internal Server Error" };
-  }
 }

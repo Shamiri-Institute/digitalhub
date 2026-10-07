@@ -3,7 +3,7 @@
 import { and, eq, isNull, notInArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-import { currentSupervisor, currentSupervisorLite } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import { db, isUniqueViolation } from "#/db/client";
 import { fellow, sessionRecording } from "#/db/schema";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
@@ -20,27 +20,34 @@ export type GroupSession = Awaited<ReturnType<typeof loadGroupSessions>>[number]
 export type SupervisorRecording = Awaited<ReturnType<typeof loadSupervisorRecordings>>[number];
 
 export async function loadSupervisorFellows() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor?.profile?.id) {
     throw new Error("Unauthorized user");
   }
 
-  return supervisor.profile.fellows
+  const fellows = await db.query.fellow.findMany({
+    where: (f, { eq }) => eq(f.supervisorId, supervisor.profile.id),
+    columns: { id: true, fellowName: true, droppedOut: true },
+  });
+  return fellows
     .filter((f) => !f.droppedOut)
     .map((f) => ({ id: f.id, fellowName: f.fellowName }))
     .toSorted((a, b) => (a.fellowName ?? "").localeCompare(b.fellowName ?? ""));
 }
 
 export async function loadFellowGroups(fellowId: string) {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor?.profile?.id) {
     throw new Error("Unauthorized user");
   }
 
-  const fellow = supervisor.profile.fellows.find((f) => f.id === fellowId);
-  if (!fellow) {
+  const supervisedFellow = await db.query.fellow.findFirst({
+    where: (f, { and, eq }) => and(eq(f.id, fellowId), eq(f.supervisorId, supervisor.profile.id)),
+    columns: { id: true },
+  });
+  if (!supervisedFellow) {
     throw new Error("Fellow not found or unauthorized");
   }
 
@@ -55,7 +62,7 @@ export async function loadFellowGroups(fellowId: string) {
 }
 
 export async function loadGroupSessions(groupId: string) {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor?.profile?.id) {
     throw new Error("Unauthorized user");
@@ -101,7 +108,7 @@ export async function checkRecordingExists(params: {
   groupId: string;
   sessionId: string;
 }) {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor?.profile?.id) {
     throw new Error("Unauthorized user");
@@ -335,7 +342,7 @@ export async function createSessionRecording(input: {
 }
 
 export async function loadSupervisorRecordings() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor?.profile?.id) {
     throw new Error("Unauthorized user");
@@ -393,7 +400,7 @@ export async function loadSupervisorRecordings() {
 }
 
 export async function retryRecordingProcessing(recordingId: string) {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor?.profile?.id) {
     return {
@@ -474,7 +481,7 @@ export async function updateSessionRecording(input: {
   sessionId: string;
   originalFileName: string;
 }) {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor?.profile?.id) {
     return { success: false, message: "Unauthorized user" };
@@ -571,7 +578,7 @@ export async function updateSessionRecording(input: {
 }
 
 export async function archiveRecording(recordingId: string) {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor?.profile?.id) {
     return {

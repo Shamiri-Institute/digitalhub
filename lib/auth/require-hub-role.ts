@@ -41,7 +41,13 @@ export const requireHubRole = cache(async (...allowedRoles: HubRole[]) => {
   if (!profileId || !hubId) {
     throw new ForbiddenRoleError("You have no assigned hub");
   }
-  return { userId: membership.userId, role, profileId, hubId };
+  return {
+    userId: membership.userId,
+    implementerId: membership.implementerId,
+    role,
+    profileId,
+    hubId,
+  };
 });
 
 /**

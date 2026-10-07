@@ -1,11 +1,11 @@
 "use server";
 
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import { signOut } from "next-auth/react";
 import { db } from "#/db/client";
 
 export async function loadSchoolFeedback() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor) {
     throw new Error("The session has not been authenticated");

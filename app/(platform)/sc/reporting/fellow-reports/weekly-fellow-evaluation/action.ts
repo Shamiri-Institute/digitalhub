@@ -1,11 +1,11 @@
 "use server";
 
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { db } from "#/db/client";
 
 export async function loadWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluation[]> {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (!supervisor) {
     throw new Error("Supervisor not found");
   }

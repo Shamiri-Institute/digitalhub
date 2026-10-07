@@ -6,12 +6,7 @@ import type { z } from "zod";
 import { refresh } from "next/cache";
 
 import { FellowDetailsSchema, MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
-import {
-  type CurrentHubCoordinator,
-  type CurrentSupervisor,
-  currentFellow,
-  getCurrentPersonnel,
-} from "#/app/auth";
+import { currentFellow } from "#/app/auth";
 import {
   DropoutFellowSchema,
   WeeklyFellowEvaluationSchema,
@@ -29,6 +24,7 @@ import {
   user,
   weeklyFellowRatings,
 } from "#/db/schema";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import {
   fellowsInCallerScope,
   hubOfSession,
@@ -36,15 +32,6 @@ import {
   requireSchoolInHub,
 } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
-
-async function checkAuth() {
-  const personnel = await getCurrentPersonnel();
-  if (!personnel) {
-    throw new Error("The session has not been authenticated");
-  }
-
-  return personnel;
-}
 
 const attendedFlag = (attended: string | undefined) =>
   attended === "attended" ? true : attended === "missed" ? false : null;
@@ -70,31 +57,10 @@ async function requireSessionWithName(tx: Transaction, sessionId: string, hubId:
 
 export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSchema>) {
   try {
-    const { profile, session } = await checkAuth();
-
-    const role = session.user.activeMembership?.role;
-    if (!role) {
-      return {
-        success: false,
-        message: "Something went wrong. Missing role information",
-      };
-    }
-
-    if (role !== ImplementerRole.SUPERVISOR && role !== ImplementerRole.HUB_COORDINATOR) {
-      return {
-        success: false,
-        message: "User is not authorised to perform this action",
-      };
-    }
-
-    const implementerId = session.user.activeMembership?.implementerId;
-
-    if (!implementerId) {
-      return {
-        success: false,
-        message: "Something went wrong. Missing implementer information",
-      };
-    }
+    const caller = await requireHubRole(
+      ImplementerRole.SUPERVISOR,
+      ImplementerRole.HUB_COORDINATOR,
+    );
 
     const {
       id,
@@ -115,10 +81,6 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
       if (!id) {
         throw new Error("Fellow id is required to edit a fellow");
       }
-      const caller = await requireHubRole(
-        ImplementerRole.SUPERVISOR,
-        ImplementerRole.HUB_COORDINATOR,
-      );
       const [fellowInCallerScope] = await db
         .select({ id: fellow.id })
         .from(fellow)
@@ -202,26 +164,17 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
         }
       }
 
-      let hubId: string | undefined;
-      let supervisorId: string | undefined;
-
-      if (role === ImplementerRole.HUB_COORDINATOR && profile) {
-        const hc = profile as NonNullable<CurrentHubCoordinator>["profile"];
-        hubId = hc?.assignedHub?.id ?? undefined;
-      } else if (role === ImplementerRole.SUPERVISOR && profile) {
-        const supervisor = profile as NonNullable<CurrentSupervisor>["profile"];
-        supervisorId = supervisor?.id ?? undefined;
-        hubId = supervisor?.hubId ?? undefined;
-      }
+      const supervisorId =
+        caller.role === ImplementerRole.SUPERVISOR ? caller.profileId : undefined;
 
       await db.transaction(async (tx) => {
         const [created] = await tx
           .insert(fellow)
           .values({
             id: objectId("fellow"),
-            hubId,
+            hubId: caller.hubId,
             supervisorId,
-            implementerId,
+            implementerId: caller.implementerId,
             fellowName,
             fellowEmail,
             cellNumber,
@@ -251,7 +204,7 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
         }
 
         await tx.insert(implementerMember).values({
-          implementerId,
+          implementerId: caller.implementerId,
           userId,
           role: "FELLOW",
           identifier: created.id,
@@ -287,21 +240,9 @@ export async function submitWeeklyFellowEvaluation(
   data: z.infer<typeof WeeklyFellowEvaluationSchema>,
 ) {
   try {
-    const { profile, session } = await checkAuth();
-
-    const role = session.user.activeMembership?.role;
-    if (!role) {
-      return {
-        success: false,
-        message: "Something went wrong. Missing role information",
-      };
-    }
-
-    if (role !== ImplementerRole.SUPERVISOR) {
-      return {
-        success: false,
-        message: "Something went wrong. User is not authorised to perform this action",
-      };
+    const { identifier: supervisorId } = await requireAuthRole(ImplementerRole.SUPERVISOR);
+    if (!supervisorId) {
+      throw new Error("Supervisor id is required to submit an evaluation");
     }
 
     const {
@@ -321,21 +262,17 @@ export async function submitWeeklyFellowEvaluation(
     if (mode === "add") {
       const fellowRow = await requireFellow(db, fellowId);
 
-      if (fellowRow.supervisorId === profile?.id) {
-        const supervisorId = profile?.id;
+      if (fellowRow.supervisorId === supervisorId) {
         const previousEvaluation = await db.query.weeklyFellowRatings.findFirst({
           where: (w, { and, eq }) =>
             and(
               eq(w.fellowId, fellowId),
-              supervisorId ? eq(w.supervisorId, supervisorId) : undefined,
+              eq(w.supervisorId, supervisorId),
               eq(w.week, new Date(week)),
             ),
         });
 
         if (previousEvaluation === undefined) {
-          if (!supervisorId) {
-            throw new Error("Supervisor id is required to submit an evaluation");
-          }
           await db.insert(weeklyFellowRatings).values({
             week,
             fellowId,
@@ -516,18 +453,7 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
  * Fellow attendance creates payout statements, so a supervisor or hub coordinator may mark only
  * fellows in their own hub. A missing and a forbidden fellow give the same error.
  */
-async function requireFellowsInCallerHub(
-  personnel: Awaited<ReturnType<typeof checkAuth>>,
-  fellowIds: string[],
-) {
-  const { profile } = personnel;
-  const hubId =
-    personnel.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR
-      ? (profile as NonNullable<CurrentSupervisor>["profile"]).hubId
-      : (profile as NonNullable<CurrentHubCoordinator>["profile"]).assignedHubId;
-  if (hubId === null) {
-    throw new Error("Fellow not found in your hub");
-  }
+async function requireFellowsInCallerHub(hubId: string, fellowIds: string[]) {
   const uniqueIds = [...new Set(fellowIds)];
   const inHub =
     uniqueIds.length === 0
@@ -544,31 +470,16 @@ async function requireFellowsInCallerHub(
 
 export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
-    const personnel = await checkAuth();
-    const { session: userSession } = personnel;
-    if (!userSession) {
-      return {
-        success: false,
-        message: "Something went wrong. Missing user information",
-      };
-    }
-
-    const role = userSession.user.activeMembership?.role;
-    if (
-      !role ||
-      (role !== ImplementerRole.SUPERVISOR && role !== ImplementerRole.HUB_COORDINATOR)
-    ) {
-      return {
-        success: false,
-        message: "User is not authorised to perform this action",
-      };
-    }
+    const { userId, hubId } = await requireHubRole(
+      ImplementerRole.SUPERVISOR,
+      ImplementerRole.HUB_COORDINATOR,
+    );
 
     const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
     if (!id) {
       throw new Error("Fellow id is required");
     }
-    const callerHubId = await requireFellowsInCallerHub(personnel, [id]);
+    const callerHubId = await requireFellowsInCallerHub(hubId, [id]);
 
     const response = await db.transaction(
       async (tx) => {
@@ -614,14 +525,10 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
               (!existingPayout && attendanceStatus) ||
               (existingPayout && existingPayout.reason !== reason)
             ) {
-              if (!userSession.user.id) {
-                throw new Error("User ID is required to create payout statement");
-              }
-
               await tx.insert(payoutStatements).values({
                 fellowId: fellowRow.id,
                 fellowAttendanceId: attendance.id,
-                createdBy: userSession.user.id,
+                createdBy: userId,
                 amount,
                 reason,
                 mpesaNumber: fellowRow.mpesaNumber,
@@ -636,7 +543,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
           await tx
             .update(fellowAttendance)
             .set({
-              markedBy: userSession.user.id,
+              markedBy: userId,
               fellowId: fellowRow.id,
               absenceReason: attendanceStatus === false ? absenceReason : null,
               absenceComments: attendanceStatus === false ? comments : null,
@@ -697,18 +604,18 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
             sessionId,
             absenceReason,
             absenceComments: comments,
-            markedBy: userSession.user.id,
+            markedBy: userId,
             attended: attendanceStatus,
           })
           .returning({ id: fellowAttendance.id });
         if (!createdAttendance) {
           throw new Error("Could not create the attendance record");
         }
-        if (attendanceStatus && userSession.user.id) {
+        if (attendanceStatus) {
           await tx.insert(payoutStatements).values({
             fellowId: fellowRow.id,
             fellowAttendanceId: createdAttendance.id,
-            createdBy: userSession.user.id,
+            createdBy: userId,
             amount: session.session?.amount ?? 0,
             reason: "MARK_SESSION_ATTENDANCE",
             mpesaNumber: fellowRow.mpesaNumber,
@@ -744,28 +651,13 @@ export async function markManyFellowAttendance(
   data: z.infer<typeof MarkAttendanceSchema>,
 ) {
   try {
-    const personnel = await checkAuth();
-    const { session: userSession } = personnel;
-    if (!userSession) {
-      return {
-        success: false,
-        message: "Something went wrong. Missing user information",
-      };
-    }
-
-    const role = userSession.user.activeMembership?.role;
-    if (
-      !role ||
-      (role !== ImplementerRole.SUPERVISOR && role !== ImplementerRole.HUB_COORDINATOR)
-    ) {
-      return {
-        success: false,
-        message: "User is not authorised to perform this action",
-      };
-    }
+    const { userId, hubId } = await requireHubRole(
+      ImplementerRole.SUPERVISOR,
+      ImplementerRole.HUB_COORDINATOR,
+    );
 
     const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
-    const callerHubId = await requireFellowsInCallerHub(personnel, ids);
+    const callerHubId = await requireFellowsInCallerHub(hubId, ids);
 
     const response = await db.transaction(
       async (tx) => {
@@ -815,13 +707,12 @@ export async function markManyFellowAttendance(
           if (
             ((existingPayouts.length === 0 && attendanceStatus) ||
               (existingPayouts.length !== 0 && existingPayouts[0]?.reason !== reason)) &&
-            amount &&
-            userSession.user.id
+            amount
           ) {
             payout = {
               fellowId: attendance.fellow.id,
               fellowAttendanceId: attendance.id,
-              createdBy: userSession.user.id,
+              createdBy: userId,
               amount: _amount,
               reason,
               mpesaNumber: attendance.fellow.mpesaNumber,
@@ -923,7 +814,7 @@ export async function markManyFellowAttendance(
           absenceReason: attendanceStatus === false ? absenceReason : null,
           absenceComments: attendanceStatus === false ? comments : null,
           sessionId,
-          markedBy: userSession.user.id,
+          markedBy: userId,
           attended: attendanceStatus,
         }));
 
@@ -935,8 +826,7 @@ export async function markManyFellowAttendance(
                 .returning({ id: fellowAttendance.id, fellowId: fellowAttendance.fellowId })
             : [];
 
-        if (attendanceStatus && userSession.user.id) {
-          const userId = userSession.user.id;
+        if (attendanceStatus) {
           const fellowById = new Map(validFellows.map(({ fellow: f }) => [f.id, f]));
           const payoutData = newAttendances.map((attendance) => {
             const fellowRow = fellowById.get(attendance.fellowId);

@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import { db } from "#/db/client";
 
 type SchoolGroup = {
@@ -34,7 +34,7 @@ type SchoolGroup = {
 };
 
 export async function loadSessionReport() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
 
   if (!supervisor) {
     throw new Error("Unauthorised user");

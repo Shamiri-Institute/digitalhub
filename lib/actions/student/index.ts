@@ -10,7 +10,7 @@ import {
   MarkAttendanceSchema,
   StudentReportingNotesSchema,
 } from "#/app/(platform)/hc/schemas";
-import { currentHubCoordinator, getCurrentPersonnel } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import {
   MoveStudentToSchoolSchema,
   StudentDetailsSchema,
@@ -26,17 +26,10 @@ import {
   studentReportingNotes,
 } from "#/db/schema";
 import { fetchSessionAttendances } from "#/lib/actions/session/session";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { generateStudentVisibleID } from "#/lib/utils";
-
-async function checkAuth() {
-  const user = await getCurrentPersonnel();
-  if (user === null) {
-    throw new Error("The session has not been authenticated");
-  }
-  return user;
-}
 
 type StudentRole =
   | typeof ImplementerRole.FELLOW
@@ -111,11 +104,7 @@ async function requireSession(sessionId: string) {
 export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSchema>) {
   // TODO: Add db transactions
   try {
-    const auth = await checkAuth();
-    const userId = auth.session.user.id;
-    if (!userId) {
-      throw new Error("The session has not been authenticated");
-    }
+    const { implementerId } = await requireAuthRole(...STUDENT_WRITE_ROLES);
 
     const {
       id,
@@ -201,7 +190,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
         questionnaireType:
           questionnaireType === "none" || questionnaireType == null ? null : questionnaireType,
         assignedGroupId,
-        implementerId: auth.session.user.activeMembership?.implementerId,
+        implementerId,
         fellowId: group.leader.id,
         supervisorId: group.leader.supervisor?.id,
       })
@@ -227,11 +216,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
 
 export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
-    const auth = await checkAuth();
-    const userId = auth.session.user.id;
-    if (!userId) {
-      throw new Error("The session has not been authenticated");
-    }
+    const { userId } = await requireAuthRole(...STUDENT_WRITE_ROLES);
 
     const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
@@ -309,11 +294,7 @@ export async function markManyStudentsAttendance(
   data: z.infer<typeof MarkAttendanceSchema>,
 ) {
   try {
-    const auth = await checkAuth();
-    const userId = auth.session.user.id;
-    if (!userId) {
-      throw new Error("The session has not been authenticated");
-    }
+    const { userId } = await requireAuthRole(...STUDENT_WRITE_ROLES);
 
     const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 

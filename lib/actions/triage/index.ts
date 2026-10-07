@@ -2,8 +2,8 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
-import { currentFellow, getCurrentPersonnel } from "#/app/auth";
 import { db, type Transaction } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
 import {
   interventionGroup,
   interventionSession,
@@ -12,6 +12,7 @@ import {
   triageEvent,
   triageEventAudit,
 } from "#/db/schema";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { hubOfSession } from "#/lib/auth/require-hub-role";
 
 const triageEventWith = {
@@ -35,19 +36,11 @@ function loadTriageEvent(cursor: typeof db | Transaction, id: string) {
 }
 
 async function getFellowContext() {
-  const user = await getCurrentPersonnel();
-  if (!user) {
-    throw new Error("Not authenticated");
-  }
-  const fellow = await currentFellow();
-  if (!fellow?.profile) {
+  const { userId, identifier } = await requireAuthRole(ImplementerRole.FELLOW);
+  if (!identifier) {
     throw new Error("Only fellows can document triage events");
   }
-  const userId = user.session.user.id;
-  if (!userId) {
-    throw new Error("User ID not found");
-  }
-  return { fellowId: fellow.profile.id, userId };
+  return { fellowId: identifier, userId };
 }
 
 /**

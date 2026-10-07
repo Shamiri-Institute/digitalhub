@@ -1,11 +1,11 @@
 import { ImplementerRole } from "#/db/enums";
 import { signOut } from "next-auth/react";
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import SchoolSessionsPage from "#/components/common/schools/school-sessions-page";
 
 export default async function SessionsPage(props: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await props.params;
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }

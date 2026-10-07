@@ -3,7 +3,7 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
 
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
 import HubStudentsDetailsCharts from "#/components/charts/students-charts";
@@ -20,7 +20,7 @@ import {
 import { fetchStudentClinicalStats } from "#/lib/actions/clinical/students";
 
 export default async function SupervisorStudentsPage() {
-  const current = await currentSupervisor();
+  const current = await currentSupervisorLite();
 
   if (!current) {
     redirect("/login");

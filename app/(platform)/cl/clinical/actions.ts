@@ -46,7 +46,7 @@ export async function getSchoolsInClinicalLeadHub() {
     db.query.school.findMany({
       where: (s, { eq }) => eq(s.hubId, hubId),
       with: {
-        students: true,
+        students: { columns: { id: true, studentName: true } },
         interventionSessions: {
           columns: { id: true },
           with: { session: { columns: { sessionName: true, sessionLabel: true } } },

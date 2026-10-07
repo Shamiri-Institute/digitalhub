@@ -2,7 +2,7 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { currentSupervisor, getCurrentPersonnel } from "#/app/auth";
+import { currentSupervisorLite } from "#/app/auth";
 import { db } from "#/db/client";
 import { clinicalScreeningInfo, fellow, triageEvent } from "#/db/schema";
 
@@ -18,7 +18,7 @@ function supervisedFellowIds(supervisorId: string) {
 }
 
 export async function getFellowsForSupervisor(): Promise<FellowForSupervisor[]> {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (!supervisor?.profile) throw new Error("Unauthorised");
   const supervisorId = supervisor.profile.id;
 
@@ -30,7 +30,7 @@ export async function getFellowsForSupervisor(): Promise<FellowForSupervisor[]> 
 }
 
 export async function getTriageEventsForSupervisor() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (!supervisor?.profile) throw new Error("Unauthorised");
   const supervisorId = supervisor.profile.id;
 
@@ -79,7 +79,7 @@ export async function getTriageEventsForSupervisor() {
 }
 
 export async function getTriageDashboardStats() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (!supervisor?.profile) throw new Error("Unauthorised");
   const supervisorId = supervisor.profile.id;
 
@@ -129,7 +129,7 @@ export async function getTriageDashboardStats() {
 }
 
 export async function createClinicalCaseFromTriage(triageEventId: string, pseudonym: string) {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (!supervisor?.profile) throw new Error("Unauthorised");
   const supervisorId = supervisor.profile.id;
 
@@ -166,9 +166,8 @@ export async function createClinicalCaseFromTriage(triageEventId: string, pseudo
 }
 
 export async function markTriageReviewed(triageEventId: string, note: string) {
-  const user = await getCurrentPersonnel();
-  const supervisor = await currentSupervisor();
-  if (!supervisor?.profile?.id || !user?.session.user.id) throw new Error("Unauthorised");
+  const supervisor = await currentSupervisorLite();
+  if (!supervisor?.profile?.id || !supervisor.session.user.id) throw new Error("Unauthorised");
 
   const event = await db.query.triageEvent.findFirst({
     where: (t, { eq }) => eq(t.id, triageEventId),
@@ -179,7 +178,7 @@ export async function markTriageReviewed(triageEventId: string, note: string) {
   await db
     .update(triageEvent)
     .set({
-      reviewedById: user.session.user.id,
+      reviewedById: supervisor.session.user.id,
       reviewedAt: new Date(),
       reviewNote: note,
     })

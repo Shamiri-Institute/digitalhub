@@ -3,12 +3,7 @@
 import { and, count, desc, eq } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
-import {
-  currentClinicalLead,
-  currentSupervisor,
-  currentSupervisorLite,
-  getCurrentUserSession,
-} from "#/app/auth";
+import { currentSupervisorLite, getCurrentUserSession } from "#/app/auth";
 import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
@@ -43,31 +38,28 @@ async function requireClinicalActor() {
   const session = await getCurrentUserSession();
   const userId = session?.user.id;
   const role = session?.user.activeMembership?.role;
-  if (!userId) {
+  const identifier = session?.user.activeMembership?.identifier;
+  if (!userId || !identifier) {
     throw new Error("Unauthorized");
   }
 
   if (role === ImplementerRole.SUPERVISOR) {
-    const supervisor = await currentSupervisorLite();
+    const supervisor = await db.query.supervisor.findFirst({
+      where: (s, { eq }) => eq(s.id, identifier),
+      columns: { id: true, hubId: true },
+    });
     if (supervisor) {
-      return {
-        role,
-        userId,
-        profileId: supervisor.profile.id,
-        hubId: supervisor.profile.hubId,
-      };
+      return { role, userId, profileId: supervisor.id, hubId: supervisor.hubId };
     }
   }
 
   if (role === ImplementerRole.CLINICAL_LEAD) {
-    const clinicalLead = await currentClinicalLead();
+    const clinicalLead = await db.query.clinicalLead.findFirst({
+      where: (cl, { eq }) => eq(cl.id, identifier),
+      columns: { id: true, assignedHubId: true },
+    });
     if (clinicalLead) {
-      return {
-        role,
-        userId,
-        profileId: clinicalLead.profile.id,
-        hubId: clinicalLead.profile.assignedHubId,
-      };
+      return { role, userId, profileId: clinicalLead.id, hubId: clinicalLead.assignedHubId };
     }
   }
 
@@ -110,7 +102,7 @@ const clinicalHome = (role: ImplementerRole) =>
   role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical";
 
 export async function getClinicalCases() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (!supervisor) throw new Error("Unauthorized");
   const supervisorId = supervisor.profile.id;
 
@@ -177,7 +169,7 @@ export async function getClinicalCases() {
 }
 
 export async function getClinicalCasesStats() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (!supervisor) throw new Error("Unauthorized");
 
   const caseStats = await db
@@ -339,7 +331,7 @@ export async function referClinicalCaseToSupervisor(data: {
 }
 
 export async function getSupervisorsInHub() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (!supervisor?.profile.hubId) throw new Error("Unauthorized");
   const { hubId, id: supervisorId } = supervisor.profile;
   const supervisors = await db.query.supervisor.findMany({
@@ -360,7 +352,7 @@ export async function getSupervisorsInHub() {
 }
 
 export async function getSchoolsInHub() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   const projectId = supervisor?.profile?.hub?.projectId;
   const hubId = supervisor?.profile.hubId;
   if (!supervisor || !projectId || !hubId) {
@@ -372,7 +364,7 @@ export async function getSchoolsInHub() {
     db.query.school.findMany({
       where: (s, { eq }) => eq(s.hubId, hubId),
       with: {
-        students: true,
+        students: { columns: { id: true, studentName: true } },
         interventionSessions: {
           columns: { id: true },
           with: { session: { columns: { sessionName: true, sessionLabel: true } } },
@@ -793,7 +785,7 @@ export async function updateClinicalCaseAttendance(data: {
 }
 
 export async function getClinicalLeads() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (!supervisor) {
     throw new Error("Supervisor not found");
   }
@@ -865,7 +857,7 @@ export async function referClinicalCaseToClinicalLead(data: {
 }
 
 export async function getReferredCasesToSupervisor() {
-  const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisorLite();
   if (!supervisor) {
     throw new Error("Supervisor not found");
   }
