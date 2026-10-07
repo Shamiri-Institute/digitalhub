@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
+import type { Filters } from "#/lib/schedule-filters";
 import { toast } from "#/components/ui/use-toast";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
 import { getCalendarDate, getDefaultSessionDateRange } from "#/lib/date-utils";

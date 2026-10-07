@@ -3,10 +3,9 @@ import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
-import { useFilters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import {
   FellowAttendanceDataTable,
@@ -15,7 +14,7 @@ import {
 import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-menu";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { useSessionsContext } from "#/components/common/session/sessions-provider";
-import { useTitle } from "#/components/common/session/title-provider";
+import type { Filters } from "#/lib/schedule-filters";
 import {
   SupervisorAttendanceDataTable,
   SupervisorAttendanceDataTableMenu,
@@ -267,24 +266,20 @@ export function TableView({
   supervisors,
   role,
   supervisorId,
+  filters,
 }: {
   state: CalendarState;
   supervisors?: ScheduleSupervisor[];
   role: ImplementerRole;
   supervisorId?: string;
+  filters: Filters;
 }) {
   const [userSelectedDay, setUserSelectedDay] = useState<CalendarDate | null>(null);
   const weekDays = state.getDatesInWeek(0);
-  const { setTitle } = useTitle();
   const dayFormatter = useDateFormatter({
     weekday: "long",
   });
-  const dateFormatter = useDateFormatter({
-    dateStyle: "long",
-    calendar: state.visibleRange.start.calendar.identifier,
-  });
   const [roleToggle, setRoleToggle] = useState<Role>("supervisors");
-  const { filters } = useFilters();
   const { sessions } = useSessionsContext();
 
   const selectedDay = (() => {
@@ -391,16 +386,6 @@ export function TableView({
     });
     return { supervisorAttendances: attendances, fellowAttendances: _fellowAttendances };
   })();
-
-  // effect: publishes the visible range to the shared title context
-  useEffect(() => {
-    setTitle(
-      dateFormatter.formatRange(
-        state.visibleRange.start.toDate(state.timeZone),
-        state.visibleRange.end.toDate(state.timeZone),
-      ),
-    );
-  }, [state.visibleRange.start, state.visibleRange.end, dateFormatter, setTitle, state.timeZone]);
 
   const enableRowSelection = (row: Row<FellowAttendancesTableData>) => {
     return (

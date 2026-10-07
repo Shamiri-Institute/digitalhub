@@ -52,13 +52,11 @@ test("the school sessions page lists earlier unmarked sessions before marking on
     waitUntil: "networkidle",
   });
 
-  const sessionRow = page
-    .getByRole("row")
-    .filter({
-      has: page.locator("td:first-child", {
-        hasText: format(new Date(fixture.sessionDate), "dd MMM yyyy"),
-      }),
-    });
+  const sessionRow = page.getByRole("row").filter({
+    has: page.locator("td:first-child", {
+      hasText: format(new Date(fixture.sessionDate), "dd MMM yyyy"),
+    }),
+  });
   await sessionRow.locator('[aria-haspopup="menu"]').click();
   await page.getByRole("menuitem", { name: "Mark session occurrence" }).click();
 

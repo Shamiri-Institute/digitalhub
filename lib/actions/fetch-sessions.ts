@@ -2,7 +2,7 @@
 
 import { and, eq } from "drizzle-orm";
 
-import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
+import type { Filters } from "#/lib/schedule-filters";
 import { db } from "#/db/client";
 import { ImplementerRole, type SessionStatus } from "#/db/enums";
 import { hub, interventionGroup } from "#/db/schema";

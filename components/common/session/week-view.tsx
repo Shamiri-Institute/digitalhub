@@ -1,6 +1,6 @@
 import { type CalendarDate, isToday } from "@internationalized/date";
 import type { ImplementerRole } from "#/db/enums";
-import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
+import { type Dispatch, type SetStateAction, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
@@ -8,7 +8,6 @@ import { cn } from "#/lib/utils";
 import { SessionList } from "./session-list";
 import { type Session, useSessions } from "./sessions-provider";
 import { syncScrollLeft } from "./sync-scroll";
-import { useTitle } from "./title-provider";
 
 export function WeekView({
   state,
@@ -36,26 +35,9 @@ export function WeekView({
   const bodyScrollRef = useRef<HTMLDivElement>(null);
   const { gridProps, headerProps } = useCalendarGrid({ weekdayStyle: "long" }, state);
 
-  const startDate = state.visibleRange.start;
-
-  const dateFormatter = useDateFormatter({
-    dateStyle: "long",
-    calendar: startDate.calendar.identifier,
-  });
   const dayFormatter = useDateFormatter({
     weekday: "long",
   });
-
-  const { setTitle } = useTitle();
-  // effect: publishes the visible range to the shared title context
-  useEffect(() => {
-    setTitle(
-      dateFormatter.formatRange(
-        state.visibleRange.start.toDate(state.timeZone),
-        state.visibleRange.end.toDate(state.timeZone),
-      ),
-    );
-  }, [state.visibleRange.start, state.visibleRange.end, dateFormatter, setTitle, state.timeZone]);
 
   // 6 AM - 6 PM session scheduling window
   const hours = Array.from({ length: 13 }, (_, i) => 6 + i);

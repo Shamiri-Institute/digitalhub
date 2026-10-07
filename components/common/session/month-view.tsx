@@ -1,14 +1,13 @@
 import { type CalendarDate, getWeeksInMonth, isSameDay, isWeekend } from "@internationalized/date";
 import type { ImplementerRole } from "#/db/enums";
-import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
-import { useCalendarCell, useCalendarGrid, useDateFormatter, useLocale } from "react-aria";
+import { type Dispatch, type SetStateAction, useRef } from "react";
+import { useCalendarCell, useCalendarGrid, useLocale } from "react-aria";
 import type { CalendarGridProps } from "react-aria-components";
 import type { CalendarState } from "react-stately";
 import { cn } from "#/lib/utils";
 import { SessionList } from "./session-list";
 import { type Session, useSessions } from "./sessions-provider";
 import { syncScrollLeft } from "./sync-scroll";
-import { useTitle } from "./title-provider";
 
 export function MonthView({
   state,
@@ -34,27 +33,8 @@ export function MonthView({
   const { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
   const weeksInMonth = getWeeksInMonth(state.visibleRange.start, locale);
 
-  const { setTitle } = useTitle();
-  const titleFormatter = useDateFormatter({
-    month: "long",
-    year: "numeric",
-  });
   const headerScrollRef = useRef<HTMLDivElement>(null);
   const bodyScrollRef = useRef<HTMLDivElement>(null);
-
-  // effect: publishes the visible month to the shared title context
-  useEffect(() => {
-    if (state.value) {
-      setTitle(`${titleFormatter.format(state.visibleRange.start.toDate(state.timeZone))}`);
-    }
-  }, [
-    setTitle,
-    state.timeZone,
-    state.value,
-    titleFormatter,
-    state.visibleRange.start,
-    state.visibleRange.end,
-  ]);
 
   return (
     <div className="relative">

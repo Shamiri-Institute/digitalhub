@@ -18,19 +18,13 @@ import {
   mergeProps,
   useButton,
   useCalendar,
+  useDateFormatter,
   useFocusRing,
   useLocale,
 } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { type CalendarState, useCalendarState } from "react-stately";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
-import {
-  type DateRangeType,
-  type Filters,
-  FiltersContext,
-  statusFilterOptions,
-  useFilters,
-} from "#/app/(platform)/hc/schedule/context/filters-context";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
@@ -52,12 +46,12 @@ import {
 } from "#/components/ui/dialog";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
 import { getDateRangeForCalendar } from "#/lib/date-utils";
+import { type DateRangeType, type Filters, statusFilterOptions } from "#/lib/schedule-filters";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
-import { type Mode, ModeProvider, useMode } from "./mode-provider";
 import { MonthView } from "./month-view";
-import { ScheduleModeToggle } from "./schedule-mode-toggle";
+import { type Mode, ScheduleModeToggle } from "./schedule-mode-toggle";
 import {
   type Session,
   SessionsProvider,
@@ -65,7 +59,6 @@ import {
   useSessionsContext,
 } from "./sessions-provider";
 import { TableView } from "./table-view";
-import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
 import type { school, sessionName } from "#/db/schema";
 
@@ -249,32 +242,44 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const table = useCalendar(calendarStateProps, tableState);
 
+  const monthTitleFormatter = useDateFormatter({ month: "long", year: "numeric" });
+  const dayTitleFormatter = useDateFormatter({ day: "numeric", month: "long" });
+  const rangeTitleFormatter = useDateFormatter({
+    dateStyle: "long",
+    calendar: weekState.visibleRange.start.calendar.identifier,
+  });
+  const rangeTitle = (state: CalendarState) =>
+    rangeTitleFormatter.formatRange(
+      state.visibleRange.start.toDate(state.timeZone),
+      state.visibleRange.end.toDate(state.timeZone),
+    );
+
   let title = "";
   let prevButtonProps: AriaButtonProps = {};
   let nextButtonProps: AriaButtonProps = {};
   switch (mode) {
     case "month":
-      title = month.title;
+      title = monthTitleFormatter.format(monthState.visibleRange.start.toDate(monthState.timeZone));
       prevButtonProps = month.prevButtonProps;
       nextButtonProps = month.nextButtonProps;
       break;
     case "week":
-      title = week.title;
+      title = rangeTitle(weekState);
       prevButtonProps = week.prevButtonProps;
       nextButtonProps = week.nextButtonProps;
       break;
     case "day":
-      title = day.title;
+      title = dayTitleFormatter.format(dayState.visibleRange.start.toDate(dayState.timeZone));
       prevButtonProps = day.prevButtonProps;
       nextButtonProps = day.nextButtonProps;
       break;
     case "table":
-      title = table.title;
+      title = rangeTitle(tableState);
       prevButtonProps = table.prevButtonProps;
       nextButtonProps = table.nextButtonProps;
       break;
     case "list":
-      title = week.title;
+      title = rangeTitle(listState);
       prevButtonProps = list.prevButtonProps;
       nextButtonProps = list.nextButtonProps;
       break;
@@ -291,54 +296,53 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       role={props.role}
       fellowId={props.fellowId}
     >
-      <ModeProvider defaultMode={mode}>
-        <TitleProvider>
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-              <div className="flex items-start justify-between gap-6 lg:items-center">
-                <ScheduleTitle fallbackTitle={title} />
-                <NavigationButtons prevProps={prevButtonProps} nextProps={nextButtonProps} />
-              </div>
-              <div className="flex lg:mx-2">
-                <ScheduleModeToggle role={props.role} />
-              </div>
-              <FiltersContext.Provider value={{ filters, setFilters }}>
-                <ScheduleFilterToggle sessionFilters={props.hubSessionTypes ?? []} />
-              </FiltersContext.Provider>
-            </div>
-            {props.role === "HUB_COORDINATOR" || props.role === "SUPERVISOR" ? (
-              <div className="flex items-center gap-4">
-                <SessionsLoader />
-                <CreateSessionButton
-                  open={newScheduleDialog}
-                  setDialogOpen={setNewScheduleDialog}
-                  schools={schools}
-                  hubSessionTypes={props.hubSessionTypes}
-                  role={props.role}
-                />
-              </div>
-            ) : props.role === "ADMIN" ? (
-              <SessionsLoader />
-            ) : null}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+          <div className="flex items-start justify-between gap-6 lg:items-center">
+            <div className="text-2xl font-semibold leading-8">{title}</div>
+            <NavigationButtons prevProps={prevButtonProps} nextProps={nextButtonProps} />
           </div>
-          <div className="mt-4 w-full">
-            <FiltersContext.Provider value={{ filters, setFilters }}>
-              <CalendarView
-                monthProps={{ state: monthState, weekdayStyle: "long" }}
-                weekProps={{ state: weekState }}
-                dayProps={{ state: dayState }}
-                listProps={{ state: listState }}
-                tableProps={{ state: tableState }}
-                supervisors={props.supervisors}
-                fellowRatings={props.fellowRatings}
-                role={props.role}
-                supervisorId={props.supervisorId}
-                fellowId={props.fellowId}
-              />
-            </FiltersContext.Provider>
+          <div className="flex lg:mx-2">
+            <ScheduleModeToggle role={props.role} mode={mode} />
           </div>
-        </TitleProvider>
-      </ModeProvider>
+          <ScheduleFilterToggle
+            sessionFilters={props.hubSessionTypes ?? []}
+            filters={filters}
+            setFilters={setFilters}
+            mode={mode}
+          />
+        </div>
+        {props.role === "HUB_COORDINATOR" || props.role === "SUPERVISOR" ? (
+          <div className="flex items-center gap-4">
+            <SessionsLoader />
+            <CreateSessionButton
+              open={newScheduleDialog}
+              setDialogOpen={setNewScheduleDialog}
+              schools={schools}
+              hubSessionTypes={props.hubSessionTypes}
+              role={props.role}
+            />
+          </div>
+        ) : props.role === "ADMIN" ? (
+          <SessionsLoader />
+        ) : null}
+      </div>
+      <div className="mt-4 w-full">
+        <CalendarView
+          monthProps={{ state: monthState, weekdayStyle: "long" }}
+          weekProps={{ state: weekState }}
+          dayProps={{ state: dayState }}
+          listProps={{ state: listState }}
+          tableProps={{ state: tableState }}
+          supervisors={props.supervisors}
+          fellowRatings={props.fellowRatings}
+          role={props.role}
+          supervisorId={props.supervisorId}
+          fellowId={props.fellowId}
+          mode={mode}
+          filters={filters}
+        />
+      </div>
     </SessionsProvider>
   );
 }
@@ -380,12 +384,6 @@ function CreateSessionButton({
       </DialogPortal>
     </Dialog>
   );
-}
-
-function ScheduleTitle({ fallbackTitle }: { fallbackTitle: string }) {
-  const { title } = useTitle();
-
-  return <div className="text-2xl font-semibold leading-8">{title || fallbackTitle}</div>;
 }
 
 function SessionsLoader() {
@@ -434,6 +432,8 @@ function CalendarView({
   role,
   supervisorId,
   fellowId,
+  mode,
+  filters,
 }: {
   monthProps: {
     state: CalendarState;
@@ -459,8 +459,9 @@ function CalendarView({
   role: ImplementerRole;
   supervisorId?: string;
   fellowId?: string;
+  mode: Mode;
+  filters: Filters;
 }) {
-  const { mode } = useMode();
   const { sessions, loading, refresh } = useSessionsContext();
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
@@ -571,6 +572,7 @@ function CalendarView({
               supervisors={supervisors}
               role={role}
               supervisorId={supervisorId}
+              filters={filters}
             />
           );
         }
@@ -720,10 +722,18 @@ function NavigationButton({ children, ...props }: { children: React.ReactNode })
   );
 }
 
-function ScheduleFilterToggle({ sessionFilters }: { sessionFilters: SessionName[] }) {
+function ScheduleFilterToggle({
+  sessionFilters,
+  filters,
+  setFilters,
+  mode,
+}: {
+  sessionFilters: SessionName[];
+  filters: Filters;
+  setFilters: Dispatch<SetStateAction<Filters>>;
+  mode: Mode;
+}) {
   const [open, setOpen] = useState(false);
-  const { filters, setFilters } = useFilters();
-  const { mode } = useMode();
   const _sessionTypes: { [key: string]: boolean } = {};
   Object.keys(filters.sessionTypes).forEach((sessionType) => {
     _sessionTypes[sessionType] = true;

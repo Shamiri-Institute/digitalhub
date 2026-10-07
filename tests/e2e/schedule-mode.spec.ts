@@ -22,6 +22,21 @@ test.describe("supervisor schedule mode from the URL", () => {
     await expect(page.getByLabel("Select month view")).toHaveAttribute("data-state", "on");
     await expect(page.getByText(errorBoundary)).toHaveCount(0);
   });
+
+  test("back and forward show the view that the URL names", async ({ page }) => {
+    await page.goto(getUrl("/sc/schedule"));
+    await page.getByLabel("Select week view").click();
+    await page.getByLabel("Select list view").click();
+    await expect(page).toHaveURL(/mode=list/);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/mode=week/);
+    await expect(page.getByLabel("Select week view")).toHaveAttribute("data-state", "on");
+
+    await page.goForward();
+    await expect(page).toHaveURL(/mode=list/);
+    await expect(page.getByLabel("Select list view")).toHaveAttribute("data-state", "on");
+  });
 });
 
 test.describe("hub coordinator schedule mode from the URL", () => {
