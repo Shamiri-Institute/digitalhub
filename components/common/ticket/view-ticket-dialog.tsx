@@ -14,6 +14,7 @@ import {
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
+import { toast } from "#/components/ui/use-toast";
 import { getEscalationsPerTicket } from "#/lib/actions/ticket";
 import type { TicketEscalation } from "#/lib/actions/ticket/types";
 import type { TicketData } from "./columns";
@@ -40,16 +41,31 @@ export function ViewTicketDialog({
   useEffect(() => {
     if (!open || !ticket?.id) return;
 
+    let cancelled = false;
     const fetchEscalations = async () => {
       setLoadingEscalations(true);
-      const result = await getEscalationsPerTicket(ticket.id);
-      if (result.success && result.data) {
-        setEscalations(result.data);
+      setEscalations([]);
+      try {
+        const result = await getEscalationsPerTicket(ticket.id);
+        if (cancelled) return;
+        if (result.success && result.data) {
+          setEscalations(result.data);
+        } else {
+          toast({ variant: "destructive", description: "Could not load the escalations." });
+        }
+      } catch {
+        if (!cancelled) {
+          toast({ variant: "destructive", description: "Could not load the escalations." });
+        }
+      } finally {
+        if (!cancelled) setLoadingEscalations(false);
       }
-      setLoadingEscalations(false);
     };
 
     void fetchEscalations();
+    return () => {
+      cancelled = true;
+    };
   }, [open, ticket?.id]);
 
   if (!ticket) return null;

@@ -14,9 +14,7 @@ import {
 export type StudentAttendanceMenuState = {
   setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  setTriageStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
-  setTriageModalOpen: Dispatch<SetStateAction<boolean>>;
-  setTriageReadOnly: Dispatch<SetStateAction<boolean>>;
+  openTriageModal: (triageTarget: StudentAttendanceData, readOnly: boolean) => void;
   setHistoryStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setHistoryModalOpen: Dispatch<SetStateAction<boolean>>;
 };
@@ -34,12 +32,6 @@ export default function StudentAttendanceMenu({
   isFellow: boolean;
   hasExistingTriageEvent: boolean;
 }) {
-  const openTriageModal = (readOnly: boolean) => {
-    state.setTriageReadOnly(readOnly);
-    state.setTriageStudent(attendance);
-    state.setTriageModalOpen(true);
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -64,14 +56,18 @@ export default function StudentAttendanceMenu({
           Mark attendance
         </DropdownMenuItem>
         {isFellow && !hasExistingTriageEvent && (
-          <DropdownMenuItem onClick={() => openTriageModal(false)}>
+          <DropdownMenuItem onClick={() => state.openTriageModal(attendance, false)}>
             Triage occurred
           </DropdownMenuItem>
         )}
         {isFellow && hasExistingTriageEvent && (
           <>
-            <DropdownMenuItem onClick={() => openTriageModal(false)}>Edit triage</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => openTriageModal(true)}>View triage</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => state.openTriageModal(attendance, false)}>
+              Edit triage
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => state.openTriageModal(attendance, true)}>
+              View triage
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
                 state.setHistoryStudent(attendance);

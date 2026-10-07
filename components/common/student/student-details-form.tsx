@@ -2,7 +2,14 @@
 
 import { ImplementerRole, QuestionnaireType } from "#/db/enums";
 import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useEffect,
+  useEffectEvent,
+  useState,
+  useTransition,
+} from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
@@ -39,7 +46,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError } from "#/components/ui/use-toast";
+import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import {
   checkExistingStudents,
   submitStudentDetails,
@@ -77,7 +84,7 @@ export default function StudentDetailsForm({
     setTransferDialog(false);
     setTransferOption(undefined);
   };
-  const [loading, setLoading] = useState(false);
+  const [isTransferPending, startTransfer] = useTransition();
   const [matchedStudents, setMatchedStudents] = useState<
     Awaited<ReturnType<typeof checkExistingStudents>>
   >([]);
@@ -131,61 +138,56 @@ export default function StudentDetailsForm({
     }
   };
 
-  const submitTransferOption = async () => {
-    setLoading(true);
-    if (transferOption === -1) {
-      await onSubmit(form.getValues()).then(() => {
-        closeTransferDialog();
-      });
-    } else if (
-      transferOption !== undefined &&
-      transferOption >= 0 &&
-      form.getValues("assignedGroupId") !== undefined
-    ) {
-      const data = matchedStudents[transferOption];
-      if (!data) return;
-      const assignedGroupId = form.getValues("assignedGroupId");
-      if (!assignedGroupId) return;
-      const response = await transferStudentToGroup(data.id, assignedGroupId);
-      if (!response.success) {
-        toast({
-          variant: "destructive",
-          description:
-            response.message ?? "Something went wrong during submission, please try again",
-        });
-        return;
-      }
+  const submitTransferOption = () => {
+    startTransfer(() =>
+      toastOnFailure(async () => {
+        if (transferOption === -1) {
+          if (await onSubmit(form.getValues())) closeTransferDialog();
+          return;
+        }
+        const matchedStudent =
+          transferOption !== undefined ? matchedStudents[transferOption] : undefined;
+        const assignedGroupId = form.getValues("assignedGroupId");
+        if (!matchedStudent || !assignedGroupId) return;
+        const response = await transferStudentToGroup(matchedStudent.id, assignedGroupId);
+        if (!response.success) {
+          toast({
+            variant: "destructive",
+            description:
+              response.message ?? "Something went wrong during submission, please try again",
+          });
+          return;
+        }
 
-      await revalidatePageAction(pathname);
-      toast({
-        description: response.message,
-      });
-      form.reset();
-      closeTransferDialog();
-      onOpenChange(false);
-    }
-    setLoading(false);
-    return;
+        await revalidatePageAction(pathname);
+        toast({
+          description: response.message,
+        });
+        form.reset();
+        closeTransferDialog();
+        onOpenChange(false);
+      }),
+    );
   };
 
   const onSubmit = async (values: z.infer<typeof StudentDetailsSchema>) => {
-    if (mode === "view") return;
+    if (mode === "view") return false;
 
     const response = await submitStudentDetails(values);
     if (!response.success) {
       toast({
         description: response.message ?? "Something went wrong during submission, please try again",
       });
-      return;
+      return false;
     }
 
-    void revalidatePageAction(pathname).then(() => {
-      toast({
-        description: response.message,
-      });
-      form.reset();
-      onOpenChange(false);
+    await revalidatePageAction(pathname);
+    toast({
+      description: response.message,
     });
+    form.reset();
+    onOpenChange(false);
+    return true;
   };
 
   return (
@@ -528,11 +530,9 @@ export default function StudentDetailsForm({
                     : "brand"
               }
               type="button"
-              onClick={() => {
-                void submitTransferOption();
-              }}
-              disabled={loading || transferOption === undefined}
-              loading={loading}
+              onClick={submitTransferOption}
+              disabled={isTransferPending || transferOption === undefined}
+              loading={isTransferPending}
             >
               {transferOption === undefined
                 ? "Confirm transfer"

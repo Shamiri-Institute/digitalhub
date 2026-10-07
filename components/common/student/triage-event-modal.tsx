@@ -80,6 +80,7 @@ export default function TriageEventModal({
   sessionId,
   sessionName,
   existingEvent,
+  loadingExistingEvent = false,
   readOnly = false,
   onSuccess,
 }: {
@@ -90,6 +91,7 @@ export default function TriageEventModal({
   sessionId: string;
   sessionName?: string;
   existingEvent?: TriageEventWithRelations | null;
+  loadingExistingEvent?: boolean;
   readOnly?: boolean;
   onSuccess?: () => void;
 }) {
@@ -125,7 +127,7 @@ export default function TriageEventModal({
       const supervisors = await getSupervisorsInFellowHub(sessionId);
       setSupervisorsInHub(supervisors);
     } catch {
-      setSupervisorsInHub([]);
+      toast({ variant: "destructive", description: "Could not load the supervisors in your hub." });
     }
   };
 
@@ -178,6 +180,7 @@ export default function TriageEventModal({
   }, [isOpen, existingEvent, studentId, sessionId]);
 
   const onSubmit = async (data: z.infer<typeof TriageEventSchema>) => {
+    if (loadingExistingEvent) return;
     const result = existingEvent
       ? await updateTriageEvent(
           { ...data, id: existingEvent.id },
@@ -420,8 +423,15 @@ export default function TriageEventModal({
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? "Saving…" : "Save triage"}
+                  <Button
+                    type="submit"
+                    disabled={form.formState.isSubmitting || loadingExistingEvent}
+                  >
+                    {loadingExistingEvent
+                      ? "Loading…"
+                      : form.formState.isSubmitting
+                        ? "Saving…"
+                        : "Save triage"}
                   </Button>
                 </>
               )}

@@ -6,6 +6,7 @@ import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
+import { toast } from "#/components/ui/use-toast";
 import { getTicketResolution } from "#/lib/actions/ticket";
 import type { TicketResolution } from "#/lib/actions/ticket/types";
 import type { TicketData } from "./columns";
@@ -32,18 +33,30 @@ export function ViewResolutionDialog({
   useEffect(() => {
     if (!open || !ticket?.id) return;
 
+    let cancelled = false;
     const fetchResolution = async () => {
       setLoading(true);
-      const result = await getTicketResolution(ticket.id);
-      if (result.success) {
-        setResolution(result.data ?? null);
-      } else {
-        setResolution(null);
+      try {
+        const result = await getTicketResolution(ticket.id);
+        if (cancelled) return;
+        setResolution(result.success ? (result.data ?? null) : null);
+        if (!result.success) {
+          toast({ variant: "destructive", description: "Could not load the resolution." });
+        }
+      } catch {
+        if (!cancelled) {
+          setResolution(null);
+          toast({ variant: "destructive", description: "Could not load the resolution." });
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     };
 
     void fetchResolution();
+    return () => {
+      cancelled = true;
+    };
   }, [open, ticket?.id]);
 
   if (!ticket) return null;

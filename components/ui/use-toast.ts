@@ -199,4 +199,18 @@ function toastOnError<A extends unknown[]>(fn: (...args: A) => Promise<unknown>)
   };
 }
 
-export { toast, toastOnError, useToast };
+/**
+ * Runs async work inside `startTransition` without rejecting: React sends an error thrown in a
+ * transition to the nearest error boundary. A failure shows a destructive toast and goes to
+ * `reportError`, so Sentry still records it.
+ */
+async function toastOnFailure(work: () => Promise<unknown>) {
+  try {
+    await work();
+  } catch (error) {
+    toast({ title: "Something went wrong, please try again", variant: "destructive" });
+    reportError(error);
+  }
+}
+
+export { toast, toastOnError, toastOnFailure, useToast };

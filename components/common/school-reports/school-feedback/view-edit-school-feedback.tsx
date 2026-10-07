@@ -66,6 +66,7 @@ export default function ViewEditSchoolFeedback({
         });
 
         await revalidatePageAction("sc/reporting/school-reports/school-feedback");
+        setDialogOpen(false);
       } else {
         toast({
           title: response.message,
@@ -79,7 +80,6 @@ export default function ViewEditSchoolFeedback({
         variant: "destructive",
       });
     }
-    setDialogOpen(false);
   };
 
   const isViewOnly = action === "view";

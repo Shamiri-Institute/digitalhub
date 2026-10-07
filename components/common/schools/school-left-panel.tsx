@@ -18,6 +18,7 @@ import {
 } from "#/components/ui/accordion";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import { toast } from "#/components/ui/use-toast";
 import { fetchSchool, type SchoolData } from "#/lib/actions/school";
 import { cn, getSchoolInitials } from "#/lib/utils";
 import LocationIcon from "#/public/icons/location-pin-icon.svg";
@@ -37,17 +38,30 @@ export default function SchoolLeftPanel({
 
   // effect: loads the school for the route's visibleId; server-side loading is a separate change
   useEffect(() => {
+    let cancelled = false;
     const fetchSchoolData = async () => {
       setLoading(true);
-      if (visibleId) {
+      try {
+        if (!visibleId) return;
         const response = await fetchSchool(visibleId as string);
+        if (cancelled) return;
         if (response.success && response.data) {
           setSchool(response.data);
+        } else {
+          toast({ variant: "destructive", description: "Could not load school details." });
         }
+      } catch {
+        if (!cancelled) {
+          toast({ variant: "destructive", description: "Could not load school details." });
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     };
     void fetchSchoolData();
+    return () => {
+      cancelled = true;
+    };
   }, [visibleId]);
 
   function renderPhoneNumbers(phone: string) {

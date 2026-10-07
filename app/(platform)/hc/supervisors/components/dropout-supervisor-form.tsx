@@ -1,6 +1,6 @@
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { DropoutSupervisorSchema } from "#/app/(platform)/hc/schemas";
@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError } from "#/components/ui/use-toast";
+import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { SUPERVISOR_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { zodResolver } from "#/lib/zod-resolver";
 
@@ -48,7 +48,7 @@ export default function DropoutSupervisor({
   setDropoutDialog: Dispatch<SetStateAction<boolean>>;
 }) {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState<z.infer<typeof DropoutSupervisorSchema>>();
   const pathname = usePathname();
 
@@ -56,25 +56,26 @@ export default function DropoutSupervisor({
     resolver: zodResolver(DropoutSupervisorSchema),
   });
 
-  async function confirmSubmit() {
-    setLoading(true);
-    if (formData) {
-      const response = await dropoutSupervisor(formData?.supervisorId, formData?.dropoutReason);
-      if (!response.success) {
-        toast({
-          description: response.message ?? "Something went wrong, please try again",
-        });
-        return;
-      }
-      toast({
-        description: response.message,
-      });
-      form.reset();
-      setConfirmDialogOpen(false);
-      setLoading(false);
+  function confirmSubmit() {
+    if (!formData) return;
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await dropoutSupervisor(formData.supervisorId, formData.dropoutReason);
+        if (!response.success) {
+          toast({
+            description: response.message ?? "Something went wrong, please try again",
+          });
+          return;
+        }
 
-      await revalidatePageAction(pathname);
-    }
+        await revalidatePageAction(pathname);
+        toast({
+          description: response.message,
+        });
+        form.reset();
+        setConfirmDialogOpen(false);
+      }),
+    );
   }
 
   const onSubmit = (data: z.infer<typeof DropoutSupervisorSchema>) => {
@@ -147,12 +148,7 @@ export default function DropoutSupervisor({
               >
                 Cancel
               </Button>
-              <Button
-                variant="destructive"
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
+              <Button variant="destructive" type="submit">
                 Submit
               </Button>
             </DialogFooter>
@@ -190,11 +186,9 @@ export default function DropoutSupervisor({
             <Button
               type="submit"
               variant="destructive"
-              disabled={loading}
-              loading={loading}
-              onClick={() => {
-                void confirmSubmit();
-              }}
+              disabled={isPending}
+              loading={isPending}
+              onClick={confirmSubmit}
             >
               Confirm
             </Button>

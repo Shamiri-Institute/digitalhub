@@ -1,12 +1,13 @@
 "use client";
 
+import { useTransition } from "react";
 import {
   acceptReferredClinicalCase,
   rejectReferredClinicalCase,
 } from "#/app/(platform)/sc/clinical/action";
 import { Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
-import { toastOnError, useToast } from "#/components/ui/use-toast";
+import { toastOnFailure, useToast } from "#/components/ui/use-toast";
 import type { clinicalScreeningInfo, student } from "#/db/schema";
 
 type CasesType = typeof clinicalScreeningInfo.$inferSelect & {
@@ -40,21 +41,31 @@ export function RefferedCasesTab({
 }) {
   const { toast } = useToast();
 
-  const handleAcceptReferredCase = async () => {
-    const response = await acceptReferredClinicalCase(caseId);
-    toast(
-      response.success
-        ? { variant: "default", title: "Referred case accepted" }
-        : { variant: "destructive", title: "Error accepting referred case. Please try again" },
+  const [isPending, startTransition] = useTransition();
+
+  const handleAcceptReferredCase = () => {
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await acceptReferredClinicalCase(caseId);
+        toast(
+          response.success
+            ? { variant: "default", title: "Referred case accepted" }
+            : { variant: "destructive", title: "Error accepting referred case. Please try again" },
+        );
+      }),
     );
   };
 
-  const handleRejectReferredCase = async () => {
-    const response = await rejectReferredClinicalCase(caseId);
-    toast(
-      response.success
-        ? { variant: "default", title: "Referred case rejected" }
-        : { variant: "destructive", title: "Error rejecting referred case. Please try again" },
+  const handleRejectReferredCase = () => {
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await rejectReferredClinicalCase(caseId);
+        toast(
+          response.success
+            ? { variant: "default", title: "Referred case rejected" }
+            : { variant: "destructive", title: "Error rejecting referred case. Please try again" },
+        );
+      }),
     );
   };
 
@@ -75,16 +86,18 @@ export function RefferedCasesTab({
       <div className="flex items-center justify-between">
         <button
           type="button"
-          onClick={toastOnError(handleAcceptReferredCase)}
-          className="cursor-pointer"
+          onClick={handleAcceptReferredCase}
+          disabled={isPending}
+          className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Accept referred case"
         >
           <Icons.check className="mx-2 h-6 w-6 align-baseline text-muted-green xl:h-7 xl:w-7" />
         </button>
         <button
           type="button"
-          onClick={toastOnError(handleRejectReferredCase)}
-          className="cursor-pointer"
+          onClick={handleRejectReferredCase}
+          disabled={isPending}
+          className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Reject referred case"
         >
           <Icons.xIcon className="mx-2 h-6 w-6 align-baseline text-shamiri-red xl:h-7 xl:w-7" />

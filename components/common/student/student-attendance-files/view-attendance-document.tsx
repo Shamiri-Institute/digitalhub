@@ -1,12 +1,12 @@
 "use client";
 
 import type { ImplementerRole } from "#/db/enums";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Icons } from "#/components/icons";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
-import { toastOnError, useToast } from "#/components/ui/use-toast";
+import { toastOnFailure, useToast } from "#/components/ui/use-toast";
 import { deleteAttendanceFile, getAttendanceDocument } from "#/lib/actions/file/student-attendance";
 import { NO_ATTENDANCE_DOCUMENT_MESSAGE } from "#/lib/actions/file/student-attendance/types";
 import PdfViewerModal from "#/lib/utils/pdf/pdf-viewer-modal";
@@ -24,6 +24,7 @@ export default function ViewAttendanceDocument({
 }) {
   const { toast } = useToast();
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [isDeleting, startDeleting] = useTransition();
   const [state, setState] = useState<{
     loading: boolean;
     error?: string;
@@ -32,7 +33,6 @@ export default function ViewAttendanceDocument({
     id?: string;
     link?: string;
     archived?: boolean;
-    archiving?: boolean;
   }>({ loading: true });
 
   // effect: loads the presigned document URL on mount
@@ -59,21 +59,24 @@ export default function ViewAttendanceDocument({
     void loadDocument();
   }, [sessionId, groupId]);
 
-  const handleDelete = async () => {
-    if (!state.id) return;
-    setState((prev) => ({ ...prev, archiving: true }));
-    const result = await deleteAttendanceFile(state.id);
-    if (result.success) {
-      setState({ loading: false, archived: true, archiving: false });
-      onDeleteSuccess?.();
-      toast({ description: "Attendance document deleted successfully." });
-    } else {
-      setState((prev) => ({ ...prev, archiving: false }));
-      toast({
-        description: result.message ?? "Failed to delete document",
-        variant: "destructive",
-      });
-    }
+  const handleDelete = () => {
+    const documentId = state.id;
+    if (!documentId) return;
+    startDeleting(() =>
+      toastOnFailure(async () => {
+        const result = await deleteAttendanceFile(documentId);
+        if (result.success) {
+          setState({ loading: false, archived: true });
+          onDeleteSuccess?.();
+          toast({ description: "Attendance document deleted successfully." });
+        } else {
+          toast({
+            description: result.message ?? "Failed to delete document",
+            variant: "destructive",
+          });
+        }
+      }),
+    );
   };
 
   if (state.loading) return <Skeleton className="h-16 w-full rounded-lg" />;
@@ -132,11 +135,11 @@ export default function ViewAttendanceDocument({
             <Button
               variant="destructive"
               size="sm"
-              onClick={toastOnError(handleDelete)}
-              loading={state.archiving}
+              onClick={handleDelete}
+              loading={isDeleting}
               className="mt-2 w-fit hover:bg-shamiri-light-red/90"
             >
-              {state.archiving ? "Deleting..." : "Delete"}
+              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
           )}
         </div>

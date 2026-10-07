@@ -83,19 +83,19 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
   const [fileError, setFileError] = useState<string | null>(null);
   const [validatingFile, setValidatingFile] = useState(false);
 
-  const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const { uploadToS3, files } = useS3Upload();
+  const { isSubmitting } = form.formState;
 
   // effect: mirrors the S3 hook's upload progress into the dialog's progress bar
   useEffect(() => {
-    if (files.length > 0 && uploading) {
+    if (files.length > 0 && isSubmitting) {
       const lastFile = files[files.length - 1];
       if (lastFile) {
         setUploadProgress(Math.min(Math.round(lastFile.progress * 0.8), 80));
       }
     }
-  }, [files, uploading]);
+  }, [files, isSubmitting]);
 
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
@@ -122,83 +122,110 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
 
   // effect: resets dependent fields and reloads groups when the watched fellow field changes
   useEffect(() => {
-    if (fellowId) {
-      setLoadingGroups(true);
-      setGroups([]);
-      setSessions([]);
-      form.setValue("groupId", "");
-      form.setValue("sessionId", "");
-      form.setValue("schoolId", "");
-      setDuplicateExists(false);
-      setSelectedFile(null);
-      setFileError(null);
+    if (!fellowId) return;
+    let cancelled = false;
+    setLoadingGroups(true);
+    setGroups([]);
+    setSessions([]);
+    form.setValue("groupId", "");
+    form.setValue("sessionId", "");
+    form.setValue("schoolId", "");
+    setDuplicateExists(false);
+    setSelectedFile(null);
+    setFileError(null);
 
-      loadFellowGroups(fellowId)
-        .then(setGroups)
-        .catch((error) => {
-          console.error("Error loading groups:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load intervention groups",
-            variant: "destructive",
-          });
-        })
-        .finally(() => setLoadingGroups(false));
-    }
+    loadFellowGroups(fellowId)
+      .then((fellowGroups) => {
+        if (!cancelled) setGroups(fellowGroups);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Error loading groups:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load intervention groups",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingGroups(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [fellowId, form]);
 
   // effect: resets dependent fields and reloads sessions when the watched group field changes
   useEffect(() => {
-    if (groupId) {
-      setLoadingSessions(true);
-      setSessions([]);
-      form.setValue("sessionId", "");
-      setDuplicateExists(false);
-      setSelectedFile(null);
-      setFileError(null);
+    if (!groupId) return;
+    let cancelled = false;
+    setLoadingSessions(true);
+    setSessions([]);
+    form.setValue("sessionId", "");
+    setDuplicateExists(false);
+    setSelectedFile(null);
+    setFileError(null);
 
-      const selectedGroup = groups.find((g) => g.id === groupId);
-      if (selectedGroup) {
-        form.setValue("schoolId", selectedGroup.schoolId);
-      }
-
-      loadGroupSessions(groupId)
-        .then(setSessions)
-        .catch((error) => {
-          console.error("Error loading sessions:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load sessions",
-            variant: "destructive",
-          });
-        })
-        .finally(() => setLoadingSessions(false));
+    const selectedGroup = groups.find((g) => g.id === groupId);
+    if (selectedGroup) {
+      form.setValue("schoolId", selectedGroup.schoolId);
     }
+
+    loadGroupSessions(groupId)
+      .then((groupSessions) => {
+        if (!cancelled) setSessions(groupSessions);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Error loading sessions:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load sessions",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSessions(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [groupId, groups, form]);
 
   // effect: checks for a duplicate recording once all four watched fields are set
   useEffect(() => {
-    if (fellowId && groupId && sessionId && schoolId) {
-      setCheckingDuplicate(true);
-      setDuplicateExists(false);
+    if (!fellowId || !groupId || !sessionId || !schoolId) return;
+    let cancelled = false;
+    setCheckingDuplicate(true);
+    setDuplicateExists(false);
 
-      checkRecordingExists({ fellowId, groupId, sessionId, schoolId })
-        .then((existing) => {
-          if (existing) {
-            setDuplicateExists(true);
-            toast({
-              title: "Recording exists",
-              description:
-                "A recording already exists for this session. Please choose a different session.",
-              variant: "destructive",
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Error checking duplicate:", error);
-        })
-        .finally(() => setCheckingDuplicate(false));
-    }
+    checkRecordingExists({ fellowId, groupId, sessionId, schoolId })
+      .then((existing) => {
+        if (!cancelled && existing) {
+          setDuplicateExists(true);
+          toast({
+            title: "Recording exists",
+            description:
+              "A recording already exists for this session. Please choose a different session.",
+            variant: "destructive",
+          });
+        }
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Error checking duplicate:", error);
+        toast({
+          title: "Error",
+          description: "Could not check for an existing recording",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingDuplicate(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [fellowId, groupId, sessionId, schoolId]);
 
   const handleFileSelect = async (file: File) => {
@@ -269,7 +296,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
       return;
     }
 
-    setUploading(true);
     setUploadProgress(0);
 
     try {
@@ -312,7 +338,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
         variant: "destructive",
       });
     } finally {
-      setUploading(false);
       setUploadProgress(0);
     }
   };
@@ -360,7 +385,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                       onSelectItem={field.onChange}
                       placeholder={loadingFellows ? "Loading..." : "Select a fellow"}
                       inputPlaceholder="Search fellows..."
-                      disabled={loadingFellows || uploading}
+                      disabled={loadingFellows || isSubmitting}
                       className="w-full"
                     />
                   </FormControl>
@@ -380,7 +405,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={!fellowId || loadingGroups || uploading}
+                    disabled={!fellowId || loadingGroups || isSubmitting}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -419,7 +444,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={!groupId || loadingSessions || uploading}
+                    disabled={!groupId || loadingSessions || isSubmitting}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -472,7 +497,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                     onDragOver={(e) => e.preventDefault()}
                     className={cn(
                       "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
-                      uploading || validatingFile
+                      isSubmitting || validatingFile
                         ? "cursor-not-allowed border-gray-200 bg-gray-50"
                         : "border-gray-300 hover:border-shamiri-new-blue",
                       fileError && "border-red-border",
@@ -501,7 +526,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                       type="file"
                       accept={ALLOWED_EXTENSIONS.join(",")}
                       onChange={handleFileInputChange}
-                      disabled={uploading || validatingFile}
+                      disabled={isSubmitting || validatingFile}
                       className="hidden"
                     />
                   </label>
@@ -511,7 +536,7 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
               </>
             )}
 
-            {uploading && (
+            {isSubmitting && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Uploading...</span>
@@ -527,16 +552,16 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
             )}
 
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={handleClose} disabled={uploading}>
+              <Button type="button" variant="ghost" onClick={handleClose} disabled={isSubmitting}>
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="brand"
-                disabled={!selectedFile || uploading || duplicateExists || validatingFile}
-                loading={uploading}
+                disabled={!selectedFile || isSubmitting || duplicateExists || validatingFile}
+                loading={isSubmitting}
               >
-                {uploading ? "Uploading..." : "Upload"}
+                {isSubmitting ? "Uploading..." : "Upload"}
               </Button>
             </DialogFooter>
           </form>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
+import { toast } from "#/components/ui/use-toast";
 import { getStudentTriageHistory } from "#/lib/actions/triage";
 
 type HistoryEvent = Awaited<ReturnType<typeof getStudentTriageHistory>>[number];
@@ -95,18 +96,30 @@ export default function StudentTriageHistoryModal({
   studentId: string;
   studentName?: string | null;
 }) {
-  const [history, setHistory] = useState<HistoryEvent[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadedHistory, setLoadedHistory] = useState<{
+    studentId: string;
+    events: HistoryEvent[];
+  } | null>(null);
+  const loading = loadedHistory?.studentId !== studentId;
+  const history = loadedHistory?.events ?? [];
+  const closeAfterFailedLoad = useEffectEvent(onClose);
 
   // effect: isOpen is set by the parent; loads the history when it opens
   useEffect(() => {
     if (!isOpen || !studentId) return;
-    // oxlint-disable-next-line react/set-state-in-effect -- isOpen is controlled by the parent, so the fetch cannot live in an open handler here
-    setLoading(true);
-    void getStudentTriageHistory(studentId)
-      .then(setHistory)
-      .catch(() => setHistory([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    getStudentTriageHistory(studentId)
+      .then((events) => {
+        if (!cancelled) setLoadedHistory({ studentId, events });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        toast({ variant: "destructive", description: "Could not load the triage history." });
+        closeAfterFailedLoad();
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, studentId]);
 
   return (

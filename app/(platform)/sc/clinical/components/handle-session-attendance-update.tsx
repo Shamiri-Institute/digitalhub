@@ -1,7 +1,7 @@
 "use client";
 
 import type { Row } from "@tanstack/react-table";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { updateClinicalSessionAttendance } from "#/app/(platform)/sc/clinical/action";
 import type { AttendanceRecord } from "#/app/(platform)/sc/clinical/components/columns";
 import { CustomIndicator } from "#/components/common/mark-attendance";
@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnFailure } from "#/components/ui/use-toast";
 
 export default function HandleSessionAttendanceUpdate({ row }: { row: Row<AttendanceRecord> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,18 +28,20 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
         : "unmarked",
   );
 
-  const handleAttendanceUpdate = async (status: boolean | null) => {
-    try {
-      const response = await updateClinicalSessionAttendance(row.original.sessionId, status);
-      if (response.success) {
-        toast({ description: response.message });
-        setIsOpen(false);
-      } else {
-        toast({ variant: "destructive", description: response.message });
-      }
-    } catch (error) {
-      console.log(error);
-    }
+  const [isPending, startTransition] = useTransition();
+
+  const handleAttendanceUpdate = (status: boolean | null) => {
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await updateClinicalSessionAttendance(row.original.sessionId, status);
+        if (response.success) {
+          toast({ description: response.message });
+          setIsOpen(false);
+        } else {
+          toast({ variant: "destructive", description: response.message });
+        }
+      }),
+    );
   };
 
   return (
@@ -126,6 +128,8 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
                 Cancel
               </Button>
               <Button
+                disabled={isPending}
+                loading={isPending}
                 onClick={() => {
                   const status =
                     selectedStatus === "attended"
@@ -133,7 +137,7 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
                       : selectedStatus === "missed"
                         ? false
                         : null;
-                  void handleAttendanceUpdate(status);
+                  handleAttendanceUpdate(status);
                 }}
               >
                 Save changes

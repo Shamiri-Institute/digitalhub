@@ -73,7 +73,6 @@ export default function EditRecordingDialog({
   const [loadingFellows, setLoadingFellows] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
@@ -106,6 +105,7 @@ export default function EditRecordingDialog({
     if (!fellowId) return;
 
     const isInitialValue = fellowId === recording.fellowId;
+    let cancelled = false;
 
     setLoadingGroups(true);
     setGroups([]);
@@ -119,49 +119,70 @@ export default function EditRecordingDialog({
     const loadOriginalSessions = async () => {
       setLoadingSessions(true);
       try {
-        setSessions(await loadGroupSessions(recording.groupId));
+        const originalGroupSessions = await loadGroupSessions(recording.groupId);
+        if (!cancelled) setSessions(originalGroupSessions);
       } catch {
-        toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
+        if (!cancelled) {
+          toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
+        }
       } finally {
-        setLoadingSessions(false);
+        if (!cancelled) setLoadingSessions(false);
       }
     };
 
     loadFellowGroups(fellowId)
       .then((loadedGroups) => {
+        if (cancelled) return;
         setGroups(loadedGroups);
         if (isInitialValue && loadedGroups.some((g) => g.id === recording.groupId)) {
           void loadOriginalSessions();
         }
       })
-      .catch(() =>
+      .catch(() => {
+        if (cancelled) return;
         toast({
           title: "Error",
           description: "Failed to load intervention groups",
           variant: "destructive",
-        }),
-      )
-      .finally(() => setLoadingGroups(false));
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingGroups(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [fellowId, recording.fellowId, recording.groupId, form]);
 
   // effect: reloads sessions when the watched group field changes
   useEffect(() => {
     if (!groupId || groupId === recording.groupId) return;
 
+    let cancelled = false;
     setLoadingSessions(true);
     setSessions([]);
     form.setValue("sessionId", "");
 
     loadGroupSessions(groupId)
-      .then(setSessions)
-      .catch(() =>
-        toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" }),
-      )
-      .finally(() => setLoadingSessions(false));
+      .then((groupSessions) => {
+        if (!cancelled) setSessions(groupSessions);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSessions(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [groupId, recording.groupId, form]);
 
+  const { isSubmitting } = form.formState;
+
   const onSubmit = async (data: RecordingEditFormData) => {
-    setSaving(true);
     try {
       const result = await updateSessionRecording({
         recordingId: recording.id,
@@ -179,8 +200,6 @@ export default function EditRecordingDialog({
       }
     } catch {
       toast({ title: "Error", description: "Failed to update recording", variant: "destructive" });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -213,7 +232,7 @@ export default function EditRecordingDialog({
                       onSelectItem={field.onChange}
                       placeholder={loadingFellows ? "Loading..." : "Select a fellow"}
                       inputPlaceholder="Search fellows..."
-                      disabled={loadingFellows || saving}
+                      disabled={loadingFellows || isSubmitting}
                       className="w-full"
                     />
                   </FormControl>
@@ -233,7 +252,7 @@ export default function EditRecordingDialog({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={!fellowId || loadingGroups || saving}
+                    disabled={!fellowId || loadingGroups || isSubmitting}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -272,7 +291,7 @@ export default function EditRecordingDialog({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={!groupId || loadingSessions || saving}
+                    disabled={!groupId || loadingSessions || isSubmitting}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -310,7 +329,11 @@ export default function EditRecordingDialog({
                     Recording name <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} disabled={saving} placeholder="e.g. s2_session_recording" />
+                    <Input
+                      {...field}
+                      disabled={isSubmitting}
+                      placeholder="e.g. s2_session_recording"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -322,12 +345,12 @@ export default function EditRecordingDialog({
                 type="button"
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                disabled={saving}
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
-              <Button type="submit" variant="brand" disabled={saving} loading={saving}>
-                {saving ? "Saving..." : "Save changes"}
+              <Button type="submit" variant="brand" disabled={isSubmitting} loading={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save changes"}
               </Button>
             </DialogFooter>
           </form>

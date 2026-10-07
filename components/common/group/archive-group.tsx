@@ -1,13 +1,13 @@
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useState } from "react";
+import { type Dispatch, type SetStateAction, useTransition } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnFailure } from "#/components/ui/use-toast";
 import { archiveInterventionGroup } from "#/lib/actions/group";
 
 export default function ArchiveGroup({
@@ -21,25 +21,27 @@ export default function ArchiveGroup({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
 }) {
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
 
-  const onSubmit = async () => {
-    setLoading(true);
-    const response = await archiveInterventionGroup(groupId);
-    if (!response.success) {
-      toast({
-        description: response.message ?? "Something went wrong, please try again",
-      });
-      return;
-    }
-    toast({
-      description: response.message,
-    });
+  const onSubmit = () => {
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await archiveInterventionGroup(groupId);
+        if (!response.success) {
+          toast({
+            description: response.message ?? "Something went wrong, please try again",
+          });
+          return;
+        }
+        toast({
+          description: response.message,
+        });
 
-    await revalidatePageAction(pathname);
-    setLoading(false);
-    onOpenChange(false);
+        await revalidatePageAction(pathname);
+        onOpenChange(false);
+      }),
+    );
   };
 
   return (
@@ -75,11 +77,9 @@ export default function ArchiveGroup({
             <Button
               type="submit"
               variant="destructive"
-              disabled={loading}
-              loading={loading}
-              onClick={() => {
-                void onSubmit();
-              }}
+              disabled={isPending}
+              loading={isPending}
+              onClick={onSubmit}
             >
               Confirm
             </Button>

@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useTransition } from "react";
 import { revalidatePageAction, undoDropoutSchool } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnFailure } from "#/components/ui/use-toast";
 import type { SchoolsTableData } from "./columns";
 
 export function UndoDropoutSchool({
@@ -23,25 +23,25 @@ export function UndoDropoutSchool({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
-  async function undoDropout() {
-    setLoading(true);
-    if (school) {
-      const response = await undoDropoutSchool(school.id);
-      if (!response.success) {
-        toast({
-          description: response.message ?? "Something went wrong, please try again",
-        });
-        setLoading(false);
-        return;
-      }
+  function undoDropout() {
+    if (!school) return;
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await undoDropoutSchool(school.id);
+        if (!response.success) {
+          toast({
+            description: response.message ?? "Something went wrong, please try again",
+          });
+          return;
+        }
 
-      toast({ description: response.message });
-      await revalidatePageAction(pathname);
-      setLoading(false);
-      setOpen(false);
-    }
+        toast({ description: response.message });
+        await revalidatePageAction(pathname);
+        setOpen(false);
+      }),
+    );
   }
 
   return (
@@ -60,14 +60,7 @@ export function UndoDropoutSchool({
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={loading}
-            loading={loading}
-            onClick={() => {
-              void undoDropout();
-            }}
-          >
+          <Button type="submit" disabled={isPending} loading={isPending} onClick={undoDropout}>
             Undo
           </Button>
         </DialogFooter>

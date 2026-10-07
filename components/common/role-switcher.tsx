@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { selectPersonnel } from "#/app/actions";
 import { Button } from "#/components/ui/button";
+import { toast } from "#/components/ui/use-toast";
 import {
   Command,
   CommandEmpty,
@@ -76,6 +77,7 @@ function DevRoleSwitcher({ loading, setLoading, session }: RoleSwitcherProps) {
       await signOut({ callbackUrl: "/login" });
     } catch (error) {
       console.error("Failed to switch role:", error);
+      toast({ variant: "destructive", description: "Could not switch role. Please try again." });
     } finally {
       setLoading(false);
     }
