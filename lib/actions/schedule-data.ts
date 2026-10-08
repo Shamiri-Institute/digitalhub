@@ -1,4 +1,6 @@
-import { eq, sql } from "drizzle-orm";
+import "server-only";
+
+import { eq, type SQL, type SQLWrapper, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import {
@@ -6,6 +8,7 @@ import {
   fellow,
   interventionGroup,
   interventionGroupReport,
+  interventionSession,
   school,
   student,
   supervisor,
@@ -19,24 +22,77 @@ export const clinicalCasesCountExtras = (s: { id: typeof student.id }) => ({
   clinicalCasesCount: countOf(clinicalScreeningInfo.studentId, s.id).as("clinical_cases_count"),
 });
 
-/** Supervisors of a hub with the attendance, fellow and group data the schedule views read. */
-export function fetchScheduleSupervisors(hubId: string) {
-  return db.query.supervisor.findMany({
+/** Schools a session can be scheduled at. */
+export function fetchScheduleSchools(hubId: string) {
+  return db.query.school.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
+    columns: { id: true, schoolName: true },
+    orderBy: (s, { asc }) => asc(s.schoolName),
+  });
+}
+
+/** Session types a session can be scheduled with. */
+export function fetchScheduleSessionTypes(hubId: string) {
+  return db.query.sessionName.findMany({
+    where: (s, { eq }) => eq(s.hubId, hubId),
+    columns: { id: true, sessionType: true, sessionLabel: true },
+  });
+}
+
+/**
+ * Supervisors of the hubs with the fellow and group data the session dialogs read, and their
+ * attendance at the sessions that `sessionsWhere` selects.
+ */
+export function fetchScheduleSupervisors(hubIds: string[] | SQLWrapper, sessionsWhere: SQL) {
+  const sessionIds = db
+    .select({ id: interventionSession.id })
+    .from(interventionSession)
+    .where(sessionsWhere);
+  return db.query.supervisor.findMany({
+    where: (s, { inArray }) => inArray(s.hubId, hubIds),
+    columns: { id: true, hubId: true, supervisorName: true, cellNumber: true },
     with: {
-      supervisorAttendances: { with: { session: true } },
+      supervisorAttendances: {
+        where: (a, { inArray }) => inArray(a.sessionId, sessionIds),
+        columns: {
+          id: true,
+          sessionId: true,
+          schoolId: true,
+          attended: true,
+          absenceReason: true,
+          absenceComments: true,
+        },
+      },
       fellows: {
+        columns: {
+          id: true,
+          supervisorId: true,
+          fellowName: true,
+          cellNumber: true,
+          droppedOut: true,
+        },
         with: {
-          fellowAttendances: true,
+          fellowAttendances: {
+            where: (a, { inArray }) => inArray(a.sessionId, sessionIds),
+            columns: {
+              id: true,
+              sessionId: true,
+              schoolId: true,
+              attended: true,
+              processedAt: true,
+            },
+          },
           groups: {
+            columns: { id: true, schoolId: true, groupName: true, groupType: true },
             extras: (g) => ({
               studentsCount: countOf(student.assignedGroupId, g.id).as("students_count"),
             }),
           },
         },
       },
-      assignedSchools: true,
+      assignedSchools: { columns: { schoolName: true } },
     },
+    orderBy: (s, { asc }) => asc(s.supervisorName),
   });
 }
 

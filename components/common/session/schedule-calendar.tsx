@@ -70,14 +70,15 @@ import { TableView } from "./table-view";
 import { WeekView } from "./week-view";
 import type { school, sessionName } from "#/db/schema";
 
-type School = typeof school.$inferSelect;
-type SessionName = typeof sessionName.$inferSelect;
+type School = Pick<typeof school.$inferSelect, "id" | "schoolName">;
+type SessionName = Pick<typeof sessionName.$inferSelect, "id" | "sessionType" | "sessionLabel">;
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
   /** Sessions in the range the URL names; null until the server knows the viewer's time zone. */
   sessions: Promise<Session[]> | null;
   timeZone: string | null;
-  schools: School[];
+  /** Schools and session types for "Schedule a session" (hub coordinators and supervisors). */
+  schools?: School[];
   supervisors?: ScheduleSupervisor[];
   fellowRatings?: {
     id: string;
@@ -236,7 +237,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             <CreateSessionButton
               open={newScheduleDialog}
               setDialogOpen={setNewScheduleDialog}
-              schools={schools}
+              schools={schools ?? []}
               hubSessionTypes={props.hubSessionTypes}
               role={props.role}
               loading={loading}

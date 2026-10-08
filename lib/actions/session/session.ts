@@ -20,6 +20,7 @@ import {
   student,
   studentAttendance,
 } from "#/db/schema";
+import { clinicalCasesCountExtras } from "#/lib/actions/schedule-data";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
@@ -389,8 +390,7 @@ async function requireSessionVisibleToCaller(sessionId: string) {
   return { membership, fellowId: undefined };
 }
 
-export async function fetchSessionAttendances(sessionId: string) {
-  const { fellowId } = await requireSessionVisibleToCaller(sessionId);
+function sessionAttendances(sessionId: string, fellowId: string | undefined) {
   return db.query.studentAttendance.findMany({
     where: (a, { and, eq, inArray }) =>
       and(
@@ -416,6 +416,43 @@ export async function fetchSessionAttendances(sessionId: string) {
       schoolId: true,
     },
   });
+}
+
+export async function fetchSessionAttendances(sessionId: string) {
+  const { fellowId } = await requireSessionVisibleToCaller(sessionId);
+  return sessionAttendances(sessionId, fellowId);
+}
+
+/** Students of the session's school groups (a fellow's own groups only) with their attendance. */
+export async function fetchSessionStudentAttendance(sessionId: string) {
+  const { fellowId } = await requireSessionVisibleToCaller(sessionId);
+  const groupIds = db
+    .select({ id: interventionGroup.id })
+    .from(interventionGroup)
+    .innerJoin(interventionSession, eq(interventionSession.schoolId, interventionGroup.schoolId))
+    .where(
+      and(
+        eq(interventionSession.id, sessionId),
+        fellowId ? eq(interventionGroup.leaderId, fellowId) : undefined,
+      ),
+    );
+  const [students, attendances] = await Promise.all([
+    db.query.student.findMany({
+      where: (st, { inArray }) => inArray(st.assignedGroupId, groupIds),
+      columns: {
+        id: true,
+        assignedGroupId: true,
+        studentName: true,
+        visibleId: true,
+        admissionNumber: true,
+        yearOfBirth: true,
+      },
+      extras: clinicalCasesCountExtras,
+      orderBy: (st, { asc }) => asc(st.id),
+    }),
+    sessionAttendances(sessionId, fellowId),
+  ]);
+  return { students, attendances };
 }
 
 export async function countSessionGroupAttendance(sessionId: string, fellowId: string) {

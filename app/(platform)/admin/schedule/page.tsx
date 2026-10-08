@@ -4,11 +4,8 @@ import { ImplementerRole } from "#/db/enums";
 import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import {
-  fetchImplementerFellowRatings,
-  fetchImplementerSessionTypes,
-  fetchImplementerSupervisors,
-} from "#/lib/actions/implementer";
+import { fetchImplementerFellowRatings } from "#/lib/actions/implementer";
+import { fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
 import { loadScheduleSessions, type ScheduleSearchParams } from "#/lib/schedule-sessions";
 import { ScheduleCalendar } from "../../../../components/common/session/schedule-calendar";
 import { AdminScheduleHeader } from "../../../../components/common/session/admin-schedule-header";
@@ -23,11 +20,10 @@ export default async function AdminSchedulePage({
     await signOut({ callbackUrl: "/login" });
   }
   const role = admin?.session.user.activeMembership?.role ?? ImplementerRole.ADMIN;
-  const [sessionTypes, supervisors, fellowRatings, schedule] = await Promise.all([
-    fetchImplementerSessionTypes(),
-    fetchImplementerSupervisors(),
+  const schedule = await loadScheduleSessions(searchParams, role);
+  const [supervisors, fellowRatings] = await Promise.all([
+    fetchScheduleSupervisors(schedule.hubIds, schedule.sessionsWhere),
     fetchImplementerFellowRatings(),
-    loadScheduleSessions(searchParams, role),
   ]);
 
   return (
@@ -39,11 +35,9 @@ export default async function AdminSchedulePage({
           aria-label="Session schedule"
           sessions={schedule.sessions}
           timeZone={schedule.timeZone}
-          schools={[]}
-          supervisors={supervisors.data ?? []}
+          supervisors={supervisors}
           fellowRatings={fellowRatings.data ?? []}
           role={role}
-          hubSessionTypes={sessionTypes.data ?? []}
         />
       </div>
       <PageFooter />

@@ -1222,7 +1222,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
         pointPersonId: faker.string.alpha({ casing: "upper", length: 6 }),
         pointPersonName: faker.person.fullName(),
         pointPersonPhone: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        numbersExpected: faker.number.int({ min: 200, max: 600 }),
+        numbersExpected: faker.number.int({ min: 400, max: 900 }),
         principalName: faker.person.fullName(),
         droppedOut: false,
         dropoutReason: null,
@@ -1628,6 +1628,52 @@ async function createAttendanceRecords(
   await insertMany(schema.supervisorAttendance, supervisorAttendanceData);
 
   return { fellowAttendances, studentAttendances };
+}
+
+/**
+ * Fellow and supervisor attendance at the schools outside the demo sample, so each hub has about
+ * as many attendance rows as a production hub (2,400 to 5,800 fellow rows in October 2026).
+ */
+async function createHubAttendance(
+  schools: DemoSchool[],
+  sessions: DemoSessions,
+  seederUserId: string,
+) {
+  console.log("creating hub attendance");
+  const fellowAttendanceData: (typeof schema.fellowAttendance.$inferInsert)[] = [];
+  const supervisorAttendanceData: (typeof schema.supervisorAttendance.$inferInsert)[] = [];
+  for (const school of schools) {
+    const projectId = school.hub?.projectId;
+    if (!projectId) continue;
+    for (const session of sessions.filter((s) => s.schoolId === school.id)) {
+      for (const group of school.interventionGroups) {
+        fellowAttendanceData.push({
+          projectId,
+          fellowId: group.leaderId,
+          sessionId: session.id,
+          schoolId: school.id,
+          supervisorId: school.assignedSupervisorId ?? undefined,
+          groupId: group.id,
+          sessionDate: session.sessionDate,
+          yearOfImplementation: session.yearOfImplementation ?? undefined,
+          attended: faker.datatype.boolean({ probability: 0.9 }),
+          markedBy: seederUserId,
+        });
+      }
+      if (school.assignedSupervisorId) {
+        supervisorAttendanceData.push({
+          projectId,
+          schoolId: school.id,
+          supervisorId: school.assignedSupervisorId,
+          sessionId: session.id,
+          attended: faker.datatype.boolean({ probability: 0.9 }),
+          markedBy: seederUserId,
+        });
+      }
+    }
+  }
+  await insertMany(schema.fellowAttendance, fellowAttendanceData);
+  await insertMany(schema.supervisorAttendance, supervisorAttendanceData);
 }
 
 async function createStudentOutcomes(
@@ -2288,6 +2334,7 @@ async function createDemoRecords(
     seederUserId,
   );
   await Promise.all([
+    createHubAttendance(allSchools.slice(DEMO_SCHOOL_SAMPLE), sessions, seederUserId),
     createStudentOutcomes(schools, studentsBySchool, groupTypeByGroupId),
     createClinicalRecords(
       schools,

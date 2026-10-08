@@ -1,11 +1,14 @@
 import { signOut } from "next-auth/react";
-import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import { currentHubCoordinator } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import { db } from "#/db/client";
 import { getHubScheduleStats } from "#/lib/actions/hub";
-import { fetchHubFellowRatings, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
+import {
+  fetchHubFellowRatings,
+  fetchScheduleSchools,
+  fetchScheduleSessionTypes,
+  fetchScheduleSupervisors,
+} from "#/lib/actions/schedule-data";
 import { loadScheduleSessions, type ScheduleSearchParams } from "#/lib/schedule-sessions";
 import { ScheduleCalendar } from "../../../../components/common/session/schedule-calendar";
 import { ScheduleHeader } from "../../../../components/common/session/schedule-header";
@@ -25,20 +28,14 @@ export default async function HubCoordinatorSchedulePage({
   const hubId = coordinator.profile.assignedHubId;
   const role = coordinator.session.user.activeMembership?.role ?? "HUB_COORDINATOR";
 
-  const values = await Promise.all([
-    fetchSchoolData(),
+  const schedule = await loadScheduleSessions(searchParams, role);
+  const [schools, schoolStats, supervisors, fellowRatings, hubSessionTypes] = await Promise.all([
+    fetchScheduleSchools(hubId),
     getHubScheduleStats(hubId),
-    fetchScheduleSupervisors(hubId),
+    fetchScheduleSupervisors(schedule.hubIds, schedule.sessionsWhere),
     fetchHubFellowRatings(hubId),
-    db.query.sessionName.findMany({ where: (s, { eq }) => eq(s.hubId, hubId) }),
-    loadScheduleSessions(searchParams, role),
+    fetchScheduleSessionTypes(hubId),
   ]);
-  const schools = values[0];
-  const schoolStats = values[1];
-  const supervisors = values[2];
-  const fellowRatings = values[3];
-  const hubSessionTypes = values[4];
-  const schedule = values[5];
 
   return (
     <div className="flex h-full w-full flex-col">

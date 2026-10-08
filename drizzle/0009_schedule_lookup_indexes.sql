@@ -1,0 +1,2 @@
+CREATE INDEX "fellow_attendances_fellow_id_idx" ON "fellow_attendances" USING btree ("fellow_id");--> statement-breakpoint
+CREATE INDEX "intervention_groups_school_id_idx" ON "intervention_groups" USING btree ("school_id");

@@ -904,18 +904,8 @@ type FellowGroupStats = {
   total_sessions: number;
 };
 
-export async function getFellowGroupsAndHubData() {
-  const fellowId = (await currentFellow())?.profile.id;
-  if (!fellowId) return null;
-
-  const [fellowRow, statsRows] = await Promise.all([
-    db.query.fellow.findFirst({
-      where: (f, { eq }) => eq(f.id, fellowId),
-      columns: { hubId: true },
-      with: { groups: { columns: { id: true, schoolId: true } } },
-    }),
-    db
-      .execute<FellowGroupStats>(sql`
+async function fellowGroupStats(fellowId: string) {
+  const { rows } = await db.execute<FellowGroupStats>(sql`
       SELECT
         COUNT(*)::int                 AS group_count,
         COALESCE(SUM(sc.c), 0)::int   AS total_students,
@@ -930,8 +920,27 @@ export async function getFellowGroupsAndHubData() {
         WHERE school_id = ig.school_id
       ) ic ON TRUE
       WHERE ig.leader_id = ${fellowId}
-    `)
-      .then((r) => r.rows),
+    `);
+  return rows[0] ?? { group_count: 0, total_students: 0, total_sessions: 0 };
+}
+
+/** Group, student and session counts of the signed-in fellow's groups. */
+export async function getFellowGroupStats() {
+  const fellowId = (await currentFellow())?.profile.id;
+  return fellowId ? fellowGroupStats(fellowId) : null;
+}
+
+export async function getFellowGroupsAndHubData() {
+  const fellowId = (await currentFellow())?.profile.id;
+  if (!fellowId) return null;
+
+  const [fellowRow, stats] = await Promise.all([
+    db.query.fellow.findFirst({
+      where: (f, { eq }) => eq(f.id, fellowId),
+      columns: { hubId: true },
+      with: { groups: { columns: { id: true, schoolId: true } } },
+    }),
+    fellowGroupStats(fellowId),
   ]);
 
   if (!fellowRow) return null;
@@ -964,12 +973,6 @@ export async function getFellowGroupsAndHubData() {
       ? db.query.sessionName.findMany({ where: (n, { eq }) => eq(n.hubId, hubId) })
       : Promise.resolve([]),
   ]);
-
-  const stats = statsRows[0] ?? {
-    group_count: 0,
-    total_students: 0,
-    total_sessions: 0,
-  };
 
   return { stats, hub: { schools: schoolRows, sessions } };
 }

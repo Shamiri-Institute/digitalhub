@@ -533,6 +533,8 @@ export const fellowAttendance = pgTable(
     uniqueIndex("fellow_attendances_fellow_id_session_id_key")
       .on(table.fellowId, table.sessionId)
       .where(sql`${table.createdAt} >= '2024-09-01'`),
+    // The unique index above is partial, so a lookup by fellow alone cannot use it.
+    index("fellow_attendances_fellow_id_idx").on(table.fellowId),
     foreignKey({
       columns: [table.fellowId],
       foreignColumns: [fellow.id],
@@ -1666,6 +1668,7 @@ export const interventionGroup = pgTable(
       table.leaderId,
       table.schoolId,
     ),
+    index("intervention_groups_school_id_idx").on(table.schoolId),
     foreignKey({
       columns: [table.projectId],
       foreignColumns: [project.id],

@@ -43,8 +43,8 @@ export function ScheduleNewSession({
   role,
 }: {
   toggleDialog: Dispatch<SetStateAction<boolean>>;
-  schools: (typeof school.$inferSelect)[];
-  hubSessionTypes: (typeof sessionName.$inferSelect)[];
+  schools: Pick<typeof school.$inferSelect, "id" | "schoolName">[];
+  hubSessionTypes: Pick<typeof sessionName.$inferSelect, "id" | "sessionType" | "sessionLabel">[];
   role: ImplementerRole;
 }) {
   const { toast } = useToast();

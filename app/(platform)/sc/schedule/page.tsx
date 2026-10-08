@@ -4,9 +4,13 @@ import { ScheduleCalendar } from "#/components/common/session/schedule-calendar"
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import { db } from "#/db/client";
 import { getHubScheduleStats } from "#/lib/actions/hub";
-import { fetchHubFellowRatings, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
+import {
+  fetchHubFellowRatings,
+  fetchScheduleSchools,
+  fetchScheduleSessionTypes,
+  fetchScheduleSupervisors,
+} from "#/lib/actions/schedule-data";
 import { loadScheduleSessions, type ScheduleSearchParams } from "#/lib/schedule-sessions";
 
 export default async function SupervisorSchedulePage({
@@ -22,16 +26,14 @@ export default async function SupervisorSchedulePage({
   const hubId = supervisor?.profile.hubId as string;
   const role = supervisor?.session.user.activeMembership?.role ?? "SUPERVISOR";
 
-  const [schools, stats, supervisors, fellowRatings, hubSessionTypes, schedule] = await Promise.all(
-    [
-      db.query.school.findMany({ where: (s, { eq }) => eq(s.hubId, hubId) }),
-      getHubScheduleStats(hubId),
-      fetchScheduleSupervisors(hubId),
-      fetchHubFellowRatings(hubId),
-      db.query.sessionName.findMany({ where: (s, { eq }) => eq(s.hubId, hubId) }),
-      loadScheduleSessions(searchParams, role),
-    ],
-  );
+  const schedule = await loadScheduleSessions(searchParams, role);
+  const [schools, stats, supervisors, fellowRatings, hubSessionTypes] = await Promise.all([
+    fetchScheduleSchools(hubId),
+    getHubScheduleStats(hubId),
+    fetchScheduleSupervisors(schedule.hubIds, schedule.sessionsWhere),
+    fetchHubFellowRatings(hubId),
+    fetchScheduleSessionTypes(hubId),
+  ]);
 
   return (
     <div className="flex h-full w-full flex-col">
