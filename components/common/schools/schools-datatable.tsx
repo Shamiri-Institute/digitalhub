@@ -69,19 +69,16 @@ export default function SchoolsDatatable({
   const renderTableActions = () => {
     return (
       role === ImplementerRole.HUB_COORDINATOR && (
-        <>
-          <SchoolDetailsForm school={school} open={editDialog} setOpen={setEditDialog} />
-          <Button
-            className="flex gap-1"
-            onClick={() => {
-              setSchool(null);
-              setEditDialog(true);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add school</span>
-          </Button>
-        </>
+        <Button
+          className="flex gap-1"
+          onClick={() => {
+            setSchool(null);
+            setEditDialog(true);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          <span>Add school</span>
+        </Button>
       )
     );
   };
