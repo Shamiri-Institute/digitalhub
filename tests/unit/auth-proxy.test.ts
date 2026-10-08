@@ -37,14 +37,14 @@ describe("proxy", () => {
   it("lets a request with a cookie through without touching the database", () => {
     // The proxy runs where the database is unreachable (see proxy.ts). A database call would
     // have to be awaited, so a synchronous response is the proof that none is made.
-    const res = proxy(request("/hc/schools", "next-auth.session-token=abc"));
+    const res = proxy(request("/hc/schools", `${sessionCookie().name}=abc`));
     expect(res).not.toBeInstanceOf(Promise);
     expect(res.headers.get("x-middleware-next")).toBe("1");
   });
 
   it("reads the secure-prefixed cookie when the site is served over https", () => {
     process.env.NEXTAUTH_URL = "https://hub.example.org";
-    const res = proxy(request("/sc/schedule", "__Secure-next-auth.session-token=abc"));
+    const res = proxy(request("/sc/schedule", `${sessionCookie().name}=abc`));
     expect(res.headers.get("x-middleware-next")).toBe("1");
   });
 

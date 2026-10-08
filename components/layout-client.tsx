@@ -15,7 +15,7 @@ import { Building2, Menu, ShieldAlert } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { Session } from "next-auth";
+import type { SessionUser } from "#/lib/auth/session-user";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import type { CurrentPersonnel } from "#/app/auth";
@@ -55,12 +55,12 @@ interface NavigationLinkProps {
 
 export function LayoutClient({
   children,
-  session,
+  user,
   profile,
   isAdminUser,
 }: {
   children: React.ReactNode;
-  session: Session | null;
+  user: SessionUser | null;
   profile: CurrentPersonnel | null;
   isAdminUser: boolean;
 }) {
@@ -81,9 +81,9 @@ export function LayoutClient({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const userName = session?.user?.name ?? "N/A";
+  const userName = user?.name ?? "N/A";
   const userInitials = userName === "N/A" ? "N/A" : getInitials(userName);
-  const avatarUrl = session?.user?.image ?? null;
+  const avatarUrl = user?.image ?? null;
 
   const renderNavigationLinks = (className?: string) => {
     return (
@@ -91,18 +91,18 @@ export function LayoutClient({
         <ProjectSwitcher
           loading={loading}
           setLoading={setLoading}
-          session={session}
+          user={user}
           isAdminUser={isAdminUser}
           className="nav-link"
         />
         <div className="nav-link">
-          <RoleSwitcher loading={loading} setLoading={setLoading} session={session} />
+          <RoleSwitcher loading={loading} setLoading={setLoading} user={user} />
         </div>
         <div className="nav-link">
           <MembershipSwitcher
             loading={loading}
             setLoading={setLoading}
-            session={session}
+            user={user}
             isAdminUser={isAdminUser}
           />
         </div>

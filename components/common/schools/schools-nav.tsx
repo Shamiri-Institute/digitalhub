@@ -1,18 +1,16 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
+import type { ImplementerRole } from "#/db/enums";
 
 type TabType = {
   name: string;
   href: string;
 };
 
-export default function SchoolsNav() {
+export default function SchoolsNav({ role }: { role: ImplementerRole | undefined }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session } = useSession();
-  const role = session?.user?.activeMembership?.role;
   const visibleId = pathname.split("/")[3];
 
   const options: TabType[] =

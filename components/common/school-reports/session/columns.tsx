@@ -77,7 +77,9 @@ export const columns: ColumnDef<SessionReportType>[] = [
   },
 ];
 
-export const subColumns: ColumnDef<SessionReportType["session"][number]>[] = [
+export const subColumns = (
+  canAddNotes: boolean,
+): ColumnDef<SessionReportType["session"][number]>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -142,7 +144,9 @@ export const subColumns: ColumnDef<SessionReportType["session"][number]>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => <SessionDropdownMenu sessionReportData={row.original} />,
+    cell: ({ row }) => (
+      <SessionDropdownMenu sessionReportData={row.original} canAddNotes={canAddNotes} />
+    ),
     enableHiding: false,
   },
 ];

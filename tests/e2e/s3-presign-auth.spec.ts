@@ -11,6 +11,7 @@ import {
   sessionRecording,
   user,
 } from "#/db/schema";
+import { sessionCookie } from "#/lib/auth/session";
 import { generateSessionToken } from "#/tests/helpers";
 
 const PRESIGN = "/api/s3/presigned";
@@ -42,7 +43,7 @@ type UploadTarget = {
 };
 
 function cookieHeader(token: string): Record<string, string> {
-  return { cookie: `next-auth.session-token=${token}` };
+  return { cookie: `${sessionCookie().name}=${token}` };
 }
 
 async function postPresign(request: APIRequestContext, data: unknown, token?: string) {

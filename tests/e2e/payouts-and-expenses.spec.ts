@@ -1,10 +1,10 @@
-import { type BrowserContext, expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { differenceInCalendarWeeks, format } from "date-fns";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowAttendance, payoutStatements } from "#/db/schema";
-import { generateSessionToken, signableMember } from "#/tests/helpers";
+import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
@@ -15,19 +15,6 @@ import { getUrl } from "#/tests/pages/helpers";
 
 // The dev server compiles each page on first use, which can take longer than the default.
 test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
-
-async function signIn(context: BrowserContext, email: string) {
-  await context.addCookies([
-    {
-      name: "next-auth.session-token",
-      value: await generateSessionToken(email),
-      domain: "localhost",
-      path: "/",
-      httpOnly: true,
-      sameSite: "Lax",
-    },
-  ]);
-}
 
 /** A user with one membership, so the session's active role is the one asked for. */
 async function signableProfiles(table: string, role: string, hubColumn: string) {
@@ -137,7 +124,7 @@ test.describe("payout runs", () => {
   });
 
   test("an ops user triggers a payout run", async ({ page, context }) => {
-    await signIn(context, ops.email);
+    await signInWithEmail(context, ops.email);
     await page.goto(getUrl("/ops/reporting/expenses/payout-history"), {
       waitUntil: "networkidle",
     });
@@ -173,7 +160,7 @@ test.describe("payout runs", () => {
   });
 
   test("an ops user confirms a payout run", async ({ page, context }) => {
-    await signIn(context, ops.email);
+    await signInWithEmail(context, ops.email);
     await page.goto(getUrl("/ops/reporting/expenses/payout-history"), {
       waitUntil: "networkidle",
     });
@@ -273,7 +260,7 @@ test.describe("fellow attendance", () => {
   });
 
   test("a supervisor marks their fellow missed", async ({ page, context }) => {
-    await signIn(context, fixture.email);
+    await signInWithEmail(context, fixture.email);
     const dialog = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
     const fellowRow = await searchRows(page, dialog, fixture.fellowName);
     await expect(fellowRow).toContainText("Attended");
@@ -319,7 +306,7 @@ test.describe("fellow attendance", () => {
     const supervisors = await signableProfiles("supervisors", "SUPERVISOR", "hub_id");
     const outsider = supervisors.find((s) => s.hubId !== fixture.hubId);
     if (!outsider) throw new Error("seed the database first: no supervisor in another hub");
-    await signIn(context, outsider.email);
+    await signInWithEmail(context, outsider.email);
 
     const sessionRows = await openSessionWeek(page, fixture.sessionDate, fixture.schoolName);
     await expect(page.getByRole("button", { name: "Schedule a session" })).toBeVisible();
@@ -394,7 +381,7 @@ test.describe("bulk fellow attendance", () => {
   });
 
   test("a supervisor marks two fellows attended at once", async ({ page, context }) => {
-    await signIn(context, fixture.email);
+    await signInWithEmail(context, fixture.email);
     const dialog = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
     for (const fellowName of fixture.fellowNames) {
       const fellowRow = await searchRows(page, dialog, fellowName);
@@ -431,7 +418,7 @@ test.describe("bulk fellow attendance", () => {
   });
 
   test("two tabs mark the same fellow attended at the same moment", async ({ page, context }) => {
-    await signIn(context, fixture.email);
+    await signInWithEmail(context, fixture.email);
     const fellowName = fixture.fellowNames[0];
     const fellowId = fixture.fellowIds[0];
     if (!fellowName || !fellowId) throw new Error("fixture has no fellow");

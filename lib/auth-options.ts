@@ -11,7 +11,7 @@ import { session as sessionTable, user as userTable } from "#/db/schema";
 import { env } from "#/env";
 import { isCredentialAuthAllowed } from "#/lib/auth/credential-auth";
 import { adapter, sessionCookie } from "#/lib/auth/session";
-import { loadSessionUser } from "#/lib/auth/session-user";
+import { loadSessionUser, type SessionUser } from "#/lib/auth/session-user";
 
 export type { JWTMembership, SessionUser } from "#/lib/auth/session-user";
 
@@ -77,13 +77,14 @@ export const authOptions: AuthOptions = {
       if (!sessionUser) {
         await db.delete(sessionTable).where(eq(sessionTable.userId, user.id));
         addBreadcrumb({ message: "Session user not found", data: { userId: user.id } });
-        session.user = { id: null, email: null, name: null, image: null };
-        return session;
+        const signedOutUser: SessionUser = { id: null, email: null, name: null, image: null };
+        return { ...session, user: signedOutUser };
       }
-      session.user = sessionUser;
-      return session;
+      return { ...session, user: sessionUser };
     },
   },
 };
 
-export const getCachedSession = cache(async () => getServerSession(authOptions));
+export const getCachedSession = cache(async () =>
+  getServerSession<AuthOptions, { user: SessionUser }>(authOptions),
+);

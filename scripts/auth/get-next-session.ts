@@ -1,4 +1,5 @@
 import { pool } from "#/db/client";
+import { sessionCookie } from "#/lib/auth/session";
 import { generateSessionToken } from "#/tests/helpers";
 
 async function main() {
@@ -15,7 +16,7 @@ async function main() {
   const futureTimestamp = Math.floor(futureDate.getTime() / 1000);
 
   const cookie = {
-    name: "next-auth.session-token",
+    name: sessionCookie().name,
     value: token,
     domain: "localhost",
     path: "/",

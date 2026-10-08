@@ -1,8 +1,6 @@
 "use client";
 
-import { ImplementerRole } from "#/db/enums";
 import { Check, ChevronsUpDown } from "lucide-react";
-import type { Session } from "next-auth";
 import { useState } from "react";
 import { Button } from "#/components/ui/button";
 import { toast } from "#/components/ui/use-toast";
@@ -16,30 +14,23 @@ import {
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { setActiveMembership } from "#/lib/actions/active-membership";
+import type { JWTMembership, SessionUser } from "#/lib/auth/session-user";
 import { cn } from "#/lib/utils";
-
-interface JWTMembership {
-  id: number;
-  implementerId: string;
-  implementerName: string;
-  role: ImplementerRole;
-  identifier: string | null;
-}
 
 export function MembershipSwitcher({
   loading,
   setLoading,
-  session,
+  user,
   isAdminUser,
 }: {
   loading: boolean;
   setLoading: (loading: boolean) => void;
-  session: Session | null;
+  user: SessionUser | null;
   isAdminUser: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const activeMembership = session?.user?.activeMembership ?? null;
-  const memberships = session?.user?.memberships ?? [];
+  const activeMembership = user?.activeMembership ?? null;
+  const memberships = user?.memberships ?? [];
 
   if (!isAdminUser) {
     return null;

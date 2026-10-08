@@ -4,7 +4,7 @@ import type { BrowserContext } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { createSession } from "#/lib/auth/session";
+import { createSession, sessionCookie } from "#/lib/auth/session";
 import { type Role, pickUser } from "#/tests/platform-routes";
 
 export const PersonnelFixtures = {
@@ -83,7 +83,7 @@ export async function signInWithEmail(context: BrowserContext, email: string) {
   const token = await generateSessionToken(email);
   await context.addCookies([
     {
-      name: "next-auth.session-token",
+      name: sessionCookie().name,
       value: token,
       domain: "localhost",
       path: "/",
