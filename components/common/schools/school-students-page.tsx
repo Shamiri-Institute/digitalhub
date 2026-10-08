@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 
 import StudentsDatatable from "#/components/common/student/students-datatable";
@@ -5,6 +6,7 @@ import { db } from "#/db/client";
 import type { ImplementerRole } from "#/db/enums";
 import { clinicalSessionAttendance, school } from "#/db/schema";
 import { countOf } from "#/db/sql";
+import { visibleSchoolIds } from "#/lib/auth/require-hub-role";
 
 export default async function SchoolStudentsPage({
   visibleId,
@@ -15,9 +17,11 @@ export default async function SchoolStudentsPage({
 }) {
   // The school subtree is identical for every student, so it is loaded once and attached
   // in JS. Nesting it under each row made Drizzle recompute the lateral join per student.
+  const visibleSchools = await visibleSchoolIds();
   const [schoolRow, rows] = await Promise.all([
     db.query.school.findFirst({
-      where: (s, { eq }) => eq(s.visibleId, visibleId),
+      where: (s, { and, eq, inArray }) =>
+        and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
       with: { interventionSessions: { with: { session: true } } },
     }),
     db.query.student.findMany({
@@ -26,7 +30,10 @@ export default async function SchoolStudentsPage({
           isNull(s.archivedAt),
           inArray(
             s.schoolId,
-            db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
+            db
+              .select({ id: school.id })
+              .from(school)
+              .where(and(eq(school.visibleId, visibleId), inArray(school.id, visibleSchools.ids))),
           ),
         ),
       with: {
@@ -67,7 +74,10 @@ export default async function SchoolStudentsPage({
     }),
   ]);
 
-  const students = rows.map((s) => ({ ...s, school: schoolRow ?? null }));
+  if (!schoolRow) {
+    notFound();
+  }
+  const students = rows.map((s) => ({ ...s, school: schoolRow }));
 
   return <StudentsDatatable students={students} role={role} />;
 }

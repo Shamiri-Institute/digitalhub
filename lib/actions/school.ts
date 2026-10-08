@@ -3,46 +3,8 @@
 import { eq, inArray } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { ImplementerRole } from "#/db/enums";
-import { hub, interventionGroup, school } from "#/db/schema";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { requireHubRole } from "#/lib/auth/require-hub-role";
-
-/**
- * Schools the caller may see: their implementer's (admin), their hub's, or where they lead a group.
- * Wrapped in an object because awaiting a query builder runs it.
- */
-async function visibleSchoolIds() {
-  const membership = await requireAuthRole(
-    ImplementerRole.ADMIN,
-    ImplementerRole.HUB_COORDINATOR,
-    ImplementerRole.SUPERVISOR,
-    ImplementerRole.FELLOW,
-  );
-  if (membership.role === ImplementerRole.ADMIN) {
-    return {
-      ids: db
-        .select({ id: school.id })
-        .from(school)
-        .innerJoin(hub, eq(hub.id, school.hubId))
-        .where(eq(hub.implementerId, membership.implementerId)),
-    };
-  }
-  const caller = await requireHubRole(
-    ImplementerRole.HUB_COORDINATOR,
-    ImplementerRole.SUPERVISOR,
-    ImplementerRole.FELLOW,
-  );
-  if (caller.role === ImplementerRole.FELLOW) {
-    return {
-      ids: db
-        .select({ id: interventionGroup.schoolId })
-        .from(interventionGroup)
-        .where(eq(interventionGroup.leaderId, caller.profileId)),
-    };
-  }
-  return { ids: db.select({ id: school.id }).from(school).where(eq(school.hubId, caller.hubId)) };
-}
+import { hub, school } from "#/db/schema";
+import { visibleSchoolIds } from "#/lib/auth/require-hub-role";
 
 export async function fetchSchool(visibleId: string) {
   const visibleSchools = await visibleSchoolIds();

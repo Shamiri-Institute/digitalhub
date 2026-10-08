@@ -1,9 +1,10 @@
-import { eq, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { fellow, supervisor } from "#/db/schema";
+import { fellow, hub, interventionGroup, school, supervisor } from "#/db/schema";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
 
 type HubRole =
@@ -97,4 +98,43 @@ export function fellowsInCallerScope(caller: Awaited<ReturnType<typeof requireHu
       .where(or(eq(fellow.hubId, caller.hubId), eq(supervisor.hubId, caller.hubId)));
   }
   return db.select({ id: fellow.id }).from(fellow).where(eq(fellow.id, caller.profileId));
+}
+
+/**
+ * Schools the caller may see: their implementer's in the active project (admin), their hub's, or
+ * where they lead a group. Wrapped in an object because awaiting a query builder runs it.
+ */
+export async function visibleSchoolIds() {
+  const membership = await requireAuthRole(
+    ImplementerRole.ADMIN,
+    ImplementerRole.HUB_COORDINATOR,
+    ImplementerRole.SUPERVISOR,
+    ImplementerRole.FELLOW,
+  );
+  if (membership.role === ImplementerRole.ADMIN) {
+    const activeProjectId = await getActiveProjectId();
+    return {
+      ids: db
+        .select({ id: school.id })
+        .from(school)
+        .innerJoin(hub, eq(hub.id, school.hubId))
+        .where(
+          and(eq(hub.implementerId, membership.implementerId), eq(hub.projectId, activeProjectId)),
+        ),
+    };
+  }
+  const caller = await requireHubRole(
+    ImplementerRole.HUB_COORDINATOR,
+    ImplementerRole.SUPERVISOR,
+    ImplementerRole.FELLOW,
+  );
+  if (caller.role === ImplementerRole.FELLOW) {
+    return {
+      ids: db
+        .select({ id: interventionGroup.schoolId })
+        .from(interventionGroup)
+        .where(eq(interventionGroup.leaderId, caller.profileId)),
+    };
+  }
+  return { ids: db.select({ id: school.id }).from(school).where(eq(school.hubId, caller.hubId)) };
 }

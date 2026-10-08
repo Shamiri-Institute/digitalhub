@@ -1,4 +1,5 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { notFound } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 import { currentFellow } from "#/app/auth";
@@ -6,6 +7,7 @@ import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { school } from "#/db/schema";
+import { visibleSchoolIds } from "#/lib/auth/require-hub-role";
 
 export default async function SchoolSessionsPage(props: {
   params: Promise<{ visibleId: string }>;
@@ -19,6 +21,7 @@ export default async function SchoolSessionsPage(props: {
     await signOut({ callbackUrl: "/login" });
   }
 
+  const visibleSchools = await visibleSchoolIds();
   // Every session belongs to the same school, so the school with its groups is
   // loaded once and attached below instead of being recomputed per session by a lateral join.
   const [rows, schoolRow] = await Promise.all([
@@ -26,7 +29,10 @@ export default async function SchoolSessionsPage(props: {
       where: (s, { inArray }) =>
         inArray(
           s.schoolId,
-          db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
+          db
+            .select({ id: school.id })
+            .from(school)
+            .where(and(eq(school.visibleId, visibleId), inArray(school.id, visibleSchools.ids))),
         ),
       with: {
         sessionRatings: true,
@@ -34,7 +40,8 @@ export default async function SchoolSessionsPage(props: {
       },
     }),
     db.query.school.findFirst({
-      where: (s, { eq }) => eq(s.visibleId, visibleId),
+      where: (s, { and, eq, inArray }) =>
+        and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
       with: {
         assignedSupervisor: true,
         interventionGroups: {
@@ -46,7 +53,10 @@ export default async function SchoolSessionsPage(props: {
     }),
   ]);
 
-  const sessions = rows.map((s) => ({ ...s, school: schoolRow ?? null }));
+  if (!schoolRow) {
+    notFound();
+  }
+  const sessions = rows.map((s) => ({ ...s, school: schoolRow }));
 
   return (
     <SessionsDatatable
