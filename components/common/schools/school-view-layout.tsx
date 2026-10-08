@@ -30,14 +30,24 @@ async function loadSchoolPanel(visibleId: string) {
       interventionSessions: {
         columns: { occurred: true, status: true },
         with: { session: { columns: { sessionName: true } } },
+        orderBy: (schoolSession, { desc }) => [
+          desc(schoolSession.sessionDate),
+          desc(schoolSession.id),
+        ],
       },
       hub: {
         columns: { hubName: true },
-        with: { sessions: { columns: { sessionName: true, sessionType: true } } },
+        with: {
+          sessions: {
+            columns: { sessionName: true, sessionType: true },
+            orderBy: (hubSession, { asc }) => [asc(hubSession.createdAt), asc(hubSession.id)],
+          },
+        },
       },
       schoolDropoutHistory: {
         columns: { id: true, droppedOut: true, dropoutReason: true, createdAt: true },
         with: { user: { columns: { name: true } } },
+        orderBy: (history, { asc }) => [asc(history.createdAt), asc(history.id)],
       },
     },
     // Raw SQL with a derived table on purpose: drizzle 0.45 rewrites other tables' columns inside

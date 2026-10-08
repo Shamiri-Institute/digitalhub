@@ -40,7 +40,9 @@ export default function CreateGroup({
   groupCount,
   disabled,
 }: {
-  supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
+  supervisors: (Pick<typeof supervisor.$inferSelect, "id" | "supervisorName"> & {
+    fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName" | "droppedOut">[];
+  })[];
   school: typeof schoolTable.$inferSelect;
   groupCount: number;
   disabled?: boolean;

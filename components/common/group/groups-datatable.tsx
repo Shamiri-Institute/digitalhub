@@ -31,7 +31,9 @@ export default function GroupsDataTable({
       session: typeof sessionName.$inferSelect | null;
     })[];
   };
-  supervisors?: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
+  supervisors?: (Pick<typeof supervisor.$inferSelect, "id" | "supervisorName"> & {
+    fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName" | "droppedOut">[];
+  })[];
   role: ImplementerRole;
 }) {
   const [selectedGroup, setSelectedGroup] = useState<SchoolGroupDataTableData>();

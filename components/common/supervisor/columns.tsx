@@ -23,11 +23,17 @@ import {
 } from "#/components/ui/dropdown-menu";
 
 // The row shape `SchoolSupervisorsPage` loads.
-export type SupervisorsData = typeof supervisor.$inferSelect & {
-  assignedSchools: (typeof school.$inferSelect)[];
-  fellows: (typeof fellow.$inferSelect)[];
-  supervisorAttendances: (typeof supervisorAttendance.$inferSelect & {
-    session: typeof interventionSession.$inferSelect;
+export type SupervisorsData = Pick<
+  typeof supervisor.$inferSelect,
+  "id" | "supervisorName" | "cellNumber" | "gender" | "archivedAt" | "droppedOut"
+> & {
+  assignedSchools: Pick<typeof school.$inferSelect, "schoolName">[];
+  fellows: Pick<typeof fellow.$inferSelect, "droppedOut">[];
+  supervisorAttendances: (Pick<
+    typeof supervisorAttendance.$inferSelect,
+    "id" | "supervisorId" | "attended" | "absenceReason" | "absenceComments" | "sessionId"
+  > & {
+    session: Pick<typeof interventionSession.$inferSelect, "schoolId">;
   })[];
 };
 

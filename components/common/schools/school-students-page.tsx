@@ -44,9 +44,20 @@ export default async function SchoolStudentsPage({
           }),
         },
         studentAttendances: {
+          columns: {
+            id: true,
+            studentId: true,
+            attended: true,
+            absenceReason: true,
+            comments: true,
+            sessionId: true,
+          },
           with: {
-            session: { with: { session: true } },
-            group: true,
+            session: {
+              columns: { sessionDate: true },
+              with: { session: { columns: { sessionName: true } } },
+            },
+            group: { columns: { groupName: true } },
           },
         },
         assignedGroup: {

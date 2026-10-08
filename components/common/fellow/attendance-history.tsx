@@ -29,15 +29,18 @@ import {
 
 // A fellow attendance with the session, group and payout rows the school fellows page and
 // `loadFellowsData` attach.
-export type FellowAttendanceHistoryRow = typeof fellowAttendance.$inferSelect & {
+export type FellowAttendanceHistoryRow = Pick<
+  typeof fellowAttendance.$inferSelect,
+  "fellowId" | "attended"
+> & {
   session:
-    | (typeof interventionSession.$inferSelect & {
-        session: typeof sessionName.$inferSelect | null;
-        school: typeof school.$inferSelect | null;
+    | (Pick<typeof interventionSession.$inferSelect, "sessionDate" | "venue"> & {
+        session: Pick<typeof sessionName.$inferSelect, "sessionLabel"> | null;
+        school: Pick<typeof school.$inferSelect, "schoolName"> | null;
       })
     | null;
-  group: typeof interventionGroup.$inferSelect | null;
-  PayoutStatements: (typeof payoutStatements.$inferSelect)[];
+  group: Pick<typeof interventionGroup.$inferSelect, "groupName"> | null;
+  PayoutStatements: Pick<typeof payoutStatements.$inferSelect, "mpesaNumber" | "executedAt">[];
 };
 
 export default function AttendanceHistory({

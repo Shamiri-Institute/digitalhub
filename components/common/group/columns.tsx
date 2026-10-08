@@ -1,11 +1,12 @@
 "use client";
 
-import type { interventionGroupReport, interventionSession, student } from "#/db/schema";
+import type { interventionGroupReport, interventionSession } from "#/db/schema";
 import type { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { GroupsDatatableMenu } from "#/components/common/group/groups-datatable-menu";
+import type { GroupStudent } from "#/components/common/student/students-in-group";
 import { Badge } from "#/components/ui/badge";
 
 export type SchoolGroupDataTableData = {
@@ -20,7 +21,7 @@ export type SchoolGroupDataTableData = {
   projectId: string;
   archivedAt: Date | null;
   groupRating: number | null;
-  students: (typeof student.$inferSelect & { clinicalCasesCount: number })[];
+  students: GroupStudent[];
   reports: (typeof interventionGroupReport.$inferSelect & {
     session: typeof interventionSession.$inferSelect | null;
   })[];

@@ -28,11 +28,14 @@ type GroupSummary = Pick<typeof interventionGroup.$inferSelect, "id" | "groupNam
 // The row shape `SchoolStudentsPage` builds for this table.
 export type SchoolStudentTableData = typeof student.$inferSelect & {
   clinicalCases: { id: string; sessionsCount: number }[];
-  studentAttendances: (typeof studentAttendance.$inferSelect & {
-    session: typeof interventionSession.$inferSelect & {
-      session: typeof sessionName.$inferSelect | null;
+  studentAttendances: (Pick<
+    typeof studentAttendance.$inferSelect,
+    "id" | "studentId" | "attended" | "absenceReason" | "comments" | "sessionId"
+  > & {
+    session: Pick<typeof interventionSession.$inferSelect, "sessionDate"> & {
+      session: Pick<typeof sessionName.$inferSelect, "sessionName"> | null;
     };
-    group: typeof interventionGroup.$inferSelect | null;
+    group: Pick<typeof interventionGroup.$inferSelect, "groupName"> | null;
   })[];
   assignedGroup: GroupSummary | null;
   school:

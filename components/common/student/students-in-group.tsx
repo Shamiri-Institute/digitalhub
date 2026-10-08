@@ -16,6 +16,11 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 
+export type GroupStudent = Pick<
+  typeof student.$inferSelect,
+  "id" | "studentName" | "visibleId" | "admissionNumber" | "yearOfBirth" | "updatedAt"
+> & { clinicalCasesCount: number };
+
 export default function StudentsInGroup({
   children,
   open,
@@ -29,7 +34,7 @@ export default function StudentsInGroup({
   children: React.ReactNode;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  students: (typeof student.$inferSelect & { clinicalCasesCount: number })[];
+  students: GroupStudent[];
   schoolId: string;
   groupId: string;
   groupName: string | null;
@@ -96,7 +101,7 @@ export default function StudentsInGroup({
   );
 }
 
-const columns: ColumnDef<typeof student.$inferSelect & { clinicalCasesCount: number }>[] = [
+const columns: ColumnDef<GroupStudent>[] = [
   {
     id: "Student name",
     header: "Student name",

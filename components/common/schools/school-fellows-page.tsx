@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/db/client";
 import type { ImplementerRole } from "#/db/enums";
 import { fellow, interventionGroup, school, supervisor, weeklyFellowRatings } from "#/db/schema";
-import { clinicalCasesCountExtras } from "#/lib/actions/schedule-data";
+import { clinicalCasesCountExtras, groupStudentColumns } from "#/lib/actions/schedule-data";
 import { visibleSchoolIds } from "#/lib/auth/require-hub-role";
 
 export default async function SchoolFellowsPage({
@@ -18,30 +18,40 @@ export default async function SchoolFellowsPage({
   hideActions?: boolean;
 }) {
   const visibleSchools = await visibleSchoolIds();
-  const schoolRow = await db.query.school.findFirst({
-    where: (s, { and, eq, inArray }) =>
-      and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
-    with: {
-      fellowAttendances: {
-        with: {
-          session: { with: { session: true, school: true } },
-          group: true,
-          PayoutStatements: true,
-        },
-      },
-      hub: { with: { project: true } },
-    },
-  });
-  if (!schoolRow) {
-    notFound();
-  }
+  const visibleSchool = and(
+    eq(school.visibleId, visibleId),
+    inArray(school.id, visibleSchools.ids),
+  );
+  const schoolIds = db.select({ id: school.id }).from(school).where(visibleSchool);
+  const schoolHubId = db.select({ hubId: school.hubId }).from(school).where(visibleSchool);
 
   const schoolGroups = db
     .select()
     .from(interventionGroup)
-    .where(eq(interventionGroup.schoolId, schoolRow.id))
+    .where(inArray(interventionGroup.schoolId, schoolIds))
     .as("school_groups");
-  const [rawFellows, students, supervisors] = await Promise.all([
+  const [schoolRow, rawFellows, students, supervisors] = await Promise.all([
+    db.query.school.findFirst({
+      where: (s, { and, eq, inArray }) =>
+        and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
+      columns: { id: true },
+      with: {
+        fellowAttendances: {
+          columns: { fellowId: true, attended: true },
+          with: {
+            session: {
+              columns: { sessionDate: true, venue: true },
+              with: {
+                session: { columns: { sessionLabel: true } },
+                school: { columns: { schoolName: true } },
+              },
+            },
+            group: { columns: { groupName: true } },
+            PayoutStatements: { columns: { mpesaNumber: true, executedAt: true } },
+          },
+        },
+      },
+    }),
     db
       .select({
         id: fellow.id,
@@ -64,25 +74,23 @@ export default async function SchoolFellowsPage({
       .leftJoin(weeklyFellowRatings, eq(fellow.id, weeklyFellowRatings.fellowId))
       .leftJoin(supervisor, eq(fellow.supervisorId, supervisor.id))
       .leftJoin(schoolGroups, eq(fellow.id, schoolGroups.leaderId))
-      .where(eq(fellow.hubId, schoolRow.hubId ?? ""))
+      .where(inArray(fellow.hubId, schoolHubId))
       .groupBy(fellow.id, schoolGroups.id, schoolGroups.groupName, supervisor.supervisorName),
     db.query.student.findMany({
       where: (s, { and, isNull, inArray }) =>
-        and(
-          isNull(s.archivedAt),
-          inArray(
-            s.schoolId,
-            db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
-          ),
-        ),
+        and(isNull(s.archivedAt), inArray(s.schoolId, schoolIds)),
+      columns: groupStudentColumns,
       extras: clinicalCasesCountExtras,
     }),
     db.query.supervisor.findMany({
-      where: (s, { eq }) => eq(s.hubId, schoolRow.hubId ?? ""),
+      where: (s, { inArray }) => inArray(s.hubId, schoolHubId),
       columns: { id: true, supervisorName: true },
       with: { fellows: { columns: { id: true, fellowName: true, droppedOut: true } } },
     }),
   ]);
+  if (!schoolRow) {
+    notFound();
+  }
 
   const fellows = rawFellows.map((fellow) => ({
     ...fellow,
