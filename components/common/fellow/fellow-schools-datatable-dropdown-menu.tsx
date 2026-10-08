@@ -19,7 +19,7 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
   fellowRow: FellowsData;
   state: {
     setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
-    setEditFellowDialog: Dispatch<SetStateAction<boolean>>;
+    openEditDialog: (fellow: FellowsData) => void;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
     setComplaintsDialog: Dispatch<SetStateAction<boolean>>;
     setFellow: Dispatch<SetStateAction<FellowsData | null>>;
@@ -45,12 +45,7 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {state.role === "SUPERVISOR" ? (
-          <DropdownMenuItem
-            onClick={() => {
-              handleSetFellow();
-              state.setEditFellowDialog(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => state.openEditDialog(fellowRow)}>
             Edit fellow information
           </DropdownMenuItem>
         ) : null}

@@ -1,6 +1,10 @@
 "use client";
 
 import type { fellow, supervisor } from "#/db/schema";
+import {
+  type FellowPersonalDetails,
+  loadFellowPersonalDetails,
+} from "#/app/(platform)/hc/fellows/actions";
 import { ImplementerRole } from "#/db/enums";
 import { useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -13,6 +17,7 @@ import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
+import { toastOnError } from "#/components/ui/use-toast";
 
 export default function FellowsDatatable({
   fellows,
@@ -22,7 +27,9 @@ export default function FellowsDatatable({
   attendances,
 }: {
   fellows: SchoolFellowTableData[];
-  supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
+  supervisors: (Pick<typeof supervisor.$inferSelect, "id" | "supervisorName"> & {
+    fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName" | "droppedOut">[];
+  })[];
   schoolId: string;
   role: ImplementerRole;
   hideActions?: boolean;
@@ -34,6 +41,15 @@ export default function FellowsDatatable({
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
   const [assignSupervisorDialog, setAssignSupervisorDialog] = useState(false);
+  const [fellowToShow, setFellowToShow] = useState<
+    (SchoolFellowTableData & FellowPersonalDetails) | null
+  >(null);
+
+  const openDetailsDialog = toastOnError(async (fellowRow: SchoolFellowTableData) => {
+    const personalDetails = await loadFellowPersonalDetails(fellowRow.id);
+    setFellowToShow({ ...fellowRow, ...personalDetails });
+    setDetailsDialog(true);
+  });
 
   const fellow = (() => {
     if (selectedFellow) {
@@ -48,7 +64,7 @@ export default function FellowsDatatable({
   const memoizedColumns = columns({
     state: {
       setFellow: setSelectedFellow,
-      setDetailsDialog,
+      openDetailsDialog,
       setReplaceDialog,
       setStudentsDialog,
       setAttendanceHistoryDialog,
@@ -71,18 +87,6 @@ export default function FellowsDatatable({
       />
       {fellow && (
         <>
-          <FellowDetailsForm
-            open={detailsDialog}
-            onOpenChange={setDetailsDialog}
-            mode={
-              role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
-                ? "view"
-                : role === ImplementerRole.SUPERVISOR
-                  ? "edit"
-                  : null
-            }
-            fellow={fellow}
-          />
           <AttendanceHistory
             open={attendanceHistoryDialog}
             onOpenChange={setAttendanceHistoryDialog}
@@ -140,6 +144,20 @@ export default function FellowsDatatable({
             </>
           ) : null}
         </>
+      )}
+      {fellowToShow && (
+        <FellowDetailsForm
+          open={detailsDialog}
+          onOpenChange={setDetailsDialog}
+          mode={
+            role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
+              ? "view"
+              : role === ImplementerRole.SUPERVISOR
+                ? "edit"
+                : null
+          }
+          fellow={fellowToShow}
+        />
       )}
     </>
   );

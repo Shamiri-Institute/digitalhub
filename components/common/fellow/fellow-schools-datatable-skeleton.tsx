@@ -11,21 +11,18 @@ export default function FellowSchoolsDatatableSkeleton({ role }: { role: Impleme
         state: {
           setFellow: () => null,
           setWeeklyEvaluationDialog: () => false,
-          setEditFellowDialog: () => false,
+          openEditDialog: () => null,
           setAttendanceHistoryDialog: () => false,
           setComplaintsDialog: () => false,
           role,
         },
       })}
       columnVisibilityState={{
-        "MPESA Name": false,
         "Average Rating": false,
         "Active Status": false,
         County: false,
         "Fellow Email": false,
         "Phone Number": false,
-        "ID Number": false,
-        "Date of Birth": false,
         Gender: false,
         "Sub-county": false,
       }}

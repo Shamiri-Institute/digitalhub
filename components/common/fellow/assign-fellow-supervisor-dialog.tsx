@@ -29,8 +29,8 @@ export default function AssignFellowSupervisorDialog({
   children,
   fellow,
 }: {
-  supervisors: (typeof supervisor.$inferSelect & {
-    fellows: (typeof fellowTable.$inferSelect)[];
+  supervisors: (Pick<typeof supervisor.$inferSelect, "id" | "supervisorName"> & {
+    fellows: Pick<typeof fellowTable.$inferSelect, "id" | "fellowName" | "droppedOut">[];
   })[];
   children: React.ReactNode;
   open: boolean;

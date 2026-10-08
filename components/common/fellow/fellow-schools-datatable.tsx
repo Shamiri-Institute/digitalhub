@@ -1,4 +1,8 @@
 "use client";
+import {
+  type FellowPersonalDetails,
+  loadFellowPersonalDetails,
+} from "#/app/(platform)/hc/fellows/actions";
 import type { ImplementerRole } from "#/db/enums";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
@@ -17,6 +21,7 @@ import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
+import { toastOnError } from "#/components/ui/use-toast";
 import { markFellowAttendance } from "#/lib/actions/fellow";
 import type { FellowsData } from "../../../app/(platform)/sc/actions";
 import { fellowSchoolsColumns, subColumns } from "./fellow-schools-columns";
@@ -41,12 +46,21 @@ export default function FellowSchoolsDatatable({
   const [attendanceDialog, setAttendanceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
+  const [fellowToEdit, setFellowToEdit] = useState<(FellowsData & FellowPersonalDetails) | null>(
+    null,
+  );
+
+  const openEditDialog = toastOnError(async (fellowRow: FellowsData) => {
+    const personalDetails = await loadFellowPersonalDetails(fellowRow.id);
+    setFellowToEdit({ ...fellowRow, ...personalDetails });
+    setEditFellowDialog(true);
+  });
 
   const mainColumns = (() => {
     const columns = {
       setFellow: setSelectedFellow,
       setWeeklyEvaluationDialog,
-      setEditFellowDialog,
+      openEditDialog,
       setAttendanceHistoryDialog,
       setComplaintsDialog,
       role,
@@ -131,14 +145,11 @@ export default function FellowSchoolsDatatable({
         renderTableActions={renderTableActions()}
         emptyStateMessage="No fellows assigned to you"
         columnVisibilityState={{
-          "MPESA Name": false,
           "Average Rating": false,
           "Active Status": false,
           County: false,
           "Fellow Email": false,
           "Phone Number": false,
-          "ID Number": false,
-          "Date of Birth": false,
           Gender: false,
           "Sub-county": false,
         }}
@@ -157,12 +168,6 @@ export default function FellowSchoolsDatatable({
       />
       {fellow && (
         <>
-          <FellowDetailsForm
-            open={editFellowDialog}
-            onOpenChange={setEditFellowDialog}
-            mode={role === "HUB_COORDINATOR" ? "view" : role === "SUPERVISOR" ? "edit" : null}
-            fellow={fellow}
-          />
           <WeeklyFellowEvaluation
             fellowId={fellow.id}
             open={weeklyEvaluationDialog}
@@ -201,6 +206,14 @@ export default function FellowSchoolsDatatable({
             {renderFellowDialogAlert(fellow)}
           </SubmitComplaint>
         </>
+      )}
+      {fellowToEdit && (
+        <FellowDetailsForm
+          open={editFellowDialog}
+          onOpenChange={setEditFellowDialog}
+          mode={role === "HUB_COORDINATOR" ? "view" : role === "SUPERVISOR" ? "edit" : null}
+          fellow={fellowToEdit}
+        />
       )}
       {fellowGroup && fellow && (
         <>
