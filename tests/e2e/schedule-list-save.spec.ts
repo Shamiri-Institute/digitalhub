@@ -56,7 +56,7 @@ test("marking a session in the list view keeps the visible range", async ({ page
       and coalesce(i.status::text, '') <> 'Cancelled'
       and ${signableMember()}
       and not exists (select 1 from intervention_sessions p
-        join session_names pn on pn.id = p.session_id and pn."sessionType" = n."sessionType"
+        join session_names pn on pn.id = p.session_id and pn."session_type" = n."session_type"
         where p.school_id = s.id and not p.occurred and p.session_date < i.session_date
           and coalesce(p.status::text, '') <> 'Cancelled')
     order by i.session_date desc, i.id

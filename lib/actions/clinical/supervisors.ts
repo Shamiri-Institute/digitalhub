@@ -34,7 +34,7 @@ export function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
       LEFT JOIN
         "clinical_case_notes" ccn ON csi.id = ccn."case_id"
       LEFT JOIN
-        "clinical_session_attendance" csa ON csi.id = csa."caseId" AND csa."supervisor_id" = s.id
+        "clinical_session_attendance" csa ON csi.id = csa."case_id" AND csa."supervisor_id" = s.id
       ${s.join}
       WHERE
         ${s.where}

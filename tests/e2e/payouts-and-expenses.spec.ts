@@ -241,7 +241,7 @@ test.describe("fellow attendance", () => {
       join fellows f on f.id = fa.fellow_id and f.hub_id = sc.hub_id
         and coalesce(f.dropped_out, false) = false
       join intervention_groups g on g.school_id = sc.id and g.leader_id = f.id
-        and (sn."sessionType" <> 'INTERVENTION' or g.group_type = 'TREATMENT')
+        and (sn."session_type" <> 'INTERVENTION' or g.group_type = 'TREATMENT')
       join implementer_members m on m.identifier = f.supervisor_id and m.role = 'SUPERVISOR'
       join users u on u.id = m.user_id and u.email is not null
       where fa.attended and fa.processed_at is null and ${signableMember()}
@@ -350,7 +350,7 @@ test.describe("bulk fellow attendance", () => {
         (array_agg(f.id order by f.id))[1:2] as "fellowIds",
         (array_agg(f.fellow_name order by f.id))[1:2] as "fellowNames"
       from intervention_sessions i
-      join session_names sn on sn.id = i.session_id and sn."sessionType" = 'INTERVENTION'
+      join session_names sn on sn.id = i.session_id and sn."session_type" = 'INTERVENTION'
         and sn.amount > 0
       join schools s on s.id = i.school_id
       join intervention_groups g on g.school_id = s.id and g.group_type = 'TREATMENT'

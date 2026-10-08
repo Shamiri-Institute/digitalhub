@@ -21,7 +21,7 @@ function caseScope(scope: CasesScope) {
   }
   return {
     joins: sql.empty(),
-    where: sql`(s."hub_id" = ${scope.hubId} OR csi."clinicalLeadId" = ${scope.clinicalLeadId})`,
+    where: sql`(s."hub_id" = ${scope.hubId} OR csi."clinical_lead_id" = ${scope.clinicalLeadId})`,
   };
 }
 
@@ -105,7 +105,7 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
         session as name,
         COUNT(*)::int as value
       FROM "clinical_session_attendance" csa
-      JOIN "clinical_screening_info" csi ON csa."caseId" = csi.id
+      JOIN "clinical_screening_info" csi ON csa."case_id" = csi.id
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
       ${cs.joins}
       WHERE ${cs.where}
@@ -312,8 +312,8 @@ export async function fetchClinicalCasesList(
         csi.general_presenting_issues_endpoint as "generalPresentingIssuesEndpoint",
         csi.general_presenting_issues_other_specified_baseline as "generalPresentingIssuesOtherSpecifiedBaseline",
         csi.general_presenting_issues_other_specified_endpoint as "generalPresentingIssuesOtherSpecifiedEndpoint",
-        csi."clinicalLeadId" as "clinicalLeadId",
-        CASE WHEN csi."clinicalLeadId" = ${profileId} THEN true ELSE false END as "isClinicalLeadCase",
+        csi."clinical_lead_id" as "clinicalLeadId",
+        CASE WHEN csi."clinical_lead_id" = ${profileId} THEN true ELSE false END as "isClinicalLeadCase",
         CASE WHEN csfp.id IS NOT NULL THEN true ELSE false END as "treatmentPlan",
         CASE WHEN EXISTS (
           SELECT 1 FROM "clinical_case_notes" ccn
@@ -325,12 +325,12 @@ export async function fetchClinicalCasesList(
         (
           SELECT CAST(COUNT(*) AS INTEGER)
           FROM "clinical_session_attendance" csa
-          WHERE csa."caseId" = csi.id
+          WHERE csa."case_id" = csi.id
         ) as "noOfClinicalSessions",
         (
           SELECT csa.session
           FROM "clinical_session_attendance" csa
-          WHERE csa."caseId" = csi.id
+          WHERE csa."case_id" = csi.id
           ORDER BY csa.date DESC
           LIMIT 1
         ) as "upcomingSession",

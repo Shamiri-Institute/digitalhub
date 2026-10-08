@@ -38,7 +38,7 @@ test("the school sessions page lists earlier unmarked sessions before marking on
     join session_names n on n.id = i.session_id
     join intervention_sessions p on p.school_id = s.id and not p.occurred
       and coalesce(p.status::text, '') <> 'Cancelled' and p.session_date < i.session_date
-    join session_names pn on pn.id = p.session_id and pn."sessionType" = n."sessionType"
+    join session_names pn on pn.id = p.session_id and pn."session_type" = n."session_type"
     where ${signableMember()}
       and (select count(*) from intervention_sessions o where o.school_id = s.id) <= 10
       and (select count(*) from intervention_sessions o

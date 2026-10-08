@@ -44,7 +44,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
           columns: { id: true },
           extras: (c, { sql }) => ({
             sessionsCount:
-              sql<number>`(select count(*)::int from (select "caseId" from clinical_session_attendance) a where a."caseId" = ${c.id})`.as(
+              sql<number>`(select count(*)::int from (select "case_id" from clinical_session_attendance) a where a."case_id" = ${c.id})`.as(
                 "sessions_count",
               ),
           }),
