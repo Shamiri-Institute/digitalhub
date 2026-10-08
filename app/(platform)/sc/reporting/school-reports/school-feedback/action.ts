@@ -1,7 +1,7 @@
 "use server";
 
 import { currentSupervisor } from "#/app/auth";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { db } from "#/db/client";
 
 export async function loadSchoolFeedback() {
@@ -14,8 +14,7 @@ export async function loadSchoolFeedback() {
   const { profile } = supervisor;
   const hubId = profile?.hubId;
   if (!hubId) {
-    await signOut({ callbackUrl: "/login" });
-    throw new Error("Unauthorised user");
+    redirect("/login");
   }
 
   const schools = await db.query.school.findMany({

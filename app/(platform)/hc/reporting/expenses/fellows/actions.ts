@@ -2,7 +2,7 @@
 
 import { currentHubCoordinator } from "#/app/auth";
 import { asc, eq, type SQL, sql } from "drizzle-orm";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { db } from "#/db/client";
 import {
   fellow,
@@ -26,8 +26,7 @@ export async function loadHubFellowAttendance() {
 
   const hubId = hubCoordinator.profile?.assignedHubId;
   if (!hubId) {
-    await signOut({ callbackUrl: "/login" });
-    throw new Error("Unauthorised user");
+    redirect("/login");
   }
   const [fellows, payouts] = await Promise.all([
     db

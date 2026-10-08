@@ -1,6 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { notFound, redirect } from "next/navigation";
 
 import { currentFellow } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
@@ -18,7 +17,7 @@ export default async function SchoolSessionsPage(props: {
 
   const fellow = await currentFellow();
   if (fellow === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   const visibleSchools = await visibleSchoolIds();

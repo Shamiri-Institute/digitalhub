@@ -1,7 +1,7 @@
 "use server";
 
 import { currentHubCoordinator } from "#/app/auth";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { db } from "#/db/client";
 
 export async function loadHubSchoolFeedback() {
@@ -13,8 +13,7 @@ export async function loadHubSchoolFeedback() {
 
   const assignedHubId = hubCoordinator.profile?.assignedHubId;
   if (!assignedHubId) {
-    await signOut({ callbackUrl: "/login" });
-    throw new Error("Unauthorised user");
+    redirect("/login");
   }
 
   const schools = await db.query.school.findMany({

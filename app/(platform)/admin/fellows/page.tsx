@@ -1,5 +1,5 @@
 import { and, countDistinct, eq, inArray, isNull, or, sql } from "drizzle-orm";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
 import { currentAdminUser } from "#/app/auth";
@@ -14,7 +14,7 @@ import { getActiveProjectId } from "#/lib/active-project-id";
 export default async function FellowPage() {
   const admin = await currentAdminUser();
   if (!admin) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   const activeMembership = admin?.session?.user.activeMembership;
   const implementerId = activeMembership?.implementerId;

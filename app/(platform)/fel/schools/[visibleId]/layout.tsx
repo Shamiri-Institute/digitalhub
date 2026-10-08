@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import type React from "react";
 import { currentFellow } from "#/app/auth";
 import SchoolViewLayout from "#/components/common/schools/school-view-layout";
@@ -9,7 +9,7 @@ export default async function Layout(props: {
 }) {
   const fellow = await currentFellow();
   if (fellow === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   const { visibleId } = await props.params;
   return <SchoolViewLayout visibleId={visibleId}>{props.children}</SchoolViewLayout>;

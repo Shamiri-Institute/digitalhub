@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { currentFellow } from "#/app/auth";
 
 import { ScheduleCalendar } from "#/components/common/session/schedule-calendar";
@@ -15,7 +15,7 @@ export default async function FellowSchedulePage({
 }) {
   const fellow = await currentFellow();
   if (fellow === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   const role = fellow?.session.user.activeMembership?.role ?? "FELLOW";

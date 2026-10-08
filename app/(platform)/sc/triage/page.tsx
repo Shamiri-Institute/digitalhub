@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import {
   getFellowsForSupervisor,
@@ -80,8 +80,7 @@ function StatsSkeleton() {
 async function TriageContent() {
   const supervisor = await currentSupervisor();
   if (!supervisor?.profile) {
-    await signOut({ callbackUrl: "/login" });
-    return null;
+    redirect("/login");
   }
 
   const supervisorId = supervisor.profile.id;

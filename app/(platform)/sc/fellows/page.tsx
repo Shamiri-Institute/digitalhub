@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 import { loadFellowsData } from "#/app/(platform)/sc/actions";
 import { currentSupervisor } from "#/app/auth";
@@ -9,7 +9,7 @@ import FellowSchoolsDatatable from "../../../../components/common/fellow/fellow-
 export default async function FellowsPage() {
   const supervisor = await currentSupervisor();
   if (supervisor === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   if (!supervisor?.profile?.hubId) {

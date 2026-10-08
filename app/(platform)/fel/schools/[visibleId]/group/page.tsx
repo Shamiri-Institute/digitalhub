@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 import { currentFellow } from "#/app/auth";
 import FellowGroupReportTrigger from "#/components/common/group/fellow-group-report-trigger";
@@ -18,7 +18,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
 
   const fellowUser = await currentFellow();
   if (fellowUser === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   const fellowId = fellowUser?.profile?.id;
 

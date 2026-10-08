@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { currentSupervisor } from "#/app/auth";
 import { ScheduleCalendar } from "#/components/common/session/schedule-calendar";
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
@@ -20,7 +20,7 @@ export default async function SupervisorSchedulePage({
 }) {
   const supervisor = await currentSupervisor();
   if (supervisor === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   const hubId = supervisor?.profile.hubId as string;

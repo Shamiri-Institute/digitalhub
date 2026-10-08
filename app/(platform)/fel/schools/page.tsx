@@ -1,5 +1,5 @@
 import { ImplementerRole } from "#/db/enums";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { currentFellow } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
@@ -11,7 +11,7 @@ import { getFellowGroupsAndHubData } from "#/lib/actions/fellow";
 export default async function SchoolsPage() {
   const fellow = await currentFellow();
   if (fellow === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   const fellowData = await getFellowGroupsAndHubData();

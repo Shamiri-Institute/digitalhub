@@ -1,11 +1,11 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import type React from "react";
 import { currentHubCoordinator } from "#/app/auth";
 
 export default async function SchoolsLayout({ children }: { children: React.ReactNode }) {
   const coordinator = await currentHubCoordinator();
   if (coordinator === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   const assignedHubId = coordinator?.profile?.assignedHubId;
   if (!assignedHubId) {

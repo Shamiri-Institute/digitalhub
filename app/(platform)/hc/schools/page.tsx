@@ -1,5 +1,5 @@
 import { ImplementerRole } from "#/db/enums";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { currentHubCoordinator } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import { SearchCommand } from "#/components/search-command";
@@ -28,12 +28,11 @@ export default async function SchoolsPage(props: {
 
   const hubCoordinator = await currentHubCoordinator();
   if (hubCoordinator === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   const assignedHubId = hubCoordinator?.profile?.assignedHubId;
   if (!assignedHubId) {
-    await signOut({ callbackUrl: "/login" });
-    return null;
+    redirect("/login");
   }
 
   const [

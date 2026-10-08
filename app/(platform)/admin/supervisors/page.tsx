@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 import MainSupervisorsDataTable from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
 import { currentAdminUser } from "#/app/auth";
@@ -13,7 +13,7 @@ import { getActiveProjectId } from "#/lib/active-project-id";
 export default async function SupervisorsPage() {
   const admin = await currentAdminUser();
   if (admin === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   const implementerId = admin?.session?.user.activeMembership?.implementerId;
   const projectId = await getActiveProjectId();

@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
@@ -12,7 +12,7 @@ import { fetchAdminHubs } from "./queries";
 export default async function HubsPage() {
   const admin = await currentAdminUser();
   if (admin === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   const implementerId = admin?.session?.user.activeMembership?.implementerId;

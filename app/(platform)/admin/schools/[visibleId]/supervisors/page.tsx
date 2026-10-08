@@ -1,5 +1,5 @@
 import { ImplementerRole } from "#/db/enums";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { currentAdminUser } from "#/app/auth";
 import SchoolSupervisorsPage from "#/components/common/schools/school-supervisors-page";
 
@@ -7,7 +7,7 @@ export default async function SupervisorsPage(props: { params: Promise<{ visible
   const { visibleId } = await props.params;
   const admin = await currentAdminUser();
   if (admin === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   return (
     <SchoolSupervisorsPage

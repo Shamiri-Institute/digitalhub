@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { ImplementerRole } from "#/db/enums";
 
 import { currentAdminUser } from "#/app/auth";
@@ -17,7 +17,7 @@ export default async function AdminSchedulePage({
 }) {
   const admin = await currentAdminUser();
   if (admin === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   const role = admin?.session.user.activeMembership?.role ?? ImplementerRole.ADMIN;
   const schedule = await loadScheduleSessions(searchParams, role);

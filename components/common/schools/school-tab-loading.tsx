@@ -1,5 +1,5 @@
 import type { ImplementerRole } from "#/db/enums";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { getCurrentUserSession } from "#/app/auth";
 import FellowsDatatableSkeleton from "#/components/common/fellow/fellows-datatable-skeleton";
 import GroupsDatatableSkeleton from "#/components/common/group/groups-datatable-skeleton";
@@ -24,7 +24,7 @@ export default async function SchoolTabLoading({
 }) {
   const session = await getCurrentUserSession();
   if (!session) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   const Skeleton = SKELETONS[tab];
   return <Skeleton role={session?.user.activeMembership?.role ?? fallbackRole} />;
