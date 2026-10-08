@@ -1,9 +1,12 @@
 "use server";
 
-import { sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
+import { fellow, hub } from "#/db/schema";
+import { getActiveProjectId } from "#/lib/active-project-id";
+import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole } from "#/lib/auth/require-hub-role";
 
 export type FellowDropoutReasonsGraphData = {
@@ -102,4 +105,53 @@ export async function fetchFellowSessionRatingAverages() {
   });
 
   return ratingAverages;
+}
+
+/**
+ * The fellows the caller may see: a hub coordinator sees their hub, an admin their implementer's
+ * fellows in the active project, the same as the fellows pages list.
+ */
+async function callerFellowFilter() {
+  const { role, implementerId } = await requireAuthRole(
+    ImplementerRole.HUB_COORDINATOR,
+    ImplementerRole.ADMIN,
+  );
+  if (role === ImplementerRole.ADMIN) {
+    const activeProjectHubIds = db
+      .select({ id: hub.id })
+      .from(hub)
+      .where(eq(hub.projectId, await getActiveProjectId()));
+    return and(eq(fellow.implementerId, implementerId), inArray(fellow.hubId, activeProjectHubIds));
+  }
+  const { hubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+  return eq(fellow.hubId, hubId);
+}
+
+export async function loadFellowPersonalDetails(fellowId: string) {
+  const [personalDetails] = await db
+    .select({
+      idNumber: fellow.idNumber,
+      dateOfBirth: fellow.dateOfBirth,
+      mpesaName: fellow.mpesaName,
+      mpesaNumber: fellow.mpesaNumber,
+    })
+    .from(fellow)
+    .where(and(eq(fellow.id, fellowId), await callerFellowFilter()));
+  if (!personalDetails) {
+    throw new Error("Fellow not found");
+  }
+  return personalDetails;
+}
+
+export type FellowPersonalDetails = Awaited<ReturnType<typeof loadFellowPersonalDetails>>;
+
+export async function loadFellowWeeklyEvaluations(fellowId: string) {
+  const fellowInScope = db
+    .select({ id: fellow.id })
+    .from(fellow)
+    .where(and(eq(fellow.id, fellowId), await callerFellowFilter()));
+  return db.query.weeklyFellowRatings.findMany({
+    where: (r, { inArray }) => inArray(r.fellowId, fellowInScope),
+    orderBy: (r, { asc }) => [asc(r.week), asc(r.id)],
+  });
 }

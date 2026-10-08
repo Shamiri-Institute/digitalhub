@@ -52,7 +52,7 @@ export default function SubmitComplaint({
     id: string;
     complaint: string;
     comments?: string;
-    createdBy?: typeof user.$inferSelect;
+    createdBy?: Pick<typeof user.$inferSelect, "name">;
     createdAt: Date;
   }[];
 }) {

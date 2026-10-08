@@ -1,14 +1,7 @@
 "use client";
 
 import type { ImplementerRole } from "#/db/enums";
-import type {
-  fellow,
-  hub,
-  monthlySupervisorEvaluation,
-  project,
-  school,
-  supervisor,
-} from "#/db/schema";
+import type { fellow, monthlySupervisorEvaluation, school, supervisor } from "#/db/schema";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
@@ -24,9 +17,8 @@ import {
 
 // The row shape the hc and admin supervisors pages load.
 export type SupervisorsData = typeof supervisor.$inferSelect & {
-  assignedSchools: (typeof school.$inferSelect)[];
-  fellows: (typeof fellow.$inferSelect)[];
-  hub: (typeof hub.$inferSelect & { project: typeof project.$inferSelect | null }) | null;
+  assignedSchools: Pick<typeof school.$inferSelect, "schoolName">[];
+  fellows: Pick<typeof fellow.$inferSelect, "droppedOut">[];
   monthlySupervisorEvaluation: (typeof monthlySupervisorEvaluation.$inferSelect)[];
 };
 

@@ -18,20 +18,25 @@ export default async function SupervisorsPage() {
   const implementerId = admin?.session?.user.activeMembership?.implementerId;
   const projectId = await getActiveProjectId();
 
-  const supervisors = await db.query.supervisor.findMany({
-    where: (s, { and, eq, inArray }) =>
-      and(
-        implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
-        inArray(s.hubId, db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId))),
-      ),
-    with: {
-      assignedSchools: true,
-      fellows: true,
-      hub: { with: { project: true } },
-      monthlySupervisorEvaluation: true,
-    },
-    orderBy: (s, { asc }) => asc(s.supervisorName),
-  });
+  const [supervisors, project] = await Promise.all([
+    db.query.supervisor.findMany({
+      where: (s, { and, eq, inArray }) =>
+        and(
+          implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
+          inArray(s.hubId, db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId))),
+        ),
+      with: {
+        assignedSchools: { columns: { schoolName: true } },
+        fellows: { columns: { droppedOut: true } },
+        monthlySupervisorEvaluation: true,
+      },
+      orderBy: (s, { asc }) => asc(s.supervisorName),
+    }),
+    db.query.project.findFirst({
+      where: (p, { eq }) => eq(p.id, projectId),
+      columns: { actualStartDate: true, actualEndDate: true },
+    }),
+  ]);
 
   return (
     <div className="flex h-full flex-col">
@@ -40,6 +45,7 @@ export default async function SupervisorsPage() {
         <Separator />
         <MainSupervisorsDataTable
           supervisors={supervisors}
+          project={project ?? null}
           role={admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN}
         />
       </div>
