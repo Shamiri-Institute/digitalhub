@@ -1,10 +1,10 @@
 "use server";
 
-import { and, eq, getTableColumns, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { currentAdminUser } from "#/app/auth";
 import { db } from "#/db/client";
-import { hub, school, sessionName } from "#/db/schema";
+import { hub, school } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
 async function requireAdminImplementerId() {
@@ -14,14 +14,6 @@ async function requireAdminImplementerId() {
     throw new Error("Unauthorized");
   }
   return implementerId;
-}
-
-/** Ids of the hubs an implementer runs in the active project. */
-function implementerHubIds(implementerId: string, projectId: string) {
-  return db
-    .select({ id: hub.id })
-    .from(hub)
-    .where(and(eq(hub.implementerId, implementerId), eq(hub.projectId, projectId)));
 }
 
 export async function fetchImplementerStats() {
@@ -53,29 +45,6 @@ export async function fetchImplementerStats() {
   }
 }
 
-export async function fetchImplementerSessionTypes() {
-  const implementerId = await requireAdminImplementerId();
-
-  const projectId = await getActiveProjectId();
-
-  try {
-    const sessionTypes = await db
-      .selectDistinctOn([sessionName.sessionName], getTableColumns(sessionName))
-      .from(sessionName)
-      .innerJoin(hub, eq(sessionName.hubId, hub.id))
-      .where(and(eq(hub.implementerId, implementerId), eq(hub.projectId, projectId)))
-      .orderBy(sessionName.sessionName);
-
-    return { success: true, data: sessionTypes };
-  } catch (error) {
-    console.error("Error fetching implementer session types:", error);
-    return {
-      success: false,
-      message: "Error fetching implementer session types",
-    };
-  }
-}
-
 export async function fetchImplementerSchools() {
   const implementerId = await requireAdminImplementerId();
 
@@ -98,52 +67,6 @@ export async function fetchImplementerSchools() {
     return { success: false, message: "Error fetching implementer schools" };
   }
 }
-
-export async function fetchImplementerSupervisors() {
-  const implementerId = await requireAdminImplementerId();
-
-  const projectId = await getActiveProjectId();
-
-  try {
-    const supervisors = await db.query.supervisor.findMany({
-      where: (s, { inArray }) => inArray(s.hubId, implementerHubIds(implementerId, projectId)),
-      with: {
-        supervisorAttendances: {
-          with: {
-            session: true,
-          },
-        },
-        fellows: {
-          with: {
-            fellowAttendances: true,
-            groups: {
-              // The counted table is written as SQL text on purpose: drizzle 0.45 rewrites every
-              // column reference inside `extras` to the current relation's alias.
-              extras: (g, { sql }) => ({
-                studentsCount:
-                  sql<number>`(select count(*)::int from students s where s.assigned_group_id = ${g.id})`.as(
-                    "students_count",
-                  ),
-              }),
-            },
-          },
-        },
-        assignedSchools: true,
-      },
-    });
-    return { success: true, data: supervisors };
-  } catch (error) {
-    console.error("Error fetching implementer supervisors:", error);
-    return {
-      success: false,
-      message: "Error fetching implementer supervisors",
-    };
-  }
-}
-
-export type ImplementerSupervisor = NonNullable<
-  Awaited<ReturnType<typeof fetchImplementerSupervisors>>["data"]
->[number];
 
 export async function fetchImplementerFellowRatings() {
   const implementerId = await requireAdminImplementerId();

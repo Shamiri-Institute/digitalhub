@@ -19,7 +19,7 @@ export default async function SchoolSessionsPage(props: {
     await signOut({ callbackUrl: "/login" });
   }
 
-  // Every session belongs to the same school, so the school with its groups and students is
+  // Every session belongs to the same school, so the school with its groups is
   // loaded once and attached below instead of being recomputed per session by a lateral join.
   const [rows, schoolRow] = await Promise.all([
     db.query.interventionSession.findMany({
@@ -29,7 +29,6 @@ export default async function SchoolSessionsPage(props: {
           db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
         ),
       with: {
-        hub: { columns: { visibleId: true } },
         sessionRatings: true,
         session: true,
       },
@@ -41,15 +40,6 @@ export default async function SchoolSessionsPage(props: {
         interventionGroups: {
           with: {
             leader: { columns: { fellowName: true } },
-            students: {
-              with: { studentAttendances: true },
-              extras: (st, { sql }) => ({
-                clinicalCasesCount:
-                  sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
-                    "clinical_cases_count",
-                  ),
-              }),
-            },
           },
         },
       },

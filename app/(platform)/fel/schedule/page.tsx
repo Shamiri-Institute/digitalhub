@@ -5,7 +5,7 @@ import { ScheduleCalendar } from "#/components/common/session/schedule-calendar"
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import { getFellowGroupsAndHubData } from "#/lib/actions/fellow";
+import { getFellowGroupStats } from "#/lib/actions/fellow";
 import { loadScheduleSessions, type ScheduleSearchParams } from "#/lib/schedule-sessions";
 
 export default async function FellowSchedulePage({
@@ -19,8 +19,8 @@ export default async function FellowSchedulePage({
   }
 
   const role = fellow?.session.user.activeMembership?.role ?? "FELLOW";
-  const [scheduleData, schedule] = await Promise.all([
-    getFellowGroupsAndHubData(),
+  const [stats, schedule] = await Promise.all([
+    getFellowGroupStats(),
     loadScheduleSessions(searchParams, role),
   ]);
 
@@ -31,12 +31,12 @@ export default async function FellowSchedulePage({
           stats={[
             {
               title: "Sessions",
-              count: scheduleData?.stats.total_sessions ?? 0,
+              count: stats?.total_sessions ?? 0,
             },
-            { title: "Groups", count: scheduleData?.stats.group_count ?? 0 },
+            { title: "Groups", count: stats?.group_count ?? 0 },
             {
               title: "Students",
-              count: scheduleData?.stats.total_students ?? 0,
+              count: stats?.total_students ?? 0,
             },
           ]}
         />
@@ -45,9 +45,7 @@ export default async function FellowSchedulePage({
           aria-label="Session schedule"
           sessions={schedule.sessions}
           timeZone={schedule.timeZone}
-          schools={scheduleData?.hub?.schools ?? []}
           role={role}
-          hubSessionTypes={scheduleData?.hub?.sessions}
           fellowId={fellow?.profile.id}
         />
       </div>

@@ -36,13 +36,7 @@ export const currentHubCoordinator = cache(async () => {
 
   const hubCoordinator = await db.query.hubCoordinator.findFirst({
     where: (hc, { eq }) => eq(hc.id, identifier),
-    with: {
-      assignedHub: {
-        with: {
-          schools: true,
-        },
-      },
-    },
+    with: { assignedHub: true },
   });
 
   if (!hubCoordinator) {

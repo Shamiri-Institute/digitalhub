@@ -1,5 +1,5 @@
 import { ImplementerRole } from "#/db/enums";
-import type { fellow, student } from "#/db/schema";
+import type { fellow } from "#/db/schema";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -34,7 +34,10 @@ import {
 } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { fetchSessionAttendances } from "#/lib/actions/session/session";
+import {
+  type fetchSessionAttendances,
+  fetchSessionStudentAttendance,
+} from "#/lib/actions/session/session";
 import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
 import { getTriageEventByStudentAndSession, getTriageEventsForSession } from "#/lib/actions/triage";
@@ -52,7 +55,7 @@ export default function StudentAttendance({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
   session: Session | null;
-  fellows: (typeof fellow.$inferSelect)[];
+  fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName">[];
   fellowId?: string;
 }) {
   const isFellow = role === ImplementerRole.FELLOW;
@@ -78,6 +81,9 @@ export default function StudentAttendance({
   const [sessionAttendances, setSessionAttendances] = useState<
     Awaited<ReturnType<typeof fetchSessionAttendances>>
   >([]);
+  const [studentsByGroup, setStudentsByGroup] = useState<Map<string, StudentAttendanceData[]>>(
+    new Map(),
+  );
   const [attendanceFetchId, setAttendanceFetchId] = useState<string | null>(null);
 
   const loadingAttendances = isOpen && !!session?.id && attendanceFetchId !== session.id;
@@ -92,15 +98,22 @@ export default function StudentAttendance({
     if (!isOpen || !session?.id) return;
     const targetSessionId = session.id;
     let cancelled = false;
-    void fetchSessionAttendances(targetSessionId)
-      .then((rows) => {
+    void fetchSessionStudentAttendance(targetSessionId)
+      .then(({ students, attendances }) => {
         if (!cancelled) {
-          setSessionAttendances(rows);
+          const byGroup = new Map<string, StudentAttendanceData[]>();
+          for (const student of students) {
+            const groupId = student.assignedGroupId ?? "";
+            byGroup.set(groupId, [...(byGroup.get(groupId) ?? []), student]);
+          }
+          setStudentsByGroup(byGroup);
+          setSessionAttendances(attendances);
           setAttendanceFetchId(targetSessionId);
         }
       })
       .catch(() => {
         if (!cancelled) {
+          setStudentsByGroup(new Map());
           setSessionAttendances([]);
           setAttendanceFetchId(targetSessionId);
           toast({
@@ -324,11 +337,16 @@ export default function StudentAttendance({
           key={`student-attendance-table-${resetSelectionTrigger}`}
           columns={memoizedColumns}
           editColumns={true}
+          // DataTable clears the row selection when `data` changes identity, so pass the stored array.
           data={
-            groups.find((group) => group.group?.id === selectedGroup)?.group?.students ??
-            session?.school?.interventionGroups.find((group) => group.leaderId === fellowId)
-              ?.students ??
-            []
+            (attendanceFetchId === session?.id &&
+              studentsByGroup.get(
+                selectedGroup ??
+                  session?.school?.interventionGroups.find((group) => group.leaderId === fellowId)
+                    ?.id ??
+                  "",
+              )) ||
+            NO_STUDENTS
           }
           columnVisibilityState={{
             "Clinical cases": false,
@@ -423,10 +441,11 @@ export default function StudentAttendance({
   );
 }
 
-// A student of a session's school with the clinical-cases count the producers attach.
-export type StudentAttendanceData = typeof student.$inferSelect & {
-  clinicalCasesCount: number;
-};
+export type StudentAttendanceData = Awaited<
+  ReturnType<typeof fetchSessionStudentAttendance>
+>["students"][number];
+
+const NO_STUDENTS: StudentAttendanceData[] = [];
 
 const TRIAGE_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
   SUPPORTED: {

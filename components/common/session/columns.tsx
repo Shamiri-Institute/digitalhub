@@ -1,13 +1,7 @@
 "use client";
 
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
-import type {
-  interventionGroup,
-  school,
-  student,
-  studentAttendance,
-  supervisor,
-} from "#/db/schema";
+import type { interventionGroup, school, supervisor } from "#/db/schema";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
@@ -21,12 +15,7 @@ export type SessionData = Omit<Session, "school"> & {
   school:
     | (typeof school.$inferSelect & {
         assignedSupervisor: typeof supervisor.$inferSelect | null;
-        interventionGroups: (typeof interventionGroup.$inferSelect & {
-          students: (typeof student.$inferSelect & {
-            studentAttendances: (typeof studentAttendance.$inferSelect)[];
-            clinicalCasesCount: number;
-          })[];
-        })[];
+        interventionGroups: (typeof interventionGroup.$inferSelect)[];
       })
     | null;
 };

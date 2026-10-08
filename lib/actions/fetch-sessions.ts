@@ -1,57 +1,18 @@
-import { and, eq } from "drizzle-orm";
+import "server-only";
+
+import { eq, type SQLWrapper } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { ImplementerRole } from "#/db/enums";
-import { hub, interventionGroup } from "#/db/schema";
-import { getActiveProjectId } from "#/lib/active-project-id";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { requireHubRole } from "#/lib/auth/require-hub-role";
-import { clinicalCasesCountExtras } from "#/lib/actions/schedule-data";
+import { interventionGroup } from "#/db/schema";
 
-export async function fetchInterventionSessions({ start, end }: { start: Date; end: Date }) {
-  const membership = await requireAuthRole(
-    ImplementerRole.ADMIN,
-    ImplementerRole.HUB_COORDINATOR,
-    ImplementerRole.SUPERVISOR,
-    ImplementerRole.FELLOW,
-  );
-  let projectId: string;
-  let hubId: string | undefined;
-  let implementerId: string | undefined;
-  let fellowId: string | undefined;
-  if (membership.role === ImplementerRole.ADMIN) {
-    implementerId = membership.implementerId;
-    projectId = await getActiveProjectId();
-  } else {
-    const caller = await requireHubRole(
-      ImplementerRole.HUB_COORDINATOR,
-      ImplementerRole.SUPERVISOR,
-      ImplementerRole.FELLOW,
-    );
-    hubId = caller.hubId;
-    fellowId = caller.role === ImplementerRole.FELLOW ? caller.profileId : undefined;
-    const hubRow = await db.query.hub.findFirst({
-      where: (h, { eq }) => eq(h.id, caller.hubId),
-      columns: { projectId: true },
-    });
-    if (!hubRow?.projectId) {
-      throw new Error("Hub has no project");
-    }
-    projectId = hubRow.projectId;
-  }
-
-  // Hubs of this project, narrowed to the caller's hub and/or implementer when given.
-  const hubIds = db
-    .select({ id: hub.id })
-    .from(hub)
-    .where(
-      and(
-        eq(hub.projectId, projectId),
-        hubId ? eq(hub.id, hubId) : undefined,
-        implementerId ? eq(hub.implementerId, implementerId) : undefined,
-      ),
-    );
-
+/**
+ * Sessions between `start` and `end` at the hubs the page's caller may see. A fellow sees only
+ * the schools where they lead a group, and only their own groups there.
+ */
+export async function fetchInterventionSessions(
+  { start, end }: { start: Date; end: Date },
+  { hubIds, fellowId }: { hubIds: string[] | SQLWrapper; fellowId?: string },
+) {
   const sessions = await db.query.interventionSession.findMany({
     where: (s, { and, gte, lt, inArray, isNotNull }) =>
       and(
@@ -70,34 +31,23 @@ export async function fetchInterventionSessions({ start, end }: { start: Date; e
           : undefined,
       ),
     with: {
-      hub: { columns: { visibleId: true } },
       sessionRatings: true,
       session: true,
+      school: {
+        columns: { id: true, visibleId: true, schoolName: true, assignedSupervisorId: true },
+        with: {
+          interventionGroups: {
+            ...(fellowId !== undefined ? { where: (g, { eq }) => eq(g.leaderId, fellowId) } : {}),
+            columns: { id: true, leaderId: true, groupName: true },
+          },
+        },
+      },
     },
     orderBy: (s, { asc }) => asc(s.sessionDate),
   });
-
-  const schoolIds = [...new Set(sessions.map((s) => s.schoolId).filter((id) => id !== null))];
-  const schools =
-    schoolIds.length === 0
-      ? []
-      : await db.query.school.findMany({
-          where: (sc, { inArray }) => inArray(sc.id, schoolIds),
-          with: {
-            interventionGroups: {
-              ...(fellowId !== undefined ? { where: (g, { eq }) => eq(g.leaderId, fellowId) } : {}),
-              with: {
-                students: { extras: clinicalCasesCountExtras },
-              },
-            },
-          },
-        });
-  const schoolById = new Map(schools.map((sc) => [sc.id, sc]));
-
-  return sessions.map((s) => ({
-    ...s,
-    school: s.schoolId === null ? null : (schoolById.get(s.schoolId) ?? null),
-  }));
+  // One object per school, so the page payload carries each school once, not once per session.
+  const schoolById = new Map(sessions.map((s) => [s.schoolId, s.school]));
+  return sessions.map((s) => ({ ...s, school: schoolById.get(s.schoolId) ?? null }));
 }
 
 export type Session = Awaited<ReturnType<typeof fetchInterventionSessions>>[number];

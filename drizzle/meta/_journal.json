@@ -64,6 +64,13 @@
       "when": 1791296195349,
       "tag": "0008_attendance_unique_per_session",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791445328136,
+      "tag": "0009_schedule_lookup_indexes",
+      "breakpoints": true
     }
   ]
 }
