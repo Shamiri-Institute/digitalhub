@@ -11,8 +11,7 @@ import {
   sessionRecording,
   user,
 } from "#/db/schema";
-import { sessionCookie } from "#/lib/auth/session";
-import { generateSessionToken } from "#/tests/helpers";
+import { sessionCookieFor } from "#/tests/helpers";
 
 const PRESIGN = "/api/s3/presigned";
 const SIZE = 1024;
@@ -42,14 +41,15 @@ type UploadTarget = {
   foreignGroupId: string | null;
 };
 
-function cookieHeader(token: string): Record<string, string> {
-  return { cookie: `${sessionCookie().name}=${token}` };
+async function sessionCookieHeader(email: string) {
+  const { name, value } = await sessionCookieFor(email);
+  return `${name}=${value}`;
 }
 
 async function postPresign(request: APIRequestContext, data: unknown, token?: string) {
   const res = await request.post(PRESIGN, {
     data,
-    headers: token ? cookieHeader(token) : undefined,
+    headers: token ? { cookie: token } : undefined,
   });
   const body = await res.json().catch(() => ({}));
   return { res, body };
@@ -238,16 +238,16 @@ test.beforeAll(async () => {
     anyEmailForRole("ADMIN"),
   ]);
 
-  fellowToken = await generateSessionToken(required(fellowEmail, "FELLOW"));
-  supervisorToken = await generateSessionToken(required(supervisorEmail, "SUPERVISOR"));
-  hubToken = await generateSessionToken(required(hubEmail, "HUB_COORDINATOR"));
-  adminToken = await generateSessionToken(required(adminEmail, "ADMIN"));
+  fellowToken = await sessionCookieHeader(required(fellowEmail, "FELLOW"));
+  supervisorToken = await sessionCookieHeader(required(supervisorEmail, "SUPERVISOR"));
+  hubToken = await sessionCookieHeader(required(hubEmail, "HUB_COORDINATOR"));
+  adminToken = await sessionCookieHeader(required(adminEmail, "ADMIN"));
 
   attendanceTarget = required(await findFellowUploadTarget(), "fellow upload target");
-  attendanceTargetToken = await generateSessionToken(attendanceTarget.email);
+  attendanceTargetToken = await sessionCookieHeader(attendanceTarget.email);
 
   recordingTarget = required(await findRecordingUploadTarget(), "recording upload target");
-  recordingTargetToken = await generateSessionToken(recordingTarget.email);
+  recordingTargetToken = await sessionCookieHeader(recordingTarget.email);
 });
 
 test.describe("S3 presign auth gate (unauthenticated)", () => {

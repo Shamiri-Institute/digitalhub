@@ -1,6 +1,5 @@
+import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
-
-import { sessionCookie } from "#/lib/auth/session";
 
 const PUBLIC_PATHS = new Set(["/login", "/register"]);
 
@@ -25,8 +24,7 @@ export default function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get(sessionCookie().name)?.value;
-  if (!token) {
+  if (!getSessionCookie(request)) {
     const url = new URL("/login", request.url);
     if (path !== "/") {
       url.searchParams.set("next", path);

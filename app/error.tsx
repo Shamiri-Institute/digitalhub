@@ -2,11 +2,11 @@
 
 import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
 import * as React from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { toastOnError } from "#/components/ui/use-toast";
+import { signOut } from "#/lib/auth-client";
 
 export default function AppError({
   error,
@@ -28,8 +28,7 @@ export default function AppError({
     localStorage.clear();
     sessionStorage.clear();
     reset();
-    await signOut({ redirect: false });
-    window.location.replace("/login");
+    await signOut();
   };
 
   return (

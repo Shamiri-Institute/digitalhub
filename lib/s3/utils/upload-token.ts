@@ -55,7 +55,7 @@ function base64url(input: Buffer): string {
 }
 
 function hmac(payload: string): Buffer {
-  return createHmac("sha256", env.NEXTAUTH_SECRET).update(payload).digest();
+  return createHmac("sha256", env.BETTER_AUTH_SECRET).update(payload).digest();
 }
 
 export function signUploadToken(claim: UploadClaim): string {

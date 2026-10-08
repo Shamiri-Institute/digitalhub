@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-import { sessionCookie } from "#/lib/auth/session";
 import { getUrl } from "#/tests/pages/helpers";
 
 const pagesThatCheckTheProfile = [
@@ -13,7 +12,7 @@ test.describe("a session cookie with no session in the database", () => {
   test.beforeEach(async ({ context }) => {
     await context.addCookies([
       {
-        name: sessionCookie().name,
+        name: "better-auth.session_token",
         value: "deleted-session-token",
         domain: "localhost",
         path: "/",

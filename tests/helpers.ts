@@ -4,7 +4,7 @@ import type { BrowserContext } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { createSession, sessionCookie } from "#/lib/auth/session";
+import { createSessionCookie } from "#/lib/auth/test-auth";
 import { type Role, pickUser } from "#/tests/platform-routes";
 
 export const PersonnelFixtures = {
@@ -30,13 +30,14 @@ export const PersonnelFixtures = {
   },
 };
 
-export async function generateSessionToken(email: string) {
+/** A signed session cookie for the user, backed by a new row in `sessions`. */
+export async function sessionCookieFor(email: string) {
   const user = await db.query.user.findFirst({
     where: (u, { eq }) => eq(u.email, email),
     columns: { id: true },
   });
   if (!user) throw new Error(`No user with email ${email}`);
-  return (await createSession(user.id)).value;
+  return createSessionCookie(user.id);
 }
 
 /**
@@ -80,16 +81,5 @@ export async function emailForProfile(identifier: string, role: Role) {
 }
 
 export async function signInWithEmail(context: BrowserContext, email: string) {
-  const token = await generateSessionToken(email);
-  await context.addCookies([
-    {
-      name: sessionCookie().name,
-      value: token,
-      domain: "localhost",
-      path: "/",
-      httpOnly: true,
-      sameSite: "Lax",
-      expires: Math.floor(Date.now() / 1000) + 60 * 60,
-    },
-  ]);
+  await context.addCookies([await sessionCookieFor(email)]);
 }

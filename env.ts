@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 const schema = z.object({
-  // Signs the CSRF and callback cookies only; sessions live in the database.
-  NEXTAUTH_SECRET: z.string().min(32),
+  // Signs the session cookie; sessions live in the database.
+  BETTER_AUTH_SECRET: z.string().min(32),
+  // The site origin. Unset on Vercel previews, which use the deployment URL.
+  BETTER_AUTH_URL: z.url().optional(),
   // Enables the email test login in development, testing and training. Unset in production.
   TEST_USER_PASSWORD: z.string().min(12).optional(),
 

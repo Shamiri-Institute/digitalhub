@@ -1,7 +1,7 @@
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { NextResponse } from "next/server";
 
-import { getCachedSession } from "#/lib/auth-options";
+import { getCachedSession } from "#/lib/auth";
 import { issuePresignedUploadUrl } from "#/lib/s3/auth/issue-presigned-upload-url";
 import { UploadAuthorizationError } from "#/lib/s3/s3.errors";
 import { S3ApiRequestSchema } from "#/lib/s3/s3.types";

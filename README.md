@@ -116,8 +116,8 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/shamiri_db_dev"
 # ====================================
 # AUTHENTICATION
 # ====================================
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-nextauth-secret"  # Generate with: openssl rand -base64 32
+BETTER_AUTH_URL="http://localhost:3000"
+BETTER_AUTH_SECRET="your-better-auth-secret"  # Generate with: openssl rand -base64 32
 
 # Google OAuth (OPTIONAL for local development)
 # Not required when NEXT_PUBLIC_ENV=development (uses email/password instead)
@@ -191,8 +191,8 @@ For quick local development without file upload or email features:
 
 ```bash
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/shamiri_db_dev"
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="any-random-string-for-dev"
+BETTER_AUTH_URL="http://localhost:3000"
+BETTER_AUTH_SECRET="any-random-string-of-at-least-32-chars"
 NEXT_PUBLIC_ENV="development"
 ```
 

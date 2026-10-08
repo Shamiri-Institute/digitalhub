@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.mock("#/env", () => ({
-  env: { NEXTAUTH_SECRET: "test-secret-for-upload-token-unit-tests" },
+  env: { BETTER_AUTH_SECRET: "test-secret-for-upload-token-unit-tests" },
 }));
 
 const TEST_SECRET = "test-secret-for-upload-token-unit-tests";
