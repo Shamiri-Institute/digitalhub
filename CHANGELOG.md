@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.39.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.7...v1.39.0) (2026-10-08)
+
+### Features
+
+- **ui:** add loading ui for when users are accessing the /schools page ([#910](https://github.com/Shamiri-Institute/digitalhub/issues/910)) ([c8f99f4](https://github.com/Shamiri-Institute/digitalhub/commit/c8f99f422b3d26515f1b39e167c3079762c0b6a7))
+
 ## [1.38.7](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.6...v1.38.7) (2026-10-08)
 
 ### Bug Fixes
