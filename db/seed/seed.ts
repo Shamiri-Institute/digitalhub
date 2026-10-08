@@ -1451,7 +1451,8 @@ async function createInterventionSessionsForSchools(
       sessionType: sessionName.sessionName,
       sessionId: sessionName.id,
       schoolId: staticSchool?.id,
-      occurred: isBefore(staticDate, seedToday),
+      // The past week stays unmarked here, so e2e tests can mark a past session through the UI.
+      occurred: isBefore(staticDate, subWeeks(seedToday, 1)),
       yearOfImplementation: 2024,
       projectId: staticSchool?.hub?.projectId || undefined,
       hubId: staticSchool?.hubId,
