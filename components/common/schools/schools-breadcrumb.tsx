@@ -1,12 +1,9 @@
 "use client";
 
-import type { hub, school } from "#/db/schema";
-import { ImplementerRole } from "#/db/enums";
 import { Check, ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import {
   Command,
@@ -16,61 +13,18 @@ import {
   CommandSeparator,
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
-import { toast } from "#/components/ui/use-toast";
-import { fetchImplementerSchools } from "#/lib/actions/implementer";
-import { fetchHubSchools } from "#/lib/actions/school";
+import type { BreadcrumbSchool } from "#/components/common/schools/school-view-layout";
 import { cn } from "#/lib/utils";
 
-type School = Pick<typeof school.$inferSelect, "visibleId" | "schoolName"> & {
-  hub: Pick<typeof hub.$inferSelect, "hubName"> | null;
-};
-
-export default function SchoolsBreadcrumb() {
+export default function SchoolsBreadcrumb({ schools }: { schools: BreadcrumbSchool[] }) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
   const schoolVisibleId = pathname.split("/")[3];
 
-  const [schools, setSchools] = useState<School[]>([]);
   const selectedSchool = schools.find((school) => school.visibleId === schoolVisibleId);
-  const [loading, setLoading] = useState(false);
 
   const role = session?.user?.activeMembership?.role;
-  const implementerId = session?.user?.activeMembership?.implementerId;
-
-  // effect: loads the school list the breadcrumb navigates through for the current role
-  useEffect(() => {
-    let cancelled = false;
-    const fetchSchools = async () => {
-      setLoading(true);
-      const response =
-        implementerId && role === ImplementerRole.ADMIN
-          ? await fetchImplementerSchools()
-          : role === ImplementerRole.HUB_COORDINATOR ||
-              role === ImplementerRole.SUPERVISOR ||
-              role === ImplementerRole.FELLOW
-            ? await fetchHubSchools()
-            : null;
-      if (cancelled || !response) return;
-      if (response.success && response.data) {
-        setSchools(response.data);
-      } else {
-        toast({ variant: "destructive", description: "Could not load the school list." });
-      }
-    };
-    fetchSchools()
-      .catch(() => {
-        if (!cancelled) {
-          toast({ variant: "destructive", description: "Could not load the school list." });
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [implementerId, role]);
 
   const handleSchoolSelect = (schoolVisibleId: string) => {
     const routeArray = pathname.split("/");
@@ -126,45 +80,40 @@ export default function SchoolsBreadcrumb() {
               </div>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
-              {schools ? (
-                <Command>
-                  <span className="px-4 pb-1 pt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
-                    switch school
-                  </span>
-                  <CommandSeparator />
-                  <CommandInput placeholder="Search schools..." className="h-9" />
-                  <CommandList className="max-h-[300px] overflow-y-scroll">
-                    {schools.map((school) => (
-                      <CommandItem
-                        key={school.visibleId}
-                        value={school.schoolName}
-                        onSelect={() => handleSchoolSelect(school.visibleId)}
-                        className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-medium">{school.schoolName}</span>
-                          <span className="text-[9px] uppercase tracking-widest text-muted-foreground text-shamiri-new-blue">
-                            {school.hub?.hubName ?? "No Hub"}
-                          </span>
-                        </div>
-                        <Check
-                          className={cn(
-                            "h-4 w-4",
-                            selectedSchool?.visibleId === school.visibleId
-                              ? "opacity-100"
-                              : "opacity-0",
-                          )}
-                        />
-                      </CommandItem>
-                    ))}
-                  </CommandList>
-                </Command>
-              ) : null}
+              <Command>
+                <span className="px-4 pb-1 pt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
+                  switch school
+                </span>
+                <CommandSeparator />
+                <CommandInput placeholder="Search schools..." className="h-9" />
+                <CommandList className="max-h-[300px] overflow-y-scroll">
+                  {schools.map((school) => (
+                    <CommandItem
+                      key={school.visibleId}
+                      value={school.schoolName}
+                      onSelect={() => handleSchoolSelect(school.visibleId)}
+                      className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{school.schoolName}</span>
+                        <span className="text-[9px] uppercase tracking-widest text-muted-foreground text-shamiri-new-blue">
+                          {school.hub?.hubName ?? "No Hub"}
+                        </span>
+                      </div>
+                      <Check
+                        className={cn(
+                          "h-4 w-4",
+                          selectedSchool?.visibleId === school.visibleId
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </Command>
             </PopoverContent>
           </Popover>
-          {loading && (
-            <Icons.hourglass className="h-3.5 w-3.5 animate-bounce text-shamiri-new-blue" />
-          )}
         </div>
       </div>
       <div className="hidden lg:flex">
