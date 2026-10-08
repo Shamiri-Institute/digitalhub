@@ -20,10 +20,12 @@ import {
   fellowComplaints,
   implementerMember,
   interventionGroup,
+  interventionSessionRating,
   payoutStatements,
   user,
   weeklyFellowRatings,
 } from "#/db/schema";
+import { countOf } from "#/db/sql";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import {
   fellowsInCallerScope,
@@ -955,7 +957,14 @@ export async function getFellowGroupsAndHubData() {
           where: (s, { inArray }) => inArray(s.id, fellowSchoolIds),
           with: {
             assignedSupervisor: true,
-            interventionSessions: { with: { sessionRatings: true, session: true } },
+            interventionSessions: {
+              with: { session: true },
+              extras: (session) => ({
+                sessionRatingsCount: countOf(interventionSessionRating.sessionId, session.id).as(
+                  "session_ratings_count",
+                ),
+              }),
+            },
             students: {
               where: (st, { inArray }) => inArray(st.assignedGroupId, fellowGroupIds),
               with: { assignedGroup: true },

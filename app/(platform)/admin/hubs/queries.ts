@@ -1,4 +1,6 @@
 import { db } from "#/db/client";
+import { interventionSessionRating } from "#/db/schema";
+import { countOf } from "#/db/sql";
 
 // drizzle-orm 0.45 rewrites every column reference inside a relational-query `extras`
 // expression to the current table's alias, so a correlated subquery must name the other
@@ -15,7 +17,12 @@ export async function fetchAdminHubs(implementerId: string, projectId: string) {
         with: {
           assignedSupervisor: true,
           interventionSessions: {
-            with: { sessionRatings: true, session: true },
+            with: { session: true },
+            extras: (session) => ({
+              sessionRatingsCount: countOf(interventionSessionRating.sessionId, session.id).as(
+                "session_ratings_count",
+              ),
+            }),
           },
           students: {
             with: { assignedGroup: true },
