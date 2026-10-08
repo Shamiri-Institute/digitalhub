@@ -1,35 +1,17 @@
 "use client";
 
 import type { ImplementerRole } from "#/db/enums";
-import type {
-  interventionGroup,
-  interventionSession,
-  interventionSessionRating,
-  school,
-  sessionName,
-  student,
-  supervisor,
-} from "#/db/schema";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
+import type { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { sessionDisplayName } from "#/lib/utils";
 
-// What `fetchSchoolData`, `fetchAdminHubs` and `getFellowGroupsAndHubData` load per school.
-export type SchoolsTableData = typeof school.$inferSelect & {
-  assignedSupervisor: typeof supervisor.$inferSelect | null;
-  interventionSessions: (typeof interventionSession.$inferSelect & {
-    sessionRatings: (typeof interventionSessionRating.$inferSelect)[];
-    session: typeof sessionName.$inferSelect | null;
-  })[];
-  students: (typeof student.$inferSelect & {
-    assignedGroup: typeof interventionGroup.$inferSelect | null;
-    clinicalCasesCount: number;
-  })[];
-};
+// `fetchAdminHubs` and `getFellowGroupsAndHubData` load at least these fields per school.
+export type SchoolsTableData = Awaited<ReturnType<typeof fetchSchoolData>>[number];
 
 export const columns = ({
   role,
@@ -149,7 +131,7 @@ export const columns = ({
         // TODO: refactor session names
         if (sessions.length > 0) {
           const recent = sessions[sessions.length - 1];
-          if (recent && recent.sessionRatings.length > 0) {
+          if (recent && recent.sessionRatingsCount > 0) {
             return (
               <Badge variant="shamiri-green">
                 {`${sessionDisplayName(recent.session?.sessionName)} - Report submitted`}

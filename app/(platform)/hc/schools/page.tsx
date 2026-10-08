@@ -59,7 +59,7 @@ export default async function SchoolsPage(props: {
         <Separator />
         <div className="flex items-center justify-between">
           <div className="flex w-1/4 items-start gap-3">
-            <SearchCommand data={data} />
+            <SearchCommand data={data.map(({ id, schoolName }) => ({ id, schoolName }))} />
             {/* <SchoolsFilterToggle schools={data} /> */}
           </div>
           <div className="flex items-center gap-3">

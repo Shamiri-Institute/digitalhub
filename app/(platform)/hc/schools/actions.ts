@@ -9,10 +9,12 @@ import type { z } from "zod";
 
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/db/client";
+import { countOf } from "#/db/sql";
 import { ImplementerRole, sessionTypes } from "#/db/enums";
 import {
   interventionGroup,
   interventionSession,
+  interventionSessionRating,
   school,
   schoolDropoutHistory,
   weeklyHubReport,
@@ -28,22 +30,6 @@ import {
   WeeklyHubReportSchema,
 } from "../schemas";
 
-type SchoolWithRelations = Omit<
-  Awaited<ReturnType<typeof fetchSchoolData>>[number],
-  "interventionGroups"
->;
-
-type AddSchoolResponse = {
-  success: boolean;
-  message: string;
-  data?: SchoolWithRelations;
-};
-
-const clinicalCasesCount = (st: { id: unknown }) =>
-  sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
-    "clinical_cases_count",
-  );
-
 /** The schools of the caller's hub. Supervisors and hub coordinators both list them. */
 export async function fetchSchoolData() {
   const { hubId: callerHubId } = await requireHubRole(
@@ -52,15 +38,43 @@ export async function fetchSchoolData() {
   );
   return db.query.school.findMany({
     where: (s, { eq }) => eq(s.hubId, callerHubId),
+    columns: {
+      id: true,
+      visibleId: true,
+      createdAt: true,
+      archivedAt: true,
+      schoolName: true,
+      schoolType: true,
+      schoolEmail: true,
+      schoolCounty: true,
+      schoolSubCounty: true,
+      schoolDemographics: true,
+      boardingDay: true,
+      numbersExpected: true,
+      pointPersonName: true,
+      pointPersonPhone: true,
+      pointPersonEmail: true,
+      principalName: true,
+      principalPhone: true,
+      assignedSupervisorId: true,
+      droppedOut: true,
+      droppedOutAt: true,
+    },
     with: {
-      assignedSupervisor: true,
-      interventionSessions: { with: { sessionRatings: true, session: true } },
-      interventionGroups: { with: { leader: true } },
-      students: {
-        with: { assignedGroup: true },
-        extras: (st) => ({ clinicalCasesCount: clinicalCasesCount(st) }),
+      assignedSupervisor: {
+        columns: { supervisorName: true, cellNumber: true, supervisorEmail: true },
+      },
+      interventionSessions: {
+        columns: { sessionDate: true, occurred: true, sessionType: true },
+        with: { session: { columns: { sessionName: true } } },
+        extras: (session) => ({
+          sessionRatingsCount: countOf(interventionSessionRating.sessionId, session.id).as(
+            "session_ratings_count",
+          ),
+        }),
       },
     },
+    orderBy: (s, { asc }) => asc(s.schoolName),
   });
 }
 
@@ -434,6 +448,7 @@ export async function fetchHubSupervisors() {
   );
   return db.query.supervisor.findMany({
     where: (s, { eq }) => eq(s.hubId, callerHubId),
+    orderBy: (s, { asc }) => asc(s.supervisorName),
   });
 }
 
@@ -476,7 +491,7 @@ export async function assignSchoolPointSupervisor(
   }
 }
 
-export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<AddSchoolResponse> {
+export async function addSchool(data: z.infer<typeof AddSchoolSchema>) {
   try {
     const hubCoordinator = await currentHubCoordinator();
     if (!hubCoordinator) {
@@ -567,17 +582,10 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       if (!created) {
         throw new Error("Could not create the school");
       }
-      // A school created in this transaction has no supervisor, sessions or students yet.
-      const newSchool: SchoolWithRelations = {
-        ...created,
-        assignedSupervisor: null,
-        interventionSessions: [],
-        students: [],
-      };
 
       const numGroups = Math.ceil((parsedData.numbersExpected || 1000) / 16);
 
-      const schoolNamePrefix = getSchoolInitials(newSchool.schoolName) ?? "GROUP";
+      const schoolNamePrefix = getSchoolInitials(created.schoolName) ?? "GROUP";
 
       const interventionGroups: (typeof interventionGroup.$inferInsert)[] = [];
       for (let i = 0; i < numGroups; i++) {
@@ -588,7 +596,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
         interventionGroups.push({
           id: objectId("group"),
           groupName: `${schoolNamePrefix} ${i + 1}`,
-          schoolId: newSchool.id,
+          schoolId: created.id,
           leaderId: leader.id,
           projectId: hubCoordinator.profile?.assignedHub?.projectId ?? "",
         });
@@ -619,7 +627,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
           status: "Scheduled",
           sessionType: sessionName.sessionName,
           sessionId: sessionName.id,
-          schoolId: newSchool.id,
+          schoolId: created.id,
           occurred: false,
           yearOfImplementation: new Date().getFullYear(),
           projectId: hubCoordinator.profile?.assignedHub?.projectId || undefined,
@@ -637,7 +645,6 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       return {
         success: true,
         message: "School added successfully",
-        data: newSchool,
       };
     });
     refresh();
