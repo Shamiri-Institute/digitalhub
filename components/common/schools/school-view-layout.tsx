@@ -62,6 +62,18 @@ async function loadSchoolPanel(visibleId: string) {
 
 export type SchoolPanelData = NonNullable<Awaited<ReturnType<typeof loadSchoolPanel>>>;
 
+async function loadBreadcrumbSchools() {
+  const visibleSchools = await visibleSchoolIds();
+  return db.query.school.findMany({
+    where: (s, { inArray }) => inArray(s.id, visibleSchools.ids),
+    columns: { visibleId: true, schoolName: true },
+    with: { hub: { columns: { hubName: true } } },
+    orderBy: (s, { asc }) => asc(s.schoolName),
+  });
+}
+
+export type BreadcrumbSchool = Awaited<ReturnType<typeof loadBreadcrumbSchools>>[number];
+
 export default async function SchoolViewLayout({
   visibleId,
   children,
@@ -69,7 +81,10 @@ export default async function SchoolViewLayout({
   visibleId: string;
   children: React.ReactNode;
 }) {
-  const school = await loadSchoolPanel(visibleId);
+  const [school, breadcrumbSchools] = await Promise.all([
+    loadSchoolPanel(visibleId),
+    loadBreadcrumbSchools(),
+  ]);
   if (!school) {
     notFound();
   }
@@ -80,7 +95,7 @@ export default async function SchoolViewLayout({
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="container w-full min-w-0 grow space-y-5 pb-6 pl-6 pr-8 pt-5">
-          <SchoolsBreadcrumb />
+          <SchoolsBreadcrumb schools={breadcrumbSchools} />
           <SchoolsNav />
           <Separator />
           {children}
