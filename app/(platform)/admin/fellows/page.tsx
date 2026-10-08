@@ -31,6 +31,33 @@ export default async function FellowPage() {
       ),
     );
 
+  const listedFellow = and(
+    or(eq(hub.projectId, projectId), isNull(fellow.hubId)),
+    implementerId === undefined ? sql`false` : eq(fellow.implementerId, implementerId),
+  );
+  const ratingAverages = db
+    .select({
+      fellowId: weeklyFellowRatings.fellowId,
+      averageRating: sql<
+        number | null
+      >`((avg(${weeklyFellowRatings.behaviourRating}) + avg(${weeklyFellowRatings.dressingAndGroomingRating}) + avg(${weeklyFellowRatings.programDeliveryRating}) + avg(${weeklyFellowRatings.punctualityRating})) / 4)::float8`.as(
+        "average_rating",
+      ),
+    })
+    .from(weeklyFellowRatings)
+    .where(
+      inArray(
+        weeklyFellowRatings.fellowId,
+        db
+          .select({ id: fellow.id })
+          .from(fellow)
+          .leftJoin(hub, eq(fellow.hubId, hub.id))
+          .where(listedFellow),
+      ),
+    )
+    .groupBy(weeklyFellowRatings.fellowId)
+    .as("rating_averages");
+
   const [fellowRows, complaints, groups, supervisors] = await Promise.all([
     db
       .select({
@@ -44,21 +71,15 @@ export default async function FellowPage() {
         supervisorId: fellow.supervisorId,
         droppedOut: fellow.droppedOut,
         groupCount: countDistinct(interventionGroup.id),
-        averageRating: sql<
-          number | null
-        >`((avg(${weeklyFellowRatings.behaviourRating}) + avg(${weeklyFellowRatings.dressingAndGroomingRating}) + avg(${weeklyFellowRatings.programDeliveryRating}) + avg(${weeklyFellowRatings.punctualityRating})) / 4)::float8`,
+        averageRating: ratingAverages.averageRating,
       })
       .from(fellow)
       .leftJoin(hub, eq(fellow.hubId, hub.id))
-      .leftJoin(weeklyFellowRatings, eq(fellow.id, weeklyFellowRatings.fellowId))
+      .leftJoin(ratingAverages, eq(fellow.id, ratingAverages.fellowId))
       .leftJoin(interventionGroup, eq(fellow.id, interventionGroup.leaderId))
-      .where(
-        and(
-          or(eq(hub.projectId, projectId), isNull(fellow.hubId)),
-          implementerId === undefined ? sql`false` : eq(fellow.implementerId, implementerId),
-        ),
-      )
-      .groupBy(fellow.id),
+      .where(listedFellow)
+      .groupBy(fellow.id, ratingAverages.averageRating)
+      .orderBy(fellow.fellowName, fellow.id),
     db.query.fellowComplaints.findMany({
       where: (c, { inArray }) => inArray(c.fellowId, projectFellowIds),
       columns: { id: true, fellowId: true, complaint: true, comments: true, createdAt: true },

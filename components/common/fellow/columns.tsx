@@ -1,12 +1,12 @@
 "use client";
 
-import type { student } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { FellowsDatatableMenu } from "#/components/common/fellow/fellows-datatable-menu";
+import type { GroupStudent } from "#/components/common/student/students-in-group";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 
@@ -24,7 +24,7 @@ export type SchoolFellowTableData = {
   gender: string | null;
   county: string | null;
   subCounty: string | null;
-  students: (typeof student.$inferSelect & { clinicalCasesCount: number })[];
+  students: GroupStudent[];
 };
 
 export const columns = ({

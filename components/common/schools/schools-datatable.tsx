@@ -54,7 +54,7 @@ export default function SchoolsDatatable({
 }: {
   role: ImplementerRole;
   schools: SchoolsTableData[];
-  supervisors?: (typeof supervisor.$inferSelect)[];
+  supervisors?: Pick<typeof supervisor.$inferSelect, "id" | "supervisorName">[];
   disablePagination?: boolean;
   isSubComponent?: boolean;
   className?: string;

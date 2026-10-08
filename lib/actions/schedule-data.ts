@@ -22,6 +22,16 @@ export const clinicalCasesCountExtras = (s: { id: typeof student.id }) => ({
   clinicalCasesCount: countOf(clinicalScreeningInfo.studentId, s.id).as("clinical_cases_count"),
 });
 
+export const groupStudentColumns = {
+  id: true,
+  assignedGroupId: true,
+  studentName: true,
+  visibleId: true,
+  admissionNumber: true,
+  yearOfBirth: true,
+  updatedAt: true,
+} as const;
+
 /** Schools a session can be scheduled at. */
 export function fetchScheduleSchools(hubId: string) {
   return db.query.school.findMany({

@@ -35,7 +35,7 @@ export default function AssignPointSupervisor({
   setOpen,
   school,
 }: {
-  supervisors: (typeof supervisor.$inferSelect)[];
+  supervisors: Pick<typeof supervisor.$inferSelect, "id" | "supervisorName">[];
   open: boolean;
   setOpen: (open: boolean) => void;
   school: SchoolsTableData | null;

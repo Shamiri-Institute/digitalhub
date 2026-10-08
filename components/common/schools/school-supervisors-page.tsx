@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
 import { db } from "#/db/client";
@@ -15,32 +15,59 @@ export default async function SchoolSupervisorsPage({
   role: ImplementerRole;
 }) {
   const visibleSchools = await visibleSchoolIds();
-  const schoolRow = await db.query.school.findFirst({
-    where: (s, { and, eq, inArray }) =>
-      and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
-    with: { interventionSessions: { with: { session: true } } },
-  });
+  const schoolHubId = db
+    .select({ hubId: school.hubId })
+    .from(school)
+    .where(and(eq(school.visibleId, visibleId), inArray(school.id, visibleSchools.ids)));
+
+  const [schoolRow, supervisors] = await Promise.all([
+    db.query.school.findFirst({
+      where: (s, { and, eq, inArray }) =>
+        and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
+      with: { interventionSessions: { with: { session: true } } },
+    }),
+    db.query.supervisor.findMany({
+      where: (s, { inArray }) => inArray(s.hubId, schoolHubId),
+      columns: {
+        id: true,
+        supervisorName: true,
+        cellNumber: true,
+        gender: true,
+        archivedAt: true,
+        droppedOut: true,
+      },
+      with: {
+        assignedSchools: {
+          columns: { schoolName: true },
+          orderBy: (assignedSchool, { asc }) => [
+            asc(assignedSchool.schoolName),
+            asc(assignedSchool.id),
+          ],
+        },
+        fellows: { columns: { droppedOut: true } },
+        supervisorAttendances: {
+          where: (a, { inArray }) =>
+            inArray(
+              a.schoolId,
+              db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
+            ),
+          columns: {
+            id: true,
+            supervisorId: true,
+            attended: true,
+            absenceReason: true,
+            absenceComments: true,
+            sessionId: true,
+          },
+          with: { session: { columns: { schoolId: true } } },
+        },
+      },
+      orderBy: (s, { asc }) => asc(s.supervisorName),
+    }),
+  ]);
   if (!schoolRow) {
     notFound();
   }
-
-  const supervisors = await db.query.supervisor.findMany({
-    where: (s, { eq }) => eq(s.hubId, schoolRow.hubId ?? ""),
-    with: {
-      assignedSchools: true,
-      fellows: true,
-      supervisorAttendances: {
-        where: (a, { inArray }) =>
-          inArray(
-            a.schoolId,
-            db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
-          ),
-        with: { session: true },
-      },
-      monthlySupervisorEvaluation: true,
-    },
-    orderBy: (s, { asc }) => asc(s.supervisorName),
-  });
 
   return <SupervisorsDataTable supervisors={supervisors} role={role} school={schoolRow} />;
 }
