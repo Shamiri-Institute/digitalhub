@@ -1,8 +1,19 @@
 "use server";
 
 import { currentHubCoordinator } from "#/app/auth";
+import { asc, eq, type SQL, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
 import { db } from "#/db/client";
+import {
+  fellow,
+  fellowAttendance,
+  interventionGroup,
+  interventionSession,
+  payoutStatements,
+  school,
+  sessionName,
+  supervisor,
+} from "#/db/schema";
 
 export type HubFellowsAttendancesType = Awaited<ReturnType<typeof loadHubFellowAttendance>>[number];
 
@@ -18,118 +29,84 @@ export async function loadHubFellowAttendance() {
     await signOut({ callbackUrl: "/login" });
     throw new Error("Unauthorised user");
   }
-  const fellows = await db.query.fellow.findMany({
-    where: (f, { eq }) => eq(f.hubId, hubId),
-    with: {
-      hub: { columns: { hubName: true } },
-      supervisor: { columns: { supervisorName: true } },
-      fellowAttendances: {
-        with: {
-          session: { with: { session: true } },
-          group: true,
-          school: { columns: { schoolName: true } },
-          PayoutStatements: { orderBy: (p, { asc }) => asc(p.createdAt) },
-        },
-      },
-    },
-  });
-
-  return fellows.map((fellow) => {
-    const { totalAmount, totalPaidAmount } = calculateAmounts(fellow.fellowAttendances);
-
-    const { preCount, mainCount, supervisionCount, trainingCount } = calculateSessionCounts(
-      fellow.fellowAttendances,
-    );
-
-    const payoutStatements = fellow.fellowAttendances.flatMap((attendance) =>
-      attendance.PayoutStatements.map((payout) => ({
-        id: payout.id,
+  const [fellows, payouts] = await Promise.all([
+    db
+      .select({
+        id: fellow.id,
         fellowName: fellow.fellowName,
-        session: attendance?.session?.session?.sessionLabel,
-        mpesaNo: fellow.mpesaNumber,
-        schoolVenue: attendance.school?.schoolName,
-        dateOfAttendance: attendance?.session?.sessionDate,
-        dateMarked: attendance?.updatedAt,
-        group: attendance.group?.groupName,
-        amount: payout.amount,
-        status: attendance.attended ? "Attended" : "Absent",
-        payoutReason: payout.reason,
-        payoutNotes: payout.notes,
-        executedAt: payout.executedAt,
-        confirmedAt: payout.confirmedAt,
-      })),
-    );
+        mpesaNumber: fellow.mpesaNumber,
+        supervisorName: supervisor.supervisorName,
+        specialSession: attendancesWhere(sql`${sessionName.sessionType} = 'SPECIAL'`),
+        preCount: attendancesWhere(sql`${sessionName.sessionLabel} = 's0'`),
+        mainCount: attendancesWhere(sql`${sessionName.sessionLabel} in ('s1', 's2', 's3', 's4')`),
+        trainingCount: attendancesWhere(sql`${sessionName.sessionType} = 'TRAINING'`),
+        supervisionCount: attendancesWhere(sql`${sessionName.sessionType} = 'SUPERVISION'`),
+        paidAmount: sql<number>`coalesce(sum(${payoutStatements.amount}) filter (where ${payoutStatements.confirmedAt} is not null), 0)::int`,
+        totalAmount: sql<number>`coalesce(sum(${payoutStatements.amount}), 0)::int`,
+      })
+      .from(fellow)
+      .leftJoin(supervisor, eq(supervisor.id, fellow.supervisorId))
+      .leftJoin(fellowAttendance, eq(fellowAttendance.fellowId, fellow.id))
+      .leftJoin(interventionSession, eq(interventionSession.id, fellowAttendance.sessionId))
+      .leftJoin(sessionName, eq(sessionName.id, interventionSession.sessionId))
+      .leftJoin(payoutStatements, eq(payoutStatements.fellowAttendanceId, fellowAttendance.id))
+      .where(eq(fellow.hubId, hubId))
+      .groupBy(fellow.id, supervisor.supervisorName)
+      .orderBy(asc(fellow.fellowName), asc(fellow.id)),
+    db
+      .select({
+        fellowId: fellowAttendance.fellowId,
+        attended: fellowAttendance.attended,
+        payout: {
+          id: payoutStatements.id,
+          session: sessionName.sessionLabel,
+          schoolVenue: school.schoolName,
+          dateOfAttendance: interventionSession.sessionDate,
+          dateMarked: fellowAttendance.updatedAt,
+          group: interventionGroup.groupName,
+          amount: payoutStatements.amount,
+          executedAt: payoutStatements.executedAt,
+          confirmedAt: payoutStatements.confirmedAt,
+        },
+      })
+      .from(payoutStatements)
+      .innerJoin(fellowAttendance, eq(fellowAttendance.id, payoutStatements.fellowAttendanceId))
+      .innerJoin(fellow, eq(fellow.id, fellowAttendance.fellowId))
+      .leftJoin(interventionSession, eq(interventionSession.id, fellowAttendance.sessionId))
+      .leftJoin(sessionName, eq(sessionName.id, interventionSession.sessionId))
+      .leftJoin(school, eq(school.id, fellowAttendance.schoolId))
+      .leftJoin(interventionGroup, eq(interventionGroup.id, fellowAttendance.groupId))
+      .where(eq(fellow.hubId, hubId))
+      .orderBy(
+        asc(interventionSession.sessionDate),
+        asc(payoutStatements.createdAt),
+        asc(payoutStatements.id),
+      ),
+  ]);
+  const payoutsByFellow = Map.groupBy(payouts, (row) => row.fellowId);
 
-    return {
-      fellowName: fellow.fellowName,
-      hub: fellow?.hub?.hubName,
-      supervisorName: fellow.supervisor?.supervisorName,
-      specialSession: specialSessionCount(fellow.fellowAttendances),
-      preVsMain: `${preCount} - pre | ${mainCount} - main`,
-      trainingSupervision: `${trainingCount} - T | ${supervisionCount} - SV`,
-      paidAmount: totalPaidAmount,
-      totalAmount: totalAmount,
-      attendances: payoutStatements,
-    };
-  });
+  return fellows.map((hubFellow) => ({
+    fellowName: hubFellow.fellowName,
+    hub: hubCoordinator.profile.assignedHub?.hubName,
+    supervisorName: hubFellow.supervisorName,
+    specialSession: hubFellow.specialSession,
+    preVsMain: `${hubFellow.preCount} - pre | ${hubFellow.mainCount} - main`,
+    trainingSupervision: `${hubFellow.trainingCount} - T | ${hubFellow.supervisionCount} - SV`,
+    paidAmount: hubFellow.paidAmount,
+    totalAmount: hubFellow.totalAmount,
+    attendances: (payoutsByFellow.get(hubFellow.id) ?? []).map(({ attended, payout }) => ({
+      ...payout,
+      fellowName: hubFellow.fellowName,
+      mpesaNo: hubFellow.mpesaNumber,
+      status: attended ? "Attended" : "Absent",
+    })),
+  }));
 }
 
-function calculateAmounts(attendances: FellowAttendance[]) {
-  let totalAmount = 0;
-  let totalPaidAmount = 0;
-
-  attendances?.forEach((attendance) => {
-    attendance.PayoutStatements?.forEach((payout) => {
-      totalAmount += payout.amount;
-      if (payout.confirmedAt) {
-        totalPaidAmount += payout.amount;
-      }
-    });
-  });
-
-  return { totalAmount, totalPaidAmount };
+/** Attendances of the grouped fellow that match `condition`; the payout join repeats them. */
+function attendancesWhere(condition: SQL) {
+  return sql<number>`(count(distinct ${fellowAttendance.id}) filter (where ${condition}))::int`;
 }
-
-function specialSessionCount(attendances: FellowAttendance[]) {
-  return (
-    attendances.filter((attendance) => attendance.session?.session?.sessionType === "SPECIAL")
-      .length || 0
-  );
-}
-
-function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
-  const { preCount, mainCount, supervisionCount, trainingCount } = fellowAttendances.reduce(
-    (counts, attendance) => {
-      const sessionLabel = attendance.session?.session?.sessionLabel;
-      const sessionType = attendance.session?.session?.sessionType;
-
-      // For pre and main session counts
-      if (sessionLabel === "s0") {
-        counts.preCount += 1;
-      } else if (["s1", "s2", "s3", "s4"].includes(sessionLabel ?? "")) {
-        counts.mainCount += 1;
-      }
-
-      // For training and supervision session counts
-      if (sessionType === "SUPERVISION") {
-        counts.supervisionCount += 1;
-      } else if (sessionType === "TRAINING") {
-        counts.trainingCount += 1;
-      }
-
-      return counts;
-    },
-    { preCount: 0, mainCount: 0, supervisionCount: 0, trainingCount: 0 },
-  );
-
-  return { preCount, mainCount, supervisionCount, trainingCount };
-}
-
-/** The slice of an attendance row the helpers above read. */
-type FellowAttendance = {
-  session: { session: { sessionLabel: string; sessionType: string } | null } | null;
-  PayoutStatements: { amount: number; confirmedAt: Date | null }[];
-};
 
 export async function submitPaymentReversal(data: { id: number; name: string }) {
   const hubCoordinator = await currentHubCoordinator();
