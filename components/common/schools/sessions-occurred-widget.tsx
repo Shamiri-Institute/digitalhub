@@ -1,16 +1,15 @@
 "use client";
 
-import type { SchoolData } from "#/lib/actions/school";
+import type { SchoolPanelData } from "#/components/common/schools/school-view-layout";
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import type { sessionName } from "#/db/schema";
 
 export default function SessionsOccurredWidget({
   sessions,
   types,
 }: {
-  sessions: NonNullable<SchoolData>["interventionSessions"][number][];
-  types?: (typeof sessionName.$inferSelect)[];
+  sessions: SchoolPanelData["interventionSessions"];
+  types?: NonNullable<SchoolPanelData["hub"]>["sessions"];
 }) {
   return (
     <div className="flex flex-wrap justify-center gap-2">
