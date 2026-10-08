@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { generateSessionToken } from "#/tests/helpers";
+import { signInWithEmail } from "#/tests/helpers";
 
 /**
  * Regression guard for the personnel over-fetch (fetchImplementerPersonnel).
@@ -36,19 +36,7 @@ test.describe("Personnel over-fetch guard", () => {
     page,
     context,
   }) => {
-    const token = await generateSessionToken(FELLOW_EMAIL);
-    await context.addCookies([
-      {
-        name: "next-auth.session-token",
-        value: token,
-        domain: "localhost",
-        path: "/",
-        httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
-        expires: Math.floor(Date.now() / 1000) + 60 * 60,
-      },
-    ]);
+    await signInWithEmail(context, FELLOW_EMAIL);
 
     // The RoleSwitcher effect fires on mount; capture the real server-action id
     // and request body it sends, rather than hardcoding a build-specific hash.

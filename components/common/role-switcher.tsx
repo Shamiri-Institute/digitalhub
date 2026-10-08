@@ -2,7 +2,6 @@
 
 import type { ImplementerRole } from "#/db/enums";
 import { Check, ChevronsUpDown, Filter } from "lucide-react";
-import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { selectPersonnel } from "#/app/actions";
@@ -27,13 +26,14 @@ import {
   fetchImplementerPersonnel,
   type ImplementerPersonnel,
 } from "#/lib/actions/fetch-personnel";
+import type { SessionUser } from "#/lib/auth/session-user";
 import type { Personnel } from "#/lib/types/personnel";
 import { cn } from "#/lib/utils";
 
 interface RoleSwitcherProps {
   loading: boolean;
   setLoading: (loading: boolean) => void;
-  session: Session | null;
+  user: SessionUser | null;
 }
 
 // Development-only impersonation helper. The guard lives outside the component
@@ -46,12 +46,12 @@ export function RoleSwitcher(props: RoleSwitcherProps) {
   return <DevRoleSwitcher {...props} />;
 }
 
-function DevRoleSwitcher({ loading, setLoading, session }: RoleSwitcherProps) {
+function DevRoleSwitcher({ loading, setLoading, user }: RoleSwitcherProps) {
   const [open, setOpen] = useState(false);
   const [implementerMembers, setImplementerMembers] = useState<ImplementerPersonnel | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<Set<ImplementerRole>>(new Set());
 
-  const activeMembership = session?.user?.activeMembership ?? null;
+  const activeMembership = user?.activeMembership ?? null;
 
   // effect: loads the implementer's personnel when the active membership changes
   useEffect(() => {

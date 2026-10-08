@@ -1,5 +1,6 @@
 import { chromium } from "@playwright/test";
 
+import { sessionCookie } from "#/lib/auth/session";
 import { PersonnelFixtures } from "#/tests/helpers";
 import { generateSessionToken } from "./helpers";
 
@@ -41,7 +42,7 @@ async function globalSetup() {
 
     await context.addCookies([
       {
-        name: "next-auth.session-token",
+        name: sessionCookie().name,
         value: sessionToken,
         domain: "localhost",
         path: "/",

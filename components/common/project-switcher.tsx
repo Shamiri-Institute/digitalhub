@@ -1,9 +1,6 @@
 "use client";
 
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useRouter } from "next/navigation";
-import type { Session } from "next-auth";
-import { useSession } from "next-auth/react";
 import { useEffect, useEffectEvent, useState } from "react";
 import { Button } from "#/components/ui/button";
 import {
@@ -17,30 +14,29 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { fetchProjects, type ProjectOption, setActiveProject } from "#/lib/actions/project";
+import type { SessionUser } from "#/lib/auth/session-user";
 import { cn } from "#/lib/utils";
 
 export function ProjectSwitcher({
   loading,
   setLoading,
-  session,
+  user,
   isAdminUser,
   className,
 }: {
   loading: boolean;
   setLoading: (loading: boolean) => void;
-  session: Session | null;
+  user: SessionUser | null;
   isAdminUser: boolean;
   className?: string;
 }) {
-  const router = useRouter();
-  const { update } = useSession();
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
-  const activeProjectId = session?.user?.activeProjectId ?? null;
+  const activeProjectId = user?.activeProjectId ?? null;
 
   const loadProjects = async () => {
-    if (!session?.user?.email) return;
+    if (!user?.email) return;
     setProjectsLoading(true);
     try {
       const list = await fetchProjects();
@@ -59,7 +55,7 @@ export function ProjectSwitcher({
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- loads the admin project list on mount; server-side loading is a separate change
     loadProjectsForAdmin();
-  }, [isAdminUser, session?.user?.email]);
+  }, [isAdminUser, user?.email]);
 
   if (!isAdminUser) {
     return null;
@@ -76,8 +72,6 @@ export function ProjectSwitcher({
         toast({ variant: "destructive", description: result.error ?? "Could not switch project." });
         return;
       }
-      await update();
-      router.refresh();
     } finally {
       setLoading(false);
     }

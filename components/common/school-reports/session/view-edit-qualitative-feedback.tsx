@@ -1,10 +1,8 @@
 "use client";
 import { format } from "date-fns";
-import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ImplementerRole } from "#/db/enums";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import type { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -39,15 +37,14 @@ export default function ViewEditQualitativeFeedback({
   children,
   sessionReport,
   action,
+  canAddNotes,
 }: {
   children: React.ReactNode;
   sessionReport: SessionReportType["session"][number];
   action: "view" | "edit";
+  canAddNotes: boolean;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
-  const { data: authSession } = useSession();
-  // submitQualitativeFeedback accepts supervisors only; other roles read the notes.
-  const canAddNotes = authSession?.user?.activeMembership?.role === ImplementerRole.SUPERVISOR;
 
   const form = useForm<z.infer<typeof QualitativeFeedbackSchema>>({
     resolver: zodResolver(QualitativeFeedbackSchema),

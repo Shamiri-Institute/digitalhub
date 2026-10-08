@@ -3,7 +3,6 @@
 import { Check, ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Icons } from "#/components/icons";
 import {
   Command,
@@ -14,17 +13,21 @@ import {
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import type { BreadcrumbSchool } from "#/components/common/schools/school-view-layout";
+import type { ImplementerRole } from "#/db/enums";
 import { cn } from "#/lib/utils";
 
-export default function SchoolsBreadcrumb({ schools }: { schools: BreadcrumbSchool[] }) {
-  const { data: session } = useSession();
+export default function SchoolsBreadcrumb({
+  schools,
+  role,
+}: {
+  schools: BreadcrumbSchool[];
+  role: ImplementerRole | undefined;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const schoolVisibleId = pathname.split("/")[3];
 
   const selectedSchool = schools.find((school) => school.visibleId === schoolVisibleId);
-
-  const role = session?.user?.activeMembership?.role;
 
   const handleSchoolSelect = (schoolVisibleId: string) => {
     const routeArray = pathname.split("/");

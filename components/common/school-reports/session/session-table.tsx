@@ -6,14 +6,16 @@ import { columns, subColumns } from "./columns";
 
 export default function SessionReportDataTable({
   sessionReport,
+  canAddNotes = false,
 }: {
   sessionReport: SessionReportType[];
+  canAddNotes?: boolean;
 }) {
   return (
     <ExpandableReportTable
       data={sessionReport}
       columns={columns}
-      subColumns={subColumns}
+      subColumns={subColumns(canAddNotes)}
       getSubRows={(row) => row.session}
       emptyStateMessage="No feedback data found"
       subEmptyStateMessage="No expenses found for this fellow"

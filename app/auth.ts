@@ -1,15 +1,15 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import type { Session } from "next-auth";
 import { cache } from "react";
 
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { session as sessionTable } from "#/db/schema";
 import { roleHome } from "#/lib/auth/role-home";
+import type { SessionUser } from "#/lib/auth/session-user";
 import { getCachedSession } from "#/lib/auth-options";
 
-function requireRole(session: Session, role: ImplementerRole) {
+function requireRole(session: { user: SessionUser }, role: ImplementerRole) {
   const membership = session.user.activeMembership;
   if (membership && membership.role !== role) {
     redirect(roleHome[membership.role]);

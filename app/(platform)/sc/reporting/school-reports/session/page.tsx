@@ -6,7 +6,7 @@ export default async function SessionPage() {
 
   return (
     <div className="container w-full grow space-y-3">
-      <SessionReportDataTable sessionReport={sessionReportData} />
+      <SessionReportDataTable sessionReport={sessionReportData} canAddNotes />
     </div>
   );
 }

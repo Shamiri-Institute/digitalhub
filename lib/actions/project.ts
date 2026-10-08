@@ -1,7 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/db/client";
@@ -50,7 +50,7 @@ export async function setActiveProject(
 
   await db.update(user).set({ activeProjectId: projectId }).where(eq(user.id, session.user.id));
 
-  revalidatePath("/", "layout");
+  refresh();
 
   return { success: true };
 }

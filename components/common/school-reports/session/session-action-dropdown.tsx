@@ -4,15 +4,21 @@ import ViewEditReportDropdown from "#/components/common/view-edit-report-dropdow
 
 export default function SessionDropdownMenu({
   sessionReportData,
+  canAddNotes,
 }: {
   sessionReportData: SessionReportType["session"][number];
+  canAddNotes: boolean;
 }) {
   return (
     <ViewEditReportDropdown
       viewLabel="View qualitative feedback"
       editLabel="Edit school report"
       renderDialog={(action, children) => (
-        <ViewEditQualitativeFeedback sessionReport={sessionReportData} action={action}>
+        <ViewEditQualitativeFeedback
+          sessionReport={sessionReportData}
+          action={action}
+          canAddNotes={canAddNotes}
+        >
           {children}
         </ViewEditQualitativeFeedback>
       )}

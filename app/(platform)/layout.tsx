@@ -8,11 +8,10 @@ export default async function PlatformLayout({ children }: { children: React.Rea
     getCurrentPersonnel(),
     isCurrentUserAdmin(),
   ]);
-  const session = userSession?.session ?? null;
-  const isAdminUser =
-    isAdminEmail || session?.user?.activeMembership?.role === ImplementerRole.ADMIN;
+  const user = userSession?.session.user ?? null;
+  const isAdminUser = isAdminEmail || user?.activeMembership?.role === ImplementerRole.ADMIN;
   return (
-    <LayoutClient session={session} profile={userSession ?? null} isAdminUser={isAdminUser}>
+    <LayoutClient user={user} profile={userSession ?? null} isAdminUser={isAdminUser}>
       {children}
     </LayoutClient>
   );

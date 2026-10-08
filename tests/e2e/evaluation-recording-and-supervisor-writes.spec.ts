@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { fellow, interventionGroupReport, sessionRecording } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { generateSessionToken, signableMember } from "#/tests/helpers";
+import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
@@ -136,16 +136,7 @@ test.afterEach(async () => {
 
 async function signIn(context: BrowserContext, email: string) {
   await context.clearCookies();
-  await context.addCookies([
-    {
-      name: "next-auth.session-token",
-      value: await generateSessionToken(email),
-      domain: "localhost",
-      path: "/",
-      httpOnly: true,
-      sameSite: "Lax",
-    },
-  ]);
+  await signInWithEmail(context, email);
 }
 
 /** A row by the exact text of one of its cells, after searching the table for it. */

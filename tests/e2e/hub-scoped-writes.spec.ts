@@ -11,7 +11,7 @@ import {
   triageEvent,
   triageEventAudit,
 } from "#/db/schema";
-import { generateSessionToken, signableMember } from "#/tests/helpers";
+import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 import { sessionDisplayName } from "#/lib/utils";
 
@@ -165,16 +165,7 @@ test.afterEach(async () => {
 
 async function signIn(context: BrowserContext, email: string) {
   await context.clearCookies();
-  await context.addCookies([
-    {
-      name: "next-auth.session-token",
-      value: await generateSessionToken(email),
-      domain: "localhost",
-      path: "/",
-      httpOnly: true,
-      sameSite: "Lax",
-    },
-  ]);
+  await signInWithEmail(context, email);
 }
 
 /** A row by the exact text of one of its cells, after searching the table for it. */

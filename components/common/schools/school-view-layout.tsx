@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type React from "react";
+import { getCurrentUserSession } from "#/app/auth";
 import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
 import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
 import SchoolsNav from "#/components/common/schools/schools-nav";
@@ -91,10 +92,12 @@ export default async function SchoolViewLayout({
   visibleId: string;
   children: React.ReactNode;
 }) {
-  const [school, breadcrumbSchools] = await Promise.all([
+  const [school, breadcrumbSchools, session] = await Promise.all([
     loadSchoolPanel(visibleId),
     loadBreadcrumbSchools(),
+    getCurrentUserSession(),
   ]);
+  const role = session?.user.activeMembership?.role;
   if (!school) {
     notFound();
   }
@@ -105,8 +108,8 @@ export default async function SchoolViewLayout({
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="container w-full min-w-0 grow space-y-5 pb-6 pl-6 pr-8 pt-5">
-          <SchoolsBreadcrumb schools={breadcrumbSchools} />
-          <SchoolsNav />
+          <SchoolsBreadcrumb schools={breadcrumbSchools} role={role} />
+          <SchoolsNav role={role} />
           <Separator />
           {children}
         </div>
