@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { eq, inArray } from "drizzle-orm";
 
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
@@ -5,6 +6,7 @@ import { db } from "#/db/client";
 import type { ImplementerRole } from "#/db/enums";
 import { interventionSession, school } from "#/db/schema";
 import { fetchHubFellowRatings, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
+import { visibleSchoolIds } from "#/lib/auth/require-hub-role";
 
 export default async function SchoolSessionsPage({
   visibleId,
@@ -15,15 +17,18 @@ export default async function SchoolSessionsPage({
   role: ImplementerRole;
   supervisorId?: string;
 }) {
+  const visibleSchools = await visibleSchoolIds();
   // Every session of the page belongs to this one school, so its groups are loaded once and
   // attached in JS instead of being recomputed per session row.
   const schoolRow = await db.query.school.findFirst({
-    where: (s, { eq }) => eq(s.visibleId, visibleId),
+    where: (s, { and, eq, inArray }) =>
+      and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
     with: { assignedSupervisor: true, interventionGroups: true },
   });
-  // Supervisors and fellow ratings are scoped by the school's own hub, which
-  // for hc and sc is the same hub as the signed-in user's.
-  const hubId = schoolRow?.hubId ?? "";
+  if (!schoolRow) {
+    notFound();
+  }
+  const hubId = schoolRow.hubId ?? "";
 
   const schoolSessions = inArray(
     interventionSession.schoolId,
@@ -39,7 +44,7 @@ export default async function SchoolSessionsPage({
     fetchHubFellowRatings(hubId),
   ]);
 
-  const sessions = rawSessions.map((s) => ({ ...s, school: schoolRow ?? null }));
+  const sessions = rawSessions.map((s) => ({ ...s, school: schoolRow }));
 
   return (
     <SessionsDatatable

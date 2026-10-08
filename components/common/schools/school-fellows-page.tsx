@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { eq, sql } from "drizzle-orm";
 
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
@@ -5,6 +6,7 @@ import { db } from "#/db/client";
 import type { ImplementerRole } from "#/db/enums";
 import { fellow, interventionGroup, school, supervisor, weeklyFellowRatings } from "#/db/schema";
 import { clinicalCasesCountExtras } from "#/lib/actions/schedule-data";
+import { visibleSchoolIds } from "#/lib/auth/require-hub-role";
 
 export default async function SchoolFellowsPage({
   visibleId,
@@ -15,8 +17,10 @@ export default async function SchoolFellowsPage({
   role: ImplementerRole;
   hideActions?: boolean;
 }) {
+  const visibleSchools = await visibleSchoolIds();
   const schoolRow = await db.query.school.findFirst({
-    where: (s, { eq }) => eq(s.visibleId, visibleId),
+    where: (s, { and, eq, inArray }) =>
+      and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
     with: {
       fellowAttendances: {
         with: {
@@ -29,7 +33,7 @@ export default async function SchoolFellowsPage({
     },
   });
   if (!schoolRow) {
-    throw new Error("No School found");
+    notFound();
   }
 
   const schoolGroups = db

@@ -1,9 +1,11 @@
+import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 
 import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
 import { db } from "#/db/client";
 import type { ImplementerRole } from "#/db/enums";
 import { school } from "#/db/schema";
+import { visibleSchoolIds } from "#/lib/auth/require-hub-role";
 
 export default async function SchoolSupervisorsPage({
   visibleId,
@@ -12,13 +14,18 @@ export default async function SchoolSupervisorsPage({
   visibleId: string;
   role: ImplementerRole;
 }) {
+  const visibleSchools = await visibleSchoolIds();
   const schoolRow = await db.query.school.findFirst({
-    where: (s, { eq }) => eq(s.visibleId, visibleId),
+    where: (s, { and, eq, inArray }) =>
+      and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
     with: { interventionSessions: { with: { session: true } } },
   });
+  if (!schoolRow) {
+    notFound();
+  }
 
   const supervisors = await db.query.supervisor.findMany({
-    where: (s, { eq }) => eq(s.hubId, schoolRow?.hubId ?? ""),
+    where: (s, { eq }) => eq(s.hubId, schoolRow.hubId ?? ""),
     with: {
       assignedSchools: true,
       fellows: true,
@@ -35,5 +42,5 @@ export default async function SchoolSupervisorsPage({
     orderBy: (s, { asc }) => asc(s.supervisorName),
   });
 
-  return <SupervisorsDataTable supervisors={supervisors} role={role} school={schoolRow ?? null} />;
+  return <SupervisorsDataTable supervisors={supervisors} role={role} school={schoolRow} />;
 }
