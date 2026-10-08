@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { weeklyHubReport } from "#/db/schema";
+import { school, weeklyHubReport } from "#/db/schema";
 import { PersonnelFixtures } from "#/tests/helpers";
 import HubCoordinatorSchoolsPage from "#/tests/pages/hub-coordinator/school-page";
 
@@ -10,11 +10,18 @@ test.use({ storageState: PersonnelFixtures.hubCoordinator.stateFile });
 test.describe.configure({ mode: "parallel" });
 
 const recommendations = `E2E weekly hub report ${Date.now()}`;
+let originalSchool:
+  | Pick<typeof school.$inferSelect, "id" | "numbersExpected" | "boardingDay">
+  | undefined;
 
 // Cleanup runs in afterAll, not in a finally block: when a test times out, Playwright abandons
 // its body but still runs the hooks.
 test.afterAll(async () => {
   await db.delete(weeklyHubReport).where(eq(weeklyHubReport.recommendations, recommendations));
+  if (originalSchool) {
+    const { id, ...originalFields } = originalSchool;
+    await db.update(school).set(originalFields).where(eq(school.id, id));
+  }
 });
 
 test("Hub Coordinator can view the /schools page", async ({ page }) => {
@@ -133,4 +140,33 @@ test("Hub Coordinator can submit a weekly hub report", async ({ page }) => {
     submittedBy: coordinator?.id,
     successes: data.successes,
   });
+});
+
+test("Hub Coordinator edits a school in one dialog", async ({ page }) => {
+  const hubCoordinatorSchoolsPage = new HubCoordinatorSchoolsPage(page);
+  await hubCoordinatorSchoolsPage.visit();
+  const schoolName = await page.getByRole("row").nth(1).getByRole("cell").first().innerText();
+  const schoolRow = page.getByRole("row").filter({ hasText: schoolName });
+  originalSchool = await db.query.school.findFirst({
+    where: (s, { eq }) => eq(s.schoolName, schoolName),
+    columns: { id: true, numbersExpected: true, boardingDay: true },
+  });
+  const newNumbersExpected = String((originalSchool?.numbersExpected ?? 0) + 1);
+
+  await schoolRow.getByRole("cell").last().click();
+  await page.getByRole("menuitem", { name: "Edit school information" }).click();
+
+  await expect(
+    page.locator('[role="dialog"]').filter({ hasText: "Edit school information" }),
+  ).toHaveCount(1);
+  const editDialog = page.getByRole("dialog", { name: "Edit school information" });
+  await editDialog.getByLabel("Expected no. of students").fill(newNumbersExpected);
+  await editDialog.getByRole("combobox", { name: "School boarding status" }).click();
+  await page.getByRole("option", { name: "Day", exact: true }).click();
+  await editDialog.getByRole("button", { name: "Save Changes" }).click();
+
+  await expect(editDialog).toBeHidden();
+  await expect(schoolRow).toContainText(newNumbersExpected);
+  await page.reload();
+  await expect(schoolRow).toContainText(newNumbersExpected);
 });
