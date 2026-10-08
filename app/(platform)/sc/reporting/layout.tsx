@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import type React from "react";
 import RenderSCReportingTabs from "#/app/(platform)/sc/reporting/components/render-reporting-tabs";
 import { currentSupervisor } from "#/app/auth";
@@ -9,7 +9,7 @@ export default async function ReportingViewLayout({ children }: { children: Reac
   const supervisor = await currentSupervisor();
 
   if (!supervisor) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   return (

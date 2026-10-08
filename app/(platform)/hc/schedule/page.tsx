@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { currentHubCoordinator } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
@@ -20,7 +20,7 @@ export default async function HubCoordinatorSchedulePage({
 }) {
   const coordinator = await currentHubCoordinator();
   if (coordinator === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   if (!coordinator?.profile?.assignedHubId) {
     return <div>Hub coordinator has no assigned hub</div>;

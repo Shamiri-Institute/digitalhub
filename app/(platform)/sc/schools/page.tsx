@@ -1,6 +1,5 @@
 import { ImplementerRole } from "#/db/enums";
 import { redirect } from "next/navigation";
-import { signOut } from "next-auth/react";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { fetchHubSupervisors, fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import { currentSupervisor } from "#/app/auth";
@@ -18,8 +17,7 @@ export default async function SchoolsPage() {
   }
   const hubId = supervisor?.profile?.hubId;
   if (!hubId) {
-    await signOut({ callbackUrl: "/login" });
-    return null;
+    redirect("/login");
   }
 
   const [data, supervisors, schoolsStats] = await Promise.all([

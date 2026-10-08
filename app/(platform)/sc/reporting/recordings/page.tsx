@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { currentSupervisor } from "#/app/auth";
 import { loadSupervisorRecordings } from "./actions";
 import RecordingsDatatable from "./components/recordings-datatable";
@@ -6,7 +6,7 @@ import RecordingsDatatable from "./components/recordings-datatable";
 export default async function RecordingsPage() {
   const supervisor = await currentSupervisor();
   if (supervisor === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   if (!supervisor?.profile?.id) {

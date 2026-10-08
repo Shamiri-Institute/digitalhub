@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { loadOpsHubsPayoutHistory } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import { opsColumns } from "#/app/(platform)/ops/reporting/expenses/payout-history/ops-columns";
 import TriggerPayout from "#/app/(platform)/ops/reporting/expenses/payout-history/trigger-payout";
@@ -9,7 +9,7 @@ export default async function PayoutHistoryPage() {
   const opsUser = await currentOpsUser();
 
   if (!opsUser) {
-    return signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   const opsHubsPayoutHistory = await loadOpsHubsPayoutHistory();

@@ -1,6 +1,5 @@
 import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
 
 import { currentSupervisor } from "#/app/auth";
@@ -28,8 +27,7 @@ export default async function SupervisorStudentsPage() {
 
   const hubId = current.profile.hubId;
   if (!hubId) {
-    await signOut({ callbackUrl: "/login" });
-    return null;
+    redirect("/login");
   }
   const inHub = (col: AnyPgColumn) => eq(col, hubId);
   const hubSchoolIds = db.select({ id: school.id }).from(school).where(inHub(school.hubId));

@@ -3,7 +3,7 @@
 import { format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { eq, sql } from "drizzle-orm";
-import { signOut } from "next-auth/react";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { refresh, revalidatePath } from "next/cache";
 import type { z } from "zod";
 
@@ -501,8 +501,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>) {
 
     const hubId = hubCoordinator.profile?.assignedHubId;
     if (!hubId) {
-      await signOut({ callbackUrl: "/login" });
-      throw new Error("Unauthorised user");
+      redirect("/login");
     }
     const parsedData = AddSchoolSchema.parse(data);
 
@@ -651,6 +650,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>) {
     refresh();
     return result;
   } catch (error) {
+    unstable_rethrow(error);
     console.error("Error adding school:", error);
     return {
       success: false,

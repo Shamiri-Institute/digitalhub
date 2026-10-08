@@ -1,4 +1,4 @@
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import type React from "react";
 import RenderReportingTabs from "#/app/(platform)/hc/reporting/components/render-reporting-tabs";
 import { currentHubCoordinator } from "#/app/auth";
@@ -9,7 +9,7 @@ export default async function ReportingViewLayout({ children }: { children: Reac
   const hubCoordinator = await currentHubCoordinator();
 
   if (!hubCoordinator) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   return (

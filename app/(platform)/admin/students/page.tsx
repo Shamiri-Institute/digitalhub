@@ -1,5 +1,5 @@
 import { and, count, eq, inArray, isNull, or, sql } from "drizzle-orm";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 import { currentAdminUser } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
@@ -25,7 +25,7 @@ import { fetchStudentClinicalStats } from "#/lib/actions/clinical/students";
 export default async function StudentsPage() {
   const admin = await currentAdminUser();
   if (!admin) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   const projectId = await getActiveProjectId();
 

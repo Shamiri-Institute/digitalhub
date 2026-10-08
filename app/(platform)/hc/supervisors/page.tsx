@@ -6,7 +6,7 @@ import SupervisorChartsWrapper from "#/app/(platform)/hc/supervisors/components/
 import WeeklyHubTeamMeetingForm from "#/app/(platform)/hc/supervisors/components/weekly-hub-team-meeting";
 import { currentHubCoordinator } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
@@ -21,8 +21,7 @@ export default async function SupervisorsPage() {
 
   const hubId = coordinator.profile.assignedHubId;
   if (!hubId) {
-    await signOut({ callbackUrl: "/login" });
-    return null;
+    redirect("/login");
   }
 
   return (

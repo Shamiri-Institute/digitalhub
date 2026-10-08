@@ -1,6 +1,6 @@
 "use server";
 import { eq, sql } from "drizzle-orm";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
@@ -18,8 +18,7 @@ export async function loadFellowsData() {
   const supervisorId = supervisorProfile.profile.id;
   const hubId = supervisorProfile.profile.hubId;
   if (!hubId) {
-    await signOut({ callbackUrl: "/login" });
-    throw new Error("Unauthorised user");
+    redirect("/login");
   }
 
   const [fellows, schools, fellowAverageRatings, supervisors] = await Promise.all([

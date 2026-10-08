@@ -1,5 +1,5 @@
 import { eq, inArray, sql } from "drizzle-orm";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
@@ -21,8 +21,7 @@ export default async function FellowPage() {
   }
   const hubId = hc.profile.assignedHubId;
   if (!hubId) {
-    await signOut({ callbackUrl: "/login" });
-    return null;
+    redirect("/login");
   }
 
   return (

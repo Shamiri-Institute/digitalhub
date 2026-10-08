@@ -1,12 +1,12 @@
 import { ImplementerRole } from "#/db/enums";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { currentFellow } from "#/app/auth";
 import TicketsDatatable from "#/components/common/ticket/tickets-datatable";
 import { getAllTickets } from "#/lib/actions/ticket";
 export default async function TicketsPage() {
   const fellow = await currentFellow();
   if (fellow === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   const result = await getAllTickets({});

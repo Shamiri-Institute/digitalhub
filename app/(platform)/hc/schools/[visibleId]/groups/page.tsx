@@ -1,5 +1,5 @@
 import { ImplementerRole } from "#/db/enums";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { currentHubCoordinator } from "#/app/auth";
 import SchoolGroupsPage from "#/components/common/schools/school-groups-page";
 
@@ -7,7 +7,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
   const { visibleId } = await props.params;
   const hubCoordinator = await currentHubCoordinator();
   if (hubCoordinator === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
   return (
     <SchoolGroupsPage

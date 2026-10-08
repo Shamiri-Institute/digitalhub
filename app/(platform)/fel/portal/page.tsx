@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 import type { FellowsData } from "#/app/(platform)/sc/actions";
 import { currentFellow } from "#/app/auth";
@@ -14,7 +14,7 @@ import { interventionGroup } from "#/db/schema";
 export default async function FellowsPage() {
   const fellow = await currentFellow();
   if (fellow === null) {
-    await signOut({ callbackUrl: "/login" });
+    redirect("/login");
   }
 
   const fellowId = fellow?.profile.id;

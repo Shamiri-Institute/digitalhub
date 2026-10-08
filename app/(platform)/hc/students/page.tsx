@@ -1,6 +1,6 @@
 import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 import { currentHubCoordinator } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
@@ -33,8 +33,7 @@ export default async function StudentsPage() {
 
   const hubId = hubCoordinator.profile.assignedHubId;
   if (!hubId) {
-    await signOut({ callbackUrl: "/login" });
-    return null;
+    redirect("/login");
   }
   const inHub = (col: AnyPgColumn) => eq(col, hubId);
   const hubSchoolIds = db.select({ id: school.id }).from(school).where(inHub(school.hubId));
