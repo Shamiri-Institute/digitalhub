@@ -34,7 +34,7 @@ export async function fetchOverallStudentsDataBreakdown(scope: ClinicalScope) {
         WHERE ${sc.where}) AS "clinicalCases",
       (SELECT COUNT(*)::int
         FROM clinical_session_attendance cs
-        JOIN clinical_screening_info csi ON csi.id = cs."caseId"
+        JOIN clinical_screening_info csi ON csi.id = cs."case_id"
         JOIN students sts ON sts.id = csi.student_id
         JOIN schools sc ON sts.school_id = sc.id
         ${sc.join}
@@ -193,7 +193,7 @@ export async function fetchClinicalSessionsDataBreakdown(scope: ClinicalScope) {
       .execute<{ session: string | null; count: number }>(sql`
       SELECT session, COUNT(*)::int as count
       FROM clinical_session_attendance csa
-      JOIN clinical_screening_info csi ON csi.id = csa."caseId"
+      JOIN clinical_screening_info csi ON csi.id = csa."case_id"
       JOIN students s ON s.id = csi.student_id
       JOIN schools sc ON s.school_id = sc.id
       ${sc.join}

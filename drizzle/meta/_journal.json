@@ -71,6 +71,13 @@
       "when": 1791445328136,
       "tag": "0009_schedule_lookup_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791453295191,
+      "tag": "0010_curious_dust",
+      "breakpoints": true
     }
   ]
 }

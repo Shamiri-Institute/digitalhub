@@ -1180,7 +1180,7 @@ export const studentReportingNotes = pgTable(
     supervisorId: varchar("supervisor_id", { length: 255 }),
     studentId: varchar("student_id", { length: 255 }).notNull(),
     notes: text().notNull(),
-    addedBy: text(),
+    addedBy: text("added_by"),
   },
   (table) => [
     foreignKey({
@@ -1331,7 +1331,7 @@ export const clinicalExpertCaseNotes = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     name: varchar({ length: 255 }).notNull(),
-    caseId: text().notNull(),
+    caseId: text("case_id").notNull(),
     comment: text().notNull(),
   },
   (table) => [
@@ -1366,7 +1366,7 @@ export const clinicalCaseTransferTrail = pgTable(
     fromRole: varchar("from_role", { length: 255 }).notNull(),
     to: varchar({ length: 255 }).notNull(),
     toRole: varchar("to_role", { length: 255 }).notNull(),
-    caseId: text().notNull(),
+    caseId: text("case_id").notNull(),
     referralStatus: referralStatusOptionsEnum("referral_status"),
   },
   (table) => [
@@ -1444,9 +1444,9 @@ export const clinicalSessionAttendance = pgTable(
       .notNull(),
     supervisorId: varchar("supervisor_id", { length: 255 }),
     session: varchar({ length: 255 }).notNull(),
-    caseId: text().notNull(),
+    caseId: text("case_id").notNull(),
     attendanceStatus: boolean("attendance_status"),
-    clinicalLeadId: text(),
+    clinicalLeadId: text("clinical_lead_id"),
   },
   (table) => [
     foreignKey({
@@ -1553,7 +1553,7 @@ export const clinicalScreeningInfo = pgTable(
     riskStatus: riskStatusOptionsEnum("risk_status").notNull(),
     schoolId: varchar("school_id", { length: 255 }).notNull(),
     currentSupervisorId: varchar("current_supervisor_id", { length: 255 }),
-    referredToSupervisorId: varchar("referredTo_supervisor_id", { length: 255 }),
+    referredToSupervisorId: varchar("referred_to_supervisor_id", { length: 255 }),
     acceptCase: boolean("accept_case").default(false).notNull(),
     generalPresentingIssues: varchar("general_presenting_issues", { length: 255 }),
     generalPresentingIssuesOtherSpecified: text("general_presenting_issues_other_specified"),
@@ -1603,7 +1603,7 @@ export const clinicalScreeningInfo = pgTable(
     generalPresentingIssuesOtherSpecifiedEndpoint: text(
       "general_presenting_issues_other_specified_endpoint",
     ),
-    clinicalLeadId: text(),
+    clinicalLeadId: text("clinical_lead_id"),
   },
   (table) => [
     foreignKey({
@@ -2059,7 +2059,7 @@ export const monthlySupervisorEvaluation = pgTable(
     fellowRecruitmentEffectiveness: integer("fellow_recruitment_effectiveness").notNull(),
     fellowTrainingEffectiveness: integer("fellow_training_effectiveness").notNull(),
     programLogisticsCoordination: integer("program_logistics_coordination").notNull(),
-    programSessionAttendance: integer("program_session_attendace").notNull(),
+    programSessionAttendance: integer("program_session_attendance").notNull(),
     managementStyleComments: text("management_style_comments"),
     workplaceDemeanorComments: text("workplace_demeanor_comments"),
     programExecutionComments: text("program_execution_comments"),
@@ -2109,7 +2109,7 @@ export const sessionName = pgTable(
       .notNull()
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
-    sessionType: sessionTypesEnum().notNull(),
+    sessionType: sessionTypesEnum("session_type").notNull(),
     sessionName: varchar("session_name", { length: 255 }).notNull(),
     amount: integer(),
     currency: varchar({ length: 100 }).default("KES").notNull(),
@@ -2374,7 +2374,7 @@ export const schoolFeedback = pgTable(
     factorsInfluencedStudentParticipation: text("factors_influenced_student_participation"),
     concernsRaisedByTeachers: text("concerns_raised_by_teachers"),
     programImpactOnStudents: text("program_impact_on_students"),
-    schoolId: varchar({ length: 255 }),
+    schoolId: varchar("school_id", { length: 255 }),
     userId: varchar("user_id", { length: 255 }).notNull(),
   },
   (table) => [
