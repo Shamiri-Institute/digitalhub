@@ -9,8 +9,8 @@ import type { FellowsData } from "#/app/(platform)/sc/actions";
 import FellowSchoolDatatableDropdownMenu, {
   type FellowGroupData,
 } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
-import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Badge } from "#/components/ui/badge";
+import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Checkbox } from "#/components/ui/checkbox";
 import { sessionDisplayName } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
@@ -22,7 +22,7 @@ export const fellowSchoolsColumns = ({
 }: {
   state: {
     setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
-    setEditFellowDialog: Dispatch<SetStateAction<boolean>>;
+    openEditDialog: (fellow: FellowsData) => void;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
     setComplaintsDialog: Dispatch<SetStateAction<boolean>>;
     setFellow: Dispatch<SetStateAction<FellowsData | null>>;
@@ -106,11 +106,6 @@ export const fellowSchoolsColumns = ({
     },
   },
   {
-    accessorKey: "mpesaName",
-    header: "MPESA Name",
-    id: "MPESA Name",
-  },
-  {
     accessorKey: "fellowEmail",
     header: "Fellow Email",
     id: "Fellow Email",
@@ -134,18 +129,6 @@ export const fellowSchoolsColumns = ({
     accessorKey: "gender",
     header: "Gender",
     id: "Gender",
-  },
-  {
-    accessorKey: "idNumber",
-    header: "ID Number",
-    id: "ID Number",
-  },
-  {
-    header: "Date of Birth",
-    id: "Date of Birth",
-    accessorFn: ({ dateOfBirth }) => {
-      return dateOfBirth !== null ? format(dateOfBirth, "dd-MM-yyyy") : null;
-    },
   },
   {
     id: "button",

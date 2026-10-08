@@ -21,6 +21,20 @@ export default async function FellowsPage() {
   const [fellowRow, schools] = await Promise.all([
     db.query.fellow.findFirst({
       where: (f, { eq }) => (fellowId === undefined ? sql`false` : eq(f.id, fellowId)),
+      columns: {
+        id: true,
+        fellowName: true,
+        fellowEmail: true,
+        cellNumber: true,
+        mpesaNumber: true,
+        county: true,
+        subCounty: true,
+        gender: true,
+        supervisorId: true,
+        droppedOut: true,
+        droppedOutAt: true,
+        createdAt: true,
+      },
       with: {
         hub: { with: { project: true } },
         fellowAttendances: {
@@ -44,7 +58,7 @@ export default async function FellowsPage() {
             },
           },
         },
-        supervisor: true,
+        supervisor: { columns: { supervisorName: true } },
       },
     }),
 

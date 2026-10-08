@@ -48,14 +48,10 @@ export default async function SchoolFellowsPage({
         fellowName: fellow.fellowName,
         fellowEmail: fellow.fellowEmail,
         cellNumber: fellow.cellNumber,
-        mpesaNumber: fellow.mpesaNumber,
-        mpesaName: fellow.mpesaName,
         gender: fellow.gender,
         county: fellow.county,
         subCounty: fellow.subCounty,
         supervisorId: fellow.supervisorId,
-        dateOfBirth: fellow.dateOfBirth,
-        idNumber: fellow.idNumber,
         supervisorName: supervisor.supervisorName,
         droppedOut: fellow.droppedOut,
         groupName: schoolGroups.groupName,
@@ -83,7 +79,8 @@ export default async function SchoolFellowsPage({
     }),
     db.query.supervisor.findMany({
       where: (s, { eq }) => eq(s.hubId, schoolRow.hubId ?? ""),
-      with: { fellows: true },
+      columns: { id: true, supervisorName: true },
+      with: { fellows: { columns: { id: true, fellowName: true, droppedOut: true } } },
     }),
   ]);
 

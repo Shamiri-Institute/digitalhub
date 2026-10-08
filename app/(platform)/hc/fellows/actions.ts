@@ -7,7 +7,7 @@ import { ImplementerRole } from "#/db/enums";
 import { fellow, hub } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { requireHubRole } from "#/lib/auth/require-hub-role";
+import { fellowsInCallerScope, requireHubRole } from "#/lib/auth/require-hub-role";
 
 export type FellowDropoutReasonsGraphData = {
   name: string;
@@ -109,12 +109,14 @@ export async function fetchFellowSessionRatingAverages() {
 
 /**
  * The fellows the caller may see: a hub coordinator sees their hub, an admin their implementer's
- * fellows in the active project, the same as the fellows pages list.
+ * fellows in the active project, the same as the fellows pages list, and a supervisor the fellows
+ * they supervise.
  */
 async function callerFellowFilter() {
   const { role, implementerId } = await requireAuthRole(
     ImplementerRole.HUB_COORDINATOR,
     ImplementerRole.ADMIN,
+    ImplementerRole.SUPERVISOR,
   );
   if (role === ImplementerRole.ADMIN) {
     const activeProjectHubIds = db
@@ -123,8 +125,11 @@ async function callerFellowFilter() {
       .where(eq(hub.projectId, await getActiveProjectId()));
     return and(eq(fellow.implementerId, implementerId), inArray(fellow.hubId, activeProjectHubIds));
   }
-  const { hubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
-  return eq(fellow.hubId, hubId);
+  const caller = await requireHubRole(ImplementerRole.HUB_COORDINATOR, ImplementerRole.SUPERVISOR);
+  if (caller.role === ImplementerRole.SUPERVISOR) {
+    return inArray(fellow.id, fellowsInCallerScope(caller));
+  }
+  return eq(fellow.hubId, caller.hubId);
 }
 
 export async function loadFellowPersonalDetails(fellowId: string) {

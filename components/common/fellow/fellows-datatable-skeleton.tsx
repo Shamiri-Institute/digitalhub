@@ -10,7 +10,7 @@ export default function FellowsDatatableSkeleton({ role }: { role: ImplementerRo
       columns={columns({
         state: {
           setFellow: () => {},
-          setDetailsDialog: () => {},
+          openDetailsDialog: () => {},
           setReplaceDialog: () => {},
           setStudentsDialog: () => {},
           setAttendanceHistoryDialog: () => {},

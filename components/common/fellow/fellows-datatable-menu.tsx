@@ -21,7 +21,7 @@ export function FellowsDatatableMenu({
   fellow: SchoolFellowTableData;
   state: {
     setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
-    setDetailsDialog: Dispatch<SetStateAction<boolean>>;
+    openDetailsDialog: (fellow: SchoolFellowTableData) => void;
     setReplaceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
@@ -43,12 +43,7 @@ export function FellowsDatatableMenu({
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            state.setFellow(fellow);
-            state.setDetailsDialog(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDetailsDialog(fellow)}>
           {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
             ? "View fellow information"
             : role === ImplementerRole.SUPERVISOR

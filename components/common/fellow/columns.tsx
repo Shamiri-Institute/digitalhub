@@ -21,13 +21,9 @@ export type SchoolFellowTableData = {
   groupName: string | null;
   averageRating: number | null;
   fellowEmail: string | null;
-  idNumber: string | null;
   gender: string | null;
-  dateOfBirth: Date | null;
   county: string | null;
   subCounty: string | null;
-  mpesaName: string | null;
-  mpesaNumber: string | null;
   students: (typeof student.$inferSelect & { clinicalCasesCount: number })[];
 };
 
@@ -37,7 +33,7 @@ export const columns = ({
 }: {
   state: {
     setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
-    setDetailsDialog: Dispatch<SetStateAction<boolean>>;
+    openDetailsDialog: (fellow: SchoolFellowTableData) => void;
     setReplaceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
