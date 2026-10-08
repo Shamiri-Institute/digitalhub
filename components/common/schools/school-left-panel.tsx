@@ -1,13 +1,11 @@
 "use client";
 
-import type { ImplementerRole } from "#/db/enums";
 import { format } from "date-fns";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
+import type { SchoolPanelData } from "#/components/common/schools/school-view-layout";
 import SessionsOccurredWidget from "#/components/common/schools/sessions-occurred-widget";
 import { Icons } from "#/components/icons";
 import {
@@ -16,10 +14,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "#/components/ui/accordion";
-import { Skeleton } from "#/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
-import { toast } from "#/components/ui/use-toast";
-import { fetchSchool, type SchoolData } from "#/lib/actions/school";
 import { cn, getSchoolInitials } from "#/lib/utils";
 import LocationIcon from "#/public/icons/location-pin-icon.svg";
 import MailIcon from "#/public/icons/mail-icon.svg";
@@ -27,43 +22,11 @@ import PhoneIcon from "#/public/icons/telephone-icon.svg";
 
 export default function SchoolLeftPanel({
   open = false,
-  role,
+  school,
 }: {
   open?: boolean;
-  role?: ImplementerRole;
+  school: SchoolPanelData;
 }) {
-  const [loading, setLoading] = useState(!role);
-  const [school, setSchool] = useState<SchoolData | null>(null);
-  const { visibleId } = useParams();
-
-  // effect: loads the school for the route's visibleId; server-side loading is a separate change
-  useEffect(() => {
-    let cancelled = false;
-    const fetchSchoolData = async () => {
-      setLoading(true);
-      try {
-        if (!visibleId) return;
-        const response = await fetchSchool(visibleId as string);
-        if (cancelled) return;
-        if (response.success && response.data) {
-          setSchool(response.data);
-        } else {
-          toast({ variant: "destructive", description: "Could not load school details." });
-        }
-      } catch {
-        if (!cancelled) {
-          toast({ variant: "destructive", description: "Could not load school details." });
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void fetchSchoolData();
-    return () => {
-      cancelled = true;
-    };
-  }, [visibleId]);
-
   function renderPhoneNumbers(phone: string) {
     try {
       const phoneNumber = parsePhoneNumberWithError(phone, "KE");
@@ -90,18 +53,18 @@ export default function SchoolLeftPanel({
           >
             <div className="flex items-center gap-x-4 2xl:items-center">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-shamiri-new-light-blue text-lg font-semibold text-shamiri-new-blue lg:h-16 lg:w-16 lg:p-[18px] lg:text-xl">
-                {getSchoolInitials(school?.schoolName ?? "")}
+                {getSchoolInitials(school.schoolName)}
               </div>
               <h2 className="text-xl font-semibold text-black lg:text-left lg:text-[28px]">
-                {loading ? <Skeleton className="h-6 w-32" /> : school?.schoolName}
+                {school.schoolName}
               </h2>
             </div>
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-5 pt-6">
             <div className="min-h-[15vh] flex items-center justify-center">
               <SessionsOccurredWidget
-                types={school?.hub?.sessions}
-                sessions={school?.interventionSessions ?? []}
+                types={school.hub?.sessions}
+                sessions={school.interventionSessions}
               />
             </div>
             <div className="flex justify-center px-4">
@@ -109,15 +72,15 @@ export default function SchoolLeftPanel({
                 stats={[
                   {
                     title: "Sessions",
-                    count: school?.interventionSessionsCount || 0,
+                    count: school.interventionSessionsCount,
                   },
                   {
                     title: "Groups",
-                    count: school?.interventionGroupsCount || 0,
+                    count: school.interventionGroupsCount,
                   },
                   {
                     title: "Students",
-                    count: school?.studentsCount || 0,
+                    count: school.studentsCount,
                   },
                 ]}
               />
@@ -145,10 +108,10 @@ export default function SchoolLeftPanel({
                         <p className="text-shamiri-black">Phone Number</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {school?.pointPersonPhone === null || school?.pointPersonPhone === "N/A" ? (
+                        {school.pointPersonPhone === null || school.pointPersonPhone === "N/A" ? (
                           <span className="text-shamiri-text-grey">Not available</span>
                         ) : (
-                          school?.pointPersonPhone.split("/").map((phone) => {
+                          school.pointPersonPhone.split("/").map((phone) => {
                             return renderPhoneNumbers(phone);
                           })
                         )}
@@ -166,12 +129,12 @@ export default function SchoolLeftPanel({
                         />
                         <p className="text-sm font-medium leading-5 text-shamiri-black">Email</p>
                       </div>
-                      {school?.schoolEmail ? (
+                      {school.schoolEmail ? (
                         <Link
-                          href={`mailto:${school?.schoolEmail}`}
+                          href={`mailto:${school.schoolEmail}`}
                           className="text-shamiri-text-grey"
                         >
-                          {school?.schoolEmail}
+                          {school.schoolEmail}
                         </Link>
                       ) : (
                         <p className="text-shamiri-text-grey">N/A</p>
@@ -190,14 +153,12 @@ export default function SchoolLeftPanel({
                         <p className="text-shamiri-black">Location</p>
                       </div>
                       <p className="text-shamiri-text-grey">
-                        {school?.schoolSubCounty !== null
-                          ? `${school?.schoolSubCounty?.trim()},`
-                          : ""}{" "}
-                        {school?.schoolCounty}
+                        {school.schoolSubCounty !== null ? `${school.schoolSubCounty.trim()},` : ""}{" "}
+                        {school.schoolCounty}
                       </p>
-                      {school?.latitude !== null && school?.longitude !== null ? (
+                      {school.latitude !== null && school.longitude !== null ? (
                         <a
-                          href={`https://maps.google.com?q=${school?.latitude},${school?.longitude}`}
+                          href={`https://maps.google.com?q=${school.latitude},${school.longitude}`}
                           className="text-shamiri-new-blue"
                         >
                           Get directions
@@ -215,25 +176,23 @@ export default function SchoolLeftPanel({
                   <AccordionContent className="space-y-3 pt-4 text-sm font-medium leading-5">
                     <div>
                       <p className="text-shamiri-black">Type</p>
-                      <p className="text-shamiri-text-grey">{school?.schoolType}</p>
+                      <p className="text-shamiri-text-grey">{school.schoolType}</p>
                     </div>
                     <div>
                       <p className="text-shamiri-black">Hub</p>
-                      <p className="text-shamiri-text-grey">{school?.hub?.hubName}</p>
+                      <p className="text-shamiri-text-grey">{school.hub?.hubName}</p>
                     </div>
                     <div>
                       <p className="text-shamiri-black">Principal</p>
-                      <p className="text-shamiri-text-grey">{school?.principalName}</p>
+                      <p className="text-shamiri-text-grey">{school.principalName}</p>
                     </div>
                     <div>
                       <p className="text-shamiri-black">Principal phone number</p>
                       <div className="flex gap-2">
-                        {school?.principalPhone === null ||
-                        school?.principalPhone === undefined ||
-                        school?.principalPhone === "N/A" ? (
+                        {school.principalPhone === null || school.principalPhone === "N/A" ? (
                           <span className="text-shamiri-text-grey">Not available</span>
                         ) : (
-                          school?.principalPhone.split("/").map((phone) => {
+                          school.principalPhone.split("/").map((phone) => {
                             return (
                               <a href={`tel:${phone}`} key={phone} className="flex">
                                 <div className="rounded-full border px-1.5 py-0.5 text-shamiri-new-blue">
@@ -247,15 +206,15 @@ export default function SchoolLeftPanel({
                     </div>
                     <div>
                       <p className="text-shamiri-black">Point teacher</p>
-                      <p className="text-shamiri-text-grey">{school?.pointPersonName}</p>
+                      <p className="text-shamiri-text-grey">{school.pointPersonName}</p>
                     </div>
                     <div>
                       <p className="text-shamiri-black">Point teacher phone number</p>
                       <div className="flex flex-wrap gap-2">
-                        {school?.pointPersonPhone === null || school?.pointPersonPhone === "N/A" ? (
+                        {school.pointPersonPhone === null || school.pointPersonPhone === "N/A" ? (
                           <span className="text-shamiri-text-grey">Not available</span>
                         ) : (
-                          school?.pointPersonPhone.split("/").map((phone) => {
+                          school.pointPersonPhone.split("/").map((phone) => {
                             return renderPhoneNumbers(phone);
                           })
                         )}
@@ -269,9 +228,9 @@ export default function SchoolLeftPanel({
                       <span>Dropout History</span>
                     </div>
                   </AccordionTrigger>
-                  {school?.schoolDropoutHistory && school?.schoolDropoutHistory.length > 0 ? (
+                  {school.schoolDropoutHistory.length > 0 ? (
                     <AccordionContent className="pt-4 text-sm font-medium leading-5">
-                      {school?.schoolDropoutHistory.map((history) => {
+                      {school.schoolDropoutHistory.map((history) => {
                         return (
                           <div key={history.id} className="flex justify-between py-2.5">
                             <div>
