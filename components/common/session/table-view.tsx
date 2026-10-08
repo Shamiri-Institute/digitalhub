@@ -13,8 +13,7 @@ import {
 } from "#/components/common/fellow/fellow-attendance";
 import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-menu";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
-import { useSessionsContext } from "#/components/common/session/sessions-provider";
-import type { Filters } from "#/lib/schedule-filters";
+import type { Session } from "#/lib/actions/fetch-sessions";
 import {
   SupervisorAttendanceDataTable,
   SupervisorAttendanceDataTableMenu,
@@ -266,13 +265,13 @@ export function TableView({
   supervisors,
   role,
   supervisorId,
-  filters,
+  sessions,
 }: {
   state: CalendarState;
   supervisors?: ScheduleSupervisor[];
   role: ImplementerRole;
   supervisorId?: string;
-  filters: Filters;
+  sessions: Session[];
 }) {
   const [userSelectedDay, setUserSelectedDay] = useState<CalendarDate | null>(null);
   const weekDays = state.getDatesInWeek(0);
@@ -280,7 +279,6 @@ export function TableView({
     weekday: "long",
   });
   const [roleToggle, setRoleToggle] = useState<Role>("supervisors");
-  const { sessions } = useSessionsContext();
 
   const selectedDay = (() => {
     const today = getCalendarDate(new Date());
@@ -314,19 +312,6 @@ export function TableView({
     const _fellowAttendances: FellowAttendancesTableData[] = [];
 
     const attendances = activeSessions.flatMap((session) => {
-      if (filters.sessionTypes) {
-        if (
-          session.session?.sessionName !== undefined &&
-          !Object.keys(filters.sessionTypes).includes(session.session?.sessionName)
-        ) {
-          return [];
-        }
-      }
-      if (filters.statusTypes) {
-        if (session.status !== null && !Object.keys(filters.statusTypes).includes(session.status)) {
-          return [];
-        }
-      }
       return (supervisors ?? []).map((supervisor) => {
         const totalAttendedFellows = supervisor.fellows.filter((fellow) => {
           const attended = fellow.fellowAttendances.find(

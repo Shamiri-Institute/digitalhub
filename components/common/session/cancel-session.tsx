@@ -18,13 +18,11 @@ export default function CancelSession({
   sessionId,
   open,
   onOpenChange,
-  onSaved,
   children,
 }: {
   sessionId: string;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  onSaved?: () => Promise<void>;
   children: React.ReactNode;
 }) {
   const [isPending, startTransition] = useTransition();
@@ -43,7 +41,6 @@ export default function CancelSession({
           return;
         }
 
-        await onSaved?.();
         toast({
           description: response.message,
         });

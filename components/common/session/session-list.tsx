@@ -16,7 +16,7 @@ import {
 import { toast } from "#/components/ui/use-toast";
 import { countSessionGroupAttendance } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import type { Session } from "./sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 
 export function SessionList({
   sessions,

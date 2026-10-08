@@ -7,7 +7,6 @@ import type { z } from "zod";
 import RescheduleSession from "#/components/common/session/reschedule-session";
 import { ScheduleNewSessionSchema } from "#/components/common/session/schema";
 import { SessionDetail } from "#/components/common/session/session-list";
-import { useSessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -34,7 +33,7 @@ import { toastOnError, useToast } from "#/components/ui/use-toast";
 import { createNewSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
-import type { Session } from "./sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 import type { school, sessionName } from "#/db/schema";
 
 export function ScheduleNewSession({
@@ -49,7 +48,6 @@ export function ScheduleNewSession({
   role: ImplementerRole;
 }) {
   const { toast } = useToast();
-  const { refresh } = useSessionsContext();
 
   const [mode, setMode] = useState<"school" | "venue">("school");
 
@@ -110,7 +108,6 @@ export function ScheduleNewSession({
         });
         form.reset();
         toggleDialog(false);
-        await refresh();
       } else {
         if (response.data) {
           setExistingSession(response.data as Session);
@@ -470,7 +467,6 @@ export function ScheduleNewSession({
           session={existingSession}
           open={rescheduleDialog}
           onOpenChange={setRescheduleDialog}
-          onSaved={refresh}
         >
           <SessionDetail
             state={{ session: existingSession }}

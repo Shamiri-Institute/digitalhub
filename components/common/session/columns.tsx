@@ -12,7 +12,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import type { Dispatch, SetStateAction } from "react";
 import { SessionDropDown } from "#/components/common/session/session-list";
-import type { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 

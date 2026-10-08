@@ -11,7 +11,7 @@ import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-m
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { SessionDetail } from "#/components/common/session/session-list";
-import type { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Alert, AlertTitle } from "#/components/ui/alert";

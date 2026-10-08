@@ -8,7 +8,8 @@ import type { CalendarState } from "react-stately";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 import { SessionList } from "./session-list";
-import { type Session, useSessions } from "./sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
+import { sessionsAt } from "#/lib/schedule-view";
 
 export function DayView({
   state,
@@ -16,6 +17,7 @@ export function DayView({
   dialogState,
   supervisorId,
   fellowId,
+  sessions: allSessions,
 }: {
   state: CalendarState;
   role: ImplementerRole;
@@ -31,6 +33,7 @@ export function DayView({
   };
   supervisorId?: string;
   fellowId?: string;
+  sessions: Session[];
 }) {
   const dayFormatter = useDateFormatter({ weekday: "long" });
 
@@ -47,7 +50,7 @@ export function DayView({
 
   const headerLabel = `${currentDate.day} - ${dayFormatter.format(currentDate.toDate(state.timeZone))}`;
 
-  const { sessions } = useSessions({ date: currentDate });
+  const sessions = sessionsAt(allSessions, currentDate);
   const hasSessions = sessions.length > 0;
 
   return (
@@ -90,13 +93,13 @@ export function DayView({
               </td>
               <DayCalendarCell
                 rowIdx={rowIdx}
-                hour={hour}
                 date={currentDate}
                 state={state}
                 role={role}
                 dialogState={dialogState}
                 fellowId={fellowId}
                 supervisorId={supervisorId}
+                sessions={sessionsAt(sessions, currentDate, hour)}
               />
             </tr>
           ))}
@@ -108,16 +111,15 @@ export function DayView({
 
 function DayCalendarCell({
   rowIdx,
-  hour,
   date,
   state,
   role,
   dialogState,
   fellowId,
   supervisorId,
+  sessions,
 }: {
   rowIdx: number;
-  hour: number;
   date: CalendarDate;
   state: CalendarState;
   role: ImplementerRole;
@@ -133,6 +135,7 @@ function DayCalendarCell({
   };
   fellowId?: string;
   supervisorId?: string;
+  sessions: Session[];
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { cellProps, buttonProps, isSelected, isDisabled, isUnavailable } = useCalendarCell(
@@ -140,8 +143,6 @@ function DayCalendarCell({
     state,
     ref,
   );
-
-  const { sessions } = useSessions({ date, hour });
 
   return (
     <td {...cellProps}>

@@ -11,7 +11,7 @@ import { columns, type SessionData } from "#/components/common/session/columns";
 import RescheduleSession from "#/components/common/session/reschedule-session";
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
-import type { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 import StudentAttendance from "#/components/common/student/student-attendance";
 import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";

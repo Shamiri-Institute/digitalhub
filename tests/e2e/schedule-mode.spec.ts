@@ -26,6 +26,7 @@ test.describe("supervisor schedule mode from the URL", () => {
   test("back and forward show the view that the URL names", async ({ page }) => {
     await page.goto(getUrl("/sc/schedule"));
     await page.getByLabel("Select week view").click();
+    await expect(page).toHaveURL(/mode=week/);
     await page.getByLabel("Select list view").click();
     await expect(page).toHaveURL(/mode=list/);
 
@@ -36,6 +37,20 @@ test.describe("supervisor schedule mode from the URL", () => {
     await page.goForward();
     await expect(page).toHaveURL(/mode=list/);
     await expect(page.getByLabel("Select list view")).toHaveAttribute("data-state", "on");
+  });
+
+  test("the visible dates are in the URL, so a reload keeps them", async ({ page }) => {
+    await page.goto(getUrl("/sc/schedule?mode=week"));
+    const title = page.getByRole("heading", { level: 3 });
+    const thisWeek = await title.innerText();
+
+    await page.getByRole("button", { name: "Next", exact: true }).click();
+    await expect(title).not.toHaveText(thisWeek);
+    await expect(page).toHaveURL(/date=\d{4}-\d{2}-\d{2}/);
+    const nextWeek = await title.innerText();
+
+    await page.reload();
+    await expect(title).toHaveText(nextWeek);
   });
 });
 

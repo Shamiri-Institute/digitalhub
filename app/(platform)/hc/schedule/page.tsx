@@ -6,10 +6,15 @@ import { Separator } from "#/components/ui/separator";
 import { db } from "#/db/client";
 import { getHubScheduleStats } from "#/lib/actions/hub";
 import { fetchHubFellowRatings, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
+import { loadScheduleSessions, type ScheduleSearchParams } from "#/lib/schedule-sessions";
 import { ScheduleCalendar } from "../../../../components/common/session/schedule-calendar";
 import { ScheduleHeader } from "../../../../components/common/session/schedule-header";
 
-export default async function HubCoordinatorSchedulePage() {
+export default async function HubCoordinatorSchedulePage({
+  searchParams,
+}: {
+  searchParams: ScheduleSearchParams;
+}) {
   const coordinator = await currentHubCoordinator();
   if (coordinator === null) {
     await signOut({ callbackUrl: "/login" });
@@ -18,6 +23,7 @@ export default async function HubCoordinatorSchedulePage() {
     return <div>Hub coordinator has no assigned hub</div>;
   }
   const hubId = coordinator.profile.assignedHubId;
+  const role = coordinator.session.user.activeMembership?.role ?? "HUB_COORDINATOR";
 
   const values = await Promise.all([
     fetchSchoolData(),
@@ -25,12 +31,14 @@ export default async function HubCoordinatorSchedulePage() {
     fetchScheduleSupervisors(hubId),
     fetchHubFellowRatings(hubId),
     db.query.sessionName.findMany({ where: (s, { eq }) => eq(s.hubId, hubId) }),
+    loadScheduleSessions(searchParams, role),
   ]);
   const schools = values[0];
   const schoolStats = values[1];
   const supervisors = values[2];
   const fellowRatings = values[3];
   const hubSessionTypes = values[4];
+  const schedule = values[5];
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -53,15 +61,16 @@ export default async function HubCoordinatorSchedulePage() {
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
         <ScheduleCalendar
-          hubId={hubId}
           aria-label="Session schedule"
+          sessions={schedule.sessions}
+          timeZone={schedule.timeZone}
           schools={schools}
           supervisors={supervisors}
           fellowRatings={fellowRatings.map((rating) => ({
             ...rating,
             averageRating: Number(rating.averageRating),
           }))}
-          role={coordinator?.session.user.activeMembership?.role ?? "HUB_COORDINATOR"}
+          role={role}
           hubSessionTypes={hubSessionTypes}
         />
       </div>

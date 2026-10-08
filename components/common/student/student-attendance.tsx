@@ -7,7 +7,7 @@ import AttendanceStatusWidget from "#/components/common/attendance-status-widget
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
-import type { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/lib/actions/fetch-sessions";
 import ViewAttendanceDocument from "#/components/common/student/student-attendance-files/view-attendance-document";
 import StudentAttendanceMenu from "#/components/common/student/student-attendance-menu";
 import StudentTriageHistoryModal from "#/components/common/student/student-triage-history-modal";
@@ -47,7 +47,6 @@ export default function StudentAttendance({
   session,
   fellows,
   fellowId,
-  onSaved,
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
@@ -55,7 +54,6 @@ export default function StudentAttendance({
   session: Session | null;
   fellows: (typeof fellow.$inferSelect)[];
   fellowId?: string;
-  onSaved?: () => Promise<void>;
 }) {
   const isFellow = role === ImplementerRole.FELLOW;
   const [selectedGroup, setSelectedGroup] = useState<string>();
@@ -409,10 +407,7 @@ export default function StudentAttendance({
             existingEvent={loadedTriageEvent?.event ?? undefined}
             loadingExistingEvent={!loadedTriageEvent}
             readOnly={triageReadOnly}
-            onSuccess={toastOnError(async () => {
-              await onSaved?.();
-              await reloadTriageEventsAfterSave();
-            })}
+            onSuccess={toastOnError(reloadTriageEventsAfterSave)}
           />
         )}
         {historyStudent && (
