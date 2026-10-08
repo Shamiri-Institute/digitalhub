@@ -58,7 +58,6 @@ export async function loadHubFellowAttendance() {
         fellowId: fellowAttendance.fellowId,
         attended: fellowAttendance.attended,
         payout: {
-          id: payoutStatements.id,
           session: sessionName.sessionLabel,
           schoolVenue: school.schoolName,
           dateOfAttendance: interventionSession.sessionDate,
@@ -106,32 +105,4 @@ export async function loadHubFellowAttendance() {
 /** Attendances of the grouped fellow that match `condition`; the payout join repeats them. */
 function attendancesWhere(condition: SQL) {
   return sql<number>`(count(distinct ${fellowAttendance.id}) filter (where ${condition}))::int`;
-}
-
-export async function submitPaymentReversal(data: { id: number; name: string }) {
-  const hubCoordinator = await currentHubCoordinator();
-  if (!hubCoordinator) {
-    throw new Error("Unauthorised user");
-  }
-  // will be in a separate PR for actions
-  return {
-    success: true,
-    message: `Payment for ${data.name} has been reversed`,
-  };
-}
-
-export async function submitRequestRepayment(data: {
-  id: number;
-  name: string;
-  mpesaNumber: string;
-}) {
-  const hubCoordinator = await currentHubCoordinator();
-  if (!hubCoordinator) {
-    throw new Error("Unauthorised user");
-  }
-  // will be in a separate PR for actions
-  return {
-    success: true,
-    message: `Repayment request for ${data.name} has been submitted`,
-  };
 }
