@@ -1,12 +1,14 @@
 "use server";
 
-import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { db, isUniqueViolation, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
+  adminUser,
   clinicalLead,
   hubCoordinator,
+  implementerMember,
   ticketEscalations,
   ticketReassignments,
   ticketResolutions,
@@ -744,30 +746,26 @@ const fetchEscalationRecipientHandlers: Record<
 
     return clinicalLeadUserId;
   },
-  ADMIN: async () => {
-    const adminUsers = await db.query.adminUser.findMany({
-      orderBy: (a, { desc }) => desc(a.createdAt),
-    });
-    if (adminUsers.length === 0) throw new Error("No admin user found");
-
-    const adminMemberships = await db.query.implementerMember.findMany({
-      where: (m, { and, eq, inArray }) =>
+  ADMIN: async (_userId, implementerId) => {
+    // The oldest super admin of the ticket's implementer, so adding admins, or an admin of another
+    // implementer, never changes who receives the ticket.
+    const [recipient] = await db
+      .select({ userId: implementerMember.userId })
+      .from(adminUser)
+      .innerJoin(
+        implementerMember,
         and(
-          eq(m.role, "ADMIN"),
-          inArray(
-            m.identifier,
-            adminUsers.map((a) => a.id),
-          ),
+          eq(implementerMember.identifier, adminUser.id),
+          eq(implementerMember.role, "ADMIN"),
+          eq(implementerMember.implementerId, implementerId),
         ),
-      columns: { userId: true, createdAt: true },
-      orderBy: (m, { desc }) => desc(m.createdAt),
-      limit: 1,
-    });
+      )
+      .where(and(eq(adminUser.implementerId, implementerId), eq(adminUser.isSuperAdmin, true)))
+      .orderBy(asc(adminUser.createdAt), asc(adminUser.id))
+      .limit(1);
+    if (!recipient) throw new Error("No admin user found");
 
-    const adminUserId = adminMemberships[0]?.userId;
-    if (!adminUserId) throw new Error("No admin user found");
-
-    return adminUserId;
+    return recipient.userId;
   },
 };
 
