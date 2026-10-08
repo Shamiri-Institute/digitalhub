@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.38.7](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.6...v1.38.7) (2026-10-08)
+
+### Bug Fixes
+
+- await returned promises inside try (ENG-2241) ([#896](https://github.com/Shamiri-Institute/digitalhub/issues/896)) ([17a0a7a](https://github.com/Shamiri-Institute/digitalhub/commit/17a0a7a42fb44e571a421fac1de2a66c4ad06715))
+- client async handlers: stuck spinners, races and hidden errors (ENG-2244) ([#897](https://github.com/Shamiri-Institute/digitalhub/issues/897)) ([1c545a2](https://github.com/Shamiri-Institute/digitalhub/commit/1c545a2f69d46710d87c7b59b3f745844c87885f))
+- let report and clinical loaders throw instead of returning [] ([#898](https://github.com/Shamiri-Institute/digitalhub/issues/898)) ([7ef55d5](https://github.com/Shamiri-Institute/digitalhub/commit/7ef55d57f83c4b0578fa5227710e38e47a039aa6))
+- **recordings:** submit to Fidelity in after() so upload and retry respond at once ([#902](https://github.com/Shamiri-Institute/digitalhub/issues/902)) ([c81d9ea](https://github.com/Shamiri-Institute/digitalhub/commit/c81d9ea1babb54b619616a8d8ce62ded16db2238))
+- save related writes together and fix bug when updating clinical case information ([#895](https://github.com/Shamiri-Institute/digitalhub/issues/895)) ([34468aa](https://github.com/Shamiri-Institute/digitalhub/commit/34468aac9039184bb461f47822f66226da2c7e44))
+- session dialogs read empty SessionsContext defaults outside the schedule ([#904](https://github.com/Shamiri-Institute/digitalhub/issues/904)) ([f5b0b13](https://github.com/Shamiri-Institute/digitalhub/commit/f5b0b13dc057ee59337b65db66eb72f1ef792dcd))
+
 ## [1.38.6](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.5...v1.38.6) (2026-10-07)
 
 ### Bug Fixes
