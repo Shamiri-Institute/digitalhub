@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.39.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.39.0...v1.39.1) (2026-10-08)
+
+### Bug Fixes
+
+- **schools:** scope school pages to the caller's hubs ([#912](https://github.com/Shamiri-Institute/digitalhub/issues/912)) ([1a1867c](https://github.com/Shamiri-Institute/digitalhub/commit/1a1867cca1004bbd405aa03f0e8635841efd7bc3))
+
 ## [1.39.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.38.7...v1.39.0) (2026-10-08)
 
 ### Features
