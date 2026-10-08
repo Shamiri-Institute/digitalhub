@@ -28,9 +28,13 @@ export async function loadFellowComplaints() {
   const caller = await requireHubRole(ImplementerRole.SUPERVISOR, ImplementerRole.HUB_COORDINATOR);
   const complaints = await db.query.fellowComplaints.findMany({
     where: (c, { inArray }) => inArray(c.fellowId, fellowsInCallerScope(caller)),
+    columns: { id: true, fellowId: true, createdAt: true, complaint: true, comments: true },
     with: {
-      supervisor: true,
-      fellow: { with: { supervisor: true } },
+      supervisor: { columns: { supervisorName: true } },
+      fellow: {
+        columns: { fellowName: true },
+        with: { supervisor: { columns: { supervisorName: true } } },
+      },
     },
     orderBy: (c, { asc }) => [asc(c.createdAt), asc(c.id)],
   });

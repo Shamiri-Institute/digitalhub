@@ -15,22 +15,36 @@ export async function loadSessionReport() {
   const hubId = hubCoordinator.profile.assignedHubId;
   const schools = await db.query.school.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
+    columns: { schoolName: true },
     with: {
       interventionSessions: {
         where: (session, { eq }) => eq(session.occurred, true),
+        columns: { id: true, sessionName: true, sessionType: true, sessionDate: true },
         with: {
-          sessionRatings: true,
-          session: true,
-          sessionNotes: true,
+          sessionRatings: {
+            columns: {
+              studentBehaviorRating: true,
+              adminSupportRating: true,
+              workloadRating: true,
+            },
+          },
+          session: { columns: { sessionLabel: true, sessionName: true } },
+          sessionNotes: {
+            columns: { id: true, kind: true, content: true },
+            orderBy: (note, { asc }) => asc(note.id),
+          },
           sessionComments: {
+            columns: { id: true, content: true, createdAt: true },
             with: {
               user: { columns: { name: true } },
             },
+            orderBy: (comment, { asc }) => [asc(comment.createdAt), asc(comment.id)],
           },
         },
-        orderBy: (session, { asc }) => asc(session.sessionDate),
+        orderBy: (session, { asc }) => [asc(session.sessionDate), asc(session.id)],
       },
     },
+    orderBy: (s, { asc }) => [asc(s.schoolName), asc(s.id)],
   });
 
   const reportData = schools.map((school) => {

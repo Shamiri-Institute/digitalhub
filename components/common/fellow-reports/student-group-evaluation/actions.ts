@@ -41,8 +41,11 @@ function fetchEvaluations(caller: ReportCaller) {
   return db.query.interventionGroupReport.findMany({
     where: (r, { inArray }) => inArray(r.groupId, groupsInCallerScope(caller)),
     with: {
-      group: { with: { leader: true } },
-      session: true,
+      group: {
+        columns: { groupName: true },
+        with: { leader: { columns: { id: true, fellowName: true } } },
+      },
+      session: { columns: { sessionType: true } },
     },
     orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
   });
