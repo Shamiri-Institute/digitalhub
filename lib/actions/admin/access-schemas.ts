@@ -10,7 +10,13 @@ const accessFields = {
 
 export const CreateAdminSchema = z.object({
   adminName: stringValidation("Please enter the admin's name"),
-  email: z.email({ error: "Please enter a valid email." }),
+  // Emails are stored in lowercase, as Google sign-in returns them, so a differently cased entry
+  // does not create a second user.
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .pipe(z.email({ error: "Please enter a valid email." })),
   ...accessFields,
 });
 
