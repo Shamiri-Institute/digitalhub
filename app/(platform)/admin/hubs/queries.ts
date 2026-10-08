@@ -24,15 +24,6 @@ export async function fetchAdminHubs(implementerId: string, projectId: string) {
               ),
             }),
           },
-          students: {
-            with: { assignedGroup: true },
-            extras: (s, { sql }) => ({
-              clinicalCasesCount:
-                sql<number>`(select count(*)::int from clinical_screening_info c where c.student_id = ${s.id})`.as(
-                  "clinical_cases_count",
-                ),
-            }),
-          },
         },
       },
       implementer: true,

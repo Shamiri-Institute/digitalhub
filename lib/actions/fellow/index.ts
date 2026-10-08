@@ -940,7 +940,7 @@ export async function getFellowGroupsAndHubData() {
     db.query.fellow.findFirst({
       where: (f, { eq }) => eq(f.id, fellowId),
       columns: { hubId: true },
-      with: { groups: { columns: { id: true, schoolId: true } } },
+      with: { groups: { columns: { schoolId: true } } },
     }),
     fellowGroupStats(fellowId),
   ]);
@@ -948,7 +948,6 @@ export async function getFellowGroupsAndHubData() {
   if (!fellowRow) return null;
 
   const { hubId } = fellowRow;
-  const fellowGroupIds = fellowRow.groups.map((group) => group.id);
   const fellowSchoolIds = Array.from(new Set(fellowRow.groups.map((group) => group.schoolId)));
 
   const [schoolRows, sessions] = await Promise.all([
@@ -963,16 +962,6 @@ export async function getFellowGroupsAndHubData() {
                 sessionRatingsCount: countOf(interventionSessionRating.sessionId, session.id).as(
                   "session_ratings_count",
                 ),
-              }),
-            },
-            students: {
-              where: (st, { inArray }) => inArray(st.assignedGroupId, fellowGroupIds),
-              with: { assignedGroup: true },
-              extras: (st, { sql }) => ({
-                clinicalCasesCount:
-                  sql<number>`(select count(*)::int from (select student_id from clinical_screening_info) c where c.student_id = ${st.id})`.as(
-                    "clinical_cases_count",
-                  ),
               }),
             },
           },

@@ -448,6 +448,7 @@ export async function fetchHubSupervisors() {
   );
   return db.query.supervisor.findMany({
     where: (s, { eq }) => eq(s.hubId, callerHubId),
+    columns: { id: true, supervisorName: true },
     orderBy: (s, { asc }) => asc(s.supervisorName),
   });
 }
