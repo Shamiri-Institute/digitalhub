@@ -23,6 +23,7 @@ import {
 
 import {
   AdaptationType,
+  AdminTeam,
   ApprovalStatus,
   FollowUpPlanOptions,
   GroupType,
@@ -59,6 +60,7 @@ export const followUpPlanOptionsEnum = pgEnum(
 export const groupTypeEnum = pgEnum("GroupType", enumValues(GroupType));
 export const sessionStatusEnum = pgEnum("SessionStatus", enumValues(SessionStatus));
 export const adaptationTypeEnum = pgEnum("adaptation_types", enumValues(AdaptationType));
+export const adminTeamEnum = pgEnum("admin_team", enumValues(AdminTeam));
 export const approvalStatusEnum = pgEnum("approval_status", enumValues(ApprovalStatus));
 export const caseStatusOptionsEnum = pgEnum("caseStatusOptions", enumValues(caseStatusOptions));
 export const implementerRoleEnum = pgEnum("implementer_roles", enumValues(ImplementerRole));
@@ -2509,8 +2511,24 @@ export const adminUser = pgTable(
       .$onUpdate(() => new Date()),
     email: varchar({ length: 255 }).notNull(),
     adminName: varchar("name", { length: 255 }).notNull(),
+    implementerId: varchar("implementer_id", { length: 255 }),
+    isSuperAdmin: boolean("is_super_admin").default(false).notNull(),
+    team: adminTeamEnum(),
   },
-  (table) => [uniqueIndex("admin_users_email_key").using("btree", table.email)],
+  (table) => [
+    uniqueIndex("admin_users_implementer_id_email_key").using(
+      "btree",
+      table.implementerId,
+      table.email,
+    ),
+    foreignKey({
+      columns: [table.implementerId],
+      foreignColumns: [implementer.id],
+      name: "admin_users_implementer_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
 );
 
 export const opsUser = pgTable(

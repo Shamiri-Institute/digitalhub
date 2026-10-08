@@ -85,6 +85,13 @@
       "when": 1791476836748,
       "tag": "0011_better_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791539404762,
+      "tag": "0012_admin_super_admins_and_teams",
+      "breakpoints": true
     }
   ]
 }

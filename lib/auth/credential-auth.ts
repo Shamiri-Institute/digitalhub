@@ -30,4 +30,6 @@ export const TEST_USER_EMAILS: ReadonlySet<string> = new Set([
   "kai.havertz@test.com",
   "takehiro.tomiyasu@test.com",
   "admin@shamiri.institute",
+  "care.admin@shamiri.institute",
+  "plain.admin@shamiri.institute",
 ]);
