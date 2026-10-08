@@ -21,7 +21,7 @@ export async function loadFellowGroupReports() {
       and(inArray(g.leaderId, fellowsInCallerScope(caller)), isNull(g.archivedAt)),
     with: {
       leader: { columns: { fellowName: true } },
-      fellowGroupReports: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] },
+      fellowGroupReports: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)], limit: 1 },
     },
     orderBy: (g, { asc }) => asc(g.groupName),
   });
