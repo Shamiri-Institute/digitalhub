@@ -47,6 +47,12 @@ export const authOptions: AuthOptions = {
       ]
     : [],
   adapter,
+  logger: {
+    error: (code, metadata) => {
+      const error = metadata instanceof Error ? metadata : metadata.error;
+      console.error(`[next-auth][error][${code}]`, metadata, { cause: error?.cause });
+    },
+  },
   callbacks: {
     signIn: async ({ user, account, profile }) => {
       if (account?.provider !== "google" || !user.email) {
