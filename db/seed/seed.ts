@@ -428,6 +428,11 @@ async function createCoreUsers(
       email: "marie.odhiambo@shamiri.institute",
       role: ImplementerRole.HUB_COORDINATOR,
     },
+    {
+      id: objectId("user"),
+      email: "osborn@shamiri.institute",
+      role: ImplementerRole.SUPERVISOR,
+    },
   ];
 
   const users = await insertManyReturning(
