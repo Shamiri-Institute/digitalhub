@@ -40,7 +40,6 @@ export async function loadSupervisorFellowAttendance() {
 
     const payoutStatements = fellow.fellowAttendances.flatMap((attendance) =>
       attendance.PayoutStatements.map((payout) => ({
-        id: payout.id,
         fellowName: fellow.fellowName,
         session: attendance?.session?.session?.sessionLabel,
         mpesaNo: fellow.mpesaNumber,
@@ -126,31 +125,3 @@ type FellowAttendance = {
   session: { session: { sessionName: string; sessionType: string } | null } | null;
   PayoutStatements: { amount: number; confirmedAt: Date | null }[];
 };
-
-export async function submitPaymentReversal(data: { id: number; name: string }) {
-  const currentSupervisorData = await currentSupervisor();
-  if (!currentSupervisorData) {
-    throw new Error("Unauthorised user");
-  }
-  // will be in a separate PR for actions
-  return {
-    success: true,
-    message: `Payment for ${data.name} has been reversed`,
-  };
-}
-
-export async function submitRequestRepayment(data: {
-  id: number;
-  name: string;
-  mpesaNumber: string;
-}) {
-  const currentSupervisorData = await currentSupervisor();
-  if (!currentSupervisorData) {
-    throw new Error("Unauthorised user");
-  }
-  // will be in a separate PR for actions
-  return {
-    success: true,
-    message: `Repayment request for ${data.name} has been submitted`,
-  };
-}
