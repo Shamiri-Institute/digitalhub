@@ -31,19 +31,15 @@ export default async function FellowPage() {
       ),
     );
 
-  const [fellowRows, complaints, groups, supervisors, weeklyFellowEvaluations] = await Promise.all([
+  const [fellowRows, complaints, groups, supervisors] = await Promise.all([
     db
       .select({
         id: fellow.id,
         fellowName: fellow.fellowName,
         fellowEmail: fellow.fellowEmail,
         gender: fellow.gender,
-        dateOfBirth: fellow.dateOfBirth,
-        idNumber: fellow.idNumber,
         county: fellow.county,
         subCounty: fellow.subCounty,
-        mpesaName: fellow.mpesaName,
-        mpesaNumber: fellow.mpesaNumber,
         cellNumber: fellow.cellNumber,
         supervisorId: fellow.supervisorId,
         droppedOut: fellow.droppedOut,
@@ -65,11 +61,13 @@ export default async function FellowPage() {
       .groupBy(fellow.id),
     db.query.fellowComplaints.findMany({
       where: (c, { inArray }) => inArray(c.fellowId, projectFellowIds),
-      with: { user: true },
+      columns: { id: true, fellowId: true, complaint: true, comments: true, createdAt: true },
+      with: { user: { columns: { name: true } } },
     }),
     db.query.interventionGroup.findMany({
       where: (g, { inArray }) => inArray(g.leaderId, projectFellowIds),
-      with: { school: true },
+      columns: { id: true, leaderId: true, groupName: true, archivedAt: true },
+      with: { school: { columns: { schoolName: true } } },
     }),
     db.query.supervisor.findMany({
       where: (s, { and, eq, inArray }) =>
@@ -77,10 +75,8 @@ export default async function FellowPage() {
           implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
           inArray(s.hubId, projectHubIds),
         ),
-      with: { fellows: true },
-    }),
-    db.query.weeklyFellowRatings.findMany({
-      where: (w, { inArray }) => inArray(w.fellowId, projectFellowIds),
+      columns: { id: true, supervisorName: true },
+      with: { fellows: { columns: { id: true, fellowName: true, droppedOut: true } } },
     }),
   ]);
 
@@ -100,7 +96,6 @@ export default async function FellowPage() {
         <MainFellowsDatatable
           fellows={data}
           supervisors={supervisors}
-          weeklyEvaluations={weeklyFellowEvaluations}
           role={activeMembership?.role ?? ImplementerRole.ADMIN}
         />
       </div>

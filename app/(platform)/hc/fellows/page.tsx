@@ -1,5 +1,4 @@
-import { type AnyPgColumn } from "drizzle-orm/pg-core";
-import { countDistinct, eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { signOut } from "next-auth/react";
 import { Suspense } from "react";
 
@@ -13,7 +12,7 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { fellow, interventionGroup, weeklyFellowRatings } from "#/db/schema";
+import { fellow, weeklyFellowRatings } from "#/db/schema";
 
 export default async function FellowPage() {
   const hc = await currentHubCoordinator();
@@ -25,59 +24,6 @@ export default async function FellowPage() {
     await signOut({ callbackUrl: "/login" });
     return null;
   }
-  const inHub = (col: AnyPgColumn) => eq(col, hubId);
-  const hubFellowIds = db.select({ id: fellow.id }).from(fellow).where(inHub(fellow.hubId));
-
-  const [fellowRows, complaints, groups, supervisors, weeklyFellowEvaluations] = await Promise.all([
-    db
-      .select({
-        id: fellow.id,
-        fellowName: fellow.fellowName,
-        fellowEmail: fellow.fellowEmail,
-        gender: fellow.gender,
-        dateOfBirth: fellow.dateOfBirth,
-        idNumber: fellow.idNumber,
-        county: fellow.county,
-        subCounty: fellow.subCounty,
-        mpesaName: fellow.mpesaName,
-        mpesaNumber: fellow.mpesaNumber,
-        cellNumber: fellow.cellNumber,
-        supervisorId: fellow.supervisorId,
-        droppedOut: fellow.droppedOut,
-        groupCount: countDistinct(interventionGroup.id),
-        averageRating: sql<
-          number | null
-        >`((avg(${weeklyFellowRatings.behaviourRating}) + avg(${weeklyFellowRatings.dressingAndGroomingRating}) + avg(${weeklyFellowRatings.programDeliveryRating}) + avg(${weeklyFellowRatings.punctualityRating})) / 4)::float8`,
-      })
-      .from(fellow)
-      .leftJoin(weeklyFellowRatings, eq(fellow.id, weeklyFellowRatings.fellowId))
-      .leftJoin(interventionGroup, eq(fellow.id, interventionGroup.leaderId))
-      .where(eq(fellow.hubId, hubId))
-      .groupBy(fellow.id),
-    db.query.fellowComplaints.findMany({
-      where: (c, { inArray }) => inArray(c.fellowId, hubFellowIds),
-      with: { user: true },
-    }),
-    db.query.interventionGroup.findMany({
-      where: (g, { inArray }) => inArray(g.leaderId, hubFellowIds),
-      with: { school: true },
-    }),
-    db.query.supervisor.findMany({
-      where: (s) => inHub(s.hubId),
-      with: { fellows: true },
-    }),
-    db.query.weeklyFellowRatings.findMany({
-      where: (w) => inArray(w.fellowId, hubFellowIds),
-    }),
-  ]);
-
-  const complaintsByFellow = Map.groupBy(complaints, (c) => c.fellowId);
-  const groupsByLeader = Map.groupBy(groups, (g) => g.leaderId);
-  const data = fellowRows.map((fellowRow) => ({
-    ...fellowRow,
-    complaints: complaintsByFellow.get(fellowRow.id) ?? [],
-    groups: groupsByLeader.get(fellowRow.id) ?? [],
-  }));
 
   return (
     <div className="flex h-full flex-col">
@@ -86,18 +32,88 @@ export default async function FellowPage() {
         <Separator />
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <FellowsChartsWrapper
-            coordinator={{ assignedHubId: hc.profile?.assignedHubId ?? null }}
-          />
+          <FellowsChartsWrapper coordinator={{ assignedHubId: hubId }} />
         </Suspense>
-        <MainFellowsDatatable
-          fellows={data}
-          supervisors={supervisors}
-          weeklyEvaluations={weeklyFellowEvaluations}
+        <FellowsTable
+          hubId={hubId}
           role={hc.session?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR}
         />
       </div>
       <PageFooter />
     </div>
   );
+}
+
+async function FellowsTable({ hubId, role }: { hubId: string; role: ImplementerRole }) {
+  const hubFellowIds = db.select({ id: fellow.id }).from(fellow).where(eq(fellow.hubId, hubId));
+  const ratingAverages = db
+    .select({
+      fellowId: weeklyFellowRatings.fellowId,
+      averageRating: sql<
+        number | null
+      >`((avg(${weeklyFellowRatings.behaviourRating}) + avg(${weeklyFellowRatings.dressingAndGroomingRating}) + avg(${weeklyFellowRatings.programDeliveryRating}) + avg(${weeklyFellowRatings.punctualityRating})) / 4)::float8`.as(
+        "average_rating",
+      ),
+    })
+    .from(weeklyFellowRatings)
+    .where(inArray(weeklyFellowRatings.fellowId, hubFellowIds))
+    .groupBy(weeklyFellowRatings.fellowId)
+    .as("rating_averages");
+
+  const [fellowRows, complaints, groups, supervisors] = await Promise.all([
+    db
+      .select({
+        id: fellow.id,
+        fellowName: fellow.fellowName,
+        fellowEmail: fellow.fellowEmail,
+        gender: fellow.gender,
+        county: fellow.county,
+        subCounty: fellow.subCounty,
+        cellNumber: fellow.cellNumber,
+        supervisorId: fellow.supervisorId,
+        droppedOut: fellow.droppedOut,
+        averageRating: ratingAverages.averageRating,
+      })
+      .from(fellow)
+      .leftJoin(ratingAverages, eq(fellow.id, ratingAverages.fellowId))
+      .where(eq(fellow.hubId, hubId))
+      .orderBy(fellow.fellowName, fellow.id),
+    db.query.fellowComplaints.findMany({
+      where: (c, { inArray }) => inArray(c.fellowId, hubFellowIds),
+      columns: { id: true, fellowId: true, complaint: true, comments: true, createdAt: true },
+      with: { user: { columns: { name: true } } },
+      orderBy: (c, { desc }) => [desc(c.createdAt), desc(c.id)],
+    }),
+    db.query.interventionGroup.findMany({
+      where: (g, { inArray }) => inArray(g.leaderId, hubFellowIds),
+      columns: { id: true, leaderId: true, groupName: true, archivedAt: true },
+      with: { school: { columns: { schoolName: true } } },
+      orderBy: (g, { asc }) => [asc(g.groupName), asc(g.id)],
+    }),
+    db.query.supervisor.findMany({
+      where: (s, { eq }) => eq(s.hubId, hubId),
+      columns: { id: true, supervisorName: true },
+      with: {
+        fellows: {
+          columns: { id: true, fellowName: true, droppedOut: true },
+          orderBy: (f, { asc }) => [asc(f.fellowName), asc(f.id)],
+        },
+      },
+      orderBy: (s, { asc }) => [asc(s.supervisorName), asc(s.id)],
+    }),
+  ]);
+
+  const complaintsByFellow = Map.groupBy(complaints, (c) => c.fellowId);
+  const groupsByLeader = Map.groupBy(groups, (g) => g.leaderId);
+  const data = fellowRows.map((fellowRow) => {
+    const fellowGroups = groupsByLeader.get(fellowRow.id) ?? [];
+    return {
+      ...fellowRow,
+      groupCount: fellowGroups.length,
+      complaints: complaintsByFellow.get(fellowRow.id) ?? [],
+      groups: fellowGroups,
+    };
+  });
+
+  return <MainFellowsDatatable fellows={data} supervisors={supervisors} role={role} />;
 }

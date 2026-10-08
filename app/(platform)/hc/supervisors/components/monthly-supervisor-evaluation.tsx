@@ -63,7 +63,7 @@ export default function MonthlySupervisorEvaluation({
   children: React.ReactNode;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  project: typeof projectTable.$inferSelect | null;
+  project: Pick<typeof projectTable.$inferSelect, "actualStartDate" | "actualEndDate"> | null;
   evaluations: MonthlySupervisorEvaluationType[];
   mode?: "view" | "edit";
 }) {

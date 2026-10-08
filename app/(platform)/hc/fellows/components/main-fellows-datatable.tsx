@@ -1,6 +1,11 @@
 "use client";
 
 import type { fellow, supervisor, weeklyFellowRatings } from "#/db/schema";
+import {
+  type FellowPersonalDetails,
+  loadFellowPersonalDetails,
+  loadFellowWeeklyEvaluations,
+} from "#/app/(platform)/hc/fellows/actions";
 import { ImplementerRole } from "#/db/enums";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { Plus } from "lucide-react";
@@ -14,16 +19,17 @@ import SubmitComplaint from "#/components/common/submit-complaint";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
+import { toastOnError } from "#/components/ui/use-toast";
 
 export default function MainFellowsDatatable({
   fellows,
   supervisors,
-  weeklyEvaluations,
   role,
 }: {
   fellows: MainFellowTableData[];
-  supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
-  weeklyEvaluations: (typeof weeklyFellowRatings.$inferSelect)[];
+  supervisors: (Pick<typeof supervisor.$inferSelect, "id" | "supervisorName"> & {
+    fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName" | "droppedOut">[];
+  })[];
   role: ImplementerRole;
 }) {
   const [selectedFellow, setFellow] = useState<MainFellowTableData | null>(null);
@@ -34,6 +40,25 @@ export default function MainFellowsDatatable({
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
   const [viewComplaintsDialog, setViewComplaintsDialog] = useState(false);
   const [dropOutDialog, setDropOutDialog] = useState(false);
+  const [fellowToEdit, setFellowToEdit] = useState<
+    (MainFellowTableData & FellowPersonalDetails) | null
+  >(null);
+  const [weeklyEvaluations, setWeeklyEvaluations] = useState<
+    (typeof weeklyFellowRatings.$inferSelect)[]
+  >([]);
+
+  const openEditDialog = toastOnError(async (fellowRow: MainFellowTableData) => {
+    const personalDetails = await loadFellowPersonalDetails(fellowRow.id);
+    setFellowToEdit({ ...fellowRow, ...personalDetails });
+    setEditDialog(true);
+  });
+
+  const openWeeklyEvaluationDialog = toastOnError(async (fellowRow: MainFellowTableData) => {
+    const evaluations = await loadFellowWeeklyEvaluations(fellowRow.id);
+    setFellow(fellowRow);
+    setWeeklyEvaluations(evaluations);
+    setWeeklyEvaluationDialog(true);
+  });
 
   const renderTableActions = () => {
     return (
@@ -56,8 +81,8 @@ export default function MainFellowsDatatable({
         columns={columns(
           supervisors,
           setFellow,
-          setEditDialog,
-          setWeeklyEvaluationDialog,
+          openEditDialog,
+          openWeeklyEvaluationDialog,
           setViewComplaintsDialog,
           setDropOutDialog,
           role,
@@ -79,9 +104,7 @@ export default function MainFellowsDatatable({
             fellowId={fellow.id}
             open={weeklyEvaluationDialog}
             onOpenChange={setWeeklyEvaluationDialog}
-            evaluations={weeklyEvaluations.filter(
-              (evaluation) => evaluation.fellowId === fellow.id,
-            )}
+            evaluations={weeklyEvaluations}
             mode={"view"}
           >
             <DialogAlertWidget>
@@ -95,12 +118,6 @@ export default function MainFellowsDatatable({
               </div>
             </DialogAlertWidget>
           </WeeklyFellowEvaluation>
-          <FellowDetailsForm
-            fellow={fellow}
-            open={editDialog}
-            onOpenChange={setEditDialog}
-            mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
-          />
           <SubmitComplaint
             id={fellow.id}
             open={viewComplaintsDialog}
@@ -128,6 +145,14 @@ export default function MainFellowsDatatable({
             supervisors={supervisors}
           />
         </>
+      )}
+      {fellowToEdit && (
+        <FellowDetailsForm
+          fellow={fellowToEdit}
+          open={editDialog}
+          onOpenChange={setEditDialog}
+          mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
+        />
       )}
     </>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { ImplementerRole } from "#/db/enums";
+import type { project as projectTable } from "#/db/schema";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useState } from "react";
 import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
@@ -15,9 +16,11 @@ import DataTable from "#/components/data-table";
 
 export default function MainSupervisorsDataTable({
   supervisors,
+  project,
   role,
 }: {
   supervisors: SupervisorsData[];
+  project: Pick<typeof projectTable.$inferSelect, "actualStartDate" | "actualEndDate"> | null;
   role: ImplementerRole;
 }) {
   const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);
@@ -105,7 +108,7 @@ export default function MainSupervisorsDataTable({
         supervisorId={supervisor !== null ? supervisor.id : undefined}
         setIsOpen={setEvaluationDialog}
         isOpen={evaluationDialog}
-        project={supervisor?.hub?.project ?? null}
+        project={project}
         evaluations={supervisor?.monthlySupervisorEvaluation ?? []}
         mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
       >

@@ -11,6 +11,7 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/db/client";
+import type { ImplementerRole } from "#/db/enums";
 
 export default async function SupervisorsPage() {
   const coordinator = await currentHubCoordinator();
@@ -23,17 +24,6 @@ export default async function SupervisorsPage() {
     await signOut({ callbackUrl: "/login" });
     return null;
   }
-
-  const supervisors = await db.query.supervisor.findMany({
-    where: (s, { eq }) => eq(s.hubId, hubId),
-    with: {
-      assignedSchools: true,
-      fellows: true,
-      hub: { with: { project: true } },
-      monthlySupervisorEvaluation: true,
-    },
-    orderBy: (s, { asc }) => asc(s.supervisorName),
-  });
 
   return (
     <div className="flex h-full flex-col">
@@ -53,12 +43,48 @@ export default async function SupervisorsPage() {
 
         <Separator />
 
-        <MainSupervisorsDataTable
-          supervisors={supervisors}
+        <SupervisorsTable
+          hubId={hubId}
+          projectId={coordinator.profile.assignedHub?.projectId ?? null}
           role={coordinator.session.user.activeMembership?.role ?? "HUB_COORDINATOR"}
         />
       </div>
       <PageFooter />
     </div>
+  );
+}
+
+async function SupervisorsTable({
+  hubId,
+  projectId,
+  role,
+}: {
+  hubId: string;
+  projectId: string | null;
+  role: ImplementerRole;
+}) {
+  const [supervisors, project] = await Promise.all([
+    db.query.supervisor.findMany({
+      where: (s, { eq }) => eq(s.hubId, hubId),
+      with: {
+        assignedSchools: {
+          columns: { schoolName: true },
+          orderBy: (school, { asc }) => [asc(school.schoolName), asc(school.id)],
+        },
+        fellows: { columns: { droppedOut: true } },
+        monthlySupervisorEvaluation: true,
+      },
+      orderBy: (s, { asc }) => asc(s.supervisorName),
+    }),
+    projectId
+      ? db.query.project.findFirst({
+          where: (p, { eq }) => eq(p.id, projectId),
+          columns: { actualStartDate: true, actualEndDate: true },
+        })
+      : undefined,
+  ]);
+
+  return (
+    <MainSupervisorsDataTable supervisors={supervisors} project={project ?? null} role={role} />
   );
 }

@@ -21,7 +21,7 @@ export default function AssignFellowSupervisorSelect({
 }: {
   fellowId: string;
   supervisorId: string | null;
-  supervisors: (typeof supervisor.$inferSelect)[];
+  supervisors: Pick<typeof supervisor.$inferSelect, "id" | "supervisorName">[];
   disabled?: boolean;
 }) {
   const [selectedSupervisor, setSelectedSupervisor] = useState(supervisorId);

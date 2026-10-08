@@ -1,6 +1,6 @@
 "use client";
 
-import type { fellowComplaints, interventionGroup, school, supervisor, user } from "#/db/schema";
+import type { fellowComplaints, interventionGroup, supervisor } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
@@ -13,34 +13,35 @@ import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 
-type Supervisor = typeof supervisor.$inferSelect;
+type Supervisor = Pick<typeof supervisor.$inferSelect, "id" | "supervisorName">;
 
 export type MainFellowTableData = {
   id: string;
   fellowName: string | null;
   fellowEmail: string | null;
   cellNumber: string | null;
-  idNumber: string | null;
   gender: string | null;
-  dateOfBirth: string | Date | null;
   county: string | null;
   subCounty: string | null;
-  mpesaName: string | null;
-  mpesaNumber: string | null;
   supervisorId: string | null;
   supervisorName?: string | null;
   droppedOut: boolean | null;
   groupCount?: number;
   averageRating: number | null;
-  complaints?: (typeof fellowComplaints.$inferSelect & { user: typeof user.$inferSelect | null })[];
-  groups?: (typeof interventionGroup.$inferSelect & { school: typeof school.$inferSelect })[];
+  complaints?: (Pick<
+    typeof fellowComplaints.$inferSelect,
+    "id" | "complaint" | "comments" | "createdAt"
+  > & { user: { name: string | null } | null })[];
+  groups?: (Pick<typeof interventionGroup.$inferSelect, "id" | "groupName" | "archivedAt"> & {
+    school: { schoolName: string };
+  })[];
 };
 
 export const columns = (
   supervisors: Supervisor[],
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>,
-  setEditDialog: Dispatch<SetStateAction<boolean>>,
-  setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>,
+  openEditDialog: (fellow: MainFellowTableData) => void,
+  openWeeklyEvaluationDialog: (fellow: MainFellowTableData) => void,
   setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>,
   setDropOutDialog: Dispatch<SetStateAction<boolean>>,
   role: ImplementerRole,
@@ -178,8 +179,8 @@ export const columns = (
         <MainFellowsDatatableMenu
           fellow={row.original}
           setFellow={setFellow}
-          setEditDialog={setEditDialog}
-          setWeeklyEvaluationDialog={setWeeklyEvaluationDialog}
+          openEditDialog={openEditDialog}
+          openWeeklyEvaluationDialog={openWeeklyEvaluationDialog}
           setViewComplaintsDialog={setViewComplaintsDialog}
           setDropOutDialog={setDropOutDialog}
           role={role}

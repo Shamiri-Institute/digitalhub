@@ -4,6 +4,7 @@ import type React from "react";
 import { type Dispatch, type SetStateAction, useEffect, useEffectEvent } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
+import type { FellowPersonalDetails } from "#/app/(platform)/hc/fellows/actions";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -49,7 +50,7 @@ export default function FellowDetailsForm({
   mode,
   children,
 }: {
-  fellow?: MainFellowTableData;
+  fellow?: MainFellowTableData & FellowPersonalDetails;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   mode: "edit" | "add" | "view" | null;

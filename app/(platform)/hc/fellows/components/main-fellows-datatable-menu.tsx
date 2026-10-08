@@ -14,16 +14,16 @@ import {
 export default function MainFellowsDatatableMenu({
   fellow,
   setFellow,
-  setEditDialog,
-  setWeeklyEvaluationDialog,
+  openEditDialog,
+  openWeeklyEvaluationDialog,
   setViewComplaintsDialog,
   setDropOutDialog,
   role,
 }: {
   fellow: MainFellowTableData;
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>;
-  setEditDialog: Dispatch<SetStateAction<boolean>>;
-  setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+  openEditDialog: (fellow: MainFellowTableData) => void;
+  openWeeklyEvaluationDialog: (fellow: MainFellowTableData) => void;
   setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>;
   setDropOutDialog: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
@@ -44,20 +44,10 @@ export default function MainFellowsDatatableMenu({
         <DropdownMenuSeparator />
         {role === ImplementerRole.ADMIN ? (
           <>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setEditDialog(true);
-              }}
-            >
+            <DropdownMenuItem onSelect={() => openEditDialog(fellow)}>
               View fellow information
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setWeeklyEvaluationDialog(true);
-              }}
-            >
+            <DropdownMenuItem onSelect={() => openWeeklyEvaluationDialog(fellow)}>
               View weekly fellow evaluation
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -72,12 +62,7 @@ export default function MainFellowsDatatableMenu({
           </>
         ) : (
           <>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setEditDialog(true);
-              }}
-            >
+            <DropdownMenuItem onSelect={() => openEditDialog(fellow)}>
               Edit fellow information
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -88,12 +73,7 @@ export default function MainFellowsDatatableMenu({
             >
               Submit complaint
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setWeeklyEvaluationDialog(true);
-              }}
-            >
+            <DropdownMenuItem onSelect={() => openWeeklyEvaluationDialog(fellow)}>
               View weekly fellow evaluation
             </DropdownMenuItem>
             <DropdownMenuItem

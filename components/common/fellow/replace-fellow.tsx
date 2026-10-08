@@ -39,7 +39,9 @@ export default function ReplaceFellow({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   children?: React.ReactNode;
-  supervisors: (typeof supervisor.$inferSelect & { fellows: (typeof fellow.$inferSelect)[] })[];
+  supervisors: (Pick<typeof supervisor.$inferSelect, "id" | "supervisorName"> & {
+    fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName" | "droppedOut">[];
+  })[];
 }) {
   const form = useForm<z.infer<typeof ReplaceGroupLeaderSchema>>({
     resolver: zodResolver(ReplaceGroupLeaderSchema),
