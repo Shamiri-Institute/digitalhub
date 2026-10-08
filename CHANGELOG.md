@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.39.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.39.1...v1.39.2) (2026-10-08)
+
+### Bug Fixes
+
+- **expenses:** remove the always-disabled payout menu from the fellow expenses reports ([#923](https://github.com/Shamiri-Institute/digitalhub/issues/923)) ([cdd7eca](https://github.com/Shamiri-Institute/digitalhub/commit/cdd7eca7a05cb79bcc979c7b13148beb2784f164))
+- **schools:** render the school details dialog once for hub coordinators ([#920](https://github.com/Shamiri-Institute/digitalhub/issues/920)) ([48dfbbb](https://github.com/Shamiri-Institute/digitalhub/commit/48dfbbb2f8204dac87d01fc89300e65ec6ba02cd))
+
 ## [1.39.1](https://github.com/Shamiri-Institute/digitalhub/compare/v1.39.0...v1.39.1) (2026-10-08)
 
 ### Bug Fixes
