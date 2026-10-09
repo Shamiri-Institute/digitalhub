@@ -1,16 +1,23 @@
--- Backfills the admin profiles that 0012 left without an implementer, so every ADMIN membership
--- resolves to a profile of its own implementer and each implementer has a super admin.
+-- Repairs admin profiles so ADMIN memberships resolve to a profile of their own implementer, and
+-- gives each implementer that has admins a super admin.
 --
--- Production had ADMIN memberships whose `identifier` pointed at no `admin_users` row (hand-written
--- identifiers, one shared by two people), a person with two ADMIN memberships in one implementer,
--- and profiles that no membership used. All ADMIN memberships belong to one implementer, so a
--- profile takes the implementer of the membership that points at it.
+-- It removes a duplicate ADMIN membership, points memberships whose identifier has no profile at
+-- the profile with the member's email, creates a profile for members who still have none (members
+-- without an email are skipped), deletes profiles no ADMIN membership uses, sets `implementer_id`
+-- on the rest, makes the oldest ADMIN membership's profile the super admin when the implementer
+-- has none, and then makes `implementer_id` NOT NULL.
+--
+-- Older data can have ADMIN memberships that point at no profile, a person with two ADMIN
+-- memberships in one implementer, and profiles that no membership uses. A profile takes the
+-- implementer of the membership that points at it, so this assumes a person has at most one
+-- unlinked ADMIN membership: a person with several would share one profile, and only one of their
+-- implementers would match it.
 --
 -- Nothing here touches `implementer_members.updated_at`: the most recently updated membership is
 -- the person's active one.
 
 -- 1. A person keeps one ADMIN membership per implementer: the one that already points at a
---    profile, otherwise the oldest.
+--    profile, otherwise the first created (the lowest id).
 WITH ranked AS (
   SELECT
     m.id,
