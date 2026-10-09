@@ -5,7 +5,6 @@ import { z } from "zod";
 import {
   type ClinicalCases,
   getClinicalLeads,
-  getSupervisorsInHub,
   referClinicalCaseToClinicalLead,
   referClinicalCaseToSupervisor,
 } from "#/app/(platform)/sc/clinical/action";
@@ -57,18 +56,22 @@ const REFERRAL_OPTIONS = {
   ],
 };
 
+export type ReferralSupervisors = {
+  currentSupervisor: { id: string; name: string | null } | undefined;
+  supervisorsInHub: { id: string; name: string | null }[];
+};
+
 export default function ReferClinicalCase({
   children,
   clinicalCase,
+  referralSupervisors: { currentSupervisor, supervisorsInHub },
 }: {
   children: React.ReactNode;
   clinicalCase: ClinicalCases;
+  referralSupervisors: ReferralSupervisors;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedReferTo, setSelectedReferTo] = useState<string>("");
-  const [supervisorsInHub, setSupervisorsInHub] = useState<{ id: string; name: string | null }[]>(
-    [],
-  );
   const [clinicalLeads, setClinicalLeads] = useState<
     { id: string; name: string | null; hubId: string | null }[]
   >([]);
@@ -76,20 +79,6 @@ export default function ReferClinicalCase({
     id: string;
     name: string | null;
   } | null>(null);
-  const [currentSupervisor, setCurrentSupervisor] = useState<{
-    id: string | undefined;
-    name?: string | null;
-  } | null>(null);
-
-  // effect: loads the hub's supervisors on mount; server-side loading is a separate change
-  useEffect(() => {
-    const fetchSupervisorsInHub = async () => {
-      const data = await getSupervisorsInHub();
-      setSupervisorsInHub(data.allSupervisors);
-      setCurrentSupervisor(data.currentSupervisor);
-    };
-    toastOnError(fetchSupervisorsInHub)();
-  }, []);
 
   // effect: loads clinical leads when the watched referral target switches to Clinical Lead
   useEffect(() => {

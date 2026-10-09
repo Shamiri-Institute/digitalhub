@@ -8,26 +8,6 @@ import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { user } from "#/db/schema";
 
-export type ProjectOption = {
-  id: string;
-  name: string;
-  visibleId: string;
-};
-
-export async function fetchProjects(): Promise<ProjectOption[]> {
-  const session = await getCurrentUserSession();
-  if (!session) return [];
-
-  if (session.user.activeMembership?.role !== ImplementerRole.ADMIN) return [];
-
-  const projects = await db.query.project.findMany({
-    orderBy: (p, { desc }) => desc(p.createdAt),
-    columns: { id: true, name: true, visibleId: true },
-  });
-
-  return projects;
-}
-
 export async function setActiveProject(
   projectId: string,
 ): Promise<{ success: boolean; error?: string }> {

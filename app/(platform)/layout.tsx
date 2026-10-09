@@ -1,17 +1,39 @@
-import { getCurrentPersonnel } from "#/app/auth";
+import { getCurrentPersonnel, getCurrentUserSession } from "#/app/auth";
 import { LayoutClient } from "#/components/layout-client";
+import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
+import { fetchImplementerPersonnel, isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
+
+async function loadAdminProjects() {
+  const session = await getCurrentUserSession();
+  if (session?.user.activeMembership?.role !== ImplementerRole.ADMIN) {
+    return null;
+  }
+  return db.query.project.findMany({
+    orderBy: (p, { desc }) => desc(p.createdAt),
+    columns: { id: true, name: true, visibleId: true },
+  });
+}
+
+export type AdminProject = NonNullable<Awaited<ReturnType<typeof loadAdminProjects>>>[number];
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
-  const [userSession, isAdminEmail] = await Promise.all([
+  const [userSession, isAdminEmail, adminProjects, personnel] = await Promise.all([
     getCurrentPersonnel(),
     isCurrentUserAdmin(),
+    loadAdminProjects(),
+    fetchImplementerPersonnel(),
   ]);
   const user = userSession?.session.user ?? null;
   const isAdminUser = isAdminEmail || user?.activeMembership?.role === ImplementerRole.ADMIN;
   return (
-    <LayoutClient user={user} profile={userSession ?? null} isAdminUser={isAdminUser}>
+    <LayoutClient
+      user={user}
+      profile={userSession ?? null}
+      isAdminUser={isAdminUser}
+      adminProjects={adminProjects}
+      personnel={personnel}
+    >
       {children}
     </LayoutClient>
   );

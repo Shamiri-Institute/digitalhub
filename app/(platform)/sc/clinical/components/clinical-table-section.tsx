@@ -4,7 +4,7 @@ import ClinicalCasesTable from "#/app/(platform)/sc/clinical/components/clinical
 export default async function ClinicalTableSection() {
   const [cases, schoolsData] = await Promise.all([getClinicalCases(), getSchoolsInHub()]);
 
-  const { schools, fellowsInProject, supervisorsInHub, hubs } = schoolsData;
+  const { schools, fellowsInProject, supervisorsInHub, currentSupervisorId, hubs } = schoolsData;
 
   return (
     <ClinicalCasesTable
@@ -12,6 +12,7 @@ export default async function ClinicalTableSection() {
       schools={schools}
       fellowsInProject={fellowsInProject}
       supervisorsInHub={supervisorsInHub}
+      currentSupervisorId={currentSupervisorId}
       hubs={hubs}
     />
   );

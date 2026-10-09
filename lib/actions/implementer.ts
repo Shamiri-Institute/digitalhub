@@ -1,4 +1,4 @@
-"use server";
+import "server-only";
 
 import { sql } from "drizzle-orm";
 
@@ -20,28 +20,27 @@ export async function fetchImplementerStats() {
 
   const projectId = await getActiveProjectId();
 
-  try {
-    const { rows: stats } = await db.execute<{
-      hub_count: number;
-      school_count: number;
-      student_count: number;
-    }>(sql`SELECT
-      COUNT(DISTINCT h.id)::int AS hub_count,
-      COUNT(DISTINCT sch.id)::int AS school_count,
-      COUNT(DISTINCT stu.id)::int AS student_count
-    FROM
-      hubs h
-      LEFT JOIN schools sch ON h.id = sch.hub_id
-      LEFT JOIN students stu ON sch.id = stu.school_id
-    WHERE
-      h.implementer_id = ${implementerId}
-      AND h.project_id = ${projectId}`);
+  const { rows: stats } = await db.execute<{
+    hub_count: number;
+    school_count: number;
+    student_count: number;
+  }>(sql`SELECT
+    COUNT(DISTINCT h.id)::int AS hub_count,
+    COUNT(DISTINCT sch.id)::int AS school_count,
+    COUNT(DISTINCT stu.id)::int AS student_count
+  FROM
+    hubs h
+    LEFT JOIN schools sch ON h.id = sch.hub_id
+    LEFT JOIN students stu ON sch.id = stu.school_id
+  WHERE
+    h.implementer_id = ${implementerId}
+    AND h.project_id = ${projectId}`);
 
-    return { success: true, data: stats[0] };
-  } catch (error) {
-    console.error("Error fetching implementer stats:", error);
-    return { success: false, message: "Error fetching implementer stats" };
+  const [row] = stats;
+  if (!row) {
+    throw new Error("Implementer stats query returned no rows");
   }
+  return row;
 }
 
 export async function fetchImplementerFellowRatings() {

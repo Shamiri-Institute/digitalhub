@@ -330,27 +330,6 @@ export async function referClinicalCaseToSupervisor(data: {
   }
 }
 
-export async function getSupervisorsInHub() {
-  const supervisor = await currentSupervisor();
-  if (!supervisor?.profile.hubId) throw new Error("Unauthorized");
-  const { hubId, id: supervisorId } = supervisor.profile;
-  const supervisors = await db.query.supervisor.findMany({
-    where: (s, { and, eq, ne }) => and(eq(s.hubId, hubId), ne(s.id, supervisorId)),
-  });
-  const allSupervisors =
-    supervisors.map((supervisor) => ({
-      id: supervisor.id,
-      name: supervisor.supervisorName,
-    })) || [];
-  return {
-    currentSupervisor: {
-      id: supervisor.profile.id,
-      name: supervisor.profile.supervisorName,
-    },
-    allSupervisors: allSupervisors,
-  };
-}
-
 export async function getSchoolsInHub() {
   const supervisor = await currentSupervisor();
   const projectId = supervisor?.profile?.hub?.projectId;

@@ -1,7 +1,8 @@
 "use client";
 
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useEffect, useEffectEvent, useState } from "react";
+import { useState } from "react";
+import type { AdminProject } from "#/app/(platform)/layout";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -13,7 +14,7 @@ import {
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { fetchProjects, type ProjectOption, setActiveProject } from "#/lib/actions/project";
+import { setActiveProject } from "#/lib/actions/project";
 import type { SessionUser } from "#/lib/auth/session-user";
 import { cn } from "#/lib/utils";
 
@@ -21,49 +22,21 @@ export function ProjectSwitcher({
   loading,
   setLoading,
   user,
-  isAdminUser,
+  projects,
   className,
 }: {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   user: SessionUser | null;
-  isAdminUser: boolean;
+  projects: AdminProject[];
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [projects, setProjects] = useState<ProjectOption[]>([]);
-  const [projectsLoading, setProjectsLoading] = useState(false);
   const activeProjectId = user?.activeProjectId ?? null;
-
-  const loadProjects = async () => {
-    if (!user?.email) return;
-    setProjectsLoading(true);
-    try {
-      const list = await fetchProjects();
-      setProjects(list);
-    } finally {
-      setProjectsLoading(false);
-    }
-  };
-
-  const loadProjectsForAdmin = useEffectEvent(() => {
-    if (!isAdminUser) return;
-    void loadProjects();
-  });
-
-  // effect: loads the admin project list on mount
-  useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- loads the admin project list on mount; server-side loading is a separate change
-    loadProjectsForAdmin();
-  }, [isAdminUser, user?.email]);
-
-  if (!isAdminUser) {
-    return null;
-  }
 
   const activeProject = projects.find((p) => p.id === activeProjectId);
 
-  const handleProjectChange = toastOnError(async (project: ProjectOption) => {
+  const handleProjectChange = toastOnError(async (project: AdminProject) => {
     if (activeProjectId === project.id) return;
     setLoading(true);
     try {
@@ -79,13 +52,7 @@ export function ProjectSwitcher({
 
   return (
     <div className={className}>
-      <Popover
-        open={open}
-        onOpenChange={(isOpen) => {
-          setOpen(isOpen);
-          if (isOpen) void loadProjects();
-        }}
-      >
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -108,9 +75,7 @@ export function ProjectSwitcher({
             </span>
             <CommandSeparator />
             <CommandInput placeholder="Search projects..." className="h-9" />
-            <CommandEmpty>
-              {projectsLoading ? "Loading projects..." : "No projects found."}
-            </CommandEmpty>
+            <CommandEmpty>No projects found.</CommandEmpty>
             <CommandGroup className="max-h-[300px] overflow-y-scroll">
               {projects.map((project) => (
                 <CommandItem

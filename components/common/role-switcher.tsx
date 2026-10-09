@@ -2,7 +2,7 @@
 
 import type { ImplementerRole } from "#/db/enums";
 import { Check, ChevronsUpDown, Filter } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { selectPersonnel } from "#/app/actions";
 import { signOut } from "#/lib/auth-client";
 import { Button } from "#/components/ui/button";
@@ -22,10 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
-import {
-  fetchImplementerPersonnel,
-  type ImplementerPersonnel,
-} from "#/lib/actions/fetch-personnel";
+import type { ImplementerPersonnel } from "#/lib/actions/fetch-personnel";
 import type { SessionUser } from "#/lib/auth/session-user";
 import type { Personnel } from "#/lib/types/personnel";
 import { cn } from "#/lib/utils";
@@ -34,36 +31,15 @@ interface RoleSwitcherProps {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   user: SessionUser | null;
+  implementerMembers: ImplementerPersonnel;
 }
 
-// Development-only impersonation helper. The guard lives outside the component
-// that owns the effect: hooks run before any early return, so guarding inside
-// DevRoleSwitcher would still fire fetchImplementerPersonnel in production.
-export function RoleSwitcher(props: RoleSwitcherProps) {
-  if (process.env.NEXT_PUBLIC_ENV !== "development") {
-    return null;
-  }
-  return <DevRoleSwitcher {...props} />;
-}
-
-function DevRoleSwitcher({ loading, setLoading, user }: RoleSwitcherProps) {
+// Development-only impersonation helper; the layout loads personnel only in development.
+export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: RoleSwitcherProps) {
   const [open, setOpen] = useState(false);
-  const [implementerMembers, setImplementerMembers] = useState<ImplementerPersonnel | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<Set<ImplementerRole>>(new Set());
 
   const activeMembership = user?.activeMembership ?? null;
-
-  // effect: loads the implementer's personnel when the active membership changes
-  useEffect(() => {
-    const fetchImplementerMembers = async () => {
-      if (!activeMembership) {
-        return;
-      }
-      const implementerMembers = await fetchImplementerPersonnel(activeMembership);
-      setImplementerMembers(implementerMembers);
-    };
-    void fetchImplementerMembers();
-  }, [activeMembership]);
 
   const handleRoleChange = async (member: Personnel) => {
     setLoading(true);
@@ -83,15 +59,14 @@ function DevRoleSwitcher({ loading, setLoading, user }: RoleSwitcherProps) {
     }
   };
 
-  const availableRoles: ImplementerRole[] = implementerMembers?.personnel
-    ? Array.from(new Set(implementerMembers.personnel.map((member) => member.role))).toSorted()
-    : [];
+  const availableRoles: ImplementerRole[] = Array.from(
+    new Set(implementerMembers.personnel.map((member) => member.role)),
+  ).toSorted();
 
-  const filteredPersonnel = implementerMembers?.personnel
-    ? selectedRoles.size === 0
+  const filteredPersonnel =
+    selectedRoles.size === 0
       ? implementerMembers.personnel
-      : implementerMembers.personnel.filter((member) => selectedRoles.has(member.role))
-    : [];
+      : implementerMembers.personnel.filter((member) => selectedRoles.has(member.role));
 
   const handleRoleToggle = (role: ImplementerRole) => {
     setSelectedRoles((prev) => {
@@ -120,7 +95,7 @@ function DevRoleSwitcher({ loading, setLoading, user }: RoleSwitcherProps) {
                 <div className="flex flex-row items-baseline gap-3">
                   <span className="font-medium">
                     {
-                      implementerMembers?.personnel?.find(
+                      implementerMembers.personnel.find(
                         (member) => member.id === implementerMembers.activePersonnelId,
                       )?.label
                     }
@@ -205,7 +180,7 @@ function DevRoleSwitcher({ loading, setLoading, user }: RoleSwitcherProps) {
                 <Check
                   className={cn(
                     "h-4 w-4",
-                    member.id === implementerMembers?.activePersonnelId
+                    member.id === implementerMembers.activePersonnelId
                       ? "opacity-100"
                       : "opacity-0",
                   )}
