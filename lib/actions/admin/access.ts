@@ -115,23 +115,24 @@ export async function updateAdminAccess(
     const parsed = UpdateAdminAccessSchema.parse(data);
 
     await db.transaction(async (tx) => {
-      // Lock the implementer's super admins, so two of them demoting each other at the same
-      // moment cannot leave the implementer without one.
+      // Lock the implementer's super admins, then check the caller is still one. A super admin
+      // cannot demote themselves, so the implementer always keeps at least one, even when two of
+      // them demote each other at the same moment.
       const superAdmins = await tx
         .select({ id: adminUser.id })
         .from(adminUser)
         .where(and(eq(adminUser.implementerId, implementerId), eq(adminUser.isSuperAdmin, true)))
         .for("update");
 
+      if (!superAdmins.some((a) => a.id === identifier)) {
+        throw new ForbiddenRoleError("Forbidden: this action requires a super admin");
+      }
+
       const isDemotion = !parsed.isSuperAdmin;
       if (isDemotion && parsed.adminId === identifier) {
         throw new AdminAccessError(
           "You cannot remove your own super admin access. Ask another super admin to do it.",
         );
-      }
-      const otherSuperAdmins = superAdmins.filter((a) => a.id !== parsed.adminId).length;
-      if (otherSuperAdmins + (parsed.isSuperAdmin ? 1 : 0) === 0) {
-        throw new AdminAccessError("An implementer needs at least one super admin");
       }
 
       const updated = await tx
