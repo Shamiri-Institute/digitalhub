@@ -1,7 +1,7 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import type { z } from "zod";
 
 import { db, isUniqueViolation } from "#/db/client";
@@ -10,8 +10,6 @@ import { requireSuperAdmin } from "#/lib/auth/admin-access";
 import { ForbiddenRoleError, UnauthenticatedError } from "#/lib/auth/require-auth-role";
 import type { ActionResponse } from "#/types/actions.types";
 import { CreateAdminSchema, UpdateAdminAccessSchema } from "./access-schemas";
-
-const USERS_PATH = "/admin/users";
 
 /** An expected failure whose message is safe to show the super admin. */
 class AdminAccessError extends Error {}
@@ -92,7 +90,7 @@ export async function createAdmin(
       });
     });
 
-    revalidatePath(USERS_PATH);
+    refresh();
     return { success: true, message: `Successfully added ${parsed.adminName}` };
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -139,7 +137,7 @@ export async function updateAdminAccess(
       }
     });
 
-    revalidatePath(USERS_PATH);
+    refresh();
     return { success: true, message: "Access updated" };
   } catch (error) {
     return failure(error, "Sorry, could not update the admin's access.");
