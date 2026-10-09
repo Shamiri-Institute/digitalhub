@@ -1,4 +1,4 @@
-import { getCurrentPersonnel } from "#/app/auth";
+import { currentAdminUser, getCurrentPersonnel } from "#/app/auth";
 import { LayoutClient } from "#/components/layout-client";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
@@ -25,11 +25,17 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   ]);
   const user = userSession?.session.user ?? null;
   const isAdminUser = isAdminEmail || user?.activeMembership?.role === ImplementerRole.ADMIN;
+  // currentAdminUser sends any other role to its own home, so only an admin may call it. For an
+  // admin it is the cached profile that getCurrentPersonnel already loaded.
+  const adminUser =
+    user?.activeMembership?.role === ImplementerRole.ADMIN ? await currentAdminUser() : null;
+  const isSuperAdmin = adminUser?.profile.isSuperAdmin ?? false;
   return (
     <LayoutClient
       user={user}
       profile={userSession ?? null}
       isAdminUser={isAdminUser}
+      isSuperAdmin={isSuperAdmin}
       adminProjects={adminProjects}
       personnel={personnel}
     >

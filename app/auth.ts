@@ -223,6 +223,12 @@ export const currentAdminUser = cache(async () => {
     return null;
   }
 
+  // The profile must belong to the membership's implementer, so a membership never resolves to
+  // another implementer's admin profile.
+  if (adminUser.implementerId !== membership.implementerId) {
+    return null;
+  }
+
   return { profile: adminUser, session };
 });
 

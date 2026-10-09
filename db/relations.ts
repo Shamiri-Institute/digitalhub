@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 
 import {
   account,
+  adminUser,
   attendanceDocuments,
   clinicalCaseNotes,
   clinicalCaseTermination,
@@ -452,6 +453,15 @@ export const implementerRelations = relations(implementer, ({ one, many }) => ({
   clinicalLeads: many(clinicalLead, { relationName: "ClinicalLead_implementer" }),
   clinicalTeam: many(clinicalTeam, { relationName: "ClinicalTeam_implementer" }),
   opsUser: many(opsUser, { relationName: "OpsUser_implementer" }),
+  admins: many(adminUser, { relationName: "AdminUser_implementer" }),
+}));
+
+export const adminUserRelations = relations(adminUser, ({ one }) => ({
+  implementer: one(implementer, {
+    fields: [adminUser.implementerId],
+    references: [implementer.id],
+    relationName: "AdminUser_implementer",
+  }),
 }));
 
 export const implementerAvatarRelations = relations(implementerAvatar, ({ one }) => ({

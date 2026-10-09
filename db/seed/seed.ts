@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import {
+  AdminTeam,
   caseStatusOptions,
   FollowUpPlanOptions,
   ImplementerRole,
@@ -447,11 +448,15 @@ async function createCoreUsers(
   const membershipData = users.map((user) => {
     const role = userData.find((u) => u.id === user.id)?.role as ImplementerRole;
     if (role === ImplementerRole.ADMIN) {
+      // Shares the Super Admin's profile of each implementer, so this user is a super admin there.
       return implementers.flatMap((implementer) => ({
         userId: user.id,
         implementerId: implementer.id,
         role,
-        identifier: admins.find((admin) => admin.email === "admin@shamiri.institute")?.id,
+        identifier: admins.find(
+          (admin) =>
+            admin.email === "admin@shamiri.institute" && admin.implementerId === implementer.id,
+        )?.id,
       }));
     }
     const personnel =
@@ -488,57 +493,99 @@ async function createAdminUsers(
 ) {
   console.log("creating admin users");
 
-  // create admin user for all implementers
-  const superAdmin = [
+  const shamiri = implementers[0];
+  if (!shamiri) {
+    throw new Error("Cannot create admin users without an implementer");
+  }
+
+  type AdminPerson = {
+    userId: string;
+    email: string;
+    adminName: string;
+    implementerIds: string[];
+    isSuperAdmin: boolean;
+    team: AdminTeam | null;
+  };
+
+  const adminPeople: AdminPerson[] = [
+    // a super admin of every implementer
     {
-      id: objectId("user"),
+      userId: objectId("user"),
       email: "admin@shamiri.institute",
       adminName: "Super Admin",
-      implementers: implementers.map((implementer) => implementer.id),
+      implementerIds: implementers.map((implementer) => implementer.id),
+      isSuperAdmin: true,
+      team: null,
+    },
+    // a super admin per implementer
+    ...implementers.flatMap((implementer) =>
+      implementer.pointPersonEmail
+        ? [
+            {
+              userId: objectId("user"),
+              email: implementer.pointPersonEmail,
+              adminName: `Admin (${implementer.implementerName})`,
+              implementerIds: [implementer.id],
+              isSuperAdmin: true,
+              team: null,
+            },
+          ]
+        : [],
+    ),
+    // a team admin and a plain admin, to exercise every access state
+    {
+      userId: objectId("user"),
+      email: "care.admin@shamiri.institute",
+      adminName: "Care Admin",
+      implementerIds: [shamiri.id],
+      isSuperAdmin: false,
+      team: AdminTeam.CARE,
+    },
+    {
+      userId: objectId("user"),
+      email: "plain.admin@shamiri.institute",
+      adminName: "Plain Admin",
+      implementerIds: [shamiri.id],
+      isSuperAdmin: false,
+      team: null,
     },
   ];
 
-  // create admin per implementer
-  const implementerAdmins = implementers.map((implementer) => ({
-    id: objectId("user"),
-    email: implementer.pointPersonEmail,
-    adminName: `Admin (${implementer.implementerName})`,
-    implementers: [implementer.id],
-  }));
-
-  const adminData = [...implementerAdmins, ...superAdmin];
-
-  // create admin profiles
+  // create one admin profile per person and implementer
   const createdAdminUsers = await insertManyReturning(
     schema.adminUser,
-    adminData.map((user) => ({
-      id: objectId("admin"),
-      email: user.email,
-      adminName: user.adminName,
-    })) as (typeof schema.adminUser.$inferInsert)[],
+    adminPeople.flatMap((person) =>
+      person.implementerIds.map((implementerId) => ({
+        id: objectId("admin"),
+        email: person.email,
+        adminName: person.adminName,
+        implementerId,
+        isSuperAdmin: person.isSuperAdmin,
+        team: person.team,
+      })),
+    ) as (typeof schema.adminUser.$inferInsert)[],
   );
 
   const createdUsers = await insertManyReturning(
     schema.user,
-    adminData.map((user) => ({
-      id: user.id,
-      email: user.email,
-      name: user.adminName,
+    adminPeople.map((person) => ({
+      id: person.userId,
+      email: person.email,
+      name: person.adminName,
       activeProjectId: defaultProjectId,
     })),
   );
 
   // Create membership records
-  const membershipData = adminData.map((user) => {
-    return user.implementers.map((implementer) => ({
-      userId: user.id,
-      implementerId: implementer,
-      role: ImplementerRole.ADMIN,
-      identifier: createdAdminUsers.find((u) => u.email === user.email)?.id ?? "",
-    }));
-  });
+  const userIdByEmail = new Map(adminPeople.map((person) => [person.email, person.userId]));
+  const membershipData = createdAdminUsers.map((admin) => ({
+    userId: userIdByEmail.get(admin.email) ?? "",
+    implementerId: admin.implementerId,
+    role: ImplementerRole.ADMIN,
+    identifier: admin.id,
+  }));
 
-  await insertMany(schema.implementerMember, membershipData.flat());
+  await insertMany(schema.implementerMember, membershipData);
 
   // Add admin emails to set
   createdUsers.forEach((user) => {

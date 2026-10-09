@@ -15,6 +15,17 @@ export const ImplementerRole = {
 } as const;
 export type ImplementerRole = (typeof ImplementerRole)[keyof typeof ImplementerRole];
 
+export const AdminTeam = {
+  CARE: "CARE",
+  RESEARCH: "RESEARCH",
+} as const;
+export type AdminTeam = (typeof AdminTeam)[keyof typeof AdminTeam];
+
+export const TEAM_LABELS: Record<AdminTeam, string> = {
+  CARE: "Care",
+  RESEARCH: "Research",
+};
+
 export const ApprovalStatus = {
   PENDING: "PENDING",
   REJECTED: "REJECTED",

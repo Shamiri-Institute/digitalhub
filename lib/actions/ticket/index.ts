@@ -1,12 +1,14 @@
 "use server";
 
-import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { db, isUniqueViolation, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
+  adminUser,
   clinicalLead,
   hubCoordinator,
+  implementerMember,
   ticketEscalations,
   ticketReassignments,
   ticketResolutions,
@@ -53,7 +55,10 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
 
     const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](payload.category);
     const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
-    const escalationRecipientId = await handler(createdById, activeImplementerId);
+    const escalationRecipientId = await handler({
+      userId: createdById,
+      implementerId: activeImplementerId,
+    });
 
     const ticketPayload: CreateTicketPayload = {
       ...payload,
@@ -191,7 +196,7 @@ export async function createEscalation(
     const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](ticketCategory);
 
     const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
-    const escalationRecipientId = await handler(userId, activeImplementerId);
+    const escalationRecipientId = await handler({ userId, implementerId: activeImplementerId });
 
     const escalationData: CreateTicketEscalationPayload = {
       escalatedById: userId,
@@ -684,7 +689,7 @@ const fetchEscalationRecipientHandlers: Record<
   EscalationRecipientRole,
   FetchEscalationRecipientHandler
 > = {
-  SUPERVISOR: async (userId) => {
+  SUPERVISOR: async ({ userId }) => {
     const { rows: result } = await db.execute<{ supervisor_user_id: string }>(sql`
       SELECT im2.user_id AS supervisor_user_id
       FROM implementer_members im1
@@ -702,7 +707,7 @@ const fetchEscalationRecipientHandlers: Record<
 
     return supervisorUserId;
   },
-  HUB_COORDINATOR: async (userId, implementerId) => {
+  HUB_COORDINATOR: async ({ userId, implementerId }) => {
     const { rows: result } = await db.execute<{ hub_coordinator_user_id: string }>(sql`
       SELECT hc_member.user_id as hub_coordinator_user_id
       FROM implementer_members sup_member
@@ -723,7 +728,7 @@ const fetchEscalationRecipientHandlers: Record<
 
     return hubCoordinatorUserId;
   },
-  CLINICAL_LEAD: async (userId, implementerId) => {
+  CLINICAL_LEAD: async ({ userId, implementerId }) => {
     const { rows: result } = await db.execute<{ clinical_lead_user_id: string }>(sql`
       SELECT cl_member.user_id as clinical_lead_user_id
       FROM implementer_members sup_member
@@ -744,30 +749,26 @@ const fetchEscalationRecipientHandlers: Record<
 
     return clinicalLeadUserId;
   },
-  ADMIN: async () => {
-    const adminUsers = await db.query.adminUser.findMany({
-      orderBy: (a, { desc }) => desc(a.createdAt),
-    });
-    if (adminUsers.length === 0) throw new Error("No admin user found");
-
-    const adminMemberships = await db.query.implementerMember.findMany({
-      where: (m, { and, eq, inArray }) =>
+  ADMIN: async ({ implementerId }) => {
+    // The oldest super admin of the ticket's implementer, so adding admins, or an admin of another
+    // implementer, never changes who receives the ticket.
+    const [recipient] = await db
+      .select({ userId: implementerMember.userId })
+      .from(adminUser)
+      .innerJoin(
+        implementerMember,
         and(
-          eq(m.role, "ADMIN"),
-          inArray(
-            m.identifier,
-            adminUsers.map((a) => a.id),
-          ),
+          eq(implementerMember.identifier, adminUser.id),
+          eq(implementerMember.role, "ADMIN"),
+          eq(implementerMember.implementerId, implementerId),
         ),
-      columns: { userId: true, createdAt: true },
-      orderBy: (m, { desc }) => desc(m.createdAt),
-      limit: 1,
-    });
+      )
+      .where(and(eq(adminUser.implementerId, implementerId), eq(adminUser.isSuperAdmin, true)))
+      .orderBy(asc(adminUser.createdAt), asc(adminUser.id))
+      .limit(1);
+    if (!recipient) throw new Error("No admin user found");
 
-    const adminUserId = adminMemberships[0]?.userId;
-    if (!adminUserId) throw new Error("No admin user found");
-
-    return adminUserId;
+    return recipient.userId;
   },
 };
 

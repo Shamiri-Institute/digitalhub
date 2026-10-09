@@ -11,7 +11,7 @@ import {
   SchoolIcon,
   SignOutIcon,
 } from "#/components/icons";
-import { Building2, Menu, ShieldAlert } from "lucide-react";
+import { Building2, Menu, ShieldAlert, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -53,6 +53,8 @@ interface NavigationLinkProps {
   setPopoverOpen: (open: boolean) => void;
   hubsActive: boolean;
   ticketsActive: boolean;
+  usersActive: boolean;
+  isSuperAdmin: boolean;
 }
 
 export function LayoutClient({
@@ -60,6 +62,7 @@ export function LayoutClient({
   user,
   profile,
   isAdminUser,
+  isSuperAdmin,
   adminProjects,
   personnel,
 }: {
@@ -67,6 +70,7 @@ export function LayoutClient({
   user: SessionUser | null;
   profile: CurrentPersonnel | null;
   isAdminUser: boolean;
+  isSuperAdmin: boolean;
   adminProjects: AdminProject[] | null;
   personnel: ImplementerPersonnel | null;
 }) {
@@ -82,6 +86,7 @@ export function LayoutClient({
   const triageActive = subRoute?.includes("triage");
   const hubsActive = subRoute?.includes("hubs") || subRoute?.includes("schools");
   const ticketsActive = subRoute?.includes("tickets");
+  const usersActive = subRoute?.includes("users");
 
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -227,6 +232,8 @@ export function LayoutClient({
                 setPopoverOpen: setPopoverOpen,
                 hubsActive: hubsActive ?? false,
                 ticketsActive: ticketsActive ?? false,
+                usersActive: usersActive ?? false,
+                isSuperAdmin,
               })}
           </div>
         </div>
@@ -305,6 +312,8 @@ function getCurrentUserNavigationLinks(
     setPopoverOpen,
     hubsActive,
     ticketsActive,
+    usersActive,
+    isSuperAdmin,
   }: NavigationLinkProps,
 ) {
   const links = [];
@@ -340,6 +349,18 @@ function getCurrentUserNavigationLinks(
         <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
       </div>,
     );
+    // Hiding the tab is cosmetic: the page and its actions require a super admin themselves.
+    if (isSuperAdmin) {
+      links.push(
+        <div
+          className={`tab-link flex items-center gap-2 ${cn(usersActive && "active")}`}
+          key="admin-users"
+        >
+          <Users className="h-4 w-4" strokeWidth={3} />
+          <Link href={`/${mainRoute}/users`}>Users</Link>
+        </div>,
+      );
+    }
   }
 
   // Hub Coordinator links
