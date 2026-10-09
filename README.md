@@ -125,17 +125,6 @@ GOOGLE_ID="your-google-client-id"
 GOOGLE_SECRET="your-google-client-secret"
 
 # ====================================
-# GOOGLE DRIVE API (Document Storage)
-# ====================================
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_EMAIL="your-google-service-account-email"
-GOOGLE_PROJECT_ID="your-google-project-id"
-GOOGLE_PRIVATE_KEY="your-google-private-key"
-PROGRESSNOTE_FILEID="google-drive-folder-id-for-progress-notes"
-TREATMENTPLAN_FILEID="google-drive-folder-id-for-treatment-plans"
-CASEREPORTS_FILEID="google-drive-folder-id-for-case-reports"
-
-# ====================================
 # AWS S3 (File Uploads)
 # ====================================
 # S3_UPLOAD_KEY/SECRET are the IAM credentials used for all S3 buckets
@@ -233,12 +222,12 @@ When `NEXT_PUBLIC_ENV=development` and `TEST_USER_PASSWORD` is set, sign in as a
 │  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
 └─────────────────────────────┬───────────────────────────────────┘
                               │
-          ┌───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│   PostgreSQL    │  │    AWS S3       │  │  Google Drive   │
-│  (Drizzle ORM)  │  │  (File Storage) │  │   (Documents)   │
-└─────────────────┘  └─────────────────┘  └─────────────────┘
+                    ┌─────────┴─────────┐
+                    ▼                   ▼
+          ┌─────────────────┐  ┌─────────────────┐
+          │   PostgreSQL    │  │    AWS S3       │
+          │  (Drizzle ORM)  │  │  (File Storage) │
+          └─────────────────┘  └─────────────────┘
 ```
 
 ### Role-Based Access Control (RBAC)
