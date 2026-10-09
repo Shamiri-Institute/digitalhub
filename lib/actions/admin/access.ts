@@ -35,16 +35,23 @@ export async function createAdmin(
 
     await db.transaction(async (tx) => {
       const existingAdmin = await tx.query.adminUser.findFirst({
-        where: (a, { and, eq }) =>
-          and(eq(a.implementerId, implementerId), eq(a.email, parsed.email)),
+        where: (a, { and, eq, sql }) =>
+          and(eq(a.implementerId, implementerId), sql`lower(trim(${a.email})) = ${parsed.email}`),
         columns: { id: true },
       });
       if (existingAdmin) {
         throw new AdminAccessError("An admin with this email already exists");
       }
 
+      // Emails are stored as the sign-in provider sent them, so a user can have capitals the
+      // lowercased input lacks. Match without case, preferring an active user, then the oldest.
       const existingUser = await tx.query.user.findFirst({
-        where: (u, { eq }) => eq(u.email, parsed.email),
+        where: (u, { sql }) => sql`lower(trim(${u.email})) = ${parsed.email}`,
+        orderBy: (u, { asc, sql }) => [
+          sql`${u.archivedAt} is not null`,
+          asc(u.createdAt),
+          asc(u.id),
+        ],
         columns: { id: true, archivedAt: true },
         with: { memberships: { columns: { id: true }, limit: 1 } },
       });

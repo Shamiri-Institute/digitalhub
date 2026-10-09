@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { adminUser, implementerMember, user } from "#/db/schema";
@@ -18,6 +18,8 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
 const SUPER_ADMIN = "admin@shamiri.institute";
 const PLAIN_ADMIN = "plain.admin@shamiri.institute";
 const NEW_ADMIN_EMAIL = `e2e-admin-access-${Date.now()}@example.com`;
+// A user whose email has capitals, as a sign-in provider can store it.
+const MIXED_CASE_EMAIL = `E2E-Mixed-Case-${Date.now()}@Example.com`;
 
 // The dev server compiles each page on first use, which can take longer than the default.
 test.describe.configure({ timeout: 3 * 60 * 1000 });
@@ -32,6 +34,16 @@ test.afterAll(async () => {
     await db.delete(adminUser).where(eq(adminUser.id, id));
   }
   await db.delete(user).where(eq(user.email, NEW_ADMIN_EMAIL));
+
+  const mixedCaseUsers = await db.query.user.findMany({
+    where: (u, { eq }) => eq(u.email, MIXED_CASE_EMAIL),
+    columns: { id: true },
+  });
+  for (const { id } of mixedCaseUsers) {
+    await db.delete(implementerMember).where(eq(implementerMember.userId, id));
+  }
+  await db.delete(adminUser).where(eq(adminUser.email, MIXED_CASE_EMAIL.toLowerCase()));
+  await db.delete(user).where(eq(user.email, MIXED_CASE_EMAIL));
 });
 
 test("a super admin adds an admin and changes their team", async ({ page, context }) => {
@@ -135,4 +147,35 @@ test("the users table lists only the admins of the caller's implementer", async 
   // An admin of the caller's own implementer is listed; one of another implementer is not.
   await expect((await searchRows(page, PLAIN_ADMIN)).first()).toBeVisible();
   await expect(await searchRows(page, otherImplementerAdmin.email)).toHaveCount(0);
+});
+
+test("adding an admin reuses the user whose email only differs in case", async ({
+  page,
+  context,
+}) => {
+  const [existing] = await db
+    .insert(user)
+    .values({ email: MIXED_CASE_EMAIL, name: "E2E Mixed Case" })
+    .returning({ id: user.id });
+  if (!existing) throw new Error("Could not create the mixed-case user");
+
+  await signInWithEmail(context, SUPER_ADMIN);
+  await page.goto(getUrl("/admin/users"));
+  await page.getByRole("button", { name: "Add new user" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Full name").fill("E2E Mixed Case");
+  await dialog.getByLabel("Email address").fill(MIXED_CASE_EMAIL);
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toBeHidden();
+  await expect((await searchRows(page, MIXED_CASE_EMAIL.toLowerCase())).first()).toBeVisible();
+
+  // No second user was made: the ADMIN membership belongs to the existing one.
+  expect(
+    await db.$count(user, sql`lower(trim(${user.email})) = ${MIXED_CASE_EMAIL.toLowerCase()}`),
+  ).toBe(1);
+  const memberships = await db.query.implementerMember.findMany({
+    where: (m, { eq }) => eq(m.userId, existing.id),
+    columns: { role: true },
+  });
+  expect(memberships.map((m) => m.role)).toEqual(["ADMIN"]);
 });
