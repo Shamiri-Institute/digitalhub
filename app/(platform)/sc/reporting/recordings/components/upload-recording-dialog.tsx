@@ -41,9 +41,8 @@ import {
   type GroupSession,
   loadFellowGroups,
   loadGroupSessions,
-  loadSupervisorFellows,
-  type SupervisorFellow,
 } from "../actions";
+import type { SupervisorFellow } from "../page";
 import {
   ALLOWED_EXTENSIONS,
   type RecordingUploadFormData,
@@ -55,9 +54,14 @@ import {
 interface UploadRecordingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  fellows: SupervisorFellow[];
 }
 
-export default function UploadRecordingDialog({ open, onOpenChange }: UploadRecordingDialogProps) {
+export default function UploadRecordingDialog({
+  open,
+  onOpenChange,
+  fellows,
+}: UploadRecordingDialogProps) {
   const form = useForm<RecordingUploadFormData>({
     resolver: zodResolver(RecordingUploadSchema),
     defaultValues: {
@@ -68,11 +72,9 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
     },
   });
 
-  const [fellows, setFellows] = useState<SupervisorFellow[]>([]);
   const [groups, setGroups] = useState<FellowGroup[]>([]);
   const [sessions, setSessions] = useState<GroupSession[]>([]);
 
-  const [loadingFellows, setLoadingFellows] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
 
@@ -101,24 +103,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
   const groupId = form.watch("groupId");
   const sessionId = form.watch("sessionId");
   const schoolId = form.watch("schoolId");
-
-  // effect: open is set by the parent; loads fellows when it opens
-  useEffect(() => {
-    if (open) {
-      setLoadingFellows(true);
-      loadSupervisorFellows()
-        .then(setFellows)
-        .catch((error) => {
-          console.error("Error loading fellows:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load fellows",
-            variant: "destructive",
-          });
-        })
-        .finally(() => setLoadingFellows(false));
-    }
-  }, [open]);
 
   // effect: resets dependent fields and reloads groups when the watched fellow field changes
   useEffect(() => {
@@ -344,7 +328,6 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
 
   const handleClose = () => {
     form.reset();
-    setFellows([]);
     setGroups([]);
     setSessions([]);
     setSelectedFile(null);
@@ -383,9 +366,9 @@ export default function UploadRecordingDialog({ open, onOpenChange }: UploadReco
                       }))}
                       activeItemId={field.value}
                       onSelectItem={field.onChange}
-                      placeholder={loadingFellows ? "Loading..." : "Select a fellow"}
+                      placeholder="Select a fellow"
                       inputPlaceholder="Search fellows..."
-                      disabled={loadingFellows || isSubmitting}
+                      disabled={isSubmitting}
                       className="w-full"
                     />
                   </FormControl>

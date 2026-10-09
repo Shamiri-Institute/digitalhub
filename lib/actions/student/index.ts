@@ -563,20 +563,6 @@ export async function transferStudentToGroup(id: string, groupId: string) {
   }
 }
 
-export async function getHubSchoolsForStudentTransfer() {
-  const hubCoordinator = await currentHubCoordinator();
-  const hubId = hubCoordinator?.profile?.assignedHubId;
-  if (!hubId) {
-    return [];
-  }
-
-  return db.query.school.findMany({
-    where: (s, { and, eq, isNull }) => and(eq(s.hubId, hubId), isNull(s.archivedAt)),
-    columns: { id: true, schoolName: true, visibleId: true },
-    orderBy: (s, { asc }) => asc(s.schoolName),
-  });
-}
-
 export async function getSchoolGroupsForStudentTransfer(schoolId: string) {
   const hubCoordinator = await currentHubCoordinator();
   const hubId = hubCoordinator?.profile?.assignedHubId;
