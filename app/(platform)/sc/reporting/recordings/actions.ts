@@ -97,11 +97,16 @@ export async function checkRecordingExists(params: {
     throw new Error("Unauthorized user");
   }
 
+  const supervisorId = supervisor.profile.id;
   // The unique key is (fellowId, schoolId, groupId, sessionId).
   const recording = await db.query.sessionRecording.findFirst({
-    where: (r, { and, eq }) =>
+    where: (r, { and, eq, inArray }) =>
       and(
         eq(r.fellowId, params.fellowId),
+        inArray(
+          r.fellowId,
+          db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, supervisorId)),
+        ),
         eq(r.schoolId, params.schoolId),
         eq(r.groupId, params.groupId),
         eq(r.sessionId, params.sessionId),
