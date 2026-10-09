@@ -339,7 +339,7 @@ export async function getSchoolsInHub() {
   }
   const projectHubIds = db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId));
 
-  const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all([
+  const [schools, supervisorsInHub, fellowsInProject, hubs, clinicalLeads] = await Promise.all([
     db.query.school.findMany({
       where: (s, { eq }) => eq(s.hubId, hubId),
       with: {
@@ -361,6 +361,10 @@ export async function getSchoolsInHub() {
       where: (h, { eq }) => eq(h.projectId, projectId),
       columns: { id: true, hubName: true },
     }),
+    db.query.clinicalLead.findMany({
+      where: (cl, { inArray }) => inArray(cl.assignedHubId, projectHubIds),
+      columns: { id: true, clinicalLeadName: true },
+    }),
   ]);
 
   return {
@@ -369,6 +373,7 @@ export async function getSchoolsInHub() {
     fellowsInProject,
     currentSupervisorId: supervisor.profile.id,
     hubs,
+    clinicalLeads,
   };
 }
 
@@ -761,31 +766,6 @@ export async function updateClinicalCaseAttendance(data: {
     console.error(error);
     return { error: "Something went wrong" };
   }
-}
-
-export async function getClinicalLeads() {
-  const supervisor = await currentSupervisor();
-  if (!supervisor) {
-    throw new Error("Supervisor not found");
-  }
-  const projectId = supervisor.profile?.hub?.projectId;
-  if (!projectId) {
-    throw new Error("Assigned hub has no project");
-  }
-
-  const clinicalLeads = await db.query.clinicalLead.findMany({
-    where: (cl, { inArray }) =>
-      inArray(
-        cl.assignedHubId,
-        db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
-      ),
-  });
-  const clinicalLeadsWithSupervisor = clinicalLeads.map((lead) => ({
-    name: lead.clinicalLeadName,
-    id: lead.id,
-    hubId: lead.assignedHubId,
-  }));
-  return clinicalLeadsWithSupervisor || [];
 }
 
 export async function referClinicalCaseToClinicalLead(data: {

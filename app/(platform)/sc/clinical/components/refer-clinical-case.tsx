@@ -1,10 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
   type ClinicalCases,
-  getClinicalLeads,
   referClinicalCaseToClinicalLead,
   referClinicalCaseToSupervisor,
 } from "#/app/(platform)/sc/clinical/action";
@@ -56,40 +55,23 @@ const REFERRAL_OPTIONS = {
   ],
 };
 
-export type ReferralSupervisors = {
+export type ReferralOptions = {
   currentSupervisor: { id: string; name: string | null } | undefined;
   supervisorsInHub: { id: string; name: string | null }[];
+  clinicalLeads: { id: string; name: string | null }[];
 };
 
 export default function ReferClinicalCase({
   children,
   clinicalCase,
-  referralSupervisors: { currentSupervisor, supervisorsInHub },
+  referralOptions: { currentSupervisor, supervisorsInHub, clinicalLeads },
 }: {
   children: React.ReactNode;
   clinicalCase: ClinicalCases;
-  referralSupervisors: ReferralSupervisors;
+  referralOptions: ReferralOptions;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedReferTo, setSelectedReferTo] = useState<string>("");
-  const [clinicalLeads, setClinicalLeads] = useState<
-    { id: string; name: string | null; hubId: string | null }[]
-  >([]);
-  const [selectedClinicalLead, setSelectedClinicalLead] = useState<{
-    id: string;
-    name: string | null;
-  } | null>(null);
-
-  // effect: loads clinical leads when the watched referral target switches to Clinical Lead
-  useEffect(() => {
-    const fetchClinicalLeads = async () => {
-      if (selectedReferTo === "Clinical Lead") {
-        const data = await getClinicalLeads();
-        setClinicalLeads(data);
-      }
-    };
-    toastOnError(fetchClinicalLeads)();
-  }, [selectedReferTo]);
 
   const form = useForm<ComplaintFormValues>({
     resolver: zodResolver(ReferClinicalCaseSchema),
@@ -114,7 +96,8 @@ export default function ReferClinicalCase({
           referredFrom: currentSupervisor?.name ?? "",
           referredFromSpecified: currentSupervisor?.id ?? "",
           referredTo: data.referTo,
-          referredToPerson: selectedClinicalLead?.name ?? "",
+          referredToPerson:
+            clinicalLeads.find((lead) => lead.id === data.clinicalLeadId)?.name ?? "",
         });
       } else if (data.referTo === "Supervisor") {
         response = await referClinicalCaseToSupervisor({
@@ -187,7 +170,6 @@ export default function ReferClinicalCase({
                         }
                         if (value !== "Clinical Lead") {
                           form.setValue("clinicalLeadId", "");
-                          setSelectedClinicalLead(null);
                         }
                       }}
                       value={field.value}
@@ -255,18 +237,7 @@ export default function ReferClinicalCase({
                             label: lead.name || "Unknown",
                           }))}
                           activeItemId={field.value || ""}
-                          onSelectItem={(value) => {
-                            field.onChange(value);
-                            const selectedLead = clinicalLeads.find((lead) => lead.id === value);
-                            if (!selectedLead) {
-                              setSelectedClinicalLead(null);
-                              return;
-                            }
-                            setSelectedClinicalLead({
-                              id: selectedLead.id,
-                              name: selectedLead.name,
-                            });
-                          }}
+                          onSelectItem={field.onChange}
                           placeholder="Select a clinical lead..."
                           inputPlaceholder="Search clinical leads..."
                         />
