@@ -9,9 +9,11 @@
 --
 -- Older data can have ADMIN memberships that point at no profile, a person with two ADMIN
 -- memberships in one implementer, and profiles that no membership uses. A profile takes the
--- implementer of the membership that points at it, so this assumes a person has at most one
--- unlinked ADMIN membership: a person with several would share one profile, and only one of their
--- implementers would match it.
+-- implementer of the membership that points at it, so this assumes no profile is shared across
+-- implementers, whether memberships already point at it or match it by email. A shared profile
+-- would go to one implementer, and the person's memberships in the others would not match it.
+-- Neither this migration nor 0012 splits a shared profile, so check before applying that no ADMIN
+-- `identifier` appears in more than one implementer.
 --
 -- Nothing here touches `implementer_members.updated_at`: the most recently updated membership is
 -- the person's active one.
