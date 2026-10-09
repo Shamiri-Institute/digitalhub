@@ -1,25 +1,22 @@
-"use server";
+import "server-only";
 
+import { cache } from "react";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import type { JWTMembership } from "#/lib/auth/session-user";
 import { constants } from "#/lib/constants";
 import type { Personnel } from "#/lib/types/personnel";
 
-export async function fetchImplementerPersonnel(_membership: JWTMembership) {
-  // This is a development-only impersonation helper for the RoleSwitcher. An exported
-  // "use server" function is a public endpoint in every build, so the switcher's
-  // client-side dev-only render is not a gate: enforce it on the server.
+// Development-only impersonation list for the RoleSwitcher.
+export async function fetchImplementerPersonnel() {
   if (constants.NEXT_PUBLIC_ENV !== "development") {
-    throw new Error("Personnel switching is only available in development");
+    return null;
   }
   const session = await getCurrentUserSession();
-  if (!session?.user.activeMembership) {
-    throw new Error("Session not found");
+  const activeMembership = session?.user.activeMembership;
+  if (!activeMembership) {
+    return null;
   }
-  // Scope to the caller's own implementer from the session; never trust the argument.
-  const { activeMembership } = session.user;
 
   const implementerMembers = await db.query.implementerMember.findMany({
     where: (m, { eq }) => eq(m.implementerId, activeMembership.implementerId),
@@ -137,9 +134,11 @@ export async function fetchImplementerPersonnel(_membership: JWTMembership) {
   return { personnel, activePersonnelId };
 }
 
-export type ImplementerPersonnel = Awaited<ReturnType<typeof fetchImplementerPersonnel>>;
+export type ImplementerPersonnel = NonNullable<
+  Awaited<ReturnType<typeof fetchImplementerPersonnel>>
+>;
 
-export async function isCurrentUserAdmin() {
+export const isCurrentUserAdmin = cache(async () => {
   // Derive the email from the session; never accept it from the caller. Otherwise any
   // caller could probe whether an arbitrary email is an admin.
   const session = await getCurrentUserSession();
@@ -151,4 +150,4 @@ export async function isCurrentUserAdmin() {
     where: (a, { eq }) => eq(a.email, email),
   });
   return adminUser !== undefined;
-}
+});

@@ -1,7 +1,7 @@
 "use client";
 import { Plus } from "lucide-react";
 import type { ClinicalCases, SchoolsInHubData } from "#/app/(platform)/sc/clinical/action";
-import { columns } from "#/app/(platform)/sc/clinical/columns";
+import { clinicalCaseColumns } from "#/app/(platform)/sc/clinical/columns";
 import { ClinicalDiagnosingBoard } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
 import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
 import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-clinical-case-form";
@@ -14,14 +14,22 @@ export default function ClinicalCasesTable({
   schools,
   fellowsInProject,
   supervisorsInHub,
+  currentSupervisorId,
   hubs,
 }: {
   cases: ClinicalCases[];
   schools: SchoolsInHubData["schools"];
   fellowsInProject: SchoolsInHubData["fellowsInProject"];
   supervisorsInHub: SchoolsInHubData["supervisorsInHub"];
+  currentSupervisorId: string;
   hubs: SchoolsInHubData["hubs"];
 }) {
+  const supervisorOptions = supervisorsInHub.map((s) => ({ id: s.id, name: s.supervisorName }));
+  const referralSupervisors = {
+    currentSupervisor: supervisorOptions.find((s) => s.id === currentSupervisorId),
+    supervisorsInHub: supervisorOptions.filter((s) => s.id !== currentSupervisorId),
+  };
+
   const renderTableActions = (
     <AddNewClinicalCaseForm
       schools={schools}
@@ -41,7 +49,7 @@ export default function ClinicalCasesTable({
   return (
     <DataTable
       data={cases}
-      columns={columns}
+      columns={clinicalCaseColumns(referralSupervisors)}
       className="data-table data-table-action bg-white lg:mt-4"
       renderTableActions={renderTableActions}
       renderSubComponent={({ row }) => (

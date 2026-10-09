@@ -5,7 +5,9 @@ import CaseTerminationForm from "#/app/(platform)/sc/clinical/components/case-te
 import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/components/cases-sessions-attendance-history";
 import ConsultClinicalExpert from "#/app/(platform)/sc/clinical/components/consult-clinical-expert";
 import MarkCaseAsSpecial from "#/app/(platform)/sc/clinical/components/mark-case-as-special";
-import ReferClinicalCase from "#/app/(platform)/sc/clinical/components/refer-clinical-case";
+import ReferClinicalCase, {
+  type ReferralSupervisors,
+} from "#/app/(platform)/sc/clinical/components/refer-clinical-case";
 import TreatmentPlanForm from "#/app/(platform)/sc/clinical/components/treatment-plan-form";
 import TriggerFollowupDialog from "#/app/(platform)/sc/clinical/components/trigger-followup-dialog";
 import ViewEditClinicalCaseStudentInfo from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
@@ -22,9 +24,11 @@ import { cn } from "#/lib/utils";
 export default function ClinicalCaseActionsDropdownMenu({
   clinicalCase,
   role = "CLINICAL_LEAD",
+  referralSupervisors,
 }: {
   clinicalCase: ClinicalCases;
   role?: "CLINICAL_LEAD" | "SUPERVISOR";
+  referralSupervisors?: ReferralSupervisors;
 }) {
   return (
     <DropdownMenu>
@@ -47,11 +51,16 @@ export default function ClinicalCaseActionsDropdownMenu({
         </ViewEditClinicalCaseStudentInfo>
         {role === "SUPERVISOR" && (
           <>
-            <ReferClinicalCase clinicalCase={clinicalCase}>
-              <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-                Refer case
-              </div>
-            </ReferClinicalCase>
+            {referralSupervisors && (
+              <ReferClinicalCase
+                clinicalCase={clinicalCase}
+                referralSupervisors={referralSupervisors}
+              >
+                <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+                  Refer case
+                </div>
+              </ReferClinicalCase>
+            )}
             <ConsultClinicalExpert clinicalCase={clinicalCase}>
               <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
                 Consult clinical expert

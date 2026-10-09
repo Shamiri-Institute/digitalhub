@@ -18,12 +18,14 @@ import { usePathname } from "next/navigation";
 import type { SessionUser } from "#/lib/auth/session-user";
 import { signOut } from "#/lib/auth-client";
 import { useState } from "react";
+import type { AdminProject } from "#/app/(platform)/layout";
 import type { CurrentPersonnel } from "#/app/auth";
 import { MembershipSwitcher } from "#/components/common/membership-switcher";
 import { ProfileDialog } from "#/components/common/profile/profile-dialog";
 import { ProjectSwitcher } from "#/components/common/project-switcher";
 import { RoleSwitcher } from "#/components/common/role-switcher";
 import { Button } from "#/components/ui/button";
+import type { ImplementerPersonnel } from "#/lib/actions/fetch-personnel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,11 +60,15 @@ export function LayoutClient({
   user,
   profile,
   isAdminUser,
+  adminProjects,
+  personnel,
 }: {
   children: React.ReactNode;
   user: SessionUser | null;
   profile: CurrentPersonnel | null;
   isAdminUser: boolean;
+  adminProjects: AdminProject[] | null;
+  personnel: ImplementerPersonnel | null;
 }) {
   const pathname = usePathname();
   const [mainRoute, subRoute] = pathname.slice(1).split("/");
@@ -88,16 +94,25 @@ export function LayoutClient({
   const renderNavigationLinks = (className?: string) => {
     return (
       <div className={className}>
-        <ProjectSwitcher
-          loading={loading}
-          setLoading={setLoading}
-          user={user}
-          isAdminUser={isAdminUser}
-          className="nav-link"
-        />
-        <div className="nav-link">
-          <RoleSwitcher loading={loading} setLoading={setLoading} user={user} />
-        </div>
+        {adminProjects && (
+          <ProjectSwitcher
+            loading={loading}
+            setLoading={setLoading}
+            user={user}
+            projects={adminProjects}
+            className="nav-link"
+          />
+        )}
+        {personnel && (
+          <div className="nav-link">
+            <RoleSwitcher
+              loading={loading}
+              setLoading={setLoading}
+              user={user}
+              implementerMembers={personnel}
+            />
+          </div>
+        )}
         <div className="nav-link">
           <MembershipSwitcher
             loading={loading}
