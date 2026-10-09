@@ -42,6 +42,7 @@ import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
 import {
   getStudentTriageHistory,
+  getSupervisorsInFellowHub,
   getTriageEventByStudentAndSession,
   getTriageEventsForSession,
 } from "#/lib/actions/triage";
@@ -69,12 +70,7 @@ export default function StudentAttendance({
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<StudentAttendanceData>[]>([]);
   const [resetSelectionTrigger, setResetSelectionTrigger] = useState<number>(0);
-  const [triageModalOpen, setTriageModalOpen] = useState(false);
-  const [triageReadOnly, setTriageReadOnly] = useState(false);
-  const [triageStudent, setTriageStudent] = useState<StudentAttendanceData | undefined>();
-  const [loadedTriageEvent, setLoadedTriageEvent] = useState<{
-    event: Awaited<ReturnType<typeof getTriageEventByStudentAndSession>>;
-  } | null>(null);
+  const [triage, setTriage] = useState<TriageDialog | null>(null);
   const [loadedTriageEvents, setLoadedTriageEvents] = useState<{
     sessionId: string;
     byStudent: Record<string, TriageEventWithRelations>;
@@ -99,7 +95,7 @@ export default function StudentAttendance({
       ? Object.fromEntries(sessionAttendances.map((a) => [a.studentId, a]))
       : {};
 
-  // effect: loads the session's attendances when the parent opens the dialog
+  // effect: a menu several components up opens the dialog; loads the attendances and a fellow's triage events
   useEffect(() => {
     if (!isOpen || !session?.id) return;
     const targetSessionId = session.id;
@@ -128,38 +124,56 @@ export default function StudentAttendance({
           });
         }
       });
+    if (isFellow) {
+      getTriageEventsForSession(targetSessionId)
+        .then((events) => {
+          if (!cancelled) {
+            setLoadedTriageEvents({
+              sessionId: targetSessionId,
+              byStudent: triageEventsByStudentId(events),
+            });
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            toast({ variant: "destructive", description: "Could not load the triage records." });
+          }
+        });
+    }
     return () => {
       cancelled = true;
     };
-  }, [isOpen, session?.id]);
+  }, [isOpen, session?.id, isFellow]);
 
-  function openTriageModal(triageTarget: StudentAttendanceData, readOnly: boolean) {
-    setTriageReadOnly(readOnly);
-    setTriageStudent(triageTarget);
-    setLoadedTriageEvent(null);
-    setTriageModalOpen(true);
-  }
+  function openTriageModal(student: StudentAttendanceData, readOnly: boolean) {
+    if (!session) return;
+    const sessionId = session.id;
+    const isThisTriage = (current: TriageDialog | null): current is TriageDialog =>
+      current?.student.id === student.id && current.sessionId === sessionId;
 
-  // effect: loads the existing triage event while the triage modal is open; cleanup drops stale responses
-  useEffect(() => {
-    if (!triageModalOpen || !triageStudent?.id || !session?.id) return;
-    let cancelled = false;
-    getTriageEventByStudentAndSession(triageStudent.id, session.id)
-      .then((event) => {
-        if (!cancelled) setLoadedTriageEvent({ event });
-      })
+    setTriage({ sessionId, student, readOnly, supervisors: [] });
+    getTriageEventByStudentAndSession(student.id, sessionId)
+      .then((event) =>
+        setTriage((current) => (isThisTriage(current) ? { ...current, event } : current)),
+      )
       .catch(() => {
-        if (cancelled) return;
-        setTriageModalOpen(false);
+        setTriage((current) => (isThisTriage(current) ? null : current));
         toast({
           variant: "destructive",
           description: "Could not load the triage record. Please try again.",
         });
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [triageModalOpen, triageStudent?.id, session?.id]);
+    getSupervisorsInFellowHub(sessionId)
+      .then((supervisors) =>
+        setTriage((current) => (isThisTriage(current) ? { ...current, supervisors } : current)),
+      )
+      .catch(() => {
+        toast({
+          variant: "destructive",
+          description: "Could not load the supervisors in your hub.",
+        });
+      });
+  }
 
   const form = useForm<{ fellow: string }>({
     defaultValues: {
@@ -205,28 +219,6 @@ export default function StudentAttendance({
     }
   };
 
-  // effect: loads the session's triage events for the fellow view
-  useEffect(() => {
-    if (!isFellow || !session?.id) return;
-
-    const sessionId = session.id;
-    let cancelled = false;
-    getTriageEventsForSession(sessionId)
-      .then((events) => {
-        if (!cancelled) {
-          setLoadedTriageEvents({ sessionId, byStudent: triageEventsByStudentId(events) });
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          toast({ variant: "destructive", description: "Could not load the triage records." });
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isFellow, session?.id]);
-
   const saveAttendance = async (
     pending: ReturnType<typeof markStudentAttendance | typeof markManyStudentsAttendance>,
   ) => {
@@ -265,6 +257,7 @@ export default function StudentAttendance({
           setAttendanceFetchId(null);
           setSessionAttendances([]);
           setHistory(null);
+          setTriage(null);
         }
       }}
       modal={true}
@@ -418,20 +411,17 @@ export default function StudentAttendance({
             </p>
           </DialogAlertWidget>
         </MarkAttendance>
-        {session && triageStudent && (
+        {session && triage && (
           <TriageEventModal
-            isOpen={triageModalOpen}
-            setIsOpen={(open) => {
-              setTriageModalOpen(open);
-              if (!open) setTriageReadOnly(false);
-            }}
-            studentId={triageStudent.id}
-            studentName={triageStudent.studentName}
+            onClose={() => setTriage(null)}
+            studentId={triage.student.id}
+            studentName={triage.student.studentName}
             sessionId={session.id}
             sessionName={sessionDisplayName(session.session?.sessionName ?? "")}
-            existingEvent={loadedTriageEvent?.event ?? undefined}
-            loadingExistingEvent={!loadedTriageEvent}
-            readOnly={triageReadOnly}
+            existingEvent={triage.event ?? undefined}
+            loadingExistingEvent={triage.event === undefined}
+            supervisors={triage.supervisors}
+            readOnly={triage.readOnly}
             onSuccess={toastOnError(reloadTriageEventsAfterSave)}
           />
         )}
@@ -446,6 +436,15 @@ export default function StudentAttendance({
     </Dialog>
   );
 }
+
+/** The open triage modal. `event` is undefined until its read resolves, and null when none exists. */
+type TriageDialog = {
+  sessionId: string;
+  student: StudentAttendanceData;
+  readOnly: boolean;
+  event?: Awaited<ReturnType<typeof getTriageEventByStudentAndSession>>;
+  supervisors: Awaited<ReturnType<typeof getSupervisorsInFellowHub>>;
+};
 
 export type StudentAttendanceData = Awaited<
   ReturnType<typeof fetchSessionStudentAttendance>
