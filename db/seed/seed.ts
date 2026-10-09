@@ -578,18 +578,12 @@ async function createAdminUsers(
 
   // Create membership records
   const userIdByEmail = new Map(adminPeople.map((person) => [person.email, person.userId]));
-  const membershipData = createdAdminUsers.flatMap((admin) =>
-    admin.implementerId === null
-      ? []
-      : [
-          {
-            userId: userIdByEmail.get(admin.email) ?? "",
-            implementerId: admin.implementerId,
-            role: ImplementerRole.ADMIN,
-            identifier: admin.id,
-          },
-        ],
-  );
+  const membershipData = createdAdminUsers.map((admin) => ({
+    userId: userIdByEmail.get(admin.email) ?? "",
+    implementerId: admin.implementerId,
+    role: ImplementerRole.ADMIN,
+    identifier: admin.id,
+  }));
 
   await insertMany(schema.implementerMember, membershipData);
 
