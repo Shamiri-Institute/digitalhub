@@ -1,17 +1,6 @@
 import { db } from "#/db/client";
-import { ImplementerRole, type AdminTeam } from "#/db/enums";
+import { ImplementerRole } from "#/db/enums";
 import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
-
-/**
- * Whether an admin may use a team's functions: super admins pass every team check, other admins
- * only their own team's. Admins with no team keep the pages every admin has.
- */
-export function hasTeamAccess(
-  admin: { isSuperAdmin: boolean; team: AdminTeam | null },
-  team: AdminTeam,
-) {
-  return admin.isSuperAdmin || admin.team === team;
-}
 
 /**
  * Guard for actions that only a super admin of the caller's implementer may run. The implementer
