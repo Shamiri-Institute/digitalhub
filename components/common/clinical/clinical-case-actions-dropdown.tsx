@@ -6,7 +6,7 @@ import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/
 import ConsultClinicalExpert from "#/app/(platform)/sc/clinical/components/consult-clinical-expert";
 import MarkCaseAsSpecial from "#/app/(platform)/sc/clinical/components/mark-case-as-special";
 import ReferClinicalCase, {
-  type ReferralSupervisors,
+  type ReferralOptions,
 } from "#/app/(platform)/sc/clinical/components/refer-clinical-case";
 import TreatmentPlanForm from "#/app/(platform)/sc/clinical/components/treatment-plan-form";
 import TriggerFollowupDialog from "#/app/(platform)/sc/clinical/components/trigger-followup-dialog";
@@ -24,11 +24,11 @@ import { cn } from "#/lib/utils";
 export default function ClinicalCaseActionsDropdownMenu({
   clinicalCase,
   role = "CLINICAL_LEAD",
-  referralSupervisors,
+  referralOptions,
 }: {
   clinicalCase: ClinicalCases;
   role?: "CLINICAL_LEAD" | "SUPERVISOR";
-  referralSupervisors?: ReferralSupervisors;
+  referralOptions?: ReferralOptions;
 }) {
   return (
     <DropdownMenu>
@@ -51,11 +51,8 @@ export default function ClinicalCaseActionsDropdownMenu({
         </ViewEditClinicalCaseStudentInfo>
         {role === "SUPERVISOR" && (
           <>
-            {referralSupervisors && (
-              <ReferClinicalCase
-                clinicalCase={clinicalCase}
-                referralSupervisors={referralSupervisors}
-              >
+            {referralOptions && (
+              <ReferClinicalCase clinicalCase={clinicalCase} referralOptions={referralOptions}>
                 <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
                   Refer case
                 </div>

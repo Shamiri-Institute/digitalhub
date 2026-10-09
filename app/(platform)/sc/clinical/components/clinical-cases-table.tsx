@@ -15,6 +15,7 @@ export default function ClinicalCasesTable({
   fellowsInProject,
   supervisorsInHub,
   currentSupervisorId,
+  clinicalLeads,
   hubs,
 }: {
   cases: ClinicalCases[];
@@ -22,12 +23,14 @@ export default function ClinicalCasesTable({
   fellowsInProject: SchoolsInHubData["fellowsInProject"];
   supervisorsInHub: SchoolsInHubData["supervisorsInHub"];
   currentSupervisorId: string;
+  clinicalLeads: SchoolsInHubData["clinicalLeads"];
   hubs: SchoolsInHubData["hubs"];
 }) {
   const supervisorOptions = supervisorsInHub.map((s) => ({ id: s.id, name: s.supervisorName }));
-  const referralSupervisors = {
+  const referralOptions = {
     currentSupervisor: supervisorOptions.find((s) => s.id === currentSupervisorId),
     supervisorsInHub: supervisorOptions.filter((s) => s.id !== currentSupervisorId),
+    clinicalLeads: clinicalLeads.map((l) => ({ id: l.id, name: l.clinicalLeadName })),
   };
 
   const renderTableActions = (
@@ -49,7 +52,7 @@ export default function ClinicalCasesTable({
   return (
     <DataTable
       data={cases}
-      columns={clinicalCaseColumns(referralSupervisors)}
+      columns={clinicalCaseColumns(referralOptions)}
       className="data-table data-table-action bg-white lg:mt-4"
       renderTableActions={renderTableActions}
       renderSubComponent={({ row }) => (

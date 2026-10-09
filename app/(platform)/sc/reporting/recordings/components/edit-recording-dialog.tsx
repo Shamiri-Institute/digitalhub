@@ -67,16 +67,23 @@ export default function EditRecordingDialog({
     },
   });
 
-  const [groups, setGroups] = useState<FellowGroup[]>([]);
-  const [sessions, setSessions] = useState<GroupSession[]>([]);
-
-  const [loadingGroups, setLoadingGroups] = useState(false);
-  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [loadedGroups, setLoadedGroups] = useState<{
+    fellowId: string;
+    groups: FellowGroup[];
+  } | null>(null);
+  const [loadedSessions, setLoadedSessions] = useState<{
+    groupId: string;
+    sessions: GroupSession[];
+  } | null>(null);
 
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
+  const groups = loadedGroups?.fellowId === fellowId ? loadedGroups.groups : [];
+  const loadingGroups = !!fellowId && loadedGroups?.fellowId !== fellowId;
+  const sessions = loadedSessions?.groupId === groupId ? loadedSessions.sessions : [];
+  const loadingSessions = !!groupId && loadedSessions?.groupId !== groupId;
 
-  // effect: open is set by the parent; resets the form when it opens
+  // effect: open is set by the parent; resets the form and loads the recording's groups and sessions when it opens
   useEffect(() => {
     if (!open) return;
 
@@ -86,90 +93,80 @@ export default function EditRecordingDialog({
       sessionId: recording.sessionId,
       originalFileName: recording.originalFileName,
     });
-  }, [open, recording, form]);
 
-  // When fellowId changes, reload groups.
-  // On initial load (fellowId matches the recording's original value), also
-  // pre-load the sessions for the original group so all fields are pre-selected.
-  // effect: reloads groups when the watched fellow field changes
-  useEffect(() => {
-    if (!fellowId) return;
-
-    const isInitialValue = fellowId === recording.fellowId;
     let cancelled = false;
-
-    setLoadingGroups(true);
-    setGroups([]);
-
-    if (!isInitialValue) {
-      setSessions([]);
-      form.setValue("groupId", "");
-      form.setValue("sessionId", "");
-    }
-
-    const loadOriginalSessions = async () => {
-      setLoadingSessions(true);
+    const loadRecordingOptions = async () => {
+      let fellowGroups: FellowGroup[] = [];
       try {
-        const originalGroupSessions = await loadGroupSessions(recording.groupId);
-        if (!cancelled) setSessions(originalGroupSessions);
+        fellowGroups = await loadFellowGroups(recording.fellowId);
       } catch {
         if (!cancelled) {
-          toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
+          toast({
+            title: "Error",
+            description: "Failed to load intervention groups",
+            variant: "destructive",
+          });
         }
-      } finally {
-        if (!cancelled) setLoadingSessions(false);
+      }
+      if (cancelled) return;
+      setLoadedGroups({ fellowId: recording.fellowId, groups: fellowGroups });
+
+      let groupSessions: GroupSession[] = [];
+      if (fellowGroups.some((g) => g.id === recording.groupId)) {
+        try {
+          groupSessions = await loadGroupSessions(recording.groupId);
+        } catch {
+          if (!cancelled) {
+            toast({
+              title: "Error",
+              description: "Failed to load sessions",
+              variant: "destructive",
+            });
+          }
+        }
+      }
+      if (!cancelled) setLoadedSessions({ groupId: recording.groupId, sessions: groupSessions });
+    };
+    void loadRecordingOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, recording, form]);
+
+  function selectFellow(selectedFellowId: string) {
+    form.setValue("groupId", "");
+    form.setValue("sessionId", "");
+    const keepIfStillSelected = (fellowGroups: FellowGroup[]) => {
+      if (form.getValues("fellowId") === selectedFellowId) {
+        setLoadedGroups({ fellowId: selectedFellowId, groups: fellowGroups });
       }
     };
-
-    loadFellowGroups(fellowId)
-      .then((loadedGroups) => {
-        if (cancelled) return;
-        setGroups(loadedGroups);
-        if (isInitialValue && loadedGroups.some((g) => g.id === recording.groupId)) {
-          void loadOriginalSessions();
-        }
-      })
+    loadFellowGroups(selectedFellowId)
+      .then(keepIfStillSelected)
       .catch(() => {
-        if (cancelled) return;
+        keepIfStillSelected([]);
         toast({
           title: "Error",
           description: "Failed to load intervention groups",
           variant: "destructive",
         });
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingGroups(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [fellowId, recording.fellowId, recording.groupId, form]);
+  }
 
-  // effect: reloads sessions when the watched group field changes
-  useEffect(() => {
-    if (!groupId || groupId === recording.groupId) return;
-
-    let cancelled = false;
-    setLoadingSessions(true);
-    setSessions([]);
+  function selectGroup(selectedGroupId: string) {
     form.setValue("sessionId", "");
-
-    loadGroupSessions(groupId)
-      .then((groupSessions) => {
-        if (!cancelled) setSessions(groupSessions);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingSessions(false);
-      });
-    return () => {
-      cancelled = true;
+    const keepIfStillSelected = (groupSessions: GroupSession[]) => {
+      if (form.getValues("groupId") === selectedGroupId) {
+        setLoadedSessions({ groupId: selectedGroupId, sessions: groupSessions });
+      }
     };
-  }, [groupId, recording.groupId, form]);
+    loadGroupSessions(selectedGroupId)
+      .then(keepIfStillSelected)
+      .catch(() => {
+        keepIfStillSelected([]);
+        toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
+      });
+  }
 
   const { isSubmitting } = form.formState;
 
@@ -220,7 +217,11 @@ export default function EditRecordingDialog({
                         label: f.fellowName ?? "Unknown",
                       }))}
                       activeItemId={field.value}
-                      onSelectItem={field.onChange}
+                      onSelectItem={(value) => {
+                        if (value === field.value) return;
+                        field.onChange(value);
+                        selectFellow(value);
+                      }}
                       placeholder="Select a fellow"
                       inputPlaceholder="Search fellows..."
                       disabled={isSubmitting}
@@ -241,7 +242,10 @@ export default function EditRecordingDialog({
                     Group <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      selectGroup(value);
+                    }}
                     value={field.value}
                     disabled={!fellowId || loadingGroups || isSubmitting}
                   >

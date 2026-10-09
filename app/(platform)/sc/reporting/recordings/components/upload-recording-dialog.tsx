@@ -72,14 +72,17 @@ export default function UploadRecordingDialog({
     },
   });
 
-  const [groups, setGroups] = useState<FellowGroup[]>([]);
-  const [sessions, setSessions] = useState<GroupSession[]>([]);
-
-  const [loadingGroups, setLoadingGroups] = useState(false);
-  const [loadingSessions, setLoadingSessions] = useState(false);
-
-  const [duplicateExists, setDuplicateExists] = useState(false);
-  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
+  const [loadedGroups, setLoadedGroups] = useState<{
+    fellowId: string;
+    groups: FellowGroup[];
+  } | null>(null);
+  const [loadedSessions, setLoadedSessions] = useState<{
+    groupId: string;
+    sessions: GroupSession[];
+  } | null>(null);
+  const [duplicateCheck, setDuplicateCheck] = useState<{ key: string; exists: boolean } | null>(
+    null,
+  );
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -102,91 +105,78 @@ export default function UploadRecordingDialog({
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
   const sessionId = form.watch("sessionId");
-  const schoolId = form.watch("schoolId");
 
-  // effect: resets dependent fields and reloads groups when the watched fellow field changes
-  useEffect(() => {
-    if (!fellowId) return;
-    let cancelled = false;
-    setLoadingGroups(true);
-    setGroups([]);
-    setSessions([]);
+  const duplicateKey = `${fellowId}:${groupId}:${sessionId}`;
+  const groups = loadedGroups?.fellowId === fellowId ? loadedGroups.groups : [];
+  const loadingGroups = !!fellowId && loadedGroups?.fellowId !== fellowId;
+  const sessions = loadedSessions?.groupId === groupId ? loadedSessions.sessions : [];
+  const loadingSessions = !!groupId && loadedSessions?.groupId !== groupId;
+  const checkingDuplicate = !!sessionId && duplicateCheck?.key !== duplicateKey;
+  const duplicateExists = duplicateCheck?.key === duplicateKey && duplicateCheck.exists;
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    setFileError(null);
+  };
+
+  function selectFellow(selectedFellowId: string) {
     form.setValue("groupId", "");
     form.setValue("sessionId", "");
     form.setValue("schoolId", "");
-    setDuplicateExists(false);
-    setSelectedFile(null);
-    setFileError(null);
-
-    loadFellowGroups(fellowId)
-      .then((fellowGroups) => {
-        if (!cancelled) setGroups(fellowGroups);
-      })
+    clearFile();
+    const keepIfStillSelected = (fellowGroups: FellowGroup[]) => {
+      if (form.getValues("fellowId") === selectedFellowId) {
+        setLoadedGroups({ fellowId: selectedFellowId, groups: fellowGroups });
+      }
+    };
+    loadFellowGroups(selectedFellowId)
+      .then(keepIfStillSelected)
       .catch((error) => {
-        if (cancelled) return;
         console.error("Error loading groups:", error);
+        keepIfStillSelected([]);
         toast({
           title: "Error",
           description: "Failed to load intervention groups",
           variant: "destructive",
         });
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingGroups(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [fellowId, form]);
+  }
 
-  // effect: resets dependent fields and reloads sessions when the watched group field changes
-  useEffect(() => {
-    if (!groupId) return;
-    let cancelled = false;
-    setLoadingSessions(true);
-    setSessions([]);
+  function selectGroup(selectedGroupId: string) {
     form.setValue("sessionId", "");
-    setDuplicateExists(false);
-    setSelectedFile(null);
-    setFileError(null);
-
-    const selectedGroup = groups.find((g) => g.id === groupId);
-    if (selectedGroup) {
-      form.setValue("schoolId", selectedGroup.schoolId);
-    }
-
-    loadGroupSessions(groupId)
-      .then((groupSessions) => {
-        if (!cancelled) setSessions(groupSessions);
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        console.error("Error loading sessions:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load sessions",
-          variant: "destructive",
-        });
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingSessions(false);
-      });
-    return () => {
-      cancelled = true;
+    form.setValue("schoolId", groups.find((g) => g.id === selectedGroupId)?.schoolId ?? "");
+    clearFile();
+    const keepIfStillSelected = (groupSessions: GroupSession[]) => {
+      if (form.getValues("groupId") === selectedGroupId) {
+        setLoadedSessions({ groupId: selectedGroupId, sessions: groupSessions });
+      }
     };
-  }, [groupId, groups, form]);
+    loadGroupSessions(selectedGroupId)
+      .then(keepIfStillSelected)
+      .catch((error) => {
+        console.error("Error loading sessions:", error);
+        keepIfStillSelected([]);
+        toast({ title: "Error", description: "Failed to load sessions", variant: "destructive" });
+      });
+  }
 
-  // effect: checks for a duplicate recording once all four watched fields are set
-  useEffect(() => {
-    if (!fellowId || !groupId || !sessionId || !schoolId) return;
-    let cancelled = false;
-    setCheckingDuplicate(true);
-    setDuplicateExists(false);
-
-    checkRecordingExists({ fellowId, groupId, sessionId, schoolId })
+  function selectSession(selectedSessionId: string) {
+    const values = form.getValues();
+    const key = `${values.fellowId}:${values.groupId}:${selectedSessionId}`;
+    const isStillSelected = () => {
+      const current = form.getValues();
+      return `${current.fellowId}:${current.groupId}:${current.sessionId}` === key;
+    };
+    checkRecordingExists({
+      fellowId: values.fellowId,
+      groupId: values.groupId,
+      sessionId: selectedSessionId,
+      schoolId: values.schoolId,
+    })
       .then((existing) => {
-        if (!cancelled && existing) {
-          setDuplicateExists(true);
+        if (!isStillSelected()) return;
+        setDuplicateCheck({ key, exists: !!existing });
+        if (existing) {
           toast({
             title: "Recording exists",
             description:
@@ -196,21 +186,16 @@ export default function UploadRecordingDialog({
         }
       })
       .catch((error) => {
-        if (cancelled) return;
         console.error("Error checking duplicate:", error);
+        if (!isStillSelected()) return;
+        setDuplicateCheck({ key, exists: false });
         toast({
           title: "Error",
           description: "Could not check for an existing recording",
           variant: "destructive",
         });
-      })
-      .finally(() => {
-        if (!cancelled) setCheckingDuplicate(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [fellowId, groupId, sessionId, schoolId]);
+  }
 
   const handleFileSelect = async (file: File) => {
     setFileError(null);
@@ -328,11 +313,7 @@ export default function UploadRecordingDialog({
 
   const handleClose = () => {
     form.reset();
-    setGroups([]);
-    setSessions([]);
-    setSelectedFile(null);
-    setFileError(null);
-    setDuplicateExists(false);
+    clearFile();
     setUploadProgress(0);
     onOpenChange(false);
   };
@@ -365,7 +346,11 @@ export default function UploadRecordingDialog({
                         label: fellow.fellowName ?? "Unknown",
                       }))}
                       activeItemId={field.value}
-                      onSelectItem={field.onChange}
+                      onSelectItem={(value) => {
+                        if (value === field.value) return;
+                        field.onChange(value);
+                        selectFellow(value);
+                      }}
                       placeholder="Select a fellow"
                       inputPlaceholder="Search fellows..."
                       disabled={isSubmitting}
@@ -386,7 +371,10 @@ export default function UploadRecordingDialog({
                     Group <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      selectGroup(value);
+                    }}
                     value={field.value}
                     disabled={!fellowId || loadingGroups || isSubmitting}
                   >
@@ -425,7 +413,10 @@ export default function UploadRecordingDialog({
                     Session <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      selectSession(value);
+                    }}
                     value={field.value}
                     disabled={!groupId || loadingSessions || isSubmitting}
                   >

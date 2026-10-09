@@ -4,16 +4,14 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
 import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
-import type { ReferralSupervisors } from "#/app/(platform)/sc/clinical/components/refer-clinical-case";
+import type { ReferralOptions } from "#/app/(platform)/sc/clinical/components/refer-clinical-case";
 import ClinicalCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 
-export function clinicalCaseColumns(
-  referralSupervisors?: ReferralSupervisors,
-): ColumnDef<ClinicalCases>[] {
+export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDef<ClinicalCases>[] {
   return [
     {
       id: "checkbox",
@@ -115,7 +113,7 @@ export function clinicalCaseColumns(
         <ClinicalCaseActionsDropdownMenu
           clinicalCase={row.original}
           role={row.original.role as "CLINICAL_LEAD" | "SUPERVISOR"}
-          referralSupervisors={referralSupervisors}
+          referralOptions={referralOptions}
         />
       ),
       enableHiding: false,

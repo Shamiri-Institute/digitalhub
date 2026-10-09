@@ -49,8 +49,10 @@ export default function StudentMoveSchoolForm({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
 }) {
-  const [groups, setGroups] = useState<SchoolGroup[]>([]);
-  const [loadingGroups, setLoadingGroups] = useState(false);
+  const [loadedGroups, setLoadedGroups] = useState<{
+    schoolId: string;
+    groups: SchoolGroup[];
+  } | null>(null);
 
   const form = useForm<z.infer<typeof MoveStudentToSchoolSchema>>({
     resolver: zodResolver(MoveStudentToSchoolSchema),
@@ -59,41 +61,30 @@ export default function StudentMoveSchoolForm({
     },
   });
 
-  const selectedSchoolId = form.watch("schoolId");
+  const selectedSchoolId = form.watch("schoolId") ?? "";
+  const groups = loadedGroups?.schoolId === selectedSchoolId ? loadedGroups.groups : [];
+  const loadingGroups = !!selectedSchoolId && loadedGroups?.schoolId !== selectedSchoolId;
 
   // effect: resets the form when the parent opens the dialog
   useEffect(() => {
     if (!isOpen) return;
 
     form.reset({ studentId: student.id });
-    setGroups([]);
   }, [isOpen, student.id, form]);
 
-  // effect: loads the groups when the watched school field changes
-  useEffect(() => {
-    if (!selectedSchoolId) {
-      setGroups([]);
-      return;
-    }
-
-    let cancelled = false;
-    setLoadingGroups(true);
-    void getSchoolGroupsForStudentTransfer(selectedSchoolId)
-      .then((schoolGroups) => {
-        if (!cancelled) setGroups(schoolGroups);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          toast({ variant: "destructive", description: "Could not load the groups." });
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingGroups(false);
-      });
-    return () => {
-      cancelled = true;
+  function loadGroups(schoolId: string) {
+    const keepIfStillSelected = (schoolGroups: SchoolGroup[]) => {
+      if (form.getValues("schoolId") === schoolId) {
+        setLoadedGroups({ schoolId, groups: schoolGroups });
+      }
     };
-  }, [selectedSchoolId]);
+    getSchoolGroupsForStudentTransfer(schoolId)
+      .then(keepIfStillSelected)
+      .catch(() => {
+        keepIfStillSelected([]);
+        toast({ variant: "destructive", description: "Could not load the groups." });
+      });
+  }
 
   async function onSubmit(values: z.infer<typeof MoveStudentToSchoolSchema>) {
     const response = await moveStudentToSchool(values);
@@ -141,6 +132,7 @@ export default function StudentMoveSchoolForm({
                     onValueChange={(value) => {
                       field.onChange(value);
                       form.resetField("assignedGroupId");
+                      loadGroups(value);
                     }}
                     value={field.value}
                   >
