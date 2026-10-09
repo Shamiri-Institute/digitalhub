@@ -1,7 +1,6 @@
 "use client";
 
-import type { Dispatch, SetStateAction } from "react";
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
@@ -31,11 +30,7 @@ import {
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
-import {
-  createTriageEvent,
-  getSupervisorsInFellowHub,
-  updateTriageEvent,
-} from "#/lib/actions/triage";
+import { createTriageEvent, updateTriageEvent } from "#/lib/actions/triage";
 import { zodResolver } from "#/lib/zod-resolver";
 
 const RISK_SCREEN_OPTIONS: { value: TriageEventFormData["riskScreenOutcome"]; label: string }[] = [
@@ -73,32 +68,28 @@ const RISK_NOT_COMPLETED_OPTIONS: {
 ];
 
 export default function TriageEventModal({
-  isOpen,
-  setIsOpen,
+  onClose,
   studentId,
   studentName,
   sessionId,
   sessionName,
   existingEvent,
   loadingExistingEvent = false,
+  supervisors,
   readOnly = false,
   onSuccess,
 }: {
-  isOpen: boolean;
-  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  onClose: () => void;
   studentId: string;
   studentName?: string | null;
   sessionId: string;
   sessionName?: string;
   existingEvent?: TriageEventWithRelations | null;
   loadingExistingEvent?: boolean;
+  supervisors: { id: string; supervisorName: string | null }[];
   readOnly?: boolean;
   onSuccess?: () => void;
 }) {
-  const [supervisorsInHub, setSupervisorsInHub] = useState<
-    { id: string; supervisorName: string | null }[]
-  >([]);
-
   const form = useForm<TriageEventFormData>({
     resolver: zodResolver(TriageEventSchema),
     defaultValues: {
@@ -122,26 +113,6 @@ export default function TriageEventModal({
   const showSupervisorSelect = actionTaken === "REFERRED" || actionTaken === "ESCALATED";
   const forceEscalated = riskScreenOutcome === "ANY_YES";
 
-  const loadSupervisors = async () => {
-    try {
-      const supervisors = await getSupervisorsInFellowHub(sessionId);
-      setSupervisorsInHub(supervisors);
-    } catch {
-      toast({ variant: "destructive", description: "Could not load the supervisors in your hub." });
-    }
-  };
-
-  const loadSupervisorsOnOpen = useEffectEvent(() => {
-    if (isOpen) {
-      void loadSupervisors();
-    }
-  });
-
-  // effect: loads the hub's supervisors when the parent opens the modal
-  useEffect(() => {
-    loadSupervisorsOnOpen();
-  }, [isOpen, sessionId]);
-
   // effect: forces the action to ESCALATED when the risk screen outcome requires it
   useEffect(() => {
     if (forceEscalated) {
@@ -149,9 +120,8 @@ export default function TriageEventModal({
     }
   }, [forceEscalated, form]);
 
-  // effect: loads the existing triage event into the form when the parent opens the modal
+  // effect: copies the existing triage event into the form when the parent's read resolves
   useEffect(() => {
-    if (!isOpen) return;
     if (existingEvent) {
       form.reset({
         id: existingEvent.id,
@@ -176,8 +146,8 @@ export default function TriageEventModal({
         note: undefined,
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset when modal/session/student/event identity changes
-  }, [isOpen, existingEvent, studentId, sessionId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset when session/student/event identity changes
+  }, [existingEvent, studentId, sessionId]);
 
   const onSubmit = async (data: z.infer<typeof TriageEventSchema>) => {
     if (loadingExistingEvent) return;
@@ -196,12 +166,12 @@ export default function TriageEventModal({
       return;
     }
     toast({ description: result.message });
-    setIsOpen(false);
+    onClose();
     onSuccess?.();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="lg:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
@@ -340,7 +310,7 @@ export default function TriageEventModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {supervisorsInHub.map((sup) => (
+                        {supervisors.map((sup) => (
                           <SelectItem key={sup.id} value={sup.id}>
                             {sup.supervisorName ?? sup.id}
                           </SelectItem>
@@ -410,7 +380,7 @@ export default function TriageEventModal({
             />
             <DialogFooter className="flex justify-end gap-2 pt-2">
               {readOnly ? (
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                <Button type="button" variant="outline" onClick={onClose}>
                   Close
                 </Button>
               ) : (
@@ -419,7 +389,7 @@ export default function TriageEventModal({
                     type="button"
                     variant="ghost"
                     className="text-shamiri-new-blue hover:bg-blue-bg"
-                    onClick={() => setIsOpen(false)}
+                    onClick={onClose}
                   >
                     Cancel
                   </Button>
