@@ -62,6 +62,7 @@ export function LayoutClient({
   user,
   profile,
   isAdminUser,
+  isSuperAdmin,
   adminProjects,
   personnel,
 }: {
@@ -69,6 +70,7 @@ export function LayoutClient({
   user: SessionUser | null;
   profile: CurrentPersonnel | null;
   isAdminUser: boolean;
+  isSuperAdmin: boolean;
   adminProjects: AdminProject[] | null;
   personnel: ImplementerPersonnel | null;
 }) {
@@ -85,8 +87,6 @@ export function LayoutClient({
   const hubsActive = subRoute?.includes("hubs") || subRoute?.includes("schools");
   const ticketsActive = subRoute?.includes("tickets");
   const usersActive = subRoute?.includes("users");
-  const isSuperAdmin =
-    !!profile?.profile && "isSuperAdmin" in profile.profile && profile.profile.isSuperAdmin;
 
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);

@@ -1,4 +1,4 @@
-import { getCurrentPersonnel } from "#/app/auth";
+import { currentAdminUser, getCurrentPersonnel } from "#/app/auth";
 import { LayoutClient } from "#/components/layout-client";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
@@ -17,19 +17,22 @@ async function loadAdminProjects() {
 export type AdminProject = NonNullable<Awaited<ReturnType<typeof loadAdminProjects>>>[number];
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
-  const [userSession, isAdminEmail, adminProjects, personnel] = await Promise.all([
+  const [userSession, adminUser, isAdminEmail, adminProjects, personnel] = await Promise.all([
     getCurrentPersonnel(),
+    currentAdminUser(),
     isCurrentUserAdmin(),
     loadAdminProjects(),
     fetchImplementerPersonnel(),
   ]);
   const user = userSession?.session.user ?? null;
   const isAdminUser = isAdminEmail || user?.activeMembership?.role === ImplementerRole.ADMIN;
+  const isSuperAdmin = adminUser?.profile.isSuperAdmin ?? false;
   return (
     <LayoutClient
       user={user}
       profile={userSession ?? null}
       isAdminUser={isAdminUser}
+      isSuperAdmin={isSuperAdmin}
       adminProjects={adminProjects}
       personnel={personnel}
     >
