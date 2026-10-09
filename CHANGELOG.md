@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.40.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.39.3...v1.40.0) (2026-10-09)
+
+### Features
+
+- **auth:** replace next-auth with better-auth ([#926](https://github.com/Shamiri-Institute/digitalhub/issues/926)) ([0cd8607](https://github.com/Shamiri-Institute/digitalhub/commit/0cd86072bef8f5d6cb748dff1dec6b62c83274d2))
+
+### Bug Fixes
+
+- **auth:** log the underlying cause of NextAuth errors ([#927](https://github.com/Shamiri-Institute/digitalhub/issues/927)) ([c4ab3d0](https://github.com/Shamiri-Institute/digitalhub/commit/c4ab3d0b1ac9392d4e9fa255d82b4bedaf29ee5c))
+
 ## [1.39.3](https://github.com/Shamiri-Institute/digitalhub/compare/v1.39.2...v1.39.3) (2026-10-08)
 
 ### Bug Fixes
