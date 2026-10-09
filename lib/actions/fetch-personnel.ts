@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
@@ -137,7 +138,7 @@ export type ImplementerPersonnel = NonNullable<
   Awaited<ReturnType<typeof fetchImplementerPersonnel>>
 >;
 
-export async function isCurrentUserAdmin() {
+export const isCurrentUserAdmin = cache(async () => {
   // Derive the email from the session; never accept it from the caller. Otherwise any
   // caller could probe whether an arbitrary email is an admin.
   const session = await getCurrentUserSession();
@@ -149,4 +150,4 @@ export async function isCurrentUserAdmin() {
     where: (a, { eq }) => eq(a.email, email),
   });
   return adminUser !== undefined;
-}
+});

@@ -5,8 +5,8 @@ import { refresh } from "next/cache";
 
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/db/client";
-import { ImplementerRole } from "#/db/enums";
 import { user } from "#/db/schema";
+import { isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
 
 export async function setActiveProject(
   projectId: string,
@@ -16,7 +16,7 @@ export async function setActiveProject(
     return { success: false, error: "Not authenticated" };
   }
 
-  if (session.user.activeMembership?.role !== ImplementerRole.ADMIN) {
+  if (!(await isCurrentUserAdmin())) {
     return { success: false, error: "Unauthorized" };
   }
 

@@ -1,12 +1,11 @@
-import { getCurrentPersonnel, getCurrentUserSession } from "#/app/auth";
+import { getCurrentPersonnel } from "#/app/auth";
 import { LayoutClient } from "#/components/layout-client";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fetchImplementerPersonnel, isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
 
 async function loadAdminProjects() {
-  const session = await getCurrentUserSession();
-  if (session?.user.activeMembership?.role !== ImplementerRole.ADMIN) {
+  if (!(await isCurrentUserAdmin())) {
     return null;
   }
   return db.query.project.findMany({
