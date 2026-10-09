@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 
 import { db } from "#/db/client";
 import { isCredentialAuthAllowed, TEST_USER_EMAILS } from "#/lib/auth/credential-auth";
-import { createSession } from "#/lib/auth/session";
 
 const INVALID = { error: "Invalid email or password" } as const;
 
@@ -24,7 +23,15 @@ export async function devLogin(email: string, password: string): Promise<{ error
     return INVALID;
   }
 
-  const { name, options, value, expires } = await createSession(user.id);
-  (await cookies()).set(name, value, { ...options, expires });
+  // Imported here so the test-only auth instance never loads where credential login is off.
+  const { createSessionCookie } = await import("#/lib/auth/test-auth");
+  const { name, value, path, httpOnly, secure, expires } = await createSessionCookie(user.id);
+  (await cookies()).set(name, value, {
+    path,
+    httpOnly,
+    secure,
+    sameSite: "lax",
+    expires: expires ? new Date(expires * 1000) : undefined,
+  });
   return {};
 }

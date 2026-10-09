@@ -1,12 +1,9 @@
 // @vitest-environment node
 import { pathToRegexp } from "next/dist/compiled/path-to-regexp";
 import { NextRequest } from "next/server";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { sessionCookie } from "#/lib/auth/session";
 import proxy, { config } from "#/proxy";
-
-const original = { NEXTAUTH_URL: process.env.NEXTAUTH_URL, VERCEL_URL: process.env.VERCEL_URL };
 
 function request(path: string, cookie?: string) {
   return new NextRequest(new URL(path, "http://localhost:3000"), {
@@ -14,16 +11,7 @@ function request(path: string, cookie?: string) {
   });
 }
 
-afterEach(() => {
-  process.env.NEXTAUTH_URL = original.NEXTAUTH_URL;
-  process.env.VERCEL_URL = original.VERCEL_URL;
-});
-
 describe("proxy", () => {
-  beforeEach(() => {
-    process.env.NEXTAUTH_URL = "http://localhost:3000";
-  });
-
   it("redirects to /login with the requested path when no session cookie is present", () => {
     const res = proxy(request("/hc/schools"));
     expect(res.status).toBe(307);
@@ -37,14 +25,13 @@ describe("proxy", () => {
   it("lets a request with a cookie through without touching the database", () => {
     // The proxy runs where the database is unreachable (see proxy.ts). A database call would
     // have to be awaited, so a synchronous response is the proof that none is made.
-    const res = proxy(request("/hc/schools", `${sessionCookie().name}=abc`));
+    const res = proxy(request("/hc/schools", "better-auth.session_token=abc"));
     expect(res).not.toBeInstanceOf(Promise);
     expect(res.headers.get("x-middleware-next")).toBe("1");
   });
 
   it("reads the secure-prefixed cookie when the site is served over https", () => {
-    process.env.NEXTAUTH_URL = "https://hub.example.org";
-    const res = proxy(request("/sc/schedule", `${sessionCookie().name}=abc`));
+    const res = proxy(request("/sc/schedule", "__Secure-better-auth.session_token=abc"));
     expect(res.headers.get("x-middleware-next")).toBe("1");
   });
 
@@ -73,21 +60,5 @@ describe("matcher", () => {
     for (const path of ["/", "/login", "/hc/schools", "/hc/reporting/monitoring-and-evaluation"]) {
       expect(matcher.test(path)).toBe(true);
     }
-  });
-});
-
-describe("sessionCookie", () => {
-  it("uses the secure-prefixed name over https", () => {
-    process.env.NEXTAUTH_URL = "https://hub.example.org";
-    expect(sessionCookie()).toMatchObject({
-      name: "__Secure-next-auth.session-token",
-      options: { secure: true },
-    });
-  });
-
-  it("treats a Vercel deployment without NEXTAUTH_URL as https", () => {
-    delete process.env.NEXTAUTH_URL;
-    process.env.VERCEL_URL = "digitalhub-abc.vercel.app";
-    expect(sessionCookie().name).toBe("__Secure-next-auth.session-token");
   });
 });

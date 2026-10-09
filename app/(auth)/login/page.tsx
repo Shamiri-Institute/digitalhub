@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { LoginForm } from "#/app/(auth)/login/form";
 import { Icons } from "#/components/icons";
-import { getCachedSession } from "#/lib/auth-options";
+import { getCachedSession } from "#/lib/auth";
 
 export const metadata: Metadata = {
   title: "Log in to SDH",

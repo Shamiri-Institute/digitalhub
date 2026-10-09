@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { implementerMember } from "#/db/schema";
-import { getCachedSession } from "#/lib/auth-options";
+import { getCachedSession } from "#/lib/auth";
 
 // The session callback treats the most recently updated membership as the active one.
 export async function setActiveMembership(membershipId: number): Promise<void> {

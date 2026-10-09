@@ -1,7 +1,6 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -10,6 +9,7 @@ import { Label } from "#/components/ui/label";
 import { toastOnError, useToast } from "#/components/ui/use-toast";
 import { isCredentialAuthAllowedClient } from "#/lib/auth/client-credential-auth";
 import { devLogin } from "#/lib/auth/dev-login";
+import { authClient } from "#/lib/auth-client";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -25,7 +25,9 @@ export function LoginForm() {
   useEffect(() => {
     const error = searchParams?.get("error");
     if (error) {
-      const errorMessage = error === "CredentialsSignin" ? "Invalid email or password" : error;
+      const errorMessage =
+        searchParams?.get("error_description") ??
+        (error === "signup_disabled" ? "No account exists for this Google email" : error);
       toast({ title: errorMessage, variant: "destructive" });
     }
   }, [searchParams, toast]);
@@ -58,10 +60,17 @@ export function LoginForm() {
         disabled={isLoading}
         onClick={() => {
           setClickedGoogle(true);
-          signIn("google", { callbackUrl: "/?login=1" }).catch(() => {
-            setClickedGoogle(false);
-            toast({ title: "Could not start Google sign-in", variant: "destructive" });
-          });
+          authClient.signIn
+            .social({
+              provider: "google",
+              callbackURL: "/?login=1",
+              errorCallbackURL: "/login",
+              fetchOptions: { throw: true },
+            })
+            .catch(() => {
+              setClickedGoogle(false);
+              toast({ title: "Could not start Google sign-in", variant: "destructive" });
+            });
         }}
         className="flex gap-2"
         data-testid="google-login"

@@ -7,7 +7,7 @@ import { ImplementerRole } from "#/db/enums";
 import { session as sessionTable } from "#/db/schema";
 import { roleHome } from "#/lib/auth/role-home";
 import type { SessionUser } from "#/lib/auth/session-user";
-import { getCachedSession } from "#/lib/auth-options";
+import { getCachedSession } from "#/lib/auth";
 
 function requireRole(session: { user: SessionUser }, role: ImplementerRole) {
   const membership = session.user.activeMembership;

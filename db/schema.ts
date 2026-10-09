@@ -91,21 +91,38 @@ export const ticketPriorityLevelEnum = pgEnum(
 export const ticketStatusEnum = pgEnum("ticket_status", enumValues(TicketStatus));
 export const triageActionTakenEnum = pgEnum("triage_action_taken", enumValues(TriageActionTaken));
 
-export const verificationToken = pgTable(
-  "verification_tokens",
+export const verification = pgTable(
+  "verifications",
   {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("verification")),
     identifier: text().notNull(),
-    token: text().notNull(),
-    expires: timestamp({ precision: 3, mode: "date" }).notNull(),
+    value: text().notNull(),
+    expiresAt: timestamp("expires_at", { precision: 3, mode: "date" }).notNull(),
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
-  (table) => [
-    uniqueIndex("verification_tokens_identifier_token_key").using(
-      "btree",
-      table.identifier,
-      table.token,
-    ),
-    uniqueIndex("verification_tokens_token_key").using("btree", table.token),
-  ],
+  (table) => [index("verifications_identifier_idx").on(table.identifier)],
+);
+
+export const rateLimit = pgTable(
+  "rate_limits",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("ratelimit")),
+    key: text().notNull(),
+    count: integer().notNull(),
+    lastRequest: doublePrecision("last_request").notNull(),
+  },
+  (table) => [uniqueIndex("rate_limits_key_key").on(table.key)],
 );
 
 export const account = pgTable(
@@ -116,23 +133,25 @@ export const account = pgTable(
       .notNull()
       .$defaultFn(() => objectId("account")),
     userId: text("user_id").notNull(),
-    type: text().notNull(),
-    provider: text().notNull(),
-    providerAccountId: text("provider_account_id").notNull(),
-    refresh_token: text("refresh_token"),
-    access_token: text("access_token"),
-    expires_at: integer("expires_at"),
-    token_type: text("token_type"),
+    providerId: text("provider_id").notNull(),
+    accountId: text("account_id").notNull(),
+    refreshToken: text("refresh_token"),
+    accessToken: text("access_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { precision: 3, mode: "date" }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { precision: 3, mode: "date" }),
     scope: text(),
-    id_token: text("id_token"),
-    session_state: text("session_state"),
+    idToken: text("id_token"),
+    password: text(),
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => [
-    uniqueIndex("accounts_provider_provider_account_id_key").using(
-      "btree",
-      table.provider,
-      table.providerAccountId,
-    ),
+    uniqueIndex("accounts_provider_id_account_id_key").on(table.providerId, table.accountId),
+    index("accounts_user_id_idx").on(table.userId),
     foreignKey({
       columns: [table.userId],
       foreignColumns: [user.id],
@@ -150,12 +169,21 @@ export const session = pgTable(
       .primaryKey()
       .notNull()
       .$defaultFn(() => objectId("authsession")),
-    sessionToken: text("session_token").notNull(),
+    token: text().notNull(),
     userId: text("user_id").notNull(),
-    expires: timestamp({ precision: 3, mode: "date" }).notNull(),
+    expiresAt: timestamp("expires_at", { precision: 3, mode: "date" }).notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => [
-    uniqueIndex("sessions_session_token_key").using("btree", table.sessionToken),
+    uniqueIndex("sessions_token_key").on(table.token),
+    index("sessions_user_id_idx").on(table.userId),
     foreignKey({
       columns: [table.userId],
       foreignColumns: [user.id],
@@ -944,7 +972,7 @@ export const user = pgTable(
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
     name: text(),
     email: text(),
-    emailVerified: timestamp("email_verified", { precision: 3, mode: "date" }),
+    emailVerified: boolean("email_verified").default(false).notNull(),
     image: text(),
     activeProjectId: varchar("active_project_id", { length: 255 }),
   },

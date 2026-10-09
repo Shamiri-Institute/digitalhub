@@ -78,6 +78,13 @@
       "when": 1791453295191,
       "tag": "0010_curious_dust",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791476836748,
+      "tag": "0011_better_auth",
+      "breakpoints": true
     }
   ]
 }

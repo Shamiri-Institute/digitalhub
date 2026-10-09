@@ -2,9 +2,9 @@
 
 import type { ImplementerRole } from "#/db/enums";
 import { Check, ChevronsUpDown, Filter } from "lucide-react";
-import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { selectPersonnel } from "#/app/actions";
+import { signOut } from "#/lib/auth-client";
 import { Button } from "#/components/ui/button";
 import { toast } from "#/components/ui/use-toast";
 import {
@@ -74,7 +74,7 @@ function DevRoleSwitcher({ loading, setLoading, user }: RoleSwitcherProps) {
         throw new Error("Failed to update personnel");
       }
 
-      await signOut({ callbackUrl: "/login" });
+      await signOut();
     } catch (error) {
       console.error("Failed to switch role:", error);
       toast({ variant: "destructive", description: "Could not switch role. Please try again." });

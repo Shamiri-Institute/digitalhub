@@ -16,7 +16,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { SessionUser } from "#/lib/auth/session-user";
-import { signOut } from "next-auth/react";
+import { signOut } from "#/lib/auth-client";
 import { useState } from "react";
 import type { CurrentPersonnel } from "#/app/auth";
 import { MembershipSwitcher } from "#/components/common/membership-switcher";
@@ -138,10 +138,7 @@ export function LayoutClient({
                 </DropdownMenuItem>
               )}
 
-              <DropdownMenuItem
-                className="flex items-center gap-2"
-                onClick={toastOnError(() => signOut({ callbackUrl: "/login" }))}
-              >
+              <DropdownMenuItem className="flex items-center gap-2" onClick={toastOnError(signOut)}>
                 <SignOutIcon fill="#969696" />
                 <p>Sign out</p>
               </DropdownMenuItem>

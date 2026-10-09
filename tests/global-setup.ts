@@ -1,8 +1,6 @@
 import { chromium } from "@playwright/test";
 
-import { sessionCookie } from "#/lib/auth/session";
-import { PersonnelFixtures } from "#/tests/helpers";
-import { generateSessionToken } from "./helpers";
+import { PersonnelFixtures, sessionCookieFor } from "#/tests/helpers";
 
 const sessionFixtures = [
   {
@@ -33,24 +31,8 @@ async function globalSetup() {
   for (const { userEmail, stateFile } of sessionFixtures) {
     console.log(`Adding session token for ${userEmail} to browser`);
 
-    const sessionToken = await generateSessionToken(userEmail);
     const context = await browser.newContext();
-
-    const futureDate = new Date();
-    futureDate.setFullYear(futureDate.getFullYear() + 1);
-    const futureTimestamp = Math.floor(futureDate.getTime() / 1000);
-
-    await context.addCookies([
-      {
-        name: sessionCookie().name,
-        value: sessionToken,
-        domain: "localhost",
-        path: "/",
-        httpOnly: true,
-        sameSite: "Lax",
-        expires: futureTimestamp,
-      },
-    ]);
+    await context.addCookies([await sessionCookieFor(userEmail)]);
     await context.storageState({ path: stateFile });
   }
 
