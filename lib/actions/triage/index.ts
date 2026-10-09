@@ -66,9 +66,19 @@ function studentsInLedGroupsAtSession(callerFellowId: string, sessionId: string)
 export async function getSupervisorsInFellowHub(
   sessionId: string,
 ): Promise<{ id: string; supervisorName: string | null }[]> {
-  await getFellowContext();
+  const { fellowId: callerFellowId } = await getFellowContext();
   const session = await db.query.interventionSession.findFirst({
-    where: (s, { eq }) => eq(s.id, sessionId),
+    where: (s, { and, eq, inArray }) =>
+      and(
+        eq(s.id, sessionId),
+        inArray(
+          s.schoolId,
+          db
+            .select({ id: interventionGroup.schoolId })
+            .from(interventionGroup)
+            .where(eq(interventionGroup.leaderId, callerFellowId)),
+        ),
+      ),
     columns: { hubId: true },
     with: { school: { columns: { hubId: true } } },
   });
