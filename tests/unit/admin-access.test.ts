@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 // The session is built by the real loadSessionUser, so the active membership is the real one.
-vi.mock("#/lib/auth-options", async () => {
+vi.mock("#/lib/auth", async () => {
   const { loadSessionUser } = await import("#/lib/auth/session-user");
   return {
     getCachedSession: async () => ({ user: await loadSessionUser(session.userId) }),
@@ -214,9 +214,9 @@ describe("currentAdminUser", () => {
       identifier: legacyProfile.id,
     });
     await db.insert(sessionTable).values({
-      sessionToken: `admin-access-test-${runId}`,
+      token: `admin-access-test-${runId}`,
       userId: tempUser.id,
-      expires: new Date(Date.now() + 60_000),
+      expiresAt: new Date(Date.now() + 60_000),
     });
 
     session.userId = tempUser.id;

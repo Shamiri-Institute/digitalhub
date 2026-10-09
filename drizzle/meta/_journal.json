@@ -92,6 +92,13 @@
       "when": 1791539404762,
       "tag": "0012_admin_super_admins_and_teams",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791545290266,
+      "tag": "0013_backfill_admin_profiles",
+      "breakpoints": true
     }
   ]
 }
