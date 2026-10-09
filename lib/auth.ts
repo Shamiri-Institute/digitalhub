@@ -83,6 +83,13 @@ export const authOptions = {
       },
     },
   },
+  onAPIError: {
+    onError: (error) => {
+      console.error("[better-auth][error]", error, {
+        cause: error instanceof Error ? error.cause : undefined,
+      });
+    },
+  },
   rateLimit: { enabled: true, storage: "database" },
   advanced: {
     ipAddress: { ipAddressHeaders: ["x-real-ip", "x-forwarded-for"] },

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.39.3](https://github.com/Shamiri-Institute/digitalhub/compare/v1.39.2...v1.39.3) (2026-10-08)
+
+### Bug Fixes
+
+- **auth:** redirect to /login on the server instead of calling the browser-only signOut ([#924](https://github.com/Shamiri-Institute/digitalhub/issues/924)) ([1541eb8](https://github.com/Shamiri-Institute/digitalhub/commit/1541eb8f7f62671a912c3e855ae030ba6e3a24b8))
+
 ## [1.39.2](https://github.com/Shamiri-Institute/digitalhub/compare/v1.39.1...v1.39.2) (2026-10-08)
 
 ### Bug Fixes
