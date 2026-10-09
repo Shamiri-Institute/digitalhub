@@ -61,10 +61,10 @@ export const REASSIGNMENT_INITIATOR_ROLES: ReassignmentInitiatorRole[] = [
   "CLINICAL_LEAD",
 ];
 
-export type FetchEscalationRecipientHandler = (
-  userId: string,
-  implementerId: string,
-) => Promise<string>;
+export type FetchEscalationRecipientHandler = (initiator: {
+  userId: string;
+  implementerId: string;
+}) => Promise<string>;
 
 export const ESCALATION_RECIPIENT_FROM_CATEGORY: Record<TicketCategory, EscalationRecipientRole> = {
   TECH: "HUB_COORDINATOR",

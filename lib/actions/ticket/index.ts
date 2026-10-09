@@ -55,7 +55,10 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
 
     const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](payload.category);
     const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
-    const escalationRecipientId = await handler(createdById, activeImplementerId);
+    const escalationRecipientId = await handler({
+      userId: createdById,
+      implementerId: activeImplementerId,
+    });
 
     const ticketPayload: CreateTicketPayload = {
       ...payload,
@@ -193,7 +196,7 @@ export async function createEscalation(
     const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](ticketCategory);
 
     const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
-    const escalationRecipientId = await handler(userId, activeImplementerId);
+    const escalationRecipientId = await handler({ userId, implementerId: activeImplementerId });
 
     const escalationData: CreateTicketEscalationPayload = {
       escalatedById: userId,
@@ -686,7 +689,7 @@ const fetchEscalationRecipientHandlers: Record<
   EscalationRecipientRole,
   FetchEscalationRecipientHandler
 > = {
-  SUPERVISOR: async (userId) => {
+  SUPERVISOR: async ({ userId }) => {
     const { rows: result } = await db.execute<{ supervisor_user_id: string }>(sql`
       SELECT im2.user_id AS supervisor_user_id
       FROM implementer_members im1
@@ -704,7 +707,7 @@ const fetchEscalationRecipientHandlers: Record<
 
     return supervisorUserId;
   },
-  HUB_COORDINATOR: async (userId, implementerId) => {
+  HUB_COORDINATOR: async ({ userId, implementerId }) => {
     const { rows: result } = await db.execute<{ hub_coordinator_user_id: string }>(sql`
       SELECT hc_member.user_id as hub_coordinator_user_id
       FROM implementer_members sup_member
@@ -725,7 +728,7 @@ const fetchEscalationRecipientHandlers: Record<
 
     return hubCoordinatorUserId;
   },
-  CLINICAL_LEAD: async (userId, implementerId) => {
+  CLINICAL_LEAD: async ({ userId, implementerId }) => {
     const { rows: result } = await db.execute<{ clinical_lead_user_id: string }>(sql`
       SELECT cl_member.user_id as clinical_lead_user_id
       FROM implementer_members sup_member
@@ -746,7 +749,7 @@ const fetchEscalationRecipientHandlers: Record<
 
     return clinicalLeadUserId;
   },
-  ADMIN: async (_userId, implementerId) => {
+  ADMIN: async ({ implementerId }) => {
     // The oldest super admin of the ticket's implementer, so adding admins, or an admin of another
     // implementer, never changes who receives the ticket.
     const [recipient] = await db
