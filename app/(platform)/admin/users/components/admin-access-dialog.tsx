@@ -51,7 +51,7 @@ interface AdminAccessDialogProps {
 export default function AdminAccessDialog({ open, onOpenChange, admin }: AdminAccessDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-1/4 max-w-none">
+      <DialogContent className="lg:w-2/5 lg:max-w-none">
         <AdminAccessForm admin={admin} onDone={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
@@ -94,7 +94,7 @@ function AdminAccessForm({ admin, onDone }: { admin?: ImplementerAdmin; onDone: 
             {admin ? "Manage user access" : "Add a new user"}
           </DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-1 gap-4 py-4">
+        <div className="grid grid-cols-2 gap-4 py-4">
           <FormField
             control={form.control}
             name="adminName"
