@@ -2516,11 +2516,7 @@ export const adminUser = pgTable(
     team: adminTeamEnum(),
   },
   (table) => [
-    uniqueIndex("admin_users_implementer_id_email_key").using(
-      "btree",
-      table.implementerId,
-      table.email,
-    ),
+    uniqueIndex("admin_users_implementer_id_email_key").on(table.implementerId, table.email),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
