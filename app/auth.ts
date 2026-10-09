@@ -223,11 +223,6 @@ export const currentAdminUser = cache(async () => {
     return null;
   }
 
-  // A profile without an implementer cannot be used, so the user is signed out.
-  if (adminUser.implementerId === null && session.user.id) {
-    await endSession(session.user.id, "Your admin profile is not set up for an implementer");
-  }
-
   // The profile must belong to the membership's implementer, so a membership never resolves to
   // another implementer's admin profile.
   if (adminUser.implementerId !== membership.implementerId) {
@@ -237,12 +232,6 @@ export const currentAdminUser = cache(async () => {
   return { profile: adminUser, session };
 });
 
-/** Deletes the user's sessions and sends them to the login page with the reason. */
-async function endSession(userId: string, reason: string): Promise<never> {
-  await db.delete(sessionTable).where(eq(sessionTable.userId, userId));
-  redirect(`/login?error=${encodeURIComponent(reason)}`);
-}
-
 export async function getCurrentUserSession() {
   const session = await getCachedSession();
   if (!session?.user.id) {
@@ -250,7 +239,8 @@ export async function getCurrentUserSession() {
   }
 
   if (!session.user.activeMembership) {
-    await endSession(session.user.id, "No active membership for this account");
+    await db.delete(sessionTable).where(eq(sessionTable.userId, session.user.id));
+    redirect(`/login?error=${encodeURIComponent("No active membership for this account")}`);
   }
 
   return session;

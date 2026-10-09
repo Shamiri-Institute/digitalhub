@@ -96,4 +96,7 @@ WHERE a.id IN (
     SELECT 1
     FROM admin_users s
     WHERE s.implementer_id = a.implementer_id AND s.is_super_admin
-  );
+  );--> statement-breakpoint
+
+-- 7. Every profile now has an implementer, so the column can require one.
+ALTER TABLE "admin_users" ALTER COLUMN "implementer_id" SET NOT NULL;

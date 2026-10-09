@@ -13,7 +13,7 @@ export default async function AdminUsersPage() {
     redirect("/login");
   }
   const { implementerId, isSuperAdmin } = admin.profile;
-  if (!isSuperAdmin || implementerId === null) {
+  if (!isSuperAdmin) {
     redirect("/admin/schedule");
   }
 

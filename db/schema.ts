@@ -2511,7 +2511,7 @@ export const adminUser = pgTable(
       .$onUpdate(() => new Date()),
     email: varchar({ length: 255 }).notNull(),
     adminName: varchar("name", { length: 255 }).notNull(),
-    implementerId: varchar("implementer_id", { length: 255 }),
+    implementerId: varchar("implementer_id", { length: 255 }).notNull(),
     isSuperAdmin: boolean("is_super_admin").default(false).notNull(),
     team: adminTeamEnum(),
   },
