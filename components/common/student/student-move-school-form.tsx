@@ -30,30 +30,26 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import {
-  getHubSchoolsForStudentTransfer,
-  getSchoolGroupsForStudentTransfer,
-  moveStudentToSchool,
-} from "#/lib/actions/student";
+import type { TransferSchool } from "#/components/common/schools/school-students-page";
+import { getSchoolGroupsForStudentTransfer, moveStudentToSchool } from "#/lib/actions/student";
 import { zodResolver } from "#/lib/zod-resolver";
 
-type HubSchool = Awaited<ReturnType<typeof getHubSchoolsForStudentTransfer>>[number];
 type SchoolGroup = Awaited<ReturnType<typeof getSchoolGroupsForStudentTransfer>>[number];
 
 export default function StudentMoveSchoolForm({
   student,
+  schools,
   isOpen,
   setIsOpen,
   children,
 }: {
   student: SchoolStudentTableData;
+  schools: TransferSchool[];
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
 }) {
-  const [schools, setSchools] = useState<HubSchool[]>([]);
   const [groups, setGroups] = useState<SchoolGroup[]>([]);
-  const [loadingSchools, setLoadingSchools] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(false);
 
   const form = useForm<z.infer<typeof MoveStudentToSchoolSchema>>({
@@ -65,22 +61,13 @@ export default function StudentMoveSchoolForm({
 
   const selectedSchoolId = form.watch("schoolId");
 
-  // effect: resets the form and loads the transfer schools when the parent opens the dialog
+  // effect: resets the form when the parent opens the dialog
   useEffect(() => {
     if (!isOpen) return;
 
     form.reset({ studentId: student.id });
     setGroups([]);
-    setLoadingSchools(true);
-    void getHubSchoolsForStudentTransfer()
-      .then((data) => {
-        setSchools(data.filter((school) => school.id !== student.schoolId));
-      })
-      .catch(() => {
-        toast({ variant: "destructive", description: "Could not load the schools." });
-      })
-      .finally(() => setLoadingSchools(false));
-  }, [isOpen, student.id, student.schoolId, form]);
+  }, [isOpen, student.id, form]);
 
   // effect: loads the groups when the watched school field changes
   useEffect(() => {
@@ -156,17 +143,14 @@ export default function StudentMoveSchoolForm({
                       form.resetField("assignedGroupId");
                     }}
                     value={field.value}
-                    disabled={loadingSchools}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue
-                          placeholder={loadingSchools ? "Loading schools..." : "Select a school"}
-                        />
+                        <SelectValue placeholder="Select a school" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="max-h-[200px]">
-                      {schools.length === 0 && !loadingSchools ? (
+                      {schools.length === 0 ? (
                         <div className="px-2 py-1.5 text-sm text-shamiri-text-grey">
                           No other schools available
                         </div>

@@ -2,11 +2,29 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 
 import StudentsDatatable from "#/components/common/student/students-datatable";
+import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/db/client";
-import type { ImplementerRole } from "#/db/enums";
+import { ImplementerRole } from "#/db/enums";
 import { clinicalSessionAttendance, school } from "#/db/schema";
 import { countOf } from "#/db/sql";
 import { visibleSchoolIds } from "#/lib/auth/require-hub-role";
+
+async function loadTransferSchools(role: ImplementerRole) {
+  if (role !== ImplementerRole.HUB_COORDINATOR) {
+    return [];
+  }
+  const hubId = (await currentHubCoordinator())?.profile?.assignedHubId;
+  if (!hubId) {
+    return [];
+  }
+  return db.query.school.findMany({
+    where: (s, { and, eq, isNull }) => and(eq(s.hubId, hubId), isNull(s.archivedAt)),
+    columns: { id: true, schoolName: true, visibleId: true },
+    orderBy: (s, { asc }) => asc(s.schoolName),
+  });
+}
+
+export type TransferSchool = Awaited<ReturnType<typeof loadTransferSchools>>[number];
 
 export default async function SchoolStudentsPage({
   visibleId,
@@ -18,7 +36,7 @@ export default async function SchoolStudentsPage({
   // The school subtree is identical for every student, so it is loaded once and attached
   // in JS. Nesting it under each row made Drizzle recompute the lateral join per student.
   const visibleSchools = await visibleSchoolIds();
-  const [schoolRow, rows] = await Promise.all([
+  const [schoolRow, rows, transferSchools] = await Promise.all([
     db.query.school.findFirst({
       where: (s, { and, eq, inArray }) =>
         and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
@@ -83,6 +101,7 @@ export default async function SchoolStudentsPage({
       },
       orderBy: (s, { desc }) => desc(s.updatedAt),
     }),
+    loadTransferSchools(role),
   ]);
 
   if (!schoolRow) {
@@ -90,5 +109,5 @@ export default async function SchoolStudentsPage({
   }
   const students = rows.map((s) => ({ ...s, school: schoolRow }));
 
-  return <StudentsDatatable students={students} role={role} />;
+  return <StudentsDatatable students={students} role={role} transferSchools={transferSchools} />;
 }

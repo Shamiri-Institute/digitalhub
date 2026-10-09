@@ -1,5 +1,6 @@
 "use client";
 
+import type { TransferSchool } from "#/components/common/schools/school-students-page";
 import { ImplementerRole } from "#/db/enums";
 import { useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -18,9 +19,11 @@ import { markStudentAttendance } from "#/lib/actions/student";
 export default function StudentsDatatable({
   students,
   role,
+  transferSchools = [],
 }: {
   students: SchoolStudentTableData[];
   role: ImplementerRole;
+  transferSchools?: TransferSchool[];
 }) {
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
@@ -150,6 +153,7 @@ export default function StudentsDatatable({
           </StudentArchiveForm>
           <StudentMoveSchoolForm
             student={student}
+            schools={transferSchools.filter((school) => school.id !== student.schoolId)}
             isOpen={moveSchoolDialog}
             setIsOpen={setMoveSchoolDialog}
           >

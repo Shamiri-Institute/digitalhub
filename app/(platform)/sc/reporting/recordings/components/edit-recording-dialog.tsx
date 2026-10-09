@@ -38,21 +38,22 @@ import {
   type GroupSession,
   loadFellowGroups,
   loadGroupSessions,
-  loadSupervisorFellows,
-  type SupervisorFellow,
   updateSessionRecording,
 } from "../actions";
+import type { SupervisorFellow } from "../page";
 import { type RecordingEditFormData, RecordingEditSchema } from "../schemas";
 import type { RecordingTableData } from "./columns";
 
 interface EditRecordingDialogProps {
   recording: RecordingTableData;
+  fellows: SupervisorFellow[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export default function EditRecordingDialog({
   recording,
+  fellows,
   open,
   onOpenChange,
 }: EditRecordingDialogProps) {
@@ -66,18 +67,16 @@ export default function EditRecordingDialog({
     },
   });
 
-  const [fellows, setFellows] = useState<SupervisorFellow[]>([]);
   const [groups, setGroups] = useState<FellowGroup[]>([]);
   const [sessions, setSessions] = useState<GroupSession[]>([]);
 
-  const [loadingFellows, setLoadingFellows] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
 
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
 
-  // effect: open is set by the parent; resets the form and loads fellows when it opens
+  // effect: open is set by the parent; resets the form when it opens
   useEffect(() => {
     if (!open) return;
 
@@ -87,14 +86,6 @@ export default function EditRecordingDialog({
       sessionId: recording.sessionId,
       originalFileName: recording.originalFileName,
     });
-
-    setLoadingFellows(true);
-    loadSupervisorFellows()
-      .then(setFellows)
-      .catch(() =>
-        toast({ title: "Error", description: "Failed to load fellows", variant: "destructive" }),
-      )
-      .finally(() => setLoadingFellows(false));
   }, [open, recording, form]);
 
   // When fellowId changes, reload groups.
@@ -230,9 +221,9 @@ export default function EditRecordingDialog({
                       }))}
                       activeItemId={field.value}
                       onSelectItem={field.onChange}
-                      placeholder={loadingFellows ? "Loading..." : "Select a fellow"}
+                      placeholder="Select a fellow"
                       inputPlaceholder="Search fellows..."
-                      disabled={loadingFellows || isSubmitting}
+                      disabled={isSubmitting}
                       className="w-full"
                     />
                   </FormControl>

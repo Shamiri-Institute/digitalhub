@@ -4,6 +4,7 @@ import { useState } from "react";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import type { SupervisorFellow } from "../page";
 import { type RecordingTableData, recordingColumns } from "./columns";
 import EditRecordingDialog from "./edit-recording-dialog";
 import UploadRecordingDialog from "./upload-recording-dialog";
@@ -11,9 +12,10 @@ import ViewFeedbackDialog from "./view-feedback-dialog";
 
 interface RecordingsDatatableProps {
   data: RecordingTableData[];
+  fellows: SupervisorFellow[];
 }
 
-export default function RecordingsDatatable({ data }: RecordingsDatatableProps) {
+export default function RecordingsDatatable({ data, fellows }: RecordingsDatatableProps) {
   const [uploadDialog, setUploadDialog] = useState(false);
   const [viewFeedbackDialog, setViewFeedbackDialog] = useState(false);
   const [editDialog, setEditDialog] = useState(false);
@@ -44,7 +46,7 @@ export default function RecordingsDatatable({ data }: RecordingsDatatableProps) 
         rowSelectionDescription="recordings"
       />
 
-      <UploadRecordingDialog open={uploadDialog} onOpenChange={setUploadDialog} />
+      <UploadRecordingDialog open={uploadDialog} onOpenChange={setUploadDialog} fellows={fellows} />
 
       {selectedRecording && (
         <ViewFeedbackDialog
@@ -56,6 +58,7 @@ export default function RecordingsDatatable({ data }: RecordingsDatatableProps) 
       {selectedRecording && (
         <EditRecordingDialog
           recording={selectedRecording}
+          fellows={fellows}
           open={editDialog}
           onOpenChange={setEditDialog}
         />

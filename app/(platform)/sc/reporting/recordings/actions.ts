@@ -15,28 +15,9 @@ import {
   verifyUploadedObject,
 } from "#/lib/s3/utils/verify-upload";
 
-export type SupervisorFellow = Awaited<ReturnType<typeof loadSupervisorFellows>>[number];
 export type FellowGroup = Awaited<ReturnType<typeof loadFellowGroups>>[number];
 export type GroupSession = Awaited<ReturnType<typeof loadGroupSessions>>[number];
 export type SupervisorRecording = Awaited<ReturnType<typeof loadSupervisorRecordings>>[number];
-
-export async function loadSupervisorFellows() {
-  const supervisor = await currentSupervisor();
-
-  if (!supervisor?.profile?.id) {
-    throw new Error("Unauthorized user");
-  }
-
-  return db.query.fellow.findMany({
-    where: (f, { and, eq, isNull, or }) =>
-      and(
-        eq(f.supervisorId, supervisor.profile.id),
-        or(eq(f.droppedOut, false), isNull(f.droppedOut)),
-      ),
-    columns: { id: true, fellowName: true },
-    orderBy: (f, { asc }) => asc(f.fellowName),
-  });
-}
 
 export async function loadFellowGroups(fellowId: string) {
   const supervisor = await currentSupervisor();
@@ -116,11 +97,16 @@ export async function checkRecordingExists(params: {
     throw new Error("Unauthorized user");
   }
 
+  const supervisorId = supervisor.profile.id;
   // The unique key is (fellowId, schoolId, groupId, sessionId).
   const recording = await db.query.sessionRecording.findFirst({
-    where: (r, { and, eq }) =>
+    where: (r, { and, eq, inArray }) =>
       and(
         eq(r.fellowId, params.fellowId),
+        inArray(
+          r.fellowId,
+          db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, supervisorId)),
+        ),
         eq(r.schoolId, params.schoolId),
         eq(r.groupId, params.groupId),
         eq(r.sessionId, params.sessionId),
