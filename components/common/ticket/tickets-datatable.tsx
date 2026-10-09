@@ -2,7 +2,11 @@
 
 import type { ImplementerRole } from "#/db/enums";
 import { useState } from "react";
-import { columns, type TicketData } from "#/components/common/ticket/columns";
+import {
+  columns,
+  type TicketData,
+  type TicketDialogKind,
+} from "#/components/common/ticket/columns";
 import CreateTicketDialog from "#/components/common/ticket/create-ticket-dialog";
 import { EscalateTicketDialog } from "#/components/common/ticket/escalate-ticket-dialog";
 import { ReassignTicketDialog } from "#/components/common/ticket/reassign-ticket-dialog";
@@ -12,9 +16,24 @@ import { ViewResolutionDialog } from "#/components/common/ticket/view-resolution
 import { ViewTicketDialog } from "#/components/common/ticket/view-ticket-dialog";
 import DataTable from "#/components/data-table";
 import {
+  getEscalationsPerTicket,
+  getTicketReassignments,
+  getTicketResolution,
+} from "#/lib/actions/ticket";
+import {
   isEscalationInitiatorRole,
   type ReassignmentInitiatorRole,
 } from "#/lib/actions/ticket/types";
+
+type OpenTicketDialog =
+  | { kind: "view"; ticketId: string; escalations: ReturnType<typeof getEscalationsPerTicket> }
+  | { kind: "viewResolution"; ticketId: string; resolution: ReturnType<typeof getTicketResolution> }
+  | {
+      kind: "viewReassignment";
+      ticketId: string;
+      reassignments: ReturnType<typeof getTicketReassignments>;
+    }
+  | { kind: "resolve" | "escalate" | "reassign"; ticketId: string };
 
 export default function TicketsDatatable({
   tickets,
@@ -25,27 +44,22 @@ export default function TicketsDatatable({
   role: ImplementerRole;
   hubId?: string;
 }) {
-  const [selectedTicket, setSelectedTicket] = useState<TicketData | undefined>();
-  const [viewDialog, setViewDialog] = useState(false);
-  const [resolutionDialog, setResolutionDialog] = useState<boolean | "view">(false);
-  const [escalateDialog, setEscalateDialog] = useState(false);
-  const [reassignDialog, setReassignDialog] = useState<boolean | "view">(false);
+  const [dialog, setDialog] = useState<OpenTicketDialog | null>(null);
+  const ticket = dialog && tickets.find((t) => t.id === dialog.ticketId);
+  const closeDialog = () => setDialog(null);
 
-  const ticket = (() => {
-    if (selectedTicket) {
-      return tickets.find((t) => t.id === selectedTicket.id);
+  const openDialog = (kind: TicketDialogKind, { id: ticketId }: TicketData) => {
+    switch (kind) {
+      case "view":
+        return setDialog({ kind, ticketId, escalations: getEscalationsPerTicket(ticketId) });
+      case "viewResolution":
+        return setDialog({ kind, ticketId, resolution: getTicketResolution(ticketId) });
+      case "viewReassignment":
+        return setDialog({ kind, ticketId, reassignments: getTicketReassignments(ticketId) });
+      default:
+        return setDialog({ kind, ticketId });
     }
-    return selectedTicket;
-  })();
-
-  const memoizedColumns = columns({
-    setTicket: setSelectedTicket,
-    setViewDialog,
-    setResolutionDialog,
-    setEscalateDialog,
-    setReassignDialog,
-    role,
-  });
+  };
 
   const renderTableActions = () => {
     if (!isEscalationInitiatorRole(role)) return null;
@@ -55,51 +69,43 @@ export default function TicketsDatatable({
   return (
     <>
       <DataTable
-        columns={memoizedColumns}
+        columns={columns({ openDialog, role })}
         data={tickets}
         className="data-table data-table-action lg:mt-4"
         emptyStateMessage="No tickets found"
         renderTableActions={renderTableActions()}
       />
-      {ticket && (
-        <ViewTicketDialog ticket={ticket} open={viewDialog} onOpenChange={setViewDialog} />
-      )}
-      {ticket && resolutionDialog === true && (
-        <ResolveTicketDialog
+      {ticket && dialog.kind === "view" && (
+        <ViewTicketDialog
           ticket={ticket}
-          open={resolutionDialog === true}
-          onOpenChange={() => setResolutionDialog(false)}
+          escalations={dialog.escalations}
+          onOpenChange={closeDialog}
         />
       )}
-      {ticket && resolutionDialog === "view" && (
+      {ticket && dialog.kind === "resolve" && (
+        <ResolveTicketDialog ticket={ticket} open onOpenChange={closeDialog} />
+      )}
+      {ticket && dialog.kind === "viewResolution" && (
         <ViewResolutionDialog
           ticket={ticket}
-          open={resolutionDialog === "view"}
-          onOpenChange={() => setResolutionDialog(false)}
+          resolution={dialog.resolution}
+          onOpenChange={closeDialog}
         />
       )}
-      {ticket && (
-        <EscalateTicketDialog
-          ticket={ticket}
-          open={escalateDialog}
-          onOpenChange={setEscalateDialog}
-        />
+      {ticket && dialog.kind === "escalate" && (
+        <EscalateTicketDialog ticket={ticket} open onOpenChange={closeDialog} />
       )}
-      {ticket && reassignDialog === true && (
+      {ticket && dialog.kind === "reassign" && (
         <ReassignTicketDialog
           ticket={ticket}
           hubId={hubId}
           role={role as ReassignmentInitiatorRole}
-          open={reassignDialog === true}
-          onOpenChange={() => setReassignDialog(false)}
+          open
+          onOpenChange={closeDialog}
         />
       )}
-      {ticket && reassignDialog === "view" && (
-        <ViewReassignmentDialog
-          ticket={ticket}
-          open={reassignDialog === "view"}
-          onOpenChange={() => setReassignDialog(false)}
-        />
+      {ticket && dialog.kind === "viewReassignment" && (
+        <ViewReassignmentDialog reassignments={dialog.reassignments} onOpenChange={closeDialog} />
       )}
     </>
   );

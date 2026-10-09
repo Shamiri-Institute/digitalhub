@@ -1,7 +1,5 @@
 "use client";
 
-import type { ImplementerRole } from "#/db/enums";
-import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 import { Icons } from "#/components/icons";
 import {
@@ -20,22 +18,9 @@ import {
   type TicketEscalationStatus,
 } from "#/lib/actions/ticket/types";
 
-import type { TicketData } from "./columns";
+import type { TicketData, TicketTableState } from "./columns";
 
-export function TicketDropdown({
-  ticket,
-  state,
-}: {
-  ticket: TicketData;
-  state: {
-    setTicket: Dispatch<SetStateAction<TicketData | undefined>>;
-    setViewDialog: Dispatch<SetStateAction<boolean>>;
-    setResolutionDialog: Dispatch<SetStateAction<boolean | "view">>;
-    setEscalateDialog: Dispatch<SetStateAction<boolean>>;
-    setReassignDialog: Dispatch<SetStateAction<boolean | "view">>;
-    role: ImplementerRole;
-  };
-}) {
+export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: TicketTableState }) {
   const [status, setStatus] = useState<TicketEscalationStatus | null>(null);
 
   const fetchStatus = async () => {
@@ -78,51 +63,28 @@ export function TicketDropdown({
           <span className="text-shamiri-text-grey text-xs font-medium uppercase">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            state.setTicket(ticket);
-            state.setViewDialog(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDialog("view", ticket)}>
           View ticket
         </DropdownMenuItem>
         {(showResolve || hasResolution) && (
           <DropdownMenuItem
-            onClick={() => {
-              state.setTicket(ticket);
-              state.setResolutionDialog(showResolve ? true : "view");
-            }}
+            onClick={() => state.openDialog(showResolve ? "resolve" : "viewResolution", ticket)}
           >
             {showResolve ? "Resolve ticket" : "View resolution"}
           </DropdownMenuItem>
         )}
         {showReassign && isReassignmentInitiator && (
-          <DropdownMenuItem
-            onClick={() => {
-              state.setTicket(ticket);
-              state.setReassignDialog(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => state.openDialog("reassign", ticket)}>
             Reassign ticket
           </DropdownMenuItem>
         )}
         {!showReassign && hasReassignment && (
-          <DropdownMenuItem
-            onClick={() => {
-              state.setTicket(ticket);
-              state.setReassignDialog("view");
-            }}
-          >
+          <DropdownMenuItem onClick={() => state.openDialog("viewReassignment", ticket)}>
             View reassignment
           </DropdownMenuItem>
         )}
         {showEscalate && (
-          <DropdownMenuItem
-            onClick={() => {
-              state.setTicket(ticket);
-              state.setEscalateDialog(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => state.openDialog("escalate", ticket)}>
             Escalate ticket
           </DropdownMenuItem>
         )}

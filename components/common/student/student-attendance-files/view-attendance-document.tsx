@@ -25,48 +25,51 @@ export default function ViewAttendanceDocument({
   const { toast } = useToast();
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [isDeleting, startDeleting] = useTransition();
-  const [state, setState] = useState<{
-    loading: boolean;
+  const documentKey = `${sessionId}:${groupId}`;
+  const [loaded, setLoaded] = useState<{
+    key: string;
     error?: string;
     url?: string;
     fileName?: string;
     id?: string;
-    link?: string;
     archived?: boolean;
-  }>({ loading: true });
+  } | null>(null);
+  const state = loaded?.key === documentKey ? loaded : null;
 
-  // effect: loads the presigned document URL on mount
+  // effect: sessionId and groupId come from the parent (a group select, or a remount after an upload); cleanup drops stale responses
   useEffect(() => {
-    async function loadDocument() {
-      try {
-        const result = await getAttendanceDocument({ sessionId, groupId });
-        if (result.success) {
-          setState({
-            loading: false,
-            url: result.data?.presignedUrl,
-            fileName: result.data?.fileName,
-            id: result.data?.id,
-            link: result.data?.link,
-          });
-        } else {
-          setState({ loading: false, error: result.message });
-        }
-      } catch {
-        setState({ loading: false, error: "Failed to load document" });
-      }
-    }
-
-    void loadDocument();
+    const key = `${sessionId}:${groupId}`;
+    let cancelled = false;
+    getAttendanceDocument({ sessionId, groupId })
+      .then((result) => {
+        if (cancelled) return;
+        setLoaded(
+          result.success
+            ? {
+                key,
+                url: result.data?.presignedUrl,
+                fileName: result.data?.fileName,
+                id: result.data?.id,
+              }
+            : { key, error: result.message },
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setLoaded({ key, error: "Failed to load document" });
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId, groupId]);
 
   const handleDelete = () => {
-    const documentId = state.id;
+    const documentId = state?.id;
     if (!documentId) return;
     startDeleting(() =>
       toastOnFailure(async () => {
         const result = await deleteAttendanceFile(documentId);
         if (result.success) {
-          setState({ loading: false, archived: true });
+          setLoaded({ key: documentKey, archived: true });
           onDeleteSuccess?.();
           toast({ description: "Attendance document deleted successfully." });
         } else {
@@ -79,7 +82,7 @@ export default function ViewAttendanceDocument({
     );
   };
 
-  if (state.loading) return <Skeleton className="h-16 w-full rounded-lg" />;
+  if (!state) return <Skeleton className="h-16 w-full rounded-lg" />;
 
   if (state.archived) {
     return (
