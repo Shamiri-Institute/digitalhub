@@ -16,14 +16,7 @@ export default function TicketsLoading({
   return (
     <DatatableSkeleton
       rows={rows}
-      columns={columns({
-        setTicket: () => {},
-        setViewDialog: () => {},
-        setResolutionDialog: () => {},
-        setEscalateDialog: () => {},
-        setReassignDialog: () => {},
-        role: userRole,
-      })}
+      columns={columns({ openDialog: () => {}, role: userRole })}
       renderTableActions={
         isEscalationInitiatorRole(userRole) ? <CreateTicketDialog disabled /> : null
       }

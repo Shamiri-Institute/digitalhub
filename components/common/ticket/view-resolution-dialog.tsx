@@ -1,14 +1,13 @@
 "use client";
 
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { Suspense, use } from "react";
+import { LoadErrorBoundary } from "#/components/common/load-error-boundary";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
-import { toast } from "#/components/ui/use-toast";
 import { getTicketResolution } from "#/lib/actions/ticket";
-import type { TicketResolution } from "#/lib/actions/ticket/types";
 import type { TicketData } from "./columns";
 
 const formatSafeDate = (date: Date | string | null | undefined) => {
@@ -19,90 +18,36 @@ const formatSafeDate = (date: Date | string | null | undefined) => {
 
 export function ViewResolutionDialog({
   ticket,
-  open,
+  resolution,
   onOpenChange,
 }: {
-  ticket: TicketData | undefined;
-  open: boolean;
+  ticket: TicketData;
+  resolution: ReturnType<typeof getTicketResolution>;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [resolution, setResolution] = useState<TicketResolution | null>();
-  const [loading, setLoading] = useState(false);
-
-  // effect: loads the ticket's resolution when the parent opens the dialog
-  useEffect(() => {
-    if (!open || !ticket?.id) return;
-
-    let cancelled = false;
-    const fetchResolution = async () => {
-      setLoading(true);
-      try {
-        const result = await getTicketResolution(ticket.id);
-        if (cancelled) return;
-        setResolution(result.success ? (result.data ?? null) : null);
-        if (!result.success) {
-          toast({ variant: "destructive", description: "Could not load the resolution." });
-        }
-      } catch {
-        if (!cancelled) {
-          setResolution(null);
-          toast({ variant: "destructive", description: "Could not load the resolution." });
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    void fetchResolution();
-    return () => {
-      cancelled = true;
-    };
-  }, [open, ticket?.id]);
-
-  if (!ticket) return null;
-
   const isResolved = ticket.status === "RESOLVED";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Resolution Details</DialogTitle>
         </DialogHeader>
 
-        {loading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-6 w-1/2" />
-          </div>
-        ) : isResolved && resolution ? (
-          <div className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-shamiri-text-grey uppercase">
-                Resolved By
-              </div>
-              <div className="text-base capitalize">
-                {resolution.resolvedByRole
-                  ? resolution.resolvedByRole.toLowerCase().replace("_", " ")
-                  : "Unknown"}
-              </div>
-            </div>
-            <Separator />
-            <div>
-              <div className="text-sm font-medium text-shamiri-text-grey uppercase">
-                Resolution Reason
-              </div>
-              <div className="text-base">{resolution.resolutionReason}</div>
-            </div>
-            <Separator />
-            <div>
-              <div className="text-sm font-medium text-shamiri-text-grey uppercase">
-                Date Resolved
-              </div>
-              <div className="text-base">{formatSafeDate(resolution.createdAt)}</div>
-            </div>
-          </div>
+        {isResolved ? (
+          <LoadErrorBoundary message="Could not load the resolution.">
+            <Suspense
+              fallback={
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-6 w-1/2" />
+                </div>
+              }
+            >
+              <ResolutionDetails resolution={resolution} />
+            </Suspense>
+          </LoadErrorBoundary>
         ) : (
           <div className="space-y-4">
             <div className="rounded-md bg-blue-bg border border-blue-border p-4">
@@ -134,5 +79,42 @@ export function ViewResolutionDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ResolutionDetails({
+  resolution: resolutionPromise,
+}: {
+  resolution: ReturnType<typeof getTicketResolution>;
+}) {
+  const result = use(resolutionPromise);
+  const resolution = result.data;
+  if (!result.success || !resolution) {
+    return <p className="text-sm text-shamiri-light-red">Could not load the resolution.</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="text-sm font-medium text-shamiri-text-grey uppercase">Resolved By</div>
+        <div className="text-base capitalize">
+          {resolution.resolvedByRole
+            ? resolution.resolvedByRole.toLowerCase().replace("_", " ")
+            : "Unknown"}
+        </div>
+      </div>
+      <Separator />
+      <div>
+        <div className="text-sm font-medium text-shamiri-text-grey uppercase">
+          Resolution Reason
+        </div>
+        <div className="text-base">{resolution.resolutionReason}</div>
+      </div>
+      <Separator />
+      <div>
+        <div className="text-sm font-medium text-shamiri-text-grey uppercase">Date Resolved</div>
+        <div className="text-base">{formatSafeDate(resolution.createdAt)}</div>
+      </div>
+    </div>
   );
 }

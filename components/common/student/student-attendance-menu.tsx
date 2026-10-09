@@ -15,8 +15,7 @@ export type StudentAttendanceMenuState = {
   setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   openTriageModal: (triageTarget: StudentAttendanceData, readOnly: boolean) => void;
-  setHistoryStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
-  setHistoryModalOpen: Dispatch<SetStateAction<boolean>>;
+  openHistory: (student: StudentAttendanceData) => void;
 };
 
 export default function StudentAttendanceMenu({
@@ -68,12 +67,7 @@ export default function StudentAttendanceMenu({
             <DropdownMenuItem onClick={() => state.openTriageModal(attendance, true)}>
               View triage
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setHistoryStudent(attendance);
-                state.setHistoryModalOpen(true);
-              }}
-            >
+            <DropdownMenuItem onClick={() => state.openHistory(attendance)}>
               View student triage history
             </DropdownMenuItem>
           </>

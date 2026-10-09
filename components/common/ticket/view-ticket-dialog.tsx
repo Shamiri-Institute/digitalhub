@@ -1,7 +1,8 @@
 "use client";
 
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { Suspense, use } from "react";
+import { LoadErrorBoundary } from "#/components/common/load-error-boundary";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -14,9 +15,7 @@ import {
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
-import { toast } from "#/components/ui/use-toast";
 import { getEscalationsPerTicket } from "#/lib/actions/ticket";
-import type { TicketEscalation } from "#/lib/actions/ticket/types";
 import type { TicketData } from "./columns";
 
 const formatSafeDate = (date: Date | string | null | undefined) => {
@@ -27,51 +26,15 @@ const formatSafeDate = (date: Date | string | null | undefined) => {
 
 export function ViewTicketDialog({
   ticket,
-  open,
+  escalations,
   onOpenChange,
 }: {
-  ticket: TicketData | undefined;
-  open: boolean;
+  ticket: TicketData;
+  escalations: ReturnType<typeof getEscalationsPerTicket>;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [escalations, setEscalations] = useState<TicketEscalation[]>([]);
-  const [loadingEscalations, setLoadingEscalations] = useState(false);
-
-  // effect: loads the ticket's escalations when the parent opens the dialog
-  useEffect(() => {
-    if (!open || !ticket?.id) return;
-
-    let cancelled = false;
-    const fetchEscalations = async () => {
-      setLoadingEscalations(true);
-      setEscalations([]);
-      try {
-        const result = await getEscalationsPerTicket(ticket.id);
-        if (cancelled) return;
-        if (result.success && result.data) {
-          setEscalations(result.data);
-        } else {
-          toast({ variant: "destructive", description: "Could not load the escalations." });
-        }
-      } catch {
-        if (!cancelled) {
-          toast({ variant: "destructive", description: "Could not load the escalations." });
-        }
-      } finally {
-        if (!cancelled) setLoadingEscalations(false);
-      }
-    };
-
-    void fetchEscalations();
-    return () => {
-      cancelled = true;
-    };
-  }, [open, ticket?.id]);
-
-  if (!ticket) return null;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -128,68 +91,18 @@ export function ViewTicketDialog({
             <div className="text-sm font-medium text-shamiri-text-grey uppercase mb-3">
               Escalation History
             </div>
-            {loadingEscalations ? (
-              <div className="space-y-3">
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-              </div>
-            ) : escalations.length === 0 ? (
-              <div className="text-sm text-shamiri-text-grey">No escalations</div>
-            ) : (
-              <div className="relative">
-                <div className="absolute left-[18px] top-3 h-[calc(100%-24px)] w-1 bg-shamiri-new-blue/30 rounded-full" />
-                <div className="space-y-4">
-                  {[...escalations].reverse().map((escalation, index) => {
-                    const stepNumber = escalations.length - index;
-                    return (
-                      <div key={escalation.id} className="relative flex gap-3 pl-10">
-                        <div className="absolute left-2 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-new-blue text-white text-xs font-bold z-10">
-                          {stepNumber}
-                        </div>
-                        <div className="flex-1 rounded-md border border-shamiri-light-grey bg-background p-3">
-                          <div className="flex flex-col gap-3">
-                            <div className="flex flex-row items-center justify-center gap-2 sm:gap-3">
-                              <div className="flex flex-col items-center gap-1">
-                                <Badge variant="default" className="text-xs">
-                                  {escalation.escalatedByRole?.toLowerCase() ?? "unknown"}
-                                </Badge>
-                                <span className="text-xs sm:text-sm font-medium">
-                                  {escalation.escalatedByName ?? "Unknown"}
-                                </span>
-                              </div>
-                              <Icons.chevronRight className="h-4 w-4 text-shamiri-new-blue shrink-0" />
-                              <div className="flex flex-col items-center gap-1">
-                                <Badge variant="outline" className="text-xs">
-                                  {escalation.escalatedToRole?.toLowerCase() ?? "unknown"}
-                                </Badge>
-                                <span className="text-xs sm:text-sm font-medium">
-                                  {escalation.escalatedToName ?? "Unknown"}
-                                </span>
-                              </div>
-                            </div>
-                            <Separator className="my-1" />
-                            <div className="flex flex-col gap-1">
-                              <span className="text-xs text-shamiri-text-grey uppercase">
-                                Reason
-                              </span>
-                              <span className="text-sm text-shamiri-text-dark-grey">
-                                {escalation.escalationReason}
-                              </span>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <span className="text-xs text-shamiri-text-grey uppercase">Date</span>
-                              <span className="text-sm">
-                                {formatSafeDate(escalation.createdAt)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            <LoadErrorBoundary message="Could not load the escalations.">
+              <Suspense
+                fallback={
+                  <div className="space-y-3">
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                }
+              >
+                <EscalationHistory escalations={escalations} />
+              </Suspense>
+            </LoadErrorBoundary>
           </div>
         </div>
         <div className="mt-6 flex justify-end">
@@ -204,5 +117,69 @@ export function ViewTicketDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function EscalationHistory({
+  escalations: escalationsPromise,
+}: {
+  escalations: ReturnType<typeof getEscalationsPerTicket>;
+}) {
+  const result = use(escalationsPromise);
+  const escalations = result.data ?? [];
+  if (!result.success || escalations.length === 0) {
+    return <div className="text-sm text-shamiri-text-grey">No escalations</div>;
+  }
+
+  return (
+    <div className="relative">
+      <div className="absolute left-[18px] top-3 h-[calc(100%-24px)] w-1 bg-shamiri-new-blue/30 rounded-full" />
+      <div className="space-y-4">
+        {[...escalations].reverse().map((escalation, index) => {
+          const stepNumber = escalations.length - index;
+          return (
+            <div key={escalation.id} className="relative flex gap-3 pl-10">
+              <div className="absolute left-2 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-new-blue text-white text-xs font-bold z-10">
+                {stepNumber}
+              </div>
+              <div className="flex-1 rounded-md border border-shamiri-light-grey bg-background p-3">
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-row items-center justify-center gap-2 sm:gap-3">
+                    <div className="flex flex-col items-center gap-1">
+                      <Badge variant="default" className="text-xs">
+                        {escalation.escalatedByRole?.toLowerCase() ?? "unknown"}
+                      </Badge>
+                      <span className="text-xs sm:text-sm font-medium">
+                        {escalation.escalatedByName ?? "Unknown"}
+                      </span>
+                    </div>
+                    <Icons.chevronRight className="h-4 w-4 text-shamiri-new-blue shrink-0" />
+                    <div className="flex flex-col items-center gap-1">
+                      <Badge variant="outline" className="text-xs">
+                        {escalation.escalatedToRole?.toLowerCase() ?? "unknown"}
+                      </Badge>
+                      <span className="text-xs sm:text-sm font-medium">
+                        {escalation.escalatedToName ?? "Unknown"}
+                      </span>
+                    </div>
+                  </div>
+                  <Separator className="my-1" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-shamiri-text-grey uppercase">Reason</span>
+                    <span className="text-sm text-shamiri-text-dark-grey">
+                      {escalation.escalationReason}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-shamiri-text-grey uppercase">Date</span>
+                    <span className="text-sm">{formatSafeDate(escalation.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

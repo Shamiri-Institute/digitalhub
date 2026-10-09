@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useEffectEvent, useState } from "react";
+import { Suspense, use } from "react";
+import { LoadErrorBoundary } from "#/components/common/load-error-boundary";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
@@ -11,7 +12,6 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
-import { toast } from "#/components/ui/use-toast";
 import { getStudentTriageHistory } from "#/lib/actions/triage";
 
 type HistoryEvent = Awaited<ReturnType<typeof getStudentTriageHistory>>[number];
@@ -86,44 +86,16 @@ function HistoryRow({ event }: { event: HistoryEvent }) {
 }
 
 export default function StudentTriageHistoryModal({
-  isOpen,
   onClose,
-  studentId,
   studentName,
+  events,
 }: {
-  isOpen: boolean;
   onClose: () => void;
-  studentId: string;
   studentName?: string | null;
+  events: ReturnType<typeof getStudentTriageHistory>;
 }) {
-  const [loadedHistory, setLoadedHistory] = useState<{
-    studentId: string;
-    events: HistoryEvent[];
-  } | null>(null);
-  const loading = loadedHistory?.studentId !== studentId;
-  const history = loadedHistory?.events ?? [];
-  const closeAfterFailedLoad = useEffectEvent(onClose);
-
-  // effect: isOpen is set by the parent; loads the history when it opens
-  useEffect(() => {
-    if (!isOpen || !studentId) return;
-    let cancelled = false;
-    getStudentTriageHistory(studentId)
-      .then((events) => {
-        if (!cancelled) setLoadedHistory({ studentId, events });
-      })
-      .catch(() => {
-        if (cancelled) return;
-        toast({ variant: "destructive", description: "Could not load the triage history." });
-        closeAfterFailedLoad();
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen, studentId]);
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">Student triage history</DialogTitle>
@@ -133,9 +105,9 @@ export default function StudentTriageHistoryModal({
         </DialogHeader>
 
         <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
-          {loading && (
-            <div>
-              {HISTORY_SKELETONS.map((id) => (
+          <LoadErrorBoundary message="Could not load the triage history.">
+            <Suspense
+              fallback={HISTORY_SKELETONS.map((id) => (
                 <div key={id} className="rounded-lg border p-4 space-y-2">
                   <div className="flex justify-between">
                     <Skeleton className="h-4 w-20" />
@@ -144,14 +116,10 @@ export default function StudentTriageHistoryModal({
                   <Skeleton className="h-4 w-32" />
                 </div>
               ))}
-            </div>
-          )}
-          {!loading && history.length === 0 && (
-            <p className="py-6 text-center text-sm text-shamiri-text-grey">
-              No triage history for this student in your sessions.
-            </p>
-          )}
-          {!loading && history.map((event) => <HistoryRow key={event.id} event={event} />)}
+            >
+              <HistoryRows events={events} />
+            </Suspense>
+          </LoadErrorBoundary>
         </div>
 
         <DialogFooter>
@@ -162,4 +130,16 @@ export default function StudentTriageHistoryModal({
       </DialogContent>
     </Dialog>
   );
+}
+
+function HistoryRows({ events }: { events: ReturnType<typeof getStudentTriageHistory> }) {
+  const history = use(events);
+  if (history.length === 0) {
+    return (
+      <p className="py-6 text-center text-sm text-shamiri-text-grey">
+        No triage history for this student in your sessions.
+      </p>
+    );
+  }
+  return history.map((event) => <HistoryRow key={event.id} event={event} />);
 }

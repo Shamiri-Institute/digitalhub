@@ -3,21 +3,26 @@
 import type { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import type { Dispatch, SetStateAction } from "react";
 import { TicketDropdown } from "#/components/common/ticket/ticket-dropdown";
 import type { FullTicket } from "#/lib/actions/ticket/types";
 import { cn } from "#/lib/utils";
 
 export type TicketData = FullTicket;
 
-export const columns = (state: {
-  setTicket: Dispatch<SetStateAction<TicketData | undefined>>;
-  setViewDialog: Dispatch<SetStateAction<boolean>>;
-  setResolutionDialog: Dispatch<SetStateAction<boolean | "view">>;
-  setEscalateDialog: Dispatch<SetStateAction<boolean>>;
-  setReassignDialog: Dispatch<SetStateAction<boolean | "view">>;
+export type TicketDialogKind =
+  | "view"
+  | "resolve"
+  | "viewResolution"
+  | "escalate"
+  | "reassign"
+  | "viewReassignment";
+
+export type TicketTableState = {
+  openDialog: (kind: TicketDialogKind, ticket: TicketData) => void;
   role: ImplementerRole;
-}): ColumnDef<TicketData>[] => {
+};
+
+export const columns = (state: TicketTableState): ColumnDef<TicketData>[] => {
   return [
     {
       accessorKey: "createdAt",

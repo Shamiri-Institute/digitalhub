@@ -40,7 +40,11 @@ import {
 } from "#/lib/actions/session/session";
 import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
-import { getTriageEventByStudentAndSession, getTriageEventsForSession } from "#/lib/actions/triage";
+import {
+  getStudentTriageHistory,
+  getTriageEventByStudentAndSession,
+  getTriageEventsForSession,
+} from "#/lib/actions/triage";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
 export default function StudentAttendance({
@@ -75,8 +79,10 @@ export default function StudentAttendance({
     sessionId: string;
     byStudent: Record<string, TriageEventWithRelations>;
   } | null>(null);
-  const [historyModalOpen, setHistoryModalOpen] = useState(false);
-  const [historyStudent, setHistoryStudent] = useState<StudentAttendanceData | undefined>();
+  const [history, setHistory] = useState<{
+    student: StudentAttendanceData;
+    events: ReturnType<typeof getStudentTriageHistory>;
+  } | null>(null);
 
   const [sessionAttendances, setSessionAttendances] = useState<
     Awaited<ReturnType<typeof fetchSessionAttendances>>
@@ -175,8 +181,8 @@ export default function StudentAttendance({
     setAttendance,
     setAttendanceDialog: setMarkAttendanceDialog,
     openTriageModal,
-    setHistoryStudent,
-    setHistoryModalOpen,
+    openHistory: (student: StudentAttendanceData) =>
+      setHistory({ student, events: getStudentTriageHistory(student.id) }),
     triageEventsByStudent,
     attendanceByStudentId,
     loadingAttendances,
@@ -258,6 +264,7 @@ export default function StudentAttendance({
         if (!open) {
           setAttendanceFetchId(null);
           setSessionAttendances([]);
+          setHistory(null);
         }
       }}
       modal={true}
@@ -428,12 +435,11 @@ export default function StudentAttendance({
             onSuccess={toastOnError(reloadTriageEventsAfterSave)}
           />
         )}
-        {historyStudent && (
+        {history && (
           <StudentTriageHistoryModal
-            isOpen={historyModalOpen}
-            onClose={() => setHistoryModalOpen(false)}
-            studentId={historyStudent.id}
-            studentName={historyStudent.studentName}
+            onClose={() => setHistory(null)}
+            studentName={history.student.studentName}
+            events={history.events}
           />
         )}
       </DialogContent>
@@ -526,8 +532,7 @@ const columns = (state: {
   setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   openTriageModal: (triageTarget: StudentAttendanceData, readOnly: boolean) => void;
-  setHistoryStudent: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
-  setHistoryModalOpen: Dispatch<SetStateAction<boolean>>;
+  openHistory: (student: StudentAttendanceData) => void;
   triageEventsByStudent: Record<string, TriageEventWithRelations>;
   attendanceByStudentId: Record<
     string,
@@ -621,11 +626,7 @@ const columns = (state: {
     id: "button",
     cell: ({ row }) => (
       <StudentAttendanceMenu
-        state={{
-          ...state,
-          setHistoryStudent: state.setHistoryStudent,
-          setHistoryModalOpen: state.setHistoryModalOpen,
-        }}
+        state={state}
         attendance={row.original}
         disabled={!row.getCanSelect() || state.loadingAttendances}
         isFellow={state.role === ImplementerRole.FELLOW}

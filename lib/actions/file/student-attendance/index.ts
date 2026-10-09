@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, isNull, or, type SQL, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, type SQL } from "drizzle-orm";
 
 import { getCurrentUserSession } from "#/app/auth";
 import { db, isSerializationFailure } from "#/db/client";
@@ -8,6 +8,7 @@ import { ImplementerRole } from "#/db/enums";
 import {
   attendanceDocuments,
   fellow,
+  hub,
   hubCoordinator,
   interventionGroup,
   school,
@@ -45,8 +46,19 @@ class StaleAttendanceUploadError extends Error {
 function buildAttendanceScopeFilter(
   role: ImplementerRole | undefined,
   identifier: string | null | undefined,
+  implementerId: string | undefined,
 ): SQL | null {
-  if (role === ImplementerRole.ADMIN) return sql`true`;
+  if (role === ImplementerRole.ADMIN) {
+    if (!implementerId) return null;
+    return inArray(
+      interventionGroup.schoolId,
+      db
+        .select({ id: school.id })
+        .from(school)
+        .innerJoin(hub, eq(school.hubId, hub.id))
+        .where(eq(hub.implementerId, implementerId)),
+    );
+  }
   if (!identifier) return null;
 
   switch (role) {
@@ -112,7 +124,11 @@ export async function getAttendanceDocument(
 
     if (role !== ImplementerRole.ADMIN && !identifier) throw new Error("Forbidden");
 
-    const scopeFilter = buildAttendanceScopeFilter(role, identifier);
+    const scopeFilter = buildAttendanceScopeFilter(
+      role,
+      identifier,
+      session.user.activeMembership?.implementerId,
+    );
     if (!scopeFilter) throw new Error("Forbidden");
 
     const [group] = await db
