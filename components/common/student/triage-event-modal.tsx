@@ -205,7 +205,7 @@ export default function TriageEventModal({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value ?? ""}
-                    disabled={readOnly}
+                    disabled={readOnly || loadingExistingEvent}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -239,7 +239,7 @@ export default function TriageEventModal({
                     <Select
                       onValueChange={field.onChange}
                       value={field.value ?? ""}
-                      disabled={readOnly}
+                      disabled={readOnly || loadingExistingEvent}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -268,7 +268,7 @@ export default function TriageEventModal({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value ?? ""}
-                    disabled={readOnly}
+                    disabled={readOnly || loadingExistingEvent}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -302,7 +302,7 @@ export default function TriageEventModal({
                     <Select
                       onValueChange={field.onChange}
                       value={field.value ?? ""}
-                      disabled={readOnly}
+                      disabled={readOnly || loadingExistingEvent}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -335,7 +335,7 @@ export default function TriageEventModal({
                     <Select
                       onValueChange={field.onChange}
                       value={field.value ?? ""}
-                      disabled={readOnly}
+                      disabled={readOnly || loadingExistingEvent}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -369,7 +369,7 @@ export default function TriageEventModal({
                       className="resize-none"
                       maxLength={200}
                       rows={2}
-                      disabled={readOnly}
+                      disabled={readOnly || loadingExistingEvent}
                       {...field}
                     />
                   </FormControl>

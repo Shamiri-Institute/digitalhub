@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -81,14 +81,22 @@ export default function CaseNotesForm({
   const [open, setDialogOpen] = useState<boolean>(false);
   const [showOtherInput, setShowOtherInput] = useState(false);
   const [hasExistingNotes, setHasExistingNotes] = useState(false);
-  const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>>>([]);
+  // null until the case's notes load; the session select waits for them, so choosing a session
+  // prefills from loaded notes instead of wiping what the user typed when they arrive.
+  const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>> | null>(
+    null,
+  );
 
   const onOpenChange = (nextOpen: boolean) => {
     setDialogOpen(nextOpen);
     if (nextOpen) {
+      setNotes(null);
       getClinicalCaseNotes(clinicalCase.id)
         .then(setNotes)
-        .catch(() => toast({ title: "Failed to load case notes", variant: "destructive" }));
+        .catch(() => {
+          setNotes([]);
+          toast({ title: "Failed to load case notes", variant: "destructive" });
+        });
     }
   };
 
@@ -111,14 +119,8 @@ export default function CaseNotesForm({
     },
   });
 
-  const sessionIdWatcher = form.watch("sessionId");
-
-  // effect: prefills the form from the loaded notes when the watched session changes or the notes arrive
-  useEffect(() => {
-    const sessionId = sessionIdWatcher;
-    if (!sessionId) return;
-
-    const existingNote = notes.find((note) => note.sessionId === sessionId);
+  const selectSession = (sessionId: string) => {
+    const existingNote = notes?.find((note) => note.sessionId === sessionId);
 
     setHasExistingNotes(!!existingNote);
 
@@ -158,7 +160,7 @@ export default function CaseNotesForm({
       });
       setShowOtherInput(false);
     }
-  }, [sessionIdWatcher, notes, form]);
+  };
 
   const onSubmit = async (data: CaseReportFormValues) => {
     try {
@@ -224,9 +226,9 @@ export default function CaseNotesForm({
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={!clinicalCase.clinicalSessionAttendance?.length}
+                    onValueChange={selectSession}
+                    value={field.value}
+                    disabled={!clinicalCase.clinicalSessionAttendance?.length || notes === null}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -235,7 +237,7 @@ export default function CaseNotesForm({
                     </FormControl>
                     <SelectContent>
                       {clinicalCase.clinicalSessionAttendance?.map((session) => {
-                        const hasNotes = notes.some((note) => note.sessionId === session.id);
+                        const hasNotes = notes?.some((note) => note.sessionId === session.id);
                         return (
                           <SelectItem key={session.id} value={session.id}>
                             <div className="flex w-full items-center justify-between">
