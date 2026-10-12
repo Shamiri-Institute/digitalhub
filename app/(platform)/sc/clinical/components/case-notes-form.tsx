@@ -83,9 +83,7 @@ export default function CaseNotesForm({
   const [hasExistingNotes, setHasExistingNotes] = useState(false);
   // null until the case's notes load; the session select waits for them, so choosing a session
   // prefills from loaded notes instead of wiping what the user typed when they arrive.
-  const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>> | null>(
-    null,
-  );
+  const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>> | null>(null);
 
   const onOpenChange = (nextOpen: boolean) => {
     setDialogOpen(nextOpen);

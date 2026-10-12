@@ -76,11 +76,7 @@ export async function signInWithEmail(context: BrowserContext, email: string) {
  * without touching seed data or another spec's case. `remove` deletes everything that references
  * it, then the case and the student.
  */
-export async function createClinicalCase(owner: {
-  schoolId: string;
-  currentSupervisorId?: string;
-  clinicalLeadId?: string;
-}) {
+export async function createClinicalCase(owner: { schoolId: string; currentSupervisorId: string }) {
   const label = `e2e-case-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const studentId = objectId("stu");
   const studentName = `${label} student`;
@@ -108,7 +104,6 @@ export async function createClinicalCase(owner: {
       studentId,
       schoolId: owner.schoolId,
       currentSupervisorId: owner.currentSupervisorId,
-      clinicalLeadId: owner.clinicalLeadId,
       caseStatus: "Active",
       riskStatus: "No",
       pseudonym: label,

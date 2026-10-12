@@ -1,4 +1,4 @@
-import { type BrowserContext, expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -51,15 +51,6 @@ async function deleteAdmin(admin: { id: string; profileId: string }) {
   await db.delete(user).where(eq(user.id, admin.id));
 }
 
-/** Signs a seeded user in with a new session and returns that session's token. */
-async function signInWithNewSession(context: BrowserContext, email: string) {
-  const cookie = await sessionCookieFor(email);
-  await context.addCookies([cookie]);
-  const [token] = decodeURIComponent(cookie.value).split(".");
-  if (!token) throw new Error("The session cookie has no token");
-  return token;
-}
-
 test("a request without a session cookie goes to the login page with the path", async ({
   request,
 }) => {
@@ -80,8 +71,9 @@ const pagesThatLoadTheProfile: Array<[Role, string]> = [
 for (const [role, route] of pagesThatLoadTheProfile) {
   test(`deleting the session row sends ${route} to the login page`, async ({ context, page }) => {
     // Only this test's session is deleted; the seeded user's other sessions are left alone.
-    const { email } = await pickUser(role);
-    const token = await signInWithNewSession(context, email);
+    const cookie = await sessionCookieFor((await pickUser(role)).email);
+    await context.addCookies([cookie]);
+    const [token = ""] = decodeURIComponent(cookie.value).split(".");
     await page.goto(getUrl(route));
     await expect(page).toHaveURL(getUrl(route));
     // Sets the session data cookie as well, if a cookie cache were enabled.
