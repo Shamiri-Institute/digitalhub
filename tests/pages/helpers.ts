@@ -23,6 +23,7 @@ export async function searchRows(page: Page, text: string, scope: Page | Locator
     expect(visible.every(Boolean)).toBe(true);
   }).toPass();
   for (const box of await boxes.all()) {
+    await waitForHydration(box);
     await box.fill(text);
   }
   return scope.getByRole("row").filter({ hasText: text });
@@ -35,10 +36,8 @@ export function dataRows(page: Page) {
 
 /** A row by the exact text of one of its cells, after searching the table for it. */
 export async function rowWithCell(page: Page, scope: Locator, text: string) {
-  await scope.getByPlaceholder("Search...").fill(text);
-  return scope
-    .getByRole("row")
-    .filter({ has: page.getByRole("cell", { name: text, exact: true }) });
+  const rows = await searchRows(page, text, scope);
+  return rows.filter({ has: page.getByRole("cell", { name: text, exact: true }) });
 }
 
 /** Opens a row's actions menu. Rows re-render while their data loads, so retry the click. */
@@ -66,4 +65,15 @@ export async function scheduleUrl(context: BrowserContext, path: string, date: D
   await context.addCookies([{ name: TIME_ZONE_COOKIE, value: timeZone, domain: "localhost", path: "/" }]);
   const localDate = new Intl.DateTimeFormat("en-CA", { timeZone }).format(date);
   return getUrl(`${path}${path.includes("?") ? "&" : "?"}date=${localDate}`);
+}
+
+/**
+ * Waits until React has hydrated `element`. On a production build the HTML arrives before the
+ * JavaScript, and text typed into an input before hydration is reset by it. React attaches its
+ * props to a DOM node when it hydrates it.
+ */
+export async function waitForHydration(element: Locator) {
+  await expect
+    .poll(() => element.evaluate((node) => Object.keys(node).some((key) => key.startsWith("__reactProps"))))
+    .toBe(true);
 }
