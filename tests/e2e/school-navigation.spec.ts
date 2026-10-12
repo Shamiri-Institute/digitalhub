@@ -28,7 +28,6 @@ for (const flow of flows) {
     page,
     context,
   }) => {
-    test.setTimeout(3 * 60 * 1000);
     await signInAs(context, flow.role);
 
     await page.goto(getUrl(flow.list));

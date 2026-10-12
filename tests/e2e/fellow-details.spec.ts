@@ -12,9 +12,6 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
  * value back and to restore it.
  */
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ timeout: 3 * 60 * 1000 });
-
 type Fixture = {
   fellowId: string;
   fellowName: string;

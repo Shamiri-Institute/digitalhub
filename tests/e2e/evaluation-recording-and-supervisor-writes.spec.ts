@@ -15,8 +15,7 @@ import { getUrl } from "#/tests/pages/helpers";
  * pick fixtures, to read a saved value back and to put rows back.
  */
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
+test.describe.configure({ mode: "serial" });
 
 type EvaluationFixture = {
   email: string;

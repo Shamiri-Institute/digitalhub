@@ -7,7 +7,6 @@
 
 # testing
 /coverage
-tests/fixtures/*-state.json
 app/node_modules/.vitest/results.json
 
 # next.js

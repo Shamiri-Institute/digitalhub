@@ -15,8 +15,7 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
  * add fixtures and to put rows back.
  */
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
+test.describe.configure({ mode: "serial" });
 
 type CaseFixture = { email: string; caseId: string; pseudonym: string };
 type AttendanceFixture = {

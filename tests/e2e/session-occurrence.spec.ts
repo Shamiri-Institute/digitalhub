@@ -11,8 +11,6 @@ import { getUrl } from "#/tests/pages/helpers";
  * unmarked sessions of the same type, the same as on the schedule.
  */
 
-test.describe.configure({ timeout: 3 * 60 * 1000 });
-
 type Fixture = {
   email: string;
   visibleId: string;

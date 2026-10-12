@@ -10,8 +10,6 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
  * dialog loads them when it opens. The database is used only to pick the fixtures.
  */
 
-test.describe.configure({ timeout: 3 * 60 * 1000 });
-
 type Fixture = {
   fellowName: string;
   idNumber: string;

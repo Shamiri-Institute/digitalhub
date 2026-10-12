@@ -5,16 +5,17 @@ import { db } from "#/db/client";
 import { implementerMember, session, user } from "#/db/schema";
 import { sessionCookieFor, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
-import { pickUser } from "#/tests/platform-routes";
+import { type Role, pickUser } from "#/tests/platform-routes";
 
 const loginUrl = new RegExp(`^${getUrl("/login")}`);
 
-async function createSupervisorUser() {
-  const supervisor = await pickUser("SUPERVISOR");
-  const supervisorMembership = await db.query.implementerMember.findFirst({
-    where: (m, { and, eq }) => and(eq(m.userId, supervisor.id), eq(m.role, "SUPERVISOR")),
+/** A new user who shares a seeded user's profile, so a test can end its sessions freely. */
+async function createUser(role: Role = "SUPERVISOR") {
+  const seededUser = await pickUser(role);
+  const seededMembership = await db.query.implementerMember.findFirst({
+    where: (m, { and, eq }) => and(eq(m.userId, seededUser.id), eq(m.role, role)),
   });
-  if (!supervisorMembership) throw new Error("No supervisor membership to copy");
+  if (!seededMembership) throw new Error(`No ${role} membership to copy`);
   const email = `auth-session-${Date.now()}-${Math.random().toString(36).slice(2)}@test.com`;
   const [createdUser] = await db
     .insert(user)
@@ -22,10 +23,10 @@ async function createSupervisorUser() {
     .returning({ id: user.id });
   if (!createdUser) throw new Error("Could not create the test user");
   await db.insert(implementerMember).values({
-    implementerId: supervisorMembership.implementerId,
+    implementerId: seededMembership.implementerId,
     userId: createdUser.id,
-    role: "SUPERVISOR",
-    identifier: supervisorMembership.identifier,
+    role,
+    identifier: seededMembership.identifier,
   });
   return { id: createdUser.id, email };
 }
@@ -43,28 +44,36 @@ test("a request without a session cookie goes to the login page with the path", 
   expect(res.headers().location).toBe("/login?next=%2Fhc%2Fschools");
 });
 
-test("deleting the session row signs the user out on the next request", async ({
-  context,
-  page,
-}) => {
-  const testUser = await createSupervisorUser();
-  try {
-    await signInWithEmail(context, testUser.email);
-    await page.goto(getUrl("/sc/fellows"));
-    await expect(page).toHaveURL(getUrl("/sc/fellows"));
-    // Sets the session data cookie as well, if a cookie cache were enabled.
-    expect((await page.request.get(getUrl("/api/auth/get-session"))).ok()).toBe(true);
+// Each of these pages loads the signed-in user's profile, which must redirect, not crash, once the
+// session behind the cookie is gone.
+const pagesThatLoadTheProfile: Array<[Role, string]> = [
+  ["SUPERVISOR", "/sc/fellows"],
+  ["FELLOW", "/fel/portal"],
+  ["HUB_COORDINATOR", "/hc/schools"],
+  ["OPERATIONS", "/ops/reporting/expenses/payout-history"],
+];
 
-    await db.delete(session).where(eq(session.userId, testUser.id));
-    await page.goto(getUrl("/sc/fellows"));
-    await expect(page).toHaveURL(loginUrl);
-  } finally {
-    await deleteUser(testUser.id);
-  }
-});
+for (const [role, route] of pagesThatLoadTheProfile) {
+  test(`deleting the session row sends ${route} to the login page`, async ({ context, page }) => {
+    const testUser = await createUser(role);
+    try {
+      await signInWithEmail(context, testUser.email);
+      await page.goto(getUrl(route));
+      await expect(page).toHaveURL(getUrl(route));
+      // Sets the session data cookie as well, if a cookie cache were enabled.
+      expect((await page.request.get(getUrl("/api/auth/get-session"))).ok()).toBe(true);
+
+      await db.delete(session).where(eq(session.userId, testUser.id));
+      await page.goto(getUrl(route));
+      await expect(page).toHaveURL(loginUrl);
+    } finally {
+      await deleteUser(testUser.id);
+    }
+  });
+}
 
 test("signing out from the user menu deletes the session", async ({ context, page }) => {
-  const testUser = await createSupervisorUser();
+  const testUser = await createUser();
   try {
     await signInWithEmail(context, testUser.email);
     await page.goto(getUrl("/sc/fellows"));
@@ -84,7 +93,7 @@ test("archiving a signed-in user signs them out and blocks new sessions", async 
   context,
   page,
 }) => {
-  const testUser = await createSupervisorUser();
+  const testUser = await createUser();
   try {
     await signInWithEmail(context, testUser.email);
     await page.goto(getUrl("/sc/fellows"));

@@ -13,7 +13,7 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
  * the complaint. The database is read only to pick fixtures and to delete the complaint.
  */
 
-test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
+test.describe.configure({ mode: "serial" });
 
 const supervisorEmail = "martin.odegaard@test.com";
 const complaintComment = `E2E complaint ${Date.now()}`;

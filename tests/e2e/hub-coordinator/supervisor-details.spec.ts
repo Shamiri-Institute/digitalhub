@@ -17,8 +17,7 @@ let targetUserId: string;
 let ownHubEmail: string;
 let otherHubEmail: string;
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
+test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async () => {
   const [supervisors, coordinators] = await Promise.all([

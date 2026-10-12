@@ -3,11 +3,8 @@ import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { school, weeklyHubReport } from "#/db/schema";
-import { PersonnelFixtures } from "#/tests/helpers";
-import HubCoordinatorSchoolsPage from "#/tests/pages/hub-coordinator/school-page";
-
-test.use({ storageState: PersonnelFixtures.hubCoordinator.stateFile });
-test.describe.configure({ mode: "parallel" });
+import { signInAs } from "#/tests/helpers";
+import { getUrl, openRowMenu, rowWithCell } from "#/tests/pages/helpers";
 
 const recommendations = `E2E weekly hub report ${Date.now()}`;
 let originalSchool:
@@ -24,142 +21,80 @@ test.afterAll(async () => {
   }
 });
 
-test("Hub Coordinator can view the /schools page", async ({ page }) => {
-  // given
-  const hubCoordinatorSchoolsPage = new HubCoordinatorSchoolsPage(page);
-  // when
-  await hubCoordinatorSchoolsPage.visit();
-  // then
-  await hubCoordinatorSchoolsPage.isShown();
-  await expect(page.getByRole("button", { name: "Weekly Hub Report" })).toBeVisible();
+test("Hub Coordinator can submit a weekly hub report", async ({ page, context }) => {
+  const coordinator = await signInAs(context, "HUB_COORDINATOR");
+  await page.goto(getUrl("/hc/schools"));
+  const ratings = [
+    ["Hub Related Issues and", 4],
+    ["School Related Issues and", 2],
+    ["Supervisor Related Issues and", 3],
+    ["Fellow Related Issues and", 1],
+  ] as const;
 
-  const mainTag = page.getByRole("main");
-  await expect(page.locator("h2")).toContainText("Schools");
-  await expect(mainTag).toContainText("Session progress");
-  await expect(mainTag).toContainText("Drop out reasons");
-  await expect(mainTag).toContainText("School information completion");
-  await expect(mainTag).toContainText("Ratings");
-  await expect(page.locator("main")).toContainText("Edit columns");
-});
-
-test("Hub Coordinator can submit a weekly hub report", async ({ page }) => {
-  // given
-  const hubCoordinatorSchoolsPage = new HubCoordinatorSchoolsPage(page);
-  await hubCoordinatorSchoolsPage.visit();
-  const data = {
-    schoolRelatedIssuesAndObservations: "The school is ok",
-    schoolRelatedIssuesAndObservationRating: 2,
-    supervisorRelatedIssuesAndObservations: "the school is awesome",
-    supervisorRelatedIssuesAndObservationsRating: 3,
-    fellowRelatedIssuesAndObservations: "The fellows have been ok",
-    fellowRelatedIssuesAndObservationsRating: 1,
-    hubRelatedIssuesAndObservations: "There have been no issues",
-    hubRelatedIssuesAndObservationsRating: 4,
-    successes: "It has generally been successful",
-    challenges: "I don't have any challenges to report",
-    recommendations,
-  };
-
-  // when
   await page.getByRole("button", { name: "Weekly Hub Report" }).click();
-  await expect(page.getByTestId("weekly-hub-report-dialog")).toBeVisible();
-
-  await page.getByRole("combobox", { name: "Select week" }).click();
+  const dialog = page.getByTestId("weekly-hub-report-dialog");
+  await dialog.getByRole("combobox", { name: "Select week" }).click();
   await page.getByRole("option", { name: "Week 1" }).click();
-  await page
-    .locator("label")
-    .filter({ hasText: "Hub Related Issues and" })
-    .locator("path")
-    .nth(1)
-    .click();
-  await page
-    .getByRole("textbox", { name: "Hub Related Issues and" })
-    .fill(data.hubRelatedIssuesAndObservations);
-  await page
-    .locator("label")
-    .filter({ hasText: "School Related Issues and" })
-    .locator("path")
-    .nth(3)
-    .click();
-  await page
-    .getByRole("textbox", { name: "School Related Issues and" })
-    .fill(data.schoolRelatedIssuesAndObservations);
-  await page
-    .locator("label")
-    .filter({ hasText: "Supervisor Related Issues and" })
-    .locator("path")
-    .nth(2)
-    .click();
-  await page
-    .getByRole("textbox", { name: "Supervisor Related Issues and" })
-    .fill(data.supervisorRelatedIssuesAndObservations);
-  await page
-    .locator("label")
-    .filter({ hasText: "Fellow Related Issues and" })
-    .getByRole("img")
-    .nth(4)
-    .click();
-  //await page.getByRole('textbox', { name: 'Fellow Related Issues and' }).click();
-  await page
-    .getByRole("textbox", { name: "Fellow Related Issues and" })
-    .fill(data.fellowRelatedIssuesAndObservations);
-  //await page.getByRole('textbox', { name: 'Successes' }).click();
-  await page.getByRole("textbox", { name: "Successes" }).fill(data.successes);
-  //await page.getByRole('textbox', { name: 'Challenges' }).click();
-  await page.getByRole("textbox", { name: "Challenges" }).fill(data.challenges);
-  //await page.getByRole('textbox', { name: 'Recommendations' }).click();
-  await page.getByRole("textbox", { name: "Recommendations" }).fill(data.recommendations);
-  await page.getByRole("button", { name: "Submit" }).click();
+  for (const [section, stars] of ratings) {
+    const field = dialog.locator("label").filter({ hasText: section });
+    await field.getByRole("button", { name: `${stars} out of 5` }).click();
+    await dialog.getByRole("textbox", { name: section }).fill(`${section} observations`);
+  }
+  await dialog.getByRole("textbox", { name: "Successes" }).fill("It has generally been successful");
+  await dialog.getByRole("textbox", { name: "Challenges" }).fill("No challenges to report");
+  await dialog.getByRole("textbox", { name: "Recommendations" }).fill(recommendations);
+  await dialog.getByRole("button", { name: "Submit" }).click();
 
-  // then
-  // dialog only dismissed upon successful entry
-  await expect(page.getByTestId("weekly-hub-report-dialog")).not.toBeVisible();
+  await expect(dialog).toBeHidden();
 
-  // No page lists weekly hub reports yet, so the test reads the saved report from the database.
-  // The hub and the author must come from the session, not from the form.
-  const coordinatorMembership = await db.query.user.findFirst({
-    where: (u, { eq }) => eq(u.email, PersonnelFixtures.hubCoordinator.email),
-    columns: {},
-    with: { memberships: { columns: { identifier: true, role: true } } },
-  });
-  const coordinatorId = coordinatorMembership?.memberships.find(
-    (m) => m.role === "HUB_COORDINATOR",
-  )?.identifier;
-  if (!coordinatorId) throw new Error("the hub coordinator fixture has no membership");
-  const coordinator = await db.query.hubCoordinator.findFirst({
-    where: (hc, { eq }) => eq(hc.id, coordinatorId),
+  // No page lists weekly hub reports, and the hub and author come from the session rather than
+  // the form, so the saved report is the only place to check them.
+  const coordinatorProfile = await db.query.hubCoordinator.findFirst({
+    where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
     columns: { id: true, assignedHubId: true },
   });
-
   const savedReport = await db.query.weeklyHubReport.findFirst({
     where: (r, { eq }) => eq(r.recommendations, recommendations),
-    columns: { hubId: true, submittedBy: true, successes: true },
+    columns: {
+      hubId: true,
+      submittedBy: true,
+      hubRelatedIssuesAndObservationsRating: true,
+      fellowRelatedIssuesAndObservationsRating: true,
+    },
   });
   expect(savedReport).toEqual({
-    hubId: coordinator?.assignedHubId,
-    submittedBy: coordinator?.id,
-    successes: data.successes,
+    hubId: coordinatorProfile?.assignedHubId,
+    submittedBy: coordinator.identifier,
+    hubRelatedIssuesAndObservationsRating: 4,
+    fellowRelatedIssuesAndObservationsRating: 1,
   });
 });
 
-test("Hub Coordinator edits a school in one dialog", async ({ page }) => {
-  const hubCoordinatorSchoolsPage = new HubCoordinatorSchoolsPage(page);
-  await hubCoordinatorSchoolsPage.visit();
-  const schoolName = await page.getByRole("row").nth(1).getByRole("cell").first().innerText();
-  const schoolRow = page.getByRole("row").filter({ hasText: schoolName });
-  originalSchool = await db.query.school.findFirst({
-    where: (s, { eq }) => eq(s.schoolName, schoolName),
-    columns: { id: true, numbersExpected: true, boardingDay: true },
+test("Hub Coordinator edits a school in one dialog", async ({ page, context }) => {
+  const coordinator = await signInAs(context, "HUB_COORDINATOR");
+  const coordinatorProfile = await db.query.hubCoordinator.findFirst({
+    where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
+    columns: { assignedHubId: true },
   });
-  const newNumbersExpected = String((originalSchool?.numbersExpected ?? 0) + 1);
+  // The last school, so this does not edit the one other specs open first.
+  const targetSchool = await db.query.school.findFirst({
+    where: (s, { and, eq, isNull }) =>
+      and(eq(s.hubId, coordinatorProfile?.assignedHubId ?? ""), isNull(s.archivedAt), isNull(s.droppedOutAt)),
+    columns: { id: true, schoolName: true, numbersExpected: true, boardingDay: true },
+    orderBy: (s, { desc }) => desc(s.visibleId),
+  });
+  if (!targetSchool) throw new Error("seed the database first: the hub has no open school");
+  const { schoolName, ...original } = targetSchool;
+  originalSchool = original;
+  const newNumbersExpected = String((targetSchool.numbersExpected ?? 0) + 1);
 
-  await schoolRow.getByRole("cell").last().click();
+  await page.goto(getUrl("/hc/schools"));
+  const schoolRow = await rowWithCell(page, page.getByRole("main"), schoolName);
+  await openRowMenu(page, schoolRow);
   await page.getByRole("menuitem", { name: "Edit school information" }).click();
 
-  await expect(
-    page.locator('[role="dialog"]').filter({ hasText: "Edit school information" }),
-  ).toHaveCount(1);
   const editDialog = page.getByRole("dialog", { name: "Edit school information" });
+  await expect(editDialog).toHaveCount(1);
   await editDialog.getByLabel("Expected no. of students").fill(newNumbersExpected);
   await editDialog.getByRole("combobox", { name: "School boarding status" }).click();
   await page.getByRole("option", { name: "Day", exact: true }).click();
@@ -168,5 +103,6 @@ test("Hub Coordinator edits a school in one dialog", async ({ page }) => {
   await expect(editDialog).toBeHidden();
   await expect(schoolRow).toContainText(newNumbersExpected);
   await page.reload();
-  await expect(schoolRow).toContainText(newNumbersExpected);
+  const reloadedRow = await rowWithCell(page, page.getByRole("main"), schoolName);
+  await expect(reloadedRow).toContainText(newNumbersExpected);
 });

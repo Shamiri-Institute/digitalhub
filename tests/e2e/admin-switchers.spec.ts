@@ -10,7 +10,7 @@ import { getUrl } from "#/tests/pages/helpers";
  * layout, so after a switch the header must show the new project and implementer.
  */
 
-test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
+test.describe.configure({ mode: "serial" });
 
 type Admin = { userId: string; email: string; activeProjectId: string; activeProjectName: string };
 type Project = { id: string; name: string; implementerName: string | null };

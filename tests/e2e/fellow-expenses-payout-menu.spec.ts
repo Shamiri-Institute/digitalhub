@@ -10,8 +10,6 @@ type Viewer = { path: string; email: string; fellowName: string; payouts: number
 
 const viewers: Partial<Record<"hc" | "sc" | "ops", Viewer>> = {};
 
-test.describe.configure({ timeout: 3 * 60 * 1000 });
-
 test.beforeAll(async () => {
   // Fellows with payouts in a default-project hub, whose name no other fellow shares.
   const { rows: fellows } = await db.execute<{

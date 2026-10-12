@@ -23,8 +23,7 @@ import { sessionDisplayName } from "#/lib/utils";
  * rows back.
  */
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
+test.describe.configure({ mode: "serial" });
 
 type Coordinator = { email: string; hubId: string; implementerId: string };
 type SchoolFixture = {
@@ -524,12 +523,9 @@ test("a borrowed fellow's triage event and supervisor list use the session's hub
   const attendance = page.getByRole("dialog", { name: "Mark student attendance" });
   await expect(attendance.getByRole("checkbox", { name: "Select row" }).first()).toBeVisible();
   const form = page.getByRole("dialog", { name: "Document triage" });
-  // The table re-renders while the dev server compiles, which can close the menu: retry both.
-  await expect(async () => {
-    await openRowMenu(page, await rowWithCell(page, attendance, borrowed.admissionNumber));
-    await page.getByRole("menuitem", { name: "Triage occurred" }).click({ timeout: 5000 });
-    await expect(form).toBeVisible({ timeout: 2000 });
-  }).toPass({ timeout: 60_000 });
+  await openRowMenu(page, await rowWithCell(page, attendance, borrowed.admissionNumber));
+  await page.getByRole("menuitem", { name: "Triage occurred" }).click();
+  await expect(form).toBeVisible();
   await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
   await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
   await form.getByRole("combobox", { name: "Action taken (required)" }).click();

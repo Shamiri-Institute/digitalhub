@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 const siteUrl = `http://localhost:${process.env.PORT ?? 3000}`;
 
@@ -22,4 +22,20 @@ export async function searchRows(page: Page, text: string) {
 /** Rows that carry data; the empty state renders one row with a single spanning cell. */
 export function dataRows(page: Page) {
   return page.locator("tbody tr").filter({ hasNot: page.locator("td[colspan]") });
+}
+
+/** A row by the exact text of one of its cells, after searching the table for it. */
+export async function rowWithCell(page: Page, scope: Locator, text: string) {
+  await scope.getByPlaceholder("Search...").fill(text);
+  return scope
+    .getByRole("row")
+    .filter({ has: page.getByRole("cell", { name: text, exact: true }) });
+}
+
+/** Opens a row's actions menu. Rows re-render while their data loads, so retry the click. */
+export async function openRowMenu(page: Page, row: Locator) {
+  await expect(async () => {
+    await row.getByRole("cell").last().click();
+    await expect(page.getByRole("menu")).toBeVisible({ timeout: 2000 });
+  }).toPass({ timeout: 30_000 });
 }

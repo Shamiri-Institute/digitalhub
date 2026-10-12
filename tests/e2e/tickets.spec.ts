@@ -9,7 +9,6 @@ import { getUrl } from "#/tests/pages/helpers";
  * ticket dialog), so it catches a write that lands in the wrong shape.
  */
 test("supervisor creates a ticket and can view it in the list", async ({ page, context }) => {
-  test.setTimeout(3 * 60 * 1000);
   await signInAs(context, "SUPERVISOR");
   const subject = `E2E ticket ${Date.now()}`;
 

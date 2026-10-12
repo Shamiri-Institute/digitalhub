@@ -13,8 +13,7 @@ import { getUrl } from "#/tests/pages/helpers";
  * is otherwise used only to pick fixtures and to restore what a test changed.
  */
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
+test.describe.configure({ mode: "serial" });
 
 /** A user with one membership, so the session's active role is the one asked for. */
 async function signableProfiles(table: string, role: string, hubColumn: string) {

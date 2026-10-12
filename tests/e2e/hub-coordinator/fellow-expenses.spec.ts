@@ -26,9 +26,6 @@ type Expected = {
 let coordinatorEmail: string;
 let expected: Expected;
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ timeout: 3 * 60 * 1000 });
-
 test.beforeAll(async () => {
   const coordinators = await db.query.hubCoordinator.findMany({
     where: (hc, { isNotNull }) => isNotNull(hc.assignedHubId),

@@ -13,8 +13,7 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
  * to pick the fixture, to read the stored rows back and to remove them afterwards.
  */
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
+test.describe.configure({ mode: "serial" });
 
 type Fixture = {
   sessionId: string;

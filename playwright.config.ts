@@ -19,11 +19,12 @@ export default defineConfig({
     stdout: showServerLogs,
     stderr: showServerLogs,
   },
+  // `next dev` compiles each page on first use, which can take longer than the default.
+  timeout: process.env.E2E_PROD ? 30_000 : 3 * 60 * 1000,
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
   workers: isCI ? 1 : undefined,
-  globalSetup: "./tests/global-setup.ts",
   use: { trace: "retain-on-failure" },
   projects: [
     {

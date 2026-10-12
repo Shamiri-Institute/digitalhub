@@ -336,6 +336,7 @@ function RatingStarsInput({
                 onChange(5 - index);
               }}
               type="button"
+              aria-label={`${5 - index} out of 5`}
             >
               <Icons.starRating className="h-full w-full" />
             </button>

@@ -28,8 +28,7 @@ let clinicalLead: Fixture;
 let caseId: string;
 let pseudonym: string;
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
+test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async () => {
   const supervisors = await db.query.supervisor.findMany({

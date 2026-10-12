@@ -19,7 +19,6 @@ type Fixture = {
 };
 
 test("the school breadcrumb and its switcher render on the server", async ({ page, context }) => {
-  test.setTimeout(3 * 60 * 1000);
   const {
     rows: [fixture],
   } = await db.execute<Fixture>(sql`

@@ -13,7 +13,7 @@ import { getUrl } from "#/tests/pages/helpers";
  * give the supervisor a rated session (the report lists rated sessions only) and to clean up.
  */
 
-test.describe.configure({ mode: "serial", timeout: 3 * 60 * 1000 });
+test.describe.configure({ mode: "serial" });
 
 const supervisorEmail = "martin.odegaard@test.com";
 const ratingId = "isr_e2e_eng2231";

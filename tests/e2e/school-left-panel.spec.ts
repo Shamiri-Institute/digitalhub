@@ -13,8 +13,6 @@ import { getUrl } from "#/tests/pages/helpers";
  * session as cancelled without a reload. The test puts the session's status back afterwards.
  */
 
-test.describe.configure({ timeout: 3 * 60 * 1000 });
-
 type Fixture = {
   email: string;
   sessionId: string;

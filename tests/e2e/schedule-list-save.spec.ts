@@ -15,8 +15,6 @@ import { getUrl } from "#/tests/pages/helpers";
  * session unmarked again.
  */
 
-test.describe.configure({ timeout: 3 * 60 * 1000 });
-
 const timeZone = "Africa/Nairobi";
 test.use({ timezoneId: timeZone });
 

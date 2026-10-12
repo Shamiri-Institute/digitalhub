@@ -21,9 +21,6 @@ const NEW_ADMIN_EMAIL = `e2e-admin-access-${Date.now()}@example.com`;
 // A user whose email has capitals, as a sign-in provider can store it.
 const MIXED_CASE_EMAIL = `E2E-Mixed-Case-${Date.now()}@Example.com`;
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ timeout: 3 * 60 * 1000 });
-
 test.afterAll(async () => {
   const created = await db.query.adminUser.findMany({
     where: (a, { eq }) => eq(a.email, NEW_ADMIN_EMAIL),

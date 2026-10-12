@@ -13,9 +13,6 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
  * the rows with a live query. The database is read only.
  */
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ timeout: 3 * 60 * 1000 });
-
 test("an admin sees each fellow's group in the fellow attendance dialog", async ({
   page,
   context,
