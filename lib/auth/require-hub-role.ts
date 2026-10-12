@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "#/db/client";
@@ -12,7 +12,6 @@ type HubRole =
   | typeof ImplementerRole.HUB_COORDINATOR
   | typeof ImplementerRole.FELLOW;
 
-/** The hub a supervisor, hub coordinator or fellow profile belongs to, or null. */
 const hubIdOfProfile = cache(async (role: HubRole, profileId: string) => {
   if (role === ImplementerRole.HUB_COORDINATOR) {
     const coordinator = await db.query.hubCoordinator.findFirst({
@@ -51,7 +50,6 @@ export const requireHubRole = cache(async (...allowedRoles: HubRole[]) => {
   };
 });
 
-/** The hub where a session takes place: the session's hub, else its school's hub. */
 export function hubOfSession(session: {
   hubId: string | null;
   school: { hubId: string | null } | null;
@@ -75,16 +73,31 @@ export async function requireSchoolInHub(schoolId: string | null | undefined, hu
   }
 }
 
+/** Throws unless every fellow belongs to the hub. A missing and a forbidden fellow look the same. */
+export async function requireFellowsInHub(fellowIds: string[], hubId: string) {
+  const uniqueIds = [...new Set(fellowIds)];
+  const inHub =
+    uniqueIds.length === 0
+      ? []
+      : await db
+          .select({ id: fellow.id })
+          .from(fellow)
+          .where(and(inArray(fellow.id, uniqueIds), eq(fellow.hubId, hubId)));
+  if (inHub.length !== uniqueIds.length) {
+    throw new Error("Fellow not found in your hub");
+  }
+}
+
 /**
- * The ids of the fellows a caller from requireHubRole may see in reports. A supervisor sees the
- * fellows they supervise. A hub coordinator sees the fellows of their hub.
+ * The ids of the fellows a caller from requireHubRole may see in reports: the fellows of their hub,
+ * and for a supervisor only the ones they supervise.
  */
 export function fellowsInCallerScope(caller: Awaited<ReturnType<typeof requireHubRole>>) {
   if (caller.role === ImplementerRole.SUPERVISOR) {
     return db
       .select({ id: fellow.id })
       .from(fellow)
-      .where(eq(fellow.supervisorId, caller.profileId));
+      .where(and(eq(fellow.supervisorId, caller.profileId), eq(fellow.hubId, caller.hubId)));
   }
   if (caller.role === ImplementerRole.HUB_COORDINATOR) {
     return db.select({ id: fellow.id }).from(fellow).where(eq(fellow.hubId, caller.hubId));

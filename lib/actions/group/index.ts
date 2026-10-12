@@ -14,7 +14,11 @@ import { db, isUniqueViolation } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fellowGroupReport, interventionGroup, interventionGroupReport } from "#/db/schema";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
+import {
+  requireFellowsInHub,
+  requireHubRole,
+  requireSchoolInHub,
+} from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { getSchoolInitials } from "#/lib/utils";
 
@@ -86,6 +90,7 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
     );
     const { schoolId, fellowId } = CreateGroupSchema.parse(data);
     await requireSchoolInHub(schoolId, callerHubId);
+    await requireFellowsInHub([fellowId], callerHubId);
     const school = await db.query.school.findFirst({
       where: (s, { eq }) => eq(s.id, schoolId),
       with: { hub: { columns: { projectId: true } } },

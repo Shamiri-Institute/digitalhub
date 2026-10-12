@@ -67,10 +67,6 @@ const STUDENT_WRITE_ROLES = [
   ImplementerRole.HUB_COORDINATOR,
 ] as const;
 
-/**
- * Throws unless the caller works at the school: a fellow leads a group there, a supervisor or hub
- * coordinator has the school in their hub.
- */
 async function requireCallerAtSchool(
   caller: Awaited<ReturnType<typeof requireHubRole>>,
   schoolId: string,
@@ -333,7 +329,6 @@ export async function markManyStudentsAttendance(
     const status = attendedFlag(attended);
 
     await db.transaction(async (tx) => {
-      // Create new attendance records
       const attendances = await tx.query.studentAttendance.findMany({
         where: (a, { and, eq, inArray }) =>
           and(inArray(a.studentId, ids), eq(a.sessionId, sessionId)),
@@ -375,7 +370,6 @@ export async function markManyStudentsAttendance(
         await tx.insert(studentAttendance).values(createRecords);
       }
 
-      // Update existing attendances
       await tx
         .update(studentAttendance)
         .set({
@@ -449,7 +443,6 @@ export async function dropoutStudent(data: z.infer<typeof DropoutStudentSchema>)
 export async function archiveStudent(data: z.infer<typeof ArchiveStudentSchema>) {
   try {
     const { studentId } = ArchiveStudentSchema.parse(data);
-    // Only hub coordinators see "Archive student" in the UI.
     await requireStudentAccess(studentId, ImplementerRole.HUB_COORDINATOR);
     const [result] = await db
       .update(student)

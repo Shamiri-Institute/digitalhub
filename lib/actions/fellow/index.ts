@@ -30,6 +30,7 @@ import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import {
   fellowsInCallerScope,
   hubOfSession,
+  requireFellowsInHub,
   requireHubRole,
   requireSchoolInHub,
 } from "#/lib/auth/require-hub-role";
@@ -102,7 +103,6 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
         };
       }
 
-      // Check if email exists for any other user
       const existingUser = await db.query.user.findFirst({
         where: (u, { and, eq, ne }) => and(eq(u.email, fellowEmail), ne(u.id, fellowMember.userId)),
       });
@@ -331,22 +331,6 @@ export async function submitWeeklyFellowEvaluation(
   }
 }
 
-/** The caller, after checking the fellow belongs to their hub, which is how hub pages list fellows. */
-async function requireFellowInHub(
-  fellowId: string,
-  ...roles: (typeof ImplementerRole.SUPERVISOR | typeof ImplementerRole.HUB_COORDINATOR)[]
-) {
-  const caller = await requireHubRole(...roles);
-  const fellowInHub = await db.query.fellow.findFirst({
-    where: (f, { and, eq }) => and(eq(f.id, fellowId), eq(f.hubId, caller.hubId)),
-    columns: { id: true },
-  });
-  if (!fellowInHub) {
-    throw new Error("Fellow not found");
-  }
-  return caller;
-}
-
 export async function replaceGroupLeader({
   leaderId,
   groupId,
@@ -364,6 +348,7 @@ export async function replaceGroupLeader({
       columns: { schoolId: true },
     });
     await requireSchoolInHub(groupToReassign?.schoolId, caller.hubId);
+    await requireFellowsInHub([leaderId], caller.hubId);
 
     const [updated] = await db
       .update(interventionGroup)
@@ -406,8 +391,8 @@ export async function replaceGroupLeader({
 export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
   try {
     const { fellowId, mode, dropoutReason } = DropoutFellowSchema.parse(data);
-    // Only the hub coordinator's fellows table offers this.
-    await requireFellowInHub(fellowId, ImplementerRole.HUB_COORDINATOR);
+    const { hubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
+    await requireFellowsInHub([fellowId], hubId);
     if (mode === "dropout") {
       const groups = await db.$count(
         interventionGroup,
@@ -451,25 +436,6 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
   }
 }
 
-/**
- * Fellow attendance creates payout statements, so a supervisor or hub coordinator may mark only
- * fellows in their own hub. A missing and a forbidden fellow give the same error.
- */
-async function requireFellowsInCallerHub(hubId: string, fellowIds: string[]) {
-  const uniqueIds = [...new Set(fellowIds)];
-  const inHub =
-    uniqueIds.length === 0
-      ? []
-      : await db
-          .select({ id: fellow.id })
-          .from(fellow)
-          .where(and(inArray(fellow.id, uniqueIds), eq(fellow.hubId, hubId)));
-  if (inHub.length !== uniqueIds.length) {
-    throw new Error("Fellow not found in your hub");
-  }
-  return hubId;
-}
-
 export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
     const { userId, hubId } = await requireHubRole(
@@ -481,13 +447,13 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
     if (!id) {
       throw new Error("Fellow id is required");
     }
-    const callerHubId = await requireFellowsInCallerHub(hubId, [id]);
+    await requireFellowsInHub([id], hubId);
 
     const response = await db.transaction(
       async (tx) => {
         const fellowRow = await requireFellow(tx, id);
 
-        const session = await requireSessionWithName(tx, sessionId, callerHubId);
+        const session = await requireSessionWithName(tx, sessionId, hubId);
 
         if (!session.occurred) {
           throw new Error(
@@ -659,11 +625,11 @@ export async function markManyFellowAttendance(
     );
 
     const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
-    const callerHubId = await requireFellowsInCallerHub(hubId, ids);
+    await requireFellowsInHub(ids, hubId);
 
     const response = await db.transaction(
       async (tx) => {
-        const session = await requireSessionWithName(tx, sessionId, callerHubId);
+        const session = await requireSessionWithName(tx, sessionId, hubId);
 
         if (!session.occurred) {
           throw new Error("An error occurred while marking attendances. Session has not occurred.");
@@ -751,7 +717,6 @@ export async function markManyFellowAttendance(
             );
         }
 
-        // create new attendances
         const fellowIds = ids.filter((fellowId) => {
           return !attendances.some((attendance) => attendance.fellowId === fellowId);
         });
@@ -879,7 +844,7 @@ export async function submitFellowComplaint(data: z.infer<typeof SubmitComplaint
       ImplementerRole.SUPERVISOR,
       ImplementerRole.HUB_COORDINATOR,
     );
-    await requireFellowsInCallerHub(caller.hubId, [id]);
+    await requireFellowsInHub([id], caller.hubId);
     const [result] = await db
       .insert(fellowComplaints)
       .values({ fellowId: id, complaint, comments, createdBy: caller.userId })
@@ -926,7 +891,6 @@ async function fellowGroupStats(fellowId: string) {
   return rows[0] ?? { group_count: 0, total_students: 0, total_sessions: 0 };
 }
 
-/** Group, student and session counts of the signed-in fellow's groups. */
 export async function getFellowGroupStats() {
   const fellowId = (await currentFellow())?.profile.id;
   return fellowId ? fellowGroupStats(fellowId) : null;

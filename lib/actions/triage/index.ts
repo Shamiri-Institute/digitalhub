@@ -59,10 +59,6 @@ function studentsInLedGroupsAtSession(callerFellowId: string, sessionId: string)
     );
 }
 
-/**
- * The supervisors a fellow can refer a student to at a session. The hub comes from the session,
- * never from the client.
- */
 export async function getSupervisorsInFellowHub(
   sessionId: string,
 ): Promise<{ id: string; supervisorName: string | null }[]> {
