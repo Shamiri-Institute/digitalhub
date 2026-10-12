@@ -72,7 +72,6 @@ test.beforeAll(async () => {
   };
 
   // The edit keeps the recording's fellow, group and session, which must be an occurred one.
-  // recordings-status-api.spec.ts borrows the first three recordings by id, so skip those.
   const {
     rows: [supervisedRecording],
   } = await db.execute<RecordingFixture>(sql`
@@ -88,8 +87,6 @@ test.beforeAll(async () => {
     join implementer_members m on m.identifier = r.supervisor_id and m.role = 'SUPERVISOR'
     join users u on u.id = m.user_id and u.email is not null
     where ${signableMember()} and r.archived_at is null
-      and r.id not in (
-        select o.id from session_recordings o where o.archived_at is null order by o.id limit 3)
     order by r.id desc
     limit 1`);
   if (!supervisedRecording) {

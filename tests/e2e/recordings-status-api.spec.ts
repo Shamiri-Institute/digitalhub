@@ -1,25 +1,24 @@
 import { expect, test } from "@playwright/test";
 
-import { eq, inArray } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { sessionRecording } from "#/db/schema";
+import { objectId } from "#/lib/crypto";
 
 // The fidelity service calls these routes with the RECORDINGS_API_KEY in `x-api-key`.
 // The dev server and this process must share that key, so export it before the run.
 const apiKey = process.env.RECORDINGS_API_KEY;
 const TEST_JOB_ID = "job_eng2222_status_api";
 
-type RecordingSnapshot = typeof sessionRecording.$inferSelect;
-
-let originalRecordings: RecordingSnapshot[] = [];
+let testRecordingIds: string[] = [];
 
 test.describe.configure({ mode: "serial" });
 
-function borrowedRecordingId(index: number) {
-  const borrowedRecording = originalRecordings[index];
-  if (!borrowedRecording) throw new Error(`No borrowed recording at index ${index}`);
-  return borrowedRecording.id;
+function testRecordingId(index: number) {
+  const recordingId = testRecordingIds[index];
+  if (!recordingId) throw new Error(`No test recording at index ${index}`);
+  return recordingId;
 }
 
 async function loadRecording(recordingId: string) {
@@ -31,47 +30,63 @@ async function loadRecording(recordingId: string) {
 }
 
 test.beforeAll(async () => {
-  originalRecordings = await db.query.sessionRecording.findMany({
-    where: (r, { isNull }) => isNull(r.archivedAt),
-    orderBy: (r, { asc }) => asc(r.id),
-    limit: 3,
-  });
-  expect(originalRecordings).toHaveLength(3);
-
-  // Put the borrowed seed rows in the state the fidelity service finds them in.
-  await db
-    .update(sessionRecording)
-    .set({
-      status: "PROCESSING",
-      fidelityJobId: TEST_JOB_ID,
-      overallScore: null,
-      fidelityFeedback: null,
-      transcript: null,
-      errorMessage: null,
-      processedAt: null,
-      retryCount: 0,
-    })
-    .where(
-      inArray(
-        sessionRecording.id,
-        originalRecordings.map((originalRecording) => originalRecording.id),
-      ),
-    );
+  // Three recordings of their own, in the state the fidelity service finds them in. Each copies a
+  // seeded one under another group at the same school (the seed records every group's sessions),
+  // archived so that no page lists it; the status routes do not look at archivedAt.
+  type Copy = Pick<
+    typeof sessionRecording.$inferInsert,
+    | "fileName"
+    | "originalFileName"
+    | "s3Key"
+    | "contentType"
+    | "fileSize"
+    | "fellowId"
+    | "schoolId"
+    | "groupId"
+    | "sessionId"
+    | "uploadedBy"
+    | "supervisorId"
+  >;
+  const { rows } = await db.execute<Copy>(sql`
+    select distinct on (r.id) 'e2e-' || r.file_name as "fileName",
+      'e2e-' || r.original_file_name as "originalFileName", 'e2e/' || r.s3_key as "s3Key",
+      r.content_type as "contentType", r.file_size as "fileSize", r.fellow_id as "fellowId",
+      r.school_id as "schoolId", g.id as "groupId", r.intervention_session_id as "sessionId",
+      r.uploaded_by as "uploadedBy", r.supervisor_id as "supervisorId"
+    from session_recordings r
+    join intervention_groups g on g.school_id = r.school_id and g.id <> r.group_id
+    where r.archived_at is null
+      and not exists (select 1 from session_recordings o
+        where o.fellow_id = r.fellow_id and o.school_id = r.school_id and o.group_id = g.id
+          and o.intervention_session_id = r.intervention_session_id)
+    order by r.id, g.id
+    limit 3`);
+  if (rows.length < 3) throw new Error("seed the database first: no recordings to copy");
+  const inserted = await db
+    .insert(sessionRecording)
+    .values(
+      rows.map((copy) => ({
+        ...copy,
+        id: objectId("rec"),
+        status: "PROCESSING" as const,
+        fidelityJobId: TEST_JOB_ID,
+        archivedAt: new Date(),
+      })),
+    )
+    .returning({ id: sessionRecording.id });
+  testRecordingIds = inserted.map(({ id }) => id);
 });
 
 test.afterAll(async () => {
-  for (const { id: recordingId, ...originalValues } of originalRecordings) {
-    await db
-      .update(sessionRecording)
-      .set(originalValues)
-      .where(eq(sessionRecording.id, recordingId));
+  if (testRecordingIds.length > 0) {
+    await db.delete(sessionRecording).where(inArray(sessionRecording.id, testRecordingIds));
   }
 });
 
 test("rejects status updates without a valid API key and leaves the recording unchanged", async ({
   request,
 }) => {
-  const recordingId = borrowedRecordingId(0);
+  const recordingId = testRecordingId(0);
   const singleUpdate = { status: "COMPLETED", overallScore: "9.9" };
   const batchUpdate = {
     job_id: TEST_JOB_ID,
@@ -110,7 +125,7 @@ test("PATCH /api/recordings/[id]/status stores the status, score and feedback", 
   request,
 }) => {
   test.skip(!apiKey, "RECORDINGS_API_KEY is not set");
-  const recordingId = borrowedRecordingId(0);
+  const recordingId = testRecordingId(0);
   const fidelityFeedback = { summary: "Clear session", scores: { q1: 4 } };
 
   const response = await request.patch(`/api/recordings/${recordingId}/status`, {
@@ -137,8 +152,8 @@ test("POST /api/recordings/batch/status stores results from the fidelity webhook
   request,
 }) => {
   test.skip(!apiKey, "RECORDINGS_API_KEY is not set");
-  const succeededRecordingId = borrowedRecordingId(1);
-  const failedRecordingId = borrowedRecordingId(2);
+  const succeededRecordingId = testRecordingId(1);
+  const failedRecordingId = testRecordingId(2);
   const fidelityRatings = { overall_score: "3.5", notes: "Good pacing" };
   const transcript = { segments: [{ speaker: "fellow", text: "Welcome back" }] };
 

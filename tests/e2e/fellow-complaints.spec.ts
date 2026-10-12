@@ -4,7 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { fellowComplaints } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
-import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A supervisor files a complaint about a fellow they supervise, edits it from the complaints
@@ -15,27 +15,33 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
 
-const supervisorEmail = "martin.odegaard@test.com";
 const complaintComment = `E2E complaint ${Date.now()}`;
 const editedComplaint = `Edited complaint ${Date.now()}`;
 
+let supervisorEmail: string;
 let targetFellow: { fellowId: string; fellowName: string };
 let otherSupervisorEmail: string;
 
 test.beforeAll(async () => {
   const {
     rows: [supervisedFellow],
-  } = await db.execute<{ fellowId: string; fellowName: string; implementerId: string }>(sql`
-    select f.id as "fellowId", f.fellow_name as "fellowName", m.implementer_id as "implementerId"
+  } = await db.execute<{
+    email: string;
+    fellowId: string;
+    fellowName: string;
+    implementerId: string;
+  }>(sql`
+    select u.email, f.id as "fellowId", f.fellow_name as "fellowName",
+      m.implementer_id as "implementerId"
     from users u
     join implementer_members m on m.user_id = u.id and m.role = 'SUPERVISOR'
     join fellows f on f.supervisor_id = m.identifier and f.fellow_name is not null
-    where u.email = ${supervisorEmail}
+    where u.email is not null and ${signableMember()}
       and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
-    order by f.id
+    order by u.email, f.id
     limit 1`);
-  if (!supervisedFellow)
-    throw new Error(`No fellow with a unique name supervised by ${supervisorEmail}`);
+  if (!supervisedFellow) throw new Error("seed the database first: no supervised fellow");
+  supervisorEmail = supervisedFellow.email;
 
   // Same organisation, so the only reason the complaint is hidden is who supervises the fellow.
   const {
@@ -83,9 +89,9 @@ test("a supervisor edits a complaint about their fellow and sees it after a relo
 }) => {
   await signInWithEmail(context, supervisorEmail);
 
-  await page.goto(getUrl("/sc/fellows"), { waitUntil: "networkidle" });
+  await page.goto(getUrl("/sc/fellows"));
   const fellowRows = await searchRows(page, targetFellow.fellowName);
-  await fellowRows.first().locator("td").last().click();
+  await openRowMenu(page, fellowRows.first());
   await page.getByText("Submit Complaint").click();
   const submitDialog = page.getByRole("dialog").filter({ hasText: "Submit complaint" });
   await submitDialog.getByRole("combobox").click();
@@ -94,16 +100,16 @@ test("a supervisor edits a complaint about their fellow and sees it after a relo
   await submitDialog.getByRole("button", { name: "Submit" }).click();
   await expect(page.getByText("Complaint submitted successfully.").first()).toBeVisible();
 
-  await page.goto(getUrl("/sc/reporting/fellow-reports/complaints"), { waitUntil: "networkidle" });
+  await page.goto(getUrl("/sc/reporting/fellow-reports/complaints"));
   const complaintRow = await expandedComplaintRow(page);
-  await complaintRow.locator("td").last().click();
+  await openRowMenu(page, complaintRow);
   await page.getByText("Edit fellow complaint").click();
   const editDialog = page.getByRole("dialog").filter({ hasText: "Edit Fellow Complaint" });
   await editDialog.getByRole("textbox").fill(editedComplaint);
   await editDialog.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByText("Complaint updated successfully").first()).toBeVisible();
 
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload();
   await expect(await expandedComplaintRow(page)).toContainText(editedComplaint);
 });
 
@@ -112,6 +118,6 @@ test("a supervisor who does not supervise the fellow does not see the complaint"
   page,
 }) => {
   await signInWithEmail(context, otherSupervisorEmail);
-  await page.goto(getUrl("/sc/reporting/fellow-reports/complaints"), { waitUntil: "networkidle" });
+  await page.goto(getUrl("/sc/reporting/fellow-reports/complaints"));
   await expect(await searchRows(page, targetFellow.fellowName)).toHaveCount(0);
 });
