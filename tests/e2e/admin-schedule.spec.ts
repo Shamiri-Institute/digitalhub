@@ -1,10 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { differenceInCalendarWeeks } from "date-fns";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { signInAs } from "#/tests/helpers";
-import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * An admin opens "View fellow attendance" from the schedule. The dialog fills its fellow rows,
@@ -67,12 +66,9 @@ test("an admin sees each fellow's group in the fellow attendance dialog", async 
     throw new Error("seed the database first: no fellow with one named group at the school");
   }
 
-  await page.goto(getUrl("/admin/schedule?mode=list"), { waitUntil: "networkidle" });
-  const weeksBack = differenceInCalendarWeeks(new Date(), new Date(session.sessionDate));
-  for (let i = 0; i < weeksBack; i++) {
-    await page.getByRole("button", { name: "Previous" }).click();
-    await page.waitForLoadState("networkidle");
-  }
+  await page.goto(
+    await scheduleUrl(context, "/admin/schedule?mode=list", new Date(session.sessionDate)),
+  );
   const sessionRow = page.getByRole("row").filter({ hasText: session.schoolName }).first();
   // The menu can close while the calendar re-renders with data that loads after the page.
   const dialog = page.getByRole("dialog", { name: "View fellow attendance" });

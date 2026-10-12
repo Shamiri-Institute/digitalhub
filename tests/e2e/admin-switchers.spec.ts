@@ -112,16 +112,20 @@ test("switching implementer shows the new implementer in the header", async ({ p
   await page.goto(getUrl("/admin/hubs"));
   await switchProject(page, admin.activeProjectName, target.name);
 
-  let from: string | undefined;
-  for (const { name } of implementers) {
-    if (await header(page, "button", name).isVisible()) from = name;
-  }
+  // The header shows one of the admin's implementers once it renders; wait for it, then read it.
+  const escaped = implementers.map(({ name }) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const current = page
+    .getByRole("button")
+    .filter({ hasText: new RegExp(`^(${escaped.join("|")})$`), visible: true })
+    .first();
+  await expect(current).toBeVisible();
+  const from = (await current.innerText()).trim();
   const to = implementers.find((i) => i.name !== from)?.name;
   if (!from || !to) throw new Error("The admin needs two implementers");
 
   await header(page, "button", from).click();
   await header(page, "option", to).click();
-  await expect(header(page, "button", to)).toBeVisible({ timeout: 30_000 });
+  await expect(header(page, "button", to)).toBeVisible();
   await page.reload();
   await expect(header(page, "button", to)).toBeVisible();
 });
