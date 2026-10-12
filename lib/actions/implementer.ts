@@ -24,17 +24,13 @@ export async function fetchImplementerStats() {
     hub_count: number;
     school_count: number;
     student_count: number;
-  }>(sql`SELECT
-    COUNT(DISTINCT h.id)::int AS hub_count,
-    COUNT(DISTINCT sch.id)::int AS school_count,
-    COUNT(DISTINCT stu.id)::int AS student_count
-  FROM
-    hubs h
-    LEFT JOIN schools sch ON h.id = sch.hub_id
-    LEFT JOIN students stu ON sch.id = stu.school_id
-  WHERE
-    h.implementer_id = ${implementerId}
-    AND h.project_id = ${projectId}`);
+  }>(sql`WITH
+    h AS (SELECT id FROM hubs WHERE implementer_id = ${implementerId} AND project_id = ${projectId}),
+    sch AS (SELECT id FROM schools WHERE hub_id IN (SELECT id FROM h))
+  SELECT
+    (SELECT COUNT(*) FROM h)::int AS hub_count,
+    (SELECT COUNT(*) FROM sch)::int AS school_count,
+    (SELECT COUNT(*) FROM students WHERE school_id IN (SELECT id FROM sch))::int AS student_count`);
 
   const [row] = stats;
   if (!row) {

@@ -20,7 +20,7 @@ import {
   student,
   studentAttendance,
 } from "#/db/schema";
-import { clinicalCasesCountExtras } from "#/lib/actions/schedule-data";
+import { clinicalCasesCountExtras, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
@@ -368,7 +368,7 @@ async function requireSessionVisibleToCaller(sessionId: string) {
     if (sessionHub?.implementerId !== membership.implementerId) {
       throw new Error("No InterventionSession found");
     }
-    return { membership, fellowId: undefined };
+    return { membership, fellowId: undefined, sessionHubId };
   }
   if (membership.role === ImplementerRole.FELLOW) {
     const fellowId = membership.identifier;
@@ -383,11 +383,11 @@ async function requireSessionVisibleToCaller(sessionId: string) {
     if (!fellowId || !ledGroup) {
       throw new Error("No InterventionSession found");
     }
-    return { membership, fellowId };
+    return { membership, fellowId, sessionHubId };
   }
   const { hubId } = await requireHubCoordinatorOrSupervisor();
   requireSessionInCallerHub(session, hubId);
-  return { membership, fellowId: undefined };
+  return { membership, fellowId: undefined, sessionHubId };
 }
 
 function sessionAttendances(sessionId: string, fellowId: string | undefined) {
@@ -453,6 +453,14 @@ export async function fetchSessionStudentAttendance(sessionId: string) {
     sessionAttendances(sessionId, fellowId),
   ]);
   return { students, attendances };
+}
+
+export async function fetchSessionSupervisors(sessionId: string) {
+  const { membership, sessionHubId } = await requireSessionVisibleToCaller(sessionId);
+  if (membership.role !== ImplementerRole.ADMIN || !sessionHubId) {
+    throw new Error("No InterventionSession found");
+  }
+  return fetchScheduleSupervisors([sessionHubId], eq(interventionSession.id, sessionId));
 }
 
 export async function countSessionGroupAttendance(sessionId: string, fellowId: string) {

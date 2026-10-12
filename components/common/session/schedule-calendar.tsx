@@ -53,6 +53,7 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import type { Session } from "#/lib/actions/fetch-sessions";
+import { fetchSessionSupervisors } from "#/lib/actions/session/session";
 import {
   type Mode,
   parseScheduleView,
@@ -384,16 +385,95 @@ function CalendarView({
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
   const [selectedSession, setSession] = React.useState<Session | null>(null);
+  const [sessionSupervisors, setSessionSupervisors] = useState<{
+    sessionId: string;
+    supervisors: ScheduleSupervisor[];
+  } | null>(null);
+  const requestedSessionId = useRef<string | null>(null);
   const session = selectedSession
     ? (sessions.find((s) => s.id === selectedSession.id) ?? selectedSession)
     : null;
 
-  const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
-  const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
-  const fellowsForStudentAttendance =
-    role === ImplementerRole.SUPERVISOR && supervisorId
-      ? (supervisors?.find((s) => s.id === supervisorId)?.fellows ?? [])
-      : allFellows.filter((f) => leaderIds.has(f.id));
+  const openSession: Dispatch<SetStateAction<Session | null>> = (next) => {
+    const value = typeof next === "function" ? next(selectedSession) : next;
+    setSession(value);
+    if (role !== ImplementerRole.ADMIN || !value || requestedSessionId.current === value.id) {
+      return;
+    }
+    const sessionId = value.id;
+    requestedSessionId.current = sessionId;
+    const keep = (supervisors: ScheduleSupervisor[]) => {
+      if (requestedSessionId.current === sessionId) {
+        setSessionSupervisors({ sessionId, supervisors });
+      }
+    };
+    fetchSessionSupervisors(sessionId)
+      .then(keep)
+      .catch(() => keep([]));
+  };
+
+  const supervisorDialogs = (supervisors?: ScheduleSupervisor[]) => {
+    const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
+    const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
+    const fellowsForStudentAttendance =
+      role === ImplementerRole.SUPERVISOR && supervisorId
+        ? (supervisors?.find((s) => s.id === supervisorId)?.fellows ?? [])
+        : allFellows.filter((f) => leaderIds.has(f.id));
+    return (
+      <>
+        <FellowAttendance
+          supervisors={supervisors?.filter((supervisor) => supervisor.hubId === session?.hubId)}
+          supervisorId={role === ImplementerRole.SUPERVISOR ? supervisorId : undefined}
+          fellowRatings={fellowRatings ?? []}
+          role={role}
+          session={session}
+          isOpen={fellowAttendanceDialog}
+          setIsOpen={setFellowAttendanceDialog}
+        />
+        <SupervisorAttendance
+          isOpen={supervisorAttendanceDialog}
+          setIsOpen={setSupervisorAttendanceDialog}
+          supervisors={supervisors?.filter((supervisor) => supervisor.hubId === session?.hubId)}
+          role={role}
+          session={session}
+        />
+        <StudentAttendance
+          isOpen={studentAttendanceDialog}
+          setIsOpen={setStudentAttendanceDialog}
+          role={role}
+          session={session}
+          fellows={fellowsForStudentAttendance}
+          fellowId={fellowId}
+        />
+        {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
+          <SessionRatings
+            selectedSession={session}
+            supervisorId={supervisorId}
+            supervisors={supervisors}
+            open={ratingsDialog}
+            onOpenChange={setRatingsDialog}
+            mode={
+              role === "HUB_COORDINATOR" || role === "ADMIN"
+                ? "view"
+                : role === "SUPERVISOR"
+                  ? "add"
+                  : undefined
+            }
+            role={role}
+          >
+            {session && (
+              <SessionDetail
+                state={{ session }}
+                layout={"compact"}
+                withDropdown={false}
+                role={role}
+              />
+            )}
+          </SessionRatings>
+        )}
+      </>
+    );
+  };
 
   const activeMode = () => {
     switch (mode) {
@@ -404,7 +484,7 @@ function CalendarView({
             role={role}
             supervisorId={supervisorId}
             dialogState={{
-              setSession,
+              setSession: openSession,
               setFellowAttendanceDialog,
               setSupervisorAttendanceDialog,
               setStudentAttendanceDialog,
@@ -424,7 +504,7 @@ function CalendarView({
             role={role}
             supervisorId={supervisorId}
             dialogState={{
-              setSession,
+              setSession: openSession,
               setFellowAttendanceDialog,
               setSupervisorAttendanceDialog,
               setStudentAttendanceDialog,
@@ -445,7 +525,7 @@ function CalendarView({
             {...dayProps}
             role={role}
             dialogState={{
-              setSession,
+              setSession: openSession,
               setFellowAttendanceDialog,
               setSupervisorAttendanceDialog,
               setStudentAttendanceDialog,
@@ -468,7 +548,7 @@ function CalendarView({
             role={role}
             supervisorId={supervisorId}
             dialogState={{
-              setSession,
+              setSession: openSession,
               setFellowAttendanceDialog,
               setSupervisorAttendanceDialog,
               setStudentAttendanceDialog,
@@ -530,56 +610,10 @@ function CalendarView({
           </CancelSession>
         </>
       ) : null}
-      <FellowAttendance
-        supervisors={supervisors?.filter((supervisor) => supervisor.hubId === session?.hubId)}
-        supervisorId={role === ImplementerRole.SUPERVISOR ? supervisorId : undefined}
-        fellowRatings={fellowRatings ?? []}
-        role={role}
-        session={session}
-        isOpen={fellowAttendanceDialog}
-        setIsOpen={setFellowAttendanceDialog}
-      />
-      <SupervisorAttendance
-        isOpen={supervisorAttendanceDialog}
-        setIsOpen={setSupervisorAttendanceDialog}
-        supervisors={supervisors?.filter((supervisor) => supervisor.hubId === session?.hubId)}
-        role={role}
-        session={session}
-      />
-      <StudentAttendance
-        isOpen={studentAttendanceDialog}
-        setIsOpen={setStudentAttendanceDialog}
-        role={role}
-        session={session}
-        fellows={fellowsForStudentAttendance}
-        fellowId={fellowId}
-      />
-      {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
-        <SessionRatings
-          selectedSession={session}
-          supervisorId={supervisorId}
-          supervisors={supervisors}
-          open={ratingsDialog}
-          onOpenChange={setRatingsDialog}
-          mode={
-            role === "HUB_COORDINATOR" || role === "ADMIN"
-              ? "view"
-              : role === "SUPERVISOR"
-                ? "add"
-                : undefined
-          }
-          role={role}
-        >
-          {session && (
-            <SessionDetail
-              state={{ session }}
-              layout={"compact"}
-              withDropdown={false}
-              role={role}
-            />
-          )}
-        </SessionRatings>
-      )}
+      {role === ImplementerRole.ADMIN
+        ? sessionSupervisors?.sessionId === session?.id &&
+          supervisorDialogs(sessionSupervisors?.supervisors)
+        : supervisorDialogs(supervisors)}
       <MarkSessionOccurrence
         id={session?.id}
         defaultOccurrence={session?.occurred}
