@@ -32,8 +32,6 @@ export default async function SchoolStudentsPage({
   visibleId: string;
   role: ImplementerRole;
 }) {
-  // The school subtree is identical for every student, so it is loaded once and attached
-  // in JS. Nesting it under each row made Drizzle recompute the lateral join per student.
   const visibleSchools = await visibleSchoolIds();
   const schoolRow = await db.query.school.findFirst({
     where: (s, { and, eq, inArray }) =>
