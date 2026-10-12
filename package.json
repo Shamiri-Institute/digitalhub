@@ -20,6 +20,7 @@
     "test:ci": "playwright test",
     "test": "dotenv -c development -- playwright test",
     "test:ui": "dotenv -c development -- playwright test --ui",
+    "test:prod": "dotenv -c development -v NEXT_PUBLIC_ENV=testing -v E2E_PROD=1 -- sh -c 'next build && playwright test'",
     "test:unit": "dotenv -c development -- vitest",
     "auth:session": "dotenv -c development -- tsx scripts/auth/get-session-cookie.ts",
     "db:seed": "dotenv -c development -- tsx db/seed/seed.ts",

@@ -11,9 +11,9 @@ const useHeadless = process.env.CI ? { headless: true } : devices["Desktop Chrom
 export default defineConfig({
   testDir: "./tests/e2e",
   webServer: {
-    // E2E_PROD=1 serves a prior `npm run build`, to catch bugs that only a production build shows.
+    // CI and `npm run test:prod` set E2E_PROD=1 to serve a production build; `npm test` uses `next dev`.
     command: process.env.E2E_PROD ? "npm run start" : "npm run dev",
-    timeout: 480 * 1000, // 2 minutes
+    timeout: 480 * 1000,
     port: Number(process.env.PORT ?? 3000),
     reuseExistingServer: !isCI,
     stdout: showServerLogs,
