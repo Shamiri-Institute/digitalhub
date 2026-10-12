@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
 
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { clinicalSessionAttendance, school } from "#/db/schema";
+import { clinicalSessionAttendance } from "#/db/schema";
 import { countOf } from "#/db/sql";
 import { visibleSchoolIds } from "#/lib/auth/require-hub-role";
 
@@ -36,24 +35,17 @@ export default async function SchoolStudentsPage({
   // The school subtree is identical for every student, so it is loaded once and attached
   // in JS. Nesting it under each row made Drizzle recompute the lateral join per student.
   const visibleSchools = await visibleSchoolIds();
-  const [schoolRow, rows, transferSchools] = await Promise.all([
-    db.query.school.findFirst({
-      where: (s, { and, eq, inArray }) =>
-        and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
-      with: { interventionSessions: { with: { session: true } } },
-    }),
+  const schoolRow = await db.query.school.findFirst({
+    where: (s, { and, eq, inArray }) =>
+      and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
+    with: { interventionSessions: { with: { session: true } } },
+  });
+  if (!schoolRow) {
+    notFound();
+  }
+  const [rows, transferSchools] = await Promise.all([
     db.query.student.findMany({
-      where: (s, { and, isNull, inArray }) =>
-        and(
-          isNull(s.archivedAt),
-          inArray(
-            s.schoolId,
-            db
-              .select({ id: school.id })
-              .from(school)
-              .where(and(eq(school.visibleId, visibleId), inArray(school.id, visibleSchools.ids))),
-          ),
-        ),
+      where: (s, { and, eq, isNull }) => and(isNull(s.archivedAt), eq(s.schoolId, schoolRow.id)),
       with: {
         clinicalCases: {
           columns: { id: true },
@@ -103,10 +95,6 @@ export default async function SchoolStudentsPage({
     }),
     loadTransferSchools(role),
   ]);
-
-  if (!schoolRow) {
-    notFound();
-  }
   const students = rows.map((s) => ({ ...s, school: schoolRow }));
 
   return <StudentsDatatable students={students} role={role} transferSchools={transferSchools} />;
