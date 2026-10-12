@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "#/db/client";
 import { supervisor, user } from "#/db/schema";
 import { emailForProfile, signInWithEmail } from "#/tests/helpers";
-import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A hub coordinator edits the supervisors of their own hub through the UI. The edit form also
@@ -69,8 +69,7 @@ test("a hub coordinator edits a supervisor in their hub", async ({ page, context
   await page.goto(getUrl("/hc/supervisors"));
 
   const row = await searchRows(page, target.supervisorName ?? "");
-  await openRowMenu(page, row);
-  await page.getByRole("menuitem", { name: "Edit supervisor information" }).click();
+  await chooseRowAction(page, row, "Edit supervisor information");
   const dialog = page.getByRole("dialog", { name: "Edit supervisor information" });
   await dialog.getByRole("textbox", { name: "Full name *" }).first().fill(supervisorName);
   // The form writes this to the login email, so keep the current one.

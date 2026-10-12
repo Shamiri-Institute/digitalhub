@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { fellow, interventionGroupReport, sessionRecording } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
-import { getUrl, openRowMenu, rowWithCell } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
 /**
  * Each write checks that its record is in the caller's scope: a fellow evaluates a group they
@@ -141,8 +141,7 @@ test("a fellow evaluates a group they lead", async ({ page, context }) => {
   const dialog = page.getByRole("dialog", { name: "Student group evaluation" });
   async function openEvaluation() {
     await page.goto(getUrl(`/fel/schools/${evaluation.visibleId}/group`));
-    await openRowMenu(page, await rowWithCell(page, main, evaluation.groupName));
-    await page.getByRole("menuitem", { name: "View student group evaluation" }).click();
+    await chooseRowAction(page, await rowWithCell(page, main, evaluation.groupName), "View student group evaluation");
   }
 
   await openEvaluation();
@@ -187,8 +186,7 @@ test("a supervisor renames a recording of their fellow's group", async ({ page, 
     const recordingRow = (await rowWithCell(page, main, recording.groupName)).filter({
       has: page.getByRole("cell", { name: recording.sessionName, exact: true }),
     });
-    await openRowMenu(page, recordingRow);
-    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await chooseRowAction(page, recordingRow, "Edit");
     // The dialog resets its form once its lists load; wait for the session to show.
     await expect(dialog.getByRole("combobox", { name: /^Session/ })).toContainText(
       sessionDisplayName(recording.sessionName) ?? recording.sessionName,

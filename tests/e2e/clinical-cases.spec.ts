@@ -12,7 +12,7 @@ import {
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { createClinicalCase, emailForProfile, signInWithEmail } from "#/tests/helpers";
-import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A supervisor works on a clinical case they hold, through the UI. Each test saves, reloads and
@@ -79,8 +79,7 @@ test.beforeAll(async () => {
 });
 
 async function openCaseAction(page: Page, name: string, action: string) {
-  await openRowMenu(page, await searchRows(page, name));
-  await page.getByRole("menu").getByText(action, { exact: true }).click();
+  await chooseRowAction(page, await searchRows(page, name), action);
 }
 
 /** Fills the "Add clinical case" dialog for a new student at the first school offered. */

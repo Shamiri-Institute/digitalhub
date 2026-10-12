@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { interventionSession } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
-import { getUrl, openRowMenu } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction } from "#/tests/pages/helpers";
 
 /**
  * The school panel shows the school's counts. After a hub coordinator cancels a session on the
@@ -69,8 +69,7 @@ test("the school panel renders on the server and shows a session cancelled on th
   const sessionRow = page
     .getByRole("row")
     .filter({ has: page.getByRole("cell", { name: sessionLabel, exact: true }) });
-  await openRowMenu(page, sessionRow);
-  await page.getByRole("menuitem", { name: "Cancel session" }).click();
+  await chooseRowAction(page, sessionRow, "Cancel session");
   try {
     await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click();
     await expect(panel.getByTitle(`${sessionLabel}: Cancelled`)).toBeVisible();

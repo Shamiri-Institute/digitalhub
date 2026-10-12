@@ -75,7 +75,8 @@ export async function pickUser(role: Role): Promise<BenchUser> {
        and exists (select 1 from hubs h join projects p on p.id = h.project_id
                    where h.implementer_id = i.id and p.is_default)
        and ${PROFILE_FILTER[role]}
-     order by u.email
+     -- Seeded users before any a test adds while the suite runs.
+     order by u.created_at, u.email
      limit 1`,
     [role],
   );

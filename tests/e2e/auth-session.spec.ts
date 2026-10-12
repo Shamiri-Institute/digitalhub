@@ -1,39 +1,59 @@
-import { expect, test } from "@playwright/test";
+import { type BrowserContext, expect, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { implementerMember, session, user } from "#/db/schema";
+import { adminUser, implementerMember, session, user } from "#/db/schema";
 import { sessionCookieFor, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 import { type Role, pickUser } from "#/tests/platform-routes";
 
 const loginUrl = new RegExp(`^${getUrl("/login")}`);
 
-/** A new user who shares a seeded user's profile, so a test can end its sessions freely. */
-async function createUser(role: Role = "SUPERVISOR") {
-  const seededUser = await pickUser(role);
+/**
+ * A new admin with an admin profile of its own, so a test can sign it out or archive it without
+ * touching a user another spec signs in as.
+ */
+async function createAdmin() {
+  const seededAdmin = await pickUser("ADMIN");
   const seededMembership = await db.query.implementerMember.findFirst({
-    where: (m, { and, eq }) => and(eq(m.userId, seededUser.id), eq(m.role, role)),
+    where: (m, { and, eq }) => and(eq(m.userId, seededAdmin.id), eq(m.role, "ADMIN")),
+    columns: { implementerId: true },
   });
-  if (!seededMembership) throw new Error(`No ${role} membership to copy`);
+  if (!seededMembership) throw new Error("No ADMIN membership to copy");
   const email = `auth-session-${Date.now()}-${Math.random().toString(36).slice(2)}@test.com`;
   const [createdUser] = await db
     .insert(user)
     .values({ email, name: "Auth Session Test" })
     .returning({ id: user.id });
   if (!createdUser) throw new Error("Could not create the test user");
+  const [profile] = await db
+    .insert(adminUser)
+    .values({ email, adminName: "Auth Session Test", implementerId: seededMembership.implementerId })
+    .returning({ id: adminUser.id });
+  if (!profile) throw new Error("Could not create the test admin profile");
   await db.insert(implementerMember).values({
     implementerId: seededMembership.implementerId,
     userId: createdUser.id,
-    role,
-    identifier: seededMembership.identifier,
+    role: "ADMIN",
+    identifier: profile.id,
   });
-  return { id: createdUser.id, email };
+  return { id: createdUser.id, email, profileId: profile.id };
 }
 
-async function deleteUser(userId: string) {
-  await db.delete(implementerMember).where(eq(implementerMember.userId, userId));
-  await db.delete(user).where(eq(user.id, userId));
+async function deleteAdmin(admin: { id: string; profileId: string }) {
+  await db.delete(session).where(eq(session.userId, admin.id));
+  await db.delete(implementerMember).where(eq(implementerMember.userId, admin.id));
+  await db.delete(adminUser).where(eq(adminUser.id, admin.profileId));
+  await db.delete(user).where(eq(user.id, admin.id));
+}
+
+/** Signs a seeded user in with a new session and returns that session's token. */
+async function signInWithNewSession(context: BrowserContext, email: string) {
+  const cookie = await sessionCookieFor(email);
+  await context.addCookies([cookie]);
+  const [token] = decodeURIComponent(cookie.value).split(".");
+  if (!token) throw new Error("The session cookie has no token");
+  return token;
 }
 
 test("a request without a session cookie goes to the login page with the path", async ({
@@ -55,37 +75,35 @@ const pagesThatLoadTheProfile: Array<[Role, string]> = [
 
 for (const [role, route] of pagesThatLoadTheProfile) {
   test(`deleting the session row sends ${route} to the login page`, async ({ context, page }) => {
-    const testUser = await createUser(role);
-    try {
-      await signInWithEmail(context, testUser.email);
-      await page.goto(getUrl(route));
-      await expect(page).toHaveURL(getUrl(route));
-      // Sets the session data cookie as well, if a cookie cache were enabled.
-      expect((await page.request.get(getUrl("/api/auth/get-session"))).ok()).toBe(true);
+    // Only this test's session is deleted; the seeded user's other sessions are left alone.
+    const { email } = await pickUser(role);
+    const token = await signInWithNewSession(context, email);
+    await page.goto(getUrl(route));
+    await expect(page).toHaveURL(getUrl(route));
+    // Sets the session data cookie as well, if a cookie cache were enabled.
+    expect((await page.request.get(getUrl("/api/auth/get-session"))).ok()).toBe(true);
 
-      await db.delete(session).where(eq(session.userId, testUser.id));
-      await page.goto(getUrl(route));
-      await expect(page).toHaveURL(loginUrl);
-    } finally {
-      await deleteUser(testUser.id);
-    }
+    await db.delete(session).where(eq(session.token, token));
+    await page.goto(getUrl(route));
+    await expect(page).toHaveURL(loginUrl);
   });
 }
 
 test("signing out from the user menu deletes the session", async ({ context, page }) => {
-  const testUser = await createUser();
+  const admin = await createAdmin();
   try {
-    await signInWithEmail(context, testUser.email);
-    await page.goto(getUrl("/sc/fellows"));
+    await signInWithEmail(context, admin.email);
+    await page.goto(getUrl("/admin/schedule"));
     await page.getByAltText("Profile arrow drop down icon").click();
     await page.getByRole("menuitem", { name: "Sign out" }).click();
     await expect(page).toHaveURL(loginUrl);
-    expect(await db.$count(session, eq(session.userId, testUser.id))).toBe(0);
+    // The browser drops its cookie either way; only the database shows the session was revoked.
+    expect(await db.$count(session, eq(session.userId, admin.id))).toBe(0);
 
-    await page.goto(getUrl("/sc/fellows"));
+    await page.goto(getUrl("/admin/schedule"));
     await expect(page).toHaveURL(loginUrl);
   } finally {
-    await deleteUser(testUser.id);
+    await deleteAdmin(admin);
   }
 });
 
@@ -93,20 +111,20 @@ test("archiving a signed-in user signs them out and blocks new sessions", async 
   context,
   page,
 }) => {
-  const testUser = await createUser();
+  const admin = await createAdmin();
   try {
-    await signInWithEmail(context, testUser.email);
-    await page.goto(getUrl("/sc/fellows"));
-    await expect(page).toHaveURL(getUrl("/sc/fellows"));
+    await signInWithEmail(context, admin.email);
+    await page.goto(getUrl("/admin/schedule"));
+    await expect(page).toHaveURL(getUrl("/admin/schedule"));
 
-    await db.update(user).set({ archivedAt: new Date() }).where(eq(user.id, testUser.id));
-    await page.goto(getUrl("/sc/fellows"));
+    await db.update(user).set({ archivedAt: new Date() }).where(eq(user.id, admin.id));
+    await page.goto(getUrl("/admin/schedule"));
     await expect(page).toHaveURL(loginUrl);
-    expect(await db.$count(session, eq(session.userId, testUser.id))).toBe(0);
+    expect(await db.$count(session, eq(session.userId, admin.id))).toBe(0);
 
-    await expect(sessionCookieFor(testUser.email)).rejects.toThrow("This account is archived");
+    await expect(sessionCookieFor(admin.email)).rejects.toThrow("This account is archived");
   } finally {
-    await deleteUser(testUser.id);
+    await deleteAdmin(admin);
   }
 });
 

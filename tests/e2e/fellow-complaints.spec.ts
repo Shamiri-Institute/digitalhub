@@ -4,7 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { fellowComplaints } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
-import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A supervisor files a complaint about a fellow they supervise, edits it from the complaints
@@ -91,8 +91,7 @@ test("a supervisor edits a complaint about their fellow and sees it after a relo
 
   await page.goto(getUrl("/sc/fellows"));
   const fellowRows = await searchRows(page, targetFellow.fellowName);
-  await openRowMenu(page, fellowRows.first());
-  await page.getByText("Submit Complaint").click();
+  await chooseRowAction(page, fellowRows.first(), "Submit Complaint");
   const submitDialog = page.getByRole("dialog").filter({ hasText: "Submit complaint" });
   await submitDialog.getByRole("combobox").click();
   await page.getByRole("option", { name: "Other" }).click();
@@ -102,8 +101,7 @@ test("a supervisor edits a complaint about their fellow and sees it after a relo
 
   await page.goto(getUrl("/sc/reporting/fellow-reports/complaints"));
   const complaintRow = await expandedComplaintRow(page);
-  await openRowMenu(page, complaintRow);
-  await page.getByText("Edit fellow complaint").click();
+  await chooseRowAction(page, complaintRow, "Edit fellow complaint");
   const editDialog = page.getByRole("dialog").filter({ hasText: "Edit Fellow Complaint" });
   await editDialog.getByRole("textbox").fill(editedComplaint);
   await editDialog.getByRole("button", { name: "Save Changes" }).click();

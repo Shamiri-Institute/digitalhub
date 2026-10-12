@@ -4,7 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { supervisorAttendance } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
-import { openRowMenu, scheduleUrl, searchRows } from "#/tests/pages/helpers";
+import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A hub coordinator marks a supervisor's attendance from the schedule, first for one supervisor
@@ -69,14 +69,7 @@ async function openSupervisorAttendance(page: Page) {
   await page.goto(await scheduleUrl(page.context(), "/hc/schedule?mode=list", fixture.sessionDate));
   const sessionRow = page.getByRole("row").filter({ hasText: fixture.schoolName }).first();
   const dialog = page.getByRole("dialog", { name: "Mark supervisor attendance" });
-  // The menu can close while the calendar re-renders with data that loads after the page.
-  await expect(async () => {
-    await sessionRow.getByRole("cell").last().click();
-    await page.getByRole("menuitem", { name: "Mark supervisor attendance" }).click({
-      timeout: 2000,
-    });
-    await expect(dialog).toBeVisible({ timeout: 2000 });
-  }).toPass({ timeout: 30_000 });
+  await chooseRowAction(page, sessionRow, "Mark supervisor attendance");
   return dialog;
 }
 
@@ -101,8 +94,7 @@ test("a hub coordinator marks a supervisor attended, then missed in bulk", async
 
   await openSupervisorAttendance(page);
   const supervisorRow = await searchRows(page, fixture.supervisorName);
-  await openRowMenu(page, supervisorRow);
-  await page.getByRole("menuitem", { name: "Mark attendance" }).click();
+  await chooseRowAction(page, supervisorRow, "Mark attendance");
   const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
   await mark.getByRole("radio").first().click();
   await mark.getByRole("button", { name: "Submit" }).click();

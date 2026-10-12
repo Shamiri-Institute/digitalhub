@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { signInAs } from "#/tests/helpers";
-import { scheduleUrl, searchRows } from "#/tests/pages/helpers";
+import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * An admin opens "View fellow attendance" from the schedule. The dialog fills its fellow rows,
@@ -70,13 +70,8 @@ test("an admin sees each fellow's group in the fellow attendance dialog", async 
     await scheduleUrl(context, "/admin/schedule?mode=list", new Date(session.sessionDate)),
   );
   const sessionRow = page.getByRole("row").filter({ hasText: session.schoolName }).first();
-  // The menu can close while the calendar re-renders with data that loads after the page.
   const dialog = page.getByRole("dialog", { name: "View fellow attendance" });
-  await expect(async () => {
-    await sessionRow.getByRole("cell").last().click();
-    await page.getByRole("menuitem", { name: "View fellow attendance" }).click({ timeout: 2000 });
-    await expect(dialog).toBeVisible({ timeout: 2000 });
-  }).toPass({ timeout: 30_000 });
+  await chooseRowAction(page, sessionRow, "View fellow attendance");
   await dialog.getByRole("combobox").filter({ hasText: "Select a supervisor" }).click();
   await page.getByRole("option", { name: session.supervisorName, exact: true }).click();
 

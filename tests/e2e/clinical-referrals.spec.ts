@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "#/db/client";
 import { interventionGroup } from "#/db/schema";
 import { createClinicalCase, emailForProfile, signInWithEmail } from "#/tests/helpers";
-import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A supervisor refers a case to another supervisor in their hub, and the recipient accepts or
@@ -96,8 +96,7 @@ function referralCard(page: Page) {
 async function referCaseToRecipient(page: Page) {
   await signInWithEmail(page.context(), referrer.email);
   await page.goto(getUrl("/sc/clinical"));
-  await openRowMenu(page, await searchRows(page, pseudonym));
-  await page.getByRole("menu").getByText("Refer case", { exact: true }).click();
+  await chooseRowAction(page, await searchRows(page, pseudonym), "Refer case");
 
   // This dialog's heading is not linked to it, so it has no accessible name.
   const dialog = page

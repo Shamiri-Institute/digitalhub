@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "#/db/client";
 import { school, weeklyHubReport } from "#/db/schema";
 import { signInAs } from "#/tests/helpers";
-import { getUrl, openRowMenu, rowWithCell } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
 const recommendations = `E2E weekly hub report ${Date.now()}`;
 let originalSchool:
@@ -90,8 +90,7 @@ test("Hub Coordinator edits a school in one dialog", async ({ page, context }) =
 
   await page.goto(getUrl("/hc/schools"));
   const schoolRow = await rowWithCell(page, page.getByRole("main"), schoolName);
-  await openRowMenu(page, schoolRow);
-  await page.getByRole("menuitem", { name: "Edit school information" }).click();
+  await chooseRowAction(page, schoolRow, "Edit school information");
 
   const editDialog = page.getByRole("dialog", { name: "Edit school information" });
   await expect(editDialog).toHaveCount(1);

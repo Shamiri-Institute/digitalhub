@@ -40,11 +40,14 @@ export async function rowWithCell(page: Page, scope: Locator, text: string) {
   return rows.filter({ has: page.getByRole("cell", { name: text, exact: true }) });
 }
 
-/** Opens a row's actions menu. Rows re-render while their data loads, so retry the click. */
-export async function openRowMenu(page: Page, row: Locator) {
+/**
+ * Opens a row's actions menu and chooses `action`. A table can re-render while its data loads,
+ * which closes an open menu, so opening and choosing retry together.
+ */
+export async function chooseRowAction(page: Page, row: Locator, action: string) {
   await expect(async () => {
     await row.getByRole("cell").last().click();
-    await expect(page.getByRole("menu")).toBeVisible({ timeout: 2000 });
+    await page.getByRole("menu").getByText(action, { exact: true }).click({ timeout: 5000 });
   }).toPass({ timeout: 30_000 });
 }
 
@@ -72,7 +75,7 @@ export async function scheduleUrl(context: BrowserContext, path: string, date: D
  * JavaScript, and text typed into an input before hydration is reset by it. React attaches its
  * props to a DOM node when it hydrates it.
  */
-export async function waitForHydration(element: Locator) {
+async function waitForHydration(element: Locator) {
   await expect
     .poll(() => element.evaluate((node) => Object.keys(node).some((key) => key.startsWith("__reactProps"))))
     .toBe(true);

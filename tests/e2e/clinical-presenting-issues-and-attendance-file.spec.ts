@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { attendanceDocuments, clinicalSessionAttendance } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
 import { createClinicalCase, signInWithEmail, signableMember } from "#/tests/helpers";
-import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A supervisor saves a clinical case's baseline presenting issues (emergency, general and other
@@ -156,8 +156,7 @@ test("a save from a page loaded before the case was terminated changes nothing",
   // The same supervisor terminates the case in another tab while this page still shows it active.
   const otherTab = await context.newPage();
   await otherTab.goto(getUrl("/sc/clinical"));
-  await openRowMenu(otherTab, await searchRows(otherTab, clinicalCase.pseudonym));
-  await otherTab.getByRole("menu").getByText("Terminate case", { exact: true }).click();
+  await chooseRowAction(otherTab, await searchRows(otherTab, clinicalCase.pseudonym), "Terminate case");
   const terminate = otherTab
     .getByRole("dialog")
     .filter({ has: otherTab.getByRole("heading", { name: "Terminate Case" }) });
@@ -215,8 +214,7 @@ test("a fellow deletes their group's attendance document even when the file stor
     const sessionRow = main
       .getByRole("row")
       .filter({ has: page.getByRole("cell", { name: attendance.sessionLabel, exact: true }) });
-    await openRowMenu(page, sessionRow);
-    await page.getByRole("menuitem", { name: "Upload attendance" }).click();
+    await chooseRowAction(page, sessionRow, "Upload attendance");
     await expect(dialog).toBeVisible();
   }
 

@@ -4,7 +4,7 @@ import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { fellowAttendance, payoutStatements } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
-import { openRowMenu, scheduleUrl, searchRows } from "#/tests/pages/helpers";
+import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * Fellow attendance, which writes payout statements, through the UI. Each test saves, reloads and
@@ -37,8 +37,7 @@ async function openSessionWeek(page: Page, sessionDate: Date, schoolName: string
 
 async function openFellowAttendance(page: Page, sessionDate: Date, schoolName: string) {
   const sessionRow = (await openSessionWeek(page, sessionDate, schoolName)).first();
-  await openRowMenu(page, sessionRow);
-  await page.getByRole("menuitem", { name: "Mark fellow attendance" }).click();
+  await chooseRowAction(page, sessionRow, "Mark fellow attendance");
   return page.getByRole("dialog", { name: "Mark fellow attendance" });
 }
 
@@ -110,8 +109,7 @@ test.describe("fellow attendance", () => {
     const fellowRow = await searchRows(page, fixture.fellowName, dialog);
     await expect(fellowRow).toContainText("Attended");
 
-    await openRowMenu(page, fellowRow);
-    await page.getByRole("menuitem", { name: "Mark attendance" }).click();
+    await chooseRowAction(page, fellowRow, "Mark attendance");
     const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
     await mark.getByRole("radio").nth(1).click();
     await mark.getByRole("combobox", { name: "Select reason for above" }).click();
@@ -272,8 +270,7 @@ test.describe("bulk fellow attendance", () => {
       [page, secondTab].map(async (tab) => {
         const dialog = await openFellowAttendance(tab, fixture.sessionDate, fixture.schoolName);
         const fellowRow = await searchRows(tab, fellowName, dialog);
-        await openRowMenu(tab, fellowRow);
-        await tab.getByRole("menuitem", { name: "Mark attendance" }).click();
+        await chooseRowAction(tab, fellowRow, "Mark attendance");
         const mark = tab.getByRole("dialog").filter({ hasText: "Select attendance" });
         await mark.getByRole("radio").first().click();
         return mark.getByRole("button", { name: "Submit" });

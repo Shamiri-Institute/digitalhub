@@ -4,7 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { db } from "#/db/client";
 import { ticketEscalations, ticketReassignments, ticketResolutions, tickets } from "#/db/schema";
 import { signInAs } from "#/tests/helpers";
-import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 const subject = `E2E ticket ${Date.now()}`;
 
@@ -40,7 +40,6 @@ test("supervisor creates a ticket and can view it in the list", async ({ page, c
   await expect(row).toContainText(/tech/i);
   await expect(row).toContainText(/medium/i);
 
-  await openRowMenu(page, row);
-  await page.getByRole("menuitem", { name: "View ticket" }).click();
+  await chooseRowAction(page, row, "View ticket");
   await expect(page.getByRole("dialog")).toContainText(subject);
 });

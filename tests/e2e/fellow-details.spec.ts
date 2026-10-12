@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { fellow } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
-import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A hub coordinator edits a fellow of their hub. The edit action scopes the fellow to the caller,
@@ -50,8 +50,7 @@ test.afterAll(async () => {
 
 async function openEditDialog(page: Page) {
   const fellowRow = await searchRows(page, fixture.fellowName);
-  await openRowMenu(page, fellowRow);
-  await page.getByRole("menuitem", { name: "Edit fellow information" }).click();
+  await chooseRowAction(page, fellowRow, "Edit fellow information");
   return page.getByRole("dialog", { name: "Edit fellow information" });
 }
 

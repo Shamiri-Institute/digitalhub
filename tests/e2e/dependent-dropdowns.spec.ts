@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { signInAs } from "#/tests/helpers";
-import { getUrl, openRowMenu } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction } from "#/tests/pages/helpers";
 
 /**
  * Dropdowns that load their options when another dropdown changes. Each test picks a value and
@@ -39,8 +39,7 @@ test("a hub coordinator picks a school and sees its groups in the move-school fo
   });
 
   await page.goto(getUrl(`/hc/schools/${fixture.fromVisibleId}/students`));
-  await openRowMenu(page, page.locator("table tbody tr").first());
-  await page.getByRole("menuitem", { name: "Move to another school" }).click();
+  await chooseRowAction(page, page.locator("table tbody tr").first(), "Move to another school");
 
   const dialog = page.getByRole("dialog", { name: "Move student to another school" });
   await dialog.getByRole("combobox").first().click();
