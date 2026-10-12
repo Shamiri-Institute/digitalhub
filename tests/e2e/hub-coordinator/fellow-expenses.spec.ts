@@ -3,12 +3,12 @@ import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { emailForProfile, signInWithEmail } from "#/tests/helpers";
-import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { cellUnder, getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A hub coordinator opens the fellow expenses report. The row of one fellow shows the session
  * counts and payout totals that a direct query of the database gives, and expands to the
- * fellow's payouts.
+ * fellow's payouts, which have no action menu.
  */
 
 type Expected = {
@@ -92,17 +92,23 @@ test("a fellow's row shows the session counts and payout totals in the database"
 
   const row = await searchRows(page, expected.fellowName);
   await expect(row).toHaveCount(1);
-  const cells = row.getByRole("cell");
-  await expect(cells.nth(4)).toHaveText(String(expected.special));
-  await expect(cells.nth(5)).toHaveText(`${expected.pre} - pre | ${expected.main} - main`);
-  await expect(cells.nth(6)).toHaveText(`${expected.training} - T | ${expected.supervision} - SV`);
-  await expect(cells.nth(7)).toHaveText(String(expected.paid));
-  await expect(cells.nth(8)).toHaveText(String(expected.total));
+  const cell = (header: string) => cellUnder(page, row, header);
+  await expect(await cell("Special Session")).toHaveText(String(expected.special));
+  await expect(await cell("Pre vs Main sessions")).toHaveText(
+    `${expected.pre} - pre | ${expected.main} - main`,
+  );
+  await expect(await cell("Training vs Supervision")).toHaveText(
+    `${expected.training} - T | ${expected.supervision} - SV`,
+  );
+  await expect(await cell("Paid Amount (KES)")).toHaveText(String(expected.paid));
+  await expect(await cell("Total Amount (KES)")).toHaveText(String(expected.total));
 
-  await cells.first().getByRole("button").click();
+  await row.getByRole("cell").first().getByRole("button").click();
   const payoutTable = page.locator("td:has(table)");
   await expect(
     payoutTable.getByText(`1 of ${Math.ceil(expected.payouts / 10)}`, { exact: true }),
   ).toBeVisible();
   await expect(payoutTable.locator("tbody tr")).toHaveCount(Math.min(expected.payouts, 10));
+  // Payouts are managed from the payout run, not per row.
+  await expect(payoutTable.locator('[aria-haspopup="menu"]')).toHaveCount(0);
 });

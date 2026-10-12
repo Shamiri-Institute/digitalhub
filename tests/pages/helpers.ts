@@ -39,3 +39,11 @@ export async function openRowMenu(page: Page, row: Locator) {
     await expect(page.getByRole("menu")).toBeVisible({ timeout: 2000 });
   }).toPass({ timeout: 30_000 });
 }
+
+/** The cell of `row` under the column headed `header`. */
+export async function cellUnder(page: Page, row: Locator, header: string) {
+  const headers = await page.getByRole("columnheader").allInnerTexts();
+  const index = headers.findIndex((text) => text.trim() === header);
+  if (index === -1) throw new Error(`no column headed "${header}" in ${JSON.stringify(headers)}`);
+  return row.getByRole("cell").nth(index);
+}

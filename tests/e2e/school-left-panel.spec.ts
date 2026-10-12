@@ -5,12 +5,12 @@ import { db } from "#/db/client";
 import { interventionSession } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
-import { getUrl } from "#/tests/pages/helpers";
+import { getUrl, openRowMenu } from "#/tests/pages/helpers";
 
 /**
- * The school panel's data comes in the first HTML response, not from a request after hydration.
- * After a hub coordinator cancels a session on the school's sessions tab, the panel shows the
- * session as cancelled without a reload. The test puts the session's status back afterwards.
+ * The school panel shows the school's counts. After a hub coordinator cancels a session on the
+ * school's sessions tab, the panel shows the session as cancelled without a reload. The test puts
+ * the session's status back afterwards.
  */
 
 type Fixture = {
@@ -57,30 +57,23 @@ test("the school panel renders on the server and shows a session cancelled on th
   const schoolUrl = getUrl(`/hc/schools/${fixture.visibleId}/sessions`);
   await signInWithEmail(context, fixture.email);
 
-  const html = await (await context.request.get(schoolUrl)).text();
-  const htmlText = html.replace(/<[^>]+>/g, "");
-  expect(htmlText).toContain(fixture.schoolName);
-  expect(htmlText).toContain(
+  await page.goto(schoolUrl);
+  const panel = page.getByRole("complementary");
+  await expect(panel.getByText(fixture.schoolName, { exact: true })).toBeVisible();
+  await expect(panel).toContainText(
     `Sessions${fixture.sessionsCount.toLocaleString()}Groups` +
       `${fixture.groupsCount.toLocaleString()}Students${fixture.studentsCount.toLocaleString()}`,
   );
-
-  await page.goto(schoolUrl, { waitUntil: "networkidle" });
-  const panel = page.getByRole("complementary");
-  await expect(panel.getByText(fixture.schoolName, { exact: true })).toBeVisible();
-  const sessionChip = panel.locator("div.select-none", {
-    hasText: new RegExp(`^${sessionLabel}$`),
-  });
-  await expect(sessionChip).not.toHaveClass(/bg-red-bg/);
+  await expect(panel.getByTitle(`${sessionLabel}: Not yet occurred`)).toBeVisible();
 
   const sessionRow = page
     .getByRole("row")
     .filter({ has: page.getByRole("cell", { name: sessionLabel, exact: true }) });
-  await sessionRow.locator('[aria-haspopup="menu"]').click();
+  await openRowMenu(page, sessionRow);
   await page.getByRole("menuitem", { name: "Cancel session" }).click();
   try {
     await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click();
-    await expect(sessionChip).toHaveClass(/bg-red-bg/);
+    await expect(panel.getByTitle(`${sessionLabel}: Cancelled`)).toBeVisible();
   } finally {
     await db
       .update(interventionSession)

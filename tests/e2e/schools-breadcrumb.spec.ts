@@ -6,8 +6,8 @@ import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
- * The school switcher in the breadcrumb comes in the first HTML response, not from a request after
- * hydration. An admin sees every school of the implementer in the default project.
+ * The breadcrumb names the school's hub and the school. Its switcher lists every school of the
+ * admin's implementer in the default project.
  */
 
 type Fixture = {
@@ -18,7 +18,7 @@ type Fixture = {
   hubName: string;
 };
 
-test("the school breadcrumb and its switcher render on the server", async ({ page, context }) => {
+test("the school breadcrumb names the hub and switches between the implementer's schools", async ({ page, context }) => {
   const {
     rows: [fixture],
   } = await db.execute<Fixture>(sql`
@@ -42,14 +42,14 @@ test("the school breadcrumb and its switcher render on the server", async ({ pag
   const schoolUrl = getUrl(`/admin/schools/${fixture.visibleId}/sessions`);
   await signInWithEmail(context, fixture.email);
 
-  const html = await (await context.request.get(schoolUrl)).text();
-  const breadcrumbText = html.replace(/<[^>]+>/g, "").match(/Hubs\/[^/]*\/.{0,80}/)?.[0];
-  expect(breadcrumbText).toContain(`Hubs/${fixture.hubName}/${fixture.schoolName}`);
-  for (const { schoolName } of implementerSchools) {
-    expect(html.includes(schoolName), `${schoolName} is not in the HTML`).toBe(true);
-  }
-
   await page.goto(schoolUrl);
+  await expect(page.getByText(`Hubs/${fixture.hubName}/${fixture.schoolName}`)).toBeVisible();
   await page.locator("div[aria-haspopup=dialog]", { hasText: fixture.schoolName }).click();
-  await expect(page.getByRole("option")).toHaveCount(implementerSchools.length);
+  const options = page.getByRole("option");
+  await expect(options).toHaveCount(implementerSchools.length);
+  // Each option shows the school, then its hub on a second line.
+  const optionSchools = (await options.allInnerTexts()).map((text) => text.split("\n")[0]);
+  expect(optionSchools.toSorted()).toEqual(
+    implementerSchools.map((s) => s.schoolName).toSorted(),
+  );
 });

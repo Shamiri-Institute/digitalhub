@@ -31,9 +31,17 @@ export default function SessionsOccurredWidget({
             sessions.find((session) => {
               return session.session?.sessionName === sessionType.sessionName;
             })?.status === "Rescheduled";
+          const statusLabel = cancelledStatus
+            ? "Cancelled"
+            : rescheduledStatus
+              ? "Rescheduled"
+              : occurredStatus
+                ? "Occurred"
+                : "Not yet occurred";
           return (
             <div
               key={sessionType.sessionName}
+              title={`${sessionDisplayName(sessionType.sessionName)}: ${statusLabel}`}
               className={cn(
                 "select-none rounded-lg border px-1.5 py-0.5",
                 {

@@ -1,15 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellow } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
-import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A hub coordinator edits a fellow of their hub. The edit action scopes the fellow to the caller,
- * so this guards the allowed path. The database is used to pick the fixture, to read the stored
- * value back and to restore it.
+ * so this guards the allowed path. The database is used only to pick the fixture and restore it.
  */
 
 type Fixture = {
@@ -49,14 +48,18 @@ test.afterAll(async () => {
     .where(eq(fellow.id, fixture.fellowId));
 });
 
+async function openEditDialog(page: Page) {
+  const fellowRow = await searchRows(page, fixture.fellowName);
+  await openRowMenu(page, fellowRow);
+  await page.getByRole("menuitem", { name: "Edit fellow information" }).click();
+  return page.getByRole("dialog", { name: "Edit fellow information" });
+}
+
 test("a hub coordinator edits a fellow of their hub", async ({ page, context }) => {
   await signInWithEmail(context, fixture.email);
-  await page.goto(getUrl("/hc/fellows"), { waitUntil: "networkidle" });
+  await page.goto(getUrl("/hc/fellows"));
 
-  const fellowRow = await searchRows(page, fixture.fellowName);
-  await fellowRow.getByRole("cell").last().click();
-  await page.getByRole("menuitem", { name: "Edit fellow information" }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit fellow information" });
+  const dialog = await openEditDialog(page);
   const newMpesaName = `${fixture.fellowName} E2E`;
   await dialog.locator('input[name="mpesaName"]').fill(newMpesaName);
   // Seeded fellows can carry a sub-county outside their county, which the form rejects.
@@ -65,9 +68,7 @@ test("a hub coordinator edits a fellow of their hub", async ({ page, context }) 
   await dialog.getByRole("button", { name: "Update & Save" }).click();
   await expect(dialog).toBeHidden();
 
-  const [stored] = await db
-    .select({ mpesaName: fellow.mpesaName })
-    .from(fellow)
-    .where(eq(fellow.id, fixture.fellowId));
-  expect(stored?.mpesaName).toBe(newMpesaName);
+  await page.reload();
+  const reopened = await openEditDialog(page);
+  await expect(reopened.locator('input[name="mpesaName"]')).toHaveValue(newMpesaName);
 });
