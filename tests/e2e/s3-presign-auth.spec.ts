@@ -11,7 +11,8 @@ import {
   sessionRecording,
   user,
 } from "#/db/schema";
-import { sessionCookieFor } from "#/tests/helpers";
+import { emailForProfile, sessionCookieFor } from "#/tests/helpers";
+import { pickUser } from "#/tests/platform-routes";
 
 const PRESIGN = "/api/s3/presigned";
 const SIZE = 1024;
@@ -53,32 +54,6 @@ async function postPresign(request: APIRequestContext, data: unknown, token?: st
   });
   const body = await res.json().catch(() => ({}));
   return { res, body };
-}
-
-async function emailForUser(userId: string) {
-  const user = await db.query.user.findFirst({
-    where: (u, { eq }) => eq(u.id, userId),
-    columns: { email: true },
-  });
-  return user?.email ?? null;
-}
-
-async function emailForProfile(identifier: string, role: "FELLOW" | "SUPERVISOR") {
-  const member = await db.query.implementerMember.findFirst({
-    where: (m, { and, eq }) => and(eq(m.identifier, identifier), eq(m.role, role)),
-    orderBy: (m, { asc }) => asc(m.id),
-    columns: { userId: true },
-  });
-  return member ? emailForUser(member.userId) : null;
-}
-
-async function anyEmailForRole(role: "FELLOW" | "SUPERVISOR" | "HUB_COORDINATOR" | "ADMIN") {
-  const member = await db.query.implementerMember.findFirst({
-    where: (m, { eq }) => eq(m.role, role),
-    orderBy: (m, { asc }) => asc(m.id),
-    columns: { userId: true },
-  });
-  return member ? emailForUser(member.userId) : null;
 }
 
 /** Fellows who have not dropped out, as a subquery for `inArray(group.leaderId, …)`. */
@@ -220,6 +195,11 @@ function required<T>(value: T | null, what: string): T {
   return value;
 }
 
+/** A real group and session, so a refusal comes from the role, not from a missing group. */
+function ownedBy(target: UploadTarget) {
+  return { groupId: target.groupId, sessionId: target.sessionId };
+}
+
 let fellowToken: string;
 let supervisorToken: string;
 let hubToken: string;
@@ -231,17 +211,17 @@ let recordingTarget: UploadTarget;
 let recordingTargetToken: string;
 
 test.beforeAll(async () => {
-  const [fellowEmail, supervisorEmail, hubEmail, adminEmail] = await Promise.all([
-    anyEmailForRole("FELLOW"),
-    anyEmailForRole("SUPERVISOR"),
-    anyEmailForRole("HUB_COORDINATOR"),
-    anyEmailForRole("ADMIN"),
+  const [fellowUser, supervisorUser, hubUser, adminUser] = await Promise.all([
+    pickUser("FELLOW"),
+    pickUser("SUPERVISOR"),
+    pickUser("HUB_COORDINATOR"),
+    pickUser("ADMIN"),
   ]);
 
-  fellowToken = await sessionCookieHeader(required(fellowEmail, "FELLOW"));
-  supervisorToken = await sessionCookieHeader(required(supervisorEmail, "SUPERVISOR"));
-  hubToken = await sessionCookieHeader(required(hubEmail, "HUB_COORDINATOR"));
-  adminToken = await sessionCookieHeader(required(adminEmail, "ADMIN"));
+  fellowToken = await sessionCookieHeader(fellowUser.email);
+  supervisorToken = await sessionCookieHeader(supervisorUser.email);
+  hubToken = await sessionCookieHeader(hubUser.email);
+  adminToken = await sessionCookieHeader(adminUser.email);
 
   attendanceTarget = required(await findFellowUploadTarget(), "fellow upload target");
   attendanceTargetToken = await sessionCookieHeader(attendanceTarget.email);
@@ -277,59 +257,12 @@ test.describe("S3 presign auth gate (unauthenticated)", () => {
   });
 });
 
-test.describe("S3 presign request-schema validation (Fellow session)", () => {
-  test("missing groupId is rejected by the schema", async ({ request }) => {
-    const { groupId: _g, ...withoutGroup } = attendanceBody;
-    const { res, body } = await postPresign(request, withoutGroup, fellowToken);
-    expect(res.status()).toBe(400);
-    expect(body.error).toBe("Invalid request body");
-    expect(body.url).toBeUndefined();
-  });
-
-  test("missing sessionId is rejected by the schema", async ({ request }) => {
-    const { sessionId: _s, ...withoutSession } = attendanceBody;
-    const { res, body } = await postPresign(request, withoutSession, fellowToken);
-    expect(res.status()).toBe(400);
-    expect(body.error).toBe("Invalid request body");
-    expect(body.url).toBeUndefined();
-  });
-
-  test("missing size is rejected by the schema", async ({ request }) => {
-    const { size: _size, ...withoutSize } = attendanceBody;
-    const { res, body } = await postPresign(request, withoutSize, fellowToken);
-    expect(res.status()).toBe(400);
-    expect(body.error).toBe("Invalid request body");
-    expect(body.url).toBeUndefined();
-  });
-
-  test("zero-byte size is rejected by the schema", async ({ request }) => {
-    const { res, body } = await postPresign(request, { ...attendanceBody, size: 0 }, fellowToken);
-    expect(res.status()).toBe(400);
-    expect(body.error).toBe("Invalid request body");
-    expect(body.url).toBeUndefined();
-  });
-
-  test("size sent as a string is rejected by the schema", async ({ request }) => {
-    const { res, body } = await postPresign(
-      request,
-      { ...attendanceBody, size: "1024" },
-      fellowToken,
-    );
-    expect(res.status()).toBe(400);
-    expect(body.error).toBe("Invalid request body");
-    expect(body.url).toBeUndefined();
-  });
-
-  test("an unknown bucket is rejected by the schema", async ({ request }) => {
-    const { res, body } = await postPresign(
-      request,
-      { ...attendanceBody, bucket: "uploads" },
-      fellowToken,
-    );
-    expect(res.status()).toBe(400);
-    expect(body.error).toBe("Invalid request body");
-    expect(body.url).toBeUndefined();
-  });
+// The cases the body schema rejects are in tests/unit/s3-request-schema.test.ts.
+test("an invalid body is rejected with 400 and no url", async ({ request }) => {
+  const { res, body } = await postPresign(request, { ...attendanceBody, size: 0 }, fellowToken);
+  expect(res.status()).toBe(400);
+  expect(body.error).toBe("Invalid request body");
+  expect(body.url).toBeUndefined();
 });
 
 test.describe("S3 presign student-attendance (Fellow session)", () => {
@@ -441,7 +374,12 @@ test.describe("S3 presign student-attendance (Fellow session)", () => {
   });
 
   test("Fellow cannot mint a recordings URL", async ({ request }) => {
-    const { res, body } = await postPresign(request, recordingBody, fellowToken);
+    // The fellow leads this group, so only the role can refuse it.
+    const { res, body } = await postPresign(
+      request,
+      { ...recordingBody, ...ownedBy(attendanceTarget) },
+      attendanceTargetToken,
+    );
     expect(res.status()).toBe(403);
     expect(body.error).toBe("Forbidden");
     expect(body.url).toBeUndefined();
@@ -512,7 +450,12 @@ test.describe("S3 presign recordings (Supervisor session)", () => {
   });
 
   test("Supervisor cannot mint a student-attendance URL", async ({ request }) => {
-    const { res, body } = await postPresign(request, attendanceBody, supervisorToken);
+    // The supervisor supervises this group's fellow, so only the role can refuse it.
+    const { res, body } = await postPresign(
+      request,
+      { ...attendanceBody, ...ownedBy(recordingTarget) },
+      recordingTargetToken,
+    );
     expect(res.status()).toBe(403);
     expect(body.error).toBe("Forbidden");
     expect(body.url).toBeUndefined();
@@ -521,25 +464,41 @@ test.describe("S3 presign recordings (Supervisor session)", () => {
 
 test.describe("S3 presign other roles", () => {
   test("Hub coordinator cannot mint recordings", async ({ request }) => {
-    const { res, body } = await postPresign(request, recordingBody, hubToken);
+    const { res, body } = await postPresign(
+      request,
+      { ...recordingBody, ...ownedBy(recordingTarget) },
+      hubToken,
+    );
     expect(res.status()).toBe(403);
     expect(body.url).toBeUndefined();
   });
 
   test("Hub coordinator cannot mint student-attendance", async ({ request }) => {
-    const { res, body } = await postPresign(request, attendanceBody, hubToken);
+    const { res, body } = await postPresign(
+      request,
+      { ...attendanceBody, ...ownedBy(attendanceTarget) },
+      hubToken,
+    );
     expect(res.status()).toBe(403);
     expect(body.url).toBeUndefined();
   });
 
   test("Admin cannot mint student-attendance as if they were a Fellow", async ({ request }) => {
-    const { res, body } = await postPresign(request, attendanceBody, adminToken);
+    const { res, body } = await postPresign(
+      request,
+      { ...attendanceBody, ...ownedBy(attendanceTarget) },
+      adminToken,
+    );
     expect(res.status()).toBe(403);
     expect(body.url).toBeUndefined();
   });
 
   test("Admin cannot mint recordings", async ({ request }) => {
-    const { res, body } = await postPresign(request, recordingBody, adminToken);
+    const { res, body } = await postPresign(
+      request,
+      { ...recordingBody, ...ownedBy(recordingTarget) },
+      adminToken,
+    );
     expect(res.status()).toBe(403);
     expect(body.url).toBeUndefined();
   });
