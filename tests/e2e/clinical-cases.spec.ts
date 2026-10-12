@@ -16,7 +16,8 @@ import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A supervisor works on a clinical case they hold, through the UI. Each test saves, reloads and
- * checks what the page shows; the database is used only to find or add fixtures and to clean up.
+ * checks what the page shows. The database finds or adds fixtures, cleans up, and checks what no
+ * page shows: the owner fields set from the session and the stored termination reason.
  */
 
 type Fixture = { profileId: string; hubId: string; email: string };
@@ -115,6 +116,13 @@ async function createCaseForNewStudent(page: Page, casePseudonym: string) {
   await expect(dialog).toBeHidden();
 }
 
+function caseOwners(casePseudonym: string) {
+  return db.query.clinicalScreeningInfo.findFirst({
+    where: (c, { eq }) => eq(c.pseudonym, casePseudonym),
+    columns: { currentSupervisorId: true, clinicalLeadId: true },
+  });
+}
+
 /** Deletes a case made by createCaseForNewStudent and its student, even if only one of them exists. */
 async function deleteCase(casePseudonym: string) {
   await db.delete(clinicalScreeningInfo).where(eq(clinicalScreeningInfo.pseudonym, casePseudonym));
@@ -147,6 +155,11 @@ test("a supervisor's new case is listed as theirs", async ({ page, context }) =>
   await expect(await searchRows(page, casePseudonym)).toContainText("ACTIVE", {
     ignoreCase: true,
   });
+  // No page shows the lead of a supervisor's case; it must come from the session, not the form.
+  expect(await caseOwners(casePseudonym)).toEqual({
+    currentSupervisorId: owner.profileId,
+    clinicalLeadId: null,
+  });
 });
 
 test("a clinical lead's new case is assigned to them", async ({ page, context }) => {
@@ -159,6 +172,11 @@ test("a clinical lead's new case is assigned to them", async ({ page, context })
   await page.reload();
   // The list holds only the cases assigned to the calling lead.
   await expect(await searchRows(page, casePseudonym)).toBeVisible();
+  // No page shows the supervisor of a lead's case; it must come from the session, not the form.
+  expect(await caseOwners(casePseudonym)).toEqual({
+    currentSupervisorId: null,
+    clinicalLeadId: clinicalLead.profileId,
+  });
 });
 
 // The form once copied an existing student's admission number into a hidden numeric field. A
@@ -392,4 +410,15 @@ test("a supervisor terminates their case", async ({ page, context }) => {
 
   await page.reload();
   await expect(await searchRows(page, pseudonym)).toContainText("Terminated");
+
+  // No page shows the termination reason, so read the stored one.
+  const termination = await db.query.clinicalCaseTermination.findFirst({
+    where: (t, { eq }) => eq(t.sessionId, clinicalSessionId),
+    columns: { caseId: true, terminationReason: true, terminationReasonExplanation: true },
+  });
+  expect(termination).toEqual({
+    caseId,
+    terminationReason: "Student refused to return to sessions",
+    terminationReasonExplanation,
+  });
 });
