@@ -56,19 +56,20 @@ export async function fetchStudentsDataBreakdown(scope: ClinicalScope) {
   const [attendanceData, dropoutData, completionData, ratingsData] = await Promise.all([
     db
       .execute<{ sessionName: string | null; count: number }>(sql`
-      SELECT
-        sn.session_name as "sessionName",
-        COUNT(DISTINCT sa.student_id)::int as count
-      FROM student_attendances sa
-      JOIN students s ON s.id = sa.student_id
-      JOIN schools sc ON s.school_id = sc.id
-      JOIN intervention_sessions ins ON ins.id = sa.session_id
-      JOIN session_names sn ON sn.id = ins.session_id
-      ${sc.join}
-      WHERE ${sc.where}
-      AND sa.attended = true
-      GROUP BY sn.session_name
-      ORDER BY sn.session_name ASC
+      SELECT "sessionName", COUNT(*)::int as count
+      FROM (
+        SELECT DISTINCT sn.session_name as "sessionName", sa.student_id
+        FROM student_attendances sa
+        JOIN students s ON s.id = sa.student_id
+        JOIN schools sc ON s.school_id = sc.id
+        JOIN intervention_sessions ins ON ins.id = sa.session_id
+        JOIN session_names sn ON sn.id = ins.session_id
+        ${sc.join}
+        WHERE ${sc.where}
+        AND sa.attended = true
+      ) attended_students
+      GROUP BY "sessionName"
+      ORDER BY "sessionName" ASC
     `)
       .then((r) => r.rows),
 
