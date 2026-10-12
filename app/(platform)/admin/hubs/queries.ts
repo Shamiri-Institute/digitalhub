@@ -14,6 +14,7 @@ export async function fetchAdminHubs(implementerId: string, projectId: string) {
     where: (h, { and, eq }) => and(eq(h.implementerId, implementerId), eq(h.projectId, projectId)),
     with: {
       schools: {
+        orderBy: (school, { asc }) => [asc(school.schoolName), asc(school.id)],
         with: {
           assignedSupervisor: true,
           interventionSessions: {
@@ -39,6 +40,7 @@ export async function fetchAdminHubs(implementerId: string, projectId: string) {
           "supervisors_count",
         ),
     }),
+    orderBy: (h, { asc }) => [asc(h.hubName), asc(h.id)],
   });
 
   return hubs;
