@@ -65,7 +65,9 @@ export async function cellUnder(page: Page, row: Locator, header: string) {
  */
 export async function scheduleUrl(context: BrowserContext, path: string, date: Date) {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  await context.addCookies([{ name: TIME_ZONE_COOKIE, value: timeZone, domain: "localhost", path: "/" }]);
+  await context.addCookies([
+    { name: TIME_ZONE_COOKIE, value: timeZone, domain: "localhost", path: "/" },
+  ]);
   const localDate = new Intl.DateTimeFormat("en-CA", { timeZone }).format(date);
   return getUrl(`${path}${path.includes("?") ? "&" : "?"}date=${localDate}`);
 }
@@ -77,6 +79,8 @@ export async function scheduleUrl(context: BrowserContext, path: string, date: D
  */
 async function waitForHydration(element: Locator) {
   await expect
-    .poll(() => element.evaluate((node) => Object.keys(node).some((key) => key.startsWith("__reactProps"))))
+    .poll(() =>
+      element.evaluate((node) => Object.keys(node).some((key) => key.startsWith("__reactProps"))),
+    )
     .toBe(true);
 }

@@ -6,7 +6,10 @@ import { getUrl } from "#/tests/pages/helpers";
 import type { Role } from "#/tests/platform-routes";
 
 const otherRolesPages: Array<{ role: Role & keyof typeof roleHome; forbidden: string[] }> = [
-  { role: "SUPERVISOR", forbidden: ["/hc/schedule", "/cl/clinical", "/ops/reporting/expenses/fellows"] },
+  {
+    role: "SUPERVISOR",
+    forbidden: ["/hc/schedule", "/cl/clinical", "/ops/reporting/expenses/fellows"],
+  },
   { role: "HUB_COORDINATOR", forbidden: ["/sc/schedule"] },
   { role: "CLINICAL_LEAD", forbidden: ["/sc/schedule", "/hc/schedule"] },
   { role: "OPERATIONS", forbidden: ["/sc/schedule", "/hc/schedule", "/cl/clinical"] },

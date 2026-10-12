@@ -141,7 +141,11 @@ test("a fellow evaluates a group they lead", async ({ page, context }) => {
   const dialog = page.getByRole("dialog", { name: "Student group evaluation" });
   async function openEvaluation() {
     await page.goto(getUrl(`/fel/schools/${evaluation.visibleId}/group`));
-    await chooseRowAction(page, await rowWithCell(page, main, evaluation.groupName), "View student group evaluation");
+    await chooseRowAction(
+      page,
+      await rowWithCell(page, main, evaluation.groupName),
+      "View student group evaluation",
+    );
   }
 
   await openEvaluation();

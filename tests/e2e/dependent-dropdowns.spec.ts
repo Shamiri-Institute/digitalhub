@@ -32,7 +32,8 @@ test("a hub coordinator picks a school and sees its groups in the move-school fo
     limit 1`);
   if (!fixture) throw new Error("seed the database first: no hub with two schools and groups");
   const groups = await db.query.interventionGroup.findMany({
-    where: (g, { and, eq, isNull }) => and(eq(g.schoolId, fixture.toSchoolId), isNull(g.archivedAt)),
+    where: (g, { and, eq, isNull }) =>
+      and(eq(g.schoolId, fixture.toSchoolId), isNull(g.archivedAt)),
     columns: { groupName: true },
     with: { leader: { columns: { fellowName: true } } },
     orderBy: (g, { asc }) => asc(g.groupName),

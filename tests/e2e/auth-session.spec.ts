@@ -28,7 +28,11 @@ async function createAdmin() {
   if (!createdUser) throw new Error("Could not create the test user");
   const [profile] = await db
     .insert(adminUser)
-    .values({ email, adminName: "Auth Session Test", implementerId: seededMembership.implementerId })
+    .values({
+      email,
+      adminName: "Auth Session Test",
+      implementerId: seededMembership.implementerId,
+    })
     .returning({ id: adminUser.id });
   if (!profile) throw new Error("Could not create the test admin profile");
   await db.insert(implementerMember).values({

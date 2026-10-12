@@ -456,7 +456,8 @@ function ComplexForm() {
 
 ### Testing
 
-- `npm test` - Run Playwright tests in development
+- `npm test` - Run Playwright tests against `next dev`
+- `npm run test:prod` - Build, then run Playwright tests against `next start`, as CI does
 - `npm run test:ui` - Run Playwright tests with UI
 - `npm run test:unit` - Run Vitest unit tests
 - `npm run test:ci` - Run tests in CI mode
@@ -592,9 +593,10 @@ refactor(components): extract reusable form validation
 
 ### Testing
 
-- E2E tests use Playwright with role-based fixtures
+- E2E tests use Playwright and sign in as seeded users picked from the database (`signInAs`, `signInWithEmail` in `tests/helpers.ts`)
 - Unit tests use Vitest with React Testing Library
-- Test fixtures stored in `tests/fixtures/`
+- A spec that changes data creates its own rows or picks rows no other spec edits, and removes what it made
+- After a mutation, assert through the UI after a reload. Read the database only for what no page shows (values the server takes from the session, stored but undisplayed data, revoked sessions, writes that must not happen), with a comment saying so
 - **Run relevant tests after code changes**
 
 ## Technical Excellence Guidelines

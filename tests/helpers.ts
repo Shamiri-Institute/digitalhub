@@ -128,9 +128,7 @@ export async function createClinicalCase(owner: {
     await db
       .delete(clinicalFollowUpTreatmentPlan)
       .where(eq(clinicalFollowUpTreatmentPlan.caseId, caseId));
-    await db
-      .delete(clinicalSessionAttendance)
-      .where(eq(clinicalSessionAttendance.caseId, caseId));
+    await db.delete(clinicalSessionAttendance).where(eq(clinicalSessionAttendance.caseId, caseId));
     await db.delete(clinicalScreeningInfo).where(eq(clinicalScreeningInfo.id, caseId));
     await db.delete(student).where(eq(student.id, studentId));
   }

@@ -161,7 +161,11 @@ async function sessionRow(page: Page, scope: Locator, label: string) {
 /** The triage fellow's "Mark student attendance" dialog for the fixture session. */
 async function openStudentAttendance(page: Page) {
   await page.goto(getUrl(`/fel/schools/${triage.visibleId}/sessions`));
-  await chooseRowAction(page, await sessionRow(page, page.getByRole("main"), triage.sessionLabel), "Mark student attendance");
+  await chooseRowAction(
+    page,
+    await sessionRow(page, page.getByRole("main"), triage.sessionLabel),
+    "Mark student attendance",
+  );
   const attendance = page.getByRole("dialog", { name: "Mark student attendance" });
   // The student list loads after the dialog opens; search only once it has rows.
   await expect(attendance.getByRole("checkbox", { name: "Select row" }).first()).toBeVisible();
@@ -180,7 +184,11 @@ test("a hub coordinator drops out a student in their hub", async ({ page, contex
   );
 
   const main = page.getByRole("main");
-  await chooseRowAction(page, await rowWithCell(page, main, school.studentName), "Drop-out student");
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, main, school.studentName),
+    "Drop-out student",
+  );
   const dialog = page.getByRole("dialog", { name: "Drop out student" });
   await dialog.getByRole("combobox", { name: "Select reason *" }).click();
   await page.getByRole("option").first().click();
@@ -210,7 +218,11 @@ test("a hub coordinator marks a session in their hub as occurred", async ({ page
   await page.goto(getUrl(`/hc/schools/${school.visibleId}/sessions`));
 
   const main = page.getByRole("main");
-  await chooseRowAction(page, await sessionRow(page, main, school.sessionLabel), "Mark session occurrence");
+  await chooseRowAction(
+    page,
+    await sessionRow(page, main, school.sessionLabel),
+    "Mark session occurrence",
+  );
   const dialog = page
     .getByRole("dialog")
     .filter({ has: page.getByRole("heading", { name: "Mark session occurrence" }) });
@@ -272,7 +284,11 @@ test("a fellow marks one student missed and two students attended at once", asyn
   await signInWithEmail(context, triage.email);
 
   let attendance = await openStudentAttendance(page);
-  await chooseRowAction(page, await rowWithCell(page, attendance, missedStudent.admissionNumber ?? ""), "Mark attendance");
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, attendance, missedStudent.admissionNumber ?? ""),
+    "Mark attendance",
+  );
   // The mark dialog's heading is not linked to it, so it has no accessible name.
   const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
   // The radios are unlabelled: Attended, Missed, Unmarked.
@@ -477,11 +493,19 @@ test("a borrowed fellow's triage event and supervisor list use the session's hub
   await signInWithEmail(context, borrowed.email);
   await page.goto(getUrl(`/fel/schools/${borrowed.visibleId}/sessions`));
   const sessionLabel = sessionDisplayName(borrowed.sessionLabel) ?? borrowed.sessionLabel;
-  await chooseRowAction(page, await sessionRow(page, page.getByRole("main"), sessionLabel), "Mark student attendance");
+  await chooseRowAction(
+    page,
+    await sessionRow(page, page.getByRole("main"), sessionLabel),
+    "Mark student attendance",
+  );
   const attendance = page.getByRole("dialog", { name: "Mark student attendance" });
   await expect(attendance.getByRole("checkbox", { name: "Select row" }).first()).toBeVisible();
   const form = page.getByRole("dialog", { name: "Document triage" });
-  await chooseRowAction(page, await rowWithCell(page, attendance, borrowed.admissionNumber), "Triage occurred");
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, attendance, borrowed.admissionNumber),
+    "Triage occurred",
+  );
   await expect(form).toBeVisible();
   await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
   await page.getByRole("option", { name: "All NO (Risk negative)" }).click();

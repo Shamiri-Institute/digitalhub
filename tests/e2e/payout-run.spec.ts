@@ -119,7 +119,9 @@ test("an ops user triggers a payout run", async ({ page, context }) => {
     select sum(amount)::int as "expectedPayoutAmount" from payout_statements
     where executed_at = ${executedAt.toISOString()}`);
   await page.reload();
-  const runRow = page.getByRole("row").filter({ hasText: format(executedAt, "dd-MM-yyyy HH:mm:ss") });
+  const runRow = page
+    .getByRole("row")
+    .filter({ hasText: format(executedAt, "dd-MM-yyyy HH:mm:ss") });
   await expect(runRow).toContainText(String(run?.expectedPayoutAmount));
 });
 

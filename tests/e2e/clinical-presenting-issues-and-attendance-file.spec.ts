@@ -156,7 +156,11 @@ test("a save from a page loaded before the case was terminated changes nothing",
   // The same supervisor terminates the case in another tab while this page still shows it active.
   const otherTab = await context.newPage();
   await otherTab.goto(getUrl("/sc/clinical"));
-  await chooseRowAction(otherTab, await searchRows(otherTab, clinicalCase.pseudonym), "Terminate case");
+  await chooseRowAction(
+    otherTab,
+    await searchRows(otherTab, clinicalCase.pseudonym),
+    "Terminate case",
+  );
   const terminate = otherTab
     .getByRole("dialog")
     .filter({ has: otherTab.getByRole("heading", { name: "Terminate Case" }) });

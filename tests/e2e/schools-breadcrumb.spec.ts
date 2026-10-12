@@ -18,7 +18,10 @@ type Fixture = {
   hubName: string;
 };
 
-test("the school breadcrumb names the hub and switches between the implementer's schools", async ({ page, context }) => {
+test("the school breadcrumb names the hub and switches between the implementer's schools", async ({
+  page,
+  context,
+}) => {
   const {
     rows: [fixture],
   } = await db.execute<Fixture>(sql`
@@ -48,8 +51,9 @@ test("the school breadcrumb names the hub and switches between the implementer's
   const options = page.getByRole("option");
   await expect(options).toHaveCount(implementerSchools.length);
   // Each option shows the school, then its hub on a second line.
-  const optionSchools = (await options.allInnerTexts()).map((text) => text.split("\n")[0]);
-  expect(optionSchools.toSorted()).toEqual(
-    implementerSchools.map((s) => s.schoolName).toSorted(),
+  const optionSchools = (await options.allInnerTexts()).map((text) => text.split("\n")[0] ?? "");
+  const byName = (a: string, b: string) => a.localeCompare(b);
+  expect(optionSchools.toSorted(byName)).toEqual(
+    implementerSchools.map((s) => s.schoolName).toSorted(byName),
   );
 });

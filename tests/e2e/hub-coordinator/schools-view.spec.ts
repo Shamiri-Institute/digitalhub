@@ -79,7 +79,11 @@ test("Hub Coordinator edits a school in one dialog", async ({ page, context }) =
   // The last school, so this does not edit the one other specs open first.
   const targetSchool = await db.query.school.findFirst({
     where: (s, { and, eq, isNull }) =>
-      and(eq(s.hubId, coordinatorProfile?.assignedHubId ?? ""), isNull(s.archivedAt), isNull(s.droppedOutAt)),
+      and(
+        eq(s.hubId, coordinatorProfile?.assignedHubId ?? ""),
+        isNull(s.archivedAt),
+        isNull(s.droppedOutAt),
+      ),
     columns: { id: true, schoolName: true, numbersExpected: true, boardingDay: true },
     orderBy: (s, { desc }) => desc(s.visibleId),
   });
