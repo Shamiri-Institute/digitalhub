@@ -94,8 +94,7 @@ test.beforeAll(async () => {
   }
   recording = supervisedRecording;
 
-  // The coordinator's fellows page lists only fellows whose home hub is the coordinator's hub, so
-  // a borrowed fellow cannot be reached from the UI.
+  // The coordinator's fellows page lists only fellows whose hub is the coordinator's hub.
   const {
     rows: [hubFellow],
   } = await db.execute<ReassignFixture>(sql`

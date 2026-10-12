@@ -875,11 +875,11 @@ export async function markManyFellowAttendance(
 export async function submitFellowComplaint(data: z.infer<typeof SubmitComplaintSchema>) {
   try {
     const { id, complaint, comments } = SubmitComplaintSchema.parse(data);
-    // No hub check on the fellow: hubs borrow fellows from each other.
     const caller = await requireHubRole(
       ImplementerRole.SUPERVISOR,
       ImplementerRole.HUB_COORDINATOR,
     );
+    await requireFellowsInCallerHub(caller.hubId, [id]);
     const [result] = await db
       .insert(fellowComplaints)
       .values({ fellowId: id, complaint, comments, createdBy: caller.userId })

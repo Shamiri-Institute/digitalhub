@@ -68,8 +68,8 @@ const STUDENT_WRITE_ROLES = [
 ] as const;
 
 /**
- * Throws unless the caller works at the school: a fellow leads a group there (hubs borrow fellows,
- * so their own hub can differ), a supervisor or hub coordinator has the school in their hub.
+ * Throws unless the caller works at the school: a fellow leads a group there, a supervisor or hub
+ * coordinator has the school in their hub.
  */
 async function requireCallerAtSchool(
   caller: Awaited<ReturnType<typeof requireHubRole>>,

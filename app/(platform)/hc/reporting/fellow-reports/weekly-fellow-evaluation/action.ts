@@ -7,7 +7,6 @@ import { fellowsInCallerScope, requireHubRole } from "#/lib/auth/require-hub-rol
 
 export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluation[]> {
   const coordinator = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
-  // The same fellows as the other hub reports, borrowed fellows included.
   const fellows = await db.query.fellow.findMany({
     where: (f, { inArray }) => inArray(f.id, fellowsInCallerScope(coordinator)),
     with: { weeklyFellowRatings: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] } },

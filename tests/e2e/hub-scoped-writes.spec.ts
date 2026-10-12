@@ -3,11 +3,9 @@ import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import {
-  fellow,
   interventionSession,
   student,
   studentAttendance,
-  supervisor,
   triageEvent,
   triageEventAudit,
 } from "#/db/schema";
@@ -20,7 +18,7 @@ import { sessionDisplayName } from "#/lib/utils";
  * mark a session as occurred, mark student attendance, document and edit a triage event. Each test
  * saves, reloads and checks what the page shows, and a coordinator in another hub does not see the
  * school at all. The database picks fixtures, puts rows back, and checks what no page shows: absence
- * reasons and the hub a triage event is stored under.
+ * reasons.
  */
 
 test.describe.configure({ mode: "serial" });
@@ -402,133 +400,4 @@ test("a fellow documents a triage event; another fellow at the school does not s
   await documentTriage(triage.otherAdmissionNumber);
   const otherAttendance = await openAttendance();
   await expect(otherAttendance.getByText("1 student triaged", { exact: true })).toBeVisible();
-});
-
-test("a borrowed fellow's triage event and supervisor list use the session's hub", async ({
-  page,
-  context,
-}) => {
-  // The seed has no borrowed fellow, so move a fellow's home hub to another hub of the same
-  // organisation. The session has no hub of its own, so its hub comes from its school.
-  const {
-    rows: [borrowed],
-  } = await db.execute<{
-    email: string;
-    fellowId: string;
-    fellowHomeHubId: string | null;
-    otherHubId: string;
-    visibleId: string;
-    sessionId: string;
-    sessionHubId: string | null;
-    schoolHubId: string;
-    sessionLabel: string;
-    studentId: string;
-    admissionNumber: string;
-  }>(sql`
-    select u.email, f.id as "fellowId", f.hub_id as "fellowHomeHubId",
-      other_hub.id as "otherHubId", s.visible_id as "visibleId", i.id as "sessionId",
-      i.hub_id as "sessionHubId", s.hub_id as "schoolHubId", sn.session_name as "sessionLabel",
-      st.id as "studentId", st.admission_number as "admissionNumber"
-    from intervention_groups g
-    join fellows f on f.id = g.leader_id
-    join implementer_members m on m.identifier = f.id and m.role = 'FELLOW'
-    join users u on u.id = m.user_id and u.email is not null
-    join schools s on s.id = g.school_id and s.hub_id is not null
-    join hubs school_hub on school_hub.id = s.hub_id
-    join hubs other_hub on other_hub.implementer_id = school_hub.implementer_id
-      and other_hub.id <> s.hub_id
-      and exists (select 1 from supervisors sup where sup.hub_id = other_hub.id)
-    join intervention_sessions i on i.school_id = s.id and i.occurred
-    join session_names sn on sn.id = i.session_id
-    join students st on st.assigned_group_id = g.id and st.archived_at is null
-      and st.admission_number is not null
-    where ${signableMember()} and m.implementer_id = ${coordinator.implementerId}
-      and not exists (
-        select 1 from triage_events t where t.student_id = st.id and t.session_id = i.id)
-    order by u.email, other_hub.id, i.session_date, st.id
-    limit 1`);
-  if (!borrowed) throw new Error("seed the database first: no fellow with an occurred session");
-
-  await db
-    .update(fellow)
-    .set({ hubId: borrowed.otherHubId })
-    .where(eq(fellow.id, borrowed.fellowId));
-  await db
-    .update(interventionSession)
-    .set({ hubId: null })
-    .where(eq(interventionSession.id, borrowed.sessionId));
-  undo.push(
-    () =>
-      db
-        .update(fellow)
-        .set({ hubId: borrowed.fellowHomeHubId })
-        .where(eq(fellow.id, borrowed.fellowId)),
-    () =>
-      db
-        .update(interventionSession)
-        .set({ hubId: borrowed.sessionHubId })
-        .where(eq(interventionSession.id, borrowed.sessionId)),
-    async () => {
-      const events = await db
-        .select({ id: triageEvent.id })
-        .from(triageEvent)
-        .where(
-          and(
-            eq(triageEvent.studentId, borrowed.studentId),
-            eq(triageEvent.sessionId, borrowed.sessionId),
-          ),
-        );
-      for (const { id } of events) {
-        await db.delete(triageEventAudit).where(eq(triageEventAudit.triageEventId, id));
-        await db.delete(triageEvent).where(eq(triageEvent.id, id));
-      }
-    },
-  );
-  const sessionHubSupervisors = await db
-    .select({ name: supervisor.supervisorName })
-    .from(supervisor)
-    .where(eq(supervisor.hubId, borrowed.schoolHubId))
-    .orderBy(asc(supervisor.supervisorName));
-
-  await signInWithEmail(context, borrowed.email);
-  await page.goto(getUrl(`/fel/schools/${borrowed.visibleId}/sessions`));
-  const sessionLabel = sessionDisplayName(borrowed.sessionLabel) ?? borrowed.sessionLabel;
-  await chooseRowAction(
-    page,
-    await sessionRow(page, page.getByRole("main"), sessionLabel),
-    "Mark student attendance",
-  );
-  const attendance = page.getByRole("dialog", { name: "Mark student attendance" });
-  await expect(attendance.getByRole("checkbox", { name: "Select row" }).first()).toBeVisible();
-  const form = page.getByRole("dialog", { name: "Document triage" });
-  await chooseRowAction(
-    page,
-    await rowWithCell(page, attendance, borrowed.admissionNumber),
-    "Triage occurred",
-  );
-  await expect(form).toBeVisible();
-  await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
-  await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
-  await form.getByRole("combobox", { name: "Action taken (required)" }).click();
-  await page.getByRole("option", { name: "Referred to supervisor (risk-negative)" }).click();
-  await form.getByRole("combobox", { name: "Supervisor (in the session hub)" }).click();
-  // The list holds the supervisors of the session's hub, not of the fellow's home hub.
-  await expect(page.getByRole("option")).toHaveText(sessionHubSupervisors.map((s) => s.name ?? ""));
-  await page.getByRole("option").first().click();
-  await form.getByRole("combobox", { name: "Supervisor handoff status (required)" }).click();
-  await page.getByRole("option", { name: "Supervisor notified (pending contact)" }).click();
-  await form.getByRole("button", { name: "Save triage" }).click();
-  await expect(form).toBeHidden();
-
-  // No page shows the hub a triage event is stored under.
-  const [stored] = await db
-    .select({ hubId: triageEvent.hubId })
-    .from(triageEvent)
-    .where(
-      and(
-        eq(triageEvent.studentId, borrowed.studentId),
-        eq(triageEvent.sessionId, borrowed.sessionId),
-      ),
-    );
-  expect(stored?.hubId).toBe(borrowed.schoolHubId);
 });
