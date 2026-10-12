@@ -6,16 +6,19 @@ export default function RatingStarsInput({
   value,
   onChange,
   disabled = false,
+  className,
 }: {
   value?: number;
   onChange: (value: number) => void;
   disabled?: boolean;
+  className?: string;
 }) {
   return (
     <div
       className={cn(
         "flex items-center gap-4",
         disabled ? "pointer-events-none" : "pointer-events-auto",
+        className,
       )}
     >
       <div className="rating-stars flex flex-row-reverse gap-1 py-2">

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { Icons } from "#/components/icons";
+import RatingStarsInput from "#/components/common/rating-stars-input";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -34,7 +34,6 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import AddCircleOutlined from "#/public/icons/add-circle-outline.svg";
 import { WeeklyHubReportSchema } from "../../schemas";
@@ -166,7 +165,11 @@ export default function WeeklyHubReportButtonAndForm() {
                         control={form.control}
                         name="hubRelatedIssuesAndObservationsRating"
                         render={({ field }) => (
-                          <RatingStarsInput value={field.value} onChange={field.onChange} />
+                          <RatingStarsInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="flex-col items-end gap-0"
+                          />
                         )}
                       />
                     </FormLabel>
@@ -188,7 +191,11 @@ export default function WeeklyHubReportButtonAndForm() {
                         control={form.control}
                         name="schoolRelatedIssuesAndObservationRating"
                         render={({ field }) => (
-                          <RatingStarsInput value={field.value} onChange={field.onChange} />
+                          <RatingStarsInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="flex-col items-end gap-0"
+                          />
                         )}
                       />
                     </FormLabel>
@@ -210,7 +217,11 @@ export default function WeeklyHubReportButtonAndForm() {
                         control={form.control}
                         name="supervisorRelatedIssuesAndObservationsRating"
                         render={({ field }) => (
-                          <RatingStarsInput value={field.value} onChange={field.onChange} />
+                          <RatingStarsInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="flex-col items-end gap-0"
+                          />
                         )}
                       />
                     </FormLabel>
@@ -233,7 +244,11 @@ export default function WeeklyHubReportButtonAndForm() {
                         control={form.control}
                         name="fellowRelatedIssuesAndObservationsRating"
                         render={({ field }) => (
-                          <RatingStarsInput value={field.value} onChange={field.onChange} />
+                          <RatingStarsInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="flex-col items-end gap-0"
+                          />
                         )}
                       />
                     </FormLabel>
@@ -307,43 +322,5 @@ export default function WeeklyHubReportButtonAndForm() {
         </Form>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function RatingStarsInput({
-  value,
-  onChange,
-  disabled = false,
-}: {
-  value?: number;
-  onChange: (value: number) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className={cn("flex flex-col", disabled ? "pointer-events-none" : "pointer-events-auto")}>
-      <div className="rating-stars flex flex-row-reverse gap-1 py-2">
-        {Array.from(Array(5).keys()).map((index) => {
-          return (
-            <button
-              key={index.toString()}
-              className={cn(
-                "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
-                value && value >= 5 - index
-                  ? "text-shamiri-light-orange"
-                  : "text-shamiri-light-grey",
-              )}
-              onClick={() => {
-                onChange(5 - index);
-              }}
-              type="button"
-              aria-label={`${5 - index} out of 5`}
-            >
-              <Icons.starRating className="h-full w-full" />
-            </button>
-          );
-        })}
-      </div>
-      <FormMessage className="text-[10px]" />
-    </div>
   );
 }
