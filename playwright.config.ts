@@ -23,18 +23,23 @@ export default defineConfig({
   timeout: process.env.E2E_PROD ? 30_000 : 3 * 60 * 1000,
   fullyParallel: true,
   forbidOnly: isCI,
+  // Stop at the first failure; `--max-failures=0` runs everything.
+  maxFailures: 1,
   retries: isCI ? 2 : 0,
   workers: isCI ? 1 : undefined,
   use: { trace: "retain-on-failure" },
   projects: [
     {
       name: "chromium",
-      use: {
-        ...useHeadless,
-        launchOptions: {
-          slowMo,
-        },
-      },
+      testIgnore: /payout-run\.spec\.ts/,
+      use: { ...useHeadless, launchOptions: { slowMo } },
+    },
+    // A payout run executes every eligible statement in the database, so it runs after the rest.
+    {
+      name: "payout-run",
+      testMatch: /payout-run\.spec\.ts/,
+      dependencies: ["chromium"],
+      use: { ...useHeadless, launchOptions: { slowMo } },
     },
   ],
 });

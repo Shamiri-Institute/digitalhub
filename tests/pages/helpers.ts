@@ -1,4 +1,6 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { type BrowserContext, expect, type Locator, type Page } from "@playwright/test";
+
+import { TIME_ZONE_COOKIE } from "#/lib/schedule-view";
 
 const siteUrl = `http://localhost:${process.env.PORT ?? 3000}`;
 
@@ -11,8 +13,8 @@ export function getUrl(route: string) {
  * Tables show 10 rows a page, so without the search a row can sit on a later page: a "visible"
  * check then fails and a "not listed" check passes for the wrong reason.
  */
-export async function searchRows(page: Page, text: string) {
-  const boxes = page.getByPlaceholder("Search...");
+export async function searchRows(page: Page, text: string, scope: Page | Locator = page) {
+  const boxes = scope.getByPlaceholder("Search...");
   // Streamed content arrives in a hidden container before it replaces the fallback, so wait until
   // every box on the page is a visible one.
   await expect(async () => {
@@ -23,7 +25,7 @@ export async function searchRows(page: Page, text: string) {
   for (const box of await boxes.all()) {
     await box.fill(text);
   }
-  return page.getByRole("row").filter({ hasText: text });
+  return scope.getByRole("row").filter({ hasText: text });
 }
 
 /** Rows that carry data; the empty state renders one row with a single spanning cell. */
@@ -53,4 +55,15 @@ export async function cellUnder(page: Page, row: Locator, header: string) {
   const index = headers.findIndex((text) => text.trim() === header);
   if (index === -1) throw new Error(`no column headed "${header}" in ${JSON.stringify(headers)}`);
   return row.getByRole("cell").nth(index);
+}
+
+/**
+ * A schedule page (`path` with its query) showing the period around `date`. The server reads the
+ * viewer's time zone from a cookie, so the test sets it to its own and names the date in it.
+ */
+export async function scheduleUrl(context: BrowserContext, path: string, date: Date) {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  await context.addCookies([{ name: TIME_ZONE_COOKIE, value: timeZone, domain: "localhost", path: "/" }]);
+  const localDate = new Intl.DateTimeFormat("en-CA", { timeZone }).format(date);
+  return getUrl(`${path}${path.includes("?") ? "&" : "?"}date=${localDate}`);
 }

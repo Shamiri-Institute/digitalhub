@@ -1,16 +1,15 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
-import { differenceInCalendarWeeks, format } from "date-fns";
+import { expect, type Page, test } from "@playwright/test";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowAttendance, payoutStatements } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
-import { getUrl } from "#/tests/pages/helpers";
+import { openRowMenu, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
- * Money flows through the UI: payout runs and fellow attendance (which writes payout statements).
- * Each test saves, reloads, checks what the page shows and reads the stored rows back. The database
- * is otherwise used only to pick fixtures and to restore what a test changed.
+ * Fellow attendance, which writes payout statements, through the UI. Each test saves, reloads and
+ * checks what the page shows; the database picks fixtures, restores them, and checks the payout
+ * statements and absence reasons that no page shows. Payout runs are in payout-run.spec.ts.
  */
 
 test.describe.configure({ mode: "serial" });
@@ -30,171 +29,18 @@ async function signableProfiles(table: string, role: string, hubColumn: string) 
   return rows;
 }
 
-/** Only users with one membership, in an organisation that runs the default project. */
-/** Rows containing `text`, after typing it into every table search box in `scope`. */
-async function searchRows(page: Page, scope: Page | Locator, text: string) {
-  await scope.getByPlaceholder("Search...").first().waitFor();
-  for (const box of await scope.getByPlaceholder("Search...").all()) {
-    await box.fill(text);
-  }
-  return scope.getByRole("row").filter({ hasText: text });
-}
-
-/** The schedule's list view, moved back to the week of `sessionDate`; rows at `schoolName`. */
+/** The schedule's list view for the week of `sessionDate`; rows at `schoolName`. */
 async function openSessionWeek(page: Page, sessionDate: Date, schoolName: string) {
-  await page.goto(getUrl("/sc/schedule?mode=list"), { waitUntil: "networkidle" });
-  const weeksBack = differenceInCalendarWeeks(new Date(), sessionDate);
-  for (let i = 0; i < weeksBack; i++) {
-    await page.getByRole("button", { name: "Previous" }).click();
-    await page.waitForLoadState("networkidle");
-  }
+  await page.goto(await scheduleUrl(page.context(), "/sc/schedule?mode=list", sessionDate));
   return page.getByRole("row").filter({ hasText: schoolName });
 }
 
 async function openFellowAttendance(page: Page, sessionDate: Date, schoolName: string) {
   const sessionRow = (await openSessionWeek(page, sessionDate, schoolName)).first();
-  await sessionRow.getByRole("cell").last().click();
+  await openRowMenu(page, sessionRow);
   await page.getByRole("menuitem", { name: "Mark fellow attendance" }).click();
   return page.getByRole("dialog", { name: "Mark fellow attendance" });
 }
-
-test.describe("payout runs", () => {
-  type Fixture = { attendanceId: number; fellowId: string; sessionAmount: number };
-  let ops: Awaited<ReturnType<typeof signableProfiles>>[number];
-  let fixture: Fixture;
-  let insertedPayoutId: string;
-  const startedAt = new Date();
-
-  test.beforeAll(async () => {
-    const [firstOps] = await signableProfiles("ops_users", "OPERATIONS", "implementer_id");
-    if (!firstOps) throw new Error("seed the database first: no ops user");
-    ops = firstOps;
-
-    // An attendance the next payout run picks up: attended, unprocessed, at an occurred session,
-    // for an active fellow in a default-project hub. The seed executes every statement it writes,
-    // so give it an unexecuted one; afterAll removes it.
-    const {
-      rows: [row],
-    } = await db.execute<Fixture>(sql`
-      select fa.id as "attendanceId", f.id as "fellowId", sn.amount as "sessionAmount"
-      from fellow_attendances fa
-      join intervention_sessions i on i.id = fa.session_id and i.occurred
-      join session_names sn on sn.id = i.session_id and sn.amount > 0
-      join fellows f on f.id = fa.fellow_id and coalesce(f.dropped_out, false) = false
-      join hubs h on h.id = f.hub_id
-      join projects p on p.id = h.project_id and p.is_default
-      where fa.attended and fa.processed_at is null
-        and not exists (select 1 from payout_statements ps where ps.fellow_attendance_id = fa.id)
-      order by fa.id
-      limit 1`);
-    if (!row) throw new Error("seed the database first: no attended, unprocessed attendance");
-    fixture = row;
-    const [inserted] = await db
-      .insert(payoutStatements)
-      .values({
-        fellowAttendanceId: fixture.attendanceId,
-        fellowId: fixture.fellowId,
-        amount: fixture.sessionAmount,
-        reason: "MARK_SESSION_ATTENDANCE",
-        createdBy: ops.userId,
-      })
-      .returning({ id: payoutStatements.id });
-    if (!inserted) throw new Error("could not insert the payout statement fixture");
-    insertedPayoutId = inserted.id;
-  });
-
-  test.afterAll(async () => {
-    // A run touches every eligible row, so undo by time: nothing else sets these columns.
-    await db
-      .update(payoutStatements)
-      .set({ confirmedAt: null, confirmedBy: null })
-      .where(gte(payoutStatements.confirmedAt, startedAt));
-    await db
-      .update(payoutStatements)
-      .set({ executedAt: null })
-      .where(gte(payoutStatements.executedAt, startedAt));
-    await db
-      .update(fellowAttendance)
-      .set({ processedAt: null })
-      .where(gte(fellowAttendance.processedAt, startedAt));
-    if (insertedPayoutId) {
-      await db.delete(payoutStatements).where(eq(payoutStatements.id, insertedPayoutId));
-    }
-  });
-
-  test("an ops user triggers a payout run", async ({ page, context }) => {
-    await signInWithEmail(context, ops.email);
-    await page.goto(getUrl("/ops/reporting/expenses/payout-history"), {
-      waitUntil: "networkidle",
-    });
-
-    await page.getByRole("button", { name: "Manually Trigger Payout" }).click();
-    const dialog = page.getByRole("dialog", { name: "Confirm Payout Trigger" });
-    await dialog.getByRole("button", { name: "Confirm Trigger" }).click();
-    await expect(dialog).toBeHidden();
-
-    const [executedPayout] = await db
-      .select({ executedAt: payoutStatements.executedAt })
-      .from(payoutStatements)
-      .where(eq(payoutStatements.id, insertedPayoutId));
-    const [processedAttendance] = await db
-      .select({ processedAt: fellowAttendance.processedAt })
-      .from(fellowAttendance)
-      .where(eq(fellowAttendance.id, fixture.attendanceId));
-    const executedAt = executedPayout?.executedAt;
-    if (!executedAt) throw new Error("the payout run did not execute the fixture's statement");
-    expect(processedAttendance?.processedAt).toEqual(executedAt);
-
-    // The run is listed with the sum of the statements it executed.
-    const {
-      rows: [run],
-    } = await db.execute<{ expectedPayoutAmount: number }>(sql`
-      select sum(amount)::int as "expectedPayoutAmount" from payout_statements
-      where executed_at = ${executedAt.toISOString()}`);
-    await page.reload({ waitUntil: "networkidle" });
-    const runRow = page
-      .getByRole("row")
-      .filter({ hasText: format(executedAt, "dd-MM-yyyy HH:mm:ss") });
-    await expect(runRow).toContainText(String(run?.expectedPayoutAmount));
-  });
-
-  test("an ops user confirms a payout run", async ({ page, context }) => {
-    await signInWithEmail(context, ops.email);
-    await page.goto(getUrl("/ops/reporting/expenses/payout-history"), {
-      waitUntil: "networkidle",
-    });
-
-    const unconfirmed = page
-      .getByRole("row")
-      .filter({ has: page.getByRole("button", { name: "Confirm Payout", exact: true }) })
-      .first();
-    const dateAdded = (await unconfirmed.getByRole("cell").nth(1).innerText()).trim();
-    await unconfirmed.getByRole("button", { name: "Confirm Payout", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "Confirm Payout" });
-    await dialog.getByRole("button", { name: "Confirm Payout" }).click();
-    await expect(dialog).toBeHidden();
-
-    // Runs are listed newest first, so the run stays on the first page. The table search does
-    // not match the formatted date, so find the row by its text instead.
-    await page.reload({ waitUntil: "networkidle" });
-    const row = page.getByRole("row").filter({ hasText: dateAdded });
-    await expect(row.getByRole("button", { name: "Confirmed" })).toBeDisabled();
-
-    // Every statement of the run is confirmed by this user, and only that run's statements.
-    const confirmedPayouts = await db
-      .select({
-        executedAt: payoutStatements.executedAt,
-        confirmedBy: payoutStatements.confirmedBy,
-      })
-      .from(payoutStatements)
-      .where(gte(payoutStatements.confirmedAt, startedAt));
-    expect(confirmedPayouts.length).toBeGreaterThan(0);
-    for (const confirmedPayout of confirmedPayouts) {
-      expect(confirmedPayout.confirmedBy).toBe(ops.userId);
-      expect(format(confirmedPayout.executedAt ?? 0, "dd-MM-yyyy HH:mm:ss")).toBe(dateAdded);
-    }
-  });
-});
 
 test.describe("fellow attendance", () => {
   type Fixture = {
@@ -261,10 +107,10 @@ test.describe("fellow attendance", () => {
   test("a supervisor marks their fellow missed", async ({ page, context }) => {
     await signInWithEmail(context, fixture.email);
     const dialog = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
-    const fellowRow = await searchRows(page, dialog, fixture.fellowName);
+    const fellowRow = await searchRows(page, fixture.fellowName, dialog);
     await expect(fellowRow).toContainText("Attended");
 
-    await fellowRow.getByRole("cell").last().click();
+    await openRowMenu(page, fellowRow);
     await page.getByRole("menuitem", { name: "Mark attendance" }).click();
     const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
     await mark.getByRole("radio").nth(1).click();
@@ -274,18 +120,16 @@ test.describe("fellow attendance", () => {
     await mark.getByRole("button", { name: "Submit" }).click();
     await expect(mark).toBeHidden();
 
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload();
     const reopened = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
-    await expect(await searchRows(page, reopened, fixture.fellowName)).toContainText("Missed");
+    await expect(await searchRows(page, fixture.fellowName, reopened)).toContainText("Missed");
 
+    // No page shows the absence reason or the payout statements.
     const [markedFellowAttendance] = await db
-      .select({
-        attended: fellowAttendance.attended,
-        absenceReason: fellowAttendance.absenceReason,
-      })
+      .select({ absenceReason: fellowAttendance.absenceReason })
       .from(fellowAttendance)
       .where(eq(fellowAttendance.id, fixture.attendanceId));
-    expect(markedFellowAttendance).toEqual({ attended: false, absenceReason });
+    expect(markedFellowAttendance).toEqual({ absenceReason });
     // The paid session is reversed with one negative statement of the session's amount.
     const reversals = await db
       .select({ amount: payoutStatements.amount, reason: payoutStatements.reason })
@@ -383,7 +227,7 @@ test.describe("bulk fellow attendance", () => {
     await signInWithEmail(context, fixture.email);
     const dialog = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
     for (const fellowName of fixture.fellowNames) {
-      const fellowRow = await searchRows(page, dialog, fellowName);
+      const fellowRow = await searchRows(page, fellowName, dialog);
       await fellowRow.getByRole("checkbox", { name: "Select row" }).check();
     }
     await dialog.getByRole("button", { name: "Mark fellow attendance" }).click();
@@ -393,13 +237,14 @@ test.describe("bulk fellow attendance", () => {
     await mark.getByRole("button", { name: "Submit" }).click();
     await expect(mark).toBeHidden();
 
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload();
     const reopened = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
     for (const fellowName of fixture.fellowNames) {
-      await expect(await searchRows(page, reopened, fellowName)).toContainText("Attended");
+      await expect(await searchRows(page, fellowName, reopened)).toContainText("Attended");
     }
 
-    // One attended row per fellow, each with one payout statement of the session's amount.
+    // No page shows payout statements: one attendance per fellow, each with one statement of the
+    // session's amount.
     const markedFellowAttendances = await db.query.fellowAttendance.findMany({
       where: (a, { and, eq, inArray }) =>
         and(eq(a.sessionId, fixture.sessionId), inArray(a.fellowId, fixture.fellowIds)),
@@ -426,8 +271,8 @@ test.describe("bulk fellow attendance", () => {
     const submitButtons = await Promise.all(
       [page, secondTab].map(async (tab) => {
         const dialog = await openFellowAttendance(tab, fixture.sessionDate, fixture.schoolName);
-        const fellowRow = await searchRows(tab, dialog, fellowName);
-        await fellowRow.getByRole("cell").last().click();
+        const fellowRow = await searchRows(tab, fellowName, dialog);
+        await openRowMenu(tab, fellowRow);
         await tab.getByRole("menuitem", { name: "Mark attendance" }).click();
         const mark = tab.getByRole("dialog").filter({ hasText: "Select attendance" });
         await mark.getByRole("radio").first().click();
@@ -452,8 +297,8 @@ test.describe("bulk fellow attendance", () => {
       },
     ]);
 
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload();
     const reopened = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
-    await expect(await searchRows(page, reopened, fellowName)).toContainText("Attended");
+    await expect(await searchRows(page, fellowName, reopened)).toContainText("Attended");
   });
 });
