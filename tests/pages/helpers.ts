@@ -12,8 +12,15 @@ export function getUrl(route: string) {
  * check then fails and a "not listed" check passes for the wrong reason.
  */
 export async function searchRows(page: Page, text: string) {
-  await page.getByPlaceholder("Search...").first().waitFor();
-  for (const box of await page.getByPlaceholder("Search...").all()) {
+  const boxes = page.getByPlaceholder("Search...");
+  // Streamed content arrives in a hidden container before it replaces the fallback, so wait until
+  // every box on the page is a visible one.
+  await expect(async () => {
+    const visible = await Promise.all((await boxes.all()).map((box) => box.isVisible()));
+    expect(visible.length).toBeGreaterThan(0);
+    expect(visible.every(Boolean)).toBe(true);
+  }).toPass();
+  for (const box of await boxes.all()) {
     await box.fill(text);
   }
   return page.getByRole("row").filter({ hasText: text });

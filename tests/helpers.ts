@@ -1,7 +1,19 @@
 import type { BrowserContext } from "@playwright/test";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
+import {
+  clinicalCaseNotes,
+  clinicalCaseTermination,
+  clinicalCaseTransferTrail,
+  clinicalExpertCaseNotes,
+  clinicalFollowUpTreatmentPlan,
+  clinicalFollowUpTreatmentPlanAuditTrail,
+  clinicalScreeningInfo,
+  clinicalSessionAttendance,
+  student,
+} from "#/db/schema";
+import { objectId } from "#/lib/crypto";
 import { createSessionCookie } from "#/lib/auth/test-auth";
 import { type Role, pickUser } from "#/tests/platform-routes";
 
@@ -57,4 +69,71 @@ export async function emailForProfile(identifier: string, role: Role) {
 
 export async function signInWithEmail(context: BrowserContext, email: string) {
   await context.addCookies([await sessionCookieFor(email)]);
+}
+
+/**
+ * A new Active clinical case for a new student at `schoolId`, so a spec can change the case
+ * without touching seed data or another spec's case. `remove` deletes everything that references
+ * it, then the case and the student.
+ */
+export async function createClinicalCase(owner: {
+  schoolId: string;
+  currentSupervisorId?: string;
+  clinicalLeadId?: string;
+}) {
+  const label = `e2e-case-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const studentId = objectId("stu");
+  const studentName = `${label} student`;
+  // The case's edit form needs the fields a seeded student has, its group among them.
+  const group = await db.query.interventionGroup.findFirst({
+    where: (g, { and, eq, isNull }) => and(eq(g.schoolId, owner.schoolId), isNull(g.archivedAt)),
+    columns: { id: true },
+    orderBy: (g, { asc }) => asc(g.id),
+  });
+  if (!group) throw new Error(`seed the database first: school ${owner.schoolId} has no group`);
+  await db.insert(student).values({
+    id: studentId,
+    visibleId: label,
+    studentName,
+    schoolId: owner.schoolId,
+    assignedGroupId: group.id,
+    admissionNumber: "9001",
+    gender: "Female",
+    form: 2,
+    stream: "B",
+  });
+  const [created] = await db
+    .insert(clinicalScreeningInfo)
+    .values({
+      studentId,
+      schoolId: owner.schoolId,
+      currentSupervisorId: owner.currentSupervisorId,
+      clinicalLeadId: owner.clinicalLeadId,
+      caseStatus: "Active",
+      riskStatus: "No",
+      pseudonym: label,
+    })
+    .returning({ id: clinicalScreeningInfo.id });
+  if (!created) throw new Error("could not insert the clinical case fixture");
+  const caseId = created.id;
+
+  async function remove() {
+    await db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.caseId, caseId));
+    await db.delete(clinicalCaseTermination).where(eq(clinicalCaseTermination.caseId, caseId));
+    await db.delete(clinicalExpertCaseNotes).where(eq(clinicalExpertCaseNotes.caseId, caseId));
+    await db.delete(clinicalCaseTransferTrail).where(eq(clinicalCaseTransferTrail.caseId, caseId));
+    await db
+      .delete(clinicalFollowUpTreatmentPlanAuditTrail)
+      .where(eq(clinicalFollowUpTreatmentPlanAuditTrail.caseId, caseId));
+    await db
+      .delete(clinicalFollowUpTreatmentPlan)
+      .where(eq(clinicalFollowUpTreatmentPlan.caseId, caseId));
+    await db
+      .delete(clinicalSessionAttendance)
+      .where(eq(clinicalSessionAttendance.caseId, caseId));
+    await db.delete(clinicalScreeningInfo).where(eq(clinicalScreeningInfo.id, caseId));
+    await db.delete(student).where(eq(student.id, studentId));
+  }
+
+  return { caseId, pseudonym: label, studentName, remove };
 }

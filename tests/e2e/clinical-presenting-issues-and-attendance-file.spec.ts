@@ -2,22 +2,22 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { attendanceDocuments, clinicalScreeningInfo } from "#/db/schema";
+import { attendanceDocuments, clinicalSessionAttendance } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { signInWithEmail, signableMember } from "#/tests/helpers";
-import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { createClinicalCase, signInWithEmail, signableMember } from "#/tests/helpers";
+import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A supervisor saves a clinical case's baseline presenting issues (emergency, general and other
  * issues in one save), and a fellow deletes the attendance document of a group they lead. Locally
  * there is no S3, so the delete also proves that a failed object delete still archives the file.
  * Each test saves, reloads and checks what the page shows; the database is used only to pick or
- * add fixtures and to put rows back.
+ * add fixtures and to remove them. Each test gets a new case.
  */
 
 test.describe.configure({ mode: "serial" });
 
-type CaseFixture = { email: string; caseId: string; pseudonym: string };
+type CaseFixture = { email: string; supervisorId: string; schoolId: string };
 type AttendanceFixture = {
   email: string;
   userId: string;
@@ -27,22 +27,25 @@ type AttendanceFixture = {
   sessionLabel: string;
 };
 
-let clinicalCase: CaseFixture;
+let caseOwner: CaseFixture;
+let clinicalCase: { caseId: string; pseudonym: string; remove: () => Promise<void> };
 let attendance: AttendanceFixture;
 
 test.beforeAll(async () => {
   const {
     rows: [caseRow],
   } = await db.execute<CaseFixture>(sql`
-    select u.email, c.id as "caseId", c.pseudonym
-    from clinical_screening_info c
-    join implementer_members m on m.identifier = c.current_supervisor_id and m.role = 'SUPERVISOR'
+    select u.email, sv.id as "supervisorId", sc.id as "schoolId"
+    from supervisors sv
+    join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
     join users u on u.id = m.user_id and u.email is not null
-    where c.case_status = 'Active' and c.pseudonym is not null and ${signableMember()}
-    order by c.id desc
+    join schools sc on sc.hub_id = sv.hub_id and sc.archived_at is null
+    where ${signableMember()}
+      and exists (select 1 from intervention_groups g where g.school_id = sc.id)
+    order by sv.id desc, sc.id
     limit 1`);
-  if (!caseRow) throw new Error("seed the database first: no supervisor with an active case");
-  clinicalCase = caseRow;
+  if (!caseRow) throw new Error("seed the database first: no supervisor with a school");
+  caseOwner = caseRow;
 
   // "Upload attendance" opens only for an occurred session with at least 2 marked students.
   const {
@@ -78,6 +81,13 @@ test.beforeAll(async () => {
 // Cleanup runs in afterEach, not in a finally block: when a test times out, Playwright abandons
 // its body but still runs the hooks.
 let undo: (() => Promise<unknown>)[] = [];
+test.beforeEach(async () => {
+  clinicalCase = await createClinicalCase({
+    schoolId: caseOwner.schoolId,
+    currentSupervisorId: caseOwner.supervisorId,
+  });
+  undo.push(() => clinicalCase.remove());
+});
 test.afterEach(async () => {
   for (const step of undo.reverse()) {
     await step();
@@ -103,35 +113,12 @@ test("a supervisor saves emergency, general and other presenting issues together
   page,
   context,
 }) => {
-  const original = await db.query.clinicalScreeningInfo.findFirst({
-    where: (c, { eq }) => eq(c.id, clinicalCase.caseId),
-    columns: {
-      emergencyPresentingIssuesBaseline: true,
-      generalPresentingIssuesBaseline: true,
-      generalPresentingIssuesOtherSpecifiedBaseline: true,
-    },
-  });
-  if (!original) throw new Error(`case ${clinicalCase.caseId} is gone`);
-  undo.push(() =>
-    db
-      .update(clinicalScreeningInfo)
-      .set(original)
-      .where(eq(clinicalScreeningInfo.id, clinicalCase.caseId)),
-  );
-  await db
-    .update(clinicalScreeningInfo)
-    .set({
-      emergencyPresentingIssuesBaseline: null,
-      generalPresentingIssuesBaseline: null,
-      generalPresentingIssuesOtherSpecifiedBaseline: null,
-    })
-    .where(eq(clinicalScreeningInfo.id, clinicalCase.caseId));
   const otherIssues = `e2e other issues ${Date.now()}`;
   // The checkboxes are unlabelled; the emergency columns are Low, Moderate, High, Severe risk.
   const highRiskBullying = (row: Locator) => row.getByRole("checkbox").nth(2);
 
-  await signInWithEmail(context, clinicalCase.email);
-  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+  await signInWithEmail(context, caseOwner.email);
+  await page.goto(getUrl("/sc/clinical"));
   await expandCase(page);
   await highRiskBullying(issueRow(page, "Bullying")).click();
   await issueRow(page, "Family issues").getByRole("checkbox").click();
@@ -141,7 +128,7 @@ test("a supervisor saves emergency, general and other presenting issues together
     page.getByText("Baseline presenting issues updated successfully", { exact: true }),
   ).toBeVisible();
 
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload();
   await expandCase(page);
   await expect(highRiskBullying(issueRow(page, "Bullying"))).toBeChecked();
   await expect(issueRow(page, "Family issues").getByRole("checkbox")).toBeChecked();
@@ -152,44 +139,47 @@ test("a save from a page loaded before the case was terminated changes nothing",
   page,
   context,
 }) => {
-  const presentingIssueColumns = {
-    caseStatus: true,
-    emergencyPresentingIssuesBaseline: true,
-    generalPresentingIssuesBaseline: true,
-    generalPresentingIssuesOtherSpecifiedBaseline: true,
-    emergencyPresentingIssuesEndpoint: true,
-    generalPresentingIssuesEndpoint: true,
-    generalPresentingIssuesOtherSpecifiedEndpoint: true,
-  } as const;
-  const readCase = () =>
-    db.query.clinicalScreeningInfo.findFirst({
-      where: (c, { eq }) => eq(c.id, clinicalCase.caseId),
-      columns: presentingIssueColumns,
-    });
-  const original = await readCase();
-  if (!original) throw new Error(`case ${clinicalCase.caseId} is gone`);
-  undo.push(() =>
-    db
-      .update(clinicalScreeningInfo)
-      .set(original)
-      .where(eq(clinicalScreeningInfo.id, clinicalCase.caseId)),
-  );
+  // Terminating a case names one of its clinical sessions, which no page creates.
+  const sessionLabel = `e2e-termination-${Date.now()}`;
+  await db.insert(clinicalSessionAttendance).values({
+    caseId: clinicalCase.caseId,
+    session: sessionLabel,
+    supervisorId: caseOwner.supervisorId,
+    attendanceStatus: true,
+  });
 
-  await signInWithEmail(context, clinicalCase.email);
-  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+  await signInWithEmail(context, caseOwner.email);
+  await page.goto(getUrl("/sc/clinical"));
   await expandCase(page);
   await issueRow(page, "Family issues").getByRole("checkbox").click();
-  // Another user terminates the case while this page still shows it as active.
-  await db
-    .update(clinicalScreeningInfo)
-    .set({ caseStatus: "Terminated" })
-    .where(eq(clinicalScreeningInfo.id, clinicalCase.caseId));
-  await page.getByRole("button", { name: "Save Baseline" }).click();
 
+  // The same supervisor terminates the case in another tab while this page still shows it active.
+  const otherTab = await context.newPage();
+  await otherTab.goto(getUrl("/sc/clinical"));
+  await openRowMenu(otherTab, await searchRows(otherTab, clinicalCase.pseudonym));
+  await otherTab.getByRole("menu").getByText("Terminate case", { exact: true }).click();
+  const terminate = otherTab
+    .getByRole("dialog")
+    .filter({ has: otherTab.getByRole("heading", { name: "Terminate Case" }) });
+  await terminate.getByRole("combobox").filter({ hasText: "Select session" }).click();
+  await otherTab.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await terminate.getByRole("combobox").filter({ hasText: "Student no-show" }).click();
+  await otherTab.getByRole("option", { name: "Student refused to return to sessions" }).click();
+  await terminate.getByRole("textbox", { name: /Termination Explanation/ }).fill("E2E");
+  await terminate.getByRole("button", { name: "Terminate Case" }).click();
+  await expect(terminate).toBeHidden();
+  await otherTab.close();
+
+  await page.getByRole("button", { name: "Save Baseline" }).click();
   await expect(
     page.getByText("The case status changed. Reload the page.", { exact: true }),
   ).toBeVisible();
-  expect(await readCase()).toEqual({ ...original, caseStatus: "Terminated" });
+
+  await page.reload();
+  const caseRow = await searchRows(page, clinicalCase.pseudonym);
+  await expect(caseRow).toContainText("Terminated");
+  await caseRow.getByRole("button").first().click();
+  await expect(issueRow(page, "Family issues").getByRole("checkbox")).not.toBeChecked();
 });
 
 test("a fellow deletes their group's attendance document even when the file store fails", async ({
@@ -218,20 +208,14 @@ test("a fellow deletes their group's attendance document even when the file stor
   await signInWithEmail(context, attendance.email);
   const dialog = page.getByRole("dialog", { name: "Attendance Document" });
   async function openAttendanceDocument() {
-    await page.goto(getUrl(`/fel/schools/${attendance.schoolVisibleId}/sessions`), {
-      waitUntil: "networkidle",
-    });
+    await page.goto(getUrl(`/fel/schools/${attendance.schoolVisibleId}/sessions`));
     const main = page.getByRole("main");
     await main.getByRole("combobox").filter({ hasText: "Show 10" }).click();
     await page.getByRole("option", { name: "Show 50" }).click();
     const sessionRow = main
       .getByRole("row")
       .filter({ has: page.getByRole("cell", { name: attendance.sessionLabel, exact: true }) });
-    // Rows re-render while their data loads, so retry the click.
-    await expect(async () => {
-      await sessionRow.getByRole("cell").last().click();
-      await expect(page.getByRole("menu")).toBeVisible({ timeout: 2000 });
-    }).toPass({ timeout: 30_000 });
+    await openRowMenu(page, sessionRow);
     await page.getByRole("menuitem", { name: "Upload attendance" }).click();
     await expect(dialog).toBeVisible();
   }

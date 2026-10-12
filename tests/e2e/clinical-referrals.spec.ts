@@ -1,15 +1,15 @@
 import { expect, type Page, test } from "@playwright/test";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { clinicalCaseTransferTrail, clinicalScreeningInfo } from "#/db/schema";
-import { emailForProfile, signInWithEmail } from "#/tests/helpers";
-import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { interventionGroup } from "#/db/schema";
+import { createClinicalCase, emailForProfile, signInWithEmail } from "#/tests/helpers";
+import { getUrl, openRowMenu, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A supervisor refers a case to another supervisor in their hub, and the recipient accepts or
  * rejects it, all through the UI. Each test reloads and checks what each supervisor's page shows;
- * the database is read only to find fixtures and to put the case back.
+ * the database is used only to find the supervisors and to add and remove a case for each test.
  */
 
 type Supervisor = { profileId: string; name: string; email: string };
@@ -17,47 +17,44 @@ type Supervisor = { profileId: string; name: string; email: string };
 let referrer: Supervisor;
 let recipient: Supervisor;
 let bystander: Supervisor;
-let caseId: string;
+let referrerSchoolId: string;
 let pseudonym: string;
 let studentName: string;
-let originalCase: typeof clinicalScreeningInfo.$inferSelect;
+let removeCase: () => Promise<void>;
 
 test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async () => {
   const supervisors = await db.query.supervisor.findMany({
+    where: (s, { isNotNull }) => and(isNotNull(s.hubId), isNotNull(s.supervisorName)),
     columns: { id: true, hubId: true, supervisorName: true },
-    with: {
-      clinicalScreeningCases: {
-        where: (c, { and, eq, isNotNull, isNull }) =>
-          and(eq(c.caseStatus, "Active"), isNotNull(c.pseudonym), isNull(c.referredToSupervisorId)),
-        with: { student: { columns: { studentName: true } } },
-        orderBy: (c, { asc }) => asc(c.id),
-      },
-    },
     orderBy: (s, { asc }) => asc(s.id),
   });
-
-  const signable: (Supervisor & { hubId: string | null })[] = [];
+  const signable: (Supervisor & { hubId: string })[] = [];
   for (const s of supervisors) {
-    const email = s.supervisorName ? await emailForProfile(s.id, "SUPERVISOR") : null;
-    if (email && s.supervisorName) {
+    const email = await emailForProfile(s.id, "SUPERVISOR");
+    if (email && s.supervisorName && s.hubId) {
       signable.push({ profileId: s.id, name: s.supervisorName, email, hubId: s.hubId });
     }
   }
-
-  for (const s of supervisors) {
-    const owner = signable.find((candidate) => candidate.profileId === s.id);
-    const referable = s.clinicalScreeningCases.find((c) => c.student?.studentName);
-    const sameHub = signable.find(
-      (candidate) => candidate.hubId === s.hubId && candidate.profileId !== s.id,
+  for (const candidate of signable) {
+    const colleague = signable.find(
+      (s) => s.hubId === candidate.hubId && s.profileId !== candidate.profileId,
     );
-    if (owner && referable?.pseudonym && referable.student?.studentName && sameHub) {
-      referrer = owner;
-      recipient = sameHub;
-      caseId = referable.id;
-      pseudonym = referable.pseudonym;
-      studentName = referable.student.studentName;
+    const school = await db.query.school.findFirst({
+      where: (s, { and, eq, exists, isNull }) =>
+        and(
+          eq(s.hubId, candidate.hubId),
+          isNull(s.archivedAt),
+          exists(db.select().from(interventionGroup).where(eq(interventionGroup.schoolId, s.id))),
+        ),
+      columns: { id: true },
+      orderBy: (s, { asc }) => asc(s.id),
+    });
+    if (colleague && school) {
+      referrer = candidate;
+      recipient = colleague;
+      referrerSchoolId = school.id;
       break;
     }
   }
@@ -65,35 +62,25 @@ test.beforeAll(async () => {
     (s) => referrer && s.profileId !== referrer.profileId && s.profileId !== recipient.profileId,
   );
   if (!referrer || !other) {
-    throw new Error("seed the database first: no supervisor with a case and a hub colleague");
+    throw new Error("seed the database first: no supervisor with a school and a hub colleague");
   }
   bystander = other;
-
-  const snapshot = await db.query.clinicalScreeningInfo.findFirst({
-    where: (c, { eq }) => eq(c.id, caseId),
-  });
-  if (!snapshot) throw new Error(`case ${caseId} is gone`);
-  originalCase = snapshot;
 });
 
-let testStartedAt: Date;
-test.beforeEach(() => {
-  testStartedAt = new Date();
+test.beforeEach(async () => {
+  const created = await createClinicalCase({
+    schoolId: referrerSchoolId,
+    currentSupervisorId: referrer.profileId,
+  });
+  pseudonym = created.pseudonym;
+  studentName = created.studentName;
+  removeCase = created.remove;
 });
 
 // Cleanup runs in afterEach, not in a finally block: when a test times out, Playwright abandons
 // its body but still runs the hooks.
 test.afterEach(async () => {
-  const { id, ...restorable } = originalCase;
-  await db.update(clinicalScreeningInfo).set(restorable).where(eq(clinicalScreeningInfo.id, id));
-  await db
-    .delete(clinicalCaseTransferTrail)
-    .where(
-      and(
-        eq(clinicalCaseTransferTrail.caseId, id),
-        gt(clinicalCaseTransferTrail.createdAt, testStartedAt),
-      ),
-    );
+  await removeCase?.();
 });
 
 /** The "Cases referred to you" list on a supervisor's clinical page. */
@@ -108,8 +95,8 @@ function referralCard(page: Page) {
 
 async function referCaseToRecipient(page: Page) {
   await signInWithEmail(page.context(), referrer.email);
-  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
-  await (await searchRows(page, pseudonym)).getByRole("cell").last().click();
+  await page.goto(getUrl("/sc/clinical"));
+  await openRowMenu(page, await searchRows(page, pseudonym));
   await page.getByRole("menu").getByText("Refer case", { exact: true }).click();
 
   // This dialog's heading is not linked to it, so it has no accessible name.
@@ -133,7 +120,7 @@ test("the recipient accepts a referred case and it becomes theirs", async ({ pag
   await referCaseToRecipient(page);
 
   await signInWithEmail(page.context(), recipient.email);
-  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+  await page.goto(getUrl("/sc/clinical"));
   await referralCard(page).getByRole("button", { name: "Accept referred case" }).click();
   await expect(page.getByText("Referred case accepted").first()).toBeVisible();
 
@@ -144,7 +131,7 @@ test("the recipient accepts a referred case and it becomes theirs", async ({ pag
   // The referring supervisor no longer holds the case.
   await page.context().clearCookies();
   await signInWithEmail(page.context(), referrer.email);
-  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+  await page.goto(getUrl("/sc/clinical"));
   await expect(page.getByRole("button", { name: "New case" })).toBeVisible();
   await expect(await searchRows(page, pseudonym)).toHaveCount(0);
 });
@@ -153,7 +140,7 @@ test("the recipient rejects a referred case and the referrer keeps it", async ({
   await referCaseToRecipient(page);
 
   await signInWithEmail(page.context(), recipient.email);
-  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+  await page.goto(getUrl("/sc/clinical"));
   await referralCard(page).getByRole("button", { name: "Reject referred case" }).click();
   await expect(page.getByText("Referred case rejected").first()).toBeVisible();
 
@@ -164,7 +151,7 @@ test("the recipient rejects a referred case and the referrer keeps it", async ({
 
   await page.context().clearCookies();
   await signInWithEmail(page.context(), referrer.email);
-  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+  await page.goto(getUrl("/sc/clinical"));
   await expect(await searchRows(page, pseudonym)).toHaveCount(1);
 });
 
@@ -172,7 +159,7 @@ test("a supervisor the case was not referred to does not see the referral", asyn
   await referCaseToRecipient(page);
 
   await signInWithEmail(page.context(), bystander.email);
-  await page.goto(getUrl("/sc/clinical"), { waitUntil: "networkidle" });
+  await page.goto(getUrl("/sc/clinical"));
   await expect(referredCases(page)).toBeVisible();
   await expect(referralCard(page)).toHaveCount(0);
 });
