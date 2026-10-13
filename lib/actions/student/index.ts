@@ -26,7 +26,6 @@ import {
   studentReportingNotes,
 } from "#/db/schema";
 import { fetchSessionAttendances } from "#/lib/actions/session/session";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { generateStudentVisibleID } from "#/lib/utils";
@@ -100,7 +99,7 @@ async function requireSession(sessionId: string) {
 export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSchema>) {
   // TODO: Add db transactions
   try {
-    const { implementerId } = await requireAuthRole(...STUDENT_WRITE_ROLES);
+    const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
 
     const {
       id,
@@ -149,7 +148,6 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
     if (!assignedGroupId || !schoolId) {
       throw new Error("A group and a school are required to add a student");
     }
-    const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
     await requireCallerAtSchool(caller, schoolId);
     const [group, schoolRow, studentCount] = await Promise.all([
       db.query.interventionGroup.findFirst({
@@ -186,7 +184,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
         questionnaireType:
           questionnaireType === "none" || questionnaireType == null ? null : questionnaireType,
         assignedGroupId,
-        implementerId,
+        implementerId: caller.implementerId,
         fellowId: group.leader.id,
         supervisorId: group.leader.supervisor?.id,
       })
@@ -212,7 +210,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
 
 export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
-    const { userId } = await requireAuthRole(...STUDENT_WRITE_ROLES);
+    const { userId } = await requireHubRole(...STUDENT_WRITE_ROLES);
 
     const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
@@ -290,7 +288,7 @@ export async function markManyStudentsAttendance(
   data: z.infer<typeof MarkAttendanceSchema>,
 ) {
   try {
-    const { userId } = await requireAuthRole(...STUDENT_WRITE_ROLES);
+    const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
 
     const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
@@ -303,7 +301,6 @@ export async function markManyStudentsAttendance(
       };
     }
 
-    const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
     const uniqueIds = [...new Set(ids)];
     const studentsInCallerScope =
       session.schoolId === null || uniqueIds.length === 0
@@ -361,7 +358,7 @@ export async function markManyStudentsAttendance(
           sessionId,
           groupId: row.assignedGroup.id,
           fellowId: row.assignedGroup.leaderId,
-          markedBy: userId,
+          markedBy: caller.userId,
           attended: status,
         });
       });
@@ -373,7 +370,7 @@ export async function markManyStudentsAttendance(
       await tx
         .update(studentAttendance)
         .set({
-          markedBy: userId,
+          markedBy: caller.userId,
           absenceReason: status === null || status ? null : absenceReason,
           comments: status === null || status ? null : comments,
           attended: status,

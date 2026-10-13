@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { format } from "date-fns";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -32,6 +33,9 @@ type SchoolFixture = {
   sessionId: string;
   sessionLabel: string;
   sessionOccurred: boolean;
+  groupName: string;
+  /** A supervisor in the coordinator's hub. */
+  supervisorEmail: string;
 };
 type TriageFixture = {
   email: string;
@@ -66,16 +70,22 @@ test.beforeAll(async () => {
     } = await db.execute<SchoolFixture>(sql`
       select s.visible_id as "visibleId", s.school_name as "schoolName",
         st.id as "studentId", st.student_name as "studentName",
-        i.id as "sessionId", sn.session_name as "sessionLabel", i.occurred as "sessionOccurred"
+        i.id as "sessionId", sn.session_name as "sessionLabel", i.occurred as "sessionOccurred",
+        g.group_name as "groupName", sup_user.email as "supervisorEmail"
       from schools s
       join students st on st.school_id = s.id and st.archived_at is null
         and coalesce(st.dropped_out, false) = false and st.student_name is not null
-      join intervention_sessions i on i.school_id = s.id
+      join intervention_groups g on g.id = st.assigned_group_id
+      join intervention_sessions i on i.school_id = s.id and i.occurred
         and i.session_date < now() and coalesce(i.status::text, '') <> 'Cancelled'
       join session_names sn on sn.id = i.session_id
+      join supervisors sup on sup.hub_id = s.hub_id
+      join implementer_members sm on sm.identifier = sup.id and sm.role = 'SUPERVISOR'
+        and ${signableMember("sm")}
+      join users sup_user on sup_user.id = sm.user_id and sup_user.email is not null
       where s.hub_id = ${candidate.hubId} and s.archived_at is null
         and coalesce(s.dropped_out, false) = false
-      order by s.visible_id, st.id, i.session_date
+      order by s.visible_id, st.id, i.session_date, sup_user.email
       limit 1`);
     // Same organisation, different hub: the case a hub check exists for.
     const other = coordinators.find(
@@ -91,8 +101,8 @@ test.beforeAll(async () => {
   }
   if (!school) {
     throw new Error(
-      "seed the database first: no coordinator with a school that has students and a past session, " +
-        "and another coordinator in the same organisation",
+      "seed the database first: no coordinator with a school that has grouped students, an occurred " +
+        "session and a supervisor, and another coordinator in the same organisation",
     );
   }
   const {
@@ -242,6 +252,131 @@ test("a hub coordinator in another hub does not see the school", async ({ page, 
 
   const main = page.getByRole("main");
   await expect(await rowWithCell(page, main, school.schoolName)).toHaveCount(0);
+
+  await page.goto(getUrl(`/hc/schools/${school.visibleId}/students`));
+  await expect(page.getByText("This page could not be found.")).toBeVisible();
+});
+
+test("a hub coordinator marks a student in their hub missed at a session", async ({
+  page,
+  context,
+}) => {
+  const attendanceAtSession = and(
+    eq(studentAttendance.studentId, school.studentId),
+    eq(studentAttendance.sessionId, school.sessionId),
+  );
+  const originalAttendances = await db.select().from(studentAttendance).where(attendanceAtSession);
+  // Start unmarked, so "Missed" can only come from this test.
+  await db.delete(studentAttendance).where(attendanceAtSession);
+  undo.push(async () => {
+    await db.delete(studentAttendance).where(attendanceAtSession);
+    if (originalAttendances.length > 0) {
+      await db.insert(studentAttendance).values(originalAttendances);
+    }
+  });
+  const session = await db.query.interventionSession.findFirst({
+    where: (s, { eq }) => eq(s.id, school.sessionId),
+    columns: { sessionDate: true },
+  });
+  if (!session) throw new Error(`session ${school.sessionId} is gone`);
+  await signInWithEmail(context, coordinator.email);
+  await page.goto(getUrl(`/hc/schools/${school.visibleId}/students`));
+
+  const main = page.getByRole("main");
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, main, school.studentName),
+    "Mark student attendance",
+  );
+  const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
+  await mark.getByRole("combobox", { name: "Select session" }).click();
+  await page
+    .getByRole("option")
+    .filter({ hasText: school.sessionLabel })
+    .filter({ hasText: format(session.sessionDate, "dd MMM yyyy") })
+    .click();
+  // The radios are unlabelled: Attended, Missed, Unmarked.
+  await mark.getByRole("radio").nth(1).click();
+  await mark.getByRole("combobox", { name: "Select reason for above" }).click();
+  await page.getByRole("option").first().click();
+  await mark.getByRole("button", { name: "Submit" }).click();
+  await expect(mark).toBeHidden();
+
+  await page.reload();
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, main, school.studentName),
+    "View attendance history",
+  );
+  const history = page.getByRole("dialog", { name: "Student session attendance history" });
+  await expect(
+    history
+      .getByRole("row")
+      .filter({ has: page.getByRole("cell", { name: school.sessionLabel, exact: true }) }),
+  ).toContainText("Missed");
+});
+
+test("a supervisor edits the details of a student in their hub", async ({ page, context }) => {
+  const [originalDetails] = await db
+    .select({ studentName: student.studentName, form: student.form, stream: student.stream })
+    .from(student)
+    .where(eq(student.id, school.studentId));
+  if (!originalDetails) throw new Error(`student ${school.studentId} is gone`);
+  undo.push(() => db.update(student).set(originalDetails).where(eq(student.id, school.studentId)));
+  await signInWithEmail(context, school.supervisorEmail);
+  await page.goto(getUrl(`/sc/schools/${school.visibleId}/students`));
+
+  const main = page.getByRole("main");
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, main, school.studentName),
+    "Edit information",
+  );
+  const dialog = page.getByRole("dialog", { name: "Edit student information" });
+  const nameInput = dialog.getByLabel("Student name");
+  // The form loads the student after it opens; typing before that is overwritten.
+  await expect(nameInput).toHaveValue(school.studentName);
+  const editedName = `${school.studentName} Edited`;
+  await nameInput.fill(editedName);
+  // The seed leaves these required fields empty.
+  await dialog.getByLabel("Grade/Form").fill("2");
+  await dialog.getByLabel("Stream").fill("East");
+  await dialog.getByRole("button", { name: "Update & save" }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.reload();
+  await expect(await rowWithCell(page, main, editedName)).toHaveCount(1);
+});
+
+test("a hub coordinator adds a student to a group in their hub", async ({ page, context }) => {
+  const newStudentName = `E2E Student ${Date.now()}`;
+  undo.push(() => db.delete(student).where(eq(student.studentName, newStudentName)));
+  await signInWithEmail(context, coordinator.email);
+  await page.goto(getUrl(`/hc/schools/${school.visibleId}/groups`));
+
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, page.getByRole("main"), school.groupName),
+    "View students in group",
+  );
+  await page
+    .getByRole("dialog", { name: "Students in group" })
+    .getByRole("button", { name: "Add Student" })
+    .click();
+  const form = page.getByRole("dialog", { name: "Add student to group" });
+  await form.getByLabel("Student name").fill(newStudentName);
+  await form.getByRole("combobox", { name: /Gender/ }).click();
+  await page.getByRole("option", { name: "Female" }).click();
+  await form.getByLabel("Year of birth").fill("2012");
+  // A new admission number, so the form does not offer to transfer an existing student.
+  await form.getByLabel("Admission number").fill(String(Date.now()).slice(-9));
+  await form.getByLabel("Grade/Form").fill("2");
+  await form.getByLabel("Stream").fill("East");
+  await form.getByRole("button", { name: "Submit" }).click();
+  await expect(form).toBeHidden();
+
+  await page.goto(getUrl(`/hc/schools/${school.visibleId}/students`));
+  await expect(await rowWithCell(page, page.getByRole("main"), newStudentName)).toHaveCount(1);
 });
 
 test("a fellow marks one student missed and two students attended at once", async ({

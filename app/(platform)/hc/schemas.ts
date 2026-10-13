@@ -229,29 +229,6 @@ export const AssignPointSupervisorSchema = z.object({
   assignedSupervisorId: z.string({ error: "Please pick a supervisor." }),
 });
 
-export const MarkSupervisorAttendanceSchema = z
-  .object({
-    supervisorId: z.string(),
-    attended: z.enum(ATTENDANCE_STATUS, { error: "Please select attendance." }).optional(),
-    sessionId: z.string(),
-    absenceReason: z.string().optional(),
-    comments: z.string().optional(),
-  })
-  // TODO: Confirm if validation is required
-  .superRefine((val, ctx) => {
-    const ids = val.supervisorId.split(",");
-    if (val.attended === "missed" && val.absenceReason === undefined && ids.length === 1) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Please add a reason for absence",
-        fatal: true,
-        path: ["absenceReason"],
-      });
-
-      return z.NEVER;
-    }
-  });
-
 export const WeeklyHubTeamMeetingSchema = z.object({
   hubId: stringValidation("Missing hub ID"),
   submittedBy: stringValidation("Missing hub coordinator ID"),

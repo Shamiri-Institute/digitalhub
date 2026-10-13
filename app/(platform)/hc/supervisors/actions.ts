@@ -8,7 +8,6 @@ import {
   AddNewSupervisorSchema,
   DropoutSupervisorSchema,
   EditSupervisorSchema,
-  MarkSupervisorAttendanceSchema,
   MonthlySupervisorEvaluationSchema,
   SubmitComplaintSchema,
   WeeklyHubTeamMeetingSchema,
@@ -19,7 +18,6 @@ import {
   implementerMember,
   monthlySupervisorEvaluation,
   supervisor,
-  supervisorAttendance,
   supervisorComplaints,
   user,
   weeklyTeamMeetingReport,
@@ -183,47 +181,6 @@ export async function submitSupervisorComplaint(data: z.infer<typeof SubmitCompl
     return {
       success: false,
       message: "Something went wrong while trying to submit a complaint",
-    };
-  }
-}
-
-export async function markSupervisorAttendance(
-  id: string,
-  data: z.infer<typeof MarkSupervisorAttendanceSchema>,
-) {
-  await checkAuth();
-
-  const parsedData = MarkSupervisorAttendanceSchema.parse(data);
-  const attended =
-    parsedData.attended === "attended" ? true : parsedData.attended === "missed" ? false : null;
-  try {
-    const attendance = await db.query.supervisorAttendance.findFirst({
-      where: (a, { eq }) => eq(a.id, id),
-    });
-
-    if (attendance !== undefined) {
-      await checkSupervisorInHub(attendance.supervisorId);
-      await db
-        .update(supervisorAttendance)
-        .set({
-          attended,
-          absenceReason: !attended ? parsedData.absenceReason : null,
-          absenceComments: !attended ? parsedData.comments : null,
-        })
-        .where(eq(supervisorAttendance.id, attendance.id));
-      return {
-        success: true,
-        message: "Successfully marked supervisor attendance.",
-        data: attendance,
-      };
-    }
-    return {
-      error: "Something went wrong while updating supervisor attendance",
-    };
-  } catch (error: unknown) {
-    console.error(error);
-    return {
-      error: "Something went wrong while updating supervisor attendance",
     };
   }
 }
