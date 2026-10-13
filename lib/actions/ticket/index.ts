@@ -22,6 +22,7 @@ import {
   type CreateTicketPayload,
   type CreateTicketReassignmentInput,
   type CreateTicketReassignmentPayload,
+  CreateTicketSchema,
   CreateTicketReassignmentSchema,
   ESCALATION_INITIATOR_ROLES,
   ESCALATION_RECIPIENT_FROM_INITIATOR,
@@ -53,17 +54,15 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
 
     if (!isEscalationInitiatorRole(role)) throw new Error("The role cannot create tickets");
 
-    const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](payload.category);
+    const ticketFields = CreateTicketSchema.parse(payload);
+    const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](ticketFields.category);
     const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
     const escalationRecipientId = await handler({
       userId: createdById,
       implementerId: activeImplementerId,
     });
 
-    const ticketPayload: CreateTicketPayload = {
-      ...payload,
-      createdById,
-    };
+    const ticketPayload: CreateTicketPayload = { ...ticketFields, createdById };
 
     await db.transaction(async (tx) => {
       const [ticket] = await tx
@@ -401,6 +400,9 @@ export async function getTicketEscalationStatus(
 ): Promise<ActionResponse<TicketEscalationStatus>> {
   try {
     const { userId, role } = await requireAuthRole(...Object.values(ImplementerRole));
+
+    const authorized = await escalationParticipation(ticketId, userId);
+    if (!authorized) throw new Error("Ticket not found");
 
     const [ticket, latestEscalation, existingResolution] = await Promise.all([
       db.query.tickets.findFirst({

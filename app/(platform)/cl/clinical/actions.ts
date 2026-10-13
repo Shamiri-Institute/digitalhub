@@ -55,10 +55,11 @@ export async function getSchoolsInClinicalLeadHub() {
     }),
     db.query.supervisor.findMany({
       where: (s, { eq }) => eq(s.hubId, hubId),
+      columns: { id: true, supervisorName: true },
     }),
     db.query.fellow.findMany({
       where: (f, { inArray }) => inArray(f.hubId, projectHubIds),
-      with: { hub: { columns: { id: true } } },
+      columns: { id: true, fellowName: true, hubId: true },
     }),
     db.query.hub.findMany({
       where: (h, { eq }) => eq(h.projectId, projectId),

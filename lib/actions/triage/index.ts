@@ -294,30 +294,3 @@ export async function updateTriageEvent(
     return { success: false, message };
   }
 }
-
-export async function requireTriageCompleteForSubmission(
-  studentId: string,
-  sessionId: string,
-  triageOccurred: boolean,
-): Promise<{ valid: boolean; message?: string }> {
-  if (!triageOccurred) {
-    return { valid: true };
-  }
-  const event = await db.query.triageEvent.findFirst({
-    where: and(eq(triageEvent.studentId, studentId), eq(triageEvent.sessionId, sessionId)),
-  });
-  if (!event) {
-    return { valid: false, message: "Please document triage before submitting attendance." };
-  }
-  if (!event.riskScreenOutcome || !event.actionTaken) {
-    return { valid: false, message: "Triage documentation is incomplete." };
-  }
-  if (event.riskScreenOutcome === "NOT_COMPLETED" && !event.riskNotCompletedReason) {
-    return { valid: false, message: "Reason for risk screen not completed is required." };
-  }
-  const needsHandoff = ["REFERRED", "ESCALATED", "REFUSED"].includes(event.actionTaken ?? "");
-  if (needsHandoff && !event.supervisorHandoffStatus) {
-    return { valid: false, message: "Supervisor handoff status is required." };
-  }
-  return { valid: true };
-}
