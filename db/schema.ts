@@ -12,7 +12,6 @@ import {
   jsonb,
   pgEnum,
   pgTable,
-  primaryKey,
   serial,
   text,
   timestamp,
@@ -224,33 +223,6 @@ export const implementer = pgTable(
   ],
 );
 
-export const implementerAvatar = pgTable(
-  "implementer_avatars",
-  {
-    id: varchar({ length: 255 }).primaryKey().notNull(),
-    implementerId: text("implementer_id").notNull(),
-    fileId: text("file_id").notNull(),
-  },
-  (table) => [
-    uniqueIndex("implementer_avatars_file_id_key").using("btree", table.fileId),
-    uniqueIndex("implementer_avatars_implementer_id_key").using("btree", table.implementerId),
-    foreignKey({
-      columns: [table.implementerId],
-      foreignColumns: [implementer.id],
-      name: "implementer_avatars_implementer_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.fileId],
-      foreignColumns: [file.id],
-      name: "implementer_avatars_file_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
-
 export const file = pgTable("files", {
   id: varchar({ length: 255 }).primaryKey().notNull(),
   createdAt: timestamp("created_at", { precision: 3, mode: "date" })
@@ -270,55 +242,6 @@ export const file = pgTable("files", {
   signedUrl: varchar("signed_url", { length: 2048 }),
   expiresAt: timestamp("expires_at", { precision: 3, mode: "date" }),
 });
-
-export const userRecentOpen = pgTable(
-  "user_recent_opens",
-  {
-    id: serial().primaryKey().notNull(),
-    userId: varchar("user_id", { length: 255 }).notNull(),
-    itemId: text("item_id").notNull(),
-    openedAt: timestamp("opened_at", { precision: 3, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-  },
-  (table) => [
-    index("user_recent_opens_user_id_item_id_idx").using("btree", table.userId, table.itemId),
-    foreignKey({
-      columns: [table.userId],
-      foreignColumns: [user.id],
-      name: "user_recent_opens_user_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
-
-export const userAvatar = pgTable(
-  "user_avatars",
-  {
-    id: varchar({ length: 255 }).primaryKey().notNull(),
-    userId: text("user_id").notNull(),
-    fileId: text("file_id").notNull(),
-  },
-  (table) => [
-    uniqueIndex("user_avatars_file_id_key").using("btree", table.fileId),
-    uniqueIndex("user_avatars_user_id_key").using("btree", table.userId),
-    foreignKey({
-      columns: [table.userId],
-      foreignColumns: [user.id],
-      name: "user_avatars_user_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.fileId],
-      foreignColumns: [file.id],
-      name: "user_avatars_file_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
 
 export const interventionSessionRating = pgTable(
   "intervention_session_ratings",
@@ -672,37 +595,6 @@ export const fellow = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
-  ],
-);
-
-export const implementerInvite = pgTable(
-  "implementer_invites",
-  {
-    id: serial().primaryKey().notNull(),
-    email: text().notNull(),
-    implementerId: varchar("implementer_id", { length: 255 }).notNull(),
-    sentAt: timestamp("sent_at", { precision: 3, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    expiresAt: timestamp("expires_at", { precision: 3, mode: "date" }).notNull(),
-    acceptedAt: timestamp("accepted_at", { precision: 3, mode: "date" }),
-    secureToken: text("secure_token").notNull(),
-    implementerRole: implementerRoleEnum("implementer_role").notNull(),
-  },
-  (table) => [
-    uniqueIndex("implementer_invites_email_implementer_id_secure_token_key").using(
-      "btree",
-      table.email,
-      table.implementerId,
-      table.secureToken,
-    ),
-    foreignKey({
-      columns: [table.implementerId],
-      foreignColumns: [implementer.id],
-      name: "implementer_invites_implementer_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
   ],
 );
 
@@ -2157,53 +2049,6 @@ export const sessionName = pgTable(
   ],
 );
 
-export const specialApprovalRequests = pgTable(
-  "special_session_approval_requests",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("approval")),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-    approvedBy: text("approved_by"),
-    approvedAt: timestamp("approved_at", { withTimezone: true, mode: "date" }),
-    rejectedAt: timestamp("rejected_at", { withTimezone: true, mode: "date" }),
-    amount: integer().notNull(),
-    createdBy: text("created_by").notNull(),
-    fellowAttendanceId: integer("fellow_attendance_id").notNull(),
-    status: approvalStatusEnum().default("PENDING").notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.approvedBy],
-      foreignColumns: [hubCoordinator.id],
-      name: "special_session_approval_requests_approved_by_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
-    foreignKey({
-      columns: [table.createdBy],
-      foreignColumns: [supervisor.id],
-      name: "special_session_approval_requests_created_by_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.fellowAttendanceId],
-      foreignColumns: [fellowAttendance.id],
-      name: "special_session_approval_requests_fellow_attendance_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
-
 export const studentAttendance = pgTable(
   "student_attendances",
   {
@@ -2362,13 +2207,6 @@ export const payoutStatements = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    foreignKey({
-      columns: [table.specialPayoutRequestId],
-      foreignColumns: [specialApprovalRequests.id],
-      name: "payout_statements_special_payout_request_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [user.id],
@@ -3260,33 +3098,5 @@ export const ticketReassignments = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-  ],
-);
-
-export const projectImplementer = pgTable(
-  "project_implementers",
-  {
-    implementerId: varchar("implementer_id", { length: 255 }).notNull(),
-    projectId: varchar("project_id", { length: 255 }).notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.projectId],
-      foreignColumns: [project.id],
-      name: "project_implementers_project_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.implementerId],
-      foreignColumns: [implementer.id],
-      name: "project_implementers_implementer_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    primaryKey({
-      columns: [table.projectId, table.implementerId],
-      name: "project_implementers_pkey",
-    }),
   ],
 );

@@ -19,12 +19,9 @@ import {
   fellowComplaints,
   fellowGroupReport,
   fellowReportingNotes,
-  file,
   hub,
   hubCoordinator,
   implementer,
-  implementerAvatar,
-  implementerInvite,
   implementerMember,
   interventionGroup,
   interventionGroupReport,
@@ -36,7 +33,6 @@ import {
   overallFellowEvaluation,
   payoutStatements,
   project,
-  projectImplementer,
   school,
   schoolDropoutHistory,
   schoolFeedback,
@@ -44,7 +40,6 @@ import {
   sessionComment,
   sessionName,
   sessionRecording,
-  specialApprovalRequests,
   student,
   studentAttendance,
   studentGroupTransferTrail,
@@ -60,8 +55,6 @@ import {
   triageEvent,
   triageEventAudit,
   user,
-  userAvatar,
-  userRecentOpen,
   weeklyFellowRatings,
   weeklyHubReport,
   weeklyTeamMeetingReport,
@@ -326,9 +319,6 @@ export const fellowAttendanceRelations = relations(fellowAttendance, ({ one, man
     relationName: "FellowAttendance_user",
   }),
   PayoutStatements: many(payoutStatements, { relationName: "PayoutStatements_fellowAttendance" }),
-  SpecialApprovalRequests: many(specialApprovalRequests, {
-    relationName: "SpecialApprovalRequests_fellowAttendance",
-  }),
 }));
 
 export const fellowComplaintsRelations = relations(fellowComplaints, ({ one }) => ({
@@ -380,11 +370,6 @@ export const fellowReportingNotesRelations = relations(fellowReportingNotes, ({ 
   }),
 }));
 
-export const fileRelations = relations(file, ({ one }) => ({
-  implementerAvatar: one(implementerAvatar),
-  userAvatar: one(userAvatar),
-}));
-
 export const hubRelations = relations(hub, ({ one, many }) => ({
   triageEvents: many(triageEvent, { relationName: "TriageEvent_hub" }),
   fellows: many(fellow, { relationName: "Fellow_hub" }),
@@ -433,15 +418,10 @@ export const hubCoordinatorRelations = relations(hubCoordinator, ({ one, many })
   WeeklyTeamMeetingReport: many(weeklyTeamMeetingReport, {
     relationName: "WeeklyTeamMeetingReport_hubCoordinator",
   }),
-  SpecialApprovalRequests: many(specialApprovalRequests, {
-    relationName: "SpecialApprovalRequests_hubCoordinator",
-  }),
 }));
 
-export const implementerRelations = relations(implementer, ({ one, many }) => ({
-  avatar: one(implementerAvatar),
+export const implementerRelations = relations(implementer, ({ many }) => ({
   memberships: many(implementerMember, { relationName: "ImplementerMember_implementer" }),
-  invites: many(implementerInvite, { relationName: "ImplementerInvite_implementer" }),
   students: many(student, { relationName: "Student_implementer" }),
   studentOutcomes: many(studentOutcome, { relationName: "StudentOutcome_implementer" }),
   fellows: many(fellow, { relationName: "Fellow_implementer" }),
@@ -449,7 +429,6 @@ export const implementerRelations = relations(implementer, ({ one, many }) => ({
   schools: many(school, { relationName: "School_implementer" }),
   hubs: many(hub, { relationName: "Hub_implementer" }),
   hubCoordinators: many(hubCoordinator, { relationName: "HubCoordinator_implementer" }),
-  projectImplementers: many(projectImplementer, { relationName: "ProjectImplementer_implementer" }),
   clinicalLeads: many(clinicalLead, { relationName: "ClinicalLead_implementer" }),
   clinicalTeam: many(clinicalTeam, { relationName: "ClinicalTeam_implementer" }),
   opsUser: many(opsUser, { relationName: "OpsUser_implementer" }),
@@ -461,22 +440,6 @@ export const adminUserRelations = relations(adminUser, ({ one }) => ({
     fields: [adminUser.implementerId],
     references: [implementer.id],
     relationName: "AdminUser_implementer",
-  }),
-}));
-
-export const implementerAvatarRelations = relations(implementerAvatar, ({ one }) => ({
-  implementer: one(implementer, {
-    fields: [implementerAvatar.implementerId],
-    references: [implementer.id],
-  }),
-  file: one(file, { fields: [implementerAvatar.fileId], references: [file.id] }),
-}));
-
-export const implementerInviteRelations = relations(implementerInvite, ({ one }) => ({
-  implementer: one(implementer, {
-    fields: [implementerInvite.implementerId],
-    references: [implementer.id],
-    relationName: "ImplementerInvite_implementer",
   }),
 }));
 
@@ -670,11 +633,6 @@ export const payoutStatementsRelations = relations(payoutStatements, ({ one }) =
     references: [user.id],
     relationName: "PayoutStatements_user",
   }),
-  specialPayoutRequest: one(specialApprovalRequests, {
-    fields: [payoutStatements.specialPayoutRequestId],
-    references: [specialApprovalRequests.id],
-    relationName: "PayoutStatements_specialPayoutRequest",
-  }),
   confirmedByUser: one(user, {
     fields: [payoutStatements.confirmedBy],
     references: [user.id],
@@ -699,20 +657,6 @@ export const projectRelations = relations(project, ({ many }) => ({
   interventionSessions: many(interventionSession, { relationName: "InterventionSession_project" }),
   interventionGroups: many(interventionGroup, { relationName: "InterventionGroup_project" }),
   fellowGroupReports: many(fellowGroupReport, { relationName: "FellowGroupReport_project" }),
-  projectImplementers: many(projectImplementer, { relationName: "ProjectImplementer_project" }),
-}));
-
-export const projectImplementerRelations = relations(projectImplementer, ({ one }) => ({
-  project: one(project, {
-    fields: [projectImplementer.projectId],
-    references: [project.id],
-    relationName: "ProjectImplementer_project",
-  }),
-  implementer: one(implementer, {
-    fields: [projectImplementer.implementerId],
-    references: [implementer.id],
-    relationName: "ProjectImplementer_implementer",
-  }),
 }));
 
 export const schoolRelations = relations(school, ({ one, many }) => ({
@@ -828,30 +772,6 @@ export const sessionRecordingRelations = relations(sessionRecording, ({ one }) =
     relationName: "SessionRecording_supervisor",
   }),
 }));
-
-export const specialApprovalRequestsRelations = relations(
-  specialApprovalRequests,
-  ({ one, many }) => ({
-    PayoutStatements: many(payoutStatements, {
-      relationName: "PayoutStatements_specialPayoutRequest",
-    }),
-    hubCoordinator: one(hubCoordinator, {
-      fields: [specialApprovalRequests.approvedBy],
-      references: [hubCoordinator.id],
-      relationName: "SpecialApprovalRequests_hubCoordinator",
-    }),
-    supervisor: one(supervisor, {
-      fields: [specialApprovalRequests.createdBy],
-      references: [supervisor.id],
-      relationName: "SpecialApprovalRequests_supervisor",
-    }),
-    fellowAttendance: one(fellowAttendance, {
-      fields: [specialApprovalRequests.fellowAttendanceId],
-      references: [fellowAttendance.id],
-      relationName: "SpecialApprovalRequests_fellowAttendance",
-    }),
-  }),
-);
 
 export const studentRelations = relations(student, ({ one, many }) => ({
   fellow: one(fellow, {
@@ -1024,9 +944,6 @@ export const supervisorRelations = relations(supervisor, ({ one, many }) => ({
   fellowComplaints: many(fellowComplaints, { relationName: "FellowComplaints_supervisor" }),
   weeklyFellowRatings: many(weeklyFellowRatings, {
     relationName: "WeeklyFellowRatings_supervisor",
-  }),
-  SpecialApprovalRequests: many(specialApprovalRequests, {
-    relationName: "SpecialApprovalRequests_supervisor",
   }),
   sessionRecordings: many(sessionRecording, { relationName: "SessionRecording_supervisor" }),
 }));
@@ -1202,8 +1119,6 @@ export const userRelations = relations(user, ({ one, many }) => ({
   }),
   accounts: many(account, { relationName: "Account_user" }),
   sessions: many(session, { relationName: "Session_user" }),
-  recentOpens: many(userRecentOpen, { relationName: "UserRecentOpen_user" }),
-  avatar: one(userAvatar),
   memberships: many(implementerMember, { relationName: "ImplementerMember_user" }),
   studentAttendance: many(studentAttendance, { relationName: "StudentAttendance_user" }),
   reviewedTriageEvents: many(triageEvent, { relationName: "TriageEventReviewer" }),
@@ -1234,19 +1149,6 @@ export const userRelations = relations(user, ({ one, many }) => ({
   resolvedTickets: many(ticketResolutions, { relationName: "resolvedByUser" }),
   reassignmentsMade: many(ticketReassignments, { relationName: "reassignedFromUser" }),
   reassignmentsReceived: many(ticketReassignments, { relationName: "reassignedToUser" }),
-}));
-
-export const userAvatarRelations = relations(userAvatar, ({ one }) => ({
-  user: one(user, { fields: [userAvatar.userId], references: [user.id] }),
-  file: one(file, { fields: [userAvatar.fileId], references: [file.id] }),
-}));
-
-export const userRecentOpenRelations = relations(userRecentOpen, ({ one }) => ({
-  user: one(user, {
-    fields: [userRecentOpen.userId],
-    references: [user.id],
-    relationName: "UserRecentOpen_user",
-  }),
 }));
 
 export const weeklyFellowRatingsRelations = relations(weeklyFellowRatings, ({ one }) => ({

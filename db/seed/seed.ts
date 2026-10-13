@@ -306,22 +306,6 @@ function createProjects() {
   return insertManyReturning(schema.project, projects);
 }
 
-function createProjectImplementers(projects: Project[], implementers: Implementer[]) {
-  console.log("creating project implementers");
-  const projectImplementers = [];
-
-  const minLength = Math.min(projects.length, implementers.length);
-
-  for (let i = 0; i < minLength; i++) {
-    projectImplementers.push({
-      projectId: projects[i]?.id as string,
-      implementerId: implementers[i]?.id as string,
-    });
-  }
-
-  return insertManyReturning(schema.projectImplementer, projectImplementers);
-}
-
 function createHubs(projects: Project[], implementers: Implementer[]) {
   console.log("creating hubs");
   const hubs = [];
@@ -2535,8 +2519,6 @@ async function main() {
   await truncateTables();
 
   const [projects, implementers] = await Promise.all([createProjects(), createImplementers()]);
-
-  await createProjectImplementers(projects, implementers);
 
   const userEmailSet = new Set<string>();
 
