@@ -1,13 +1,18 @@
 "use server";
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { refresh } from "next/cache";
 import type { z } from "zod";
 
 import { db, isUniqueViolation, type Transaction } from "#/db/client";
-import { hub, sessionName } from "#/db/schema";
+import { hub, interventionSession, sessionName } from "#/db/schema";
+import { countOf } from "#/db/sql";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { hubSessionTypes } from "#/lib/app-constants/hub-session-types";
+import {
+  assignSessionCodes,
+  isHubSessionCategory,
+  type SessionTypeGroup,
+} from "#/lib/app-constants/hub-session-types";
 import { requireSuperAdmin } from "#/lib/auth/admin-access";
 import { objectId } from "#/lib/crypto";
 import type { ActionResponse } from "#/types/actions.types";
@@ -50,33 +55,28 @@ function hubSaveFailure(error: unknown, fallback: string): ActionResponse<never>
   return actionFailure(error, fallback);
 }
 
-/**
- * The session names of a new hub: every standard session type, with the label and amount the super
- * admin entered. The name and type always come from the standard list, never from the client, so
- * the submitted list must hold exactly the standard names.
- */
-function buildSessionNames(
+/** The session names a hub's new session types insert, with the codes `assignSessionCodes` gave. */
+function newSessionNameRows(
   hubId: string,
-  submitted: z.infer<typeof CreateHubSchema>["sessionTypes"],
+  rows: { sessionNameId?: string; type: SessionTypeGroup; label: string; amount: number }[],
+  codes: string[],
 ) {
-  const entered = new Map(submitted.map((sessionType) => [sessionType.name, sessionType]));
-  if (entered.size !== submitted.length || submitted.length !== hubSessionTypes.length) {
-    throw new AdminActionError(INVALID_SESSION_TYPES_MESSAGE);
-  }
-
-  return hubSessionTypes.map((standard) => {
-    const values = entered.get(standard.name);
-    if (!values) {
+  return rows.flatMap((row, index) => {
+    if (row.sessionNameId) return [];
+    // The form only adds rows to a group with an indexed code format.
+    if (!isHubSessionCategory(row.type)) {
       throw new AdminActionError(INVALID_SESSION_TYPES_MESSAGE);
     }
-    return {
-      hubId,
-      sessionType: standard.type,
-      sessionName: standard.name,
-      sessionLabel: values.label,
-      amount: values.amount,
-      currency: "KES",
-    };
+    return [
+      {
+        hubId,
+        sessionType: row.type,
+        sessionName: codes[index] ?? "",
+        sessionLabel: row.label,
+        amount: row.amount,
+        currency: "KES",
+      },
+    ];
   });
 }
 
@@ -85,14 +85,17 @@ export async function createHub(data: z.infer<typeof CreateHubSchema>): Promise<
     const { implementerId } = await requireSuperAdmin();
     const parsed = CreateHubSchema.parse(data);
     const projectId = await getActiveProjectId();
-    // Built before the transaction, so an invalid request never reaches the database.
     const hubId = objectId("hub");
-    const sessionNames = buildSessionNames(hubId, parsed.sessionTypes);
+    const codes = assignSessionCodes(parsed.sessionTypes, new Map());
+    const sessionNames = newSessionNameRows(hubId, parsed.sessionTypes, codes);
 
     await db.transaction(async (tx) => {
       await assertHubNameIsFree(tx, { implementerId, projectId, hubName: parsed.hubName });
       await tx.insert(hub).values({ id: hubId, hubName: parsed.hubName, implementerId, projectId });
-      await tx.insert(sessionName).values(sessionNames);
+      // A hub can start with no session types and get them later.
+      if (sessionNames.length > 0) {
+        await tx.insert(sessionName).values(sessionNames);
+      }
     });
 
     refresh();
@@ -103,50 +106,103 @@ export async function createHub(data: z.infer<typeof CreateHubSchema>): Promise<
 }
 
 /**
- * Saves the label and amount of the hub's own session names. Every submitted row must be one of
- * this hub's, and a row's code and type never change, so a tampered request cannot touch another
- * hub's rows or rename a code that sessions rely on.
+ * Saves the hub's session types. A stored row keeps its code and type, so only its label and amount
+ * change; a stored row left out is removed; a new row gets the next code of its group. Every stored
+ * row must be one of this hub's, so a tampered request cannot touch another hub's rows.
  */
 async function updateSessionNames(
   tx: Transaction,
   hubId: string,
   submitted: z.infer<typeof UpdateHubSchema>["sessionTypes"],
+  loadedSessionNameIds: string[],
 ) {
-  const stored = await tx.query.sessionName.findMany({
-    where: (n, { eq }) => eq(n.hubId, hubId),
-    columns: { id: true, sessionLabel: true, amount: true },
-  });
+  // Locked, so a session being scheduled with one of these session types finishes first and one
+  // scheduled later waits for this save. The usage check below is a separate statement, so it sees
+  // the sessions that committed while this one waited.
+  const stored = await tx
+    .select({
+      id: sessionName.id,
+      sessionName: sessionName.sessionName,
+      sessionType: sessionName.sessionType,
+      sessionLabel: sessionName.sessionLabel,
+      amount: sessionName.amount,
+    })
+    .from(sessionName)
+    .where(eq(sessionName.hubId, hubId))
+    .for("update");
   const storedById = new Map(stored.map((n) => [n.id, n]));
 
-  const seen = new Set<string>();
+  // A row left out of the form is removed, so the form must hold every row the hub has now.
+  const loaded = new Set(loadedSessionNameIds);
+  if (loaded.size !== stored.length || stored.some((n) => !loaded.has(n.id))) {
+    throw new AdminActionError(
+      "This hub's session types changed since you opened it. Please close the dialog and open it again.",
+    );
+  }
+
+  const kept = new Set<string>();
   const changed = submitted.filter((row) => {
+    if (!row.sessionNameId) return false;
     const current = storedById.get(row.sessionNameId);
-    if (!current || seen.has(row.sessionNameId)) {
+    if (!current || kept.has(row.sessionNameId) || current.sessionType !== row.type) {
       throw new AdminActionError(INVALID_SESSION_TYPES_MESSAGE);
     }
-    seen.add(row.sessionNameId);
+    kept.add(row.sessionNameId);
     return current.sessionLabel !== row.label || current.amount !== row.amount;
   });
-  if (changed.length === 0) return;
 
-  // One statement for every changed row; hub_id in the WHERE keeps it to this hub's rows.
-  const rows = sql.join(
-    changed.map((row) => sql`(${row.sessionNameId}, ${row.label}, ${row.amount}::integer)`),
-    sql`, `,
-  );
-  await tx.execute(sql`
-    update session_names as n
-    set session_label = v.label, amount = v.amount, updated_at = now()
-    from (values ${rows}) as v(id, label, amount)
-    where n.id = v.id and n.hub_id = ${hubId}`);
+  // Removed first, so a new row can take the code of a removed one.
+  const removedIds = stored.filter((n) => !kept.has(n.id)).map((n) => n.id);
+  if (removedIds.length > 0) {
+    // Deleting a session name sets the session_id of its sessions to null, so a session type that
+    // sessions use stays.
+    const [used] = await tx
+      .select({ id: interventionSession.id })
+      .from(interventionSession)
+      .where(inArray(interventionSession.sessionId, removedIds))
+      .limit(1);
+    if (used) {
+      throw new AdminActionError(
+        "A session type you removed is used by sessions, so it cannot be removed. Please reload and try again.",
+      );
+    }
+    await tx
+      .delete(sessionName)
+      .where(and(inArray(sessionName.id, removedIds), eq(sessionName.hubId, hubId)));
+  }
+
+  if (changed.length > 0) {
+    // One statement for every changed row; hub_id in the WHERE keeps it to this hub's rows.
+    const rows = sql.join(
+      changed.map((row) => sql`(${row.sessionNameId}, ${row.label}, ${row.amount}::integer)`),
+      sql`, `,
+    );
+    await tx.execute(sql`
+      update session_names as n
+      set session_label = v.label, amount = v.amount, updated_at = now()
+      from (values ${rows}) as v(id, label, amount)
+      where n.id = v.id and n.hub_id = ${hubId}`);
+  }
+
+  const codes = assignSessionCodes(submitted, storedById);
+  const added = newSessionNameRows(hubId, submitted, codes);
+  if (added.length > 0) {
+    await tx.insert(sessionName).values(added);
+  }
 }
 
-/** A hub's session names, in a stable order for the edit form. */
+/**
+ * A hub's session names for the edit form, each with how many sessions use it. Codes sort by
+ * length first, so s10 comes after s9 and the last row of a group is its highest code.
+ */
 function querySessionNames(hubId: string) {
   return db.query.sessionName.findMany({
     where: (n, { eq }) => eq(n.hubId, hubId),
     columns: { id: true, sessionName: true, sessionType: true, sessionLabel: true, amount: true },
-    orderBy: (n, { asc }) => [asc(n.sessionName), asc(n.id)],
+    extras: (n) => ({
+      sessionCount: countOf(interventionSession.sessionId, n.id).as("session_count"),
+    }),
+    orderBy: (n, { asc }) => [asc(sql`length(${n.sessionName})`), asc(n.sessionName), asc(n.id)],
   });
 }
 
@@ -180,10 +236,13 @@ export async function updateHub(data: z.infer<typeof UpdateHubSchema>): Promise<
     const parsed = UpdateHubSchema.parse(data);
 
     await db.transaction(async (tx) => {
-      const existing = await tx.query.hub.findFirst({
-        where: (h, { and, eq }) => and(eq(h.id, parsed.hubId), eq(h.implementerId, implementerId)),
-        columns: { hubName: true, projectId: true },
-      });
+      // Locked, so two edits of one hub run one after the other and cannot give two new session
+      // types the same code.
+      const [existing] = await tx
+        .select({ hubName: hub.hubName, projectId: hub.projectId })
+        .from(hub)
+        .where(and(eq(hub.id, parsed.hubId), eq(hub.implementerId, implementerId)))
+        .for("update");
       if (!existing) {
         throw new AdminActionError("Hub not found");
       }
@@ -205,7 +264,7 @@ export async function updateHub(data: z.infer<typeof UpdateHubSchema>): Promise<
           .where(and(eq(hub.id, parsed.hubId), eq(hub.implementerId, implementerId)));
       }
 
-      await updateSessionNames(tx, parsed.hubId, parsed.sessionTypes);
+      await updateSessionNames(tx, parsed.hubId, parsed.sessionTypes, parsed.loadedSessionNameIds);
     });
 
     refresh();

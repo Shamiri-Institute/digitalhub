@@ -18,17 +18,17 @@ export type HubSessionType = {
   amount: number;
 };
 
+/**
+ * The session types a new hub starts with: a typical Shamiri intervention of a pre-session and
+ * four sessions, five supervisions and five trainings. A super admin adds clinical and data
+ * follow-up sessions, or any other, in the hub dialog.
+ */
 export const hubSessionTypes: HubSessionType[] = [
   { name: "s0", label: "Pre-session", type: "INTERVENTION", amount: 1000 },
   { name: "s1", label: "Session 1", type: "INTERVENTION", amount: 1500 },
   { name: "s2", label: "Session 2", type: "INTERVENTION", amount: 1500 },
   { name: "s3", label: "Session 3", type: "INTERVENTION", amount: 1500 },
   { name: "s4", label: "Session 4", type: "INTERVENTION", amount: 1500 },
-  // adding s5-s8 for Lifeskills Intervention
-  { name: "s5", label: "Session 5", type: "INTERVENTION", amount: 1500 },
-  { name: "s6", label: "Session 6", type: "INTERVENTION", amount: 1500 },
-  { name: "s7", label: "Session 7", type: "INTERVENTION", amount: 1500 },
-  { name: "s8", label: "Session 8", type: "INTERVENTION", amount: 1500 },
   { name: "sv1", label: "Supervision 1", type: "SUPERVISION", amount: 500 },
   { name: "sv2", label: "Supervision 2", type: "SUPERVISION", amount: 500 },
   { name: "sv3", label: "Supervision 3", type: "SUPERVISION", amount: 500 },
@@ -39,18 +39,79 @@ export const hubSessionTypes: HubSessionType[] = [
   { name: "t3", label: "Training 3", type: "TRAINING", amount: 1000 },
   { name: "t4", label: "Training 4", type: "TRAINING", amount: 1000 },
   { name: "t5", label: "Training 5", type: "TRAINING", amount: 1000 },
-  { name: "cl1", label: "Clinical 1", type: "CLINICAL", amount: 0 },
-  { name: "cl2", label: "Clinical 2", type: "CLINICAL", amount: 0 },
-  { name: "cl3", label: "Clinical 3", type: "CLINICAL", amount: 0 },
-  { name: "cl4", label: "Clinical 4", type: "CLINICAL", amount: 0 },
-  { name: "cl5", label: "Clinical 5", type: "CLINICAL", amount: 0 },
-  { name: "cl6", label: "Clinical 6", type: "CLINICAL", amount: 0 },
-  { name: "cl7", label: "Clinical 7", type: "CLINICAL", amount: 0 },
-  { name: "cl8", label: "Clinical 8", type: "CLINICAL", amount: 0 },
-  { name: "dfu1", label: "Data Follow Up 1", type: "DATA_COLLECTION", amount: 500 },
-  { name: "dfu2", label: "Data Follow Up 2", type: "DATA_COLLECTION", amount: 500 },
-  { name: "dfu3", label: "Data Follow Up 3", type: "DATA_COLLECTION", amount: 500 },
-  { name: "dfu4", label: "Data Follow Up 4", type: "DATA_COLLECTION", amount: 500 },
-  { name: "dfu5", label: "Data Follow Up 5", type: "DATA_COLLECTION", amount: 500 },
-  { name: "dfu6", label: "Data Follow Up 6", type: "DATA_COLLECTION", amount: 500 },
 ];
+
+export type SessionTypeGroup = HubSessionType["type"];
+
+/** The groups a super admin can add session types to. SPECIAL codes have no indexed format. */
+export type HubSessionCategory = Exclude<SessionTypeGroup, "SPECIAL">;
+
+/**
+ * How each group numbers its codes: intervention runs s0, s1, s2 and the rest start at 1, so
+ * supervision runs sv1, sv2. A code never changes once stored, because sessions refer to it.
+ */
+const CODE_FORMATS: Record<
+  HubSessionCategory,
+  { prefix: string; first: number; label: string; amount: number }
+> = {
+  INTERVENTION: { prefix: "s", first: 0, label: "Session", amount: 1500 },
+  SUPERVISION: { prefix: "sv", first: 1, label: "Supervision", amount: 500 },
+  TRAINING: { prefix: "t", first: 1, label: "Training", amount: 1000 },
+  CLINICAL: { prefix: "cl", first: 1, label: "Clinical", amount: 0 },
+  DATA_COLLECTION: { prefix: "dfu", first: 1, label: "Data Follow Up", amount: 500 },
+};
+
+export const hubSessionCategories = Object.keys(CODE_FORMATS) as HubSessionCategory[];
+
+export function isHubSessionCategory(type: SessionTypeGroup): type is HubSessionCategory {
+  return type !== "SPECIAL";
+}
+
+/** The index in a code of the group's format, e.g. 6 for sv6, or undefined for any other code. */
+function codeIndex(category: HubSessionCategory, code: string) {
+  const match = new RegExp(`^${CODE_FORMATS[category].prefix}(\\d+)$`).exec(code);
+  return match ? Number(match[1]) : undefined;
+}
+
+/**
+ * The code of every row a hub will have, in order. A stored row keeps its code. A new row takes
+ * the next index after the highest code of its group, so removing the last rows of a group and
+ * adding new ones reuses their codes.
+ */
+export function assignSessionCodes(
+  rows: { sessionNameId?: string; type: SessionTypeGroup }[],
+  /** The hub's stored session names by id; a stored row keeps its code. */
+  storedById: ReadonlyMap<string, { sessionName: string }>,
+): string[] {
+  const nextIndex = new Map<HubSessionCategory, number>();
+  for (const row of rows) {
+    const code = row.sessionNameId ? storedById.get(row.sessionNameId)?.sessionName : undefined;
+    if (code === undefined || !isHubSessionCategory(row.type)) continue;
+    const index = codeIndex(row.type, code);
+    if (index !== undefined && index >= (nextIndex.get(row.type) ?? 0)) {
+      nextIndex.set(row.type, index + 1);
+    }
+  }
+
+  return rows.map((row) => {
+    const stored = row.sessionNameId ? storedById.get(row.sessionNameId)?.sessionName : undefined;
+    if (stored !== undefined) return stored;
+    // Only a stored row can be SPECIAL; the form never adds one.
+    if (!isHubSessionCategory(row.type)) return "";
+    const format = CODE_FORMATS[row.type];
+    const index = Math.max(nextIndex.get(row.type) ?? format.first, format.first);
+    nextIndex.set(row.type, index + 1);
+    return `${format.prefix}${index}`;
+  });
+}
+
+/** The label and amount a new session type starts with: the standard one, or the group's pattern. */
+export function newSessionTypeDefaults(category: HubSessionCategory, code: string) {
+  const standard = hubSessionTypes.find((t) => t.name === code);
+  if (standard) return { label: standard.label, amount: standard.amount };
+  const format = CODE_FORMATS[category];
+  return {
+    label: `${format.label} ${codeIndex(category, code) ?? ""}`.trim(),
+    amount: format.amount,
+  };
+}

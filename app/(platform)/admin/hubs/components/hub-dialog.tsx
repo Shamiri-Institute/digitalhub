@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Lock, Plus, Trash2 } from "lucide-react";
 import { Fragment, type ReactNode, useState } from "react";
 import {
   type FieldErrors,
@@ -17,6 +17,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "#/components/ui/accordion";
+import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -48,30 +49,40 @@ import {
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { CreateHubSchema, EditHubFormSchema } from "#/lib/actions/admin/hub-schemas";
 import { createHub, type HubSessionName, updateHub } from "#/lib/actions/admin/hubs";
-import { hubSessionTypes, type HubSessionType } from "#/lib/app-constants/hub-session-types";
+import {
+  assignSessionCodes,
+  type HubSessionCategory,
+  hubSessionTypes,
+  isHubSessionCategory,
+  newSessionTypeDefaults,
+  type SessionTypeGroup,
+} from "#/lib/app-constants/hub-session-types";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { AdminHub } from "../queries";
 
 type CreateFormValues = z.infer<typeof CreateHubSchema>;
 type EditFormValues = z.infer<typeof EditHubFormSchema>;
-type SessionTypeGroup = HubSessionType["type"];
+/** One session type in either form: a stored one has its id, a new one has none. */
+type FormSessionType = {
+  sessionNameId?: string;
+  type: SessionTypeGroup;
+  label: string;
+  amount: number;
+};
 /** The part of the create and edit forms that the shared fields read. */
-type SharedFormValues = {
-  hubName: string;
-  sessionTypes: { name: string; label: string; amount: number }[];
+type SharedFormValues = { hubName: string; sessionTypes: FormSessionType[] };
+
+const SESSION_TYPE_GROUPS: Record<SessionTypeGroup, { label: string; noun: string }> = {
+  INTERVENTION: { label: "Intervention sessions", noun: "intervention session" },
+  SUPERVISION: { label: "Supervision sessions", noun: "supervision session" },
+  TRAINING: { label: "Training sessions", noun: "training session" },
+  SPECIAL: { label: "Special sessions", noun: "special session" },
+  CLINICAL: { label: "Clinical sessions", noun: "clinical session" },
+  DATA_COLLECTION: { label: "Data follow-up sessions", noun: "data follow-up session" },
 };
 
-const SESSION_TYPE_GROUP_LABELS: Record<HubSessionType["type"], string> = {
-  INTERVENTION: "Intervention sessions",
-  SUPERVISION: "Supervision sessions",
-  TRAINING: "Training sessions",
-  SPECIAL: "Special sessions",
-  CLINICAL: "Clinical sessions",
-  DATA_COLLECTION: "Data follow-up sessions",
-};
-
-const SESSION_TYPE_GROUP_ORDER: HubSessionType["type"][] = [
+const SESSION_TYPE_GROUP_ORDER: SessionTypeGroup[] = [
   "INTERVENTION",
   "SUPERVISION",
   "TRAINING",
@@ -80,59 +91,69 @@ const SESSION_TYPE_GROUP_ORDER: HubSessionType["type"][] = [
   "DATA_COLLECTION",
 ];
 
-const standardTypeByName = new Map<string, SessionTypeGroup>(
-  hubSessionTypes.map((sessionType) => [sessionType.name, sessionType.type]),
+/** The standard session types, to be edited before the hub is created. */
+const defaultSessionTypes = hubSessionTypes.flatMap(({ type, label, amount }) =>
+  isHubSessionCategory(type) ? [{ type, label, amount }] : [],
 );
 
-/** The standard session types, to be edited before the hub is created. */
-const defaultSessionTypes = hubSessionTypes.map(({ name, label, amount }) => ({
-  name,
+const standardSessionTypes = hubSessionTypes.map(({ name, label, amount }) => ({
+  code: name,
   label,
   amount,
 }));
 
+/** The stored session names of a hub that does not exist yet. */
+const noStoredSessionNames = new Map<string, HubSessionName>();
+
 const amountFormat = new Intl.NumberFormat("en-US");
 
-type SessionTypeChange = {
-  name: string;
-  label: { from: string; to: string };
-  amount: { from: number; to: number };
-};
+type CodedSessionType = { code: string; label: string; amount: number };
 
-/** Session types of a new hub whose label or amount the admin edited, for the confirmation. */
-function customizedSessionTypes(
-  sessionTypes: CreateFormValues["sessionTypes"],
-): SessionTypeChange[] {
-  return sessionTypes.flatMap((row) => {
-    const preset = hubSessionTypes.find((t) => t.name === row.name);
-    if (!preset || (row.label === preset.label && row.amount === preset.amount)) return [];
-    return [
-      {
-        name: row.name,
-        label: { from: preset.label, to: row.label },
-        amount: { from: preset.amount, to: row.amount },
-      },
-    ];
-  });
+type SessionTypeChange =
+  | { kind: "added" | "removed"; code: string; label: string; amount: number }
+  | {
+      kind: "changed";
+      code: string;
+      label: { from: string; to: string };
+      amount: { from: number; to: number };
+    };
+
+function withCodes(
+  rows: FormSessionType[],
+  storedById: ReadonlyMap<string, { sessionName: string }>,
+): CodedSessionType[] {
+  const codes = assignSessionCodes(rows, storedById);
+  return rows.map((row, index) => ({
+    code: codes[index] ?? "",
+    label: row.label,
+    amount: row.amount,
+  }));
 }
 
-/** Session types of an existing hub whose saved label or amount will change. */
-function changedSessionTypes(
-  sessionTypes: EditFormValues["sessionTypes"],
-  stored: HubSessionName[],
+/** The session types a save adds, removes or changes, matched by code, for the confirmation. */
+function diffSessionTypes(
+  before: CodedSessionType[],
+  after: CodedSessionType[],
 ): SessionTypeChange[] {
-  const storedById = new Map(stored.map((n) => [n.id, n]));
-  return sessionTypes.flatMap((row) => {
-    const saved = storedById.get(row.sessionNameId);
-    if (!saved || (row.label === saved.sessionLabel && row.amount === saved.amount)) return [];
+  const beforeByCode = new Map(before.map((row) => [row.code, row]));
+  const afterCodes = new Set(after.map((row) => row.code));
+  const addedOrChanged = after.flatMap((row): SessionTypeChange[] => {
+    const old = beforeByCode.get(row.code);
+    if (!old) return [{ kind: "added", ...row }];
+    if (old.label === row.label && old.amount === row.amount) return [];
     return [
       {
-        name: row.name,
-        label: { from: saved.sessionLabel, to: row.label },
-        amount: { from: saved.amount, to: row.amount },
+        kind: "changed",
+        code: row.code,
+        label: { from: old.label, to: row.label },
+        amount: { from: old.amount, to: row.amount },
       },
     ];
   });
+  const removed = before
+    .filter((row) => !afterCodes.has(row.code))
+    .map((row): SessionTypeChange => ({ kind: "removed", ...row }));
+  return [...addedOrChanged, ...removed];
 }
 
 const formatAmount = (amount: number) => amountFormat.format(amount);
@@ -168,14 +189,10 @@ function ValueChange({ from, to, wrap = true }: { from: string; to: string; wrap
 }
 
 /** The groups that hold a row with a validation error, so they can be opened to show it. */
-function groupsWithErrors(
-  sessionTypeErrors: unknown,
-  sessionTypes: { name: string }[],
-  typeByName: ReadonlyMap<string, SessionTypeGroup>,
-) {
+function groupsWithErrors(sessionTypeErrors: unknown, sessionTypes: FormSessionType[]) {
   if (!Array.isArray(sessionTypeErrors)) return [];
   const groups = sessionTypeErrors.flatMap((rowErrors, index) => {
-    const group = rowErrors ? typeByName.get(sessionTypes[index]?.name ?? "") : undefined;
+    const group = rowErrors ? sessionTypes[index]?.type : undefined;
     return group ? [group] : [];
   });
   return [...new Set(groups)];
@@ -193,7 +210,7 @@ export default function HubDialog({ open, onOpenChange, edit }: HubDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[min(90vh,calc(100dvh-2rem))] flex-col lg:w-[42rem] lg:max-w-[calc(100vw-2rem)]">
+      <DialogContent className="flex flex-col lg:w-[42rem] lg:max-w-[calc(100vw-2rem)]">
         {edit ? (
           <EditHubForm hub={edit.hub} sessionNames={edit.sessionNames} onDone={onDone} />
         ) : (
@@ -273,35 +290,40 @@ function EditHubForm({
       hubName: hub.hubName,
       sessionTypes: sessionNames.map((n) => ({
         sessionNameId: n.id,
-        name: n.sessionName,
+        type: n.sessionType,
         label: n.sessionLabel,
         amount: n.amount,
       })),
     },
   });
-  const typeByName = new Map(sessionNames.map((n) => [n.sessionName, n.sessionType]));
+  const storedById = new Map(sessionNames.map((n) => [n.id, n]));
   const [openGroups, setOpenGroups] = useState<string[]>([]);
 
   // A closed group does not show its errors, so open the groups that have one.
   const onInvalid = (errors: FieldErrors<EditFormValues>) => {
-    const failing = groupsWithErrors(
-      errors.sessionTypes,
-      form.getValues("sessionTypes"),
-      typeByName,
-    );
+    const failing = groupsWithErrors(errors.sessionTypes, form.getValues("sessionTypes"));
     setOpenGroups((open) => [...new Set([...open, ...failing])]);
   };
 
   const [pending, setPending] = useState<EditFormValues | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const changes = pending ? changedSessionTypes(pending.sessionTypes, sessionNames) : [];
+  const changes = pending
+    ? diffSessionTypes(
+        sessionNames.map((n) => ({ code: n.sessionName, label: n.sessionLabel, amount: n.amount })),
+        withCodes(pending.sessionTypes, storedById),
+      )
+    : [];
   const renamed = pending !== null && pending.hubName !== hub.hubName;
 
   const confirmSave = async () => {
     if (!pending) return;
     setIsSaving(true);
     try {
-      const response = await updateHub({ hubId: hub.id, ...pending });
+      const response = await updateHub({
+        hubId: hub.id,
+        loadedSessionNameIds: sessionNames.map((n) => n.id),
+        ...pending,
+      });
       // Close the confirmation either way, so the admin can see the message and fix the form.
       setPending(null);
       if (!response.success) {
@@ -318,25 +340,23 @@ function EditHubForm({
   return (
     <Form {...form}>
       <form
-        className="flex min-h-0 flex-1 flex-col"
+        className="flex flex-col"
         onSubmit={toastOnError(form.handleSubmit(setPending, onInvalid))}
       >
         <DialogHeader className="shrink-0">
           <DialogTitle className="text-xl">Edit hub</DialogTitle>
           <DialogDescription className="text-left text-shamiri-text-grey">
-            Rename the hub, or change its session labels and amounts. Session codes cannot change.
+            Rename the hub, or change its session types. Session codes cannot change.
           </DialogDescription>
         </DialogHeader>
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-1.5 py-4">
+        <div className="flex flex-col gap-4 px-1.5 py-4">
           <HubNameField />
-          {sessionNames.length > 0 && (
-            <SessionTypesSection
-              typeByName={typeByName}
-              openGroups={openGroups}
-              onOpenGroupsChange={setOpenGroups}
-              description="Change a session's label, or the amount paid to fellows per lesson."
-            />
-          )}
+          <SessionTypesSection
+            storedById={storedById}
+            openGroups={openGroups}
+            onOpenGroupsChange={setOpenGroups}
+            description="Add or remove session types, or change a label or the amount paid to fellows per lesson. A session type that sessions use cannot be removed."
+          />
         </div>
         <HubDialogFooter isSubmitting={form.formState.isSubmitting} onCancel={onDone} />
       </form>
@@ -358,9 +378,11 @@ function EditHubForm({
         }
         changes={changes}
         changesHeading={`${sessionTypeCount(changes.length)} will change`}
-        emptyText="Session labels and amounts stay as they are."
+        emptyText="Session types stay as they are."
         note={
-          changes.some((change) => change.amount.from !== change.amount.to)
+          changes.some(
+            (change) => change.kind === "changed" && change.amount.from !== change.amount.to,
+          )
             ? "Attendance marked after the save is paid at the new amount. Payouts already recorded keep their amount, including when attendance is unmarked."
             : undefined
         }
@@ -376,27 +398,16 @@ function EditHubForm({
 }
 
 function SessionTypesSection({
-  typeByName,
-  openGroups,
-  onOpenGroupsChange,
   description,
-}: {
-  typeByName: ReadonlyMap<string, SessionTypeGroup>;
-  openGroups: string[];
-  onOpenGroupsChange: (groups: string[]) => void;
-  description: string;
-}) {
+  ...editorProps
+}: { description: string } & SessionTypesEditorProps) {
   return (
     <div className="space-y-2">
       <div className="space-y-1.5">
         <Label className="text-base">Session types</Label>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-      <SessionTypesEditor
-        typeByName={typeByName}
-        openGroups={openGroups}
-        onOpenGroupsChange={onOpenGroupsChange}
-      />
+      <SessionTypesEditor {...editorProps} />
     </div>
   );
 }
@@ -448,26 +459,41 @@ function SessionTypeLabelField({ index, sessionName }: { index: number; sessionN
   );
 }
 
-function SessionTypesEditor({
-  typeByName,
-  openGroups,
-  onOpenGroupsChange,
-}: {
-  typeByName: ReadonlyMap<string, SessionTypeGroup>;
+/** Code, label, amount and a remove button: shared by the rows and the buttons under them. */
+const SESSION_ROW_GRID =
+  "grid grid-cols-[2.5rem_minmax(0,1fr)_4.75rem_2.25rem] items-start gap-x-2 gap-y-2 sm:grid-cols-[3.25rem_minmax(0,1fr)_5.5rem_2.25rem] sm:gap-x-3";
+
+interface SessionTypesEditorProps {
+  /** The hub's stored session names by id; empty for a new hub. */
+  storedById: ReadonlyMap<string, HubSessionName>;
   openGroups: string[];
   onOpenGroupsChange: (groups: string[]) => void;
-}) {
+}
+
+/**
+ * The session types by group. A group adds rows at its end and removes its last row, so its codes
+ * stay a run with no gaps. A stored row that sessions use cannot be removed.
+ */
+function SessionTypesEditor({
+  storedById,
+  openGroups,
+  onOpenGroupsChange,
+}: SessionTypesEditorProps) {
   const form = useFormContext<SharedFormValues>();
-  const { fields } = useFieldArray({ control: form.control, name: "sessionTypes" });
+  const { fields, append, remove } = useFieldArray({ control: form.control, name: "sessionTypes" });
   const { errors } = useFormState({ control: form.control, name: "sessionTypes" });
+  const codes = assignSessionCodes(fields, storedById);
 
   const groups = SESSION_TYPE_GROUP_ORDER.map((type) => ({
     type,
-    label: SESSION_TYPE_GROUP_LABELS[type],
-    rows: fields.flatMap((field, index) =>
-      typeByName.get(field.name) === type ? [{ field, index }] : [],
-    ),
-  })).filter((group) => group.rows.length > 0);
+    ...SESSION_TYPE_GROUPS[type],
+    rows: fields.flatMap((field, index) => (field.type === type ? [{ field, index }] : [])),
+  })).filter((group) => group.rows.length > 0 || isHubSessionCategory(group.type));
+
+  const addRow = (category: HubSessionCategory) => {
+    const code = assignSessionCodes([...fields, { type: category }], storedById).at(-1) ?? "";
+    append({ type: category, ...newSessionTypeDefaults(category, code) });
+  };
 
   return (
     <Accordion
@@ -478,6 +504,15 @@ function SessionTypesEditor({
     >
       {groups.map((group) => {
         const errorCount = group.rows.filter(({ index }) => errors.sessionTypes?.[index]).length;
+        const last = group.rows.at(-1);
+        const lastStored = last?.field.sessionNameId
+          ? storedById.get(last.field.sessionNameId)
+          : undefined;
+        const lastInUse = (lastStored?.sessionCount ?? 0) > 0;
+        const category = isHubSessionCategory(group.type) ? group.type : undefined;
+        // Removing every row at once is only for rows not yet saved; stored ones go one at a time.
+        const canRemoveAll =
+          group.rows.length > 1 && group.rows.every(({ field }) => !field.sessionNameId);
         return (
           <AccordionItem
             key={group.type}
@@ -491,33 +526,156 @@ function SessionTypesEditor({
                   {errorCount > 0 && (
                     <span className="text-shamiri-light-red">{errorCount} to fix</span>
                   )}
-                  <span className="text-shamiri-new-blue">
-                    {group.rows.length} {group.rows.length === 1 ? "type" : "types"}
+                  <span
+                    className={
+                      group.rows.length > 0 ? "text-shamiri-new-blue" : "text-shamiri-text-grey"
+                    }
+                  >
+                    {group.rows.length === 0
+                      ? "None"
+                      : `${group.rows.length} ${group.rows.length === 1 ? "type" : "types"}`}
                   </span>
                 </span>
               </span>
             </AccordionTrigger>
-            <AccordionContent className="pb-3">
-              <div className="grid grid-cols-[3.25rem_minmax(0,1fr)_5.5rem] items-start gap-x-3 gap-y-2">
-                <span className="pb-1 text-xs font-medium text-shamiri-text-grey">Code</span>
-                <span className="pb-1 text-xs font-medium text-shamiri-text-grey">Label</span>
-                <span className="pb-1 text-right text-xs font-medium text-shamiri-text-grey">
-                  Amount (KES)
-                </span>
-                {group.rows.map(({ field, index }) => (
-                  <Fragment key={field.id}>
-                    <span className="pt-2 text-sm font-medium tabular-nums">{field.name}</span>
-                    <SessionTypeLabelField index={index} sessionName={field.name} />
-                    <SessionTypeAmountField index={index} sessionName={field.name} />
-                  </Fragment>
-                ))}
-              </div>
+            <AccordionContent className="space-y-3 pb-3">
+              {group.rows.length === 0 ? (
+                <p className="text-sm text-shamiri-text-dark-grey">
+                  This hub has no {group.noun}s.
+                </p>
+              ) : (
+                <div className={SESSION_ROW_GRID}>
+                  <span className="pb-1 text-center text-xs font-medium text-shamiri-text-grey">
+                    Code
+                  </span>
+                  <span className="pb-1 text-xs font-medium text-shamiri-text-grey">Label</span>
+                  <span className="pb-1 text-right text-xs font-medium text-shamiri-text-grey">
+                    {/* The amount column is too narrow on a phone for the full heading. */}
+                    <span className="sm:hidden">KES</span>
+                    <span className="hidden sm:inline">Amount (KES)</span>
+                  </span>
+                  <span aria-hidden />
+                  {group.rows.map(({ field, index }) => {
+                    const code = codes[index] ?? "";
+                    const removable = field.id === last?.field.id && !lastInUse && category;
+                    return (
+                      <Fragment key={field.id}>
+                        <span className="flex h-9 items-center justify-center text-sm font-medium tabular-nums">
+                          {code}
+                        </span>
+                        <SessionTypeLabelField index={index} sessionName={code} />
+                        <SessionTypeAmountField index={index} sessionName={code} />
+                        {removable ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-shamiri-text-dark-grey hover:bg-red-bg hover:text-shamiri-light-red focus-visible:text-shamiri-light-red"
+                            aria-label={`Remove ${code}`}
+                            onClick={() => remove(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        ) : field.id === last?.field.id && lastInUse ? (
+                          // Sessions use this row, so it stays; the note below says why.
+                          <span className="flex h-9 w-9 items-center justify-center text-shamiri-text-grey">
+                            <Lock aria-hidden className="h-4 w-4" />
+                          </span>
+                        ) : (
+                          <span aria-hidden />
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </div>
+              )}
+              {lastInUse && last && (
+                <p className="text-xs text-shamiri-text-dark-grey">
+                  {codes[last.index]} is used by {lastStored?.sessionCount}{" "}
+                  {lastStored?.sessionCount === 1 ? "session" : "sessions"}, so it cannot be
+                  removed.
+                </p>
+              )}
+              {category && (
+                <div className={SESSION_ROW_GRID}>
+                  {/* The rows' columns: add matches the label inputs, remove all starts with the amounts. */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="col-start-2 gap-2 border-dashed border-shamiri-new-blue/40 px-2 text-shamiri-new-blue shadow-none hover:border-shamiri-new-blue hover:bg-blue-bg hover:text-shamiri-new-blue sm:px-4"
+                    aria-label={`Add ${group.noun}`}
+                    onClick={() => addRow(category)}
+                  >
+                    <Plus className="h-4 w-4" />
+                    {/* The column is narrow on a phone, so the button names only the action there. */}
+                    <span className="sm:hidden">Add session</span>
+                    <span className="hidden sm:inline">Add {group.noun}</span>
+                  </Button>
+                  {canRemoveAll && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="col-span-2 gap-2 border-red-border px-2 text-shamiri-light-red shadow-none hover:bg-red-bg hover:text-shamiri-light-red sm:px-4"
+                      aria-label={`Remove all ${group.label.toLowerCase()}`}
+                      onClick={() => remove(group.rows.map(({ index }) => index))}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Remove all
+                    </Button>
+                  )}
+                </div>
+              )}
             </AccordionContent>
           </AccordionItem>
         );
       })}
     </Accordion>
   );
+}
+
+/** The session column of a row in the confirmation: its code, its label, and what happens to it. */
+function ChangedSessionCell({ change }: { change: SessionTypeChange }) {
+  return (
+    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <span className="text-xs tabular-nums text-shamiri-text-grey">{change.code}</span>
+      {change.kind === "changed" && <ValueChange from={change.label.from} to={change.label.to} />}
+      {change.kind === "added" && (
+        <>
+          <span className="font-semibold text-foreground">{change.label}</span>
+          <Badge variant="shamiri-green" className="text-xs">
+            Added
+          </Badge>
+        </>
+      )}
+      {change.kind === "removed" && (
+        <>
+          <del className="text-shamiri-text-dark-grey">
+            <span className="sr-only">removed </span>
+            {change.label}
+          </del>
+          <Badge variant="destructive" className="text-xs">
+            Removed
+          </Badge>
+        </>
+      )}
+    </span>
+  );
+}
+
+function ChangedAmountCell({ change }: { change: SessionTypeChange }) {
+  if (change.kind === "changed") {
+    return (
+      <ValueChange
+        from={formatAmount(change.amount.from)}
+        to={formatAmount(change.amount.to)}
+        wrap={false}
+      />
+    );
+  }
+  if (change.kind === "removed") {
+    return <del className="text-shamiri-text-dark-grey">{formatAmount(change.amount)}</del>;
+  }
+  return <span className="font-semibold text-foreground">{formatAmount(change.amount)}</span>;
 }
 
 /** The last step before a hub is saved: what will be stored, and the session types it edits. */
@@ -590,16 +748,12 @@ function HubConfirmDialog({
                 </TableHeader>
                 <TableBody>
                   {changes.map((change) => (
-                    <TableRow key={change.name}>
+                    <TableRow key={`${change.kind}-${change.code}`}>
                       <TableCell className="px-3 py-2.5">
-                        <ValueChange from={change.label.from} to={change.label.to} />
+                        <ChangedSessionCell change={change} />
                       </TableCell>
                       <TableCell className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">
-                        <ValueChange
-                          from={formatAmount(change.amount.from)}
-                          to={formatAmount(change.amount.to)}
-                          wrap={false}
-                        />
+                        <ChangedAmountCell change={change} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -644,15 +798,13 @@ function CreateHubForm({ onDone }: { onDone: () => void }) {
   const [pending, setPending] = useState<CreateFormValues | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>([]);
-  const changes = pending ? customizedSessionTypes(pending.sessionTypes) : [];
+  const changes = pending
+    ? diffSessionTypes(standardSessionTypes, withCodes(pending.sessionTypes, noStoredSessionNames))
+    : [];
 
   // A closed group does not show its errors, so open the groups that have one.
   const onInvalid = (errors: FieldErrors<CreateFormValues>) => {
-    const failing = groupsWithErrors(
-      errors.sessionTypes,
-      form.getValues("sessionTypes"),
-      standardTypeByName,
-    );
+    const failing = groupsWithErrors(errors.sessionTypes, form.getValues("sessionTypes"));
     setOpenGroups((open) => [...new Set([...open, ...failing])]);
   };
 
@@ -677,23 +829,23 @@ function CreateHubForm({ onDone }: { onDone: () => void }) {
   return (
     <Form {...form}>
       <form
-        className="flex min-h-0 flex-1 flex-col"
+        className="flex flex-col"
         onSubmit={toastOnError(form.handleSubmit(setPending, onInvalid))}
       >
         <DialogHeader className="shrink-0">
           <DialogTitle className="text-xl">Add a new hub</DialogTitle>
           <DialogDescription className="text-left text-shamiri-text-grey">
-            Name the hub, then review its session types. Expand a group to change a label or an
-            amount.
+            Name the hub, then review its session types. Expand a group to add or remove session
+            types, or to change a label or an amount.
           </DialogDescription>
         </DialogHeader>
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-1.5 py-4">
+        <div className="flex flex-col gap-4 px-1.5 py-4">
           <HubNameField />
           <SessionTypesSection
-            typeByName={standardTypeByName}
+            storedById={noStoredSessionNames}
             openGroups={openGroups}
             onOpenGroupsChange={setOpenGroups}
-            description="Session labels can be updated, and you can change the amount paid to fellows per lesson."
+            description="Keep only the session types this hub runs. Labels can be updated, and you can change the amount paid to fellows per lesson."
           />
         </div>
         <HubDialogFooter isSubmitting={form.formState.isSubmitting} onCancel={onDone} />
@@ -709,7 +861,7 @@ function CreateHubForm({ onDone }: { onDone: () => void }) {
           </>
         }
         changes={changes}
-        changesHeading={`${sessionTypeCount(changes.length)} with custom values`}
+        changesHeading={`${sessionTypeCount(changes.length)} ${changes.length === 1 ? "differs" : "differ"} from the standard list`}
         emptyText="Labels and fellow pay amounts will be saved as shown."
         confirmLabel="Create hub"
         isSaving={isCreating}
