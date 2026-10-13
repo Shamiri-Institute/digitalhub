@@ -5,7 +5,7 @@
 
 import { db, pool } from "#/db/client";
 import { sessionName } from "#/db/schema";
-import { hubSessionTypes } from "#/db/seed/hub-session-types";
+import { hubSessionTypes } from "#/lib/app-constants/hub-session-types";
 import { getDefaultProjectId } from "#/lib/default-project-id";
 
 async function main() {

@@ -39,6 +39,28 @@ import { objectId } from "#/lib/crypto";
 const attendedFlag = (attended: string | undefined) =>
   attended === "attended" ? true : attended === "missed" ? false : null;
 
+/**
+ * The payout statement an attendance change writes, or undefined when none is due. A statement is
+ * written only when the attendance flips: marking when the latest statement is not a mark,
+ * unmarking when there is one and it is not an unmark. Marking pays the session's current rate. Unmarking reverses what the attendance has
+ * actually been paid, the net of its statements, so a rate change in between cannot leave the
+ * fellow over- or underpaid.
+ */
+function attendancePayoutChange(
+  payouts: { amount: number; reason: string; createdAt: Date }[],
+  attended: boolean | null,
+  currentRate: number,
+): { amount: number; reason: string } | undefined {
+  const latest = payouts.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+  if (attended) {
+    if (latest?.reason === "MARK_SESSION_ATTENDANCE" || !currentRate) return undefined;
+    return { amount: currentRate, reason: "MARK_SESSION_ATTENDANCE" };
+  }
+  if (!latest || latest.reason === "UNMARK_SESSION_ATTENDANCE") return undefined;
+  const paid = payouts.reduce((sum, payout) => sum + payout.amount, 0);
+  return paid === 0 ? undefined : { amount: -paid, reason: "UNMARK_SESSION_ATTENDANCE" };
+}
+
 async function requireFellow(tx: Transaction | typeof db, id: string) {
   const row = await tx.query.fellow.findFirst({ where: (f, { eq }) => eq(f.id, id) });
   if (!row) {
@@ -473,39 +495,29 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
             );
           }
 
-          let amount = attendance.session?.session?.amount;
-          let reason = "MARK_SESSION_ATTENDANCE";
           const attendanceStatus = attendedFlag(attended);
-
-          if (Number.isInteger(amount) && amount) {
-            if (!attendanceStatus) {
-              amount = -amount;
-              reason = "UNMARK_SESSION_ATTENDANCE";
-            }
-
-            const existingPayout = await tx.query.payoutStatements.findFirst({
-              where: (p, { and, eq }) =>
-                and(eq(p.fellowId, fellowRow.id), eq(p.fellowAttendanceId, attendance.id)),
-              orderBy: (p, { desc }) => desc(p.createdAt),
-            });
-
-            if (
-              (!existingPayout && attendanceStatus) ||
-              (existingPayout && existingPayout.reason !== reason)
-            ) {
-              await tx.insert(payoutStatements).values({
-                fellowId: fellowRow.id,
-                fellowAttendanceId: attendance.id,
-                createdBy: userId,
-                amount,
-                reason,
-                mpesaNumber: fellowRow.mpesaNumber,
-              });
-            }
-          } else {
+          const currentRate = attendance.session?.session?.amount;
+          // Only marking needs the rate; an unmark reverses what was actually paid.
+          if (attendanceStatus && !(Number.isInteger(currentRate) && currentRate)) {
             throw new Error(
               "An error occurred while marking attendance. Session missing payout amount.",
             );
+          }
+
+          const payouts = await tx.query.payoutStatements.findMany({
+            where: (p, { and, eq }) =>
+              and(eq(p.fellowId, fellowRow.id), eq(p.fellowAttendanceId, attendance.id)),
+            columns: { amount: true, reason: true, createdAt: true },
+          });
+          const payout = attendancePayoutChange(payouts, attendanceStatus, currentRate ?? 0);
+          if (payout) {
+            await tx.insert(payoutStatements).values({
+              fellowId: fellowRow.id,
+              fellowAttendanceId: attendance.id,
+              createdBy: userId,
+              mpesaNumber: fellowRow.mpesaNumber,
+              ...payout,
+            });
           }
 
           await tx
@@ -660,32 +672,18 @@ export async function markManyFellowAttendance(
             );
           }
 
-          let reason = "MARK_SESSION_ATTENDANCE";
-          let _amount = amount;
-          if (!attendanceStatus && amount) {
-            _amount = -amount;
-            reason = "UNMARK_SESSION_ATTENDANCE";
-          }
-
-          const existingPayouts = attendance.PayoutStatements.toSorted((a, b) => {
-            return b.createdAt.getTime() - a.createdAt.getTime();
-          });
-
-          let payout: typeof payoutStatements.$inferInsert | undefined;
-          if (
-            ((existingPayouts.length === 0 && attendanceStatus) ||
-              (existingPayouts.length !== 0 && existingPayouts[0]?.reason !== reason)) &&
-            amount
-          ) {
-            payout = {
-              fellowId: attendance.fellow.id,
-              fellowAttendanceId: attendance.id,
-              createdBy: userId,
-              amount: _amount,
-              reason,
-              mpesaNumber: attendance.fellow.mpesaNumber,
-            };
-          }
+          const change = attendancePayoutChange(
+            attendance.PayoutStatements,
+            attendanceStatus,
+            amount,
+          );
+          const payout: typeof payoutStatements.$inferInsert | undefined = change && {
+            fellowId: attendance.fellow.id,
+            fellowAttendanceId: attendance.id,
+            createdBy: userId,
+            mpesaNumber: attendance.fellow.mpesaNumber,
+            ...change,
+          };
 
           return {
             payout,

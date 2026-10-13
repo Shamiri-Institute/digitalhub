@@ -28,7 +28,7 @@ import { TypeID } from "typeid-js";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { db, pool } from "#/db/client";
 import * as schema from "#/db/schema";
-import { hubSessionTypes } from "#/db/seed/hub-session-types";
+import { hubSessionTypes } from "#/lib/app-constants/hub-session-types";
 import { createTickets } from "#/db/seed/tickets";
 import {
   buildRecordingsS3Key,
@@ -72,7 +72,7 @@ import {
 
 // 2.2 Create Hubs (Regional centers)
 // - Hubs are geographical operation centers
-// - Required fields: id, visibleId, hubName
+// - Required fields: id, hubName (visibleId is deprecated and left null)
 // - Must be linked to: Project and Implementer
 // - Hubs are required before creating schools or staff
 
@@ -310,7 +310,6 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
   // Add static hub first
   const staticHub = {
     id: objectId("hub"),
-    visibleId: "ARSENAL1",
     hubName: "Arsenal Hub",
     projectId: projects[0]?.id as string,
     implementerId: implementers[0]?.id as string,
@@ -324,7 +323,6 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
     for (let j = 0; j < numHubs; j++) {
       hubs.push({
         id: objectId("hub"),
-        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         hubName: faker.company.name(),
         projectId: projects[i]?.id as string,
         implementerId: implementers[i]?.id as string,

@@ -426,13 +426,20 @@ export const hub = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    visibleId: varchar("visible_id", { length: 100 }).notNull(),
+    // Deprecated: nothing reads or writes it. New hubs leave it null; drop it with its index later.
+    visibleId: varchar("visible_id", { length: 100 }),
     hubName: varchar("hub_name", { length: 255 }).notNull(),
     implementerId: varchar("implementer_id", { length: 255 }).notNull(),
     projectId: varchar("project_id", { length: 100 }),
   },
   (table) => [
     uniqueIndex("hubs_visible_id_key").using("btree", table.visibleId),
+    // Hub names are unique per implementer and project, ignoring case and surrounding spaces.
+    uniqueIndex("hubs_implementer_id_project_id_name_key").on(
+      table.implementerId,
+      table.projectId,
+      sql`lower(trim(${table.hubName}))`,
+    ),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -2003,7 +2010,7 @@ export const sessionName = pgTable(
       .$onUpdate(() => new Date()),
     sessionType: sessionTypesEnum("session_type").notNull(),
     sessionName: varchar("session_name", { length: 255 }).notNull(),
-    amount: integer(),
+    amount: integer().notNull(),
     currency: varchar({ length: 100 }).default("KES").notNull(),
     hubId: varchar("hub_id", { length: 255 }).notNull(),
     sessionLabel: varchar("session_label", { length: 255 }).notNull(),
