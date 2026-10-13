@@ -4968,7 +4968,29 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "session_names_hub_id_session_name_key": {
+          "name": "session_names_hub_id_session_name_key",
+          "columns": [
+            {
+              "expression": "hub_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "session_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "session_names_hub_id_fkey": {
           "name": "session_names_hub_id_fkey",

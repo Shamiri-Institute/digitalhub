@@ -2016,6 +2016,8 @@ export const sessionName = pgTable(
     sessionLabel: varchar("session_label", { length: 255 }).notNull(),
   },
   (table) => [
+    // A code names one session type of a hub; sessions and the edit dialog look rows up by it.
+    uniqueIndex("session_names_hub_id_session_name_key").on(table.hubId, table.sessionName),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],
