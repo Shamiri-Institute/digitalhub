@@ -113,6 +113,13 @@
       "when": 1791898009474,
       "tag": "0015_drop_dead_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791900324346,
+      "tag": "0016_drop_unused_columns",
+      "breakpoints": true
     }
   ]
 }
