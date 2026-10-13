@@ -666,10 +666,10 @@ async function createHubCoordinators(
     identifier: staticCoordinators[index]?.id ?? "",
   }));
 
-  await insertMany(schema.implementerMember, staticMembershipData);
-
   // Add static coordinators to database
   await insertMany(schema.hubCoordinator, staticCoordinators);
+
+  await insertMany(schema.implementerMember, staticMembershipData);
 
   // Add static coordinator emails to set
   staticCoordinators.forEach((coord) => {
@@ -692,14 +692,6 @@ async function createHubCoordinators(
     await db.insert(schema.user).values({
       id: userId,
       email: uniqueEmail,
-    });
-
-    // Create membership
-    await db.insert(schema.implementerMember).values({
-      userId,
-      implementerId: hub.implementerId,
-      role: ImplementerRole.HUB_COORDINATOR,
-      identifier: coordinatorId,
     });
 
     // Create hub coordinator
@@ -727,6 +719,14 @@ async function createHubCoordinators(
       gender: faker.number.float() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
       idNumber: faker.string.numeric({ length: 8 }),
       assignedHubId: hub.id,
+    });
+
+    // Create membership
+    await db.insert(schema.implementerMember).values({
+      userId,
+      implementerId: hub.implementerId,
+      role: ImplementerRole.HUB_COORDINATOR,
+      identifier: coordinatorId,
     });
   }
 
@@ -848,8 +848,6 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
     identifier: objectId("sup"),
   }));
 
-  await insertMany(schema.implementerMember, membershipData);
-
   const supervisorRecords = supervisors.map((_user) => {
     // Check if this is a static supervisor
     const isStaticSupervisor = _user.visibleId?.startsWith("SUPERVISOR");
@@ -890,7 +888,9 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
     };
   });
 
-  return insertManyReturning(schema.supervisor, supervisorRecords);
+  const created = await insertManyReturning(schema.supervisor, supervisorRecords);
+  await insertMany(schema.implementerMember, membershipData);
+  return created;
 }
 
 async function createOperations(hubs: Hub[], emails: Set<string>) {
@@ -945,9 +945,7 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
     identifier: objectId("opsuser"),
   }));
 
-  await insertMany(schema.implementerMember, membershipData);
-
-  return insertManyReturning(
+  const created = await insertManyReturning(
     schema.opsUser,
     operations.map((ops) => ({
       id: membershipData.find((x) => x.userId === ops.id)?.identifier ?? "",
@@ -957,6 +955,8 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
       cellPhone: ops.cellPhone,
     })),
   );
+  await insertMany(schema.implementerMember, membershipData);
+  return created;
 }
 
 async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
@@ -1010,9 +1010,7 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
     identifier: objectId("clinicallead"),
   }));
 
-  await insertMany(schema.implementerMember, membershipData);
-
-  return insertManyReturning(
+  const created = await insertManyReturning(
     schema.clinicalLead,
     clinicalLeads.map((clinicalLead) => ({
       id: membershipData.find((x) => x.userId === clinicalLead.id)?.identifier ?? "",
@@ -1022,6 +1020,8 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
       implementerId: clinicalLead.implementerId,
     })),
   );
+  await insertMany(schema.implementerMember, membershipData);
+  return created;
 }
 
 async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
@@ -1041,14 +1041,6 @@ async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
     email: "takehiro.tomiyasu@test.com",
   });
 
-  // Create implementer member with identifier
-  await db.insert(schema.implementerMember).values({
-    userId,
-    implementerId: staticImplementer.id,
-    role: ImplementerRole.CLINICAL_TEAM,
-    identifier: clinicalTeamId,
-  });
-
   // Create clinical team member with matching id
   const clinicalTeamMember = {
     id: clinicalTeamId,
@@ -1060,6 +1052,14 @@ async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
   };
   const [created] = await db.insert(schema.clinicalTeam).values(clinicalTeamMember).returning();
   if (!created) throw new Error("Clinical team member was not created");
+
+  // Create implementer member with identifier
+  await db.insert(schema.implementerMember).values({
+    userId,
+    implementerId: staticImplementer.id,
+    role: ImplementerRole.CLINICAL_TEAM,
+    identifier: clinicalTeamId,
+  });
   return created;
 }
 
@@ -1185,9 +1185,7 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
     identifier: objectId("fellow"),
   }));
 
-  await insertMany(schema.implementerMember, membershipData);
-
-  return insertManyReturning(
+  const created = await insertManyReturning(
     schema.fellow,
     fellows.map((fellow) => {
       const { id, ..._fellow } = fellow;
@@ -1197,6 +1195,8 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
       };
     }),
   );
+  await insertMany(schema.implementerMember, membershipData);
+  return created;
 }
 
 // TODO: should each school have a unique supervisor?
