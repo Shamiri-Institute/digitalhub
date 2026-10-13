@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useState } from "react";
+import { useOptimistic, useTransition } from "react";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
 import {
   Select,
@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnFailure } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import type { supervisor } from "#/db/schema";
 
@@ -24,53 +24,36 @@ export default function AssignFellowSupervisorSelect({
   supervisors: Pick<typeof supervisor.$inferSelect, "id" | "supervisorName">[];
   disabled?: boolean;
 }) {
-  const [selectedSupervisor, setSelectedSupervisor] = useState(supervisorId);
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [shownSupervisorId, setShownSupervisorId] = useOptimistic(supervisorId);
 
-  const assignSelectedSupervisor = useEffectEvent(() => {
-    try {
-      const assignSupervisor = async () => {
-        if (selectedSupervisor !== supervisorId && selectedSupervisor !== null) {
-          setLoading(true);
-          const result = await assignFellowSupervisor({
-            fellowId,
-            supervisorId: selectedSupervisor,
-          });
-
-          if (result.success) {
-            toast({ description: result.message });
-          } else {
-            toast({ description: result.error });
-          }
-          setTimeout(() => {
-            setLoading(false);
-          }, 1500);
-        }
-      };
-      void assignSupervisor();
-    } catch (error: unknown) {
-      console.log(error);
-    }
-  });
-
-  // effect: runs the assignment server action when the controlled select value changes
-  useEffect(() => {
-    assignSelectedSupervisor();
-  }, [selectedSupervisor]);
+  function assignSupervisor(newSupervisorId: string) {
+    startTransition(async () => {
+      setShownSupervisorId(newSupervisorId);
+      await toastOnFailure(async () => {
+        const result = await assignFellowSupervisor({ fellowId, supervisorId: newSupervisorId });
+        toast(
+          result.success
+            ? { description: result.message }
+            : { variant: "destructive", description: result.error },
+        );
+      });
+    });
+  }
 
   return (
     <div className="flex">
       {disabled ? (
-        supervisors.find((supervisor) => supervisor.id === selectedSupervisor)?.supervisorName
+        supervisors.find((supervisor) => supervisor.id === shownSupervisorId)?.supervisorName
       ) : (
-        <Select onValueChange={setSelectedSupervisor} value={selectedSupervisor ?? undefined}>
+        <Select onValueChange={assignSupervisor} value={shownSupervisorId ?? undefined}>
           <SelectTrigger
             className={cn(
               "h-auto gap-1 px-2 py-0.5",
               supervisorId !== null
                 ? "border-shamiri-light-blue bg-blue-bg text-shamiri-new-blue"
                 : "border-shamiri-red bg-red-bg text-shamiri-light-red",
-              loading
+              isPending
                 ? "pointer-events-none border-shamiri-light-grey bg-background-secondary text-shamiri-text-dark-grey focus:ring-shamiri-light-grey"
                 : "pointer-events-auto",
             )}
