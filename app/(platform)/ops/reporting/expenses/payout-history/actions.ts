@@ -14,6 +14,7 @@ import {
   supervisor,
 } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
+import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 
 export type OpsHubsPayoutHistoryType = Awaited<ReturnType<typeof loadOpsHubsPayoutHistory>>[number];
 export type FellowPayoutDetail = OpsHubsPayoutHistoryType["fellowDetails"][number];
@@ -25,13 +26,14 @@ export async function loadOpsHubsPayoutHistory() {
     throw new Error("Unauthorised user");
   }
 
-  const projectId = await getActiveProjectId();
-
+  const opsHubIds = implementerHubsInProject(
+    opsUser.profile.implementerId,
+    await getActiveProjectId(),
+  );
   const projectFellowIds = db
     .select({ id: fellow.id })
     .from(fellow)
-    .innerJoin(hub, eq(hub.id, fellow.hubId))
-    .where(eq(hub.projectId, projectId));
+    .where(inArray(fellow.hubId, opsHubIds));
   const nextPayoutDate = sql`lead(${payoutStatements.executedAt}) over (order by ${payoutStatements.executedAt})`;
   const [payoutDates, details] = await Promise.all([
     db
@@ -68,7 +70,7 @@ export async function loadOpsHubsPayoutHistory() {
       .innerJoin(fellow, eq(fellow.id, payoutStatements.fellowId))
       .innerJoin(hub, eq(hub.id, fellow.hubId))
       .innerJoin(supervisor, eq(supervisor.id, fellow.supervisorId))
-      .where(and(isNotNull(payoutStatements.executedAt), eq(hub.projectId, projectId)))
+      .where(and(isNotNull(payoutStatements.executedAt), inArray(hub.id, opsHubIds)))
       .groupBy(
         payoutStatements.executedAt,
         fellow.id,
@@ -102,8 +104,10 @@ export async function triggerPayoutAction() {
     throw new Error("Unauthorised user");
   }
 
-  const projectId = await getActiveProjectId();
-
+  const opsHubIds = implementerHubsInProject(
+    opsUser.profile.implementerId,
+    await getActiveProjectId(),
+  );
   const currentTime = new Date();
 
   try {
@@ -118,10 +122,7 @@ export async function triggerPayoutAction() {
         .where(
           and(
             or(eq(fellow.droppedOut, false), isNull(fellow.droppedOut)),
-            inArray(
-              fellow.hubId,
-              tx.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId)),
-            ),
+            inArray(fellow.hubId, opsHubIds),
           ),
         );
 
@@ -211,17 +212,18 @@ export async function confirmPayoutAction(executedAt: Date) {
     throw new Error("Unauthorised user");
   }
 
-  const projectId = await getActiveProjectId();
+  const opsHubIds = implementerHubsInProject(
+    opsUser.profile.implementerId,
+    await getActiveProjectId(),
+  );
   const currentTime = new Date();
 
   try {
     const result = await db.transaction(async (tx) => {
-      // Only the active project's statements, the same set the payout history lists.
       const projectFellowIds = tx
         .select({ id: fellow.id })
         .from(fellow)
-        .innerJoin(hub, eq(hub.id, fellow.hubId))
-        .where(eq(hub.projectId, projectId));
+        .where(inArray(fellow.hubId, opsHubIds));
       const executedPayouts = await tx
         .select({ id: payoutStatements.id })
         .from(payoutStatements)

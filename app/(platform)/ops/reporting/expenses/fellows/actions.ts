@@ -1,11 +1,9 @@
 "use server";
 
-import { eq } from "drizzle-orm";
-
 import { currentOpsUser } from "#/app/auth";
 import { db } from "#/db/client";
-import { hub } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
+import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 
 export type HubFellowsAttendancesType = Awaited<
   ReturnType<typeof loadHubsFellowAttendance>
@@ -18,12 +16,13 @@ export async function loadHubsFellowAttendance() {
     throw new Error("Unauthorised user");
   }
 
-  // TODO: Implement project switch for ops users -- for now default to default project
-  const projectId = await getActiveProjectId();
+  const opsHubIds = implementerHubsInProject(
+    opsUser.profile.implementerId,
+    await getActiveProjectId(),
+  );
 
   const fellows = await db.query.fellow.findMany({
-    where: (f, { inArray }) =>
-      inArray(f.hubId, db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId))),
+    where: (f, { inArray }) => inArray(f.hubId, opsHubIds),
     with: {
       hub: { columns: { hubName: true } },
       supervisor: { columns: { supervisorName: true } },

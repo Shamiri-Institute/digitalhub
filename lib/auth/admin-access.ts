@@ -45,10 +45,3 @@ export function projectsAdministeredBy(userId: string) {
       ),
     );
 }
-
-export function hubsOverseenByAdmin(implementerId: string, projectId: string) {
-  return db
-    .select({ id: hub.id })
-    .from(hub)
-    .where(and(eq(hub.implementerId, implementerId), eq(hub.projectId, projectId)));
-}

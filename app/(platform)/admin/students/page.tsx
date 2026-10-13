@@ -18,9 +18,9 @@ import {
   student,
   supervisor,
 } from "#/db/schema";
+import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { fetchStudentClinicalStats } from "#/lib/actions/clinical/students";
-import { hubsOverseenByAdmin } from "#/lib/auth/admin-access";
 
 export default async function StudentsPage() {
   const admin = await currentAdminUser();
@@ -30,7 +30,7 @@ export default async function StudentsPage() {
   const projectId = await getActiveProjectId();
   const { implementerId } = admin.profile;
 
-  const projectHubIds = hubsOverseenByAdmin(implementerId, projectId);
+  const projectHubIds = implementerHubsInProject(implementerId, projectId);
   const projectSchoolIds = db
     .select({ id: school.id })
     .from(school)

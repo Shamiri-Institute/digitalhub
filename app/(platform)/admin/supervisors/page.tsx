@@ -8,7 +8,7 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { hubsOverseenByAdmin } from "#/lib/auth/admin-access";
+import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
 export default async function SupervisorsPage() {
@@ -24,7 +24,7 @@ export default async function SupervisorsPage() {
       where: (s, { inArray }) =>
         implementerId === undefined
           ? sql`false`
-          : inArray(s.hubId, hubsOverseenByAdmin(implementerId, projectId)),
+          : inArray(s.hubId, implementerHubsInProject(implementerId, projectId)),
       with: {
         assignedSchools: { columns: { schoolName: true } },
         fellows: { columns: { droppedOut: true } },

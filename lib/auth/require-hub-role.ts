@@ -88,6 +88,13 @@ export async function requireFellowsInHub(fellowIds: string[], hubId: string) {
   }
 }
 
+export function implementerHubsInProject(implementerId: string, projectId: string) {
+  return db
+    .select({ id: hub.id })
+    .from(hub)
+    .where(and(eq(hub.implementerId, implementerId), eq(hub.projectId, projectId)));
+}
+
 /**
  * The ids of the fellows a caller from requireHubRole may see in reports: the fellows of their hub,
  * and for a supervisor only the ones they supervise.

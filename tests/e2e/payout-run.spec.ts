@@ -3,31 +3,35 @@ import { format } from "date-fns";
 import { eq, gte, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { fellowAttendance, payoutStatements } from "#/db/schema";
+import { fellowAttendance, hub, payoutStatements } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
- * An ops user runs and confirms a payout. A run executes every eligible statement in the database,
- * so playwright.config.ts runs this spec in its own project after every other spec. The database
- * checks cover what no page shows: which statements and attendances a run processed, and who
- * confirmed them.
+ * An ops user runs and confirms a payout. A run executes every eligible statement of the ops user's
+ * implementer in their project, so playwright.config.ts runs this spec in its own project after
+ * every other spec. The database checks cover what no page shows: which statements and attendances
+ * a run processed, and who confirmed them.
  */
 
 test.describe.configure({ mode: "serial" });
 
 type Fixture = { attendanceId: number; fellowId: string; sessionAmount: number };
-let ops: { email: string; userId: string };
+type OtherImplementerFixture = Fixture & { hubId: string; originalProjectId: string | null };
+let ops: { email: string; userId: string; implementerId: string; projectId: string };
 let fixture: Fixture;
+let otherImplementer: OtherImplementerFixture;
 let insertedPayoutId: string;
+let otherImplementerPayoutId: string;
 let runExecutedAt: Date;
 const startedAt = new Date();
 
 test.beforeAll(async () => {
   const {
     rows: [firstOps],
-  } = await db.execute<{ email: string; userId: string }>(sql`
-    select u.email, u.id as "userId"
+  } = await db.execute<typeof ops>(sql`
+    select u.email, u.id as "userId", o.implementer_id as "implementerId",
+      coalesce(u.active_project_id, (select id from projects where is_default)) as "projectId"
     from ops_users o
     join implementer_members m on m.identifier = o.id and m.role = 'OPERATIONS'
     join users u on u.id = m.user_id and u.email is not null
@@ -37,38 +41,54 @@ test.beforeAll(async () => {
   if (!firstOps) throw new Error("seed the database first: no ops user");
   ops = firstOps;
 
-  // An attendance the next payout run picks up: attended, unprocessed, at an occurred session,
-  // for an active fellow in a default-project hub. The seed executes every statement it writes,
-  // so give it an unexecuted one; afterAll removes it.
-  const {
-    rows: [row],
-  } = await db.execute<Fixture>(sql`
-    select fa.id as "attendanceId", f.id as "fellowId", sn.amount as "sessionAmount"
+  // An attendance a payout run picks up: attended, unprocessed, at an occurred session, for an
+  // active fellow. The seed executes every statement it writes, so give it an unexecuted one.
+  const eligibleAttendance = sql`
+    select fa.id as "attendanceId", f.id as "fellowId", sn.amount as "sessionAmount",
+      h.id as "hubId", h.project_id as "originalProjectId"
     from fellow_attendances fa
     join intervention_sessions i on i.id = fa.session_id and i.occurred
     join session_names sn on sn.id = i.session_id and sn.amount > 0
     join fellows f on f.id = fa.fellow_id and coalesce(f.dropped_out, false) = false
     join hubs h on h.id = f.hub_id
-    join projects p on p.id = h.project_id and p.is_default
     where fa.attended and fa.processed_at is null
-      and not exists (select 1 from payout_statements ps where ps.fellow_attendance_id = fa.id)
-    order by fa.id
-    limit 1`);
+      and not exists (select 1 from payout_statements ps where ps.fellow_attendance_id = fa.id)`;
+  const {
+    rows: [row],
+  } = await db.execute<Fixture>(sql`${eligibleAttendance}
+    and h.implementer_id = ${ops.implementerId} and h.project_id = ${ops.projectId}
+    order by fa.id limit 1`);
   if (!row) throw new Error("seed the database first: no attended, unprocessed attendance");
   fixture = row;
+
+  // Another implementer's hub, moved into the ops user's project until afterAll.
+  const {
+    rows: [otherRow],
+  } = await db.execute<OtherImplementerFixture>(sql`${eligibleAttendance}
+    and h.implementer_id <> ${ops.implementerId}
+    order by fa.id limit 1`);
+  if (!otherRow) throw new Error("seed the database first: no attendance of another implementer");
+  otherImplementer = otherRow;
+  await db.update(hub).set({ projectId: ops.projectId }).where(eq(hub.id, otherImplementer.hubId));
+
+  insertedPayoutId = await insertUnexecutedStatement(fixture);
+  otherImplementerPayoutId = await insertUnexecutedStatement(otherImplementer);
+});
+
+async function insertUnexecutedStatement(attendance: Fixture) {
   const [inserted] = await db
     .insert(payoutStatements)
     .values({
-      fellowAttendanceId: fixture.attendanceId,
-      fellowId: fixture.fellowId,
-      amount: fixture.sessionAmount,
+      fellowAttendanceId: attendance.attendanceId,
+      fellowId: attendance.fellowId,
+      amount: attendance.sessionAmount,
       reason: "MARK_SESSION_ATTENDANCE",
       createdBy: ops.userId,
     })
     .returning({ id: payoutStatements.id });
   if (!inserted) throw new Error("could not insert the payout statement fixture");
-  insertedPayoutId = inserted.id;
-});
+  return inserted.id;
+}
 
 test.afterAll(async () => {
   // A run touches every eligible row, so undo by time. This spec runs alone, so nothing else
@@ -85,8 +105,14 @@ test.afterAll(async () => {
     .update(fellowAttendance)
     .set({ processedAt: null })
     .where(gte(fellowAttendance.processedAt, startedAt));
-  if (insertedPayoutId) {
-    await db.delete(payoutStatements).where(eq(payoutStatements.id, insertedPayoutId));
+  for (const payoutId of [insertedPayoutId, otherImplementerPayoutId]) {
+    if (payoutId) await db.delete(payoutStatements).where(eq(payoutStatements.id, payoutId));
+  }
+  if (otherImplementer) {
+    await db
+      .update(hub)
+      .set({ projectId: otherImplementer.originalProjectId })
+      .where(eq(hub.id, otherImplementer.hubId));
   }
 });
 
@@ -111,6 +137,13 @@ test("an ops user triggers a payout run", async ({ page, context }) => {
   if (!executedAt) throw new Error("the payout run did not execute the fixture's statement");
   expect(processedAttendance?.processedAt).toEqual(executedAt);
   runExecutedAt = executedAt;
+
+  // Must not write: another implementer's statement in the same project stays unexecuted.
+  const [otherPayout] = await db
+    .select({ executedAt: payoutStatements.executedAt })
+    .from(payoutStatements)
+    .where(eq(payoutStatements.id, otherImplementerPayoutId));
+  expect(otherPayout?.executedAt).toBeNull();
 
   // The run is listed with the sum of the statements it executed.
   const {

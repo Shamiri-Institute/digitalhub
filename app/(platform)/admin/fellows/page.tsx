@@ -9,7 +9,7 @@ import { Separator } from "#/components/ui/separator";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fellow, interventionGroup, weeklyFellowRatings } from "#/db/schema";
-import { hubsOverseenByAdmin } from "#/lib/auth/admin-access";
+import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
 export default async function FellowPage() {
@@ -24,7 +24,7 @@ export default async function FellowPage() {
   if (!implementerId) {
     redirect("/login");
   }
-  const projectHubIds = hubsOverseenByAdmin(implementerId, projectId);
+  const projectHubIds = implementerHubsInProject(implementerId, projectId);
   const listedFellow = inArray(fellow.hubId, projectHubIds);
   const projectFellowIds = db.select({ id: fellow.id }).from(fellow).where(listedFellow);
   const ratingAverages = db

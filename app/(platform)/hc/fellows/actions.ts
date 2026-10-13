@@ -5,10 +5,13 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fellow } from "#/db/schema";
-import { hubsOverseenByAdmin } from "#/lib/auth/admin-access";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { fellowsInCallerScope, requireHubRole } from "#/lib/auth/require-hub-role";
+import {
+  fellowsInCallerScope,
+  implementerHubsInProject,
+  requireHubRole,
+} from "#/lib/auth/require-hub-role";
 
 export type FellowDropoutReasonsGraphData = {
   name: string;
@@ -120,7 +123,10 @@ async function callerFellowFilter() {
     ImplementerRole.SUPERVISOR,
   );
   if (role === ImplementerRole.ADMIN) {
-    return inArray(fellow.hubId, hubsOverseenByAdmin(implementerId, await getActiveProjectId()));
+    return inArray(
+      fellow.hubId,
+      implementerHubsInProject(implementerId, await getActiveProjectId()),
+    );
   }
   const caller = await requireHubRole(ImplementerRole.HUB_COORDINATOR, ImplementerRole.SUPERVISOR);
   if (caller.role === ImplementerRole.SUPERVISOR) {
