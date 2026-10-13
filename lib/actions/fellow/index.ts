@@ -42,9 +42,9 @@ const attendedFlag = (attended: string | undefined) =>
 /**
  * The payout statement an attendance change writes, or undefined when none is due. A statement is
  * written only when the attendance flips: marking when the latest statement is not a mark,
- * unmarking when there is one and it is not an unmark. Marking pays the session's current rate. Unmarking reverses what the attendance has
- * actually been paid, the net of its statements, so a rate change in between cannot leave the
- * fellow over- or underpaid.
+ * unmarking when there is one and it is not an unmark. Marking pays the session's current rate,
+ * which can be 0. Unmarking reverses what the attendance has actually been paid, the net of its
+ * statements, so a rate change in between cannot leave the fellow over- or underpaid.
  */
 function attendancePayoutChange(
   payouts: { amount: number; reason: string; createdAt: Date }[],
@@ -53,12 +53,25 @@ function attendancePayoutChange(
 ): { amount: number; reason: string } | undefined {
   const latest = payouts.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
   if (attended) {
-    if (latest?.reason === "MARK_SESSION_ATTENDANCE" || !currentRate) return undefined;
+    if (latest?.reason === "MARK_SESSION_ATTENDANCE") return undefined;
     return { amount: currentRate, reason: "MARK_SESSION_ATTENDANCE" };
   }
   if (!latest || latest.reason === "UNMARK_SESSION_ATTENDANCE") return undefined;
   const paid = payouts.reduce((sum, payout) => sum + payout.amount, 0);
-  return paid === 0 ? undefined : { amount: -paid, reason: "UNMARK_SESSION_ATTENDANCE" };
+  return { amount: paid === 0 ? 0 : -paid, reason: "UNMARK_SESSION_ATTENDANCE" };
+}
+
+/**
+ * The rate marking attendance pays: the amount of the session's session type, which can be 0. A
+ * session with no session type has no rate, so its attendance can be unmarked but not marked.
+ */
+function sessionRate(session: { session: { amount: number } | null }) {
+  if (!session.session) {
+    throw new Error(
+      "An error occurred while marking attendance. The session has no session type, so it has no payout amount.",
+    );
+  }
+  return session.session.amount;
 }
 
 async function requireFellow(tx: Transaction | typeof db, id: string) {
@@ -485,7 +498,6 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
 
         const attendance = await tx.query.fellowAttendance.findFirst({
           where: (a, { and, eq }) => and(eq(a.fellowId, fellowRow.id), eq(a.sessionId, sessionId)),
-          with: { session: { with: { session: true } } },
         });
 
         if (attendance) {
@@ -496,20 +508,15 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
           }
 
           const attendanceStatus = attendedFlag(attended);
-          const currentRate = attendance.session?.session?.amount;
           // Only marking needs the rate; an unmark reverses what was actually paid.
-          if (attendanceStatus && !(Number.isInteger(currentRate) && currentRate)) {
-            throw new Error(
-              "An error occurred while marking attendance. Session missing payout amount.",
-            );
-          }
+          const currentRate = attendanceStatus ? sessionRate(session) : 0;
 
           const payouts = await tx.query.payoutStatements.findMany({
             where: (p, { and, eq }) =>
               and(eq(p.fellowId, fellowRow.id), eq(p.fellowAttendanceId, attendance.id)),
             columns: { amount: true, reason: true, createdAt: true },
           });
-          const payout = attendancePayoutChange(payouts, attendanceStatus, currentRate ?? 0);
+          const payout = attendancePayoutChange(payouts, attendanceStatus, currentRate);
           if (payout) {
             await tx.insert(payoutStatements).values({
               fellowId: fellowRow.id,
@@ -559,13 +566,8 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
           }
         }
 
-        if (session.session?.amount === undefined || session.session?.amount === null) {
-          throw new Error(
-            `An error occurred while marking attendance for ${fellowRow.fellowName}. Session payout amount not found.`,
-          );
-        }
-
         const attendanceStatus = attendedFlag(attended);
+        const rate = attendanceStatus ? sessionRate(session) : 0;
 
         const projectId = session.projectId;
         if (!projectId) {
@@ -596,7 +598,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
             fellowId: fellowRow.id,
             fellowAttendanceId: createdAttendance.id,
             createdBy: userId,
-            amount: session.session?.amount ?? 0,
+            amount: rate,
             reason: "MARK_SESSION_ATTENDANCE",
             mpesaNumber: fellowRow.mpesaNumber,
           });
@@ -647,14 +649,9 @@ export async function markManyFellowAttendance(
           throw new Error("An error occurred while marking attendances. Session has not occurred.");
         }
 
-        if (!Number.isInteger(session.session?.amount)) {
-          throw new Error(
-            "An error occurred while marking attendances. Session payout amount not found.",
-          );
-        }
-
         const attendanceStatus = attendedFlag(attended);
-        const amount = session.session?.amount ?? 0;
+        // Only marking needs the rate; an unmark reverses what was actually paid.
+        const rate = attendanceStatus ? sessionRate(session) : 0;
 
         const attendances = await tx.query.fellowAttendance.findMany({
           where: (a, { and, eq, inArray }) =>
@@ -675,7 +672,7 @@ export async function markManyFellowAttendance(
           const change = attendancePayoutChange(
             attendance.PayoutStatements,
             attendanceStatus,
-            amount,
+            rate,
           );
           const payout: typeof payoutStatements.$inferInsert | undefined = change && {
             fellowId: attendance.fellow.id,
@@ -799,7 +796,7 @@ export async function markManyFellowAttendance(
               fellowId: attendance.fellowId,
               fellowAttendanceId: attendance.id,
               createdBy: userId,
-              amount: amount,
+              amount: rate,
               reason: "MARK_SESSION_ATTENDANCE",
               mpesaNumber: fellowRow?.mpesaNumber ?? null,
             };
