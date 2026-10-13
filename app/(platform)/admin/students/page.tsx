@@ -13,7 +13,6 @@ import { db } from "#/db/client";
 import {
   clinicalLead,
   clinicalScreeningInfo,
-  hub,
   interventionSession,
   school,
   student,
@@ -21,6 +20,7 @@ import {
 } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { fetchStudentClinicalStats } from "#/lib/actions/clinical/students";
+import { hubsOverseenByAdmin } from "#/lib/auth/admin-access";
 
 export default async function StudentsPage() {
   const admin = await currentAdminUser();
@@ -30,10 +30,7 @@ export default async function StudentsPage() {
   const projectId = await getActiveProjectId();
   const { implementerId } = admin.profile;
 
-  const projectHubIds = db
-    .select({ id: hub.id })
-    .from(hub)
-    .where(and(eq(hub.projectId, projectId), eq(hub.implementerId, implementerId)));
+  const projectHubIds = hubsOverseenByAdmin(implementerId, projectId);
   const projectSchoolIds = db
     .select({ id: school.id })
     .from(school)
@@ -70,8 +67,8 @@ export default async function StudentsPage() {
   ] = await Promise.all([
     db.$count(
       interventionSession,
-      and(
-        eq(interventionSession.projectId, projectId),
+      or(
+        inArray(interventionSession.hubId, projectHubIds),
         inArray(interventionSession.schoolId, projectSchoolIds),
       ),
     ),

@@ -46,3 +46,14 @@ export function projectsAdministeredBy(userId: string) {
       ),
     );
 }
+
+/**
+ * The hubs an admin oversees: every hub of their implementer in the active project. Admins have no
+ * hub of their own, and a profile's own implementer column can disagree with its hub's.
+ */
+export function hubsOverseenByAdmin(implementerId: string, projectId: string) {
+  return db
+    .select({ id: hub.id })
+    .from(hub)
+    .where(and(eq(hub.implementerId, implementerId), eq(hub.projectId, projectId)));
+}

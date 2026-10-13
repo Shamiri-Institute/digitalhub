@@ -1,4 +1,4 @@
-import { and, countDistinct, eq, inArray, sql } from "drizzle-orm";
+import { countDistinct, eq, inArray, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
@@ -8,7 +8,8 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { fellow, hub, interventionGroup, weeklyFellowRatings } from "#/db/schema";
+import { fellow, interventionGroup, weeklyFellowRatings } from "#/db/schema";
+import { hubsOverseenByAdmin } from "#/lib/auth/admin-access";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
 export default async function FellowPage() {
@@ -20,15 +21,10 @@ export default async function FellowPage() {
   const implementerId = activeMembership?.implementerId;
   const projectId = await getActiveProjectId();
 
-  const projectHubIds = db
-    .select({ id: hub.id })
-    .from(hub)
-    .where(
-      and(
-        eq(hub.projectId, projectId),
-        implementerId === undefined ? sql`false` : eq(hub.implementerId, implementerId),
-      ),
-    );
+  if (!implementerId) {
+    redirect("/login");
+  }
+  const projectHubIds = hubsOverseenByAdmin(implementerId, projectId);
   const listedFellow = inArray(fellow.hubId, projectHubIds);
   const projectFellowIds = db.select({ id: fellow.id }).from(fellow).where(listedFellow);
   const ratingAverages = db

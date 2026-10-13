@@ -4,7 +4,8 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { fellow, hub } from "#/db/schema";
+import { fellow } from "#/db/schema";
+import { hubsOverseenByAdmin } from "#/lib/auth/admin-access";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { fellowsInCallerScope, requireHubRole } from "#/lib/auth/require-hub-role";
@@ -119,11 +120,7 @@ async function callerFellowFilter() {
     ImplementerRole.SUPERVISOR,
   );
   if (role === ImplementerRole.ADMIN) {
-    const activeProjectHubIds = db
-      .select({ id: hub.id })
-      .from(hub)
-      .where(eq(hub.projectId, await getActiveProjectId()));
-    return and(eq(fellow.implementerId, implementerId), inArray(fellow.hubId, activeProjectHubIds));
+    return inArray(fellow.hubId, hubsOverseenByAdmin(implementerId, await getActiveProjectId()));
   }
   const caller = await requireHubRole(ImplementerRole.HUB_COORDINATOR, ImplementerRole.SUPERVISOR);
   if (caller.role === ImplementerRole.SUPERVISOR) {

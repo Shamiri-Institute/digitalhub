@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 import MainSupervisorsDataTable from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
@@ -7,7 +8,7 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { hub } from "#/db/schema";
+import { hubsOverseenByAdmin } from "#/lib/auth/admin-access";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
 export default async function SupervisorsPage() {
@@ -20,11 +21,10 @@ export default async function SupervisorsPage() {
 
   const [supervisors, project] = await Promise.all([
     db.query.supervisor.findMany({
-      where: (s, { and, eq, inArray }) =>
-        and(
-          implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
-          inArray(s.hubId, db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId))),
-        ),
+      where: (s, { inArray }) =>
+        implementerId === undefined
+          ? sql`false`
+          : inArray(s.hubId, hubsOverseenByAdmin(implementerId, projectId)),
       with: {
         assignedSchools: { columns: { schoolName: true } },
         fellows: { columns: { droppedOut: true } },
