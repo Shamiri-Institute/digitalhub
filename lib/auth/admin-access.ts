@@ -26,7 +26,6 @@ export async function requireSuperAdmin() {
   return context;
 }
 
-/** The projects that hold a hub of an implementer the user is an admin of. */
 export function projectsAdministeredBy(userId: string) {
   return db
     .selectDistinct({ id: hub.projectId })
@@ -47,10 +46,6 @@ export function projectsAdministeredBy(userId: string) {
     );
 }
 
-/**
- * The hubs an admin oversees: every hub of their implementer in the active project. Admins have no
- * hub of their own, and a profile's own implementer column can disagree with its hub's.
- */
 export function hubsOverseenByAdmin(implementerId: string, projectId: string) {
   return db
     .select({ id: hub.id })

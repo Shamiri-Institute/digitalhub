@@ -6,11 +6,6 @@ import { hub, school, student } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
-/**
- * An admin sees the hubs of their implementer in the active project. Another implementer's hub in
- * the same project stays out of the admin pages.
- */
-
 type Fixture = { email: string; projectId: string; otherImplementerId: string; expected: number };
 
 let created: { hubId: string; schoolId: string; studentId: string } | null = null;
