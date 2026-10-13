@@ -65,13 +65,27 @@ test.beforeAll(async () => {
     order by u.email`);
 
   for (const candidate of coordinators) {
+    // Same organisation, different hub: the case a hub check exists for.
+    const other = coordinators.find(
+      (c) => c.implementerId === candidate.implementerId && c.hubId !== candidate.hubId,
+    );
+    const {
+      rows: [supervisorRow],
+    } = await db.execute<{ email: string }>(sql`
+      select u.email from supervisors sup
+      join implementer_members m on m.identifier = sup.id and m.role = 'SUPERVISOR'
+      join users u on u.id = m.user_id and u.email is not null
+      where sup.hub_id = ${candidate.hubId} and ${signableMember()}
+      order by u.email
+      limit 1`);
+    if (!other || !supervisorRow) continue;
     const {
       rows: [row],
-    } = await db.execute<SchoolFixture>(sql`
+    } = await db.execute<Omit<SchoolFixture, "supervisorEmail">>(sql`
       select s.visible_id as "visibleId", s.school_name as "schoolName",
         st.id as "studentId", st.student_name as "studentName",
         i.id as "sessionId", sn.session_name as "sessionLabel", i.occurred as "sessionOccurred",
-        g.group_name as "groupName", sup_user.email as "supervisorEmail"
+        g.group_name as "groupName"
       from schools s
       join students st on st.school_id = s.id and st.archived_at is null
         and coalesce(st.dropped_out, false) = false and st.student_name is not null
@@ -79,23 +93,19 @@ test.beforeAll(async () => {
       join intervention_sessions i on i.school_id = s.id and i.occurred
         and i.session_date < now() and coalesce(i.status::text, '') <> 'Cancelled'
       join session_names sn on sn.id = i.session_id
-      join supervisors sup on sup.hub_id = s.hub_id
-      join implementer_members sm on sm.identifier = sup.id and sm.role = 'SUPERVISOR'
-        and ${signableMember("sm")}
-      join users sup_user on sup_user.id = sm.user_id and sup_user.email is not null
       where s.hub_id = ${candidate.hubId} and s.archived_at is null
         and coalesce(s.dropped_out, false) = false
-      order by s.visible_id, st.id, i.session_date, sup_user.email
+      order by s.visible_id, st.id, i.session_date
       limit 1`);
-    // Same organisation, different hub: the case a hub check exists for.
-    const other = coordinators.find(
-      (c) => c.implementerId === candidate.implementerId && c.hubId !== candidate.hubId,
-    );
-    if (row && other) {
+    if (row) {
       coordinator = candidate;
       otherCoordinator = other;
       // The sessions table shows the display name ("S4"), not the stored name ("s4").
-      school = { ...row, sessionLabel: sessionDisplayName(row.sessionLabel) ?? row.sessionLabel };
+      school = {
+        ...row,
+        sessionLabel: sessionDisplayName(row.sessionLabel) ?? row.sessionLabel,
+        supervisorEmail: supervisorRow.email,
+      };
       break;
     }
   }
