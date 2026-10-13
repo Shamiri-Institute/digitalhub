@@ -47,12 +47,9 @@ export async function loadSessionUser(userId: string): Promise<SessionUser | nul
   }
 
   const activeProjectId = user.activeProjectId ?? defaultProjectId;
-  let inProject = user.memberships.filter((m) =>
+  const inProject = user.memberships.filter((m) =>
     m.implementer.hubs.some((h) => h.projectId === activeProjectId),
   );
-  if (inProject.length === 0) {
-    inProject = user.memberships.filter((m) => m.role === "ADMIN");
-  }
 
   // Ordered by updatedAt desc; setActiveMembership bumps updatedAt, so the first row is active.
   const memberships = inProject.map((m) => ({

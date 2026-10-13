@@ -28,13 +28,16 @@ export default async function StudentsPage() {
     redirect("/login");
   }
   const projectId = await getActiveProjectId();
+  const { implementerId } = admin.profile;
 
-  const projectHubIds = db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId));
+  const projectHubIds = db
+    .select({ id: hub.id })
+    .from(hub)
+    .where(and(eq(hub.projectId, projectId), eq(hub.implementerId, implementerId)));
   const projectSchoolIds = db
     .select({ id: school.id })
     .from(school)
     .where(inArray(school.hubId, projectHubIds));
-  // Cases handled by a supervisor or a clinical lead of a hub in the project.
   const projectCaseFilter = or(
     inArray(
       clinicalScreeningInfo.currentSupervisorId,
@@ -65,7 +68,13 @@ export default async function StudentsPage() {
     incompleteStudentCount,
     studentGroupRatingsRaw,
   ] = await Promise.all([
-    db.$count(interventionSession, eq(interventionSession.projectId, projectId)),
+    db.$count(
+      interventionSession,
+      and(
+        eq(interventionSession.projectId, projectId),
+        inArray(interventionSession.schoolId, projectSchoolIds),
+      ),
+    ),
     fetchStudentClinicalStats(projectCaseFilter),
     db.query.student.findMany({
       where: () => activeProjectStudentFilter,
@@ -82,6 +91,7 @@ export default async function StudentsPage() {
       WHERE sa.attended = true
         AND s.archived_at IS NULL
         AND h.project_id = ${projectId}
+        AND h.implementer_id = ${implementerId}
       GROUP BY ins.session_type
     `)
       .then((r) => r.rows),
@@ -111,6 +121,7 @@ export default async function StudentsPage() {
       JOIN session_names sn ON sn.id = ins.session_id
       JOIN hubs h ON sn.hub_id = h.id
       WHERE h.project_id = ${projectId}
+        AND h.implementer_id = ${implementerId}
         AND isr.student_behavior_rating IS NOT NULL
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC

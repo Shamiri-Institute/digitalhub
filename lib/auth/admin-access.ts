@@ -1,5 +1,8 @@
+import { and, eq, inArray } from "drizzle-orm";
+
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
+import { hub, implementerMember } from "#/db/schema";
 import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
 
 /**
@@ -21,4 +24,25 @@ export async function requireSuperAdmin() {
   }
 
   return context;
+}
+
+/** The projects that hold a hub of an implementer the user is an admin of. */
+export function projectsAdministeredBy(userId: string) {
+  return db
+    .selectDistinct({ id: hub.projectId })
+    .from(hub)
+    .where(
+      inArray(
+        hub.implementerId,
+        db
+          .select({ id: implementerMember.implementerId })
+          .from(implementerMember)
+          .where(
+            and(
+              eq(implementerMember.userId, userId),
+              eq(implementerMember.role, ImplementerRole.ADMIN),
+            ),
+          ),
+      ),
+    );
 }

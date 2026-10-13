@@ -1,12 +1,12 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { refresh } from "next/cache";
 
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/db/client";
-import { user } from "#/db/schema";
-import { isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
+import { project, user } from "#/db/schema";
+import { projectsAdministeredBy } from "#/lib/auth/admin-access";
 
 export async function setActiveProject(
   projectId: string,
@@ -16,15 +16,13 @@ export async function setActiveProject(
     return { success: false, error: "Not authenticated" };
   }
 
-  if (!(await isCurrentUserAdmin())) {
-    return { success: false, error: "Unauthorized" };
-  }
-
-  const project = await db.query.project.findFirst({
-    where: (p, { eq }) => eq(p.id, projectId),
-    columns: { id: true },
-  });
-  if (!project) {
+  const [administeredProject] = await db
+    .select({ id: project.id })
+    .from(project)
+    .where(
+      and(eq(project.id, projectId), inArray(project.id, projectsAdministeredBy(session.user.id))),
+    );
+  if (!administeredProject) {
     return { success: false, error: "Project not found" };
   }
 

@@ -1,14 +1,18 @@
-import { currentAdminUser, getCurrentPersonnel } from "#/app/auth";
+import { currentAdminUser, getCurrentPersonnel, getCurrentUserSession } from "#/app/auth";
 import { LayoutClient } from "#/components/layout-client";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fetchImplementerPersonnel, isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
+import { projectsAdministeredBy } from "#/lib/auth/admin-access";
 
 async function loadAdminProjects() {
-  if (!(await isCurrentUserAdmin())) {
+  const session = await getCurrentUserSession();
+  if (!session?.user?.id || !(await isCurrentUserAdmin())) {
     return null;
   }
+  const userId = session.user.id;
   return db.query.project.findMany({
+    where: (p, { inArray }) => inArray(p.id, projectsAdministeredBy(userId)),
     orderBy: (p, { desc }) => desc(p.createdAt),
     columns: { id: true, name: true, visibleId: true },
   });

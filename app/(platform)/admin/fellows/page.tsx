@@ -1,4 +1,4 @@
-import { and, countDistinct, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, countDistinct, eq, inArray, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
@@ -20,21 +20,17 @@ export default async function FellowPage() {
   const implementerId = activeMembership?.implementerId;
   const projectId = await getActiveProjectId();
 
-  const projectHubIds = db.select({ id: hub.id }).from(hub).where(eq(hub.projectId, projectId));
-  const projectFellowIds = db
-    .select({ id: fellow.id })
-    .from(fellow)
+  const projectHubIds = db
+    .select({ id: hub.id })
+    .from(hub)
     .where(
       and(
-        implementerId === undefined ? undefined : eq(fellow.implementerId, implementerId),
-        inArray(fellow.hubId, projectHubIds),
+        eq(hub.projectId, projectId),
+        implementerId === undefined ? sql`false` : eq(hub.implementerId, implementerId),
       ),
     );
-
-  const listedFellow = and(
-    or(eq(hub.projectId, projectId), isNull(fellow.hubId)),
-    implementerId === undefined ? sql`false` : eq(fellow.implementerId, implementerId),
-  );
+  const listedFellow = inArray(fellow.hubId, projectHubIds);
+  const projectFellowIds = db.select({ id: fellow.id }).from(fellow).where(listedFellow);
   const ratingAverages = db
     .select({
       fellowId: weeklyFellowRatings.fellowId,
@@ -45,16 +41,7 @@ export default async function FellowPage() {
       ),
     })
     .from(weeklyFellowRatings)
-    .where(
-      inArray(
-        weeklyFellowRatings.fellowId,
-        db
-          .select({ id: fellow.id })
-          .from(fellow)
-          .leftJoin(hub, eq(fellow.hubId, hub.id))
-          .where(listedFellow),
-      ),
-    )
+    .where(inArray(weeklyFellowRatings.fellowId, projectFellowIds))
     .groupBy(weeklyFellowRatings.fellowId)
     .as("rating_averages");
 
@@ -74,7 +61,6 @@ export default async function FellowPage() {
         averageRating: ratingAverages.averageRating,
       })
       .from(fellow)
-      .leftJoin(hub, eq(fellow.hubId, hub.id))
       .leftJoin(ratingAverages, eq(fellow.id, ratingAverages.fellowId))
       .leftJoin(interventionGroup, eq(fellow.id, interventionGroup.leaderId))
       .where(listedFellow)
@@ -91,11 +77,7 @@ export default async function FellowPage() {
       with: { school: { columns: { schoolName: true } } },
     }),
     db.query.supervisor.findMany({
-      where: (s, { and, eq, inArray }) =>
-        and(
-          implementerId === undefined ? undefined : eq(s.implementerId, implementerId),
-          inArray(s.hubId, projectHubIds),
-        ),
+      where: (s, { inArray }) => inArray(s.hubId, projectHubIds),
       columns: { id: true, supervisorName: true },
       with: { fellows: { columns: { id: true, fellowName: true, droppedOut: true } } },
     }),

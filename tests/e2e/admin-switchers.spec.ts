@@ -115,35 +115,19 @@ test("switching project shows the new project and its implementer in the header"
   await expect(header(page, "button", target.implementerName)).toBeVisible();
 });
 
-test("switching implementer shows the new implementer in the header", async ({ page, context }) => {
+test("the project switcher lists only the projects of the admin's implementers", async ({
+  page,
+  context,
+}) => {
   const { admin, otherProjects } = await loadFixture();
-  // In a project with none of the admin's hubs, every admin membership is listed.
-  const target = otherProjects.find((p) => !p.implementerName);
-  if (!target) throw new Error("No project without the admin's hubs");
-  const { rows: implementers } = await db.execute<{ name: string }>(sql`
-    select i.implementer_name as name from implementer_members m
-    join implementers i on i.id = m.implementer_id
-    where m.user_id = ${admin.userId} and m.role = 'ADMIN'
-    order by i.implementer_name`);
+  const foreign = otherProjects.find((p) => !p.implementerName);
+  if (!foreign) throw new Error("No project without the admin's hubs");
   await signInWithEmail(context, admin.email);
 
   await page.goto(getUrl("/admin/hubs"));
-  await switchProject(page, admin.activeProjectName, target.name);
-
-  // The header shows one of the admin's implementers once it renders; wait for it, then read it.
-  const escaped = implementers.map(({ name }) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  const current = page
-    .getByRole("button")
-    .filter({ hasText: new RegExp(`^(${escaped.join("|")})$`), visible: true })
-    .first();
-  await expect(current).toBeVisible();
-  const from = (await current.innerText()).trim();
-  const to = implementers.find((i) => i.name !== from)?.name;
-  if (!from || !to) throw new Error("The admin needs two implementers");
-
-  await header(page, "button", from).click();
-  await header(page, "option", to).click();
-  await expect(header(page, "button", to)).toBeVisible();
-  await page.reload();
-  await expect(header(page, "button", to)).toBeVisible();
+  await header(page, "button", admin.activeProjectName).click();
+  for (const own of otherProjects.filter((p) => p.implementerName)) {
+    await expect(header(page, "option", own.name)).toBeVisible();
+  }
+  await expect(page.getByRole("option", { name: foreign.name, exact: true })).toHaveCount(0);
 });

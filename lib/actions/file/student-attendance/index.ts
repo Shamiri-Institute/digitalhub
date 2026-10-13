@@ -14,6 +14,7 @@ import {
   school,
   studentAttendance,
 } from "#/db/schema";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { deleteObject, getPresignedUrl } from "#/lib/s3/s3.service";
 import {
   discardOrphanedUpload,
@@ -47,6 +48,7 @@ function buildAttendanceScopeFilter(
   role: ImplementerRole | undefined,
   identifier: string | null | undefined,
   implementerId: string | undefined,
+  activeProjectId: string,
 ): SQL | null {
   if (role === ImplementerRole.ADMIN) {
     if (!implementerId) return null;
@@ -56,7 +58,7 @@ function buildAttendanceScopeFilter(
         .select({ id: school.id })
         .from(school)
         .innerJoin(hub, eq(school.hubId, hub.id))
-        .where(eq(hub.implementerId, implementerId)),
+        .where(and(eq(hub.implementerId, implementerId), eq(hub.projectId, activeProjectId))),
     );
   }
   if (!identifier) return null;
@@ -128,6 +130,7 @@ export async function getAttendanceDocument(
       role,
       identifier,
       session.user.activeMembership?.implementerId,
+      await getActiveProjectId(),
     );
     if (!scopeFilter) throw new Error("Forbidden");
 

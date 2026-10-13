@@ -20,6 +20,7 @@ import {
   student,
   studentAttendance,
 } from "#/db/schema";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { clinicalCasesCountExtras, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
@@ -346,8 +347,8 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
 }
 
 /**
- * Throws unless the caller may see the session: an admin of the implementer that runs its hub, a
- * supervisor or hub coordinator of its hub, or a fellow who leads a group at its school.
+ * Throws unless the caller may see the session: an admin of the implementer that runs its hub in
+ * the active project, a supervisor or hub coordinator of its hub, or a fellow who leads a group at its school.
  */
 async function requireSessionVisibleToCaller(sessionId: string) {
   const membership = await requireAuthRole(
@@ -359,13 +360,19 @@ async function requireSessionVisibleToCaller(sessionId: string) {
   const session = await findSessionWithSchoolOrThrow(sessionId);
   const sessionHubId = session.hubId ?? session.school?.hubId ?? null;
   if (membership.role === ImplementerRole.ADMIN) {
+    const activeProjectId = await getActiveProjectId();
     const sessionHub = sessionHubId
       ? await db.query.hub.findFirst({
-          where: (h, { eq }) => eq(h.id, sessionHubId),
-          columns: { implementerId: true },
+          where: (h, { and, eq }) =>
+            and(
+              eq(h.id, sessionHubId),
+              eq(h.implementerId, membership.implementerId),
+              eq(h.projectId, activeProjectId),
+            ),
+          columns: { id: true },
         })
       : undefined;
-    if (sessionHub?.implementerId !== membership.implementerId) {
+    if (!sessionHub) {
       throw new Error("No InterventionSession found");
     }
     return { membership, fellowId: undefined, sessionHubId };
