@@ -145,15 +145,29 @@
     {
       "idx": 20,
       "version": "7",
-      "when": 1792004768930,
-      "tag": "0020_surveys",
+      "when": 1791971494363,
+      "tag": "0020_drop_attendance_copy_columns",
       "breakpoints": true
     },
     {
       "idx": 21,
       "version": "7",
-      "when": 1792004769452,
-      "tag": "0021_survey_integrity_triggers",
+      "when": 1791983974946,
+      "tag": "0021_drop_payout_statements_fellow_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792009499663,
+      "tag": "0022_surveys",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792009501567,
+      "tag": "0023_survey_integrity_triggers",
       "breakpoints": true
     }
   ]

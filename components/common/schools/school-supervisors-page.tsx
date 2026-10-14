@@ -4,7 +4,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
 import { db } from "#/db/client";
 import type { ImplementerRole } from "#/db/enums";
-import { school } from "#/db/schema";
+import { interventionSession, school } from "#/db/schema";
 import { visibleSchoolIds } from "#/lib/auth/require-hub-role";
 
 export default async function SchoolSupervisorsPage({
@@ -48,8 +48,12 @@ export default async function SchoolSupervisorsPage({
         supervisorAttendances: {
           where: (a, { inArray }) =>
             inArray(
-              a.schoolId,
-              db.select({ id: school.id }).from(school).where(eq(school.visibleId, visibleId)),
+              a.sessionId,
+              db
+                .select({ id: interventionSession.id })
+                .from(interventionSession)
+                .innerJoin(school, eq(school.id, interventionSession.schoolId))
+                .where(eq(school.visibleId, visibleId)),
             ),
           columns: {
             id: true,

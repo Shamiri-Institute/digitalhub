@@ -470,7 +470,6 @@ export const fellowAttendance = pgTable(
     attended: boolean(),
     absenceReason: text("absence_reason"),
     groupId: varchar("group_id", { length: 255 }),
-    projectId: text("project_id"),
     sessionId: text("session_id"),
     processedAt: timestamp("processed_at", { precision: 3, mode: "date" }),
     absenceComments: text("absence_comments"),
@@ -491,13 +490,6 @@ export const fellowAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    foreignKey({
-      columns: [table.projectId],
-      foreignColumns: [project.id],
-      name: "fellow_attendances_project_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [interventionSession.id],
@@ -1812,8 +1804,6 @@ export const supervisorAttendance = pgTable(
       .notNull()
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
-    projectId: text("project_id").notNull(),
-    schoolId: varchar("school_id", { length: 255 }),
     supervisorId: varchar("supervisor_id", { length: 255 }).notNull(),
     attended: boolean(),
     absenceReason: text("absence_reason"),
@@ -1826,13 +1816,6 @@ export const supervisorAttendance = pgTable(
       table.supervisorId,
       table.sessionId,
     ),
-    foreignKey({
-      columns: [table.projectId],
-      foreignColumns: [project.id],
-      name: "supervisor_attendances_project_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -1854,13 +1837,6 @@ export const supervisorAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    foreignKey({
-      columns: [table.schoolId],
-      foreignColumns: [school.id],
-      name: "supervisor_attendances_school_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
   ],
 );
 
@@ -2022,9 +1998,7 @@ export const studentAttendance = pgTable(
       .notNull()
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
-    projectId: text("project_id").notNull(),
     studentId: varchar("student_id", { length: 255 }).notNull(),
-    schoolId: varchar("school_id", { length: 255 }),
     fellowId: varchar("fellow_id", { length: 255 }),
     attended: boolean(),
     absenceReason: text("absence_reason"),
@@ -2040,13 +2014,6 @@ export const studentAttendance = pgTable(
       table.studentId,
       table.sessionId,
     ),
-    foreignKey({
-      columns: [table.projectId],
-      foreignColumns: [project.id],
-      name: "student_attendances_project_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
     foreignKey({
       columns: [table.studentId],
       foreignColumns: [student.id],
@@ -2065,13 +2032,6 @@ export const studentAttendance = pgTable(
       columns: [table.groupId],
       foreignColumns: [interventionGroup.id],
       name: "student_attendances_group_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
-    foreignKey({
-      columns: [table.schoolId],
-      foreignColumns: [school.id],
-      name: "student_attendances_school_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("set null"),
@@ -2143,7 +2103,6 @@ export const payoutStatements = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     fellowAttendanceId: integer("fellow_attendance_id").notNull(),
-    fellowId: varchar("fellow_id", { length: 255 }).notNull(),
     amount: integer().notNull(),
     reason: text().notNull(),
     notes: text(),
@@ -2154,17 +2113,11 @@ export const payoutStatements = pgTable(
     confirmedBy: text("confirmed_by"),
   },
   (table) => [
+    index("payout_statements_fellow_attendance_id_idx").on(table.fellowAttendanceId),
     foreignKey({
       columns: [table.fellowAttendanceId],
       foreignColumns: [fellowAttendance.id],
       name: "payout_statements_fellow_attendance_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.fellowId],
-      foreignColumns: [fellow.id],
-      name: "payout_statements_fellow_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
@@ -3187,7 +3140,6 @@ export const fellowGroupReport = pgTable(
     submittedAt: timestamp("submitted_at", { withTimezone: true, mode: "date" }).notNull(),
     fellowId: varchar("fellow_id", { length: 255 }).notNull(),
     groupId: varchar("group_id", { length: 255 }).notNull(),
-    projectId: varchar("project_id", { length: 100 }).notNull(),
     structuralFidelity: integer("structural_fidelity").notNull(),
     processFidelity: integer("process_fidelity").notNull(),
     adaptationsMade: boolean("adaptations_made").notNull(),
@@ -3220,7 +3172,6 @@ export const fellowGroupReport = pgTable(
       table.groupId,
     ),
     index("fellow_group_reports_group_id_idx").using("btree", table.groupId),
-    index("fellow_group_reports_project_id_idx").using("btree", table.projectId),
     foreignKey({
       columns: [table.fellowId],
       foreignColumns: [fellow.id],
@@ -3232,13 +3183,6 @@ export const fellowGroupReport = pgTable(
       columns: [table.groupId],
       foreignColumns: [interventionGroup.id],
       name: "fellow_group_reports_group_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.projectId],
-      foreignColumns: [project.id],
-      name: "fellow_group_reports_project_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),

@@ -512,14 +512,12 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
           const currentRate = attendanceStatus ? sessionRate(session) : 0;
 
           const payouts = await tx.query.payoutStatements.findMany({
-            where: (p, { and, eq }) =>
-              and(eq(p.fellowId, fellowRow.id), eq(p.fellowAttendanceId, attendance.id)),
+            where: (p, { eq }) => eq(p.fellowAttendanceId, attendance.id),
             columns: { amount: true, reason: true, createdAt: true },
           });
           const payout = attendancePayoutChange(payouts, attendanceStatus, currentRate);
           if (payout) {
             await tx.insert(payoutStatements).values({
-              fellowId: fellowRow.id,
               fellowAttendanceId: attendance.id,
               createdBy: userId,
               mpesaNumber: fellowRow.mpesaNumber,
@@ -569,8 +567,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
         const attendanceStatus = attendedFlag(attended);
         const rate = attendanceStatus ? sessionRate(session) : 0;
 
-        const projectId = session.projectId;
-        if (!projectId) {
+        if (!session.projectId) {
           throw new Error(
             "Session has no project. Ensure the session is linked to a hub with a project.",
           );
@@ -582,7 +579,6 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
             fellowId: fellowRow.id,
             groupId,
             schoolId: session.schoolId,
-            projectId,
             sessionId,
             absenceReason,
             absenceComments: comments,
@@ -595,7 +591,6 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
         }
         if (attendanceStatus) {
           await tx.insert(payoutStatements).values({
-            fellowId: fellowRow.id,
             fellowAttendanceId: createdAttendance.id,
             createdBy: userId,
             amount: rate,
@@ -675,7 +670,6 @@ export async function markManyFellowAttendance(
             rate,
           );
           const payout: typeof payoutStatements.$inferInsert | undefined = change && {
-            fellowId: attendance.fellow.id,
             fellowAttendanceId: attendance.id,
             createdBy: userId,
             mpesaNumber: attendance.fellow.mpesaNumber,
@@ -761,8 +755,7 @@ export async function markManyFellowAttendance(
           }));
         }
 
-        const projectId = session.projectId;
-        if (!projectId) {
+        if (!session.projectId) {
           throw new Error(
             "Session has no project. Ensure the session is linked to a hub with a project.",
           );
@@ -772,7 +765,6 @@ export async function markManyFellowAttendance(
           fellowId: fellowRow.id,
           schoolId: session.schoolId,
           groupId,
-          projectId,
           absenceReason: attendanceStatus === false ? absenceReason : null,
           absenceComments: attendanceStatus === false ? comments : null,
           sessionId,
@@ -793,7 +785,6 @@ export async function markManyFellowAttendance(
           const payoutData = newAttendances.map((attendance) => {
             const fellowRow = fellowById.get(attendance.fellowId);
             return {
-              fellowId: attendance.fellowId,
               fellowAttendanceId: attendance.id,
               createdBy: userId,
               amount: rate,

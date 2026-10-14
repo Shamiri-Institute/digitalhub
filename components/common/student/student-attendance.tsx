@@ -372,7 +372,6 @@ export default function StudentAttendance({
                 attended: a.attended,
                 absenceReason: a.absenceReason,
                 sessionId: a.sessionId,
-                schoolId: a.schoolId,
                 comments: a.comments,
               },
             ];

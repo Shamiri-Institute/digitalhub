@@ -54,13 +54,15 @@ async function createPublishedSurvey(
   scope: { implementerId: string; projectId: string },
   userId: string,
 ) {
+  const code = uniqueCode();
   const created = only(
     await db
       .insert(survey)
       .values({
         ...scope,
-        code: uniqueCode(),
-        title: `Published ${Date.now()}`,
+        code,
+        // The code is unique, so the title is too, even across tests running in parallel.
+        title: `Published ${code}`,
         createdBy: userId,
       })
       .returning(),

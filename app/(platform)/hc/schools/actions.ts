@@ -366,11 +366,11 @@ export async function fetchSchoolAttendances(schoolId?: string) {
     }>(sql`
     SELECT
       session_type,
-      count(distinct sa.school_id)::int AS "count"
+      count(distinct intervention_sessions.school_id)::int AS "count"
     FROM
       student_attendances sa
-    LEFT JOIN schools ON sa.school_id = schools.id
-    LEFT JOIN intervention_sessions ON sa.session_id = intervention_sessions.id
+    JOIN intervention_sessions ON sa.session_id = intervention_sessions.id
+    JOIN schools ON intervention_sessions.school_id = schools.id
     WHERE
       schools.hub_id = ${coordinatorHubId}
       ${schoolId ? sql`AND schools.id = ${schoolId}` : sql.empty()}

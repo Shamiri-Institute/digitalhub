@@ -36,7 +36,6 @@ type Attendance = {
   id: string;
   attendanceId: string;
   sessionId: string;
-  schoolId: string | null;
   attended: boolean | null;
   absenceReason: string | null;
   comments?: string | null;

@@ -243,8 +243,6 @@ export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceS
       .insert(studentAttendance)
       .values({
         studentId: studentRow.id,
-        schoolId: studentRow.schoolId,
-        projectId: studentRow.assignedGroup.projectId,
         absenceReason,
         comments,
         sessionId,
@@ -347,8 +345,6 @@ export async function markManyStudentsAttendance(
 
         createRecords.push({
           studentId: row.id,
-          schoolId: row.schoolId,
-          projectId: row.assignedGroup.projectId,
           absenceReason,
           comments,
           sessionId,

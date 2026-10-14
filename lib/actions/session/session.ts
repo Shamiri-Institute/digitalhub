@@ -420,7 +420,6 @@ function sessionAttendances(sessionId: string, fellowId: string | undefined) {
       absenceReason: true,
       comments: true,
       sessionId: true,
-      schoolId: true,
     },
   });
 }

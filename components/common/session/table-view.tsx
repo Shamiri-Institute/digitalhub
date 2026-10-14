@@ -359,7 +359,6 @@ export function TableView({
           phoneNumber: supervisor.cellNumber ?? "",
           fellows: `${totalAttendedFellows.length}/${supervisor.fellows.length}`,
           sessionId: session?.id,
-          schoolId: attendance?.schoolId,
           absenceReason: attendance?.absenceReason ?? "",
           absenceComments: attendance?.absenceComments ?? "",
           schoolName: session.school?.schoolName,

@@ -332,16 +332,10 @@ export const fellowRelations = relations(fellow, ({ one, many }) => ({
   }),
   fellowComplaints: many(fellowComplaints, { relationName: "FellowComplaints_fellow" }),
   weeklyFellowRatings: many(weeklyFellowRatings, { relationName: "WeeklyFellowRatings_fellow" }),
-  PayoutStatements: many(payoutStatements, { relationName: "PayoutStatements_fellow" }),
   sessionRecordings: many(sessionRecording, { relationName: "SessionRecording_fellow" }),
 }));
 
 export const fellowAttendanceRelations = relations(fellowAttendance, ({ one, many }) => ({
-  project: one(project, {
-    fields: [fellowAttendance.projectId],
-    references: [project.id],
-    relationName: "FellowAttendance_project",
-  }),
   fellow: one(fellow, {
     fields: [fellowAttendance.fellowId],
     references: [fellow.id],
@@ -403,11 +397,6 @@ export const fellowGroupReportRelations = relations(fellowGroupReport, ({ one })
     fields: [fellowGroupReport.groupId],
     references: [interventionGroup.id],
     relationName: "FellowGroupReport_group",
-  }),
-  project: one(project, {
-    fields: [fellowGroupReport.projectId],
-    references: [project.id],
-    relationName: "FellowGroupReport_project",
   }),
 }));
 
@@ -675,11 +664,6 @@ export const payoutStatementsRelations = relations(payoutStatements, ({ one }) =
     references: [fellowAttendance.id],
     relationName: "PayoutStatements_fellowAttendance",
   }),
-  fellow: one(fellow, {
-    fields: [payoutStatements.fellowId],
-    references: [fellow.id],
-    relationName: "PayoutStatements_fellow",
-  }),
   user: one(user, {
     fields: [payoutStatements.createdBy],
     references: [user.id],
@@ -694,11 +678,6 @@ export const payoutStatementsRelations = relations(payoutStatements, ({ one }) =
 
 export const projectRelations = relations(project, ({ many }) => ({
   usersWithActiveProject: many(user, { relationName: "UserActiveProject" }),
-  studentAttendances: many(studentAttendance, { relationName: "StudentAttendance_project" }),
-  fellowAttendances: many(fellowAttendance, { relationName: "FellowAttendance_project" }),
-  supervisorAttendances: many(supervisorAttendance, {
-    relationName: "SupervisorAttendance_project",
-  }),
   supervisorComplaints: many(supervisorComplaints, {
     relationName: "SupervisorComplaints_project",
   }),
@@ -708,16 +687,11 @@ export const projectRelations = relations(project, ({ many }) => ({
   hubs: many(hub, { relationName: "Hub_project" }),
   interventionSessions: many(interventionSession, { relationName: "InterventionSession_project" }),
   interventionGroups: many(interventionGroup, { relationName: "InterventionGroup_project" }),
-  fellowGroupReports: many(fellowGroupReport, { relationName: "FellowGroupReport_project" }),
 }));
 
 export const schoolRelations = relations(school, ({ one, many }) => ({
   students: many(student, { relationName: "Student_school" }),
-  studentAttendances: many(studentAttendance, { relationName: "StudentAttendance_school" }),
   fellowAttendances: many(fellowAttendance, { relationName: "FellowAttendance_school" }),
-  supervisorAttendances: many(supervisorAttendance, {
-    relationName: "SupervisorAttendance_school",
-  }),
   hub: one(hub, { fields: [school.hubId], references: [hub.id], relationName: "School_hub" }),
   assignedSupervisor: one(supervisor, {
     fields: [school.assignedSupervisorId],
@@ -844,11 +818,6 @@ export const studentRelations = relations(student, ({ one, many }) => ({
 }));
 
 export const studentAttendanceRelations = relations(studentAttendance, ({ one, many }) => ({
-  project: one(project, {
-    fields: [studentAttendance.projectId],
-    references: [project.id],
-    relationName: "StudentAttendance_project",
-  }),
   student: one(student, {
     fields: [studentAttendance.studentId],
     references: [student.id],
@@ -863,11 +832,6 @@ export const studentAttendanceRelations = relations(studentAttendance, ({ one, m
     fields: [studentAttendance.groupId],
     references: [interventionGroup.id],
     relationName: "StudentAttendance_group",
-  }),
-  school: one(school, {
-    fields: [studentAttendance.schoolId],
-    references: [school.id],
-    relationName: "StudentAttendance_school",
   }),
   fellow: one(fellow, {
     fields: [studentAttendance.fellowId],
@@ -980,16 +944,6 @@ export const supervisorRelations = relations(supervisor, ({ one, many }) => ({
 }));
 
 export const supervisorAttendanceRelations = relations(supervisorAttendance, ({ one }) => ({
-  project: one(project, {
-    fields: [supervisorAttendance.projectId],
-    references: [project.id],
-    relationName: "SupervisorAttendance_project",
-  }),
-  school: one(school, {
-    fields: [supervisorAttendance.schoolId],
-    references: [school.id],
-    relationName: "SupervisorAttendance_school",
-  }),
   supervisor: one(supervisor, {
     fields: [supervisorAttendance.supervisorId],
     references: [supervisor.id],

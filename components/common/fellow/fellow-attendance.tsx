@@ -304,7 +304,6 @@ export function FellowAttendanceDataTable({
                   attended: attendance.attended ?? null,
                   absenceReason: attendance.absenceReason ?? null,
                   sessionId: attendance.sessionId ?? "",
-                  schoolId: attendance.schoolId ?? null,
                   comments: attendance.absenceComments,
                 },
               ]
