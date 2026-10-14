@@ -149,7 +149,10 @@ test("a survey code can only be used once", async ({ page, context }) => {
   await expect(page.getByText("A survey with this code already exists").first()).toBeVisible();
 });
 
-test("a new draft copies a published version with its question keys", async ({ page, context }) => {
+test("a new draft copies a published version, and a survey has one draft at a time", async ({
+  page,
+  context,
+}) => {
   const { userId, scope } = await signInAsResearchAdmin(context);
   const published = await createPublishedSurvey(scope, userId);
   await page.goto(getUrl(`/admin/surveys/${published.id}`));
@@ -163,6 +166,11 @@ test("a new draft copies a published version with its question keys", async ({ p
   await expect(v2).toContainText("Draft");
   await expect(v2).toContainText("v1");
   await expect(v2.getByRole("cell", { name: "2", exact: true }).first()).toBeVisible();
+
+  // v2 is now the draft, so v1 cannot start another one.
+  await page.getByLabel("Actions for v1").click();
+  await expect(page.getByRole("menuitem", { name: "New draft from v1" })).toBeDisabled();
+  await page.keyboard.press("Escape");
 
   // Question keys are not shown on any page yet; they decide which answers line up across versions.
   const keys = await db
