@@ -159,8 +159,8 @@
     {
       "idx": 22,
       "version": "7",
-      "when": 1791986752444,
-      "tag": "0022_drop_case_id_copies_on_case_notes_and_termination",
+      "when": 1791989274773,
+      "tag": "0022_clinical_case_hierarchy",
       "breakpoints": true
     }
   ]

@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
+import type { ClinicalSessionLabel } from "#/db/enums";
 import {
   clinicalCaseNotes,
   clinicalCaseTermination,
@@ -301,7 +302,7 @@ test("a supervisor in another hub does not see the case", async ({ page, context
  * Gives the fixture case a clinical session dated today, labelled so the test can pick it, and
  * queues its removal. Notes and terminations must name one of the case's sessions.
  */
-async function addClinicalSession(sessionLabel: string) {
+async function addClinicalSession(sessionLabel: ClinicalSessionLabel) {
   const [clinicalSession] = await db
     .insert(clinicalSessionAttendance)
     .values({
@@ -324,8 +325,8 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   page,
   context,
 }) => {
-  const sessionLabel = `e2e-notes-${Date.now()}`;
-  const presentingIssues = `${sessionLabel} presenting issues`;
+  const sessionLabel = "S1";
+  const presentingIssues = `e2e-notes-${Date.now()} presenting issues`;
   const clinicalSessionId = await addClinicalSession(sessionLabel);
   undo.push(() =>
     db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.sessionId, clinicalSessionId)),
@@ -340,7 +341,7 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   async function openNotesForSession() {
     await openCaseAction(page, pseudonym, "Case notes");
     await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-    await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+    await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   }
 
   await openNotesForSession();
@@ -380,7 +381,7 @@ test("case notes reopen empty after the dialog closes without saving", async ({
   page,
   context,
 }) => {
-  const sessionLabel = `e2e-notes-reopen-${Date.now()}`;
+  const sessionLabel = "S2";
   await addClinicalSession(sessionLabel);
   await signInWithEmail(context, owner.email);
   await page.goto(getUrl("/sc/clinical"));
@@ -390,7 +391,7 @@ test("case notes reopen empty after the dialog closes without saving", async ({
     .filter({ has: page.getByRole("heading", { name: "Case Notes" }) });
   await openCaseAction(page, pseudonym, "Case notes");
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   await dialog.getByRole("textbox", { name: /Situation/ }).fill("Not saved");
   await dialog.getByRole("button", { name: "Close" }).click();
   await expect(dialog).toBeHidden();
@@ -402,8 +403,8 @@ test("case notes reopen empty after the dialog closes without saving", async ({
 });
 
 test("a supervisor terminates their case", async ({ page, context }) => {
-  const sessionLabel = `e2e-termination-${Date.now()}`;
-  const terminationReasonExplanation = `${sessionLabel} explanation`;
+  const sessionLabel = "S3";
+  const terminationReasonExplanation = `e2e-termination-${Date.now()} explanation`;
   const clinicalSessionId = await addClinicalSession(sessionLabel);
   undo.push(
     () =>
@@ -424,7 +425,7 @@ test("a supervisor terminates their case", async ({ page, context }) => {
     .getByRole("dialog")
     .filter({ has: page.getByRole("heading", { name: "Terminate Case" }) });
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   await dialog.getByRole("combobox").filter({ hasText: "Student no-show" }).click();
   await page.getByRole("option", { name: "Student refused to return to sessions" }).click();
   await dialog
@@ -439,11 +440,10 @@ test("a supervisor terminates their case", async ({ page, context }) => {
   // No page shows the termination reason, so read the stored one.
   const termination = await db.query.clinicalCaseTermination.findFirst({
     where: (t, { eq }) => eq(t.sessionId, clinicalSessionId),
-    columns: { terminationReason: true, terminationReasonExplanation: true },
-    with: { session: { columns: { caseId: true } } },
+    columns: { caseId: true, terminationReason: true, terminationReasonExplanation: true },
   });
   expect(termination).toEqual({
-    session: { caseId },
+    caseId,
     terminationReason: "Student refused to return to sessions",
     terminationReasonExplanation,
   });

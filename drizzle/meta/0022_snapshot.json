@@ -1,5 +1,5 @@
 {
-  "id": "0512d816-814d-4f84-aaba-c4995176f0e8",
+  "id": "87864937-3c04-426f-9bd1-21f330ae10da",
   "prevId": "3ff8e87d-ec70-4ebb-9ad6-1885f2e575db",
   "version": "7",
   "dialect": "postgresql",
@@ -518,6 +518,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "case_id": {
+          "name": "case_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "session_id": {
           "name": "session_id",
           "type": "text",
@@ -532,11 +538,32 @@
         }
       },
       "indexes": {
-        "clinical_case_termination_session_id_idx": {
-          "name": "clinical_case_termination_session_id_idx",
+        "clinical_case_termination_case_id_key": {
+          "name": "clinical_case_termination_case_id_key",
+          "columns": [
+            {
+              "expression": "case_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clinical_case_termination_session_id_case_id_idx": {
+          "name": "clinical_case_termination_session_id_case_id_idx",
           "columns": [
             {
               "expression": "session_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "case_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -549,12 +576,21 @@
         }
       },
       "foreignKeys": {
-        "clinical_case_termination_session_id_fkey": {
-          "name": "clinical_case_termination_session_id_fkey",
+        "clinical_case_termination_case_id_fkey": {
+          "name": "clinical_case_termination_case_id_fkey",
+          "tableFrom": "clinical_case_termination",
+          "tableTo": "clinical_screening_info",
+          "columnsFrom": ["case_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "clinical_case_termination_session_id_case_id_fkey": {
+          "name": "clinical_case_termination_session_id_case_id_fkey",
           "tableFrom": "clinical_case_termination",
           "tableTo": "clinical_session_attendance",
-          "columnsFrom": ["session_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": ["session_id", "case_id"],
+          "columnsTo": ["id", "case_id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -1456,7 +1492,87 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "clinical_session_attendance_case_id_session_date_key": {
+          "name": "clinical_session_attendance_case_id_session_date_key",
+          "columns": [
+            {
+              "expression": "case_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "session",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "id NOT IN ('csess_01jxz4tc7pfzv9e2wc4sta5n9n', 'csess_01k0gwykc9ejg9znamq2dnys9d', 'csess_01kj3dq591e6xv54aanbf3vsfj')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clinical_session_attendance_case_id_id_key": {
+          "name": "clinical_session_attendance_case_id_id_key",
+          "columns": [
+            {
+              "expression": "case_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clinical_session_attendance_supervisor_id_idx": {
+          "name": "clinical_session_attendance_supervisor_id_idx",
+          "columns": [
+            {
+              "expression": "supervisor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clinical_session_attendance_clinical_lead_id_idx": {
+          "name": "clinical_session_attendance_clinical_lead_id_idx",
+          "columns": [
+            {
+              "expression": "clinical_lead_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "clinical_session_attendance_caseId_fkey": {
           "name": "clinical_session_attendance_caseId_fkey",
@@ -1466,12 +1582,35 @@
           "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
+        },
+        "clinical_session_attendance_supervisor_id_fkey": {
+          "name": "clinical_session_attendance_supervisor_id_fkey",
+          "tableFrom": "clinical_session_attendance",
+          "tableTo": "supervisors",
+          "columnsFrom": ["supervisor_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        },
+        "clinical_session_attendance_clinical_lead_id_fkey": {
+          "name": "clinical_session_attendance_clinical_lead_id_fkey",
+          "tableFrom": "clinical_session_attendance",
+          "tableTo": "clinical_leads",
+          "columnsFrom": ["clinical_lead_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "clinical_session_attendance_session_check": {
+          "name": "clinical_session_attendance_session_check",
+          "value": "session IN ('Pre', 'S1', 'S2', 'S3', 'S4', 'F1', 'F2', 'F3', 'F4', 'F5')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.clinical_teams": {

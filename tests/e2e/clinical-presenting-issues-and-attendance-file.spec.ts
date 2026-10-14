@@ -140,7 +140,7 @@ test("a save from a page loaded before the case was terminated changes nothing",
   context,
 }) => {
   // Terminating a case names one of its clinical sessions, which no page creates.
-  const sessionLabel = `e2e-termination-${Date.now()}`;
+  const sessionLabel = "S1";
   await db.insert(clinicalSessionAttendance).values({
     caseId: clinicalCase.caseId,
     session: sessionLabel,
@@ -165,7 +165,7 @@ test("a save from a page loaded before the case was terminated changes nothing",
     .getByRole("dialog")
     .filter({ has: otherTab.getByRole("heading", { name: "Terminate Case" }) });
   await terminate.getByRole("combobox").filter({ hasText: "Select session" }).click();
-  await otherTab.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await otherTab.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   await terminate.getByRole("combobox").filter({ hasText: "Student no-show" }).click();
   await otherTab.getByRole("option", { name: "Student refused to return to sessions" }).click();
   await terminate.getByRole("textbox", { name: /Termination Explanation/ }).fill("E2E");

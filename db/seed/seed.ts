@@ -5,6 +5,7 @@ import type { PgTable } from "drizzle-orm/pg-core";
 import {
   AdminTeam,
   caseStatusOptions,
+  clinicalSessionLabels,
   FollowUpPlanOptions,
   ImplementerRole,
   RecordingProcessingStatus,
@@ -1807,7 +1808,7 @@ async function createClinicalRecords(
         sessionData.push({
           id: clinicalSessionId,
           caseId,
-          session: `Clinical Session ${s + 1}`,
+          session: clinicalSessionLabels[s] ?? "Pre",
           supervisorId: school.assignedSupervisorId ?? undefined,
           attendanceStatus: true,
         });
@@ -1853,6 +1854,7 @@ async function createClinicalRecords(
       const lastClinicalSessionId = clinicalSessionIds.at(-1);
       if (caseStatus === caseStatusOptions.Terminated && lastClinicalSessionId) {
         terminationData.push({
+          caseId,
           sessionId: lastClinicalSessionId,
           createdBy: seederUserId,
           terminationDate: faker.date.recent({ days: 30 }),

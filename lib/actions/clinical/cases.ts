@@ -278,7 +278,7 @@ export async function fetchClinicalCasesList(
       ),
       case_termination AS (
         SELECT
-          ccs.case_id,
+          cct.case_id,
           json_build_object(
             'id', cct.id,
             'createdAt', cct.created_at,
@@ -288,7 +288,6 @@ export async function fetchClinicalCasesList(
             'sessionId', cct.session_id
           ) AS termination_data
         FROM "clinical_case_termination" cct
-        JOIN "clinical_session_attendance" ccs ON ccs.id = cct."session_id"
       ),
       treatment_plan AS (
         SELECT

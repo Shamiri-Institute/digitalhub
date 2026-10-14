@@ -226,7 +226,11 @@ export default function CaseNotesForm({
                       {clinicalCase.clinicalSessionAttendance?.map((session) => {
                         const hasNotes = notes?.some((note) => note.sessionId === session.id);
                         return (
-                          <SelectItem key={session.id} value={session.id}>
+                          <SelectItem
+                            key={session.id}
+                            value={session.id}
+                            disabled={!hasNotes && session.attendanceStatus !== true}
+                          >
                             <div className="flex w-full items-center justify-between">
                               <span>
                                 {session.session} - {format(new Date(session.date), "dd MMM yyyy")}
@@ -249,7 +253,7 @@ export default function CaseNotesForm({
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      Please ensure the session is marked as done before creating case notes.
+                      Only sessions the student attended can take new case notes.
                     </p>
                   )}
                   <FormMessage />
