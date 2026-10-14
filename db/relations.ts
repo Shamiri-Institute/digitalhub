@@ -14,6 +14,11 @@ import {
   clinicalScreeningInfo,
   clinicalSessionAttendance,
   clinicalTeam,
+  researchUser,
+  survey,
+  surveyPage,
+  surveyQuestion,
+  surveyVersion,
   fellow,
   fellowAttendance,
   fellowComplaints,
@@ -254,6 +259,65 @@ export const clinicalTeamRelations = relations(clinicalTeam, ({ one }) => ({
   }),
 }));
 
+export const researchUserRelations = relations(researchUser, ({ one }) => ({
+  implementer: one(implementer, {
+    fields: [researchUser.implementerId],
+    references: [implementer.id],
+    relationName: "ResearchUser_implementer",
+  }),
+}));
+
+export const surveyRelations = relations(survey, ({ one, many }) => ({
+  implementer: one(implementer, {
+    fields: [survey.implementerId],
+    references: [implementer.id],
+    relationName: "Survey_implementer",
+  }),
+  project: one(project, {
+    fields: [survey.projectId],
+    references: [project.id],
+    relationName: "Survey_project",
+  }),
+  versions: many(surveyVersion, { relationName: "SurveyVersion_survey" }),
+}));
+
+export const surveyVersionRelations = relations(surveyVersion, ({ one, many }) => ({
+  survey: one(survey, {
+    fields: [surveyVersion.surveyId],
+    references: [survey.id],
+    relationName: "SurveyVersion_survey",
+  }),
+  basedOnVersion: one(surveyVersion, {
+    fields: [surveyVersion.basedOnVersionId],
+    references: [surveyVersion.id],
+    relationName: "SurveyVersion_basedOnVersion",
+  }),
+  pages: many(surveyPage, { relationName: "SurveyPage_version" }),
+  questions: many(surveyQuestion, { relationName: "SurveyQuestion_version" }),
+}));
+
+export const surveyPageRelations = relations(surveyPage, ({ one, many }) => ({
+  version: one(surveyVersion, {
+    fields: [surveyPage.versionId],
+    references: [surveyVersion.id],
+    relationName: "SurveyPage_version",
+  }),
+  questions: many(surveyQuestion, { relationName: "SurveyQuestion_page" }),
+}));
+
+export const surveyQuestionRelations = relations(surveyQuestion, ({ one }) => ({
+  version: one(surveyVersion, {
+    fields: [surveyQuestion.versionId],
+    references: [surveyVersion.id],
+    relationName: "SurveyQuestion_version",
+  }),
+  page: one(surveyPage, {
+    fields: [surveyQuestion.pageId],
+    references: [surveyPage.id],
+    relationName: "SurveyQuestion_page",
+  }),
+}));
+
 export const fellowRelations = relations(fellow, ({ one, many }) => ({
   students: many(student, { relationName: "Student_fellow" }),
   studentAttendances: many(studentAttendance, { relationName: "StudentAttendance_fellow" }),
@@ -431,6 +495,7 @@ export const implementerRelations = relations(implementer, ({ many }) => ({
   hubCoordinators: many(hubCoordinator, { relationName: "HubCoordinator_implementer" }),
   clinicalLeads: many(clinicalLead, { relationName: "ClinicalLead_implementer" }),
   clinicalTeam: many(clinicalTeam, { relationName: "ClinicalTeam_implementer" }),
+  researchUsers: many(researchUser, { relationName: "ResearchUser_implementer" }),
   opsUser: many(opsUser, { relationName: "OpsUser_implementer" }),
   admins: many(adminUser, { relationName: "AdminUser_implementer" }),
 }));

@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import {
@@ -12,6 +12,9 @@ import {
   referralStatusOptions,
   riskStatusOptions,
   sessionTypes,
+  SurveyQuestionType,
+  SurveyStatus,
+  SurveyVersionStatus,
   TriageActionTaken,
 } from "#/db/enums";
 import {
@@ -1038,6 +1041,159 @@ async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
     identifier: clinicalTeamId,
   });
   return created;
+}
+
+async function createResearchUser(implementers: Implementer[], emails: Set<string>) {
+  console.log("creating research user");
+  const staticImplementer = implementers[0];
+  if (!staticImplementer) throw new Error("No static implementer found for research user");
+
+  const userId = objectId("user");
+  const researchUserId = objectId("researchuser");
+
+  const email = "leandro.trossard@test.com";
+  emails.add(email);
+  await db.insert(schema.user).values({ id: userId, email });
+
+  const [created] = await db
+    .insert(schema.researchUser)
+    .values({
+      id: researchUserId,
+      name: "Leandro Trossard",
+      email,
+      cellNumber: "254712345680",
+      implementerId: staticImplementer.id,
+    })
+    .returning();
+  if (!created) throw new Error("Research user was not created");
+
+  await db.insert(schema.implementerMember).values({
+    userId,
+    implementerId: staticImplementer.id,
+    role: ImplementerRole.RESEARCH,
+    identifier: researchUserId,
+  });
+  return { profile: created, userId };
+}
+
+/** A published baseline survey for the research user, with pages that mix question types. */
+async function createResearchSurveys(
+  researchUser: Awaited<ReturnType<typeof createResearchUser>>,
+  projectId: string,
+) {
+  console.log("creating research surveys");
+  const createdBy = researchUser.userId;
+
+  const [survey] = await db
+    .insert(schema.survey)
+    .values({
+      implementerId: researchUser.profile.implementerId,
+      projectId,
+      code: "BASE26",
+      title: "Baseline wellbeing survey",
+      description: "Given to every student before the intervention starts.",
+      createdBy,
+    })
+    .returning();
+  if (!survey) throw new Error("Research survey was not created");
+
+  // Written as a draft, then published: the triggers only accept pages and questions on a draft.
+  const [version] = await db
+    .insert(schema.surveyVersion)
+    .values({ surveyId: survey.id, versionNumber: 1, createdBy })
+    .returning();
+  if (!version) throw new Error("Research survey version was not created");
+
+  const [aboutYou, howYouFeel] = await db
+    .insert(schema.surveyPage)
+    .values([
+      { versionId: version.id, position: 1, title: "About you" },
+      { versionId: version.id, position: 2, title: "How you feel" },
+    ])
+    .returning();
+  if (!aboutYou || !howYouFeel) throw new Error("Research survey pages were not created");
+
+  const agreement = {
+    options: [
+      { code: "0", label: "Not at all" },
+      { code: "1", label: "Several days" },
+      { code: "2", label: "More than half the days" },
+      { code: "3", label: "Nearly every day" },
+    ],
+  };
+  await db.insert(schema.surveyQuestion).values([
+    {
+      versionId: version.id,
+      pageId: aboutYou.id,
+      position: 1,
+      key: "age",
+      type: SurveyQuestionType.NUMBER,
+      prompt: "How old are you?",
+      config: { digits: 2, min: 10, max: 25 },
+    },
+    {
+      versionId: version.id,
+      pageId: aboutYou.id,
+      position: 2,
+      key: "gender",
+      type: SurveyQuestionType.SINGLE_CHOICE,
+      prompt: "What is your gender?",
+      config: {
+        options: [
+          { code: "F", label: "Female" },
+          { code: "M", label: "Male" },
+          { code: "X", label: "Prefer not to say" },
+        ],
+      },
+    },
+    {
+      versionId: version.id,
+      pageId: aboutYou.id,
+      position: 3,
+      key: "date_of_birth",
+      type: SurveyQuestionType.DATE,
+      prompt: "When were you born?",
+      required: false,
+      config: { min: "2000-01-01", max: null },
+    },
+    {
+      versionId: version.id,
+      pageId: howYouFeel.id,
+      position: 1,
+      key: "phq_1",
+      type: SurveyQuestionType.SINGLE_CHOICE,
+      prompt: "Little interest or pleasure in doing things",
+      config: agreement,
+    },
+    {
+      versionId: version.id,
+      pageId: howYouFeel.id,
+      position: 2,
+      key: "wellbeing",
+      type: SurveyQuestionType.RATING,
+      prompt: "How happy do you feel at school?",
+      config: { min: 1, max: 5, minLabel: "Not happy", maxLabel: "Very happy" },
+    },
+    {
+      versionId: version.id,
+      pageId: howYouFeel.id,
+      position: 3,
+      key: "comments",
+      type: SurveyQuestionType.LONG_TEXT,
+      prompt: "Is there anything else you would like to tell us?",
+      required: false,
+      config: { lines: 4 },
+    },
+  ]);
+
+  await db
+    .update(schema.surveyVersion)
+    .set({ status: SurveyVersionStatus.PUBLISHED })
+    .where(eq(schema.surveyVersion.id, version.id));
+  await db
+    .update(schema.survey)
+    .set({ status: SurveyStatus.ACTIVE })
+    .where(eq(schema.survey.id, survey.id));
 }
 
 async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
@@ -2518,6 +2674,8 @@ async function main() {
   const supervisors = await createSupervisors(hubs, userEmailSet, 6);
   const clinicalLeads = await createClinicalLeads(hubs, userEmailSet);
   const clinicalTeam = await createClinicalTeam(hubs, implementers);
+  const researchUser = await createResearchUser(implementers, userEmailSet);
+  await createResearchSurveys(researchUser, defaultProjectId);
   const operations = await createOperations(hubs, userEmailSet);
   const fellows = await createFellows(supervisors, userEmailSet);
 

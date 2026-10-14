@@ -12,6 +12,7 @@ export const ImplementerRole = {
   FELLOW: "FELLOW",
   CLINICAL_LEAD: "CLINICAL_LEAD",
   CLINICAL_TEAM: "CLINICAL_TEAM",
+  RESEARCH: "RESEARCH",
 } as const;
 export type ImplementerRole = (typeof ImplementerRole)[keyof typeof ImplementerRole];
 
@@ -177,3 +178,48 @@ export const TicketStatus = {
   CANCELLED: "CANCELLED",
 } as const;
 export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus];
+
+export const SurveyStatus = {
+  DRAFT: "DRAFT",
+  ACTIVE: "ACTIVE",
+  CLOSED: "CLOSED",
+} as const;
+export type SurveyStatus = (typeof SurveyStatus)[keyof typeof SurveyStatus];
+
+export const SURVEY_STATUS_LABELS: Record<SurveyStatus, string> = {
+  DRAFT: "Draft",
+  ACTIVE: "Active",
+  CLOSED: "Closed",
+};
+
+/** Only a DRAFT version can be edited; publishing freezes it. */
+export const SurveyVersionStatus = {
+  DRAFT: "DRAFT",
+  PUBLISHED: "PUBLISHED",
+  RETIRED: "RETIRED",
+} as const;
+export type SurveyVersionStatus = (typeof SurveyVersionStatus)[keyof typeof SurveyVersionStatus];
+
+export const SURVEY_VERSION_STATUS_LABELS: Record<SurveyVersionStatus, string> = {
+  DRAFT: "Draft",
+  PUBLISHED: "Published",
+  RETIRED: "Retired",
+};
+
+export const SurveyQuestionType = {
+  SINGLE_CHOICE: "SINGLE_CHOICE",
+  MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
+  RATING: "RATING",
+  NUMBER: "NUMBER",
+  DATE: "DATE",
+  SHORT_TEXT: "SHORT_TEXT",
+  LONG_TEXT: "LONG_TEXT",
+} as const;
+export type SurveyQuestionType = (typeof SurveyQuestionType)[keyof typeof SurveyQuestionType];
+
+export const SurveyAuditActor = {
+  USER: "USER",
+  PIPELINE: "PIPELINE",
+  SYSTEM: "SYSTEM",
+} as const;
+export type SurveyAuditActor = (typeof SurveyAuditActor)[keyof typeof SurveyAuditActor];

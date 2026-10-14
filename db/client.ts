@@ -45,9 +45,10 @@ function pgError(error: unknown): DatabaseError | undefined {
   return undefined;
 }
 
-/** Postgres `unique_violation`: an insert or update hit a unique index. */
-export function isUniqueViolation(error: unknown) {
-  return pgError(error)?.code === "23505";
+/** Postgres `unique_violation`: an insert or update hit a unique index, `constraint` if given. */
+export function isUniqueViolation(error: unknown, constraint?: string) {
+  const pg = pgError(error);
+  return pg?.code === "23505" && (constraint === undefined || pg.constraint === constraint);
 }
 
 /** Postgres `serialization_failure`: a serializable transaction conflicted; retry it. */

@@ -120,6 +120,20 @@
       "when": 1791900324346,
       "tag": "0016_drop_unused_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791967566661,
+      "tag": "0017_research_role_and_surveys",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791967567222,
+      "tag": "0018_research_integrity_triggers",
+      "breakpoints": true
     }
   ]
 }

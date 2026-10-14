@@ -11,7 +11,7 @@ import {
   SchoolIcon,
   SignOutIcon,
 } from "#/components/icons";
-import { Building2, Menu, ShieldAlert, Users } from "lucide-react";
+import { Building2, ClipboardList, Menu, ShieldAlert, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -54,6 +54,7 @@ interface NavigationLinkProps {
   hubsActive: boolean;
   ticketsActive: boolean;
   usersActive: boolean;
+  surveysActive: boolean;
   isSuperAdmin: boolean;
 }
 
@@ -87,6 +88,7 @@ export function LayoutClient({
   const hubsActive = subRoute?.includes("hubs") || subRoute?.includes("schools");
   const ticketsActive = subRoute?.includes("tickets");
   const usersActive = subRoute?.includes("users");
+  const surveysActive = subRoute?.includes("survey");
 
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -233,6 +235,7 @@ export function LayoutClient({
                 hubsActive: hubsActive ?? false,
                 ticketsActive: ticketsActive ?? false,
                 usersActive: usersActive ?? false,
+                surveysActive: surveysActive ?? false,
                 isSuperAdmin,
               })}
           </div>
@@ -313,6 +316,7 @@ function getCurrentUserNavigationLinks(
     hubsActive,
     ticketsActive,
     usersActive,
+    surveysActive,
     isSuperAdmin,
   }: NavigationLinkProps,
 ) {
@@ -479,8 +483,24 @@ function getCurrentUserNavigationLinks(
     );
   }
 
-  // Add reporting to all roles except for fellows AND clinical leads
-  if (mainRoute !== "fel" && mainRoute !== "cl" && mainRoute !== "ct" && mainRoute !== "admin") {
+  // Research links
+  if (mainRoute === "res") {
+    links.push(
+      <div className={`tab-link ${cn(surveysActive && "active")}`} key="res-survey">
+        <ClipboardList className="h-5 w-5" />
+        <Link href={`/${mainRoute}/survey`}>Surveys</Link>
+      </div>,
+    );
+  }
+
+  // Add reporting to all roles except for fellows, clinical leads, admins and research
+  if (
+    mainRoute !== "fel" &&
+    mainRoute !== "cl" &&
+    mainRoute !== "ct" &&
+    mainRoute !== "admin" &&
+    mainRoute !== "res"
+  ) {
     links.push(
       <div className={`tab-link ${reportingActive ? "active" : ""}`} key="report">
         <ReportingDropdown

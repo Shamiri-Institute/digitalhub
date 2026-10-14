@@ -164,6 +164,31 @@ export const currentClinicalTeam = cache(async () => {
   };
 });
 
+export type CurrentResearchUser = Awaited<ReturnType<typeof currentResearchUser>>;
+
+export const currentResearchUser = cache(async () => {
+  const session = await getCurrentUserSession();
+  if (!session) {
+    return null;
+  }
+
+  const membership = requireRole(session, ImplementerRole.RESEARCH);
+  if (!membership?.identifier) {
+    return null;
+  }
+  const { identifier } = membership;
+
+  const researchUser = await db.query.researchUser.findFirst({
+    where: (r, { eq }) => eq(r.id, identifier),
+  });
+
+  if (!researchUser) {
+    return null;
+  }
+
+  return { profile: researchUser, session };
+});
+
 export type CurrentOpsUser = Awaited<ReturnType<typeof currentOpsUser>>;
 
 export const currentOpsUser = cache(async () => {
@@ -287,6 +312,8 @@ export const getCurrentPersonnel = cache(async () => {
       return currentOpsUser();
     case ImplementerRole.CLINICAL_TEAM:
       return currentClinicalTeam();
+    case ImplementerRole.RESEARCH:
+      return currentResearchUser();
     case ImplementerRole.ADMIN:
       return currentAdminUser();
     default:

@@ -18,6 +18,7 @@ export type Role =
   | "CLINICAL_LEAD"
   | "CLINICAL_TEAM"
   | "OPERATIONS"
+  | "RESEARCH"
   | "ADMIN";
 
 export type BenchUser = { id: string; email: string; identifier: string | null };
@@ -30,6 +31,7 @@ const PREFIX_ROLE: Record<string, Role> = {
   cl: "CLINICAL_LEAD",
   ct: "CLINICAL_TEAM",
   ops: "OPERATIONS",
+  res: "RESEARCH",
   admin: "ADMIN",
 };
 
@@ -44,6 +46,7 @@ const PROFILE_FILTER: Record<Role, string> = {
   CLINICAL_LEAD: `exists (select 1 from clinical_leads cl where cl.id = m.identifier)`,
   CLINICAL_TEAM: `exists (select 1 from clinical_teams ct where ct.id = m.identifier)`,
   OPERATIONS: `exists (select 1 from ops_users o where o.id = m.identifier)`,
+  RESEARCH: `exists (select 1 from research_users r where r.id = m.identifier)`,
   ADMIN: `true`,
 };
 

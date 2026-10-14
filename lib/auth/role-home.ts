@@ -7,5 +7,6 @@ export const roleHome: Record<ImplementerRole, string> = {
   [ImplementerRole.CLINICAL_LEAD]: "/cl",
   [ImplementerRole.OPERATIONS]: "/ops",
   [ImplementerRole.CLINICAL_TEAM]: "/ct",
+  [ImplementerRole.RESEARCH]: "/res",
   [ImplementerRole.ADMIN]: "/admin",
 };

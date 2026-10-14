@@ -1,8 +1,11 @@
 import { sql } from "drizzle-orm";
 
 import { objectId } from "#/lib/crypto";
+import type { QuestionConfig } from "#/lib/survey/question-types";
 import {
+  bigserial,
   boolean,
+  check,
   date,
   doublePrecision,
   foreignKey,
@@ -34,6 +37,10 @@ import {
   SessionStatus,
   SupervisorHandoffStatus,
   SupportType,
+  SurveyAuditActor,
+  SurveyQuestionType,
+  SurveyStatus,
+  SurveyVersionStatus,
   TicketCategory,
   TicketPriorityLevel,
   TicketStatus,
@@ -91,6 +98,16 @@ export const ticketPriorityLevelEnum = pgEnum(
 );
 export const ticketStatusEnum = pgEnum("ticket_status", enumValues(TicketStatus));
 export const triageActionTakenEnum = pgEnum("triage_action_taken", enumValues(TriageActionTaken));
+export const surveyStatusEnum = pgEnum("survey_status", enumValues(SurveyStatus));
+export const surveyVersionStatusEnum = pgEnum(
+  "survey_version_status",
+  enumValues(SurveyVersionStatus),
+);
+export const surveyQuestionTypeEnum = pgEnum(
+  "survey_question_type",
+  enumValues(SurveyQuestionType),
+);
+export const surveyAuditActorEnum = pgEnum("survey_audit_actor", enumValues(SurveyAuditActor));
 
 export const verification = pgTable(
   "verifications",
@@ -2562,6 +2579,272 @@ export const clinicalTeam = pgTable(
       name: "clinical_teams_implementer_id_fkey",
     })
       .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+export const researchUser = pgTable(
+  "research_users",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("researchuser")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    name: varchar({ length: 255 }).notNull(),
+    email: varchar({ length: 255 }).notNull(),
+    cellNumber: varchar("cell_number", { length: 255 }),
+    implementerId: varchar("implementer_id", { length: 255 }).notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.implementerId],
+      foreignColumns: [implementer.id],
+      name: "research_users_implementer_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+// Research surveys. A survey has versions; a version has pages, and a page has questions. Only a
+// DRAFT version can change: the triggers in the survey migration reject writes to the pages and
+// questions of any other version.
+export const survey = pgTable(
+  "surveys",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("survey")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    implementerId: varchar("implementer_id", { length: 255 }).notNull(),
+    projectId: text("project_id").notNull(),
+    // Printed in every questionnaire serial and page code, so unique across implementers.
+    code: varchar({ length: 16 }).notNull(),
+    title: varchar({ length: 255 }).notNull(),
+    description: text(),
+    status: surveyStatusEnum().default(SurveyStatus.DRAFT).notNull(),
+    reviewConfidenceThreshold: doublePrecision("review_confidence_threshold")
+      .default(0.9)
+      .notNull(),
+    nextSerial: integer("next_serial").default(1).notNull(),
+    createdBy: varchar("created_by", { length: 255 }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("surveys_code_key").on(table.code),
+    index("surveys_implementer_id_project_id_idx").on(table.implementerId, table.projectId),
+    check(
+      "surveys_review_confidence_threshold_check",
+      sql`${table.reviewConfidenceThreshold} between 0 and 1`,
+    ),
+    check("surveys_next_serial_check", sql`${table.nextSerial} >= 1`),
+    foreignKey({
+      columns: [table.implementerId],
+      foreignColumns: [implementer.id],
+      name: "surveys_implementer_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.projectId],
+      foreignColumns: [project.id],
+      name: "surveys_project_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.createdBy],
+      foreignColumns: [user.id],
+      name: "surveys_created_by_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+export const surveyVersion = pgTable(
+  "survey_versions",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyversion")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    surveyId: text("survey_id").notNull(),
+    versionNumber: integer("version_number").notNull(),
+    status: surveyVersionStatusEnum().default(SurveyVersionStatus.DRAFT).notNull(),
+    // The version this one was copied from, if any.
+    basedOnVersionId: text("based_on_version_id"),
+    createdBy: varchar("created_by", { length: 255 }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("survey_versions_survey_id_version_number_key").on(
+      table.surveyId,
+      table.versionNumber,
+    ),
+    // A survey has at most one draft at a time.
+    uniqueIndex("survey_versions_one_draft_per_survey_key")
+      .on(table.surveyId)
+      .where(sql`${table.status} = 'DRAFT'`),
+    index("survey_versions_based_on_version_id_idx").on(table.basedOnVersionId),
+    check("survey_versions_version_number_check", sql`${table.versionNumber} >= 1`),
+    foreignKey({
+      columns: [table.surveyId],
+      foreignColumns: [survey.id],
+      name: "survey_versions_survey_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.basedOnVersionId],
+      foreignColumns: [table.id],
+      name: "survey_versions_based_on_version_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("set null"),
+    foreignKey({
+      columns: [table.createdBy],
+      foreignColumns: [user.id],
+      name: "survey_versions_created_by_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+export const surveyPage = pgTable(
+  "survey_pages",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveypage")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    versionId: text("version_id").notNull(),
+    position: integer().notNull(),
+    title: varchar({ length: 255 }),
+  },
+  (table) => [
+    unique("survey_pages_version_id_position_key").on(table.versionId, table.position),
+    // Target of the composite foreign key that keeps a question's page in the question's version.
+    unique("survey_pages_id_version_id_key").on(table.id, table.versionId),
+    check("survey_pages_position_check", sql`${table.position} >= 1`),
+    foreignKey({
+      columns: [table.versionId],
+      foreignColumns: [surveyVersion.id],
+      name: "survey_pages_version_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+  ],
+);
+
+export const surveyQuestion = pgTable(
+  "survey_questions",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyquestion")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    versionId: text("version_id").notNull(),
+    pageId: text("page_id").notNull(),
+    position: integer().notNull(),
+    // Stable name (such as phq_1) carried into later versions; the export column name.
+    key: varchar({ length: 64 }).notNull(),
+    type: surveyQuestionTypeEnum().notNull(),
+    prompt: text().notNull(),
+    helpText: text("help_text"),
+    required: boolean().default(true).notNull(),
+    // Shape depends on `type`; validated with lib/survey/question-types.ts before every write.
+    config: jsonb().$type<QuestionConfig>().notNull(),
+  },
+  (table) => [
+    unique("survey_questions_page_id_position_key").on(table.pageId, table.position),
+    unique("survey_questions_version_id_key_key").on(table.versionId, table.key),
+    unique("survey_questions_id_version_id_key").on(table.id, table.versionId),
+    check("survey_questions_position_check", sql`${table.position} >= 1`),
+    foreignKey({
+      columns: [table.versionId],
+      foreignColumns: [surveyVersion.id],
+      name: "survey_questions_version_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.pageId, table.versionId],
+      foreignColumns: [surveyPage.id, surveyPage.versionId],
+      name: "survey_questions_page_id_version_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+  ],
+);
+
+// Append-only history of every change to survey data; a trigger rejects UPDATE and DELETE. No
+// foreign keys to the surveys tables, so the history outlives what it records.
+export const surveyAuditEvent = pgTable(
+  "survey_audit_events",
+  {
+    id: bigserial({ mode: "number" }).primaryKey(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    actorKind: surveyAuditActorEnum("actor_kind").notNull(),
+    actorUserId: varchar("actor_user_id", { length: 255 }),
+    surveyId: text("survey_id"),
+    entityType: varchar("entity_type", { length: 64 }).notNull(),
+    entityId: text("entity_id").notNull(),
+    action: varchar({ length: 64 }).notNull(),
+    before: jsonb().$type<JsonValue>(),
+    after: jsonb().$type<JsonValue>(),
+    reason: text(),
+  },
+  (table) => [
+    index("survey_audit_events_entity_type_entity_id_idx").on(table.entityType, table.entityId),
+    index("survey_audit_events_survey_id_occurred_at_idx").on(table.surveyId, table.occurredAt),
+    check(
+      "survey_audit_events_actor_check",
+      sql`(${table.actorKind} = 'USER') = (${table.actorUserId} is not null)`,
+    ),
+    foreignKey({
+      columns: [table.actorUserId],
+      foreignColumns: [user.id],
+      name: "survey_audit_events_actor_user_id_fkey",
+    })
+      // Restrict, not cascade: the events are append-only, so a cascaded update could never apply.
+      .onUpdate("restrict")
       .onDelete("restrict"),
   ],
 );
