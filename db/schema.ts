@@ -443,13 +443,20 @@ export const hub = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    visibleId: varchar("visible_id", { length: 100 }).notNull(),
+    // Deprecated: nothing reads or writes it. New hubs leave it null; drop it with its index later.
+    visibleId: varchar("visible_id", { length: 100 }),
     hubName: varchar("hub_name", { length: 255 }).notNull(),
     implementerId: varchar("implementer_id", { length: 255 }).notNull(),
     projectId: varchar("project_id", { length: 100 }),
   },
   (table) => [
     uniqueIndex("hubs_visible_id_key").using("btree", table.visibleId),
+    // Hub names are unique per implementer and project, ignoring case and surrounding spaces.
+    uniqueIndex("hubs_implementer_id_project_id_name_key").on(
+      table.implementerId,
+      table.projectId,
+      sql`lower(trim(${table.hubName}))`,
+    ),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -815,8 +822,6 @@ export const supervisor = pgTable(
     bankAccountName: varchar("bank_account_name", { length: 255 }),
     bankAccountNumber: varchar("bank_account_number", { length: 255 }),
     kra: varchar({ length: 255 }),
-    nhif: varchar({ length: 255 }),
-    nssf: varchar({ length: 255 }),
     dateOfBirth: date("date_of_birth", { mode: "date" }),
     gender: varchar({ length: 10 }),
     droppedOut: boolean("dropped_out"),
@@ -2022,12 +2027,14 @@ export const sessionName = pgTable(
       .$onUpdate(() => new Date()),
     sessionType: sessionTypesEnum("session_type").notNull(),
     sessionName: varchar("session_name", { length: 255 }).notNull(),
-    amount: integer(),
+    amount: integer().notNull(),
     currency: varchar({ length: 100 }).default("KES").notNull(),
     hubId: varchar("hub_id", { length: 255 }).notNull(),
     sessionLabel: varchar("session_label", { length: 255 }).notNull(),
   },
   (table) => [
+    // A code names one session type of a hub; sessions and the edit dialog look rows up by it.
+    uniqueIndex("session_names_hub_id_session_name_key").on(table.hubId, table.sessionName),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],
@@ -2370,7 +2377,6 @@ export const opsUser = pgTable(
     email: varchar({ length: 255 }).notNull(),
     name: varchar({ length: 255 }).notNull(),
     gender: varchar({ length: 10 }),
-    cellPhone: varchar("cell_phone", { length: 255 }),
     droppedOut: boolean("dropped_out"),
     implementerId: varchar("implementer_id", { length: 255 }).notNull(),
     assignedHubId: varchar("assigned_hub_id", { length: 255 }),
@@ -2603,6 +2609,7 @@ export const researchUser = pgTable(
     implementerId: varchar("implementer_id", { length: 255 }).notNull(),
   },
   (table) => [
+    index("research_users_implementer_id_idx").on(table.implementerId),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -2646,6 +2653,8 @@ export const survey = pgTable(
   (table) => [
     uniqueIndex("surveys_code_key").on(table.code),
     index("surveys_implementer_id_project_id_idx").on(table.implementerId, table.projectId),
+    index("surveys_project_id_idx").on(table.projectId),
+    index("surveys_created_by_idx").on(table.createdBy),
     check(
       "surveys_review_confidence_threshold_check",
       sql`${table.reviewConfidenceThreshold} between 0 and 1`,
@@ -2706,6 +2715,7 @@ export const surveyVersion = pgTable(
       .on(table.surveyId)
       .where(sql`${table.status} = 'DRAFT'`),
     index("survey_versions_based_on_version_id_idx").on(table.basedOnVersionId),
+    index("survey_versions_created_by_idx").on(table.createdBy),
     check("survey_versions_version_number_check", sql`${table.versionNumber} >= 1`),
     foreignKey({
       columns: [table.surveyId],
@@ -2794,6 +2804,7 @@ export const surveyQuestion = pgTable(
     unique("survey_questions_page_id_position_key").on(table.pageId, table.position),
     unique("survey_questions_version_id_key_key").on(table.versionId, table.key),
     unique("survey_questions_id_version_id_key").on(table.id, table.versionId),
+    index("survey_questions_page_id_version_id_idx").on(table.pageId, table.versionId),
     check("survey_questions_position_check", sql`${table.position} >= 1`),
     foreignKey({
       columns: [table.versionId],
@@ -2834,6 +2845,7 @@ export const surveyAuditEvent = pgTable(
   (table) => [
     index("survey_audit_events_entity_type_entity_id_idx").on(table.entityType, table.entityId),
     index("survey_audit_events_survey_id_occurred_at_idx").on(table.surveyId, table.occurredAt),
+    index("survey_audit_events_actor_user_id_idx").on(table.actorUserId),
     check(
       "survey_audit_events_actor_check",
       sql`(${table.actorKind} = 'USER') = (${table.actorUserId} is not null)`,

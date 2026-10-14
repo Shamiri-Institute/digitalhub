@@ -562,6 +562,7 @@ refactor(components): extract reusable form validation
 1. Modify `db/schema.ts` (and `db/relations.ts` or `db/enums.ts` when relations or enums change)
 2. Run `npm run db:generate` to write the SQL migration into `drizzle/`; review the SQL. Use `npx drizzle-kit generate --custom --name <what>` for a data migration
 3. Run `npm run db:migrate` to apply it; test from scratch with `npm run db:reset`
+   - Run `npm run db:check` (CI runs it too): every new foreign key needs an index on its columns, and a migration that drops a column or table starts with `SET LOCAL lock_timeout = '5s';`
 4. Update seed data in `db/seed/` if needed
 5. **MANDATORY**: Run `npm run typecheck` after schema changes. Never run `drizzle-kit pull` over `db/schema.ts`; it is hand-maintained
 

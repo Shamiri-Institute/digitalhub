@@ -1,24 +1,11 @@
-import type {
-  CLINICAL_SESSION_TYPES,
-  DATA_FOLLOWUP_SESSION_TYPES,
-  INTERVENTION_SESSION_TYPES,
-  SUPERVISION_SESSION_TYPES,
-  TRAINING_SESSION_TYPES,
-} from "#/lib/app-constants/constants";
+import type { HubSessionType } from "#/lib/app-constants/hub-session-types";
 
-export type HubSessionType = {
-  name:
-    | INTERVENTION_SESSION_TYPES
-    | SUPERVISION_SESSION_TYPES
-    | TRAINING_SESSION_TYPES
-    | CLINICAL_SESSION_TYPES
-    | DATA_FOLLOWUP_SESSION_TYPES;
-  label: string;
-  type: "INTERVENTION" | "SUPERVISION" | "TRAINING" | "SPECIAL" | "CLINICAL" | "DATA_COLLECTION";
-  amount: number;
-};
-
-export const hubSessionTypes: HubSessionType[] = [
+/**
+ * The session types every seeded hub gets, wider than the standard list a new hub starts with.
+ * The seed schedules one session per intervention type a week apart from four weeks back, so
+ * s5 to s8 are the seeded schools' upcoming sessions; keeping this list keeps that data the same.
+ */
+export const seedHubSessionTypes: HubSessionType[] = [
   { name: "s0", label: "Pre-session", type: "INTERVENTION", amount: 1000 },
   { name: "s1", label: "Session 1", type: "INTERVENTION", amount: 1500 },
   { name: "s2", label: "Session 2", type: "INTERVENTION", amount: 1500 },

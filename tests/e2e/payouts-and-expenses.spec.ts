@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { fellowAttendance, payoutStatements } from "#/db/schema";
+import { fellowAttendance, payoutStatements, sessionName } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
@@ -46,12 +46,15 @@ test.describe("fellow attendance", () => {
     attendanceId: number;
     sessionDate: Date;
     sessionAmount: number;
+    sessionNameId: string;
     schoolName: string;
     fellowName: string;
     email: string;
     hubId: string;
   };
   let fixture: Fixture;
+  // What the attendance has been paid so far, the net of its payout statements.
+  let paidBefore: number;
   let original: typeof fellowAttendance.$inferSelect;
   const startedAt = new Date();
 
@@ -63,7 +66,7 @@ test.describe("fellow attendance", () => {
       rows: [row],
     } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
       select fa.id as "attendanceId", s.session_date as "sessionDate",
-        sn.amount as "sessionAmount", sc.school_name as "schoolName",
+        sn.amount as "sessionAmount", sn.id as "sessionNameId", sc.school_name as "schoolName",
         f.fellow_name as "fellowName", u.email, sc.hub_id as "hubId"
       from fellow_attendances fa
       join intervention_sessions s on s.id = fa.session_id and s.occurred
@@ -88,9 +91,18 @@ test.describe("fellow attendance", () => {
       .where(eq(fellowAttendance.id, fixture.attendanceId));
     if (!attendance) throw new Error(`attendance ${fixture.attendanceId} is gone`);
     original = attendance;
+    const payouts = await db
+      .select({ amount: payoutStatements.amount })
+      .from(payoutStatements)
+      .where(eq(payoutStatements.fellowAttendanceId, fixture.attendanceId));
+    paidBefore = payouts.reduce((sum, payout) => sum + payout.amount, 0);
   });
 
   test.afterAll(async () => {
+    await db
+      .update(sessionName)
+      .set({ amount: fixture.sessionAmount })
+      .where(eq(sessionName.id, fixture.sessionNameId));
     const { id, ...columns } = original;
     await db.update(fellowAttendance).set(columns).where(eq(fellowAttendance.id, id));
     await db
@@ -104,6 +116,13 @@ test.describe("fellow attendance", () => {
   });
 
   test("a supervisor marks their fellow missed", async ({ page, context }) => {
+    // A super admin raised the session's rate after the attendance was paid, as the edit hub
+    // dialog allows. The reversal must cancel what was paid, not the new rate.
+    await db
+      .update(sessionName)
+      .set({ amount: fixture.sessionAmount + 300 })
+      .where(eq(sessionName.id, fixture.sessionNameId));
+
     await signInWithEmail(context, fixture.email);
     const dialog = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
     const fellowRow = await searchRows(page, fixture.fellowName, dialog);
@@ -128,7 +147,8 @@ test.describe("fellow attendance", () => {
       .from(fellowAttendance)
       .where(eq(fellowAttendance.id, fixture.attendanceId));
     expect(markedFellowAttendance).toEqual({ absenceReason });
-    // The paid session is reversed with one negative statement of the session's amount.
+    // The paid session is reversed with one statement that cancels what was paid, so the
+    // attendance nets to zero even though the rate changed in between.
     const reversals = await db
       .select({ amount: payoutStatements.amount, reason: payoutStatements.reason })
       .from(payoutStatements)
@@ -138,9 +158,12 @@ test.describe("fellow attendance", () => {
           gte(payoutStatements.createdAt, startedAt),
         ),
       );
-    expect(reversals).toEqual([
-      { amount: -fixture.sessionAmount, reason: "UNMARK_SESSION_ATTENDANCE" },
-    ]);
+    expect(reversals).toEqual([{ amount: -paidBefore, reason: "UNMARK_SESSION_ATTENDANCE" }]);
+    const statements = await db
+      .select({ amount: payoutStatements.amount })
+      .from(payoutStatements)
+      .where(eq(payoutStatements.fellowAttendanceId, fixture.attendanceId));
+    expect(statements.reduce((sum, statement) => sum + statement.amount, 0)).toBe(0);
   });
 
   test("a supervisor in another hub does not see the session", async ({ page, context }) => {

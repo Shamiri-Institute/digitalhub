@@ -99,10 +99,16 @@ ALTER TABLE "survey_questions" ADD CONSTRAINT "survey_questions_page_id_version_
 ALTER TABLE "survey_versions" ADD CONSTRAINT "survey_versions_survey_id_fkey" FOREIGN KEY ("survey_id") REFERENCES "public"."surveys"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "survey_versions" ADD CONSTRAINT "survey_versions_based_on_version_id_fkey" FOREIGN KEY ("based_on_version_id") REFERENCES "public"."survey_versions"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "survey_versions" ADD CONSTRAINT "survey_versions_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE cascade;--> statement-breakpoint
+CREATE INDEX "research_users_implementer_id_idx" ON "research_users" USING btree ("implementer_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "surveys_code_key" ON "surveys" USING btree ("code");--> statement-breakpoint
 CREATE INDEX "surveys_implementer_id_project_id_idx" ON "surveys" USING btree ("implementer_id","project_id");--> statement-breakpoint
+CREATE INDEX "surveys_project_id_idx" ON "surveys" USING btree ("project_id");--> statement-breakpoint
+CREATE INDEX "surveys_created_by_idx" ON "surveys" USING btree ("created_by");--> statement-breakpoint
 CREATE INDEX "survey_audit_events_entity_type_entity_id_idx" ON "survey_audit_events" USING btree ("entity_type","entity_id");--> statement-breakpoint
 CREATE INDEX "survey_audit_events_survey_id_occurred_at_idx" ON "survey_audit_events" USING btree ("survey_id","occurred_at");--> statement-breakpoint
+CREATE INDEX "survey_audit_events_actor_user_id_idx" ON "survey_audit_events" USING btree ("actor_user_id");--> statement-breakpoint
+CREATE INDEX "survey_questions_page_id_version_id_idx" ON "survey_questions" USING btree ("page_id","version_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "survey_versions_survey_id_version_number_key" ON "survey_versions" USING btree ("survey_id","version_number");--> statement-breakpoint
 CREATE UNIQUE INDEX "survey_versions_one_draft_per_survey_key" ON "survey_versions" USING btree ("survey_id") WHERE "survey_versions"."status" = 'DRAFT';--> statement-breakpoint
-CREATE INDEX "survey_versions_based_on_version_id_idx" ON "survey_versions" USING btree ("based_on_version_id");
+CREATE INDEX "survey_versions_based_on_version_id_idx" ON "survey_versions" USING btree ("based_on_version_id");--> statement-breakpoint
+CREATE INDEX "survey_versions_created_by_idx" ON "survey_versions" USING btree ("created_by");

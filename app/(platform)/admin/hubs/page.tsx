@@ -26,7 +26,7 @@ export default async function HubsPage() {
       <div className="container w-full grow space-y-3 py-10">
         <PageHeading title="Hubs" />
         <Separator />
-        <HubsDataTable hubs={hubs} role={role} />
+        <HubsDataTable hubs={hubs} role={role} canManageHubs={admin.profile.isSuperAdmin} />
       </div>
       <PageFooter />
     </div>
