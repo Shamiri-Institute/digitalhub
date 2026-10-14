@@ -87,6 +87,8 @@ jobs:
 
       - name: Migrate database
         run: npm run db:migrate
+      - name: Check schema rules
+        run: npm run db:check
       # ideally we might want to create a different seed script for these tests so that we have deterministic data
       - name: Seed test database
         run: npm run db:seed
