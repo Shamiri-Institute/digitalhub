@@ -78,8 +78,6 @@ function buildColumns(canManageHubs: boolean): ColumnDef<HubsWithSchools>[] {
   ];
 }
 
-// TanStack renders a function `cell` as a component, so new column objects on every render would
-// remount every row menu and lose its state. Build each variant once.
 const manageColumns = buildColumns(true);
 const readOnlyColumns = buildColumns(false);
 
