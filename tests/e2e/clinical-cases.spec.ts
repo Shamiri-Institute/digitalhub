@@ -327,7 +327,9 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   await dialog.getByRole("button", { name: "Submit" }).click();
   await expect(dialog).toBeHidden();
 
+  // A saved session's notes open read-only with the stored text, and the case takes their risk.
   await page.reload();
+  await expect(await searchRows(page, pseudonym)).toContainText(/medium/i);
   await openNotesForSession();
   await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue(presentingIssues);
   await expect(dialog.getByRole("button", { name: "Submit" })).toBeHidden();

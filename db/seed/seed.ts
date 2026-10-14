@@ -1589,7 +1589,6 @@ async function createClinicalRecords(
         });
 
         notesData.push({
-          caseId,
           sessionId: clinicalSessionId,
           createdBy: seederUserId,
           presentingIssues: faker.lorem.sentence(),
@@ -1628,7 +1627,6 @@ async function createClinicalRecords(
       const lastClinicalSessionId = clinicalSessionIds.at(-1);
       if (caseStatus === caseStatusOptions.Terminated && lastClinicalSessionId) {
         terminationData.push({
-          caseId,
           sessionId: lastClinicalSessionId,
           createdBy: seederUserId,
           terminationDate: faker.date.recent({ days: 30 }),
