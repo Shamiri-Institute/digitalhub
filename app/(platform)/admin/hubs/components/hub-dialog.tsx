@@ -584,11 +584,13 @@ function SessionTypesEditor({
                     type="button"
                     variant="outline"
                     className="col-start-2 gap-2 border-dashed border-shamiri-new-blue/40 px-2 text-shamiri-new-blue shadow-none hover:border-shamiri-new-blue hover:bg-blue-bg hover:text-shamiri-new-blue sm:px-4"
-                    aria-label={`Add ${group.noun}`}
                     onClick={() => addRow(category)}
                   >
                     <Plus className="h-4 w-4" />
-                    <span className="sm:hidden">Add session</span>
+                    <span className="sm:hidden">
+                      Add session
+                      <span className="sr-only"> ({group.label.toLowerCase()})</span>
+                    </span>
                     <span className="hidden sm:inline">Add {group.noun}</span>
                   </Button>
                   {canRemoveAll && (
