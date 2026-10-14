@@ -1,14 +1,8 @@
 "use client";
 
 import { ArrowRight, Lock, Plus, Trash2 } from "lucide-react";
-import { Fragment, type ReactNode, useState } from "react";
-import {
-  type FieldErrors,
-  useFieldArray,
-  useForm,
-  useFormContext,
-  useFormState,
-} from "react-hook-form";
+import { type Dispatch, Fragment, type ReactNode, type SetStateAction, useState } from "react";
+import { useFieldArray, useForm, useFormContext, useFormState } from "react-hook-form";
 import type { z } from "zod";
 
 import {
@@ -172,13 +166,19 @@ function ValueChange({ from, to, wrap = true }: { from: string; to: string; wrap
   );
 }
 
-function groupsWithErrors(sessionTypeErrors: unknown, sessionTypes: FormSessionType[]) {
-  if (!Array.isArray(sessionTypeErrors)) return [];
-  const groups = sessionTypeErrors.flatMap((rowErrors, index) => {
-    const group = rowErrors ? sessionTypes[index]?.type : undefined;
-    return group ? [group] : [];
-  });
-  return [...new Set(groups)];
+function openGroupsWithErrors(
+  form: { getValues: () => { sessionTypes: FormSessionType[] } },
+  setOpenGroups: Dispatch<SetStateAction<string[]>>,
+) {
+  return (errors: { sessionTypes?: unknown }) => {
+    if (!Array.isArray(errors.sessionTypes)) return;
+    const { sessionTypes } = form.getValues();
+    const failing = errors.sessionTypes.flatMap((rowErrors, index) => {
+      const group = rowErrors ? sessionTypes[index]?.type : undefined;
+      return group ? [group] : [];
+    });
+    setOpenGroups((open) => [...new Set([...open, ...failing])]);
+  };
 }
 
 interface HubDialogProps {
@@ -280,11 +280,7 @@ function EditHubForm({
   const storedById = new Map(sessionNames.map((n) => [n.id, n]));
   const [openGroups, setOpenGroups] = useState<string[]>([]);
 
-  // A closed group does not show its errors, so open the groups that have one.
-  const onInvalid = (errors: FieldErrors<EditFormValues>) => {
-    const failing = groupsWithErrors(errors.sessionTypes, form.getValues("sessionTypes"));
-    setOpenGroups((open) => [...new Set([...open, ...failing])]);
-  };
+  const onInvalid = openGroupsWithErrors(form, setOpenGroups);
 
   const [pending, setPending] = useState<EditFormValues | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -778,11 +774,7 @@ function CreateHubForm({ onDone }: { onDone: () => void }) {
     ? diffSessionTypes(standardSessionTypes, withCodes(pending.sessionTypes, noStoredSessionNames))
     : [];
 
-  // A closed group does not show its errors, so open the groups that have one.
-  const onInvalid = (errors: FieldErrors<CreateFormValues>) => {
-    const failing = groupsWithErrors(errors.sessionTypes, form.getValues("sessionTypes"));
-    setOpenGroups((open) => [...new Set([...open, ...failing])]);
-  };
+  const onInvalid = openGroupsWithErrors(form, setOpenGroups);
 
   const confirmCreate = async () => {
     if (!pending) return;
