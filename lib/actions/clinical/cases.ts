@@ -2,14 +2,15 @@ import { sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { hubScope } from "./scope";
 
-/** The risk level of a case's newest note, or "N/A" before its first note. */
+/** The risk level of a case's newest note; before the first note, the case's risk at intake. */
 export function latestRiskLevel(
   sessions: { clinicalCaseNotes: { riskLevel: string; createdAt: Date }[] }[],
+  intakeRiskStatus: string,
 ) {
   const [newest] = sessions
     .flatMap((session) => session.clinicalCaseNotes)
     .toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  return newest?.riskLevel || "N/A";
+  return newest?.riskLevel || intakeRiskStatus;
 }
 
 /**
@@ -92,7 +93,7 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
            WHERE ccs."case_id" = csi.id
            ORDER BY ccn.created_at DESC
            LIMIT 1),
-          'N/A'
+          csi."risk_status"::text
         ) as name,
         COUNT(*)::int as value
       FROM "clinical_screening_info" csi
@@ -106,7 +107,7 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
          WHERE ccs."case_id" = csi.id
          ORDER BY ccn.created_at DESC
          LIMIT 1),
-        'N/A'
+        csi."risk_status"::text
       )
     `)
       .then((r) => r.rows),
@@ -315,7 +316,7 @@ export async function fetchClinicalCasesList(
            WHERE ccs."case_id" = csi.id
            ORDER BY ccn.created_at DESC
            LIMIT 1),
-          'N/A'
+          csi."risk_status"::text
         ) as "riskStatus",
         csi.case_report as "caseReport",
         csi.case_status as "caseStatus",
