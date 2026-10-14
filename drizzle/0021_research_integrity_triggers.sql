@@ -1,4 +1,4 @@
--- Integrity rules for the research tables from 0019 that drizzle cannot express in db/schema.ts.
+-- Integrity rules for the research tables from 0020 that drizzle cannot express in db/schema.ts.
 --
 -- 1. The membership identifier checks from 0014 cover the new RESEARCH role, so a research
 --    membership always points at a research_users row, and that row cannot be renamed or deleted

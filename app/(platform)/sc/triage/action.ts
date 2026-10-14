@@ -151,7 +151,6 @@ export async function createClinicalCaseFromTriage(triageEventId: string, pseudo
 
   await db.insert(clinicalScreeningInfo).values({
     studentId: event.studentId,
-    schoolId,
     currentSupervisorId: supervisorId,
     initialReferredFrom: event.fellowId,
     initialReferredFromSpecified: "fellow",

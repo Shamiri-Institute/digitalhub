@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.1.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.0.0...v2.1.0) (2026-10-14)
+
+### Features
+
+- **admin:** allow super admins to create and edit hubs ([#942](https://github.com/Shamiri-Institute/digitalhub/issues/942)) ([bacd98e](https://github.com/Shamiri-Institute/digitalhub/commit/bacd98e4ca3ce83ae5d44174c9a7b6f80662b85b))
+
 ## [2.0.0](https://github.com/Shamiri-Institute/digitalhub/compare/v1.41.3...v2.0.0) (2026-10-13)
 
 ### ⚠ BREAKING CHANGES

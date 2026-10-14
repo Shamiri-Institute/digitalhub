@@ -138,15 +138,22 @@
     {
       "idx": 19,
       "version": "7",
-      "when": 1791969945762,
-      "tag": "0019_research_role_and_surveys",
+      "when": 1791969417301,
+      "tag": "0019_drop_never_read_copy_columns",
       "breakpoints": true
     },
     {
       "idx": 20,
       "version": "7",
-      "when": 1791969946417,
-      "tag": "0020_research_integrity_triggers",
+      "when": 1791970471487,
+      "tag": "0020_research_role_and_surveys",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791970472066,
+      "tag": "0021_research_integrity_triggers",
       "breakpoints": true
     }
   ]
