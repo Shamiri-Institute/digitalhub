@@ -44,7 +44,6 @@ describe("implementer_members.identifier", () => {
         when 'CLINICAL_LEAD' then exists (select 1 from clinical_leads p where p.id = m.identifier)
         when 'CLINICAL_TEAM' then exists (select 1 from clinical_teams p where p.id = m.identifier)
         when 'OPERATIONS' then exists (select 1 from ops_users p where p.id = m.identifier)
-        when 'RESEARCH' then exists (select 1 from research_users p where p.id = m.identifier)
       end`);
     expect(result.rows[0]?.count).toBe(0);
   });

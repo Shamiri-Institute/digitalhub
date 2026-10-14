@@ -56,6 +56,7 @@ interface NavigationLinkProps {
   usersActive: boolean;
   surveysActive: boolean;
   isSuperAdmin: boolean;
+  canManageSurveys: boolean;
 }
 
 export function LayoutClient({
@@ -64,6 +65,7 @@ export function LayoutClient({
   profile,
   isAdminUser,
   isSuperAdmin,
+  canManageSurveys,
   adminProjects,
   personnel,
 }: {
@@ -72,6 +74,7 @@ export function LayoutClient({
   profile: CurrentPersonnel | null;
   isAdminUser: boolean;
   isSuperAdmin: boolean;
+  canManageSurveys: boolean;
   adminProjects: AdminProject[] | null;
   personnel: ImplementerPersonnel | null;
 }) {
@@ -237,6 +240,7 @@ export function LayoutClient({
                 usersActive: usersActive ?? false,
                 surveysActive: surveysActive ?? false,
                 isSuperAdmin,
+                canManageSurveys,
               })}
           </div>
         </div>
@@ -318,6 +322,7 @@ function getCurrentUserNavigationLinks(
     usersActive,
     surveysActive,
     isSuperAdmin,
+    canManageSurveys,
   }: NavigationLinkProps,
 ) {
   const links = [];
@@ -362,6 +367,15 @@ function getCurrentUserNavigationLinks(
         >
           <Users className="h-4 w-4" strokeWidth={3} />
           <Link href={`/${mainRoute}/users`}>Users</Link>
+        </div>,
+      );
+    }
+    // Also cosmetic: the survey pages and actions check survey access themselves.
+    if (canManageSurveys) {
+      links.push(
+        <div className={`tab-link ${cn(surveysActive && "active")}`} key="admin-surveys">
+          <ClipboardList className="h-5 w-5" />
+          <Link href={`/${mainRoute}/surveys`}>Surveys</Link>
         </div>,
       );
     }
@@ -483,24 +497,8 @@ function getCurrentUserNavigationLinks(
     );
   }
 
-  // Research links
-  if (mainRoute === "res") {
-    links.push(
-      <div className={`tab-link ${cn(surveysActive && "active")}`} key="res-survey">
-        <ClipboardList className="h-5 w-5" />
-        <Link href={`/${mainRoute}/survey`}>Surveys</Link>
-      </div>,
-    );
-  }
-
-  // Add reporting to all roles except for fellows, clinical leads, admins and research
-  if (
-    mainRoute !== "fel" &&
-    mainRoute !== "cl" &&
-    mainRoute !== "ct" &&
-    mainRoute !== "admin" &&
-    mainRoute !== "res"
-  ) {
+  // Add reporting to all roles except for fellows AND clinical leads
+  if (mainRoute !== "fel" && mainRoute !== "cl" && mainRoute !== "ct" && mainRoute !== "admin") {
     links.push(
       <div className={`tab-link ${reportingActive ? "active" : ""}`} key="report">
         <ReportingDropdown

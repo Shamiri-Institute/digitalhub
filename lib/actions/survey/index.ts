@@ -8,7 +8,7 @@ import type { z } from "zod";
 import { db, isUniqueViolation, type Transaction } from "#/db/client";
 import { SurveyAuditActor, SurveyVersionStatus } from "#/db/enums";
 import { survey, surveyPage, surveyQuestion, surveyVersion } from "#/db/schema";
-import { requireResearchScope } from "#/lib/auth/research-access";
+import { requireSurveyScope } from "#/lib/auth/admin-access";
 import { ForbiddenRoleError } from "#/lib/auth/require-auth-role";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
 import type { ActionResponse } from "#/types/actions.types";
@@ -37,7 +37,7 @@ export async function createSurvey(
   data: z.infer<typeof CreateSurveySchema>,
 ): Promise<ActionResponse<{ surveyId: string }>> {
   try {
-    const { userId, implementerId, projectId } = await requireResearchScope();
+    const { userId, implementerId, projectId } = await requireSurveyScope();
     const input = CreateSurveySchema.safeParse(data);
     if (!input.success) {
       return invalid(input.error);
@@ -106,7 +106,7 @@ export async function createDraftVersion(
   data: z.infer<typeof CreateDraftVersionSchema>,
 ): Promise<ActionResponse> {
   try {
-    const { userId, implementerId, projectId } = await requireResearchScope();
+    const { userId, implementerId, projectId } = await requireSurveyScope();
     const input = CreateDraftVersionSchema.safeParse(data);
     if (!input.success) {
       return invalid(input.error);

@@ -2,18 +2,19 @@ import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { researchScope } from "#/lib/auth/research-access";
+import { surveyScope } from "#/lib/auth/admin-access";
 import { SurveyStatusBadge } from "../components/status-badges";
 import { fetchSurveyWithVersions } from "../queries";
 import VersionsDataTable from "./components/versions-datatable";
 
-export default async function ResearchSurveyPage(props: { params: Promise<{ surveyId: string }> }) {
+export default async function AdminSurveyPage(props: { params: Promise<{ surveyId: string }> }) {
   const { surveyId } = await props.params;
-  const scope = await researchScope();
+  const scope = await surveyScope();
   if (!scope) {
-    redirect("/login");
+    redirect("/admin/schedule");
   }
 
   const survey = await fetchSurveyWithVersions(surveyId, scope);
@@ -22,10 +23,10 @@ export default async function ResearchSurveyPage(props: { params: Promise<{ surv
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="container w-full grow space-y-3">
+    <div className="flex h-full flex-col bg-white">
+      <div className="container w-full grow space-y-3 py-10">
         <Link
-          href="/res/survey"
+          href="/admin/surveys"
           className="flex items-center gap-1 text-sm font-medium text-shamiri-new-blue hover:underline"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -43,6 +44,7 @@ export default async function ResearchSurveyPage(props: { params: Promise<{ surv
         <Separator />
         <VersionsDataTable surveyId={survey.id} versions={survey.versions} />
       </div>
+      <PageFooter />
     </div>
   );
 }

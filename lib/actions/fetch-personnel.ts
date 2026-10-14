@@ -119,17 +119,6 @@ export async function fetchImplementerPersonnel() {
     project: ops.assignedHub?.project?.name,
   }));
 
-  const researchUsers: Personnel[] = (
-    await db.query.researchUser.findMany({
-      where: (r, { inArray }) => inArray(r.id, memberIds),
-      orderBy: (r, { asc }) => asc(r.name),
-    })
-  ).map((researchUser) => ({
-    id: researchUser.id,
-    role: ImplementerRole.RESEARCH,
-    label: `${researchUser.name}`,
-  }));
-
   const personnel = [
     ...admins,
     ...hubCoordinators,
@@ -138,7 +127,6 @@ export async function fetchImplementerPersonnel() {
     ...clinicalLeads,
     ...opsUsers,
     ...clinicalTeams,
-    ...researchUsers,
   ];
 
   const activePersonnelId = activeMembership.identifier || "";

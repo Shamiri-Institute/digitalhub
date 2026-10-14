@@ -62,7 +62,7 @@ function CreateSurveyForm({ onDone }: { onDone: () => void }) {
     }
     toast({ description: response.message });
     onDone();
-    router.push(`/res/survey/${response.data.surveyId}`);
+    router.push(`/admin/surveys/${response.data.surveyId}`);
   };
 
   return (

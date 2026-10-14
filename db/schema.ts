@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 
 import { objectId } from "#/lib/crypto";
-import type { QuestionConfig } from "#/lib/survey/question-types";
 import {
   bigserial,
   boolean,
@@ -2556,37 +2555,6 @@ export const clinicalTeam = pgTable(
   ],
 );
 
-export const researchUser = pgTable(
-  "research_users",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("researchuser")),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-    name: varchar({ length: 255 }).notNull(),
-    email: varchar({ length: 255 }).notNull(),
-    cellNumber: varchar("cell_number", { length: 255 }),
-    implementerId: varchar("implementer_id", { length: 255 }).notNull(),
-  },
-  (table) => [
-    index("research_users_implementer_id_idx").on(table.implementerId),
-    foreignKey({
-      columns: [table.implementerId],
-      foreignColumns: [implementer.id],
-      name: "research_users_implementer_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
-
 // Research surveys. A survey has versions; a version has pages, and a page has questions. Only a
 // DRAFT version can change: the triggers in the survey migration reject writes to the pages and
 // questions of any other version.
@@ -2697,7 +2665,7 @@ export const surveyVersion = pgTable(
       name: "survey_versions_based_on_version_id_fkey",
     })
       .onUpdate("cascade")
-      .onDelete("set null"),
+      .onDelete("no action"),
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [user.id],
@@ -2764,8 +2732,8 @@ export const surveyQuestion = pgTable(
     prompt: text().notNull(),
     helpText: text("help_text"),
     required: boolean().default(true).notNull(),
-    // Shape depends on `type`; validated with lib/survey/question-types.ts before every write.
-    config: jsonb().$type<QuestionConfig>().notNull(),
+    // Settings for the question's type, such as the options of a choice question.
+    config: jsonb().$type<JsonValue>().notNull(),
   },
   (table) => [
     unique("survey_questions_page_id_position_key").on(table.pageId, table.position),

@@ -12,7 +12,6 @@ export const ImplementerRole = {
   FELLOW: "FELLOW",
   CLINICAL_LEAD: "CLINICAL_LEAD",
   CLINICAL_TEAM: "CLINICAL_TEAM",
-  RESEARCH: "RESEARCH",
 } as const;
 export type ImplementerRole = (typeof ImplementerRole)[keyof typeof ImplementerRole];
 

@@ -19,7 +19,6 @@ const ROLES: Role[] = [
   "FELLOW",
   "HUB_COORDINATOR",
   "OPERATIONS",
-  "RESEARCH",
   "SUPERVISOR",
 ];
 

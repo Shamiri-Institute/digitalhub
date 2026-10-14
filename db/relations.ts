@@ -14,7 +14,6 @@ import {
   clinicalScreeningInfo,
   clinicalSessionAttendance,
   clinicalTeam,
-  researchUser,
   survey,
   surveyPage,
   surveyQuestion,
@@ -259,14 +258,6 @@ export const clinicalTeamRelations = relations(clinicalTeam, ({ one }) => ({
   }),
 }));
 
-export const researchUserRelations = relations(researchUser, ({ one }) => ({
-  implementer: one(implementer, {
-    fields: [researchUser.implementerId],
-    references: [implementer.id],
-    relationName: "ResearchUser_implementer",
-  }),
-}));
-
 export const surveyRelations = relations(survey, ({ one, many }) => ({
   implementer: one(implementer, {
     fields: [survey.implementerId],
@@ -492,7 +483,6 @@ export const implementerRelations = relations(implementer, ({ many }) => ({
   hubCoordinators: many(hubCoordinator, { relationName: "HubCoordinator_implementer" }),
   clinicalLeads: many(clinicalLead, { relationName: "ClinicalLead_implementer" }),
   clinicalTeam: many(clinicalTeam, { relationName: "ClinicalTeam_implementer" }),
-  researchUsers: many(researchUser, { relationName: "ResearchUser_implementer" }),
   opsUser: many(opsUser, { relationName: "OpsUser_implementer" }),
   admins: many(adminUser, { relationName: "AdminUser_implementer" }),
 }));

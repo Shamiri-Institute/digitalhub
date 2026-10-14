@@ -20,7 +20,7 @@ export const columns: ColumnDef<SurveyListItem>[] = [
     id: "Title",
     cell: ({ row }) => (
       <Link
-        href={`/res/survey/${row.original.id}`}
+        href={`/admin/surveys/${row.original.id}`}
         className="font-medium text-shamiri-new-blue hover:underline"
       >
         {row.original.title}

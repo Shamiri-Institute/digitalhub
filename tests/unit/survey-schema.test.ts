@@ -32,11 +32,11 @@ async function errorOf(write: (tx: Transaction) => Promise<unknown>) {
 /** A survey with one version holding one page and one question, in the given version status. */
 async function createSurvey(tx: Transaction, status: "DRAFT" | "PUBLISHED" = "DRAFT") {
   const member = await tx.query.implementerMember.findFirst({
-    where: (m, { eq }) => eq(m.role, "RESEARCH"),
+    where: (m, { eq }) => eq(m.role, "ADMIN"),
     orderBy: (m, { asc }) => asc(m.id),
   });
   const project = await tx.query.project.findFirst({ where: (p, { eq }) => eq(p.isDefault, true) });
-  if (!member || !project) throw new Error("The seed has no research user or default project");
+  if (!member || !project) throw new Error("The seed has no admin or default project");
 
   const created = only(
     await tx
@@ -143,7 +143,7 @@ describe("survey versions", () => {
         .set({ status: "DRAFT" })
         .where(eq(surveyVersion.id, version.id));
     });
-    expect(reopenError).toMatch(/cannot go from PUBLISHED to DRAFT/);
+    expect(reopenError).toMatch(/cannot change from PUBLISHED to DRAFT/);
   });
 
   it("only lets a draft be published, never retired straight away", async () => {
@@ -154,7 +154,7 @@ describe("survey versions", () => {
         .set({ status: "RETIRED" })
         .where(eq(surveyVersion.id, version.id));
     });
-    expect(error).toMatch(/cannot go from DRAFT to RETIRED/);
+    expect(error).toMatch(/cannot change from DRAFT to RETIRED/);
   });
 
   it("keeps a version's survey and number, even while it is a draft", async () => {
@@ -165,7 +165,17 @@ describe("survey versions", () => {
         .set({ versionNumber: 7 })
         .where(eq(surveyVersion.id, version.id));
     });
-    expect(error).toMatch(/cannot change its survey, number or source version/);
+    expect(error).toMatch(/cannot change from DRAFT to DRAFT/);
+  });
+
+  it("rejects a version created as anything but a draft", async () => {
+    const error = await errorOf(async (tx) => {
+      const { survey, userId } = await createSurvey(tx, "PUBLISHED");
+      await tx
+        .insert(surveyVersion)
+        .values({ surveyId: survey.id, versionNumber: 2, status: "PUBLISHED", createdBy: userId });
+    });
+    expect(error).toMatch(/must be created as a DRAFT, not PUBLISHED/);
   });
 
   it("rejects deleting a published version on its own", async () => {

@@ -1,10 +1,10 @@
 import { db } from "#/db/client";
 import { countOf } from "#/db/sql";
 import { surveyPage, surveyQuestion } from "#/db/schema";
-import type { ResearchScope } from "#/lib/auth/research-access";
+import type { SurveyScope } from "#/lib/auth/admin-access";
 
 /** The surveys of an implementer in a project, newest first, with their latest version. */
-export async function fetchSurveys({ implementerId, projectId }: ResearchScope) {
+export async function fetchSurveys({ implementerId, projectId }: SurveyScope) {
   const surveys = await db.query.survey.findMany({
     where: (s, { and, eq }) => and(eq(s.implementerId, implementerId), eq(s.projectId, projectId)),
     columns: {
@@ -31,7 +31,7 @@ export type SurveyListItem = Awaited<ReturnType<typeof fetchSurveys>>[number];
 /** One survey with its versions, newest first; undefined outside the caller's scope. */
 export async function fetchSurveyWithVersions(
   surveyId: string,
-  { implementerId, projectId }: ResearchScope,
+  { implementerId, projectId }: SurveyScope,
 ) {
   return db.query.survey.findFirst({
     where: (s, { and, eq }) =>

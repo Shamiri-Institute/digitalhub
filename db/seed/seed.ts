@@ -526,6 +526,14 @@ async function createAdminUsers(
     },
     {
       userId: objectId("user"),
+      email: "research.admin@shamiri.institute",
+      adminName: "Research Admin",
+      implementerIds: [shamiri.id],
+      isSuperAdmin: false,
+      team: AdminTeam.RESEARCH,
+    },
+    {
+      userId: objectId("user"),
       email: "plain.admin@shamiri.institute",
       adminName: "Plain Admin",
       implementerIds: [shamiri.id],
@@ -1036,51 +1044,25 @@ async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
   return created;
 }
 
-async function createResearchUser(implementers: Implementer[], emails: Set<string>) {
-  console.log("creating research user");
-  const staticImplementer = implementers[0];
-  if (!staticImplementer) throw new Error("No static implementer found for research user");
-
-  const userId = objectId("user");
-  const researchUserId = objectId("researchuser");
-
-  const email = "leandro.trossard@test.com";
-  emails.add(email);
-  await db.insert(schema.user).values({ id: userId, email });
-
-  const [created] = await db
-    .insert(schema.researchUser)
-    .values({
-      id: researchUserId,
-      name: "Leandro Trossard",
-      email,
-      cellNumber: "254712345680",
-      implementerId: staticImplementer.id,
-    })
-    .returning();
-  if (!created) throw new Error("Research user was not created");
-
-  await db.insert(schema.implementerMember).values({
-    userId,
-    implementerId: staticImplementer.id,
-    role: ImplementerRole.RESEARCH,
-    identifier: researchUserId,
-  });
-  return { profile: created, userId };
-}
-
-/** A published baseline survey for the research user, with pages that mix question types. */
-async function createResearchSurveys(
-  researchUser: Awaited<ReturnType<typeof createResearchUser>>,
-  projectId: string,
-) {
+/** A published baseline survey made by the Research team admin, with pages that mix question types. */
+async function createResearchSurveys(projectId: string) {
   console.log("creating research surveys");
-  const createdBy = researchUser.userId;
+  const researchAdmin = await db.query.adminUser.findFirst({
+    where: (a, { eq }) => eq(a.email, "research.admin@shamiri.institute"),
+    columns: { implementerId: true },
+  });
+  const researchAdminUser = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.email, "research.admin@shamiri.institute"),
+    columns: { id: true },
+  });
+  if (!researchAdmin || !researchAdminUser)
+    throw new Error("No Research team admin to own the survey");
+  const createdBy = researchAdminUser.id;
 
   const [survey] = await db
     .insert(schema.survey)
     .values({
-      implementerId: researchUser.profile.implementerId,
+      implementerId: researchAdmin.implementerId,
       projectId,
       code: "BASE26",
       title: "Baseline wellbeing survey",
@@ -2666,8 +2648,7 @@ async function main() {
   const supervisors = await createSupervisors(hubs, userEmailSet, 6);
   const clinicalLeads = await createClinicalLeads(hubs, userEmailSet);
   const clinicalTeam = await createClinicalTeam(hubs, implementers);
-  const researchUser = await createResearchUser(implementers, userEmailSet);
-  await createResearchSurveys(researchUser, defaultProjectId);
+  await createResearchSurveys(defaultProjectId);
   const operations = await createOperations(hubs, userEmailSet);
   const fellows = await createFellows(supervisors, userEmailSet);
 

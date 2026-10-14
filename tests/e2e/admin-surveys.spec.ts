@@ -1,10 +1,18 @@
-import { expect, type Page, test } from "@playwright/test";
+import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 import { eq, inArray } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { survey, surveyPage, surveyQuestion, surveyVersion } from "#/db/schema";
-import { signInAs } from "#/tests/helpers";
+import { signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
+
+/**
+ * Super admins and Research team admins manage surveys; other admins do not see them. The seed
+ * makes research.admin@shamiri.institute a Research team admin and care.admin@shamiri.institute a
+ * Care team admin (db/seed/seed.ts).
+ */
+const RESEARCH_ADMIN = "research.admin@shamiri.institute";
+const CARE_ADMIN = "care.admin@shamiri.institute";
 
 /** The single row an insert returned. */
 function only<T>(rows: T[]): T {
@@ -29,13 +37,16 @@ function uniqueCode() {
   return code;
 }
 
-async function scopeOf(userId: string) {
-  const membership = await db.query.implementerMember.findFirst({
-    where: (m, { and, eq }) => and(eq(m.userId, userId), eq(m.role, "RESEARCH")),
-  });
-  const project = await db.query.project.findFirst({ where: (p, { eq }) => eq(p.isDefault, true) });
-  if (!membership || !project) throw new Error("The seed has no research membership or project");
-  return { implementerId: membership.implementerId, projectId: project.id };
+/** Signs in as the Research team admin; returns their user id and the scope they work in. */
+async function signInAsResearchAdmin(context: BrowserContext) {
+  await signInWithEmail(context, RESEARCH_ADMIN);
+  const [admin, user, project] = await Promise.all([
+    db.query.adminUser.findFirst({ where: (a, { eq }) => eq(a.email, RESEARCH_ADMIN) }),
+    db.query.user.findFirst({ where: (u, { eq }) => eq(u.email, RESEARCH_ADMIN) }),
+    db.query.project.findFirst({ where: (p, { eq }) => eq(p.isDefault, true) }),
+  ]);
+  if (!admin || !user || !project) throw new Error("The seed has no Research team admin");
+  return { userId: user.id, scope: { implementerId: admin.implementerId, projectId: project.id } };
 }
 
 /** A survey whose v1 is published with one page of two questions, created straight in the DB. */
@@ -97,12 +108,14 @@ function versionRow(page: Page, versionNumber: number) {
     .filter({ has: page.getByRole("cell", { name: `v${versionNumber}`, exact: true }) });
 }
 
-test("a research user creates a survey and it starts with an empty draft", async ({
+test("a Research team admin creates a survey and it starts with an empty draft", async ({
   page,
   context,
 }) => {
-  await signInAs(context, "RESEARCH");
-  await page.goto(getUrl("/res/survey"));
+  await signInAsResearchAdmin(context);
+  await page.goto(getUrl("/admin/schedule"));
+  await page.getByRole("link", { name: "Surveys", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/surveys$/);
 
   const code = uniqueCode();
   const title = `Endline wellbeing ${code}`;
@@ -111,20 +124,20 @@ test("a research user creates a survey and it starts with an empty draft", async
   await page.getByLabel("Code").fill(code.toLowerCase());
   await page.getByRole("button", { name: "Create survey" }).click();
 
-  await expect(page).toHaveURL(/\/res\/survey\/survey_/);
+  await expect(page).toHaveURL(/\/admin\/surveys\/survey_/);
   await page.reload();
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
   await expect(page.getByText(code, { exact: true })).toBeVisible();
   await expect(versionRow(page, 1)).toContainText("Draft");
 
-  await page.goto(getUrl("/res/survey"));
+  await page.goto(getUrl("/admin/surveys"));
   await expect(page.getByRole("link", { name: title })).toBeVisible();
 });
 
 test("a survey code can only be used once", async ({ page, context }) => {
-  const user = await signInAs(context, "RESEARCH");
-  const existing = await createPublishedSurvey(await scopeOf(user.id), user.id);
-  await page.goto(getUrl("/res/survey"));
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const existing = await createPublishedSurvey(scope, userId);
+  await page.goto(getUrl("/admin/surveys"));
 
   await page.getByRole("button", { name: "New survey" }).click();
   await page.getByLabel("Title").fill("Duplicate code");
@@ -135,9 +148,9 @@ test("a survey code can only be used once", async ({ page, context }) => {
 });
 
 test("a new draft copies a published version with its question keys", async ({ page, context }) => {
-  const user = await signInAs(context, "RESEARCH");
-  const published = await createPublishedSurvey(await scopeOf(user.id), user.id);
-  await page.goto(getUrl(`/res/survey/${published.id}`));
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const published = await createPublishedSurvey(scope, userId);
+  await page.goto(getUrl(`/admin/surveys/${published.id}`));
 
   await page.getByLabel("Actions for v1").click();
   await page.getByRole("menuitem", { name: "New draft from v1" }).click();
@@ -165,18 +178,31 @@ test("a new draft copies a published version with its question keys", async ({ p
 });
 
 test("a survey of another implementer is not found", async ({ page, context }) => {
-  const user = await signInAs(context, "RESEARCH");
-  const { implementerId, projectId } = await scopeOf(user.id);
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const { implementerId, projectId } = scope;
   const other = await db.query.implementer.findFirst({
     where: (i, { ne }) => ne(i.id, implementerId),
     columns: { id: true },
   });
   if (!other) throw new Error("The seed has a single implementer");
-  const foreign = await createPublishedSurvey({ implementerId: other.id, projectId }, user.id);
+  const foreign = await createPublishedSurvey({ implementerId: other.id, projectId }, userId);
 
-  const response = await page.goto(getUrl(`/res/survey/${foreign.id}`));
+  const response = await page.goto(getUrl(`/admin/surveys/${foreign.id}`));
   expect(response?.status()).toBe(404);
 
-  await page.goto(getUrl("/res/survey"));
+  await page.goto(getUrl("/admin/surveys"));
   await expect(page.getByRole("link", { name: foreign.title })).toHaveCount(0);
+});
+
+test("an admin outside the Research team has no Surveys tab and cannot open surveys", async ({
+  page,
+  context,
+}) => {
+  await signInWithEmail(context, CARE_ADMIN);
+  await page.goto(getUrl("/admin/schedule"));
+  await expect(page.getByRole("link", { name: "Hubs", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Surveys", exact: true })).toHaveCount(0);
+
+  await page.goto(getUrl("/admin/surveys"));
+  await expect(page).toHaveURL(/\/admin\/schedule$/);
 });
