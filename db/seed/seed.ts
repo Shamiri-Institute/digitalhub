@@ -1594,7 +1594,6 @@ async function createAttendanceRecords(
       // Fellow attendance: one row per group leader in this school
       for (const group of groups) {
         fellowAttendanceData.push({
-          projectId,
           fellowId: group.leaderId,
           sessionId: session.id,
           schoolId: school.id,
@@ -1610,8 +1609,6 @@ async function createAttendanceRecords(
       // Supervisor attendance: one row per school's assigned supervisor
       if (school.assignedSupervisorId) {
         supervisorAttendanceData.push({
-          projectId,
-          schoolId: school.id,
           supervisorId: school.assignedSupervisorId,
           sessionId: session.id,
           attended: faker.datatype.boolean({ probability: 0.9 }),
@@ -1623,11 +1620,9 @@ async function createAttendanceRecords(
       for (const student of students) {
         const group = groups.find((g) => g.id === student.assignedGroupId);
         studentAttendanceData.push({
-          projectId,
           studentId: student.id,
           sessionId: session.id,
           groupId: student.assignedGroupId ?? undefined,
-          schoolId: school.id,
           fellowId: group?.leaderId,
           attended: faker.datatype.boolean({ probability: 0.85 }),
           markedBy: seederUserId,
@@ -1667,7 +1662,6 @@ async function createHubAttendance(
     for (const session of sessions.filter((s) => s.schoolId === school.id)) {
       for (const group of school.interventionGroups) {
         fellowAttendanceData.push({
-          projectId,
           fellowId: group.leaderId,
           sessionId: session.id,
           schoolId: school.id,
@@ -1681,8 +1675,6 @@ async function createHubAttendance(
       }
       if (school.assignedSupervisorId) {
         supervisorAttendanceData.push({
-          projectId,
-          schoolId: school.id,
           supervisorId: school.assignedSupervisorId,
           sessionId: session.id,
           attended: faker.datatype.boolean({ probability: 0.9 }),
@@ -2445,7 +2437,6 @@ async function createReportRecords(
           submittedAt: faker.date.recent({ days: 14 }),
           fellowId: group.leaderId,
           groupId: group.id,
-          projectId,
           structuralFidelity: faker.number.int({ min: 1, max: 5 }),
           processFidelity: faker.number.int({ min: 1, max: 5 }),
           adaptationsMade: false,

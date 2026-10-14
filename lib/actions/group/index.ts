@@ -224,7 +224,7 @@ export async function submitFellowGroupReport(data: z.infer<typeof FellowGroupRe
 
     const group = await db.query.interventionGroup.findFirst({
       where: (g, { and, eq }) => and(eq(g.id, parsed.groupId), eq(g.leaderId, fellowId)),
-      columns: { id: true, projectId: true, groupName: true },
+      columns: { id: true, groupName: true },
     });
     if (!group) {
       throw new Error("No InterventionGroup found");
@@ -235,7 +235,6 @@ export async function submitFellowGroupReport(data: z.infer<typeof FellowGroupRe
       submittedAt: new Date(),
       fellowId,
       groupId: group.id,
-      projectId: group.projectId,
       structuralFidelity: parsed.structuralFidelity,
       processFidelity: parsed.processFidelity,
       adaptationsMade: parsed.adaptationsMade,

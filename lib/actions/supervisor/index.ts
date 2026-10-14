@@ -21,7 +21,7 @@ async function upsertSupervisorAttendances(
   const [session, supervisorsInHub] = await Promise.all([
     db.query.interventionSession.findFirst({
       where: (s, { eq }) => eq(s.id, sessionId),
-      columns: { projectId: true, schoolId: true, hubId: true },
+      columns: { projectId: true, hubId: true },
       with: { school: { columns: { hubId: true } } },
     }),
     uniqueSupervisorIds.length === 0
@@ -39,8 +39,7 @@ async function upsertSupervisorAttendances(
   if (!session || hubOfSession(session) !== coordinator.hubId) {
     throw new Error(`Intervention session ${sessionId} not found`);
   }
-  const { projectId, schoolId } = session;
-  if (!projectId) {
+  if (!session.projectId) {
     throw new Error(
       "Session has no project. Ensure the session is linked to a hub with a project.",
     );
@@ -64,8 +63,6 @@ async function upsertSupervisorAttendances(
           ...markedFields,
           supervisorId,
           sessionId,
-          projectId,
-          schoolId,
         })),
       )
       .onConflictDoUpdate({

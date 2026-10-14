@@ -58,7 +58,6 @@ export default function SupervisorAttendance({
         phoneNumber: supervisor.cellNumber ?? "",
         fellows: `${supervisor.fellows.filter((fellow) => fellow.droppedOut !== true).length}/${supervisor.fellows.length}`,
         sessionId: attendance?.sessionId,
-        schoolId: attendance?.schoolId,
         absenceReason: attendance?.absenceReason ?? "",
         absenceComments: attendance?.absenceComments ?? "",
         schoolName: session?.school?.schoolName ?? session?.venue ?? undefined,
@@ -185,7 +184,6 @@ export function SupervisorAttendanceDataTable({
                   attended: attendance.attendance ?? null,
                   absenceReason: attendance.absenceReason ?? null,
                   sessionId: attendance.sessionId ?? "",
-                  schoolId: attendance.schoolId ?? null,
                   comments: attendance.absenceComments,
                 },
               ]
@@ -230,7 +228,6 @@ export type SupervisorAttendanceTableData = {
   phoneNumber: string;
   fellows: string;
   schoolName?: string;
-  schoolId?: string | null;
   sessionType?: string;
   sessionId?: string;
   occurred?: boolean | null;

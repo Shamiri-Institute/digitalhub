@@ -569,8 +569,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
         const attendanceStatus = attendedFlag(attended);
         const rate = attendanceStatus ? sessionRate(session) : 0;
 
-        const projectId = session.projectId;
-        if (!projectId) {
+        if (!session.projectId) {
           throw new Error(
             "Session has no project. Ensure the session is linked to a hub with a project.",
           );
@@ -582,7 +581,6 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
             fellowId: fellowRow.id,
             groupId,
             schoolId: session.schoolId,
-            projectId,
             sessionId,
             absenceReason,
             absenceComments: comments,
@@ -761,8 +759,7 @@ export async function markManyFellowAttendance(
           }));
         }
 
-        const projectId = session.projectId;
-        if (!projectId) {
+        if (!session.projectId) {
           throw new Error(
             "Session has no project. Ensure the session is linked to a hub with a project.",
           );
@@ -772,7 +769,6 @@ export async function markManyFellowAttendance(
           fellowId: fellowRow.id,
           schoolId: session.schoolId,
           groupId,
-          projectId,
           absenceReason: attendanceStatus === false ? absenceReason : null,
           absenceComments: attendanceStatus === false ? comments : null,
           sessionId,
