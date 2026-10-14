@@ -54,7 +54,7 @@ test("a case terminated with its row open shows and saves its endpoint issues", 
     .set({ generalPresentingIssuesBaseline: { "Family issues": "true" } })
     .where(eq(clinicalScreeningInfo.id, clinicalCase.caseId));
   // Terminating a case names one of its clinical sessions; inserting one gives it a known label.
-  const sessionLabel = `e2e-termination-${Date.now()}`;
+  const sessionLabel = "S1";
   await db.insert(clinicalSessionAttendance).values({
     caseId: clinicalCase.caseId,
     session: sessionLabel,
@@ -73,7 +73,7 @@ test("a case terminated with its row open shows and saves its endpoint issues", 
   await chooseRowAction(page, caseRow, "Terminate case");
   const terminate = page.getByRole("dialog", { name: "Terminate Case" });
   await terminate.getByRole("combobox").filter({ hasText: "Select session" }).click();
-  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   await terminate.getByRole("textbox", { name: /Termination Explanation/ }).fill("E2E");
   await terminate.getByRole("button", { name: "Terminate Case" }).click();
   await expect(terminate).toBeHidden();

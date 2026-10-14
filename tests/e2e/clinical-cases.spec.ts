@@ -3,6 +3,7 @@ import { expect, test, type Undo } from "#/tests/fixtures";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
+import type { ClinicalSessionLabel } from "#/db/enums";
 import {
   clinicalCaseNotes,
   clinicalCaseTermination,
@@ -274,7 +275,7 @@ test("a supervisor moves their case to follow-up", async ({ page, context, undo 
  * Gives the fixture case a clinical session dated today, labelled so the test can pick it, and
  * queues its removal. Notes and terminations must name one of the case's sessions.
  */
-async function addClinicalSession(sessionLabel: string, undo: Undo) {
+async function addClinicalSession(sessionLabel: ClinicalSessionLabel, undo: Undo) {
   const [clinicalSession] = await db
     .insert(clinicalSessionAttendance)
     .values({
@@ -298,8 +299,8 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   context,
   undo,
 }) => {
-  const sessionLabel = `e2e-notes-${Date.now()}`;
-  const presentingIssues = `${sessionLabel} presenting issues`;
+  const sessionLabel = "S1";
+  const presentingIssues = `e2e-notes-${Date.now()} presenting issues`;
   const clinicalSessionId = await addClinicalSession(sessionLabel, undo);
   undo(() =>
     db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.sessionId, clinicalSessionId)),
@@ -311,7 +312,7 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   async function openNotesForSession() {
     await openCaseAction(page, pseudonym, "Case notes");
     await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-    await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+    await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   }
 
   await openNotesForSession();
@@ -352,7 +353,7 @@ test("case notes typed and then cancelled are gone the next time the dialog open
   context,
   undo,
 }) => {
-  const sessionLabel = `e2e-cancelled-notes-${Date.now()}`;
+  const sessionLabel = "S2";
   await addClinicalSession(sessionLabel, undo);
   await signInWithEmail(context, owner.email);
   await page.goto(getUrl("/sc/clinical"));
@@ -360,7 +361,7 @@ test("case notes typed and then cancelled are gone the next time the dialog open
   const dialog = page.getByRole("dialog", { name: "Case Notes" });
   await openCaseAction(page, pseudonym, "Case notes");
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   await dialog.getByRole("textbox", { name: /Situation/ }).fill("Typed, then cancelled");
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toBeHidden();
@@ -371,8 +372,8 @@ test("case notes typed and then cancelled are gone the next time the dialog open
   await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue("");
 });
 test("a supervisor terminates their case", async ({ page, context, undo }) => {
-  const sessionLabel = `e2e-termination-${Date.now()}`;
-  const terminationReasonExplanation = `${sessionLabel} explanation`;
+  const sessionLabel = "S3";
+  const terminationReasonExplanation = `e2e-termination-${Date.now()} explanation`;
   const clinicalSessionId = await addClinicalSession(sessionLabel, undo);
   undo(
     () =>
@@ -391,7 +392,7 @@ test("a supervisor terminates their case", async ({ page, context, undo }) => {
   await openCaseAction(page, pseudonym, "Terminate case");
   const dialog = page.getByRole("dialog", { name: "Terminate Case" });
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   await dialog.getByRole("combobox").filter({ hasText: "Student no-show" }).click();
   await page.getByRole("option", { name: "Student refused to return to sessions" }).click();
   await dialog

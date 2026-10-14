@@ -323,6 +323,13 @@
       "when": 1793609315313,
       "tag": "0045_close_old_clinical_lead_referrals",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1793614369191,
+      "tag": "0046_clinical_case_hierarchy",
+      "breakpoints": true
     }
   ]
 }
