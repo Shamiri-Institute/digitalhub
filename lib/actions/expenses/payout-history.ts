@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, inArray, isNotNull, max, type SQL, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { fellow, hub, payoutStatements, supervisor } from "#/db/schema";
+import { fellow, fellowAttendance, hub, payoutStatements, supervisor } from "#/db/schema";
 
 export type PayoutHistoryEntry = Awaited<ReturnType<typeof loadPayoutHistory>>[number];
 export type FellowPayoutDetail = PayoutHistoryEntry["fellowDetails"][number];
@@ -24,8 +24,12 @@ export async function loadPayoutHistory(fellowScope: SQL) {
       .where(
         and(
           inArray(
-            payoutStatements.fellowId,
-            db.select({ id: fellow.id }).from(fellow).where(fellowScope),
+            payoutStatements.fellowAttendanceId,
+            db
+              .select({ id: fellowAttendance.id })
+              .from(fellowAttendance)
+              .innerJoin(fellow, eq(fellow.id, fellowAttendance.fellowId))
+              .where(fellowScope),
           ),
           isNotNull(payoutStatements.executedAt),
         ),
@@ -48,7 +52,8 @@ export async function loadPayoutHistory(fellowScope: SQL) {
         totalAmount: sql<number>`sum(${payoutStatements.amount})`.mapWith(Number),
       })
       .from(payoutStatements)
-      .innerJoin(fellow, eq(fellow.id, payoutStatements.fellowId))
+      .innerJoin(fellowAttendance, eq(fellowAttendance.id, payoutStatements.fellowAttendanceId))
+      .innerJoin(fellow, eq(fellow.id, fellowAttendance.fellowId))
       .innerJoin(hub, eq(hub.id, fellow.hubId))
       .innerJoin(supervisor, eq(supervisor.id, fellow.supervisorId))
       .where(and(isNotNull(payoutStatements.executedAt), fellowScope))

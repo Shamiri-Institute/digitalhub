@@ -16,7 +16,7 @@ import { getUrl } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
 
-type Fixture = { attendanceId: number; fellowId: string; sessionAmount: number };
+type Fixture = { attendanceId: number; sessionAmount: number };
 type OtherImplementerFixture = Fixture & { hubId: string; originalProjectId: string | null };
 let ops: { email: string; userId: string; implementerId: string; projectId: string };
 let fixture: Fixture;
@@ -44,7 +44,7 @@ test.beforeAll(async () => {
   // An attendance a payout run picks up: attended, unprocessed, at an occurred session, for an
   // active fellow. The seed executes every statement it writes, so give it an unexecuted one.
   const eligibleAttendance = sql`
-    select fa.id as "attendanceId", f.id as "fellowId", sn.amount as "sessionAmount",
+    select fa.id as "attendanceId", sn.amount as "sessionAmount",
       h.id as "hubId", h.project_id as "originalProjectId"
     from fellow_attendances fa
     join intervention_sessions i on i.id = fa.session_id and i.occurred
@@ -80,7 +80,6 @@ async function insertUnexecutedStatement(attendance: Fixture) {
     .insert(payoutStatements)
     .values({
       fellowAttendanceId: attendance.attendanceId,
-      fellowId: attendance.fellowId,
       amount: attendance.sessionAmount,
       reason: "MARK_SESSION_ATTENDANCE",
       createdBy: ops.userId,

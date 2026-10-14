@@ -1916,7 +1916,6 @@ async function createPayoutRecords(
 
   const payoutStatementData = sample.map((fa) => ({
     fellowAttendanceId: fa.id,
-    fellowId: fa.fellowId,
     amount: faker.number.int({ min: 500, max: 3000 }),
     reason: faker.helpers.arrayElement([
       "timely_attendance",

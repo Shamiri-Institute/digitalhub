@@ -2087,7 +2087,6 @@ export const payoutStatements = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     fellowAttendanceId: integer("fellow_attendance_id").notNull(),
-    fellowId: varchar("fellow_id", { length: 255 }).notNull(),
     amount: integer().notNull(),
     reason: text().notNull(),
     notes: text(),
@@ -2098,17 +2097,11 @@ export const payoutStatements = pgTable(
     confirmedBy: text("confirmed_by"),
   },
   (table) => [
+    index("payout_statements_fellow_attendance_id_idx").on(table.fellowAttendanceId),
     foreignKey({
       columns: [table.fellowAttendanceId],
       foreignColumns: [fellowAttendance.id],
       name: "payout_statements_fellow_attendance_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.fellowId],
-      foreignColumns: [fellow.id],
-      name: "payout_statements_fellow_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),

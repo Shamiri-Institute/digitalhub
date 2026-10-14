@@ -30,9 +30,10 @@ export async function loadOpsHubsPayoutHistory() {
     opsUser.profile.implementerId,
     await getActiveProjectId(),
   );
-  const projectFellowIds = db
-    .select({ id: fellow.id })
-    .from(fellow)
+  const projectFellowAttendanceIds = db
+    .select({ id: fellowAttendance.id })
+    .from(fellowAttendance)
+    .innerJoin(fellow, eq(fellow.id, fellowAttendance.fellowId))
     .where(inArray(fellow.hubId, opsHubIds));
   const nextPayoutDate = sql`lead(${payoutStatements.executedAt}) over (order by ${payoutStatements.executedAt})`;
   const [payoutDates, details] = await Promise.all([
@@ -48,7 +49,7 @@ export async function loadOpsHubsPayoutHistory() {
       .from(payoutStatements)
       .where(
         and(
-          inArray(payoutStatements.fellowId, projectFellowIds),
+          inArray(payoutStatements.fellowAttendanceId, projectFellowAttendanceIds),
           isNotNull(payoutStatements.executedAt),
         ),
       )
@@ -67,7 +68,8 @@ export async function loadOpsHubsPayoutHistory() {
         totalAmount: sql<number>`sum(${payoutStatements.amount})`.mapWith(Number),
       })
       .from(payoutStatements)
-      .innerJoin(fellow, eq(fellow.id, payoutStatements.fellowId))
+      .innerJoin(fellowAttendance, eq(fellowAttendance.id, payoutStatements.fellowAttendanceId))
+      .innerJoin(fellow, eq(fellow.id, fellowAttendance.fellowId))
       .innerJoin(hub, eq(hub.id, fellow.hubId))
       .innerJoin(supervisor, eq(supervisor.id, fellow.supervisorId))
       .where(and(isNotNull(payoutStatements.executedAt), inArray(hub.id, opsHubIds)))
@@ -220,9 +222,10 @@ export async function confirmPayoutAction(executedAt: Date) {
 
   try {
     const result = await db.transaction(async (tx) => {
-      const projectFellowIds = tx
-        .select({ id: fellow.id })
-        .from(fellow)
+      const projectFellowAttendanceIds = tx
+        .select({ id: fellowAttendance.id })
+        .from(fellowAttendance)
+        .innerJoin(fellow, eq(fellow.id, fellowAttendance.fellowId))
         .where(inArray(fellow.hubId, opsHubIds));
       const executedPayouts = await tx
         .select({ id: payoutStatements.id })
@@ -231,7 +234,7 @@ export async function confirmPayoutAction(executedAt: Date) {
           and(
             eq(payoutStatements.executedAt, executedAt),
             isNull(payoutStatements.confirmedAt),
-            inArray(payoutStatements.fellowId, projectFellowIds),
+            inArray(payoutStatements.fellowAttendanceId, projectFellowAttendanceIds),
           ),
         );
 

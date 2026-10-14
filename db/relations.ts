@@ -277,7 +277,6 @@ export const fellowRelations = relations(fellow, ({ one, many }) => ({
   }),
   fellowComplaints: many(fellowComplaints, { relationName: "FellowComplaints_fellow" }),
   weeklyFellowRatings: many(weeklyFellowRatings, { relationName: "WeeklyFellowRatings_fellow" }),
-  PayoutStatements: many(payoutStatements, { relationName: "PayoutStatements_fellow" }),
   sessionRecordings: many(sessionRecording, { relationName: "SessionRecording_fellow" }),
 }));
 
@@ -609,11 +608,6 @@ export const payoutStatementsRelations = relations(payoutStatements, ({ one }) =
     fields: [payoutStatements.fellowAttendanceId],
     references: [fellowAttendance.id],
     relationName: "PayoutStatements_fellowAttendance",
-  }),
-  fellow: one(fellow, {
-    fields: [payoutStatements.fellowId],
-    references: [fellow.id],
-    relationName: "PayoutStatements_fellow",
   }),
   user: one(user, {
     fields: [payoutStatements.createdBy],
