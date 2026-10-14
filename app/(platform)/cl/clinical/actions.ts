@@ -112,7 +112,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       attendanceStatus: session.attendanceStatus,
     }));
 
-    const riskLevel = latestRiskLevel(caseInfo.sessions);
+    const riskLevel = latestRiskLevel(caseInfo.sessions, caseInfo.riskStatus);
 
     return {
       id: caseInfo.id,

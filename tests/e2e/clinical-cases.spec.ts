@@ -321,6 +321,23 @@ async function addClinicalSession(sessionLabel: ClinicalSessionLabel) {
   return clinicalSession.id;
 }
 
+test("a case without notes shows its intake risk", async ({ page, context }) => {
+  await db
+    .update(clinicalScreeningInfo)
+    .set({ riskStatus: "High" })
+    .where(eq(clinicalScreeningInfo.id, caseId));
+  undo.push(() =>
+    db
+      .update(clinicalScreeningInfo)
+      .set({ riskStatus: "No" })
+      .where(eq(clinicalScreeningInfo.id, caseId)),
+  );
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+
+  await expect(await searchRows(page, pseudonym)).toContainText(/high/i);
+});
+
 test("a supervisor writes case notes and reads them back after a reload", async ({
   page,
   context,
