@@ -356,8 +356,9 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   await dialog.getByRole("button", { name: "Submit" }).click();
   await expect(dialog).toBeHidden();
 
-  // A saved session's notes open read-only with the stored text.
+  // A saved session's notes open read-only with the stored text, and the case takes their risk.
   await page.reload();
+  await expect(await searchRows(page, pseudonym)).toContainText(/medium/i);
   await openNotesForSession();
   await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue(presentingIssues);
   await expect(dialog.getByRole("button", { name: "Submit" })).toBeHidden();
@@ -373,6 +374,31 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   await expect(dialog.getByRole("textbox", { name: /^Explanation/ })).toHaveValue(
     "Join the next group",
   );
+});
+
+test("case notes reopen empty after the dialog closes without saving", async ({
+  page,
+  context,
+}) => {
+  const sessionLabel = `e2e-notes-reopen-${Date.now()}`;
+  await addClinicalSession(sessionLabel);
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+
+  const dialog = page
+    .getByRole("dialog")
+    .filter({ has: page.getByRole("heading", { name: "Case Notes" }) });
+  await openCaseAction(page, pseudonym, "Case notes");
+  await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
+  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await dialog.getByRole("textbox", { name: /Situation/ }).fill("Not saved");
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+
+  // The row's actions menu stays open behind the dialog, so open the notes from it again.
+  await page.getByRole("menu").getByText("Case notes", { exact: true }).click();
+  await expect(dialog.getByRole("combobox").filter({ hasText: "Select session" })).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue("");
 });
 
 test("a supervisor terminates their case", async ({ page, context }) => {
@@ -413,10 +439,11 @@ test("a supervisor terminates their case", async ({ page, context }) => {
   // No page shows the termination reason, so read the stored one.
   const termination = await db.query.clinicalCaseTermination.findFirst({
     where: (t, { eq }) => eq(t.sessionId, clinicalSessionId),
-    columns: { caseId: true, terminationReason: true, terminationReasonExplanation: true },
+    columns: { terminationReason: true, terminationReasonExplanation: true },
+    with: { session: { columns: { caseId: true } } },
   });
   expect(termination).toEqual({
-    caseId,
+    session: { caseId },
     terminationReason: "Student refused to return to sessions",
     terminationReasonExplanation,
   });

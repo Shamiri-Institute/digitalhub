@@ -69,6 +69,19 @@ const CaseReportSchema = z.object({
 
 type CaseReportFormValues = z.infer<typeof CaseReportSchema>;
 
+const emptyCaseNotes: CaseReportFormValues = {
+  presentingIssues: "",
+  orsAssessment: "",
+  riskLevel: "no",
+  necessaryConditions: "",
+  treatmentInterventions: [],
+  otherIntervention: "",
+  interventionExplanation: "",
+  studentResponseExplanation: "",
+  followUpPlan: { isGroupSession: false, explanation: "" },
+  sessionId: "",
+};
+
 export default function CaseNotesForm({
   children,
   clinicalCase,
@@ -85,9 +98,18 @@ export default function CaseNotesForm({
   // prefills from loaded notes instead of wiping what the user typed when they arrive.
   const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>> | null>(null);
 
+  const form = useForm<CaseReportFormValues>({
+    resolver: zodResolver(CaseReportSchema),
+    defaultValues: emptyCaseNotes,
+  });
+
   const onOpenChange = (nextOpen: boolean) => {
     setDialogOpen(nextOpen);
     if (nextOpen) {
+      // reset(values) also replaces the defaults, so a bare reset() would restore the last session.
+      form.reset(emptyCaseNotes);
+      setHasExistingNotes(false);
+      setShowOtherInput(false);
       setNotes(null);
       getClinicalCaseNotes(clinicalCase.id)
         .then(setNotes)
@@ -97,25 +119,6 @@ export default function CaseNotesForm({
         });
     }
   };
-
-  const form = useForm<CaseReportFormValues>({
-    resolver: zodResolver(CaseReportSchema),
-    defaultValues: {
-      presentingIssues: "",
-      orsAssessment: "",
-      riskLevel: "no",
-      necessaryConditions: "",
-      treatmentInterventions: [],
-      otherIntervention: "",
-      interventionExplanation: "",
-      studentResponseExplanation: "",
-      followUpPlan: {
-        isGroupSession: false,
-        explanation: "",
-      },
-      sessionId: "",
-    },
-  });
 
   const selectSession = (sessionId: string) => {
     const existingNote = notes?.find((note) => note.sessionId === sessionId);
@@ -141,21 +144,7 @@ export default function CaseNotesForm({
 
       setShowOtherInput((existingNote.treatmentInterventions ?? []).includes("Other"));
     } else {
-      form.reset({
-        sessionId,
-        presentingIssues: "",
-        orsAssessment: "",
-        riskLevel: "no",
-        necessaryConditions: "",
-        treatmentInterventions: [],
-        otherIntervention: "",
-        interventionExplanation: "",
-        studentResponseExplanation: "",
-        followUpPlan: {
-          isGroupSession: false,
-          explanation: "",
-        },
-      });
+      form.reset({ ...emptyCaseNotes, sessionId });
       setShowOtherInput(false);
     }
   };
@@ -188,7 +177,7 @@ export default function CaseNotesForm({
         });
       }
       setDialogOpen(false);
-      form.reset();
+      form.reset(emptyCaseNotes);
     } catch {
       toast({
         title: "Something went wrong, please try again",

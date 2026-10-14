@@ -1,6 +1,6 @@
 "use server";
 
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentUserSession } from "#/app/auth";
@@ -19,6 +19,7 @@ import {
   type JsonValue,
   student,
 } from "#/db/schema";
+import { latestRiskLevel } from "#/lib/actions/clinical/cases";
 import { objectId } from "#/lib/crypto";
 import { generateStudentVisibleID } from "#/lib/utils";
 
@@ -98,6 +99,25 @@ async function requireCaseAccess(caseId: string) {
   return { actor, clinicalCase };
 }
 
+/** The case access, after checking the session is one of that case's sessions. */
+async function requireCaseSessionAccess(caseId: string, sessionId: string) {
+  const access = await requireCaseAccess(caseId);
+  const caseSession = await db.query.clinicalSessionAttendance.findFirst({
+    where: (s, { and, eq }) => and(eq(s.id, sessionId), eq(s.caseId, caseId)),
+    columns: { id: true },
+  });
+  if (!caseSession) {
+    throw new Error("Clinical session not found");
+  }
+  return access;
+}
+
+const caseSessionIds = (caseId: string) =>
+  db
+    .select({ id: clinicalSessionAttendance.id })
+    .from(clinicalSessionAttendance)
+    .where(eq(clinicalSessionAttendance.caseId, caseId));
+
 const clinicalHome = (role: ImplementerRole) =>
   role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical";
 
@@ -115,11 +135,8 @@ export async function getClinicalCases() {
           assignedGroup: { columns: { groupName: true } },
         },
       },
-      sessions: true,
-      clinicalCaseNotes: {
-        orderBy: (n, { desc }) => desc(n.createdAt),
-        limit: 1,
-        columns: { riskLevel: true },
+      sessions: {
+        with: { clinicalCaseNotes: { columns: { riskLevel: true, createdAt: true } } },
       },
       followUptreatmentPlan: true,
     },
@@ -135,7 +152,7 @@ export async function getClinicalCases() {
       attendanceStatus: session.attendanceStatus,
     }));
 
-    const riskLevel = caseInfo.clinicalCaseNotes[0]?.riskLevel || "N/A";
+    const riskLevel = latestRiskLevel(caseInfo.sessions);
 
     return {
       id: caseInfo.id,
@@ -628,7 +645,7 @@ export async function terminateClinicalCase(data: {
   sessionId: string;
 }) {
   try {
-    const { actor } = await requireCaseAccess(data.caseId);
+    const { actor } = await requireCaseSessionAccess(data.caseId, data.sessionId);
 
     await db.transaction(async (tx) => {
       requireUpdated(
@@ -641,7 +658,6 @@ export async function terminateClinicalCase(data: {
       );
 
       await tx.insert(clinicalCaseTermination).values({
-        caseId: data.caseId,
         terminationDate: new Date(),
         terminationReason: data.terminationReason,
         terminationReasonExplanation: data.terminationReasonExplanation,
@@ -668,7 +684,7 @@ export async function unterminateClinicalCase(data: { caseId: string }) {
     await db.transaction(async (tx) => {
       await tx
         .delete(clinicalCaseTermination)
-        .where(eq(clinicalCaseTermination.caseId, data.caseId));
+        .where(inArray(clinicalCaseTermination.sessionId, caseSessionIds(data.caseId)));
 
       requireUpdated(
         await tx
@@ -692,7 +708,7 @@ export async function getClinicalCaseNotes(caseId: string) {
   await requireCaseAccess(caseId);
 
   return db.query.clinicalCaseNotes.findMany({
-    where: (n, { eq }) => eq(n.caseId, caseId),
+    where: (n, { inArray }) => inArray(n.sessionId, caseSessionIds(caseId)),
     orderBy: (n, { desc }) => desc(n.createdAt),
   });
 }
@@ -713,10 +729,9 @@ export async function createClinicalCaseNotes(data: {
   role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   try {
-    const { actor } = await requireCaseAccess(data.caseId);
+    const { actor } = await requireCaseSessionAccess(data.caseId, data.sessionId);
 
     await db.insert(clinicalCaseNotes).values({
-      caseId: data.caseId,
       sessionId: data.sessionId,
       createdBy: actor.userId,
       presentingIssues: data.presentingIssues,

@@ -2326,23 +2326,11 @@ export const clinicalCaseNotes = pgTable(
     studentResponseExplanations: text("student_response_explanations").notNull(),
     followUpPlan: followUpPlanOptionsEnum("follow_up_plan").notNull(),
     followUpPlanExplanation: text("follow_up_plan_explanation").notNull(),
-    caseId: text("case_id").notNull(),
     sessionId: text("session_id").notNull(),
     createdBy: text("created_by").notNull(),
   },
   (table) => [
-    uniqueIndex("clinical_case_notes_case_id_session_id_key").using(
-      "btree",
-      table.caseId,
-      table.sessionId,
-    ),
-    foreignKey({
-      columns: [table.caseId],
-      foreignColumns: [clinicalScreeningInfo.id],
-      name: "clinical_case_notes_case_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
+    uniqueIndex("clinical_case_notes_session_id_key").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [clinicalSessionAttendance.id],
@@ -2377,18 +2365,11 @@ export const clinicalCaseTermination = pgTable(
     terminationDate: timestamp("termination_date", { withTimezone: true, mode: "date" }).notNull(),
     terminationReason: text("termination_reason").notNull(),
     terminationReasonExplanation: text("termination_reason_explanation").notNull(),
-    caseId: text("case_id").notNull(),
     sessionId: text("session_id").notNull(),
     createdBy: text("created_by").notNull(),
   },
   (table) => [
-    foreignKey({
-      columns: [table.caseId],
-      foreignColumns: [clinicalScreeningInfo.id],
-      name: "clinical_case_termination_case_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
+    index("clinical_case_termination_session_id_idx").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [clinicalSessionAttendance.id],

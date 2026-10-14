@@ -94,7 +94,13 @@ export default function CaseTerminationForm({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setDialogOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) form.reset();
+        setDialogOpen(nextOpen);
+      }}
+    >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-w-[500px] bg-white p-5">
         <DialogHeader className="bg-white">
