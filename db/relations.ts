@@ -255,7 +255,6 @@ export const clinicalTeamRelations = relations(clinicalTeam, ({ one }) => ({
 }));
 
 export const fellowRelations = relations(fellow, ({ one, many }) => ({
-  students: many(student, { relationName: "Student_fellow" }),
   studentAttendances: many(studentAttendance, { relationName: "StudentAttendance_fellow" }),
   triageEvents: many(triageEvent, { relationName: "TriageEvent_fellow" }),
   hub: one(hub, { fields: [fellow.hubId], references: [hub.id], relationName: "Fellow_hub" }),
@@ -422,11 +421,9 @@ export const hubCoordinatorRelations = relations(hubCoordinator, ({ one, many })
 
 export const implementerRelations = relations(implementer, ({ many }) => ({
   memberships: many(implementerMember, { relationName: "ImplementerMember_implementer" }),
-  students: many(student, { relationName: "Student_implementer" }),
   studentOutcomes: many(studentOutcome, { relationName: "StudentOutcome_implementer" }),
   fellows: many(fellow, { relationName: "Fellow_implementer" }),
   supervisors: many(supervisor, { relationName: "Supervisor_implementer" }),
-  schools: many(school, { relationName: "School_implementer" }),
   hubs: many(hub, { relationName: "Hub_implementer" }),
   hubCoordinators: many(hubCoordinator, { relationName: "HubCoordinator_implementer" }),
   clinicalLeads: many(clinicalLead, { relationName: "ClinicalLead_implementer" }),
@@ -666,11 +663,6 @@ export const schoolRelations = relations(school, ({ one, many }) => ({
   supervisorAttendances: many(supervisorAttendance, {
     relationName: "SupervisorAttendance_school",
   }),
-  implementer: one(implementer, {
-    fields: [school.implementerId],
-    references: [implementer.id],
-    relationName: "School_implementer",
-  }),
   hub: one(hub, { fields: [school.hubId], references: [hub.id], relationName: "School_hub" }),
   assignedSupervisor: one(supervisor, {
     fields: [school.assignedSupervisorId],
@@ -774,21 +766,6 @@ export const sessionRecordingRelations = relations(sessionRecording, ({ one }) =
 }));
 
 export const studentRelations = relations(student, ({ one, many }) => ({
-  fellow: one(fellow, {
-    fields: [student.fellowId],
-    references: [fellow.id],
-    relationName: "Student_fellow",
-  }),
-  supervisor: one(supervisor, {
-    fields: [student.supervisorId],
-    references: [supervisor.id],
-    relationName: "Student_supervisor",
-  }),
-  implementer: one(implementer, {
-    fields: [student.implementerId],
-    references: [implementer.id],
-    relationName: "Student_implementer",
-  }),
   school: one(school, {
     fields: [student.schoolId],
     references: [school.id],
@@ -898,7 +875,6 @@ export const studentReportingNotesRelations = relations(studentReportingNotes, (
 }));
 
 export const supervisorRelations = relations(supervisor, ({ one, many }) => ({
-  students: many(student, { relationName: "Student_supervisor" }),
   triageEventsReferred: many(triageEvent, { relationName: "TriageEvent_referredSupervisor" }),
   fellows: many(fellow, { relationName: "Fellow_supervisor" }),
   fellowAttendances: many(fellowAttendance, { relationName: "FellowAttendance_supervisor" }),

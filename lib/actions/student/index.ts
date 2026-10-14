@@ -152,7 +152,6 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
     const [group, schoolRow, studentCount] = await Promise.all([
       db.query.interventionGroup.findFirst({
         where: (g, { eq }) => eq(g.id, assignedGroupId),
-        with: { leader: { with: { supervisor: true } } },
       }),
       db.query.school.findFirst({
         where: (s, { eq }) => eq(s.id, schoolId),
@@ -184,9 +183,6 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
         questionnaireType:
           questionnaireType === "none" || questionnaireType == null ? null : questionnaireType,
         assignedGroupId,
-        implementerId: caller.implementerId,
-        fellowId: group.leader.id,
-        supervisorId: group.leader.supervisor?.id,
       })
       .returning();
     if (!created) {
@@ -615,10 +611,7 @@ export async function moveStudentToSchool(data: z.infer<typeof MoveStudentToScho
         ),
       with: {
         school: { columns: { id: true, schoolName: true } },
-        leader: {
-          columns: { id: true, fellowName: true },
-          with: { supervisor: { columns: { id: true } } },
-        },
+        leader: { columns: { fellowName: true } },
       },
     });
     if (!group) {
@@ -633,8 +626,6 @@ export async function moveStudentToSchool(data: z.infer<typeof MoveStudentToScho
         .set({
           schoolId: group.school.id,
           assignedGroupId: group.id,
-          fellowId: group.leader.id,
-          supervisorId: group.leader.supervisor?.id ?? null,
         })
         .where(eq(student.id, studentRow.id));
 

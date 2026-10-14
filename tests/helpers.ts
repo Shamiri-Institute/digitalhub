@@ -102,7 +102,6 @@ export async function createClinicalCase(owner: { schoolId: string; currentSuper
     .insert(clinicalScreeningInfo)
     .values({
       studentId,
-      schoolId: owner.schoolId,
       currentSupervisorId: owner.currentSupervisorId,
       caseStatus: "Active",
       riskStatus: "No",

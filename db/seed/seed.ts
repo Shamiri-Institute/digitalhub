@@ -1783,7 +1783,6 @@ async function createClinicalRecords(
       screeningData.push({
         id: caseId,
         studentId: student.id,
-        schoolId: school.id,
         caseStatus,
         riskStatus,
         currentSupervisorId: school.assignedSupervisorId ?? undefined,

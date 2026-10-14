@@ -458,7 +458,6 @@ export async function createStudentClinicalCase(data: {
 
       await tx.insert(clinicalScreeningInfo).values({
         studentId,
-        schoolId: data.schoolId,
         currentSupervisorId: actor.role === ImplementerRole.SUPERVISOR ? actor.profileId : null,
         pseudonym: data.pseudonym,
         initialReferredFromSpecified: data.initialContact,

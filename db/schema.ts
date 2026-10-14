@@ -300,9 +300,6 @@ export const student = pgTable(
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
     studentName: varchar("student_name", { length: 255 }),
     visibleId: varchar("visible_id", { length: 100 }).notNull(),
-    fellowId: varchar("fellow_id", { length: 255 }),
-    supervisorId: varchar("supervisor_id", { length: 255 }),
-    implementerId: varchar("implementer_id", { length: 255 }),
     schoolId: varchar("school_id", { length: 255 }),
     yearOfImplementation: integer("year_of_implementation"),
     admissionNumber: varchar("admission_number", { length: 255 }),
@@ -338,27 +335,6 @@ export const student = pgTable(
   (table) => [
     index("students_assigned_group_id_idx").using("btree", table.assignedGroupId),
     index("students_school_id_idx").using("btree", table.schoolId),
-    foreignKey({
-      columns: [table.fellowId],
-      foreignColumns: [fellow.id],
-      name: "students_fellow_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
-    foreignKey({
-      columns: [table.supervisorId],
-      foreignColumns: [supervisor.id],
-      name: "students_supervisor_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
-    foreignKey({
-      columns: [table.implementerId],
-      foreignColumns: [implementer.id],
-      name: "students_implementer_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
     foreignKey({
       columns: [table.schoolId],
       foreignColumns: [school.id],
@@ -671,7 +647,6 @@ export const school = pgTable(
     schoolCounty: varchar("school_county", { length: 255 }),
     schoolDemographics: varchar("school_demographics", { length: 255 }),
     visibleId: varchar("visible_id", { length: 100 }).notNull(),
-    implementerId: varchar("implementer_id", { length: 255 }),
     hubId: varchar("hub_id", { length: 255 }),
     pointPersonName: varchar("point_person_name", { length: 255 }),
     pointPersonPhone: varchar("point_person_phone", { length: 255 }),
@@ -691,13 +666,6 @@ export const school = pgTable(
   },
   (table) => [
     uniqueIndex("schools_visible_id_key").using("btree", table.visibleId),
-    foreignKey({
-      columns: [table.implementerId],
-      foreignColumns: [implementer.id],
-      name: "schools_implementer_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],
@@ -1450,7 +1418,6 @@ export const clinicalScreeningInfo = pgTable(
     studentId: varchar("student_id", { length: 255 }).notNull(),
     caseStatus: caseStatusOptionsEnum("case_status").notNull(),
     riskStatus: riskStatusOptionsEnum("risk_status").notNull(),
-    schoolId: varchar("school_id", { length: 255 }).notNull(),
     currentSupervisorId: varchar("current_supervisor_id", { length: 255 }),
     referredToSupervisorId: varchar("referred_to_supervisor_id", { length: 255 }),
     acceptCase: boolean("accept_case").default(false).notNull(),

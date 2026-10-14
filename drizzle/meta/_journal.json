@@ -134,6 +134,13 @@
       "when": 1791966248661,
       "tag": "0018_hub_management",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791969417301,
+      "tag": "0019_drop_never_read_copy_columns",
+      "breakpoints": true
     }
   ]
 }
