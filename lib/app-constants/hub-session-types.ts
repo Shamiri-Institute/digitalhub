@@ -43,7 +43,6 @@ export const hubSessionTypes: HubSessionType[] = [
 
 export type SessionTypeGroup = HubSessionType["type"];
 
-/** The groups a super admin can add session types to. SPECIAL codes have no indexed format. */
 export type HubSessionCategory = Exclude<SessionTypeGroup, "SPECIAL">;
 
 /**
@@ -67,7 +66,6 @@ export function isHubSessionCategory(type: SessionTypeGroup): type is HubSession
   return type !== "SPECIAL";
 }
 
-/** The index in a code of the group's format, e.g. 6 for sv6, or undefined for any other code. */
 function codeIndex(category: HubSessionCategory, code: string) {
   const match = new RegExp(`^${CODE_FORMATS[category].prefix}(\\d+)$`).exec(code);
   return match ? Number(match[1]) : undefined;
@@ -80,7 +78,6 @@ function codeIndex(category: HubSessionCategory, code: string) {
  */
 export function assignSessionCodes(
   rows: { sessionNameId?: string; type: SessionTypeGroup }[],
-  /** The hub's stored session names by id; a stored row keeps its code. */
   storedById: ReadonlyMap<string, { sessionName: string }>,
 ): string[] {
   const nextIndex = new Map<HubSessionCategory, number>();
@@ -105,7 +102,6 @@ export function assignSessionCodes(
   });
 }
 
-/** The label and amount a new session type starts with: the standard one, or the group's pattern. */
 export function newSessionTypeDefaults(category: HubSessionCategory, code: string) {
   const standard = hubSessionTypes.find((t) => t.name === code);
   if (standard) return { label: standard.label, amount: standard.amount };

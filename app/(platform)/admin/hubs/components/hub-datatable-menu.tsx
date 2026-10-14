@@ -29,8 +29,6 @@ export default function HubDatatableMenu({ row, canManageHubs }: HubDatatableMen
     (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
   )[0];
 
-  // The edit dialog opens once the hub's stored session names are loaded, so its form starts
-  // from them.
   const openEdit = async () => {
     // A second click while the first load runs would race it and open the form on stale rows.
     if (isLoadingEdit) return;

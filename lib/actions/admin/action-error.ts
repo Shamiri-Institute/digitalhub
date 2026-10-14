@@ -3,7 +3,6 @@ import { ZodError } from "zod";
 import { ForbiddenRoleError, UnauthenticatedError } from "#/lib/auth/require-auth-role";
 import type { ActionResponse } from "#/types/actions.types";
 
-/** An expected failure whose message is safe to show the admin. */
 export class AdminActionError extends Error {}
 
 // `never` data lets a failure be returned from an action that otherwise returns data.

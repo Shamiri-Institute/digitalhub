@@ -55,7 +55,6 @@ function hubSaveFailure(error: unknown, fallback: string): ActionResponse<never>
   return actionFailure(error, fallback);
 }
 
-/** The session names a hub's new session types insert, with the codes `assignSessionCodes` gave. */
 function newSessionNameRows(
   hubId: string,
   rows: { sessionNameId?: string; type: SessionTypeGroup; label: string; amount: number }[],
@@ -92,7 +91,6 @@ export async function createHub(data: z.infer<typeof CreateHubSchema>): Promise<
     await db.transaction(async (tx) => {
       await assertHubNameIsFree(tx, { implementerId, projectId, hubName: parsed.hubName });
       await tx.insert(hub).values({ id: hubId, hubName: parsed.hubName, implementerId, projectId });
-      // A hub can start with no session types and get them later.
       if (sessionNames.length > 0) {
         await tx.insert(sessionName).values(sessionNames);
       }
@@ -172,7 +170,6 @@ async function updateSessionNames(
   }
 
   if (changed.length > 0) {
-    // One statement for every changed row; hub_id in the WHERE keeps it to this hub's rows.
     const rows = sql.join(
       changed.map((row) => sql`(${row.sessionNameId}, ${row.label}, ${row.amount}::integer)`),
       sql`, `,
@@ -208,7 +205,6 @@ function querySessionNames(hubId: string) {
 
 export type HubSessionName = Awaited<ReturnType<typeof querySessionNames>>[number];
 
-/** The session names of one of the caller's hubs, for the edit dialog. */
 export async function fetchHubSessionNames(
   hubId: string,
 ): Promise<ActionResponse<HubSessionName[]>> {
@@ -247,7 +243,6 @@ export async function updateHub(data: z.infer<typeof UpdateHubSchema>): Promise<
         throw new AdminActionError("Hub not found");
       }
 
-      // Only a new name can clash, so an edit to session types alone never runs the check.
       if (parsed.hubName !== existing.hubName) {
         // A hub with no project predates project scoping, so it has no peers to clash with.
         if (existing.projectId) {

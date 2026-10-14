@@ -63,14 +63,12 @@ import type { AdminHub } from "../queries";
 
 type CreateFormValues = z.infer<typeof CreateHubSchema>;
 type EditFormValues = z.infer<typeof EditHubFormSchema>;
-/** One session type in either form: a stored one has its id, a new one has none. */
 type FormSessionType = {
   sessionNameId?: string;
   type: SessionTypeGroup;
   label: string;
   amount: number;
 };
-/** The part of the create and edit forms that the shared fields read. */
 type SharedFormValues = { hubName: string; sessionTypes: FormSessionType[] };
 
 const SESSION_TYPE_GROUPS: Record<SessionTypeGroup, { label: string; noun: string }> = {
@@ -91,7 +89,6 @@ const SESSION_TYPE_GROUP_ORDER: SessionTypeGroup[] = [
   "DATA_COLLECTION",
 ];
 
-/** The standard session types, to be edited before the hub is created. */
 const defaultSessionTypes = hubSessionTypes.flatMap(({ type, label, amount }) =>
   isHubSessionCategory(type) ? [{ type, label, amount }] : [],
 );
@@ -102,7 +99,6 @@ const standardSessionTypes = hubSessionTypes.map(({ name, label, amount }) => ({
   amount,
 }));
 
-/** The stored session names of a hub that does not exist yet. */
 const noStoredSessionNames = new Map<string, HubSessionName>();
 
 const amountFormat = new Intl.NumberFormat("en-US");
@@ -130,7 +126,6 @@ function withCodes(
   }));
 }
 
-/** The session types a save adds, removes or changes, matched by code, for the confirmation. */
 function diffSessionTypes(
   before: CodedSessionType[],
   after: CodedSessionType[],
@@ -188,7 +183,6 @@ function ValueChange({ from, to, wrap = true }: { from: string; to: string; wrap
   );
 }
 
-/** The groups that hold a row with a validation error, so they can be opened to show it. */
 function groupsWithErrors(sessionTypeErrors: unknown, sessionTypes: FormSessionType[]) {
   if (!Array.isArray(sessionTypeErrors)) return [];
   const groups = sessionTypeErrors.flatMap((rowErrors, index) => {
@@ -201,7 +195,6 @@ function groupsWithErrors(sessionTypeErrors: unknown, sessionTypes: FormSessionT
 interface HubDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The hub being edited, with its stored session names. Leave it out to add a new hub. */
   edit?: { hub: AdminHub; sessionNames: HubSessionName[] };
 }
 
@@ -221,7 +214,6 @@ export default function HubDialog({ open, onOpenChange, edit }: HubDialogProps) 
   );
 }
 
-/** Both forms hold a hub name, so the field reads it from the surrounding form. */
 function HubNameField() {
   const { control } = useFormContext<SharedFormValues>();
   return (
@@ -459,12 +451,10 @@ function SessionTypeLabelField({ index, sessionName }: { index: number; sessionN
   );
 }
 
-/** Code, label, amount and a remove button: shared by the rows and the buttons under them. */
 const SESSION_ROW_GRID =
   "grid grid-cols-[2.5rem_minmax(0,1fr)_4.75rem_2.25rem] items-start gap-x-2 gap-y-2 sm:grid-cols-[3.25rem_minmax(0,1fr)_5.5rem_2.25rem] sm:gap-x-3";
 
 interface SessionTypesEditorProps {
-  /** The hub's stored session names by id; empty for a new hub. */
   storedById: ReadonlyMap<string, HubSessionName>;
   openGroups: string[];
   onOpenGroupsChange: (groups: string[]) => void;
@@ -577,7 +567,6 @@ function SessionTypesEditor({
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         ) : field.id === last?.field.id && lastInUse ? (
-                          // Sessions use this row, so it stays; the note below says why.
                           <span className="flex h-9 w-9 items-center justify-center text-shamiri-text-grey">
                             <Lock aria-hidden className="h-4 w-4" />
                           </span>
@@ -598,7 +587,6 @@ function SessionTypesEditor({
               )}
               {category && (
                 <div className={SESSION_ROW_GRID}>
-                  {/* The rows' columns: add matches the label inputs, remove all starts with the amounts. */}
                   <Button
                     type="button"
                     variant="outline"
@@ -607,7 +595,6 @@ function SessionTypesEditor({
                     onClick={() => addRow(category)}
                   >
                     <Plus className="h-4 w-4" />
-                    {/* The column is narrow on a phone, so the button names only the action there. */}
                     <span className="sm:hidden">Add session</span>
                     <span className="hidden sm:inline">Add {group.noun}</span>
                   </Button>
@@ -633,7 +620,6 @@ function SessionTypesEditor({
   );
 }
 
-/** The session column of a row in the confirmation: its code, its label, and what happens to it. */
 function ChangedSessionCell({ change }: { change: SessionTypeChange }) {
   return (
     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -678,7 +664,6 @@ function ChangedAmountCell({ change }: { change: SessionTypeChange }) {
   return <span className="font-semibold text-foreground">{formatAmount(change.amount)}</span>;
 }
 
-/** The last step before a hub is saved: what will be stored, and the session types it edits. */
 function HubConfirmDialog({
   open,
   title,
@@ -696,7 +681,6 @@ function HubConfirmDialog({
   title: string;
   summary: ReactNode;
   changes: SessionTypeChange[];
-  /** Names the listed rows, for the heading and for screen readers. */
   changesHeading: string;
   emptyText: string;
   note?: string;
@@ -794,7 +778,6 @@ function CreateHubForm({ onDone }: { onDone: () => void }) {
     resolver: zodResolver(CreateHubSchema),
     defaultValues: { hubName: "", sessionTypes: defaultSessionTypes },
   });
-  // The validated values wait here while the admin confirms, and are what gets submitted.
   const [pending, setPending] = useState<CreateFormValues | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>([]);
