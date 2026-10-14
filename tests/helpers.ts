@@ -1,5 +1,5 @@
 import type { BrowserContext } from "@playwright/test";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import {
@@ -112,7 +112,17 @@ export async function createClinicalCase(owner: { schoolId: string; currentSuper
   const caseId = created.id;
 
   async function remove() {
-    await db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.caseId, caseId));
+    await db
+      .delete(clinicalCaseNotes)
+      .where(
+        inArray(
+          clinicalCaseNotes.sessionId,
+          db
+            .select({ id: clinicalSessionAttendance.id })
+            .from(clinicalSessionAttendance)
+            .where(eq(clinicalSessionAttendance.caseId, caseId)),
+        ),
+      );
     await db.delete(clinicalCaseTermination).where(eq(clinicalCaseTermination.caseId, caseId));
     await db.delete(clinicalExpertCaseNotes).where(eq(clinicalExpertCaseNotes.caseId, caseId));
     await db.delete(clinicalCaseTransferTrail).where(eq(clinicalCaseTransferTrail.caseId, caseId));

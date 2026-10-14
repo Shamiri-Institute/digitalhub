@@ -30,11 +30,13 @@ export function fetchFellowClinicalCasesData(scope: ClinicalScope) {
       FROM
         fellows f
       LEFT JOIN
-        "clinical_screening_info" csi ON f.id = csi."current_supervisor_id"
-      LEFT JOIN
         "supervisors" s ON f."supervisor_id" = s.id
       LEFT JOIN
         "intervention_groups" ig ON f.id = ig."leader_id"
+      LEFT JOIN
+        "students" st ON st."assigned_group_id" = ig.id
+      LEFT JOIN
+        "clinical_screening_info" csi ON csi."student_id" = st.id
       ${f.join}
       WHERE
         ${f.where}

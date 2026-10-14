@@ -3,6 +3,7 @@
 import { eq } from "drizzle-orm";
 import { currentClinicalLead } from "#/app/auth";
 import { db } from "#/db/client";
+import { latestRiskLevel } from "#/lib/actions/clinical/cases";
 import { hub } from "#/db/schema";
 import {
   type CaseNotesResult,
@@ -94,11 +95,8 @@ export async function getClinicalCasesCreatedByClinicalLead() {
           assignedGroup: { columns: { groupName: true } },
         },
       },
-      sessions: true,
-      clinicalCaseNotes: {
-        orderBy: (n, { desc }) => desc(n.createdAt),
-        limit: 1,
-        columns: { riskLevel: true },
+      sessions: {
+        with: { clinicalCaseNotes: { columns: { riskLevel: true, createdAt: true } } },
       },
       followUptreatmentPlan: true,
     },
@@ -114,7 +112,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       attendanceStatus: session.attendanceStatus,
     }));
 
-    const riskLevel = caseInfo.clinicalCaseNotes[0]?.riskLevel || "N/A";
+    const riskLevel = latestRiskLevel(caseInfo.sessions, caseInfo.riskStatus);
 
     return {
       id: caseInfo.id,

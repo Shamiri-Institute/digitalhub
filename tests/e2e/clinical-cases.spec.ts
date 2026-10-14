@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
+import type { ClinicalSessionLabel } from "#/db/enums";
 import {
   clinicalCaseNotes,
   clinicalCaseTermination,
@@ -301,7 +302,7 @@ test("a supervisor in another hub does not see the case", async ({ page, context
  * Gives the fixture case a clinical session dated today, labelled so the test can pick it, and
  * queues its removal. Notes and terminations must name one of the case's sessions.
  */
-async function addClinicalSession(sessionLabel: string) {
+async function addClinicalSession(sessionLabel: ClinicalSessionLabel) {
   const [clinicalSession] = await db
     .insert(clinicalSessionAttendance)
     .values({
@@ -320,12 +321,29 @@ async function addClinicalSession(sessionLabel: string) {
   return clinicalSession.id;
 }
 
+test("a case without notes shows its intake risk", async ({ page, context }) => {
+  await db
+    .update(clinicalScreeningInfo)
+    .set({ riskStatus: "High" })
+    .where(eq(clinicalScreeningInfo.id, caseId));
+  undo.push(() =>
+    db
+      .update(clinicalScreeningInfo)
+      .set({ riskStatus: "No" })
+      .where(eq(clinicalScreeningInfo.id, caseId)),
+  );
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+
+  await expect(await searchRows(page, pseudonym)).toContainText(/high/i);
+});
+
 test("a supervisor writes case notes and reads them back after a reload", async ({
   page,
   context,
 }) => {
-  const sessionLabel = `e2e-notes-${Date.now()}`;
-  const presentingIssues = `${sessionLabel} presenting issues`;
+  const sessionLabel = "S1";
+  const presentingIssues = `e2e-notes-${Date.now()} presenting issues`;
   const clinicalSessionId = await addClinicalSession(sessionLabel);
   undo.push(() =>
     db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.sessionId, clinicalSessionId)),
@@ -340,7 +358,7 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   async function openNotesForSession() {
     await openCaseAction(page, pseudonym, "Case notes");
     await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-    await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+    await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   }
 
   await openNotesForSession();
@@ -356,8 +374,9 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   await dialog.getByRole("button", { name: "Submit" }).click();
   await expect(dialog).toBeHidden();
 
-  // A saved session's notes open read-only with the stored text.
+  // A saved session's notes open read-only with the stored text, and the case takes their risk.
   await page.reload();
+  await expect(await searchRows(page, pseudonym)).toContainText(/medium/i);
   await openNotesForSession();
   await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue(presentingIssues);
   await expect(dialog.getByRole("button", { name: "Submit" })).toBeHidden();
@@ -375,9 +394,34 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   );
 });
 
+test("case notes reopen empty after the dialog closes without saving", async ({
+  page,
+  context,
+}) => {
+  const sessionLabel = "S2";
+  await addClinicalSession(sessionLabel);
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+
+  const dialog = page
+    .getByRole("dialog")
+    .filter({ has: page.getByRole("heading", { name: "Case Notes" }) });
+  await openCaseAction(page, pseudonym, "Case notes");
+  await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
+  await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
+  await dialog.getByRole("textbox", { name: /Situation/ }).fill("Not saved");
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+
+  // The row's actions menu stays open behind the dialog, so open the notes from it again.
+  await page.getByRole("menu").getByText("Case notes", { exact: true }).click();
+  await expect(dialog.getByRole("combobox").filter({ hasText: "Select session" })).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue("");
+});
+
 test("a supervisor terminates their case", async ({ page, context }) => {
-  const sessionLabel = `e2e-termination-${Date.now()}`;
-  const terminationReasonExplanation = `${sessionLabel} explanation`;
+  const sessionLabel = "S3";
+  const terminationReasonExplanation = `e2e-termination-${Date.now()} explanation`;
   const clinicalSessionId = await addClinicalSession(sessionLabel);
   undo.push(
     () =>
@@ -398,7 +442,7 @@ test("a supervisor terminates their case", async ({ page, context }) => {
     .getByRole("dialog")
     .filter({ has: page.getByRole("heading", { name: "Terminate Case" }) });
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   await dialog.getByRole("combobox").filter({ hasText: "Student no-show" }).click();
   await page.getByRole("option", { name: "Student refused to return to sessions" }).click();
   await dialog

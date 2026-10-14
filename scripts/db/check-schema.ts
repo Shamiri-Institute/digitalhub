@@ -4,7 +4,8 @@
 //
 // 1. Every foreign key needs an index on its referencing columns: ON UPDATE/DELETE on the
 //    parent scans the child table otherwise (ENG-2164). scripts/db/unindexed-fks.txt lists the
-//    keys that predate the rule; it may only shrink.
+//    keys that predate the rule; it may only shrink. A partial index does not count: the planner
+//    cannot use it for the parent's lookups.
 // 2. A migration that drops a column or table sets lock_timeout, so a busy table fails the
 //    deploy instead of queueing all traffic behind the lock.
 import { readdirSync, readFileSync } from "node:fs";
@@ -25,6 +26,7 @@ async function unindexedForeignKeys() {
       and not exists (
         select 1 from pg_index i
         where i.indrelid = c.conrelid
+          and i.indpred is null
           and (i.indkey::int2[])[0:cardinality(c.conkey) - 1] @> c.conkey
           and (i.indkey::int2[])[0:cardinality(c.conkey) - 1] <@ c.conkey
       )

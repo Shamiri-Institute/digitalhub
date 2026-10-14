@@ -58,7 +58,7 @@ export default function ClinicalCasesTable({
       renderSubComponent={({ row }) => (
         <div className="space-y-6 p-4">
           <ClinicalDiagnosingBoard currentcase={row.original} />
-          <ViewMarkClinicalSessions currentcase={row.original} userRole="SUPERVISOR" />
+          <ViewMarkClinicalSessions currentcase={row.original} />
         </div>
       )}
       emptyStateMessage="No clinical cases found"
