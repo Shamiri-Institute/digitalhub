@@ -142,8 +142,6 @@ function diffSessionTypes(
   return [...addedOrChanged, ...removed];
 }
 
-const formatAmount = (amount: number) => amountFormat.format(amount);
-
 const sessionTypeCount = (count: number) => `${count} session ${count === 1 ? "type" : "types"}`;
 
 /**
@@ -645,16 +643,18 @@ function ChangedAmountCell({ change }: { change: SessionTypeChange }) {
   if (change.kind === "changed") {
     return (
       <ValueChange
-        from={formatAmount(change.amount.from)}
-        to={formatAmount(change.amount.to)}
+        from={amountFormat.format(change.amount.from)}
+        to={amountFormat.format(change.amount.to)}
         wrap={false}
       />
     );
   }
   if (change.kind === "removed") {
-    return <del className="text-shamiri-text-dark-grey">{formatAmount(change.amount)}</del>;
+    return <del className="text-shamiri-text-dark-grey">{amountFormat.format(change.amount)}</del>;
   }
-  return <span className="font-semibold text-foreground">{formatAmount(change.amount)}</span>;
+  return (
+    <span className="font-semibold text-foreground">{amountFormat.format(change.amount)}</span>
+  );
 }
 
 function HubConfirmDialog({
