@@ -120,6 +120,13 @@
       "when": 1791900324346,
       "tag": "0016_drop_unused_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791962529191,
+      "tag": "0017_drop_supervisor_nhif_nssf_ops_cell_phone",
+      "breakpoints": true
     }
   ]
 }

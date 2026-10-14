@@ -731,7 +731,6 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
       bankAccountNumber: "12345678",
       bankAccountName: "Martin Ødegaard",
       kra: "A123456789B",
-      nhif: "12345678",
       dateOfBirth: new Date(1998, 11, 17),
       cellNumber: "254712345678",
       mpesaNumber: "254712345678",
@@ -752,7 +751,6 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
       bankAccountNumber: "23456789",
       bankAccountName: "Declan Rice",
       kra: "B234567890C",
-      nhif: "23456789",
       dateOfBirth: new Date(1999, 0, 14),
       cellNumber: "254723456789",
       mpesaNumber: "254723456789",
@@ -773,7 +771,6 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
       bankAccountNumber: "34567890",
       bankAccountName: "William Saliba",
       kra: "C345678901D",
-      nhif: "34567890",
       dateOfBirth: new Date(2001, 2, 24),
       cellNumber: "254734567890",
       mpesaNumber: "254734567890",
@@ -855,7 +852,6 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
       bankAccountNumber: faker.finance.accountNumber(),
       bankAccountName: faker.person.fullName(),
       kra: faker.finance.accountNumber(),
-      nhif: faker.finance.accountNumber(),
       dateOfBirth: faker.date.birthdate(),
       cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
       mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
@@ -881,7 +877,6 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
     email: "kai.havertz@test.com",
     implementerId: staticHub?.implementerId ?? "",
     name: "Kai Havertz",
-    cellPhone: "254712345678",
   };
   operations.push(staticOps);
   emails.add(staticOps.email);
@@ -901,7 +896,6 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
       email: uniqueEmail,
       implementerId: hub.implementerId,
       name: faker.person.fullName(),
-      cellPhone: faker.helpers.fromRegExp("2547[1-9]{8}"),
     };
 
     operations.push(opsUser);
@@ -929,7 +923,6 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
       email: ops.email,
       name: ops.name,
       implementerId: ops.implementerId,
-      cellPhone: ops.cellPhone,
     })),
   );
   await insertMany(schema.implementerMember, membershipData);
