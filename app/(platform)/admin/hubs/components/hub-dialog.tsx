@@ -52,6 +52,7 @@ import {
   type SessionTypeGroup,
 } from "#/lib/app-constants/hub-session-types";
 import { cn } from "#/lib/utils";
+import type { ActionResponse } from "#/types/actions.types";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { AdminHub } from "../queries";
 
@@ -181,6 +182,30 @@ function openGroupsWithErrors(
   };
 }
 
+function useConfirmedSave<T>(action: (values: T) => Promise<ActionResponse>, onDone: () => void) {
+  const [pending, setPending] = useState<T | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const confirm = async () => {
+    if (!pending) return;
+    setIsSaving(true);
+    try {
+      const response = await action(pending);
+      setPending(null);
+      if (!response.success) {
+        toast({ variant: "destructive", description: response.message });
+        return;
+      }
+      toast({ description: response.message });
+      onDone();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return { pending, setPending, isSaving, confirm };
+}
+
 interface HubDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -282,8 +307,11 @@ function EditHubForm({
 
   const onInvalid = openGroupsWithErrors(form, setOpenGroups);
 
-  const [pending, setPending] = useState<EditFormValues | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const { pending, setPending, isSaving, confirm } = useConfirmedSave<EditFormValues>(
+    (values) =>
+      updateHub({ hubId: hub.id, loadedSessionNameIds: sessionNames.map((n) => n.id), ...values }),
+    onDone,
+  );
   const changes = pending
     ? diffSessionTypes(
         sessionNames.map((n) => ({ code: n.sessionName, label: n.sessionLabel, amount: n.amount })),
@@ -291,28 +319,6 @@ function EditHubForm({
       )
     : [];
   const renamed = pending !== null && pending.hubName !== hub.hubName;
-
-  const confirmSave = async () => {
-    if (!pending) return;
-    setIsSaving(true);
-    try {
-      const response = await updateHub({
-        hubId: hub.id,
-        loadedSessionNameIds: sessionNames.map((n) => n.id),
-        ...pending,
-      });
-      // Close the confirmation either way, so the admin can see the message and fix the form.
-      setPending(null);
-      if (!response.success) {
-        toast({ variant: "destructive", description: response.message });
-        return;
-      }
-      toast({ description: response.message });
-      onDone();
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   return (
     <Form {...form}>
@@ -368,7 +374,7 @@ function EditHubForm({
         onOpenChange={(open) => {
           if (!open) setPending(null);
         }}
-        onConfirm={toastOnError(confirmSave)}
+        onConfirm={toastOnError(confirm)}
       />
     </Form>
   );
@@ -767,32 +773,13 @@ function CreateHubForm({ onDone }: { onDone: () => void }) {
     resolver: zodResolver(CreateHubSchema),
     defaultValues: { hubName: "", sessionTypes: defaultSessionTypes },
   });
-  const [pending, setPending] = useState<CreateFormValues | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const { pending, setPending, isSaving, confirm } = useConfirmedSave(createHub, onDone);
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const changes = pending
     ? diffSessionTypes(standardSessionTypes, withCodes(pending.sessionTypes, noStoredSessionNames))
     : [];
 
   const onInvalid = openGroupsWithErrors(form, setOpenGroups);
-
-  const confirmCreate = async () => {
-    if (!pending) return;
-    setIsCreating(true);
-    try {
-      const response = await createHub(pending);
-      // Close the confirmation either way, so the admin can see the message and fix the form.
-      setPending(null);
-      if (!response.success) {
-        toast({ variant: "destructive", description: response.message });
-        return;
-      }
-      toast({ description: response.message });
-      onDone();
-    } finally {
-      setIsCreating(false);
-    }
-  };
 
   return (
     <Form {...form}>
@@ -832,11 +819,11 @@ function CreateHubForm({ onDone }: { onDone: () => void }) {
         changesHeading={`${sessionTypeCount(changes.length)} ${changes.length === 1 ? "differs" : "differ"} from the standard list`}
         emptyText="Labels and fellow pay amounts will be saved as shown."
         confirmLabel="Create hub"
-        isSaving={isCreating}
+        isSaving={isSaving}
         onOpenChange={(open) => {
           if (!open) setPending(null);
         }}
-        onConfirm={toastOnError(confirmCreate)}
+        onConfirm={toastOnError(confirm)}
       />
     </Form>
   );
