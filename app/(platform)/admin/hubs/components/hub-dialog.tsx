@@ -80,15 +80,6 @@ const SESSION_TYPE_GROUPS: Record<SessionTypeGroup, { label: string; noun: strin
   DATA_COLLECTION: { label: "Data follow-up sessions", noun: "data follow-up session" },
 };
 
-const SESSION_TYPE_GROUP_ORDER: SessionTypeGroup[] = [
-  "INTERVENTION",
-  "SUPERVISION",
-  "TRAINING",
-  "SPECIAL",
-  "CLINICAL",
-  "DATA_COLLECTION",
-];
-
 const defaultSessionTypes = hubSessionTypes.flatMap(({ type, label, amount }) =>
   isHubSessionCategory(type) ? [{ type, label, amount }] : [],
 );
@@ -474,11 +465,13 @@ function SessionTypesEditor({
   const { errors } = useFormState({ control: form.control, name: "sessionTypes" });
   const codes = assignSessionCodes(fields, storedById);
 
-  const groups = SESSION_TYPE_GROUP_ORDER.map((type) => ({
-    type,
-    ...SESSION_TYPE_GROUPS[type],
-    rows: fields.flatMap((field, index) => (field.type === type ? [{ field, index }] : [])),
-  })).filter((group) => group.rows.length > 0 || isHubSessionCategory(group.type));
+  const groups = (Object.keys(SESSION_TYPE_GROUPS) as SessionTypeGroup[])
+    .map((type) => ({
+      type,
+      ...SESSION_TYPE_GROUPS[type],
+      rows: fields.flatMap((field, index) => (field.type === type ? [{ field, index }] : [])),
+    }))
+    .filter((group) => group.rows.length > 0 || isHubSessionCategory(group.type));
 
   const addRow = (category: HubSessionCategory) => {
     const code = assignSessionCodes([...fields, { type: category }], storedById).at(-1) ?? "";
