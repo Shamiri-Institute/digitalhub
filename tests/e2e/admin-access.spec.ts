@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
+import { plainAdminEmail, superAdminEmail } from "#/db/seed/fixtures";
 import { adminUser, implementerMember, user } from "#/db/schema";
 import { loadSessionUser } from "#/lib/auth/session-user";
 import { signInWithEmail } from "#/tests/helpers";
@@ -12,11 +13,7 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
  * super-admin access. They cannot remove their own super-admin access, so an implementer keeps a
  * super admin, and they see only the admins of their own implementer. Admins who are not super
  * admins have no Users tab and cannot open the page.
- * The seed makes admin@shamiri.institute a super admin and plain.admin@shamiri.institute a plain
- * admin (db/seed/seed.ts).
  */
-const SUPER_ADMIN = "admin@shamiri.institute";
-const PLAIN_ADMIN = "plain.admin@shamiri.institute";
 const NEW_ADMIN_EMAIL = `e2e-admin-access-${Date.now()}@example.com`;
 // A user whose email has capitals, as a sign-in provider can store it.
 const MIXED_CASE_EMAIL = `E2E-Mixed-Case-${Date.now()}@Example.com`;
@@ -44,7 +41,7 @@ test.afterAll(async () => {
 });
 
 test("a super admin adds an admin and changes their team", async ({ page, context }) => {
-  await signInWithEmail(context, SUPER_ADMIN);
+  await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl("/admin/schedule"));
   await page.getByRole("link", { name: "Users", exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/users$/);
@@ -83,7 +80,7 @@ test("an admin who is not a super admin has no Users tab and is redirected away"
   page,
   context,
 }) => {
-  await signInWithEmail(context, PLAIN_ADMIN);
+  await signInWithEmail(context, plainAdminEmail);
   await page.goto(getUrl("/admin/schedule"));
   await expect(page.getByRole("link", { name: "Tickets" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Users", exact: true })).toHaveCount(0);
@@ -93,14 +90,14 @@ test("an admin who is not a super admin has no Users tab and is redirected away"
 });
 
 test("a super admin cannot remove their own super-admin access", async ({ page, context }) => {
-  await signInWithEmail(context, SUPER_ADMIN);
+  await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl("/admin/users"));
 
-  await searchRows(page, SUPER_ADMIN);
+  await searchRows(page, superAdminEmail);
   const ownRow = () =>
     page
       .getByRole("row")
-      .filter({ has: page.getByRole("cell", { name: SUPER_ADMIN, exact: true }) });
+      .filter({ has: page.getByRole("cell", { name: superAdminEmail, exact: true }) });
   await expect(ownRow()).toContainText("Super admin");
 
   await ownRow().locator('[aria-haspopup="menu"]').click();
@@ -115,7 +112,7 @@ test("a super admin cannot remove their own super-admin access", async ({ page, 
   await expect(dialog).toBeVisible();
 
   await page.reload();
-  await searchRows(page, SUPER_ADMIN);
+  await searchRows(page, superAdminEmail);
   await expect(ownRow()).toContainText("Super admin");
 });
 
@@ -124,23 +121,23 @@ test("the users table lists only the admins of the caller's implementer", async 
   context,
 }) => {
   const superAdmin = await db.query.user.findFirst({
-    where: (u, { eq }) => eq(u.email, SUPER_ADMIN),
+    where: (u, { eq }) => eq(u.email, superAdminEmail),
     columns: { id: true },
   });
   const active = superAdmin ? (await loadSessionUser(superAdmin.id))?.activeMembership : undefined;
-  if (!active) throw new Error(`${SUPER_ADMIN} has no active membership; run npm run db:reset`);
+  if (!active) throw new Error(`${superAdminEmail} has no active membership; run npm run db:reset`);
 
   const otherImplementerAdmin = await db.query.adminUser.findFirst({
     where: (a, { and, ne }) =>
-      and(ne(a.implementerId, active.implementerId), ne(a.email, SUPER_ADMIN)),
+      and(ne(a.implementerId, active.implementerId), ne(a.email, superAdminEmail)),
     columns: { email: true },
   });
   if (!otherImplementerAdmin) throw new Error("Expected a seeded admin in a second implementer");
 
-  await signInWithEmail(context, SUPER_ADMIN);
+  await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl("/admin/users"));
 
-  await expect((await searchRows(page, PLAIN_ADMIN)).first()).toBeVisible();
+  await expect((await searchRows(page, plainAdminEmail)).first()).toBeVisible();
   await expect(await searchRows(page, otherImplementerAdmin.email)).toHaveCount(0);
 });
 
@@ -154,7 +151,7 @@ test("adding an admin reuses the user whose email only differs in case", async (
     .returning({ id: user.id });
   if (!existing) throw new Error("Could not create the mixed-case user");
 
-  await signInWithEmail(context, SUPER_ADMIN);
+  await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl("/admin/users"));
   await page.getByRole("button", { name: "Add new user" }).click();
   const dialog = page.getByRole("dialog");

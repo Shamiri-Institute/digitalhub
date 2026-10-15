@@ -36,8 +36,11 @@ import {
   arsenalHub,
   arsenalOpsUser,
   arsenalSupervisors,
+  careAdminEmail,
   emiratesAcademy,
+  plainAdminEmail,
   sobhaAcademy,
+  superAdminEmail,
 } from "#/db/seed/fixtures";
 import { seedHubSessionTypes } from "#/db/seed/hub-session-types";
 import { createTickets } from "#/db/seed/tickets";
@@ -304,8 +307,7 @@ async function createCoreUsers(
         implementerId: implementer.id,
         role,
         identifier: admins.find(
-          (admin) =>
-            admin.email === "admin@shamiri.institute" && admin.implementerId === implementer.id,
+          (admin) => admin.email === superAdminEmail && admin.implementerId === implementer.id,
         )?.id,
       }));
     }
@@ -360,7 +362,7 @@ async function createAdminUsers(
   const adminPeople: AdminPerson[] = [
     {
       userId: objectId("user"),
-      email: "admin@shamiri.institute",
+      email: superAdminEmail,
       adminName: "Super Admin",
       implementerIds: implementers.map((implementer) => implementer.id),
       isSuperAdmin: true,
@@ -383,7 +385,7 @@ async function createAdminUsers(
     // a team admin and a plain admin, to exercise every access state
     {
       userId: objectId("user"),
-      email: "care.admin@shamiri.institute",
+      email: careAdminEmail,
       adminName: "Care Admin",
       implementerIds: [shamiri.id],
       isSuperAdmin: false,
@@ -391,7 +393,7 @@ async function createAdminUsers(
     },
     {
       userId: objectId("user"),
-      email: "plain.admin@shamiri.institute",
+      email: plainAdminEmail,
       adminName: "Plain Admin",
       implementerIds: [shamiri.id],
       isSuperAdmin: false,

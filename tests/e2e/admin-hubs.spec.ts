@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { inArray, like } from "drizzle-orm";
 
 import { db } from "#/db/client";
+import { careAdminEmail, plainAdminEmail, superAdminEmail } from "#/db/seed/fixtures";
 import { hub, interventionSession, sessionName } from "#/db/schema";
 import { hubSessionTypes } from "#/lib/app-constants/hub-session-types";
 import { objectId } from "#/lib/crypto";
@@ -10,14 +11,9 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * Super admins create and edit the hubs of their implementer, in the active project: the name and
- * the label and amount of each session type. Other
- * admins, with or without a team, see the hubs but get no way to add or edit one.
- * The seed makes admin@shamiri.institute a super admin, care.admin@shamiri.institute a Care admin
- * and plain.admin@shamiri.institute a plain admin (db/seed/seed.ts).
+ * the label and amount of each session type. Other admins, with or without a team, see the hubs
+ * but get no way to add or edit one.
  */
-const SUPER_ADMIN = "admin@shamiri.institute";
-const CARE_ADMIN = "care.admin@shamiri.institute";
-const PLAIN_ADMIN = "plain.admin@shamiri.institute";
 // Each worker loads this file, and its afterAll deletes every hub with its prefix, so two
 // workers that start in the same millisecond must still get different prefixes.
 const RUN_ID = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -42,7 +38,7 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   page,
   context,
 }) => {
-  await signInWithEmail(context, SUPER_ADMIN);
+  await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl("/admin/hubs"));
 
   await page.getByRole("button", { name: "Add hub" }).click();
@@ -156,7 +152,7 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
   context,
 }) => {
   const hubName = `${HUB_PREFIX} Custom types`;
-  await signInWithEmail(context, SUPER_ADMIN);
+  await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl("/admin/hubs"));
   await page.getByRole("button", { name: "Add hub" }).click();
   const addDialog = page.getByRole("dialog");
@@ -353,7 +349,7 @@ test("clearing an amount leaves it empty, and typing a value clears the error", 
   page,
   context,
 }) => {
-  await signInWithEmail(context, SUPER_ADMIN);
+  await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl("/admin/hubs"));
   await page.getByRole("button", { name: "Add hub" }).click();
   const dialog = page.getByRole("dialog");
@@ -380,7 +376,7 @@ test("an error inside a collapsed group opens the group and shows the error", as
   page,
   context,
 }) => {
-  await signInWithEmail(context, SUPER_ADMIN);
+  await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl("/admin/hubs"));
   await page.getByRole("button", { name: "Add hub" }).click();
   const dialog = page.getByRole("dialog");
@@ -403,7 +399,7 @@ test("an error inside a collapsed group opens the group and shows the error", as
   await expect(dialog).toBeHidden();
 });
 
-for (const email of [CARE_ADMIN, PLAIN_ADMIN]) {
+for (const email of [careAdminEmail, plainAdminEmail]) {
   test(`${email} sees the hubs but cannot add or edit one`, async ({ page, context }) => {
     await signInWithEmail(context, email);
     await page.goto(getUrl("/admin/hubs"));
