@@ -91,8 +91,6 @@ export default async function SupervisorStudentsPage() {
 
   return (
     <>
-      {/* TODO: this should filter by schools and fellow */}
-
       <StudentsStats
         totalNumberOfStudentsInHub={totalNumberOfStudentsInHub}
         totalGroupSessions={totalGroupSessions}

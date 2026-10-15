@@ -59,8 +59,6 @@ test("a request without a session cookie goes to the login page with the path", 
   expect(res.headers().location).toBe("/login?next=%2Fhc%2Fschools");
 });
 
-// Each of these pages loads the signed-in user's profile, which must redirect, not crash, once the
-// session behind the cookie is gone.
 const pagesThatLoadTheProfile: Array<[Role, string]> = [
   ["SUPERVISOR", "/sc/fellows"],
   ["FELLOW", "/fel/portal"],
@@ -70,7 +68,6 @@ const pagesThatLoadTheProfile: Array<[Role, string]> = [
 
 for (const [role, route] of pagesThatLoadTheProfile) {
   test(`deleting the session row sends ${route} to the login page`, async ({ context, page }) => {
-    // Only this test's session is deleted; the seeded user's other sessions are left alone.
     const cookie = await sessionCookieFor((await pickUser(role)).email);
     await context.addCookies([cookie]);
     const [token = ""] = decodeURIComponent(cookie.value).split(".");

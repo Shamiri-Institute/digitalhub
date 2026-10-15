@@ -156,7 +156,6 @@ export async function fetchStudentsDataBreakdown(scope: ClinicalScope) {
   };
 }
 
-/** Sums grouped `count`s by a key, largest first, as the charts' `{ name, value }` rows. */
 function countsByName<T extends { count: number }>(rows: T[], key: (row: T) => string | null) {
   const totals = new Map<string, number>();
   for (const row of rows) {
@@ -284,7 +283,6 @@ function countsByKey<T extends { count: number }, K extends string | number | nu
   );
 }
 
-/** Clinical case and session counts for the students pages, for the cases that `caseFilter` selects. */
 export async function fetchStudentClinicalStats(caseFilter: SQL | undefined) {
   const caseIds = db
     .select({ id: clinicalScreeningInfo.id })

@@ -35,11 +35,9 @@ export async function submitWeeklyTeamMeeting(data: z.infer<typeof WeeklyHubTeam
     }
     const parsedData = WeeklyHubTeamMeetingSchema.parse(data);
 
-    // The hub and the author come from the session, never from the request.
     await db
       .insert(weeklyTeamMeetingReport)
       .values({ ...parsedData, hubId, submittedBy: hubCoordinator.profile.id });
-    //TODO: If there will be a view for the weekly report, we should add a revalidation here
     return {
       success: true,
       message: "Successfully submitted the weekly team meeting report",
@@ -53,7 +51,6 @@ export async function submitWeeklyTeamMeeting(data: z.infer<typeof WeeklyHubTeam
   }
 }
 
-/** The signed-in coordinator's hub. The chart reads below never take a hub id from the client. */
 async function requireCoordinatorHub() {
   const { hubId: coordinatorHubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
   return coordinatorHubId;
@@ -68,7 +65,6 @@ async function checkAuth() {
   return hubCoordinator;
 }
 
-/** The hub coordinator, after checking the supervisor belongs to their hub. */
 async function checkSupervisorInHub(supervisorId: string) {
   const hubCoordinator = await checkAuth();
   const hubId = hubCoordinator.profile.assignedHubId;
@@ -92,9 +88,7 @@ export async function dropoutSupervisor(supervisorId: string, dropoutReason: str
     const [result] = await db
       .update(supervisor)
       .set({
-        // TODO: add columns for drop-out details. Confirm with @Wendy
         dropOutReason: data.dropoutReason,
-        // droppedOutAt: new Date(),
         droppedOut: true,
       })
       .where(eq(supervisor.id, data.supervisorId))
@@ -124,9 +118,7 @@ export async function undropSupervisor(supervisorId: string) {
     const [result] = await db
       .update(supervisor)
       .set({
-        // TODO: add columns for drop-out details. Confirm with @Wendy
         dropOutReason: null,
-        // droppedOutAt: null,
         droppedOut: false,
       })
       .where(eq(supervisor.id, supervisorId))
@@ -200,10 +192,8 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
       idNumber,
       dateOfBirth,
     } = EditSupervisorSchema.parse(data);
-    // This action also changes the supervisor's login email, so the hub check matters.
     await checkSupervisorInHub(supervisorId);
 
-    // Get the current supervisor's user ID
     const supervisorMember = await db.query.implementerMember.findFirst({
       where: (m, { and, eq }) => and(eq(m.identifier, supervisorId), eq(m.role, "SUPERVISOR")),
       columns: { userId: true },
@@ -216,7 +206,6 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
       };
     }
 
-    // Check if email exists for any other user
     const existingUser = await db.query.user.findFirst({
       where: (u, { and, eq, ne }) =>
         and(eq(u.email, personalEmail), ne(u.id, supervisorMember.userId)),
@@ -289,7 +278,6 @@ export async function createNewSupervisor(data: z.infer<typeof AddNewSupervisorS
 
     const parsedData = AddNewSupervisorSchema.parse(data);
 
-    // Check if email already exists
     const existingUser = await db.query.user.findFirst({
       where: (u, { eq }) => eq(u.email, parsedData.personalEmail),
       with: { memberships: true },

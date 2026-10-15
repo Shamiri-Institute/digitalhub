@@ -4,13 +4,6 @@ import { signInAs } from "#/tests/helpers";
 import { type Role, resolveRoutes } from "#/tests/platform-routes";
 import { getUrl } from "#/tests/pages/helpers";
 
-/**
- * Opens every platform page as every role and fails if one does not render.
- *
- * Pages come from the `app/(platform)` tree and users from the database, so a page added without
- * a test is still covered. Assertions are soft: one broken page must not hide the state of the
- * rest, so a run reports every failure at once rather than the first.
- */
 const ERROR_TEXTS = ["Oops! Something went wrong!", "Application error", "Internal Server Error"];
 const ROLES: Role[] = [
   "ADMIN",

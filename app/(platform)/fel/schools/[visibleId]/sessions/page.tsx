@@ -21,8 +21,6 @@ export default async function SchoolSessionsPage(props: {
   }
 
   const visibleSchools = await visibleSchoolIds();
-  // Every session belongs to the same school, so the school with its groups is
-  // loaded once and attached below instead of being recomputed per session by a lateral join.
   const [rows, schoolRow] = await Promise.all([
     db.query.interventionSession.findMany({
       where: (s, { inArray }) =>

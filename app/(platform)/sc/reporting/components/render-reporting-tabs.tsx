@@ -39,7 +39,6 @@ export default function RenderSCReportingTabs() {
     { name: "Payout history", href: "/sc/reporting/expenses/payout-history" },
   ];
 
-  // Session recordings page is standalone - no tab navigation needed
   if (isRecordings) {
     return null;
   }

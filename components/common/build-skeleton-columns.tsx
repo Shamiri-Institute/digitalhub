@@ -3,10 +3,6 @@ import type { ReactNode } from "react";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 
-/**
- * Loading-state table shared by every entity's datatable skeleton: takes the
- * entity's real columns and renders a DataTable of skeleton cells.
- */
 export function DatatableSkeleton<TData>({
   columns,
   rows = 10,

@@ -6,11 +6,6 @@ import { adminUser, implementerMember, session, user } from "#/db/schema";
 import { signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
-/**
- * The project and implementer switchers in the admin header. Both read the session from the server
- * layout, so after a switch the header must show the new project and implementer.
- */
-
 test.describe.configure({ mode: "serial" });
 
 type Admin = { userId: string; email: string; activeProjectId: string; activeProjectName: string };

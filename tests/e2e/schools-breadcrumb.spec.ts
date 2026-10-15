@@ -5,11 +5,6 @@ import { db } from "#/db/client";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
-/**
- * The breadcrumb names the school's hub and the school. Its switcher lists every school of the
- * admin's implementer in the default project.
- */
-
 type Fixture = {
   email: string;
   implementerId: string;

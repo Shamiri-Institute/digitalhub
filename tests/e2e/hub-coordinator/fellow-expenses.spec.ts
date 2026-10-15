@@ -5,12 +5,6 @@ import { db } from "#/db/client";
 import { emailForProfile, signInWithEmail } from "#/tests/helpers";
 import { cellUnder, getUrl, searchRows } from "#/tests/pages/helpers";
 
-/**
- * A hub coordinator opens the fellow expenses report. The row of one fellow shows the session
- * counts and payout totals that a direct query of the database gives, and expands to the
- * fellow's payouts, which have no action menu.
- */
-
 type Expected = {
   fellowName: string;
   special: number;
@@ -109,6 +103,5 @@ test("a fellow's row shows the session counts and payout totals in the database"
     payoutTable.getByText(`1 of ${Math.ceil(expected.payouts / 10)}`, { exact: true }),
   ).toBeVisible();
   await expect(payoutTable.locator("tbody tr")).toHaveCount(Math.min(expected.payouts, 10));
-  // Payouts are managed from the payout run, not per row.
   await expect(payoutTable.locator('[aria-haspopup="menu"]')).toHaveCount(0);
 });

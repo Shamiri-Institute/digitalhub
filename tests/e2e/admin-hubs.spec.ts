@@ -36,7 +36,6 @@ test.afterAll(async () => {
   const hubIds = createdHubs.map((h) => h.id);
   if (hubIds.length > 0) {
     await db.delete(interventionSession).where(inArray(interventionSession.hubId, hubIds));
-    // A hub cannot be deleted while it has session names.
     await db.delete(sessionName).where(inArray(sessionName.hubId, hubIds));
   }
   await db.delete(hub).where(like(hub.hubName, `${HUB_PREFIX}%`));
@@ -53,7 +52,6 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   const addDialog = page.getByRole("dialog");
   await addDialog.getByLabel("Hub name").fill(HUB_NAME);
 
-  // Session types live in collapsed groups; expand intervention to review and edit amounts.
   await addDialog.getByRole("button", { name: "Intervention sessions" }).click();
   await expect(addDialog.getByLabel("s1 label")).toHaveValue("Session 1");
   await expect(addDialog.getByLabel("s1 amount")).toHaveValue("1500");
@@ -63,9 +61,7 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await addDialog.getByRole("button", { name: "Save" }).click();
   const createConfirm = page.getByRole("dialog", { name: "Create hub?" });
   await expect(createConfirm).toContainText(HUB_NAME);
-  // The confirmation lists what differs from the standard, and says nothing about edits to attendance.
   await expect(createConfirm).toContainText("1 session type differs from the standard list");
-  // Rows name the session type by its label, and the old and new amounts are both announced.
   const changedRow = createConfirm.getByRole("row", { name: /Session 1/ });
   await expect(changedRow).toContainText("was 1,500");
   await expect(changedRow).toContainText("now 1,750");
@@ -85,7 +81,6 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   expect(created?.visibleId).toBeNull();
   expect(created?.projectId).not.toBeNull();
 
-  // The hub got every standard session type, with the amount that was changed in the dialog.
   const createdSessionNames = await db.query.sessionName.findMany({
     where: (n, { eq }) => eq(n.hubId, created?.id ?? ""),
     columns: { sessionName: true, sessionLabel: true, sessionType: true, amount: true },
@@ -98,7 +93,6 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
     amount: 1000,
   });
 
-  // The same name in another case clashes within the implementer and project.
   await page.getByRole("button", { name: "Add hub" }).click();
   const duplicateDialog = page.getByRole("dialog");
   await duplicateDialog.getByLabel("Hub name").fill(HUB_NAME.toUpperCase());
@@ -108,7 +102,6 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
     "Labels and fellow pay amounts will be saved as shown.",
   );
   await duplicateConfirm.getByRole("button", { name: "Create hub", exact: true }).click();
-  // The rejected create closes the confirmation and leaves the form open.
   await expect(duplicateConfirm).toBeHidden();
   await expect(page.getByText("A hub with this name already exists").first()).toBeVisible();
   await duplicateDialog.getByRole("button", { name: "Cancel" }).click();
@@ -119,10 +112,8 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await page.getByRole("menuitem", { name: "Edit hub details", exact: true }).click();
   const editDialog = page.getByRole("dialog");
   await expect(editDialog.getByLabel("Hub name")).toHaveValue(HUB_NAME);
-  // The payout note belongs to the confirmation; the form only describes its inputs.
   await expect(editDialog).toContainText("the amount paid to fellows per lesson");
   await expect(editDialog).not.toContainText("Payouts already recorded keep their amount");
-  // The dialog starts from the hub's stored session names, including the amount changed on create.
   await editDialog.getByRole("button", { name: "Intervention sessions" }).click();
   await expect(editDialog.getByLabel("s1 label")).toHaveValue("Session 1");
   await expect(editDialog.getByLabel("s1 amount")).toHaveValue("1750");
@@ -131,8 +122,6 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await editDialog.getByLabel("s1 amount").fill("1800");
   await editDialog.getByRole("button", { name: "Save" }).click();
 
-  // The edit is confirmed first: the rename, the session type that changes, and what an amount
-  // change means for payouts.
   const saveConfirm = page.getByRole("dialog", { name: "Save changes to hub?" });
   await expect(saveConfirm).toContainText(`${HUB_NAME} will be renamed to ${RENAMED_HUB_NAME}`);
   await expect(saveConfirm).toContainText("1 session type will change");
@@ -149,7 +138,6 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await expect(row).toBeVisible();
   await expect(await searchRows(page, HUB_NAME)).toHaveCount(0);
 
-  // The label and amount were saved. The code, the type and the other session names were not touched.
   const editedSessionNames = await db.query.sessionName.findMany({
     where: (n, { eq }) => eq(n.hubId, created?.id ?? ""),
     columns: { sessionName: true, sessionLabel: true, sessionType: true, amount: true },
@@ -177,7 +165,6 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
   const addDialog = page.getByRole("dialog");
   await addDialog.getByLabel("Hub name").fill(hubName);
 
-  // The standard list has no clinical sessions. Two are added, then cleared in one go.
   await addDialog.getByRole("button", { name: /Clinical sessions/ }).click();
   await expect(addDialog.getByText("This hub has no clinical sessions.")).toBeVisible();
   await addDialog.getByRole("button", { name: "Add clinical session" }).click();
@@ -186,24 +173,20 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
   await addDialog.getByRole("button", { name: "Remove all clinical sessions" }).click();
   await expect(addDialog.getByText("This hub has no clinical sessions.")).toBeVisible();
 
-  // A data follow-up session starts from its group's label and amount.
   await addDialog.getByRole("button", { name: /Data follow-up sessions/ }).click();
   await addDialog.getByRole("button", { name: "Add data follow-up session" }).click();
   await expect(addDialog.getByLabel("dfu1 label")).toHaveValue("Data Follow Up 1");
   await expect(addDialog.getByLabel("dfu1 amount")).toHaveValue("500");
 
-  // Only the last row of a group can be removed, so the codes stay a run with no gaps.
   await addDialog.getByRole("button", { name: /Intervention sessions/ }).click();
   await expect(addDialog.getByRole("button", { name: "Remove s3" })).toHaveCount(0);
   await addDialog.getByRole("button", { name: "Remove s4" }).click();
   await expect(addDialog.getByLabel("s4 label")).toHaveCount(0);
 
-  // A new supervision session takes the next code and the group's pattern.
   await addDialog.getByRole("button", { name: /Supervision sessions/ }).click();
   await addDialog.getByRole("button", { name: "Add supervision session" }).click();
   await expect(addDialog.getByLabel("sv6 label")).toHaveValue("Supervision 6");
   await expect(addDialog.getByLabel("sv6 amount")).toHaveValue("500");
-  // A rate of 0 is allowed.
   await addDialog.getByLabel("sv6 amount").fill("0");
   await addDialog.getByRole("button", { name: "Save" }).click();
 
@@ -268,7 +251,6 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
     editDialog.getByText("sv6 is used by 1 session, so it cannot be removed."),
   ).toBeVisible();
 
-  // A clinical session is added back, and the unused last intervention session is removed.
   await editDialog.getByRole("button", { name: /Clinical sessions/ }).click();
   await editDialog.getByRole("button", { name: "Add clinical session" }).click();
   await expect(editDialog.getByLabel("cl1 label")).toHaveValue("Clinical 1");
@@ -286,7 +268,6 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
   expect(editedCodes).not.toContain("s3");
   expect(editedCodes).toContain("s2");
 
-  // A form opened before another admin added a session type cannot remove it by saving.
   const staleDialog = await openEditDialog(page, hubName);
   const other = await context.newPage();
   const otherDialog = await openEditDialog(other, hubName);
@@ -320,7 +301,6 @@ const SESSION_GROUPS = [
   /Data follow-up sessions/,
 ];
 
-/** Reloads the hubs page and opens the edit dialog of a hub. */
 async function openEditDialog(page: Page, hubName: string) {
   await page.goto(getUrl("/admin/hubs"));
   const row = (await searchRows(page, hubName)).first();
@@ -331,7 +311,6 @@ async function openEditDialog(page: Page, hubName: string) {
   return dialog;
 }
 
-/** The session codes the edit dialog shows for a hub, sorted, read from each row's label input. */
 async function codesInEditDialog(page: Page, hubName: string) {
   const dialog = await openEditDialog(page, hubName);
   for (const group of SESSION_GROUPS) {
@@ -356,13 +335,11 @@ test("clearing an amount leaves it empty, and typing a value clears the error", 
   await dialog.getByLabel("Hub name").fill(`${HUB_PREFIX} Empty amount`);
   await dialog.getByRole("button", { name: "Intervention sessions" }).click();
 
-  // The field stays empty instead of snapping back to the standard amount.
   await dialog.getByLabel("s1 amount").fill("");
   await expect(dialog.getByLabel("s1 amount")).toHaveValue("");
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog.getByText("Please enter an amount")).toBeVisible();
 
-  // Typing a value, even the standard one, lets the form be saved.
   await dialog.getByLabel("s1 amount").fill("1500");
   await expect(dialog.getByText("Please enter an amount")).toBeHidden();
   await dialog.getByRole("button", { name: "Save" }).click();
@@ -409,7 +386,6 @@ for (const email of [CARE_ADMIN, PLAIN_ADMIN]) {
     await expect(page.getByRole("heading", { name: "Hubs" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add hub" })).toHaveCount(0);
 
-    // A seeded hub has a coordinator, so its row has a menu, and the menu has no edit action.
     await page.locator('tbody [aria-haspopup="menu"]').first().click();
     await expect(page.getByRole("menuitem", { name: "Edit hub details", exact: true })).toHaveCount(
       0,

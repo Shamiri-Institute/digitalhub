@@ -176,7 +176,6 @@ export default function FellowAttendance({
             </div>
 
             <div className="space-y-4">
-              {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
               <FellowAttendanceDataTable
                 data={fellows}
                 emptyStateMessage={watcher === undefined ? "Please select a supervisor" : undefined}

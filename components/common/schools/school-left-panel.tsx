@@ -104,7 +104,6 @@ export default function SchoolLeftPanel({
                           width={16}
                           height={16}
                         />
-                        {/*TODO: inter */}
                         <p className="text-shamiri-black">Phone Number</p>
                       </div>
                       <div className="flex flex-wrap gap-2">

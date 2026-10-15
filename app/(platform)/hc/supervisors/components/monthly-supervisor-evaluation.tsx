@@ -257,7 +257,6 @@ export default function MonthlySupervisorEvaluation({
       setExistingEvaluation(undefined);
       form.reset(defaultValues);
     } else if (isOpen && isViewMode && evaluations.length > 0) {
-      // Auto-select first evaluation month in view mode
       const firstEvaluation = evaluations[0];
       if (firstEvaluation) {
         updateFormValues(format(firstEvaluation.month, "yyyy-MM-dd"));

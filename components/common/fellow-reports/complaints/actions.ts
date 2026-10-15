@@ -77,13 +77,11 @@ export async function loadFellowComplaints() {
 
 export async function editFellowComplaint(complaintId: string, complaint: string) {
   try {
-    // Edit scope is read scope: a supervisor edits complaints about the fellows they supervise.
     const caller = await requireHubRole(
       ImplementerRole.SUPERVISOR,
       ImplementerRole.HUB_COORDINATOR,
     );
 
-    // A complaint about a fellow outside the caller's scope reads as missing.
     const updated = await db
       .update(fellowComplaints)
       .set({ complaint })

@@ -158,7 +158,7 @@ export async function loadSessionReport() {
       return {
         interventionSessionId: sessionGroup.interventionSessionId,
         session: sessionGroup.session,
-        avgStudentBehaviour: Math.round(avgStudentBehaviour * 10) / 10, // Round to 1 decimal place
+        avgStudentBehaviour: Math.round(avgStudentBehaviour * 10) / 10,
         avgAdminSupport: Math.round(avgAdminSupport * 10) / 10,
         avgWorkload: Math.round(avgWorkload * 10) / 10,
         sessionNotes: sessionGroup.sessionNotes.map((note) => ({

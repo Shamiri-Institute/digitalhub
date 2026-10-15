@@ -645,7 +645,6 @@ export async function markManyFellowAttendance(
         }
 
         const attendanceStatus = attendedFlag(attended);
-        // Only marking needs the rate; an unmark reverses what was actually paid.
         const rate = attendanceStatus ? sessionRate(session) : 0;
 
         const attendances = await tx.query.fellowAttendance.findMany({

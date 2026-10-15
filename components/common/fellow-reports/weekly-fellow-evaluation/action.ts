@@ -26,7 +26,6 @@ export const updateWeeklyEvaluation = async (
 
     const updated = await db
       .update(weeklyFellowRatings)
-      // Only the ratings and notes are editable; the fellow, supervisor and week stay as recorded.
       .set({
         behaviourRating: data.behaviourRating,
         behaviourNotes: data.behaviourNotes,

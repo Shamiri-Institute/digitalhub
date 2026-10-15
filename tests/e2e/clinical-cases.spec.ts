@@ -14,12 +14,6 @@ import { objectId } from "#/lib/crypto";
 import { createClinicalCase, emailForProfile, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
-/**
- * A supervisor works on a clinical case they hold, through the UI. Each test saves, reloads and
- * checks what the page shows. The database finds or adds fixtures, cleans up, and checks what no
- * page shows: the owner fields set from the session and the stored termination reason.
- */
-
 type Fixture = { profileId: string; hubId: string; email: string };
 
 let owner: Fixture;
@@ -82,7 +76,6 @@ async function openCaseAction(page: Page, name: string, action: string) {
   await chooseRowAction(page, await searchRows(page, name), action);
 }
 
-/** Fills the "Add clinical case" dialog for a new student at the first school offered. */
 async function createCaseForNewStudent(page: Page, casePseudonym: string) {
   await page.getByRole("button", { name: "New case" }).click();
   const dialog = page.getByRole("dialog", { name: "Add clinical case" });
@@ -122,7 +115,6 @@ function caseOwners(casePseudonym: string) {
   });
 }
 
-/** Deletes a case made by createCaseForNewStudent and its student, even if only one of them exists. */
 async function deleteCase(casePseudonym: string) {
   await db.delete(clinicalScreeningInfo).where(eq(clinicalScreeningInfo.pseudonym, casePseudonym));
   await db.delete(student).where(eq(student.studentName, `${casePseudonym} student`));
@@ -150,7 +142,6 @@ test("a supervisor's new case is listed as theirs", async ({ page, context }) =>
 
   await createCaseForNewStudent(page, casePseudonym);
   await page.reload();
-  // The list holds only the cases whose current supervisor is the caller.
   await expect(await searchRows(page, casePseudonym)).toContainText("ACTIVE", {
     ignoreCase: true,
   });
@@ -169,7 +160,6 @@ test("a clinical lead's new case is assigned to them", async ({ page, context })
 
   await createCaseForNewStudent(page, casePseudonym);
   await page.reload();
-  // The list holds only the cases assigned to the calling lead.
   await expect(await searchRows(page, casePseudonym)).toBeVisible();
   // No page shows the supervisor of a lead's case; it must come from the session, not the form.
   expect(await caseOwners(casePseudonym)).toEqual({
@@ -178,8 +168,6 @@ test("a clinical lead's new case is assigned to them", async ({ page, context })
   });
 });
 
-// The form once copied an existing student's admission number into a hidden numeric field. A
-// value with letters became NaN and the form refused to save without an error (ENG-2218).
 test("a supervisor opens a case for an existing student with a non-numeric admission number", async ({
   page,
   context,
@@ -356,7 +344,6 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   await dialog.getByRole("button", { name: "Submit" }).click();
   await expect(dialog).toBeHidden();
 
-  // A saved session's notes open read-only with the stored text.
   await page.reload();
   await openNotesForSession();
   await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue(presentingIssues);

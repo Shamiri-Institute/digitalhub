@@ -10,29 +10,17 @@ export const dynamic = "force-dynamic";
  *
  * Returns all recordings with PENDING status for processing by the fidelity-inference service.
  * Protected by API key authentication.
- *
- * Headers:
- *   x-api-key: API key for authentication
- *
- * Query params:
- *   limit: Maximum number of recordings to return (default: 50, max: 100)
- *
- * Response:
- *   { recordings: Array<{ id, s3Key, fileName, fellowId, schoolId, groupId, sessionId, createdAt }> }
  */
 export async function GET(request: NextRequest) {
-  // Verify API key
   if (!verifyRecordingsApiKey(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
     const limitParam = searchParams.get("limit");
     const limit = Math.min(Number.parseInt(limitParam ?? "50", 10) || 50, 100);
 
-    // Fetch pending recordings
     const recordings = await db.query.sessionRecording.findMany({
       where: (r, { and, eq, isNull }) => and(eq(r.status, "PENDING"), isNull(r.archivedAt)),
       columns: {
@@ -58,11 +46,10 @@ export async function GET(request: NextRequest) {
           with: { session: { columns: { sessionName: true } } },
         },
       },
-      orderBy: (r, { asc }) => asc(r.createdAt), // Process oldest first
+      orderBy: (r, { asc }) => asc(r.createdAt),
       limit,
     });
 
-    // Transform response to flat structure
     const response = recordings.map((rec) => ({
       id: rec.id,
       s3Key: rec.s3Key,

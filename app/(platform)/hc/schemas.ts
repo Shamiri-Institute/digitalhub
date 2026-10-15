@@ -21,7 +21,6 @@ export const DropoutSchoolSchema = z.object({
 
 export const DropoutSupervisorSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
-  // TODO: Replace dropout reasons with supervisor specific options
   dropoutReason: z.enum(SUPERVISOR_DROP_OUT_REASONS as unknown as [string, ...string[]], {
     error: "Please select one of the supplied supervisor dropout reason options",
   }),
@@ -54,7 +53,6 @@ export const ArchiveStudentSchema = z.object({
   studentId: stringValidation("Missing student ID"),
 });
 
-// TODO: Depreciate
 export const SubmitComplaintSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
   comments: stringValidation().optional(),
@@ -106,7 +104,6 @@ export const MonthlySupervisorEvaluationSchema = z.object({
 
 const counties = KENYAN_COUNTIES.map((county) => county.name) as [string, ...string[]];
 
-// Base schema with common fields
 const BaseSchoolSchema = z.object({
   schoolName: z.string().min(1, "School name is required"),
   schoolType: z.enum(SCHOOL_TYPES, { error: "Please pick a valid option" }).optional(),
@@ -134,7 +131,6 @@ const BaseSchoolSchema = z.object({
     .optional(),
 });
 
-// Schema for adding a new school (requires preSessionDate and numbersExpected)
 export const AddSchoolSchema = BaseSchoolSchema.extend({
   preSessionDate: z.date({ error: "Please select a date" }).transform((val) => {
     if (!val) {
@@ -145,7 +141,6 @@ export const AddSchoolSchema = BaseSchoolSchema.extend({
   numbersExpected: z.number().min(1, "Number of students is required"),
 });
 
-// Schema for editing a school (preSessionDate and numbersExpected are optional)
 export const EditSchoolSchema = BaseSchoolSchema.extend({
   preSessionDate: z
     .date({ error: "Please select a date" })

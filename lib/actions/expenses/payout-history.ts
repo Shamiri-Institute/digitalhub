@@ -37,7 +37,6 @@ export async function loadPayoutHistory(fellowScope: SQL) {
       .groupBy(payoutStatements.executedAt)
       .orderBy(desc(payoutStatements.executedAt)),
 
-    // One query for every payout date; rows are split per date in JS below.
     db
       .select({
         executedAt: payoutStatements.executedAt,

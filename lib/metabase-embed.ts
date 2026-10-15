@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 
 const METABASE_SITE_URL = "https://dash.shamiri.institute";
 const EMBED_FRAGMENT = "bordered=true&titled=true";
-const TOKEN_EXPIRY_SECONDS = 10 * 60; // 10 minutes
+const TOKEN_EXPIRY_SECONDS = 10 * 60;
 
 export type MetabaseEmbedParams = Record<string, string[]>;
 

@@ -85,8 +85,6 @@ export function MarkAttendance({
   selectedIds?: string[];
   onSuccess?: () => void;
 }) {
-  // Only occurred sessions are selectable. The default is the latest of those by date,
-  // whatever order the caller passed them in.
   const selectableSessions = (sessions ?? [])
     .filter((session) => session.occurred)
     .toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());

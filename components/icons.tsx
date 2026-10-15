@@ -28,7 +28,6 @@ import {
   LayoutDashboard,
   ListTodo,
   Loader2,
-  // StarIcon,
   type LucideIcon,
   type LucideProps,
   Mail,
@@ -106,7 +105,6 @@ export const Icons = {
   fileDown: FileDown,
   fileUp: FileUp,
 
-  // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"

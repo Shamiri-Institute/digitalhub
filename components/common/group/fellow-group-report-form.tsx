@@ -499,7 +499,6 @@ export default function FellowGroupReportForm({
                   />
                 </SectionShell>
 
-                {/* Section 7 — Implementation Context */}
                 <SectionShell
                   index={6}
                   innerRef={(el) => {

@@ -533,7 +533,6 @@ function SessionTypesEditor({
                   </span>
                   <span className="pb-1 text-xs font-medium text-shamiri-text-grey">Label</span>
                   <span className="pb-1 text-right text-xs font-medium text-shamiri-text-grey">
-                    {/* The amount column is too narrow on a phone for the full heading. */}
                     <span className="sm:hidden">KES</span>
                     <span className="hidden sm:inline">Amount (KES)</span>
                   </span>
@@ -689,7 +688,6 @@ function HubConfirmDialog({
   return (
     <Dialog
       open={open}
-      // Closing while the request runs would let the form be submitted a second time.
       onOpenChange={(next) => {
         if (!isSaving) onOpenChange(next);
       }}

@@ -6,15 +6,8 @@ import { fellowAttendance, payoutStatements, sessionName } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
-/**
- * Fellow attendance, which writes payout statements, through the UI. Each test saves, reloads and
- * checks what the page shows; the database picks fixtures, restores them, and checks the payout
- * statements and absence reasons that no page shows. Payout runs are in payout-run.spec.ts.
- */
-
 test.describe.configure({ mode: "serial" });
 
-/** A user with one membership, so the session's active role is the one asked for. */
 async function signableProfiles(table: string, role: string, hubColumn: string) {
   const { rows } = await db.execute<{ id: string; hubId: string; email: string; userId: string }>(
     sql`
@@ -29,7 +22,6 @@ async function signableProfiles(table: string, role: string, hubColumn: string) 
   return rows;
 }
 
-/** The schedule's list view for the week of `sessionDate`; rows at `schoolName`. */
 async function openSessionWeek(page: Page, sessionDate: Date, schoolName: string) {
   await page.goto(await scheduleUrl(page.context(), "/sc/schedule?mode=list", sessionDate));
   return page.getByRole("row").filter({ hasText: schoolName });
@@ -53,7 +45,6 @@ test.describe("fellow attendance", () => {
     hubId: string;
   };
   let fixture: Fixture;
-  // What the attendance has been paid so far, the net of its payout statements.
   let paidBefore: number;
   let original: typeof fellowAttendance.$inferSelect;
   const startedAt = new Date();
@@ -147,8 +138,6 @@ test.describe("fellow attendance", () => {
       .from(fellowAttendance)
       .where(eq(fellowAttendance.id, fixture.attendanceId));
     expect(markedFellowAttendance).toEqual({ absenceReason });
-    // The paid session is reversed with one statement that cancels what was paid, so the
-    // attendance nets to zero even though the rate changed in between.
     const reversals = await db
       .select({ amount: payoutStatements.amount, reason: payoutStatements.reason })
       .from(payoutStatements)

@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-// This function just makes it easier to validate they exist and access them.
-// https://nextjs.org/docs/app/building-your-application/configuring/environment-variables#bundling-environment-variables-for-the-browser
 function validate(value: string | undefined, name: string): string {
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);

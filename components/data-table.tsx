@@ -44,11 +44,8 @@ import { cn } from "#/lib/utils";
 
 // oxlint-disable-next-line typescript/no-explicit-any -- FilterFn generic requires any for universal compatibility with all table data types
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  // Rank the item
   const itemRank = rankItem(row.getValue<string>(columnId), String(value));
-  // Store the itemRank info
   addMeta({ itemRank });
-  // Return if the item should be filtered in/out
   return itemRank.passed;
 };
 
@@ -112,7 +109,7 @@ export default function DataTable<TData, TValue>({
     onPaginationChange: setPagination,
     enableRowSelection,
     state: { sorting, columnVisibility, rowSelection, pagination },
-    autoResetPageIndex: true, //turns off auto reset of pageIndex
+    autoResetPageIndex: true,
     getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: fuzzyFilter,
   });

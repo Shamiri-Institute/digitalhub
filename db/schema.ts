@@ -410,7 +410,6 @@ export const hub = pgTable(
   },
   (table) => [
     uniqueIndex("hubs_visible_id_key").using("btree", table.visibleId),
-    // Hub names are unique per implementer and project, ignoring case and surrounding spaces.
     uniqueIndex("hubs_implementer_id_project_id_name_key").on(
       table.implementerId,
       table.projectId,
@@ -465,7 +464,6 @@ export const fellowAttendance = pgTable(
     uniqueIndex("fellow_attendances_fellow_id_session_id_key")
       .on(table.fellowId, table.sessionId)
       .where(sql`${table.createdAt} >= '2024-09-01'`),
-    // The unique index above is partial, so a lookup by fellow alone cannot use it.
     index("fellow_attendances_fellow_id_idx").on(table.fellowId),
     foreignKey({
       columns: [table.fellowId],
@@ -1959,7 +1957,6 @@ export const sessionName = pgTable(
     sessionLabel: varchar("session_label", { length: 255 }).notNull(),
   },
   (table) => [
-    // A code names one session type of a hub; sessions and the edit dialog look rows up by it.
     uniqueIndex("session_names_hub_id_session_name_key").on(table.hubId, table.sessionName),
     foreignKey({
       columns: [table.hubId],

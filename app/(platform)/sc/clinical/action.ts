@@ -33,7 +33,6 @@ function requireUpdated<T>(rows: T[], what: string): T {
   return row;
 }
 
-/** The signed-in supervisor or clinical lead. Every other role is refused. */
 async function requireClinicalActor() {
   const session = await getCurrentUserSession();
   const userId = session?.user.id;
@@ -404,7 +403,6 @@ export async function createStudentClinicalCase(data: {
   }
 
   try {
-    // The creator and their role come from the session, never from the request.
     const actor = await requireClinicalActor();
     const { hubId } = actor;
     if (!hubId) {
@@ -831,7 +829,6 @@ export async function getReferredCasesToSupervisor() {
   return referredCases;
 }
 
-/** The latest transfer trail row of a case; the referral decision is recorded on it. */
 async function latestTransferTrail(tx: Transaction, caseId: string) {
   const [trail] = await tx
     .select({ id: clinicalCaseTransferTrail.id })
@@ -856,7 +853,6 @@ async function answerReferral(caseId: string, decision: "Approved" | "Declined")
     throw new Error("Unauthorized");
   }
   const referralRecipientId = supervisor.profile.id;
-  // An accepted case moves to the recipient; a declined one stays with the referring supervisor.
   const caseChanges =
     decision === "Approved"
       ? {

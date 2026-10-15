@@ -16,11 +16,6 @@ test.afterAll(async () => {
   await db.delete(tickets).where(eq(tickets.subject, subject));
 });
 
-/**
- * A supervisor raises a ticket, finds it in the list and opens it. This is the one user flow that
- * writes and then reads its own write back through two different queries (the list and the
- * ticket dialog), so it catches a write that lands in the wrong shape.
- */
 test("supervisor creates a ticket and can view it in the list", async ({ page, context }) => {
   await signInAs(context, "SUPERVISOR");
 

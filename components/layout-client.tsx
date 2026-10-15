@@ -318,7 +318,6 @@ function getCurrentUserNavigationLinks(
 ) {
   const links = [];
 
-  // Admin links
   if (mainRoute === "admin") {
     links.push(
       <div className={`tab-link ${cn(scheduleActive && "active")}`} key="admin-schedule">
@@ -363,7 +362,6 @@ function getCurrentUserNavigationLinks(
     }
   }
 
-  // Hub Coordinator links
   if (mainRoute === "hc") {
     links.push(
       <div className={`tab-link ${cn(scheduleActive && "active")}`} key="hc-schedule">
@@ -393,7 +391,6 @@ function getCurrentUserNavigationLinks(
     );
   }
 
-  // Supervisor links
   if (mainRoute === "sc") {
     links.push(
       <div className={`tab-link ${cn(scheduleActive && "active")}`} key="sc-schedule">
@@ -427,7 +424,6 @@ function getCurrentUserNavigationLinks(
     );
   }
 
-  // Fellow links
   if (mainRoute === "fel") {
     links.push(
       <div className={`tab-link ${cn(scheduleActive && "active")}`} key="fel-schedule">
@@ -449,7 +445,6 @@ function getCurrentUserNavigationLinks(
     );
   }
 
-  // Clinical Lead links
   if (mainRoute === "cl" || mainRoute === "ct") {
     links.push(
       <div key="cl-supervisors" className={`tab-link ${cn(supervisorsActive && "active")}`}>

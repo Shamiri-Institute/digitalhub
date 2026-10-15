@@ -114,7 +114,6 @@ test("a super admin cannot remove their own super-admin access", async ({ page, 
   ).toBeVisible();
   await expect(dialog).toBeVisible();
 
-  // The refusal left the implementer with its super admin.
   await page.reload();
   await searchRows(page, SUPER_ADMIN);
   await expect(ownRow()).toContainText("Super admin");
@@ -141,7 +140,6 @@ test("the users table lists only the admins of the caller's implementer", async 
   await signInWithEmail(context, SUPER_ADMIN);
   await page.goto(getUrl("/admin/users"));
 
-  // An admin of the caller's own implementer is listed; one of another implementer is not.
   await expect((await searchRows(page, PLAIN_ADMIN)).first()).toBeVisible();
   await expect(await searchRows(page, otherImplementerAdmin.email)).toHaveCount(0);
 });

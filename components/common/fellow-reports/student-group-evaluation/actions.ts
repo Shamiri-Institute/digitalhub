@@ -108,7 +108,6 @@ export async function loadStudentGroupEvaluations() {
   return transformEvaluationData(evaluations);
 }
 
-// Only the comments are editable; the group, session and ratings stay as the fellow reported them.
 const EditStudentGroupEvaluationSchema = z.object({
   engagementComment: z.string(),
   cooperationComment: z.string(),
@@ -122,7 +121,6 @@ export async function editStudentGroupEvaluation(
   const caller = await requireHubRole(ImplementerRole.SUPERVISOR, ImplementerRole.HUB_COORDINATOR);
   try {
     const comments = EditStudentGroupEvaluationSchema.parse(data);
-    // A report on a group outside the caller's scope reads as missing.
     const updated = await db
       .update(interventionGroupReport)
       .set(comments)

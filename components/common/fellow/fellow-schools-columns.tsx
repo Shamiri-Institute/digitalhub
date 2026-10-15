@@ -259,5 +259,4 @@ export const studentsTableColumns: ColumnDef<
     accessorKey: "numClinicalCases",
     header: "Clinical Cases",
   },
-  // TODO: add dropdown
 ];

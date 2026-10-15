@@ -106,32 +106,16 @@ const nextConfig = {
   },
 };
 
-// Injected content via Sentry wizard below
 module.exports = withSentryConfig(nextConfig, {
-  // For all available options, see:
-  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-
-  // Provided via env so forks point source-map uploads at their own project.
-  // When unset (or no SENTRY_AUTH_TOKEN), the plugin simply skips the upload.
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
 
-  // Tie each deploy to a Sentry release so errors link back to the exact commit
-  // that introduced them. On Vercel, VERCEL_GIT_COMMIT_SHA is injected at build
-  // time; falling back to undefined lets the SDK auto-detect locally. This gives
-  // us the deploy/release tracking offered by the paid Vercel-Sentry integration
-  // for free.
   release: {
     name: process.env.VERCEL_GIT_COMMIT_SHA || undefined,
   },
 
-  // Only print logs for uploading source maps in CI
   silent: true,
 
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
@@ -139,7 +123,6 @@ module.exports = withSentryConfig(nextConfig, {
   tunnelRoute: "/monitoring",
 
   webpack: {
-    // Automatically tree-shake Sentry logger statements to reduce bundle size
     treeshake: { removeDebugLogging: true },
 
     // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)

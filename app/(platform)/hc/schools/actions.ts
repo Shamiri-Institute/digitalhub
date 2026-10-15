@@ -80,7 +80,6 @@ export async function fetchSchoolData() {
 
 export async function fetchSchoolDataCompletenessData(schoolId?: string) {
   const coordinatorHubId = await requireCoordinatorHub();
-  // TODO: uncomment the school_sub_county query and adjust division from 6.0 -> 7.0
   const {
     rows: [schoolAttendanceData],
   } = await db.execute<{
@@ -163,14 +162,12 @@ async function requireCoordinatorHub() {
   return coordinatorHubId;
 }
 
-/** The coordinator's user id and hub id, after checking the school is in that hub. */
 async function requireSchoolInCoordinatorHub(schoolId: string) {
   const coordinator = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
   await requireSchoolInHub(schoolId, coordinator.hubId);
   return coordinator;
 }
 
-/** Updates the school and records the change; returns the school with its dropout history. */
 function setSchoolDropout(
   schoolId: string,
   data: { dropoutReason: string | null; droppedOut: boolean; droppedOutAt: Date | null },
@@ -248,7 +245,6 @@ export async function undoDropoutSchool(schoolId: string) {
 
 export async function submitWeeklyHubReport(data: z.infer<typeof WeeklyHubReportSchema>) {
   try {
-    // The hub and the author come from the session, never from the request.
     const coordinator = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
     const parsedData = WeeklyHubReportSchema.parse(data);
 
@@ -459,7 +455,6 @@ export async function assignSchoolPointSupervisor(
 ) {
   try {
     const parsedData = AssignPointSupervisorSchema.parse(schoolInfo);
-    // Both the school and the new point supervisor must be in the coordinator's hub.
     const { hubId: coordinatorHubId } = await requireSchoolInCoordinatorHub(schoolId);
     const supervisorInCoordinatorHub = await db.query.supervisor.findFirst({
       where: (s, { and, eq }) =>
@@ -634,7 +629,6 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>) {
           hubId,
         });
 
-        // Move to next week for next session
         currentDate.setDate(currentDate.getDate() + 7);
       }
 

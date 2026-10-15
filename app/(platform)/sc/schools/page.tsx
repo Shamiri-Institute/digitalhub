@@ -49,13 +49,6 @@ export default async function SchoolsPage() {
           />
         </div>
         <Separator />
-        {/*TODO: Add search and filter features*/}
-        {/*<div className="flex items-center justify-between">*/}
-        {/*  <div className="flex w-1/4 items-start gap-3">*/}
-        {/*    <SearchCommand data={data} />*/}
-        {/*    <SchoolsFilterToggle schools={data} />*/}
-        {/*  </div>*/}
-        {/*</div>*/}
         <SchoolsDatatable
           role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
           schools={data}

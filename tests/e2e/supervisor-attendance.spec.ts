@@ -6,12 +6,6 @@ import { supervisorAttendance } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
-/**
- * A hub coordinator marks a supervisor's attendance from the schedule, first for one supervisor
- * and then in bulk. Each save must leave one row per supervisor and session. The database is used
- * to pick the fixture, to read the stored rows back and to remove them afterwards.
- */
-
 test.describe.configure({ mode: "serial" });
 
 type Fixture = {

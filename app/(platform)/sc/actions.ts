@@ -31,12 +31,11 @@ export async function loadFellowsData() {
             session: {
               with: {
                 session: true,
-                school: true, // Used in AttendanceHistory for school name
+                school: true,
               },
             },
             group: true,
             PayoutStatements: {
-              // Used in AttendanceHistory for MPESA number and payment status
               orderBy: (p, { desc }) => desc(p.createdAt),
             },
           },
@@ -59,8 +58,6 @@ export async function loadFellowsData() {
       },
     }),
 
-    // The groups' schools with their sessions, loaded once and attached per group below instead
-    // of being recomputed for every group row by a lateral join.
     db.query.school.findMany({
       where: (s, { inArray }) =>
         inArray(

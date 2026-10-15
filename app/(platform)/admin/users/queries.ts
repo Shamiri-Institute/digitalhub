@@ -1,6 +1,5 @@
 import { db } from "#/db/client";
 
-/** The admins of an implementer with their access, for the users table. */
 export async function fetchImplementerAdmins(implementerId: string) {
   return db.query.adminUser.findMany({
     where: (a, { eq }) => eq(a.implementerId, implementerId),

@@ -6,11 +6,6 @@ import { supervisor, user } from "#/db/schema";
 import { emailForProfile, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
-/**
- * A hub coordinator edits the supervisors of their own hub through the UI. The edit form also
- * writes the supervisor's login email, so the test checks that the login email stays the same.
- */
-
 let target: typeof supervisor.$inferSelect;
 let targetEmail: string;
 let targetUserId: string;

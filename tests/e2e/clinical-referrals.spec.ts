@@ -6,12 +6,6 @@ import { interventionGroup } from "#/db/schema";
 import { createClinicalCase, emailForProfile, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
-/**
- * A supervisor refers a case to another supervisor in their hub, and the recipient accepts or
- * rejects it, all through the UI. Each test reloads and checks what each supervisor's page shows;
- * the database is used only to find the supervisors and to add and remove a case for each test.
- */
-
 type Supervisor = { profileId: string; name: string; email: string };
 
 let referrer: Supervisor;
@@ -83,12 +77,10 @@ test.afterEach(async () => {
   await removeCase?.();
 });
 
-/** The "Cases referred to you" list on a supervisor's clinical page. */
 function referredCases(page: Page) {
   return page.getByText(/^Cases referred to you/).locator("..");
 }
 
-/** The referral card for the case in that list. */
 function referralCard(page: Page) {
   return referredCases(page).getByText(studentName, { exact: true }).locator("..");
 }
@@ -127,7 +119,6 @@ test("the recipient accepts a referred case and it becomes theirs", async ({ pag
   await expect(referralCard(page)).toHaveCount(0);
   await expect(await searchRows(page, pseudonym)).toHaveCount(1);
 
-  // The referring supervisor no longer holds the case.
   await page.context().clearCookies();
   await signInWithEmail(page.context(), referrer.email);
   await page.goto(getUrl("/sc/clinical"));

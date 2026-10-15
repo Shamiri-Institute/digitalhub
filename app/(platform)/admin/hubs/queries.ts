@@ -8,7 +8,6 @@ import { countOf } from "#/db/sql";
 const notDroppedOut = (alias: string) =>
   `(${alias}.dropped_out = false or ${alias}.dropped_out is null)`;
 
-/** Hubs of an implementer in a project with everything the admin hubs table renders. */
 export async function fetchAdminHubs(implementerId: string, projectId: string) {
   const hubs = await db.query.hub.findMany({
     where: (h, { and, eq }) => and(eq(h.implementerId, implementerId), eq(h.projectId, projectId)),

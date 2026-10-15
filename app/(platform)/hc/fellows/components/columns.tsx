@@ -117,7 +117,6 @@ export const columns = (
           );
         } catch (error) {
           if (error instanceof ParseError) {
-            // Not a phone number, non-existent country, etc.
             return (
               row.original.cellNumber && (
                 <Tooltip>

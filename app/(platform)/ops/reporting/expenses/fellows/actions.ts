@@ -105,7 +105,6 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
       const sessionLabel = attendance.session?.session?.sessionLabel;
       const sessionType = attendance.session?.session?.sessionType;
 
-      // For pre and main session counts
       if (sessionLabel === "Pre-session") {
         counts.preCount += 1;
       } else if (
@@ -114,7 +113,6 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
         counts.mainCount += 1;
       }
 
-      // For training and supervision session counts
       if (sessionType === "SUPERVISION") {
         counts.supervisionCount += 1;
       } else if (sessionType === "TRAINING") {
@@ -129,7 +127,6 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
   return { preCount, mainCount, supervisionCount, trainingCount };
 }
 
-/** The slice of an attendance row the helpers above read. */
 type FellowAttendance = {
   session: { session: { sessionLabel: string; sessionType: string } | null } | null;
   PayoutStatements: { amount: number; confirmedAt: Date | null }[];

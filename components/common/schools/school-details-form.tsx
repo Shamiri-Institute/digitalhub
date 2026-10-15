@@ -128,7 +128,6 @@ export default function SchoolDetailsForm({
     }
 
     if (isEditing && school) {
-      // remove blanks (removed phone numbers and cleared inputs)
       const pointPersonPhoneNumbers = data.pointPersonPhone
         ?.split("/")
         .filter((phone: string) => phone.trim() !== "");

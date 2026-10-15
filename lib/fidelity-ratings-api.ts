@@ -1,12 +1,4 @@
 /**
- * Fidelity API Client
- *
- * This module provides a typed client for communicating with the Fidelity Ratings
- * FastAPI service (behind a Caddy reverse proxy with TLS). It handles:
- * - API key authentication via X-API-Key header
- * - Job submission (POST /jobs) and status checking (GET /jobs/{job_id})
- * - Proper error handling with timeouts
- *
  * Transport security: Caddy terminates TLS (self-signed via `tls internal`) in
  * front of the FastAPI service. An undici Agent is configured to skip certificate
  * verification ONLY for Fidelity API requests — all other outbound TLS connections
@@ -57,10 +49,6 @@ export type JobResponse = {
   result?: JobResult; // only present when status is "completed"
 };
 
-// ---------------------------------------------------------------------------
-// Internal State & Initialization
-// ---------------------------------------------------------------------------
-
 type FidelityConfig = {
   baseUrl: string;
   apiKey: string;
@@ -99,10 +87,6 @@ function getConfig(): FidelityConfig {
   return _config;
 }
 
-// ---------------------------------------------------------------------------
-// Public API Functions
-// ---------------------------------------------------------------------------
-
 /**
  * Submit recordings for processing.
  * Returns immediately with a job_id, does NOT wait for processing to complete.
@@ -133,42 +117,6 @@ export async function createJob(request: CreateJobRequest): Promise<JobResponse>
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Failed to submit job to Fidelity API: ${error.message}`, { cause: error });
-    }
-    throw error;
-  }
-}
-
-/**
- * Check the current status of a job.
- * Intended for manual checks and/or admin dashboards — NOT for polling.
- * Normal flow relies on webhook callbacks.
- */
-export async function getJobStatus(jobId: string): Promise<JobResponse> {
-  const config = getConfig();
-
-  try {
-    const response = await fetch(`${config.baseUrl}/jobs/${jobId}`, {
-      method: "GET",
-      headers: {
-        "X-API-Key": config.apiKey,
-      },
-      signal: AbortSignal.timeout(10_000),
-      // @ts-expect-error — dispatcher is a valid undici option on Node's native fetch
-      dispatcher: fidelityDispatcher,
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error(`Job ${jobId} not found`);
-      }
-      const errorText = await response.text();
-      throw new Error(`Fidelity API error: ${response.status} - ${errorText}`);
-    }
-
-    return (await response.json()) as JobResponse;
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to get job status: ${error.message}`, { cause: error });
     }
     throw error;
   }

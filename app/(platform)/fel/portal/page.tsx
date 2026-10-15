@@ -62,8 +62,6 @@ export default async function FellowsPage() {
       },
     }),
 
-    // The groups' schools with their sessions, loaded once and attached per group below instead
-    // of being recomputed for every group row by a lateral join.
     db.query.school.findMany({
       where: (s, { inArray }) =>
         inArray(
