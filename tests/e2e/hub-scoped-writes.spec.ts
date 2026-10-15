@@ -514,7 +514,14 @@ test("a fellow documents a triage event; another fellow at the school does not s
   await documentTriage(triage.admissionNumber);
 
   await chooseStudentAction("Edit triage");
-  await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
+  const riskOutcome = form.getByRole("combobox", { name: "Risk screen outcome (required)" });
+  await expect(riskOutcome).toContainText("All NO (Risk negative)");
+  await riskOutcome.click();
+  await page.getByRole("option", { name: "Any YES (Risk positive)" }).click();
+  await expect(form.getByRole("combobox", { name: "Action taken (required)" })).toContainText(
+    "Escalated immediately to supervisor (risk-positive)",
+  );
+  await riskOutcome.click();
   await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
   await form.getByRole("combobox", { name: "Action taken (required)" }).click();
   await page.getByRole("option", { name: "Provided peer counselling" }).click();

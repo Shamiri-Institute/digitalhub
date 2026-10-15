@@ -113,13 +113,6 @@ export default function TriageEventModal({
   const showSupervisorSelect = actionTaken === "REFERRED" || actionTaken === "ESCALATED";
   const forceEscalated = riskScreenOutcome === "ANY_YES";
 
-  // effect: forces the action to ESCALATED when the risk screen outcome requires it
-  useEffect(() => {
-    if (forceEscalated) {
-      form.setValue("actionTaken", "ESCALATED");
-    }
-  }, [forceEscalated, form]);
-
   // effect: copies the existing triage event into the form when the parent's read resolves
   useEffect(() => {
     if (existingEvent) {
@@ -203,7 +196,10 @@ export default function TriageEventModal({
                 <FormItem className="space-y-2">
                   <FormLabel className="text-sm">Risk screen outcome (required)</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      if (value === "ANY_YES") form.setValue("actionTaken", "ESCALATED");
+                    }}
                     value={field.value ?? ""}
                     disabled={readOnly || loadingExistingEvent}
                   >

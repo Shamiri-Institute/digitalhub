@@ -465,3 +465,182 @@ test("weekly session report shows each session's saved highlights, not typed tex
   await openFor(sessionB.sessionLabel);
   await expect(highlights).toHaveValue(sessionB.highlights);
 });
+
+async function expectCountyChangeClearsSubCounty(page: Page, dialog: Locator) {
+  const county = dialog.getByRole("combobox", { name: /^County/ });
+  const subCounty = dialog.getByRole("combobox", { name: /^Sub-county/ });
+  await county.click();
+  await page.getByRole("option", { name: "Nairobi", exact: true }).click();
+  await subCounty.click();
+  await page.getByRole("option", { name: "Dagoretti North", exact: true }).click();
+  await expect(subCounty).toContainText("Dagoretti North");
+  await county.click();
+  await page.getByRole("option", { name: "Mombasa", exact: true }).click();
+  await expect(subCounty).toContainText("Select sub-county");
+}
+
+async function pickCoordinatorAndProfile(table: "supervisors" | "fellows") {
+  const name = sql.raw(table === "supervisors" ? "p.supervisor_name" : "p.fellow_name");
+  const {
+    rows: [row],
+  } = await db.execute<{ email: string; name: string; subCounty: string }>(sql`
+    select u.email, ${name} as name, p.sub_county as "subCounty"
+    from hub_coordinators hc
+    join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
+    join users u on u.id = m.user_id and u.email is not null
+    join ${sql.raw(table)} p on p.hub_id = hc.assigned_hub_id and ${name} is not null
+      and p.sub_county is not null and p.county is not null
+      and coalesce(p.dropped_out, false) = false
+      and (select count(*) from ${sql.raw(table)} o where o.hub_id = p.hub_id
+        and ${sql.raw(table === "supervisors" ? "o.supervisor_name" : "o.fellow_name")} = ${name}) = 1
+    where ${signableMember()}
+    order by u.email, p.id
+    limit 1`);
+  if (!row) throw new Error(`seed the database first: no ${table} with a sub-county`);
+  return row;
+}
+
+for (const [table, action, title] of [
+  ["supervisors", "Edit supervisor information", "Edit supervisor information"],
+  ["fellows", "Edit fellow information", "Edit fellow information"],
+] as const) {
+  test(`${title} shows the saved sub-county, discards typed text, and clears the sub-county with the county`, async ({
+    page,
+    context,
+  }) => {
+    const fixture = await pickCoordinatorAndProfile(table);
+    await signInWithEmail(context, fixture.email);
+    await page.goto(getUrl(`/hc/${table}`));
+    const dialog = page.getByRole("dialog", { name: title });
+    const fullName = dialog.getByRole("textbox", { name: /^Full name/ }).first();
+    async function open() {
+      await chooseRowAction(page, await searchRows(page, fixture.name), action);
+      await expect(dialog).toBeVisible();
+    }
+
+    await open();
+    await expect(dialog.getByRole("combobox", { name: /^Sub-county/ })).toContainText(
+      fixture.subCounty,
+    );
+    await expect(fullName).toHaveValue(fixture.name);
+    await fullName.fill(typed);
+    await closeDialog(page, dialog);
+
+    await open();
+    await expect(fullName).toHaveValue(fixture.name);
+    await expectCountyChangeClearsSubCounty(page, dialog);
+  });
+}
+
+test("add supervisor starts empty on each open and clears the sub-county with the county", async ({
+  page,
+  context,
+}) => {
+  const fixture = await pickCoordinatorAndProfile("supervisors");
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl("/hc/supervisors"));
+  const dialog = page.getByRole("dialog", { name: "Add new supervisor" });
+  const fullName = dialog.getByRole("textbox", { name: /^Full name/ }).first();
+  const subCounty = dialog.getByRole("combobox", { name: /^Sub-county/ });
+  async function open() {
+    await page.getByRole("button", { name: "Add supervisor" }).click();
+    await expect(dialog).toBeVisible();
+  }
+
+  await open();
+  await expectCountyChangeClearsSubCounty(page, dialog);
+  await subCounty.click();
+  await page.getByRole("option").first().click();
+  await fullName.fill(typed);
+  await closeDialog(page, dialog);
+
+  await open();
+  await expect(fullName).toHaveValue("");
+  await expect(subCounty).toContainText("Select sub-county");
+});
+
+test("my profile clears the sub-county when the county changes", async ({ page, context }) => {
+  const {
+    rows: [fixture],
+  } = await db.execute<{ email: string }>(sql`
+    select u.email from supervisors s
+    join implementer_members m on m.identifier = s.id and m.role = 'SUPERVISOR'
+    join users u on u.id = m.user_id and u.email is not null
+    where s.sub_county is not null and s.county is not null and ${signableMember()}
+    order by u.email
+    limit 1`);
+  if (!fixture) throw new Error("seed the database first: no supervisor with a sub-county");
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl("/sc/schedule"));
+  await page.getByAltText("Profile arrow drop down icon").click();
+  await page.getByRole("menuitem", { name: "My Profile" }).click();
+  const dialog = page.getByRole("dialog", { name: "Edit profile" });
+  await expectCountyChangeClearsSubCounty(page, dialog);
+});
+
+test("schedule a session switches between school and venue with the session type", async ({
+  page,
+  context,
+}) => {
+  const fixture = await pickCoordinatorAndProfile("supervisors");
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl("/hc/schedule"));
+  await page.getByRole("button", { name: "Schedule a session" }).click();
+  const dialog = page.getByRole("dialog", { name: "Schedule a session" });
+  const sessionType = dialog.getByRole("combobox", { name: "Select a session type" });
+  const school = dialog.getByRole("combobox", { name: /^Select school/ });
+  // The venue input is not linked to its label; it is the dialog's only textbox.
+  const venue = dialog.getByRole("textbox");
+
+  await sessionType.click();
+  await page.getByRole("option", { name: /Supervision 1$/ }).click();
+  await expect(venue).toBeVisible();
+  await expect(school).toHaveCount(0);
+  await venue.fill(typed);
+  await sessionType.click();
+  await page.getByRole("option", { name: /Clinical 1$/ }).click();
+  await expect(school).toBeVisible();
+  await expect(venue).toHaveCount(0);
+  await sessionType.click();
+  await page.getByRole("option", { name: /Supervision 1$/ }).click();
+  await expect(venue).toBeVisible();
+  await expect(venue).toHaveValue("");
+  await expect(school).toHaveCount(0);
+});
+
+test("mark attendance clears the absence reason when the status changes", async ({
+  page,
+  context,
+}) => {
+  const {
+    rows: [fixture],
+  } = await db.execute<{ email: string; visibleId: string; supervisorName: string }>(sql`
+    select u.email, sc.visible_id as "visibleId", sv.supervisor_name as "supervisorName"
+    from hub_coordinators hc
+    join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
+    join users u on u.id = m.user_id and u.email is not null
+    join schools sc on sc.hub_id = hc.assigned_hub_id and sc.archived_at is null
+    join supervisors sv on sv.id = sc.assigned_supervisor_id and sv.supervisor_name is not null
+    where ${signableMember()}
+      and exists (select 1 from intervention_sessions i where i.school_id = sc.id and i.occurred)
+    order by u.email, sc.visible_id
+    limit 1`);
+  if (!fixture) throw new Error("seed the database first: no school with an occurred session");
+
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/supervisors`));
+  const row = page.getByRole("row").filter({ hasText: fixture.supervisorName }).first();
+  await chooseRowAction(page, row, "Mark attendance");
+  const dialog = page.getByRole("dialog").filter({ hasText: "Select attendance" });
+  await dialog.getByRole("combobox", { name: /^Select session/ }).click();
+  await page.getByRole("option").first().click();
+  const reason = dialog.getByRole("combobox", { name: "Select reason for above" });
+  await dialog.getByRole("radio", { name: "Missed" }).click();
+  await reason.click();
+  await page.getByRole("option").first().click();
+  await expect(reason).not.toContainText("Select a reason");
+  await dialog.getByRole("radio", { name: "Attended" }).click();
+  await expect(reason).toHaveCount(0);
+  await dialog.getByRole("radio", { name: "Missed" }).click();
+  await expect(reason).toContainText("Select a reason");
+});

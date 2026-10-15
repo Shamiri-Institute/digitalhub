@@ -139,12 +139,6 @@ export function MarkAttendance({
     resetForSelectedSession();
   }, [selectedSessionId]);
 
-  // effect: clears the reason and comments when the watched attendance status changes
-  useEffect(() => {
-    form.setValue("comments", undefined);
-    form.setValue("absenceReason", undefined);
-  }, [statusWatcher, form]);
-
   const onSubmit = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     let response:
       | {
@@ -252,6 +246,8 @@ export function MarkAttendance({
                     name="attended"
                     onValueChange={(value) => {
                       field.onChange(value);
+                      form.setValue("comments", undefined);
+                      form.setValue("absenceReason", undefined);
                     }}
                     className="grid grid-cols-2 gap-2 lg:grid-cols-3"
                   >
