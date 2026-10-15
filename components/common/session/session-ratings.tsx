@@ -247,16 +247,19 @@ function SessionRatingsForm({
                   render={({ field }) => (
                     <FormItem className="space-y-2">
                       <FormLabel>Student headcount</FormLabel>
-                      <Input
-                        type="number"
-                        placeholder="No of. students who attended"
-                        disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
-                        {...field}
-                        onChange={(e) => {
-                          const value = e.target.value === "" ? undefined : Number(e.target.value);
-                          field.onChange(value);
-                        }}
-                      />
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="No of. students who attended"
+                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                          {...field}
+                          onChange={(e) => {
+                            const value =
+                              e.target.value === "" ? undefined : Number(e.target.value);
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

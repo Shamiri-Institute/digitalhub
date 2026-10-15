@@ -56,6 +56,9 @@ async function expectDialogShowsPersonalData(page: Page, fixture: Fixture, item:
   const dialog = page.getByRole("dialog", { name: item });
   await expect(dialog.locator('input[name="idNumber"]')).toHaveValue(fixture.idNumber);
   await expect(dialog.locator('input[name="mpesaNumber"]')).toHaveValue(fixture.mpesaNumber);
+  if (item.startsWith("View")) {
+    await expect(dialog.getByRole("textbox", { name: "Date of birth" })).toBeVisible();
+  }
 }
 
 const hubCoordinatorFellow = sql`

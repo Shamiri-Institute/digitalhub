@@ -277,13 +277,17 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                         </PopoverContent>
                       </Popover>
                     ) : (
-                      <Input
-                        value={
-                          field.value !== undefined ? format(field.value, "dd-MM-yyyy") : undefined
-                        }
-                        type="text"
-                        disabled={mode === "view"}
-                      />
+                      <FormControl>
+                        <Input
+                          value={
+                            field.value !== undefined
+                              ? format(field.value, "dd-MM-yyyy")
+                              : undefined
+                          }
+                          type="text"
+                          disabled={mode === "view"}
+                        />
+                      </FormControl>
                     )}
                     <FormMessage />
                   </FormItem>

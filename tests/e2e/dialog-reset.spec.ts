@@ -467,6 +467,7 @@ test("weekly session report shows each session's saved highlights, not typed tex
 
   await openFor(sessionA.sessionLabel);
   await expect(highlights).toHaveValue(sessionA.highlights);
+  await expect(dialog.getByRole("spinbutton", { name: "Student headcount" })).toBeVisible();
   await highlights.fill(typed);
   await closeDialog(page, dialog);
 
@@ -601,8 +602,7 @@ test("schedule a session switches between school and venue with the session type
   const dialog = page.getByRole("dialog", { name: "Schedule a session" });
   const sessionType = dialog.getByRole("combobox", { name: "Select a session type" });
   const school = dialog.getByRole("combobox", { name: /^Select school/ });
-  // The venue input is not linked to its label; it is the dialog's only textbox.
-  const venue = dialog.getByRole("textbox");
+  const venue = dialog.getByRole("textbox", { name: "Enter venue" });
 
   await sessionType.click();
   await page.getByRole("option", { name: /Supervision 1$/ }).click();
@@ -618,6 +618,9 @@ test("schedule a session switches between school and venue with the session type
   await expect(venue).toBeVisible();
   await expect(venue).toHaveValue("");
   await expect(school).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Pick a time" }).click();
+  await expect(page.getByRole("spinbutton", { name: "Hour" })).toBeVisible();
+  await expect(page.getByRole("spinbutton", { name: "Minutes" })).toBeVisible();
 });
 
 test("mark attendance clears the absence reason when the status changes", async ({

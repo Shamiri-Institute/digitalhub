@@ -218,7 +218,9 @@ export function ScheduleNewSession({
                   <FormLabel>
                     Enter venue <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
-                  <Input {...field} type="text" />
+                  <FormControl>
+                    <Input {...field} type="text" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -287,6 +289,7 @@ export function ScheduleNewSession({
                           <div className="relative w-16">
                             <Input
                               type="number"
+                              aria-label="Hour"
                               onChange={(e) => {
                                 setHour(e.target.value);
                               }}
@@ -303,6 +306,7 @@ export function ScheduleNewSession({
                           <div className="relative w-16">
                             <Input
                               type="number"
+                              aria-label="Minutes"
                               onChange={(e) => {
                                 setMinutes(handleMinutesChange(e.target.value));
                               }}
