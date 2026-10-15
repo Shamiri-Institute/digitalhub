@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { format } from "date-fns";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
@@ -145,16 +146,6 @@ test.beforeAll(async () => {
   };
 });
 
-// Each test's undo steps run in afterEach, not in a finally block: when a test times out,
-// Playwright abandons its body but still runs the hooks.
-let undo: (() => Promise<unknown>)[] = [];
-test.afterEach(async () => {
-  for (const step of undo.reverse()) {
-    await step();
-  }
-  undo = [];
-});
-
 /**
  * A sessions-table row by its session name. That column is not searchable, so show up to 50 rows
  * a page instead (a school has at most 15 sessions).
@@ -180,11 +171,11 @@ async function openStudentAttendance(page: Page) {
   return attendance;
 }
 
-test("a hub coordinator drops out a student in their hub", async ({ page, context }) => {
+test("a hub coordinator drops out a student in their hub", async ({ page, context, undo }) => {
   await signInWithEmail(context, coordinator.email);
   const studentsPage = getUrl(`/hc/schools/${school.visibleId}/students`);
   await page.goto(studentsPage);
-  undo.push(() =>
+  undo(() =>
     db
       .update(student)
       .set({ droppedOut: false, dropOutReason: null, droppedOutAt: null })
@@ -209,12 +200,16 @@ test("a hub coordinator drops out a student in their hub", async ({ page, contex
   await expect(await rowWithCell(page, main, school.studentName)).toContainText("Inactive");
 });
 
-test("a hub coordinator marks a session in their hub as occurred", async ({ page, context }) => {
+test("a hub coordinator marks a session in their hub as occurred", async ({
+  page,
+  context,
+  undo,
+}) => {
   await db
     .update(interventionSession)
     .set({ occurred: false })
     .where(eq(interventionSession.id, school.sessionId));
-  undo.push(() =>
+  undo(() =>
     db
       .update(interventionSession)
       .set({ occurred: school.sessionOccurred })
@@ -258,6 +253,7 @@ test("a hub coordinator in another hub does not see the school", async ({ page, 
 test("a hub coordinator marks a student in their hub missed at a session", async ({
   page,
   context,
+  undo,
 }) => {
   const attendanceAtSession = and(
     eq(studentAttendance.studentId, school.studentId),
@@ -265,7 +261,7 @@ test("a hub coordinator marks a student in their hub missed at a session", async
   );
   const originalAttendances = await db.select().from(studentAttendance).where(attendanceAtSession);
   await db.delete(studentAttendance).where(attendanceAtSession);
-  undo.push(async () => {
+  undo(async () => {
     await db.delete(studentAttendance).where(attendanceAtSession);
     if (originalAttendances.length > 0) {
       await db.insert(studentAttendance).values(originalAttendances);
@@ -313,13 +309,17 @@ test("a hub coordinator marks a student in their hub missed at a session", async
   ).toContainText("Missed");
 });
 
-test("a supervisor edits the details of a student in their hub", async ({ page, context }) => {
+test("a supervisor edits the details of a student in their hub", async ({
+  page,
+  context,
+  undo,
+}) => {
   const [originalDetails] = await db
     .select({ studentName: student.studentName, form: student.form, stream: student.stream })
     .from(student)
     .where(eq(student.id, school.studentId));
   if (!originalDetails) throw new Error(`student ${school.studentId} is gone`);
-  undo.push(() => db.update(student).set(originalDetails).where(eq(student.id, school.studentId)));
+  undo(() => db.update(student).set(originalDetails).where(eq(student.id, school.studentId)));
   await signInWithEmail(context, school.supervisorEmail);
   await page.goto(getUrl(`/sc/schools/${school.visibleId}/students`));
 
@@ -345,9 +345,13 @@ test("a supervisor edits the details of a student in their hub", async ({ page, 
   await expect(await rowWithCell(page, main, editedName)).toHaveCount(1);
 });
 
-test("a hub coordinator adds a student to a group in their hub", async ({ page, context }) => {
+test("a hub coordinator adds a student to a group in their hub", async ({
+  page,
+  context,
+  undo,
+}) => {
   const newStudentName = `E2E Student ${Date.now()}`;
-  undo.push(() => db.delete(student).where(eq(student.studentName, newStudentName)));
+  undo(() => db.delete(student).where(eq(student.studentName, newStudentName)));
   await signInWithEmail(context, coordinator.email);
   await page.goto(getUrl(`/hc/schools/${school.visibleId}/groups`));
 
@@ -379,6 +383,7 @@ test("a hub coordinator adds a student to a group in their hub", async ({ page, 
 test("a fellow marks one student missed and two students attended at once", async ({
   page,
   context,
+  undo,
 }) => {
   const groupStudents = await db
     .select({ id: student.id, admissionNumber: student.admissionNumber })
@@ -404,7 +409,7 @@ test("a fellow marks one student missed and two students attended at once", asyn
     inArray(studentAttendance.studentId, studentIds),
   );
   const originalAttendances = await db.select().from(studentAttendance).where(attendanceAtSession);
-  undo.push(async () => {
+  undo(async () => {
     await db.delete(studentAttendance).where(attendanceAtSession);
     if (originalAttendances.length > 0) {
       await db.insert(studentAttendance).values(originalAttendances);
@@ -470,6 +475,7 @@ test("a fellow marks one student missed and two students attended at once", asyn
 test("a fellow documents a triage event; another fellow at the school does not see it", async ({
   page,
   context,
+  undo,
 }) => {
   test.slow();
   const note = `e2e-2212-${Date.now()}`;
@@ -493,7 +499,7 @@ test("a fellow documents a triage event; another fellow at the school does not s
     await expect(form).toBeHidden();
   }
 
-  undo.push(async () => {
+  undo(async () => {
     const events = await db
       .select({ id: triageEvent.id })
       .from(triageEvent)

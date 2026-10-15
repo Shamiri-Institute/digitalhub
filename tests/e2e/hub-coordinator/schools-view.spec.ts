@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -6,22 +6,11 @@ import { school, weeklyHubReport } from "#/db/schema";
 import { signInAs } from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
-const recommendations = `E2E weekly hub report ${Date.now()}`;
-let originalSchool:
-  | Pick<typeof school.$inferSelect, "id" | "numbersExpected" | "boardingDay">
-  | undefined;
-
-// Cleanup runs in afterAll, not in a finally block: when a test times out, Playwright abandons
-// its body but still runs the hooks.
-test.afterAll(async () => {
-  await db.delete(weeklyHubReport).where(eq(weeklyHubReport.recommendations, recommendations));
-  if (originalSchool) {
-    const { id, ...originalFields } = originalSchool;
-    await db.update(school).set(originalFields).where(eq(school.id, id));
-  }
-});
-
-test("Hub Coordinator can submit a weekly hub report", async ({ page, context }) => {
+test("Hub Coordinator can submit a weekly hub report", async ({ page, context, undo }) => {
+  const recommendations = `E2E weekly hub report ${Date.now()}`;
+  undo(() =>
+    db.delete(weeklyHubReport).where(eq(weeklyHubReport.recommendations, recommendations)),
+  );
   const coordinator = await signInAs(context, "HUB_COORDINATOR");
   await page.goto(getUrl("/hc/schools"));
   const ratings = [
@@ -70,7 +59,7 @@ test("Hub Coordinator can submit a weekly hub report", async ({ page, context })
   });
 });
 
-test("Hub Coordinator edits a school in one dialog", async ({ page, context }) => {
+test("Hub Coordinator edits a school in one dialog", async ({ page, context, undo }) => {
   const coordinator = await signInAs(context, "HUB_COORDINATOR");
   const coordinatorProfile = await db.query.hubCoordinator.findFirst({
     where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
@@ -88,8 +77,8 @@ test("Hub Coordinator edits a school in one dialog", async ({ page, context }) =
     orderBy: (s, { desc }) => desc(s.visibleId),
   });
   if (!targetSchool) throw new Error("seed the database first: the hub has no open school");
-  const { schoolName, ...original } = targetSchool;
-  originalSchool = original;
+  const { schoolName, id, ...originalFields } = targetSchool;
+  undo(() => db.update(school).set(originalFields).where(eq(school.id, id)));
   const newNumbersExpected = String((targetSchool.numbersExpected ?? 0) + 1);
 
   await page.goto(getUrl("/hc/schools"));

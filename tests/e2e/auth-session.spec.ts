@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -82,43 +82,38 @@ for (const [role, route] of pagesThatLoadTheProfile) {
   });
 }
 
-test("signing out from the user menu deletes the session", async ({ context, page }) => {
+test("signing out from the user menu deletes the session", async ({ context, page, undo }) => {
   const admin = await createAdmin();
-  try {
-    await signInWithEmail(context, admin.email);
-    await page.goto(getUrl("/admin/schedule"));
-    await page.getByAltText("Profile arrow drop down icon").click();
-    await page.getByRole("menuitem", { name: "Sign out" }).click();
-    await expect(page).toHaveURL(loginUrl);
-    // The browser drops its cookie either way; only the database shows the session was revoked.
-    expect(await db.$count(session, eq(session.userId, admin.id))).toBe(0);
+  undo(() => deleteAdmin(admin));
+  await signInWithEmail(context, admin.email);
+  await page.goto(getUrl("/admin/schedule"));
+  await page.getByAltText("Profile arrow drop down icon").click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(loginUrl);
+  // The browser drops its cookie either way; only the database shows the session was revoked.
+  expect(await db.$count(session, eq(session.userId, admin.id))).toBe(0);
 
-    await page.goto(getUrl("/admin/schedule"));
-    await expect(page).toHaveURL(loginUrl);
-  } finally {
-    await deleteAdmin(admin);
-  }
+  await page.goto(getUrl("/admin/schedule"));
+  await expect(page).toHaveURL(loginUrl);
 });
 
 test("archiving a signed-in user signs them out and blocks new sessions", async ({
   context,
   page,
+  undo,
 }) => {
   const admin = await createAdmin();
-  try {
-    await signInWithEmail(context, admin.email);
-    await page.goto(getUrl("/admin/schedule"));
-    await expect(page).toHaveURL(getUrl("/admin/schedule"));
+  undo(() => deleteAdmin(admin));
+  await signInWithEmail(context, admin.email);
+  await page.goto(getUrl("/admin/schedule"));
+  await expect(page).toHaveURL(getUrl("/admin/schedule"));
 
-    await db.update(user).set({ archivedAt: new Date() }).where(eq(user.id, admin.id));
-    await page.goto(getUrl("/admin/schedule"));
-    await expect(page).toHaveURL(loginUrl);
-    expect(await db.$count(session, eq(session.userId, admin.id))).toBe(0);
+  await db.update(user).set({ archivedAt: new Date() }).where(eq(user.id, admin.id));
+  await page.goto(getUrl("/admin/schedule"));
+  await expect(page).toHaveURL(loginUrl);
+  expect(await db.$count(session, eq(session.userId, admin.id))).toBe(0);
 
-    await expect(sessionCookieFor(admin.email)).rejects.toThrow("This account is archived");
-  } finally {
-    await deleteAdmin(admin);
-  }
+  await expect(sessionCookieFor(admin.email)).rejects.toThrow("This account is archived");
 });
 
 test("Google sign-in redirects to Google with our callback path", async ({ request }) => {

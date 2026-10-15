@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -108,19 +108,9 @@ test.beforeAll(async () => {
   reassign = hubFellow;
 });
 
-// Each test's undo steps run in afterEach, not in a finally block: when a test times out,
-// Playwright abandons its body but still runs the hooks.
-let undo: (() => Promise<unknown>)[] = [];
-test.afterEach(async () => {
-  for (const step of undo.reverse()) {
-    await step();
-  }
-  undo = [];
-});
-
-test("a fellow evaluates a group they lead", async ({ page, context }) => {
+test("a fellow evaluates a group they lead", async ({ page, context, undo }) => {
   const comment = `e2e-scoped-write-${Date.now()}`;
-  undo.push(() =>
+  undo(() =>
     db
       .delete(interventionGroupReport)
       .where(eq(interventionGroupReport.groupId, evaluation.groupId)),
@@ -163,9 +153,13 @@ test("a fellow evaluates a group they lead", async ({ page, context }) => {
   expect(savedReport).toEqual({ content: 5 });
 });
 
-test("a supervisor renames a recording of their fellow's group", async ({ page, context }) => {
+test("a supervisor renames a recording of their fellow's group", async ({
+  page,
+  context,
+  undo,
+}) => {
   const newFileName = `e2e-scoped-write-${Date.now()}`;
-  undo.push(() =>
+  undo(() =>
     db
       .update(sessionRecording)
       .set({ originalFileName: recording.originalFileName })
@@ -198,8 +192,9 @@ test("a supervisor renames a recording of their fellow's group", async ({ page, 
 test("a hub coordinator assigns a fellow of their hub to another supervisor", async ({
   page,
   context,
+  undo,
 }) => {
-  undo.push(() =>
+  undo(() =>
     db
       .update(fellow)
       .set({ supervisorId: reassign.originalSupervisorId })

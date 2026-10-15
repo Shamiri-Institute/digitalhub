@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -70,23 +71,13 @@ test.beforeAll(async () => {
   };
 });
 
-// Cleanup runs in afterEach, not in a finally block: when a test times out, Playwright abandons
-// its body but still runs the hooks.
-let undo: (() => Promise<unknown>)[] = [];
-test.beforeEach(async () => {
+test.beforeEach(async ({ undo }) => {
   clinicalCase = await createClinicalCase({
     schoolId: caseOwner.schoolId,
     currentSupervisorId: caseOwner.supervisorId,
   });
-  undo.push(() => clinicalCase.remove());
+  undo(() => clinicalCase.remove());
 });
-test.afterEach(async () => {
-  for (const step of undo.reverse()) {
-    await step();
-  }
-  undo = [];
-});
-
 /** A row of the expanded diagnosing board. The case's own row also contains it, so take the last. */
 function issueRow(page: Page, issue: string) {
   return page
@@ -179,6 +170,7 @@ test("a save from a page loaded before the case was terminated changes nothing",
 test("a fellow deletes their group's attendance document even when the file store fails", async ({
   page,
   context,
+  undo,
 }) => {
   test.skip(
     !process.env.S3_STUDENT_ATTENDANCE_BUCKET || !process.env.S3_STUDENT_ATTENDANCE_REGION,
@@ -196,7 +188,7 @@ test("a fellow deletes their group's attendance document even when the file stor
     })
     .returning({ id: attendanceDocuments.id });
   if (!document) throw new Error("could not insert the attendance document fixture");
-  undo.push(() => db.delete(attendanceDocuments).where(eq(attendanceDocuments.id, document.id)));
+  undo(() => db.delete(attendanceDocuments).where(eq(attendanceDocuments.id, document.id)));
 
   await signInWithEmail(context, attendance.email);
   const dialog = page.getByRole("dialog", { name: "Attendance Document" });

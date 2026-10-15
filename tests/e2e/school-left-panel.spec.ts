@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -22,6 +22,7 @@ type Fixture = {
 test("the school panel renders on the server and shows a session cancelled on the tab", async ({
   page,
   context,
+  undo,
 }) => {
   const {
     rows: [fixture],
@@ -64,13 +65,12 @@ test("the school panel renders on the server and shows a session cancelled on th
     .getByRole("row")
     .filter({ has: page.getByRole("cell", { name: sessionLabel, exact: true }) });
   await chooseRowAction(page, sessionRow, "Cancel session");
-  try {
-    await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click();
-    await expect(panel.getByTitle(`${sessionLabel}: Cancelled`)).toBeVisible();
-  } finally {
-    await db
+  undo(() =>
+    db
       .update(interventionSession)
       .set({ status: fixture.status })
-      .where(eq(interventionSession.id, fixture.sessionId));
-  }
+      .where(eq(interventionSession.id, fixture.sessionId)),
+  );
+  await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click();
+  await expect(panel.getByTitle(`${sessionLabel}: Cancelled`)).toBeVisible();
 });

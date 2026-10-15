@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test, type Undo } from "#/tests/fixtures";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -124,21 +125,11 @@ test.afterAll(async () => {
   await removeCase?.();
 });
 
-// Cleanup runs in afterEach, not in a finally block: when a test times out, Playwright abandons
-// its body but still runs the hooks.
-let undo: (() => Promise<unknown>)[] = [];
-test.afterEach(async () => {
-  for (const step of undo.reverse()) {
-    await step();
-  }
-  undo = [];
-});
-
-test("a supervisor's new case is listed as theirs", async ({ page, context }) => {
+test("a supervisor's new case is listed as theirs", async ({ page, context, undo }) => {
   const casePseudonym = `e2e-sc-${Date.now()}`;
   await signInWithEmail(context, owner.email);
   await page.goto(getUrl("/sc/clinical"));
-  undo.push(() => deleteCase(casePseudonym));
+  undo(() => deleteCase(casePseudonym));
 
   await createCaseForNewStudent(page, casePseudonym);
   await page.reload();
@@ -152,11 +143,11 @@ test("a supervisor's new case is listed as theirs", async ({ page, context }) =>
   });
 });
 
-test("a clinical lead's new case is assigned to them", async ({ page, context }) => {
+test("a clinical lead's new case is assigned to them", async ({ page, context, undo }) => {
   const casePseudonym = `e2e-cl-${Date.now()}`;
   await signInWithEmail(context, clinicalLead.email);
   await page.goto(getUrl("/cl/clinical"));
-  undo.push(() => deleteCase(casePseudonym));
+  undo(() => deleteCase(casePseudonym));
 
   await createCaseForNewStudent(page, casePseudonym);
   await page.reload();
@@ -171,6 +162,7 @@ test("a clinical lead's new case is assigned to them", async ({ page, context })
 test("a supervisor opens a case for an existing student with a non-numeric admission number", async ({
   page,
   context,
+  undo,
 }) => {
   const casePseudonym = `e2e-existing-${Date.now()}`;
   const schoolWithSessions = await db.query.school.findFirst({
@@ -196,7 +188,7 @@ test("a supervisor opens a case for an existing student with a non-numeric admis
     schoolId: schoolWithSessions.id,
     admissionNumber: "ADM/0042-A",
   });
-  undo.push(() => deleteCase(casePseudonym));
+  undo(() => deleteCase(casePseudonym));
 
   await signInWithEmail(context, owner.email);
   await page.goto(getUrl("/sc/clinical"));
@@ -225,6 +217,7 @@ test("a supervisor opens a case for an existing student with a non-numeric admis
 test("a supervisor edits their case's student and the change survives a reload", async ({
   page,
   context,
+  undo,
 }) => {
   const ownCase = await db.query.clinicalScreeningInfo.findFirst({
     where: (c, { eq }) => eq(c.id, caseId),
@@ -235,7 +228,7 @@ test("a supervisor edits their case's student and the change survives a reload",
   const studentName = `E2E student ${Date.now()}`;
   await signInWithEmail(context, owner.email);
   await page.goto(getUrl("/sc/clinical"));
-  undo.push(() =>
+  undo(() =>
     db
       .update(student)
       .set({ studentName: original.studentName, form: original.form, stream: original.stream })
@@ -258,10 +251,10 @@ test("a supervisor edits their case's student and the change survives a reload",
   await expect(dialog.getByRole("textbox", { name: "Student Name" })).toHaveValue(studentName);
 });
 
-test("a supervisor moves their case to follow-up", async ({ page, context }) => {
+test("a supervisor moves their case to follow-up", async ({ page, context, undo }) => {
   await signInWithEmail(context, owner.email);
   await page.goto(getUrl("/sc/clinical"));
-  undo.push(() =>
+  undo(() =>
     db
       .update(clinicalScreeningInfo)
       .set({ caseStatus: "Active" })
@@ -289,7 +282,7 @@ test("a supervisor in another hub does not see the case", async ({ page, context
  * Gives the fixture case a clinical session dated today, labelled so the test can pick it, and
  * queues its removal. Notes and terminations must name one of the case's sessions.
  */
-async function addClinicalSession(sessionLabel: string) {
+async function addClinicalSession(sessionLabel: string, undo: Undo) {
   const [clinicalSession] = await db
     .insert(clinicalSessionAttendance)
     .values({
@@ -300,7 +293,7 @@ async function addClinicalSession(sessionLabel: string) {
     })
     .returning({ id: clinicalSessionAttendance.id });
   if (!clinicalSession) throw new Error("could not insert the clinical session fixture");
-  undo.push(() =>
+  undo(() =>
     db
       .delete(clinicalSessionAttendance)
       .where(eq(clinicalSessionAttendance.id, clinicalSession.id)),
@@ -311,11 +304,12 @@ async function addClinicalSession(sessionLabel: string) {
 test("a supervisor writes case notes and reads them back after a reload", async ({
   page,
   context,
+  undo,
 }) => {
   const sessionLabel = `e2e-notes-${Date.now()}`;
   const presentingIssues = `${sessionLabel} presenting issues`;
-  const clinicalSessionId = await addClinicalSession(sessionLabel);
-  undo.push(() =>
+  const clinicalSessionId = await addClinicalSession(sessionLabel, undo);
+  undo(() =>
     db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.sessionId, clinicalSessionId)),
   );
   await signInWithEmail(context, owner.email);
@@ -362,11 +356,11 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   );
 });
 
-test("a supervisor terminates their case", async ({ page, context }) => {
+test("a supervisor terminates their case", async ({ page, context, undo }) => {
   const sessionLabel = `e2e-termination-${Date.now()}`;
   const terminationReasonExplanation = `${sessionLabel} explanation`;
-  const clinicalSessionId = await addClinicalSession(sessionLabel);
-  undo.push(
+  const clinicalSessionId = await addClinicalSession(sessionLabel, undo);
+  undo(
     () =>
       db
         .delete(clinicalCaseTermination)
