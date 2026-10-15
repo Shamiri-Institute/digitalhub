@@ -593,7 +593,7 @@ refactor(components): extract reusable form validation
 - oxlint enforces this through the `hooks-policy/justify` rule in `lint/hooks-policy.mjs`. Every `useEffect`, `useLayoutEffect`, `useMemo` and `useCallback` needs a comment on the line directly above it that starts with `effect:`, `memo:` or `callback:` and states the reason. The lint fails otherwise, so prefer a handler or a derived value to inventing a reason.
 - Put a dialog's form in a component inside `DialogContent`. Radix unmounts it on close, so each open starts from the row's values. Do not reset the form in an effect.
 - Keep the steps of a multi-step dialog (form, then confirm) as state in one `Dialog`, not in a second `Dialog`. Example: `components/common/fellow/fellow-dropout-form.tsx`.
-- Clear a dependent field (sub-county, absence reason) in the parent field's `onValueChange` handler. The `hooks-policy/no-form-reset-in-effect` rule warns on `reset` or `setValue` in an effect.
+- Clear a dependent field (sub-county, absence reason) in the parent field's `onValueChange` handler. The `hooks-policy/no-form-reset-in-effect` rule fails on `reset` or `setValue` in an effect.
 
 ### Testing
 

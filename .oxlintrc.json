@@ -103,7 +103,7 @@
         "hooks": ["useEffect", "useLayoutEffect", "useMemo", "useCallback"]
       }
     ],
-    "hooks-policy/no-form-reset-in-effect": "warn"
+    "hooks-policy/no-form-reset-in-effect": "error"
   },
   "ignorePatterns": [".next", "node_modules", "playwright-report", ".artifacts"],
   "overrides": [
