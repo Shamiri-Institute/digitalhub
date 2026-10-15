@@ -25,7 +25,7 @@ import {
 } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { TypeID } from "typeid-js";
-import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
+import { KENYAN_COUNTIES, SCHOOL_TYPES } from "#/lib/app-constants/constants";
 import { db, pool } from "#/db/client";
 import * as schema from "#/db/schema";
 import {
@@ -505,7 +505,7 @@ async function createHubCoordinators(arsenal: Hub, otherHubs: Hub[], emails: Set
       bankAccountName: faker.person.fullName(),
       kra: faker.finance.accountNumber(),
       dateOfBirth: faker.date.birthdate(),
-      cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+      cellNumber: faker.helpers.fromRegExp("2541[1-9]{8}"),
       mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
       gender: faker.number.float() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
       idNumber: faker.string.numeric({ length: 8 }),
@@ -549,8 +549,7 @@ async function createSupervisors(arsenal: Hub, otherHubs: Hub[], emails: Set<str
 
       return {
         id: objectId("user"),
-        email: uniqueEmail,
-        role: ImplementerRole.SUPERVISOR,
+        supervisorEmail: uniqueEmail,
         hubId: hub.id,
         implementerId: hub.implementerId,
         visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
@@ -591,7 +590,7 @@ async function createSupervisors(arsenal: Hub, otherHubs: Hub[], emails: Set<str
       implementerId: _user.implementerId,
       visibleId: _user.visibleId || faker.string.alpha({ casing: "upper", length: 6 }),
       supervisorName: faker.person.fullName(),
-      supervisorEmail: faker.internet.email(),
+      supervisorEmail: _user.supervisorEmail,
       county: county.name,
       subCounty: subCounty,
       bankName: faker.company.name(),
@@ -600,7 +599,7 @@ async function createSupervisors(arsenal: Hub, otherHubs: Hub[], emails: Set<str
       bankAccountName: faker.person.fullName(),
       kra: faker.finance.accountNumber(),
       dateOfBirth: faker.date.birthdate(),
-      cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+      cellNumber: faker.helpers.fromRegExp("2541[1-9]{8}"),
       mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
       gender: faker.number.float() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
       idNumber: faker.string.numeric({ length: 8 }),
@@ -813,7 +812,7 @@ async function createFellows(arsenal: Hub, supervisors: Supervisor[], emails: Se
         county: supervisor.county,
         subCounty: subCounties ? faker.helpers.arrayElement(subCounties) : supervisor.subCounty,
         dateOfBirth: faker.date.birthdate(),
-        cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+        cellNumber: faker.helpers.fromRegExp("2541[1-9]{8}"),
         gender:
           faker.number.float() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
         idNumber: faker.string.numeric({ length: 8 }),
@@ -884,7 +883,7 @@ async function createSchools(
         visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         schoolName: faker.company.name(),
         hubId: hub.id,
-        schoolType: faker.helpers.arrayElement(["National", "County", "Subcounty"]),
+        schoolType: faker.helpers.arrayElement(SCHOOL_TYPES),
         schoolEmail: faker.internet.email(),
         schoolCounty: county.name,
         schoolSubCounty: subCounty,
@@ -1017,6 +1016,8 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
         assignedGroupId: group.id,
         gender: i % 2 === 0 ? "Male" : "Female",
         yearOfBirth: 2008,
+        form: 2,
+        stream: "East",
       });
     }
   });
@@ -1036,6 +1037,8 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
         assignedGroupId: faker.helpers.arrayElement(school.interventionGroups).id,
         gender: faker.helpers.arrayElement(["Male", "Female"]),
         yearOfBirth: faker.date.birthdate({ mode: "age", min: 12, max: 20 }).getFullYear(),
+        form: faker.number.int({ min: 1, max: 4 }),
+        stream: faker.helpers.arrayElement(["East", "West", "North", "South"]),
       });
     }
   }
@@ -2108,6 +2111,9 @@ async function main() {
     hubs,
     defaultProjectId,
   );
+  // One creation time for every seeded user, so a picker that orders by it and then by email picks
+  // the same user after every reset, and users a test adds come after them.
+  await db.update(schema.user).set({ createdAt: seedToday });
 
   const schools = await createSchools(hubs, arsenal, otherHubs, supervisors);
   await createInterventionGroups(schools, fellows);
