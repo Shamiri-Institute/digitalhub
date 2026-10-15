@@ -1,7 +1,8 @@
 import { currentHubCoordinator } from "#/app/auth";
 import MetabaseDashboardEmbed from "#/components/common/metabase-dashboard-embed";
 import { Alert, AlertTitle } from "#/components/ui/alert";
-import { buildMetabaseDashboardEmbedUrl, getMetabaseEmbedConfig } from "#/lib/metabase-embed";
+import { env } from "#/env";
+import { buildMetabaseDashboardEmbedUrl } from "#/lib/metabase-embed";
 
 export default async function MonitoringAndEvaluationPage() {
   const hubCoordinator = await currentHubCoordinator();
@@ -24,7 +25,8 @@ export default async function MonitoringAndEvaluationPage() {
     );
   }
 
-  const { secretKey, dashboardId } = getMetabaseEmbedConfig();
+  const secretKey = env.METABASE_SECRET_KEY;
+  const dashboardId = env.METABASE_MONITORING_DASHBOARD_ID;
   if (!secretKey) {
     return (
       <Alert variant="destructive" className="mx-4 mt-4">
@@ -32,7 +34,7 @@ export default async function MonitoringAndEvaluationPage() {
       </Alert>
     );
   }
-  if (dashboardId === null) {
+  if (!dashboardId) {
     return (
       <Alert variant="destructive" className="mx-4 mt-4">
         <AlertTitle>

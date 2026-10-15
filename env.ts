@@ -19,7 +19,6 @@ const schema = z.object({
   S3_STUDENT_ATTENDANCE_REGION: z.string().default("af-south-1"),
 
   FIDELITY_API_URL: z.url().optional(),
-  // The fidelity service sends it to our recording webhooks, and we send it to the service.
   RECORDINGS_API_KEY: z.string().optional(),
 
   METABASE_SECRET_KEY: z.string().optional(),
