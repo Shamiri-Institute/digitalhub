@@ -1,159 +1,175 @@
-import { ImplementerRole } from "#/db/enums";
+// The Arsenal hub: a fixed hub, staff and school that e2e tests and demos can name.
 
-interface Fixtures {
-  users: {
-    email: string;
-    name: string;
-    implementerByVisibleId: string;
-    implementerRole: ImplementerRole;
-    avatarUrl: string | null;
-    identifier?: string;
-  }[];
-}
+export const arsenalHub = { visibleId: "ARSENAL1", hubName: "Arsenal Hub" };
 
-export const userFixtures: Fixtures = {
-  users: [
-    {
-      email: "mmbone@shamiri.institute",
-      name: "Wendy Mmbone",
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.ADMIN,
-      avatarUrl: null,
-    },
-    {
-      email: "benny@shamiri.institute",
-      name: "Benny H. Otieno",
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.OPERATIONS,
-      avatarUrl: null,
-    },
-    {
-      email: "linus@shamiri.institute",
-      name: "Linus Wong",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.ADMIN,
-    },
-    {
-      email: "edmund@shamiri.institute",
-      name: "Edmund Korley",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.HUB_COORDINATOR,
-      identifier: "23_HC_01",
-    },
-    {
-      email: "dmndetei@amhf.or.ke",
-      name: "Dennis Mndetei",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_2",
-      implementerRole: ImplementerRole.ADMIN,
-    },
-    {
-      email: "jackline@shamiri.institute",
-      name: "Jackline",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      email: "dennis@shamiri.institute",
-      name: "Dennis",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      email: "mcgovarn@shamiri.institute",
-      name: "McGovarn",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      email: "amanda@shamiri.institute",
-      name: "Amanda",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      email: "chrispinus@shamiri.institute",
-      name: "Chrispinus Misati",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      email: "paul@shamiri.institute",
-      name: "Paul Okoth",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      email: "ruth@shamiri.institute",
-      name: "Ruth Wangari",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.SUPERVISOR,
-    },
-    {
-      email: "symon@shamiri.institute",
-      name: "Symon Wangari",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.SUPERVISOR,
-    },
-    {
-      email: "veronicah@shamiri.institute",
-      name: "Veronicah Ngatia",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.SUPERVISOR,
-    },
-    {
-      email: "beverly@shamiri.institute",
-      name: "Beverly Mshai",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.SUPERVISOR,
-    },
-    {
-      email: "edwin@amhf.or.ke",
-      name: "Edwin Omari",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_2",
-      implementerRole: ImplementerRole.SUPERVISOR,
-    },
-    {
-      email: "hemstone@amhf.or.ke",
-      name: "Hemstone Mugala",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_2",
-      implementerRole: ImplementerRole.SUPERVISOR,
-    },
-    {
-      email: "grace@amhf.or.ke",
-      name: "Grace Mugo",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_2",
-      implementerRole: ImplementerRole.SUPERVISOR,
-    },
-    {
-      email: "rachel@amhf.or.ke",
-      name: "Rachel Kamau",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_2",
-      implementerRole: ImplementerRole.SUPERVISOR,
-    },
-    {
-      email: "shadrack.lilan@shamiri.institute",
-      name: "Shadrack Lilan",
-      avatarUrl: null,
-      implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.SUPERVISOR,
-      identifier: "SPV23_S_09",
-    },
-  ],
+const arsenalStaffDetails = {
+  county: "Nairobi",
+  subCounty: "Westlands",
+  bankName: "Arsenal Bank",
+  bankBranch: "Emirates Branch",
+  gender: "Male",
+};
+
+export const arsenalCoordinators = [
+  {
+    ...arsenalStaffDetails,
+    visibleId: "HC_ARTETA",
+    coordinatorName: "Mikel Arteta",
+    coordinatorEmail: "mikel.arteta@test.com",
+    bankAccountNumber: "12345678",
+    bankAccountName: "Mikel Arteta",
+    kra: "A123456789B",
+    dateOfBirth: new Date(1982, 2, 26),
+    cellNumber: "254712345678",
+    mpesaNumber: "254712345678",
+    idNumber: "12345678",
+  },
+  {
+    ...arsenalStaffDetails,
+    visibleId: "HC_GASPAR",
+    coordinatorName: "Edu Gaspar",
+    coordinatorEmail: "edu.gaspar@test.com",
+    bankAccountNumber: "23456789",
+    bankAccountName: "Edu Gaspar",
+    kra: "B234567890C",
+    dateOfBirth: new Date(1978, 6, 15),
+    cellNumber: "254723456789",
+    mpesaNumber: "254723456789",
+    idNumber: "23456789",
+  },
+];
+
+export const arsenalSupervisors = [
+  {
+    ...arsenalStaffDetails,
+    visibleId: "SUPERVISOR1",
+    supervisorName: "Martin Ødegaard",
+    supervisorEmail: "martin.odegaard@test.com",
+    bankAccountNumber: "12345678",
+    bankAccountName: "Martin Ødegaard",
+    kra: "A123456789B",
+    dateOfBirth: new Date(1998, 11, 17),
+    cellNumber: "254712345678",
+    mpesaNumber: "254712345678",
+    idNumber: "12345678",
+  },
+  {
+    ...arsenalStaffDetails,
+    visibleId: "SUPERVISOR2",
+    supervisorName: "Declan Rice",
+    supervisorEmail: "declan.rice@test.com",
+    bankAccountNumber: "23456789",
+    bankAccountName: "Declan Rice",
+    kra: "B234567890C",
+    dateOfBirth: new Date(1999, 0, 14),
+    cellNumber: "254723456789",
+    mpesaNumber: "254723456789",
+    idNumber: "23456789",
+  },
+  {
+    ...arsenalStaffDetails,
+    visibleId: "SUPERVISOR3",
+    supervisorName: "William Saliba",
+    supervisorEmail: "william.saliba@test.com",
+    bankAccountNumber: "34567890",
+    bankAccountName: "William Saliba",
+    kra: "C345678901D",
+    dateOfBirth: new Date(2001, 2, 24),
+    cellNumber: "254734567890",
+    mpesaNumber: "254734567890",
+    idNumber: "34567890",
+  },
+];
+
+export const arsenalOpsUser = { email: "kai.havertz@test.com", name: "Kai Havertz" };
+
+export const arsenalClinicalLead = {
+  clinicalLeadEmail: "ben.white@test.com",
+  clinicalLeadName: "Ben White",
+};
+
+export const arsenalClinicalTeamMember = {
+  name: "Takehiro Tomiyasu",
+  email: "takehiro.tomiyasu@test.com",
+  cellNumber: "254712345679",
+};
+
+export const arsenalFellows = [
+  {
+    supervisorVisibleId: "SUPERVISOR1",
+    visibleId: "FELLOW1",
+    fellowName: "Bukayo Saka",
+    fellowEmail: "bukayo.saka@test.com",
+    mpesaName: "Bukayo Saka",
+    mpesaNumber: "254712345678",
+    cellNumber: "254712345678",
+    gender: "Male",
+    dateOfBirth: new Date(2001, 8, 5),
+    idNumber: "12345678",
+    county: "Nairobi",
+    subCounty: "Westlands",
+  },
+  {
+    supervisorVisibleId: "SUPERVISOR2",
+    visibleId: "FELLOW2",
+    fellowName: "Gabriel Martinelli",
+    fellowEmail: "gabriel.martinelli@test.com",
+    mpesaName: "Gabriel Martinelli",
+    mpesaNumber: "254723456789",
+    cellNumber: "254723456789",
+    gender: "Male",
+    dateOfBirth: new Date(2001, 5, 18),
+    idNumber: "23456789",
+    county: "Nairobi",
+    subCounty: "Westlands",
+  },
+  {
+    supervisorVisibleId: "SUPERVISOR3",
+    visibleId: "FELLOW3",
+    fellowName: "Gabriel Jesus",
+    fellowEmail: "gabriel.jesus@test.com",
+    mpesaName: "Gabriel Jesus",
+    mpesaNumber: "254734567890",
+    cellNumber: "254734567890",
+    gender: "Male",
+    dateOfBirth: new Date(1997, 3, 3),
+    idNumber: "34567890",
+    county: "Nairobi",
+    subCounty: "Westlands",
+  },
+];
+
+const arsenalSchoolDetails = {
+  schoolType: "National",
+  schoolCounty: "Nairobi",
+  schoolSubCounty: "Westlands",
+  schoolDemographics: "Mixed",
+  pointPersonPhone: "254700000000",
+  droppedOut: false,
+  dropoutReason: null,
+  droppedOutAt: null,
+};
+
+// Only Emirates Academy gets the fixed groups, students and sessions; Sobha Academy is seeded like
+// any other school.
+export const emiratesAcademy = {
+  ...arsenalSchoolDetails,
+  supervisorVisibleId: "SUPERVISOR1",
+  visibleId: "ARSENAL_SCH",
+  schoolName: "Emirates Academy",
+  schoolEmail: "Gabriel.academy@test.com",
+  pointPersonName: "Thomas Partey",
+  numbersExpected: 300,
+  principalName: "David Raya",
+};
+
+export const sobhaAcademy = {
+  ...arsenalSchoolDetails,
+  supervisorVisibleId: "SUPERVISOR2",
+  visibleId: "SOBHA_SCH",
+  schoolName: "Sobha Academy",
+  schoolEmail: "sobha.academy@test.com",
+  pointPersonName: "Kai Havertz",
+  numbersExpected: 350,
+  principalName: "Mikel Merino",
 };
