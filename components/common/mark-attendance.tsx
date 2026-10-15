@@ -8,7 +8,13 @@ import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -185,7 +191,7 @@ export function MarkAttendance({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="lg:w-2/5 lg:max-w-none">
           <DialogHeader>
-            <h2 className="text-lg font-bold">{title}</h2>
+            <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
           </DialogHeader>
           {children}
           <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
@@ -252,6 +258,7 @@ export function MarkAttendance({
                     <div className="relative">
                       <CustomIndicator className="green" label={"Attended"} />
                       <RadioGroupItem
+                        aria-label="Attended"
                         value="attended"
                         id="mark_attended"
                         className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
@@ -260,6 +267,7 @@ export function MarkAttendance({
                     <div className="relative">
                       <CustomIndicator className="red" label={"Missed"} />
                       <RadioGroupItem
+                        aria-label="Missed"
                         value="missed"
                         id="mark_missed"
                         className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-red"
@@ -268,6 +276,7 @@ export function MarkAttendance({
                     <div className="relative">
                       <CustomIndicator className="blue" label={"Unmarked"} />
                       <RadioGroupItem
+                        aria-label="Unmarked"
                         value="unmarked"
                         id="Unmarked_"
                         className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"

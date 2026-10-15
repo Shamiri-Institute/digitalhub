@@ -9,13 +9,20 @@ import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema"
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import { CustomIndicator } from "#/components/common/mark-attendance";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "#/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { markSessionOccurrence } from "#/lib/actions/session/session";
-import { cn, sessionDisplayName } from "#/lib/utils";
+import { sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export function MarkSessionOccurrence({
@@ -102,7 +109,7 @@ export function MarkSessionOccurrence({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="w-2/5 max-w-none">
           <DialogHeader>
-            <h2 className="text-lg font-bold">Mark session occurrence</h2>
+            <DialogTitle className="text-lg font-bold">Mark session occurrence</DialogTitle>
           </DialogHeader>
           {children}
           {previousUnmarkedSessions.length === 0 ? (
@@ -124,6 +131,7 @@ export function MarkSessionOccurrence({
                       <div className="relative">
                         <CustomIndicator className="green" label={"Attended"} />
                         <RadioGroupItem
+                          aria-label="Attended"
                           value="attended"
                           id="mark_attended"
                           className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
@@ -132,6 +140,7 @@ export function MarkSessionOccurrence({
                       <div className="relative">
                         <CustomIndicator className="blue" label={"Unmarked"} />
                         <RadioGroupItem
+                          aria-label="Unmarked"
                           value="unmarked"
                           id="Unmarked_"
                           className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
@@ -199,7 +208,7 @@ export function MarkSessionOccurrence({
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <DialogContent className="w-1/3 max-w-none">
           <DialogHeader>
-            <span className="text-xl font-bold">Mark session occurrence</span>
+            <DialogTitle className="text-xl font-bold">Mark session occurrence</DialogTitle>
           </DialogHeader>
           {children}
           <div className="flex flex-col gap-y-4">
@@ -237,21 +246,5 @@ export function MarkSessionOccurrence({
         </DialogContent>
       </Dialog>
     </Form>
-  );
-}
-
-function CustomIndicator({ className, label }: { className: string; label: string }) {
-  return (
-    <div className="custom-indicator pointer-events-none absolute inset-0 flex h-20 items-center pl-6">
-      <div className="flex items-center gap-3">
-        <div
-          className={cn(
-            "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow-sm",
-            className,
-          )}
-        />
-        <span>{label}</span>
-      </div>
-    </div>
   );
 }

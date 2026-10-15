@@ -236,10 +236,7 @@ test("a supervisor edits their case's student and the change survives a reload",
   );
 
   await openCaseAction(page, pseudonym, "Edit student information");
-  // This dialog's heading is not linked to it, so it has no accessible name.
-  const dialog = page
-    .getByRole("dialog")
-    .filter({ has: page.getByRole("heading", { name: "View/edit student information" }) });
+  const dialog = page.getByRole("dialog", { name: "View/edit student information" });
   await dialog.getByRole("textbox", { name: "Student Name" }).fill(studentName);
   await dialog.getByRole("spinbutton", { name: "Grade/Form" }).fill("2");
   await dialog.getByRole("textbox", { name: "Stream" }).fill("B");
@@ -315,10 +312,7 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   await signInWithEmail(context, owner.email);
   await page.goto(getUrl("/sc/clinical"));
 
-  // The dialog's heading is not linked to it, so it has no accessible name.
-  const dialog = page
-    .getByRole("dialog")
-    .filter({ has: page.getByRole("heading", { name: "Case Notes" }) });
+  const dialog = page.getByRole("dialog", { name: "Case Notes" });
   async function openNotesForSession() {
     await openCaseAction(page, pseudonym, "Case notes");
     await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();

@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect, test } from "#/tests/fixtures";
 import { eq, sql } from "drizzle-orm";
 
@@ -83,12 +83,8 @@ test.beforeEach(async ({ undo }) => {
   });
   undo(() => clinicalCase.remove());
 });
-/** A row of the expanded diagnosing board. The case's own row also contains it, so take the last. */
-function issueRow(page: Page, issue: string) {
-  return page
-    .getByRole("row")
-    .filter({ has: page.getByRole("cell", { name: issue, exact: true }) })
-    .last();
+function familyIssues(page: Page) {
+  return page.getByRole("checkbox", { name: "Family issues" });
 }
 
 async function expandCase(page: Page) {
@@ -102,14 +98,13 @@ test("a supervisor saves emergency, general and other presenting issues together
   context,
 }) => {
   const otherIssues = `e2e other issues ${Date.now()}`;
-  // The checkboxes are unlabelled; the emergency columns are Low, Moderate, High, Severe risk.
-  const highRiskBullying = (row: Locator) => row.getByRole("checkbox").nth(2);
+  const highRiskBullying = page.getByRole("checkbox", { name: "Bullying: High risk" });
 
   await signInWithEmail(context, caseOwner.email);
   await page.goto(getUrl("/sc/clinical"));
   await expandCase(page);
-  await highRiskBullying(issueRow(page, "Bullying")).click();
-  await issueRow(page, "Family issues").getByRole("checkbox").click();
+  await highRiskBullying.click();
+  await familyIssues(page).click();
   await page.getByRole("textbox", { name: "Other Issues" }).fill(otherIssues);
   await page.getByRole("button", { name: "Save Baseline" }).click();
   await expect(
@@ -118,8 +113,8 @@ test("a supervisor saves emergency, general and other presenting issues together
 
   await page.reload();
   await expandCase(page);
-  await expect(highRiskBullying(issueRow(page, "Bullying"))).toBeChecked();
-  await expect(issueRow(page, "Family issues").getByRole("checkbox")).toBeChecked();
+  await expect(highRiskBullying).toBeChecked();
+  await expect(familyIssues(page)).toBeChecked();
   await expect(page.getByRole("textbox", { name: "Other Issues" })).toHaveValue(otherIssues);
 });
 
@@ -139,7 +134,7 @@ test("a save from a page loaded before the case was terminated changes nothing",
   await signInWithEmail(context, caseOwner.email);
   await page.goto(getUrl("/sc/clinical"));
   await expandCase(page);
-  await issueRow(page, "Family issues").getByRole("checkbox").click();
+  await familyIssues(page).click();
 
   const otherTab = await context.newPage();
   await otherTab.goto(getUrl("/sc/clinical"));
@@ -169,7 +164,7 @@ test("a save from a page loaded before the case was terminated changes nothing",
   const caseRow = await searchRows(page, clinicalCase.pseudonym);
   await expect(caseRow).toContainText("Terminated");
   await caseRow.getByRole("button").first().click();
-  await expect(issueRow(page, "Family issues").getByRole("checkbox")).not.toBeChecked();
+  await expect(familyIssues(page)).not.toBeChecked();
 });
 
 test("a fellow deletes their group's attendance document even when the file store fails", async ({

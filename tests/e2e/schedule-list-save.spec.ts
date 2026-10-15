@@ -78,7 +78,7 @@ test("marking a session in the list view keeps the visible range", async ({ page
 
   await sessionRow.locator('[aria-haspopup="menu"]').click();
   await page.getByRole("menuitem", { name: "Mark session occurrence" }).click();
-  await page.locator("#mark_attended").click();
+  await page.getByRole("radio", { name: "Attended" }).click();
   await page.getByRole("button", { name: "Submit" }).click();
   await page.getByRole("button", { name: "Confirm" }).click();
 

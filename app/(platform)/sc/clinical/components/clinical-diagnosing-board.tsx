@@ -325,6 +325,7 @@ function EmergencyPresentingIssues({
                 <TableCell key={severity} className="border text-center">
                   <div className="flex justify-center">
                     <Checkbox
+                      aria-label={`${issue.name}: ${severity}`}
                       checked={selectedSeverities[issue.id] === severity}
                       onCheckedChange={() =>
                         handleSelect(issue.id.toString(), severity as Severity)
@@ -377,6 +378,7 @@ function GeneralPresentingIssues({
               <TableCell className="border text-center">
                 <div className="flex justify-center">
                   <Checkbox
+                    aria-label={issue.name}
                     checked={selectedIssues[issue.id] || false}
                     onCheckedChange={(checked) =>
                       handleSelect(issue.id.toString(), checked as boolean)

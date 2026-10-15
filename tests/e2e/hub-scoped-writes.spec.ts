@@ -224,14 +224,13 @@ test("a hub coordinator marks a session in their hub as occurred", async ({
     await sessionRow(page, main, school.sessionLabel),
     "Mark session occurrence",
   );
-  const dialog = page
-    .getByRole("dialog")
-    .filter({ has: page.getByRole("heading", { name: "Mark session occurrence" }) });
-  // The radios are unlabelled; "Attended" is the first option.
-  await dialog.getByRole("radio").first().click();
+  const dialog = page.getByRole("dialog", { name: "Mark session occurrence" });
+  await dialog.getByRole("radio", { name: "Attended" }).click();
   await dialog.getByRole("button", { name: "Submit" }).click();
-  // Submit only opens a confirmation, whose title is not linked to the dialog; Confirm saves.
-  const confirm = page.getByRole("dialog").filter({ hasText: "Are you sure?" });
+  // Submit only opens a confirmation; Confirm saves.
+  const confirm = page
+    .getByRole("dialog", { name: "Mark session occurrence" })
+    .filter({ hasText: "Are you sure?" });
   await confirm.getByRole("button", { name: "Confirm" }).click();
   await expect(confirm).toBeHidden();
 
@@ -288,8 +287,7 @@ test("a hub coordinator marks a student in their hub missed at a session", async
     .filter({ hasText: school.sessionLabel })
     .filter({ hasText: format(session.sessionDate, "dd MMM yyyy") })
     .click();
-  // The radios are unlabelled: Attended, Missed, Unmarked.
-  await mark.getByRole("radio").nth(1).click();
+  await mark.getByRole("radio", { name: "Missed" }).click();
   await mark.getByRole("combobox", { name: "Select reason for above" }).click();
   await page.getByRole("option").first().click();
   await mark.getByRole("button", { name: "Submit" }).click();
@@ -423,10 +421,8 @@ test("a fellow marks one student missed and two students attended at once", asyn
     await rowWithCell(page, attendance, missedStudent.admissionNumber ?? ""),
     "Mark attendance",
   );
-  // The mark dialog's heading is not linked to it, so it has no accessible name.
   const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
-  // The radios are unlabelled: Attended, Missed, Unmarked.
-  await mark.getByRole("radio").nth(1).click();
+  await mark.getByRole("radio", { name: "Missed" }).click();
   await mark.getByRole("combobox", { name: "Select reason for above" }).click();
   const absenceReason = (await page.getByRole("option").first().innerText()).trim();
   await page.getByRole("option").first().click();

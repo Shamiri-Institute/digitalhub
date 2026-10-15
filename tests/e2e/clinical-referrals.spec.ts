@@ -84,10 +84,7 @@ async function referCaseToRecipient(page: Page) {
   await page.goto(getUrl("/sc/clinical"));
   await chooseRowAction(page, await searchRows(page, pseudonym), "Refer case");
 
-  // This dialog's heading is not linked to it, so it has no accessible name.
-  const dialog = page
-    .getByRole("dialog")
-    .filter({ has: page.getByRole("heading", { name: "Refer clinical case" }) });
+  const dialog = page.getByRole("dialog", { name: "Refer clinical case" });
   await dialog.getByRole("combobox", { name: "Refer to" }).click();
   await page.getByRole("option", { name: "Supervisor", exact: true }).click();
   await dialog.getByRole("button", { name: "Select a supervisor..." }).click();

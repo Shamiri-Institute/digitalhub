@@ -125,7 +125,7 @@ test.describe("fellow attendance", () => {
 
     await chooseRowAction(page, fellowRow, "Mark attendance");
     const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
-    await mark.getByRole("radio").nth(1).click();
+    await mark.getByRole("radio", { name: "Missed" }).click();
     await mark.getByRole("combobox", { name: "Select reason for above" }).click();
     const absenceReason = (await page.getByRole("option").first().innerText()).trim();
     await page.getByRole("option").first().click();

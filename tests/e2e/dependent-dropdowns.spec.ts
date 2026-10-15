@@ -41,9 +41,9 @@ test("a hub coordinator picks a school and sees its groups in the move-school fo
   await chooseRowAction(page, page.locator("table tbody tr").first(), "Move to another school");
 
   const dialog = page.getByRole("dialog", { name: "Move student to another school" });
-  await dialog.getByRole("combobox").first().click();
+  await dialog.getByRole("combobox", { name: /^Destination school/ }).click();
   await page.getByRole("option", { name: fixture.toSchoolName, exact: true }).click();
-  const groupSelect = dialog.getByRole("combobox").nth(1);
+  const groupSelect = dialog.getByRole("combobox", { name: /^Group \/ Fellow/ });
   await expect(groupSelect).toBeEnabled();
   await groupSelect.click();
   await expect(page.getByRole("option")).toHaveText(
@@ -92,14 +92,14 @@ test("a supervisor picks a fellow and a group and sees the group's sessions", as
   await dialog.getByRole("button", { name: "Select a fellow" }).click();
   await page.getByPlaceholder("Search fellows...").fill(fixture.fellowName);
   await page.getByRole("option", { name: fixture.fellowName, exact: true }).click();
-  const groupSelect = dialog.getByRole("combobox").nth(0);
+  const groupSelect = dialog.getByRole("combobox", { name: /^Group/ });
   await expect(groupSelect).toBeEnabled();
   await groupSelect.click();
   await expect(page.getByRole("option")).toHaveText(
     groups.map((g) => `${g.groupName} (${g.school.schoolName})`),
   );
   await page.getByRole("option").first().click();
-  const sessionSelect = dialog.getByRole("combobox").nth(1);
+  const sessionSelect = dialog.getByRole("combobox", { name: /^Session/ });
   await expect(sessionSelect).toBeEnabled();
   await sessionSelect.click();
   await expect(page.getByRole("option").first()).toBeVisible();

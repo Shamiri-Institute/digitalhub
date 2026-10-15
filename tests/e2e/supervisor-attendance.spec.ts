@@ -106,7 +106,7 @@ test("a hub coordinator marks a supervisor attended, then missed in bulk", async
     .getByRole("button", { name: "Mark supervisor attendance" })
     .click();
   const bulkMark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
-  await bulkMark.getByRole("radio").nth(1).click();
+  await bulkMark.getByRole("radio", { name: "Missed" }).click();
   await bulkMark.getByRole("combobox", { name: "Select reason for above" }).click();
   await page.getByRole("option").first().click();
   await bulkMark.getByRole("button", { name: "Submit" }).click();

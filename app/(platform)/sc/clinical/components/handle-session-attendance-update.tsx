@@ -100,6 +100,7 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
               <div className="relative">
                 <CustomIndicator className="green" label="Attended" />
                 <RadioGroupItem
+                  aria-label="Attended"
                   value="attended"
                   id="mark_attended"
                   className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
@@ -108,6 +109,7 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
               <div className="relative">
                 <CustomIndicator className="red" label="Missed" />
                 <RadioGroupItem
+                  aria-label="Missed"
                   value="missed"
                   id="mark_missed"
                   className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-red"
@@ -116,6 +118,7 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
               <div className="relative">
                 <CustomIndicator className="blue" label="Unmarked" />
                 <RadioGroupItem
+                  aria-label="Unmarked"
                   value="unmarked"
                   id="unmarked"
                   className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-new-blue"
