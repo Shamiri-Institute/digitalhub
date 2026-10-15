@@ -11,6 +11,7 @@ import {
   json,
   jsonb,
   pgEnum,
+  pgSequence,
   pgTable,
   serial,
   text,
@@ -285,6 +286,8 @@ export const interventionSessionRating = pgTable(
       .onDelete("restrict"),
   ],
 );
+
+export const studentVisibleNumber = pgSequence("student_visible_number_seq");
 
 export const student = pgTable(
   "students",

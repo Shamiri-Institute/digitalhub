@@ -6,6 +6,7 @@ import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/com
 import { currentSupervisor, getCurrentUserSession } from "#/app/auth";
 import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
+import { nextStudentVisibleId } from "#/db/sql";
 import {
   clinicalCaseNotes,
   clinicalCaseTermination,
@@ -20,7 +21,6 @@ import {
   student,
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { generateStudentVisibleID } from "#/lib/utils";
 
 export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
 export type SchoolsInHubData = Awaited<ReturnType<typeof getSchoolsInHub>>;
@@ -430,12 +430,11 @@ export async function createStudentClinicalCase(data: {
       let studentId = data.studentId;
 
       if (data.newStudent) {
-        const studentCount = await tx.$count(student);
         const [created] = await tx
           .insert(student)
           .values({
             id: objectId("stu"),
-            visibleId: generateStudentVisibleID("CLN", studentCount),
+            visibleId: nextStudentVisibleId("CLN"),
             studentName: data.newStudent.studentName,
             schoolId: data.schoolId,
             admissionNumber: data.newStudent.admissionNumber,

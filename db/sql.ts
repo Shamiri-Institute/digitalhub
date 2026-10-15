@@ -1,5 +1,9 @@
 import { type AnyColumn, getTableName, sql } from "drizzle-orm";
 
+export function nextStudentVisibleId(prefix: string) {
+  return sql<string>`${prefix} || '_' || nextval('student_visible_number_seq')`;
+}
+
 /**
  * `(select count(*) from <fk's table> where <fk> = <ref>)` for relational-query `extras`,
  * i.e. the number of related rows.

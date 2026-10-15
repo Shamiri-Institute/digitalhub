@@ -162,6 +162,13 @@
       "when": 1792053336282,
       "tag": "0022_lowercase_user_emails",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792058579625,
+      "tag": "0023_student_visible_number_seq",
+      "breakpoints": true
     }
   ]
 }
