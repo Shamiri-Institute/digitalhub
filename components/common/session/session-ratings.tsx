@@ -2,7 +2,7 @@
 
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import type { ImplementerRole } from "#/db/enums";
-import { addDays, addHours, differenceInSeconds, format } from "date-fns";
+import { addDays, addHours, format } from "date-fns";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -40,7 +40,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitSessionRatings } from "#/lib/actions/session/session";
-import { cn, sessionDisplayName } from "#/lib/utils";
+import { cn, sessionDisplayName, updateWindowFor } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { interventionSessionRating } from "#/db/schema";
 
@@ -88,9 +88,7 @@ function SessionRatingsForm({
   const [existingRating, setExistingRating] = useState<InterventionSessionRating | undefined>(
     rating,
   );
-  const [updateWindowDuration, setUpdateWindowDuration] = useState(() =>
-    rating ? differenceInSeconds(addDays(rating.createdAt, 14), new Date()) : 0,
-  );
+  const [updateWindowDuration, setUpdateWindowDuration] = useState(() => updateWindowFor(rating));
 
   const form = useForm<z.infer<typeof SessionRatingsSchema>>({
     resolver: zodResolver(SessionRatingsSchema),
@@ -116,7 +114,7 @@ function SessionRatingsForm({
     setExistingRating(next);
     form.reset(getDefaultValues(next));
     if (next) {
-      setUpdateWindowDuration(differenceInSeconds(addDays(next.createdAt, 14), new Date()));
+      setUpdateWindowDuration(updateWindowFor(next));
     }
   }
 

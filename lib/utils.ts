@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
+import { addDays, differenceInSeconds } from "date-fns";
 import { createElement } from "react";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
@@ -68,4 +69,9 @@ export function handleMinutesChange(value: string): string {
 
 export function wrapColumnHeader(label: string) {
   return createElement("div", { className: "whitespace-normal wrap-break-words leading-5" }, label);
+}
+
+/** Seconds left of the 14 days in which a saved evaluation or report can still be edited. */
+export function updateWindowFor(saved: { createdAt: Date } | undefined) {
+  return saved ? differenceInSeconds(addDays(saved.createdAt, 14), new Date()) : 0;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import type { interventionGroupReport, interventionSession, sessionName } from "#/db/schema";
-import { addDays, differenceInSeconds, format } from "date-fns";
+import { addDays, format } from "date-fns";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -37,7 +37,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitGroupEvaluation } from "#/lib/actions/group";
-import { cn, sessionDisplayName } from "#/lib/utils";
+import { cn, sessionDisplayName, updateWindowFor } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type FormInput = {
@@ -72,10 +72,6 @@ export default function StudentGroupEvaluation(props: StudentGroupEvaluationProp
       </DialogContent>
     </Dialog>
   );
-}
-
-function updateWindowFor(evaluation: { createdAt: Date } | undefined) {
-  return evaluation ? differenceInSeconds(addDays(evaluation.createdAt, 14), new Date()) : 0;
 }
 
 function StudentGroupEvaluationForm({
@@ -163,23 +159,23 @@ function StudentGroupEvaluationForm({
   );
 
   const getDefaultValues = (
-    existingEvaluation: (typeof evaluations)[number] | undefined,
-    selectedSessionId: string | undefined,
+    evaluation: (typeof evaluations)[number] | undefined,
+    sessionId: string | undefined,
   ) => {
     return {
       mode,
       groupId,
-      engagementComment: existingEvaluation?.engagementComment ?? "",
-      engagement1: existingEvaluation?.engagement1 ?? 0,
-      engagement2: existingEvaluation?.engagement2 ?? 0,
-      engagement3: existingEvaluation?.engagement3 ?? 0,
-      cooperationComment: existingEvaluation?.cooperationComment ?? "",
-      cooperation1: existingEvaluation?.cooperation1 ?? 0,
-      cooperation2: existingEvaluation?.cooperation2 ?? 0,
-      cooperation3: existingEvaluation?.cooperation3 ?? 0,
-      contentComment: existingEvaluation?.contentComment ?? "",
-      content: existingEvaluation?.content ?? 0,
-      sessionId: selectedSessionId ?? existingEvaluation?.sessionId ?? undefined,
+      engagementComment: evaluation?.engagementComment ?? "",
+      engagement1: evaluation?.engagement1 ?? 0,
+      engagement2: evaluation?.engagement2 ?? 0,
+      engagement3: evaluation?.engagement3 ?? 0,
+      cooperationComment: evaluation?.cooperationComment ?? "",
+      cooperation1: evaluation?.cooperation1 ?? 0,
+      cooperation2: evaluation?.cooperation2 ?? 0,
+      cooperation3: evaluation?.cooperation3 ?? 0,
+      contentComment: evaluation?.contentComment ?? "",
+      content: evaluation?.content ?? 0,
+      sessionId: sessionId ?? evaluation?.sessionId ?? undefined,
     };
   };
 

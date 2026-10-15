@@ -1,6 +1,6 @@
 "use client";
 
-import { addDays, differenceInSeconds, eachWeekOfInterval, format, isEqual } from "date-fns";
+import { addDays, eachWeekOfInterval, format, isEqual } from "date-fns";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -36,7 +36,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitWeeklyFellowEvaluation } from "#/lib/actions/fellow";
-import { cn } from "#/lib/utils";
+import { cn, updateWindowFor } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { project as projectTable, weeklyFellowRatings } from "#/db/schema";
 
@@ -75,7 +75,7 @@ function WeeklyFellowEvaluationForm({
     _evaluation,
   );
   const [updateWindowDuration, setUpdateWindowDuration] = useState(() =>
-    _evaluation ? differenceInSeconds(addDays(_evaluation.createdAt, 14), new Date()) : 0,
+    updateWindowFor(_evaluation),
   );
 
   const weeks =
@@ -121,7 +121,7 @@ function WeeklyFellowEvaluationForm({
       punctualityRating: evaluation?.punctualityRating ?? 0,
     });
     if (evaluation) {
-      setUpdateWindowDuration(differenceInSeconds(addDays(evaluation.createdAt, 14), new Date()));
+      setUpdateWindowDuration(updateWindowFor(evaluation));
     }
   }
 

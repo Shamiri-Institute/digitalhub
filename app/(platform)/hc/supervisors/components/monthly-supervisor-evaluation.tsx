@@ -1,4 +1,4 @@
-import { addDays, differenceInSeconds, eachMonthOfInterval, format, isEqual } from "date-fns";
+import { addDays, eachMonthOfInterval, format, isEqual } from "date-fns";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -35,7 +35,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { cn } from "#/lib/utils";
+import { cn, updateWindowFor } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { monthlySupervisorEvaluation, project as projectTable } from "#/db/schema";
 
@@ -82,34 +82,36 @@ function MonthlySupervisorEvaluationForm({
   const firstEvaluation = isViewMode ? evaluations[0] : undefined;
   const [existingEvaluation, setExistingEvaluation] = useState(firstEvaluation);
   const [updateWindowDuration, setUpdateWindowDuration] = useState(() =>
-    firstEvaluation ? differenceInSeconds(addDays(firstEvaluation.createdAt, 14), new Date()) : 0,
+    updateWindowFor(firstEvaluation),
   );
+
+  const defaultValues = {
+    supervisorId,
+    respectfulness: undefined,
+    attitude: undefined,
+    collaboration: undefined,
+    reliability: undefined,
+    identificationOfIssues: undefined,
+    leadership: undefined,
+    communicationStyle: undefined,
+    conflictResolution: undefined,
+    adaptability: undefined,
+    recognitionAndFeedback: undefined,
+    decisionMaking: undefined,
+    fellowRecruitmentEffectiveness: undefined,
+    fellowTrainingEffectiveness: undefined,
+    programLogisticsCoordination: undefined,
+    programSessionAttendance: undefined,
+    workplaceDemeanorComments: undefined,
+    managementStyleComments: undefined,
+    programExecutionComments: undefined,
+  };
 
   const form = useForm<z.infer<typeof MonthlySupervisorEvaluationSchema>>({
     resolver: zodResolver(MonthlySupervisorEvaluationSchema),
     defaultValues: firstEvaluation
       ? evaluationValues(firstEvaluation)
-      : {
-          supervisorId: supervisorId ?? "",
-          respectfulness: undefined,
-          attitude: undefined,
-          collaboration: undefined,
-          reliability: undefined,
-          identificationOfIssues: undefined,
-          leadership: undefined,
-          communicationStyle: undefined,
-          conflictResolution: undefined,
-          adaptability: undefined,
-          recognitionAndFeedback: undefined,
-          decisionMaking: undefined,
-          fellowRecruitmentEffectiveness: undefined,
-          fellowTrainingEffectiveness: undefined,
-          programLogisticsCoordination: undefined,
-          programSessionAttendance: undefined,
-          workplaceDemeanorComments: undefined,
-          managementStyleComments: undefined,
-          programExecutionComments: undefined,
-        },
+      : { ...defaultValues, supervisorId: supervisorId ?? "" },
   });
 
   const formInputs: FormInput[] = [
@@ -222,28 +224,6 @@ function MonthlySupervisorEvaluationForm({
     },
   ];
 
-  const defaultValues = {
-    supervisorId,
-    respectfulness: undefined,
-    attitude: undefined,
-    collaboration: undefined,
-    reliability: undefined,
-    identificationOfIssues: undefined,
-    leadership: undefined,
-    communicationStyle: undefined,
-    conflictResolution: undefined,
-    adaptability: undefined,
-    recognitionAndFeedback: undefined,
-    decisionMaking: undefined,
-    fellowRecruitmentEffectiveness: undefined,
-    fellowTrainingEffectiveness: undefined,
-    programLogisticsCoordination: undefined,
-    programSessionAttendance: undefined,
-    workplaceDemeanorComments: undefined,
-    managementStyleComments: undefined,
-    programExecutionComments: undefined,
-  };
-
   const months =
     project !== null && project.actualStartDate !== null
       ? eachMonthOfInterval({
@@ -273,7 +253,7 @@ function MonthlySupervisorEvaluationForm({
 
     if (match) {
       setExistingEvaluation(match);
-      setUpdateWindowDuration(differenceInSeconds(addDays(match.createdAt, 14), new Date()));
+      setUpdateWindowDuration(updateWindowFor(match));
       form.reset(evaluationValues(match));
     } else {
       form.reset({ month: new Date(value), ...defaultValues });
