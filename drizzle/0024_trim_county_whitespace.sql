@@ -1,0 +1,11 @@
+UPDATE "fellows" SET "county" = btrim("county") WHERE "county" <> btrim("county");--> statement-breakpoint
+UPDATE "fellows" SET "sub_county" = btrim("sub_county") WHERE "sub_county" <> btrim("sub_county");--> statement-breakpoint
+UPDATE "supervisors" SET "county" = btrim("county") WHERE "county" <> btrim("county");--> statement-breakpoint
+UPDATE "supervisors" SET "sub_county" = btrim("sub_county") WHERE "sub_county" <> btrim("sub_county");--> statement-breakpoint
+UPDATE "hub_coordinators" SET "county" = btrim("county") WHERE "county" <> btrim("county");--> statement-breakpoint
+UPDATE "hub_coordinators" SET "sub_county" = btrim("sub_county") WHERE "sub_county" <> btrim("sub_county");--> statement-breakpoint
+UPDATE "clinical_leads" SET "county" = btrim("county") WHERE "county" <> btrim("county");--> statement-breakpoint
+UPDATE "clinical_leads" SET "sub_county" = btrim("sub_county") WHERE "sub_county" <> btrim("sub_county");--> statement-breakpoint
+UPDATE "schools" SET "school_county" = btrim("school_county") WHERE "school_county" <> btrim("school_county");--> statement-breakpoint
+UPDATE "schools" SET "school_sub_county" = btrim("school_sub_county") WHERE "school_sub_county" <> btrim("school_sub_county");--> statement-breakpoint
+UPDATE "students" SET "county" = btrim("county") WHERE "county" <> btrim("county");

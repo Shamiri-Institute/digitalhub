@@ -2,7 +2,8 @@ import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { signInAs, uniqueFellowName } from "#/tests/helpers";
+import { arsenalSupervisors } from "#/db/seed/fixtures";
+import { signInAs, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
 import { getUrl, chooseRowAction } from "#/tests/pages/helpers";
 
 async function pickSchoolWithStudentsAndSchoolWithGroups(coordinatorId: string | null) {
@@ -103,4 +104,19 @@ test("a supervisor picks a fellow and a group and sees the group's sessions", as
   await expect(sessionSelect).toBeEnabled();
   await sessionSelect.click();
   await expect(page.getByRole("option").first()).toBeVisible();
+});
+
+test("the profile shows the saved sub-county among the county's options", async ({
+  page,
+  context,
+}) => {
+  const [supervisor] = arsenalSupervisors;
+  await signInWithEmail(context, supervisor.supervisorEmail);
+  await page.goto(getUrl("/sc/schedule"));
+  await page.getByAltText("Profile arrow drop down icon").click();
+  await page.getByRole("menuitem", { name: "My Profile" }).click();
+  const dialog = page.getByRole("dialog", { name: "Edit profile" });
+  await expect(dialog.getByRole("combobox", { name: "Sub-county" })).toHaveText(
+    supervisor.subCounty,
+  );
 });

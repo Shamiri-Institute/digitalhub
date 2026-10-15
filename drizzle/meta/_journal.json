@@ -169,6 +169,13 @@
       "when": 1792058579625,
       "tag": "0023_student_visible_number_seq",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792074959837,
+      "tag": "0024_trim_county_whitespace",
+      "breakpoints": true
     }
   ]
 }
