@@ -23,9 +23,8 @@ async function pickUniquelyNamedFellowInCoordinatorHub() {
       f.sub_county as "subCounty", u.email
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join fellows f on f.hub_id = hc.assigned_hub_id and f.fellow_name is not null
-      and f.fellow_email is not null
     where ${signableMember()}
       and ${uniqueFellowName()}
       and exists (select 1 from implementer_members fm where fm.identifier = f.id and fm.role = 'FELLOW')
@@ -60,9 +59,6 @@ test("a hub coordinator edits a fellow of their hub", async ({ page, context }) 
   const dialog = await openEditDialog(page);
   const newMpesaName = `${fixture.fellowName} E2E`;
   await dialog.locator('input[name="mpesaName"]').fill(newMpesaName);
-  // Seeded fellows can carry a sub-county outside their county, which the form rejects.
-  await dialog.getByRole("combobox", { name: /Sub-county/ }).click();
-  await page.getByRole("option").first().click();
   await dialog.getByRole("button", { name: "Update & Save" }).click();
   await expect(dialog).toBeHidden();
 

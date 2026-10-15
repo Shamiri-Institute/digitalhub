@@ -42,7 +42,7 @@ async function pickPastUnmarkedSessionWithNoEarlierUnmarked(viewerTimeZone: stri
     join session_names n on n.id = i.session_id
     join schools s on s.id = i.school_id and s.archived_at is null
     join implementer_members m on m.identifier = s.assigned_supervisor_id and m.role = 'SUPERVISOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where not i.occurred and i.session_date < now()
       and coalesce(i.status::text, '') <> 'Cancelled'
       and ${signableMember()}

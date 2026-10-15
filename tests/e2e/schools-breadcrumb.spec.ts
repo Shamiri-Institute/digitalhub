@@ -22,7 +22,7 @@ test("the school breadcrumb names the hub and switches between the implementer's
   } = await db.execute<Fixture>(sql`
     select u.email, m.implementer_id as "implementerId", s.visible_id as "visibleId", s.school_name as "schoolName", h.hub_name as "hubName"
     from implementer_members m
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join hubs h on h.implementer_id = m.implementer_id
     join projects p on p.id = h.project_id and p.is_default
     join schools s on s.hub_id = h.id

@@ -14,7 +14,7 @@ async function signableProfiles(table: string, role: string, hubColumn: string) 
     select p.id, p.${sql.raw(hubColumn)} as "hubId", u.email, u.id as "userId"
     from ${sql.raw(table)} p
     join implementer_members m on m.identifier = p.id and m.role = ${role}
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where p.${sql.raw(hubColumn)} is not null
       and ${signableMember()}
     order by p.id`,
@@ -67,7 +67,7 @@ test.describe("fellow attendance", () => {
       join intervention_groups g on g.school_id = sc.id and g.leader_id = f.id
         and (sn."session_type" <> 'INTERVENTION' or g.group_type = 'TREATMENT')
       join implementer_members m on m.identifier = f.supervisor_id and m.role = 'SUPERVISOR'
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where fa.attended and fa.processed_at is null and ${signableMember()}
         and (select ps.reason from payout_statements ps where ps.fellow_attendance_id = fa.id
           order by ps.created_at desc limit 1) <> 'UNMARK_SESSION_ATTENDANCE'
@@ -201,7 +201,7 @@ test.describe("bulk fellow attendance", () => {
       join supervisors sv on sv.id = f.supervisor_id and sv.hub_id = f.hub_id
         and sv.hub_id = s.hub_id
       join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where i.occurred and ${signableMember()}
         and not exists (
           select 1 from fellow_attendances fa where fa.session_id = i.id and fa.fellow_id = f.id)

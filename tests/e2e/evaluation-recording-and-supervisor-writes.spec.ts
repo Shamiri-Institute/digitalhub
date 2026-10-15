@@ -44,7 +44,7 @@ async function pickUnevaluatedGroupWithUniquelyNamedOccurredSession() {
       i.id as "sessionId", sn.session_name as "sessionLabel"
     from intervention_groups g
     join implementer_members m on m.identifier = g.leader_id and m.role = 'FELLOW'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.id = g.school_id
     join intervention_sessions i on i.school_id = s.id and i.occurred
     join session_names sn on sn.id = i.session_id
@@ -80,7 +80,7 @@ test.beforeAll(async () => {
       and i.occurred
     join session_names sn on sn.id = i.session_id
     join implementer_members m on m.identifier = r.supervisor_id and m.role = 'SUPERVISOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where ${signableMember()} and r.archived_at is null
     order by r.id desc
     limit 1`);
@@ -97,7 +97,7 @@ test.beforeAll(async () => {
     from hub_coordinators hc
     join hubs h on h.id = hc.assigned_hub_id
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join fellows f on f.hub_id = h.id and f.implementer_id = h.implementer_id
       and f.supervisor_id is not null and f.fellow_name is not null
     join supervisors sv on sv.hub_id = h.id and sv.id <> f.supervisor_id

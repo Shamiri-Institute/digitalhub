@@ -21,13 +21,12 @@ async function pickFixture(from: SQL) {
     select f.fellow_name as "fellowName", f.id_number as "idNumber",
       f.mpesa_number as "mpesaNumber", u.email, s.visible_id as "schoolVisibleId"
     ${from}
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where ${signableMember()}
       and f.fellow_name is not null and length(f.id_number) >= 5 and length(f.mpesa_number) >= 5
       and ${uniqueFellowName()}
-      -- The tables show phone numbers, and some seeded M-Pesa numbers equal one.
-      and not exists (select 1 from fellows o
-        where strpos(o.cell_number, f.id_number) > 0 or strpos(o.cell_number, f.mpesa_number) > 0)
+      -- The tables show phone numbers, and a random ID number can appear inside one.
+      and not exists (select 1 from fellows o where strpos(o.cell_number, f.id_number) > 0)
     order by f.id
     limit 1`);
   if (!row) throw new Error("seed the database first: no fellow with an ID and M-Pesa number");
@@ -122,14 +121,10 @@ test("the fellow portal HTML has no ID or M-Pesa number of the fellow's supervis
     select u.email, sv.id_number as "idNumber", sv.mpesa_number as "mpesaNumber"
     from fellows f
     join implementer_members m on m.identifier = f.id and m.role = 'FELLOW'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join supervisors sv on sv.id = f.supervisor_id
     where ${signableMember()} and length(sv.id_number) >= 5 and length(sv.mpesa_number) >= 5
-      -- Some seeded values repeat, so they could come from another record on the page.
-      and (select count(*) from supervisors o where o.id_number = sv.id_number) = 1
-      and (select count(*) from supervisors o where o.mpesa_number = sv.mpesa_number) = 1
-      and not exists (select 1 from fellows o where strpos(o.id_number, sv.id_number) > 0
-        or strpos(o.mpesa_number, sv.mpesa_number) > 0 or strpos(o.cell_number, sv.mpesa_number) > 0)
+      and not exists (select 1 from fellows o where strpos(o.cell_number, sv.id_number) > 0)
     order by f.id
     limit 1`);
   if (!fixture) throw new Error("seed the database first: no fellow with a supervisor");

@@ -24,7 +24,7 @@ test("the school sessions page lists earlier unmarked sessions before marking on
       p.session_date as "earlierSessionDate"
     from supervisors sv
     join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.assigned_supervisor_id = sv.id and s.archived_at is null
     join intervention_sessions i on i.school_id = s.id and not i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'

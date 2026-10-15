@@ -72,7 +72,7 @@ export async function emailForProfile(identifier: string, role: Role) {
   } = await db.execute<{ email: string }>(sql`
     select u.email from implementer_members m
     join users u on u.id = m.user_id
-    where m.identifier = ${identifier} and m.role = ${role} and u.email is not null
+    where m.identifier = ${identifier} and m.role = ${role}
       and ${signableMember()}
     order by u.email
     limit 1`);

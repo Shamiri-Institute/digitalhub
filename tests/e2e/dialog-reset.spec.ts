@@ -32,7 +32,7 @@ async function pickSupervisorWithTwoFellows() {
       (array_agg(f.id order by f.id))[1:2] as "fellowIds",
       (array_agg(f.fellow_name order by f.id))[1:2] as "fellowNames"
     from implementer_members m
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join supervisors sv on sv.id = m.identifier
     join fellows f on f.supervisor_id = sv.id and f.fellow_name is not null
       and coalesce(f.dropped_out, false) = false
@@ -116,7 +116,7 @@ test("student group evaluation shows the chosen session's saved comment, not typ
       latest.engagement_comment as "latestComment", older.engagement_comment as "olderComment",
       older.session_date::text as "olderSessionDate"
     from implementer_members m
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join intervention_groups g on g.leader_id = m.identifier and g.archived_at is null
       and g.group_name is not null
     join schools sc on sc.id = g.school_id
@@ -181,7 +181,7 @@ test("monthly supervisor evaluation clears the chosen month and comments when re
       (array_agg(sv.supervisor_name order by sv.id))[1:2] as "supervisorNames"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join hubs h on h.id = hc.assigned_hub_id
     join projects p on p.id = h.project_id and p.actual_start_date is not null
     join supervisors sv on sv.hub_id = h.id and sv.supervisor_name is not null
@@ -264,7 +264,7 @@ test("fellow drop-out clears the chosen reason when reopened and for another fel
     select u.email, (array_agg(f.fellow_name order by f.id))[1:2] as "fellowNames"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join fellows f on f.hub_id = hc.assigned_hub_id and f.fellow_name is not null
       and coalesce(f.dropped_out, false) = false
     where ${signableMember()} and ${uniqueFellowName()}
@@ -314,7 +314,7 @@ test("fellow drop-out for a group leader goes through the replace step and cance
     select u.email, f.fellow_name as "fellowName"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join fellows f on f.hub_id = hc.assigned_hub_id and f.fellow_name is not null
       and coalesce(f.dropped_out, false) = false
     where ${signableMember()} and ${uniqueFellowName()}
@@ -372,7 +372,7 @@ test("school details show each school's saved name, not typed text", async ({ pa
     select u.email, (array_agg(s.school_name order by s.visible_id))[1:2] as "schoolNames"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.hub_id = hc.assigned_hub_id and s.archived_at is null
       and s.dropped_out_at is null
       and (select count(*) from schools o where o.school_name = s.school_name) = 1
@@ -429,7 +429,7 @@ test("weekly session report shows each session's saved highlights, not typed tex
       join schools s on s.id = i.school_id and s.archived_at is null
       join supervisors sv on sv.id = r.supervisor_id
       join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where ${signableMember()} and r.positive_highlights <> ''
         and s.assigned_supervisor_id = sv.id
       order by u.email, s.visible_id
@@ -500,7 +500,7 @@ async function pickCoordinatorAndProfile(table: "supervisors" | "fellows") {
     select u.email, ${name} as name, p.sub_county as "subCounty"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join ${sql.raw(table)} p on p.hub_id = hc.assigned_hub_id and ${name} is not null
       and p.sub_county is not null and p.county is not null
       and coalesce(p.dropped_out, false) = false
@@ -578,7 +578,7 @@ test("my profile clears the sub-county when the county changes", async ({ page, 
   } = await db.execute<{ email: string }>(sql`
     select u.email from supervisors s
     join implementer_members m on m.identifier = s.id and m.role = 'SUPERVISOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where s.sub_county is not null and s.county is not null and ${signableMember()}
     order by u.email
     limit 1`);
@@ -633,7 +633,7 @@ test("mark attendance clears the absence reason when the status changes", async 
     select u.email, sc.visible_id as "visibleId", sv.supervisor_name as "supervisorName"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools sc on sc.hub_id = hc.assigned_hub_id and sc.archived_at is null
     join supervisors sv on sv.id = sc.assigned_supervisor_id and sv.supervisor_name is not null
     where ${signableMember()}
@@ -675,7 +675,7 @@ async function pickCoordinatorSchools() {
       (array_agg(sv.supervisor_name order by s.visible_id))[1:2] as "supervisorNames"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.hub_id = hc.assigned_hub_id and s.archived_at is null
       and s.dropped_out_at is null
       and (select count(*) from schools o where o.school_name = s.school_name) = 1
@@ -789,7 +789,7 @@ async function pickCoordinatorStudents() {
       (array_agg(st.student_name order by st.id))[1:2] as "studentNames"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools sc on sc.hub_id = hc.assigned_hub_id and sc.archived_at is null
     join students st on st.school_id = sc.id and st.archived_at is null
       and st.student_name is not null and st.admission_number is not null
@@ -942,7 +942,7 @@ test("session occurrence goes back to the saved state after cancelling the confi
     select u.email, s.visible_id as "visibleId", n.session_name as "sessionName"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.hub_id = hc.assigned_hub_id and s.archived_at is null
     join intervention_sessions i on i.school_id = s.id and not i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'
@@ -996,7 +996,7 @@ test("mark attendance shows each session's saved status on reopen and after swit
     select u.email, sc.visible_id as "visibleId", sv.supervisor_name as "supervisorName"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools sc on sc.hub_id = hc.assigned_hub_id and sc.archived_at is null
     join supervisors sv on sv.id = sc.assigned_supervisor_id and sv.supervisor_name is not null
     where ${signableMember()}

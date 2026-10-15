@@ -35,7 +35,7 @@ test("the school panel renders on the server and shows a session cancelled on th
         as "studentsCount"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.hub_id = hc.assigned_hub_id
     join intervention_sessions i on i.school_id = s.id and not i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'

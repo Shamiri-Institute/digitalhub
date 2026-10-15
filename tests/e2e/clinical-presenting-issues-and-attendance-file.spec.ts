@@ -33,7 +33,7 @@ async function pickOccurredSessionWithTwoMarkedStudents() {
       s.visible_id as "schoolVisibleId", sn.session_name as "sessionLabel"
     from intervention_groups g
     join implementer_members m on m.identifier = g.leader_id and m.role = 'FELLOW'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.id = g.school_id
     join intervention_sessions i on i.school_id = s.id and i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'
@@ -60,7 +60,7 @@ test.beforeAll(async () => {
     select u.email, sv.id as "supervisorId", sc.id as "schoolId"
     from supervisors sv
     join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools sc on sc.hub_id = sv.hub_id and sc.archived_at is null
     where ${signableMember()}
       and exists (select 1 from intervention_groups g where g.school_id = sc.id)

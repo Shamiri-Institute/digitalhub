@@ -26,7 +26,7 @@ async function pickSameOrgSupervisorOfOtherFellows(
   } = await db.execute<{ email: string }>(sql`
     select u.email
     from implementer_members m
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join supervisors s on s.id = m.identifier
     where m.role = 'SUPERVISOR' and m.implementer_id = ${implementerId}
       and u.email <> ${excludedEmail}
@@ -53,7 +53,7 @@ test.beforeAll(async () => {
     from users u
     join implementer_members m on m.user_id = u.id and m.role = 'SUPERVISOR'
     join fellows f on f.supervisor_id = m.identifier and f.fellow_name is not null
-    where u.email is not null and ${signableMember()}
+    where ${signableMember()}
       and ${uniqueFellowName()}
     order by u.email, f.id
     limit 1`);

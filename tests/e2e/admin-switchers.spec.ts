@@ -20,7 +20,7 @@ async function loadFixture() {
     join projects p on p.id = coalesce(u.active_project_id, (select id from projects where is_default))
     join implementer_members m on m.user_id = u.id and m.role = 'ADMIN'
     join hubs h on h.implementer_id = m.implementer_id
-    where u.archived_at is null and u.email is not null
+    where u.archived_at is null
     group by u.id, p.id
     having count(distinct m.id) > 1 and count(distinct h.project_id) > 1
     order by u.email

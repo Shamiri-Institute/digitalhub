@@ -30,7 +30,7 @@ test.beforeAll(async () => {
     join implementer_members m on m.user_id = u.id and m.role = 'SUPERVISOR'
     join schools s on s.assigned_supervisor_id = m.identifier and s.archived_at is null
     join intervention_sessions i on i.school_id = s.id
-    where u.email is not null and ${signableMember()}
+    where ${signableMember()}
     order by u.email, i.session_date < now() desc, i.session_date, i.id
     limit 1`);
   if (!fixture) throw new Error("seed the database first: no supervisor with an assigned school");

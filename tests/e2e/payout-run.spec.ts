@@ -34,7 +34,7 @@ test.beforeAll(async () => {
       coalesce(u.active_project_id, (select id from projects where is_default)) as "projectId"
     from ops_users o
     join implementer_members m on m.identifier = o.id and m.role = 'OPERATIONS'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where ${signableMember()}
     order by o.id
     limit 1`);

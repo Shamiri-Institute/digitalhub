@@ -53,7 +53,7 @@ test.beforeAll(async () => {
     select u.email, h.assigned_hub_id as "hubId", h.implementer_id as "implementerId"
     from hub_coordinators h
     join implementer_members m on m.identifier = h.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where h.assigned_hub_id is not null and ${signableMember()}
     order by u.email`);
 
@@ -67,7 +67,7 @@ test.beforeAll(async () => {
     } = await db.execute<{ email: string }>(sql`
       select u.email from supervisors sup
       join implementer_members m on m.identifier = sup.id and m.role = 'SUPERVISOR'
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where sup.hub_id = ${candidate.hubId} and ${signableMember()}
       order by u.email
       limit 1`);
@@ -117,7 +117,7 @@ test.beforeAll(async () => {
       other_student.admission_number as "otherAdmissionNumber"
     from intervention_groups g
     join implementer_members m on m.identifier = g.leader_id and m.role = 'FELLOW'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.id = g.school_id
     join intervention_sessions i on i.school_id = s.id and i.occurred
     join session_names sn on sn.id = i.session_id
@@ -128,7 +128,7 @@ test.beforeAll(async () => {
     join implementer_members other_member on other_member.identifier = other_group.leader_id
       and other_member.role = 'FELLOW'
       and ${signableMember("other_member")}
-    join users other_user on other_user.id = other_member.user_id and other_user.email is not null
+    join users other_user on other_user.id = other_member.user_id
     join students other_student on other_student.assigned_group_id = other_group.id
       and other_student.archived_at is null and other_student.admission_number is not null
     where ${signableMember()} and m.implementer_id = ${coordinator.implementerId}
@@ -333,9 +333,6 @@ test("a supervisor edits the details of a student in their hub", async ({
   await expect(nameInput).toHaveValue(school.studentName);
   const editedName = `${school.studentName} Edited`;
   await nameInput.fill(editedName);
-  // The seed leaves these required fields empty.
-  await dialog.getByLabel("Grade/Form").fill("2");
-  await dialog.getByLabel("Stream").fill("East");
   await dialog.getByRole("button", { name: "Update & save" }).click();
   await expect(dialog).toBeHidden();
 

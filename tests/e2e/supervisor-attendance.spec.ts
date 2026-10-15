@@ -26,7 +26,7 @@ async function pickLoneOccurredSessionWithUnmarkedSupervisor() {
       sv.id as "supervisorId", sv.supervisor_name as "supervisorName", u.email
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.hub_id = hc.assigned_hub_id and s.archived_at is null
     join intervention_sessions i on i.school_id = s.id and i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'
