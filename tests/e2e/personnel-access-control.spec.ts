@@ -20,7 +20,6 @@ for (const { role, forbidden } of otherRolesPages) {
     test(`${role} opening ${path} is sent to their own home`, async ({ page, context }) => {
       await signInAs(context, role);
       await page.goto(getUrl(path));
-      // Leaving the page is not enough: a redirect to /login leaves it too.
       await expect(page).toHaveURL(new RegExp(`^${getUrl(roleHome[role])}(/|\\?|$)`));
     });
   }

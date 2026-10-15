@@ -10,7 +10,6 @@ import SchoolTableDropdown from "#/components/common/schools/school-table-dropdo
 import { Badge } from "#/components/ui/badge";
 import { sessionDisplayName } from "#/lib/utils";
 
-// `fetchAdminHubs` and `getFellowGroupsAndHubData` load at least these fields per school.
 export type SchoolsTableData = Awaited<ReturnType<typeof fetchSchoolData>>[number];
 
 export const columns = ({
@@ -42,11 +41,6 @@ export const columns = ({
       id: "School ID",
       accessorKey: "visibleId",
     },
-    // TODO: computed school ranking
-    // {
-    //   accessorKey: "schoolRating",
-    //   header: "School rating",
-    // },
     {
       accessorKey: "schoolCounty",
       header: "County",
@@ -57,11 +51,6 @@ export const columns = ({
       header: "Sub - county",
       id: "Sub - county",
     },
-    // {
-    //   // TODO: fetch and display clinical cases
-    //   accessorKey: "clinicalCases",
-    //   header: "Clinical cases",
-    // },
     {
       header: "Point teacher",
       accessorKey: "pointPersonName",
@@ -74,7 +63,6 @@ export const columns = ({
       accessorFn: (row) => RenderParsedPhoneNumber(row.pointPersonPhone ?? undefined),
     },
     {
-      // TODO: this computation should be done during the fetch and possible user an accessor Function
       accessorKey: "numbersExpected",
       header: "Expected number of students",
       id: "Expected number of students",
@@ -128,7 +116,6 @@ export const columns = ({
             return a.sessionDate.getTime() - b.sessionDate.getTime();
           });
 
-        // TODO: refactor session names
         if (sessions.length > 0) {
           const recent = sessions[sessions.length - 1];
           if (recent && recent.sessionRatingsCount > 0) {

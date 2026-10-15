@@ -28,7 +28,6 @@ export default function GroupTransferHistory({
 }) {
   const transferHistoryData = student.studentGroupTransferTrail
     ? [
-        // creates current group row data
         {
           id: "",
           studentId: student.id,

@@ -6,11 +6,6 @@ import { db } from "#/db/client";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
-/**
- * On a school's sessions page, marking a session's occurrence must first ask for the earlier
- * unmarked sessions of the same type, the same as on the schedule.
- */
-
 type Fixture = {
   email: string;
   visibleId: string;

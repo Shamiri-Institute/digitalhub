@@ -5,12 +5,6 @@ import { db } from "#/db/client";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
-/**
- * Each school tab opens for a school in the caller's hubs and shows the not-found page for a
- * school outside them. Admins see the hubs of their organisation, fellows the schools where they
- * lead a group.
- */
-
 test.describe.configure({ timeout: 4 * 60 * 1000 });
 
 const notFoundText = "This page could not be found.";

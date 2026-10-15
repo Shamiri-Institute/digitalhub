@@ -56,13 +56,11 @@ async function postPresign(request: APIRequestContext, data: unknown, token?: st
   return { res, body };
 }
 
-/** Fellows who have not dropped out, as a subquery for `inArray(group.leaderId, …)`. */
 const activeFellowIds = db
   .select({ id: fellow.id })
   .from(fellow)
   .where(or(eq(fellow.droppedOut, false), isNull(fellow.droppedOut)));
 
-/** Schools with at least one session that occurred. */
 const schoolsWithOccurredSessions = db
   .select({ schoolId: interventionSession.schoolId })
   .from(interventionSession)
@@ -111,11 +109,6 @@ async function findFellowUploadTarget(): Promise<UploadTarget | null> {
   };
 }
 
-/**
- * A supervised fellow's group with an occurred session that has no recording yet and a
- * supervisor who can sign in, found in one query. The seed records every session of the first groups at each school, so a scan over the
- * first few groups finds nothing.
- */
 async function findRecordingUploadTarget(): Promise<UploadTarget | null> {
   const [target] = await db
     .select({
@@ -257,7 +250,6 @@ test.describe("S3 presign auth gate (unauthenticated)", () => {
   });
 });
 
-// The cases the body schema rejects are in tests/unit/s3-request-schema.test.ts.
 test("an invalid body is rejected with 400 and no url", async ({ request }) => {
   const { res, body } = await postPresign(request, { ...attendanceBody, size: 0 }, fellowToken);
   expect(res.status()).toBe(400);

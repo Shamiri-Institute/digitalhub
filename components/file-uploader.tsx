@@ -18,7 +18,6 @@ export function FileUploaderWithDrop({
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // change to array of files
     const files = Array.from(e.target.files || []);
     if (onChange) onChange(files);
   };
@@ -26,7 +25,6 @@ export function FileUploaderWithDrop({
   const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     setIsDragOver(false);
-    // change to array of files
     let files: File[];
 
     if (e.dataTransfer.items) {
@@ -37,7 +35,6 @@ export function FileUploaderWithDrop({
       files = Array.from(e.dataTransfer.files);
     }
 
-    // check allowed file types and filter out
     if (accept && accept !== "*") {
       const allowedTypes = accept.split(",").map((type) => type.substring(1));
       files = files.filter((file: File) => allowedTypes.includes(file.name.split(".").pop() || ""));

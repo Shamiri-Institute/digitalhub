@@ -56,9 +56,6 @@ function Button({
   ref,
   ...props
 }: ButtonProps & { ref?: React.Ref<HTMLButtonElement> }) {
-  // oxlint-disable-next-line no-unused-vars -- shadcn library code - keeping original structure
-  const Comp = asChild ? Slot : "button";
-
   if (asChild) {
     return (
       <Slot ref={ref} {...props}>

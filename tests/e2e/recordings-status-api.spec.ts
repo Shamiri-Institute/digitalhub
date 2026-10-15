@@ -193,7 +193,6 @@ test("POST /api/recordings/batch/status stores results from the fidelity webhook
   expect(failedRecording.overallScore).toBeNull();
   expect(failedRecording.retryCount).toBe(1);
 
-  // A retry of the same webhook finds both rows final and changes nothing.
   const retriedResponse = await request.post("/api/recordings/batch/status", {
     data: {
       job_id: TEST_JOB_ID,

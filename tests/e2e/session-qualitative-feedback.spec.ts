@@ -6,13 +6,6 @@ import { interventionSessionRating, sessionComment } from "#/db/schema";
 import { signableMember, signInAs, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
-/**
- * A supervisor adds qualitative feedback to a session from the school reports page, reloads and
- * sees it. The feedback used to be saved against the session label ("S1") instead of the
- * intervention session id, so the insert failed on the foreign key. The database is used only to
- * give the supervisor a rated session (the report lists rated sessions only) and to clean up.
- */
-
 test.describe.configure({ mode: "serial" });
 
 const ratingId = "isr_e2e_eng2231";
@@ -101,7 +94,6 @@ test("a supervisor saves session feedback and sees it after a reload", async ({
 
 test("a hub coordinator reads session feedback but cannot add notes", async ({ context, page }) => {
   const coordinator = await signInAs(context, "HUB_COORDINATOR");
-  // Any rated session in the coordinator's hub: the form is hidden by role, not by session.
   const {
     rows: [ratedSchool],
   } = await db.execute<{ schoolName: string }>(sql`

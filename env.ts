@@ -11,7 +11,6 @@ const schema = z.object({
   S3_UPLOAD_KEY: z.string(),
   S3_UPLOAD_SECRET: z.string(),
 
-  // Recordings bucket (dedicated for session recordings)
   S3_RECORDINGS_BUCKET: z.string(),
   S3_RECORDINGS_REGION: z.string().default("af-south-1"),
 

@@ -14,14 +14,6 @@ import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
 import { sessionDisplayName } from "#/lib/utils";
 
-/**
- * Hub coordinators and fellows change their own hub's records through the UI: drop out a student,
- * mark a session as occurred, mark student attendance, document and edit a triage event. Each test
- * saves, reloads and checks what the page shows, and a coordinator in another hub does not see the
- * school at all. The database picks fixtures, puts rows back, and checks what no page shows: absence
- * reasons.
- */
-
 test.describe.configure({ mode: "serial" });
 
 type Coordinator = { email: string; hubId: string; implementerId: string };
@@ -100,7 +92,6 @@ test.beforeAll(async () => {
     if (row) {
       coordinator = candidate;
       otherCoordinator = other;
-      // The sessions table shows the display name ("S4"), not the stored name ("s4").
       school = {
         ...row,
         sessionLabel: sessionDisplayName(row.sessionLabel) ?? row.sessionLabel,
@@ -176,7 +167,6 @@ async function sessionRow(page: Page, scope: Locator, label: string) {
     .filter({ has: page.getByRole("cell", { name: label, exact: true }) });
 }
 
-/** The triage fellow's "Mark student attendance" dialog for the fixture session. */
 async function openStudentAttendance(page: Page) {
   await page.goto(getUrl(`/fel/schools/${triage.visibleId}/sessions`));
   await chooseRowAction(
@@ -211,7 +201,6 @@ test("a hub coordinator drops out a student in their hub", async ({ page, contex
   await dialog.getByRole("combobox", { name: "Select reason *" }).click();
   await page.getByRole("option").first().click();
   await dialog.getByRole("button", { name: "Submit" }).click();
-  // Submit only opens a confirmation; Confirm saves.
   const confirm = page.getByRole("dialog", { name: "Confirm drop out" });
   await confirm.getByRole("button", { name: "Confirm" }).click();
   await expect(confirm).toBeHidden();
@@ -221,7 +210,6 @@ test("a hub coordinator drops out a student in their hub", async ({ page, contex
 });
 
 test("a hub coordinator marks a session in their hub as occurred", async ({ page, context }) => {
-  // The seed marks every past session as occurred, so make this one "not yet occurred" first.
   await db
     .update(interventionSession)
     .set({ occurred: false })
@@ -276,7 +264,6 @@ test("a hub coordinator marks a student in their hub missed at a session", async
     eq(studentAttendance.sessionId, school.sessionId),
   );
   const originalAttendances = await db.select().from(studentAttendance).where(attendanceAtSession);
-  // Start unmarked, so "Missed" can only come from this test.
   await db.delete(studentAttendance).where(attendanceAtSession);
   undo.push(async () => {
     await db.delete(studentAttendance).where(attendanceAtSession);
@@ -393,7 +380,6 @@ test("a fellow marks one student missed and two students attended at once", asyn
   page,
   context,
 }) => {
-  // Three students of the fellow's group, with their attendance at the session as it is now.
   const groupStudents = await db
     .select({ id: student.id, admissionNumber: student.admissionNumber })
     .from(student)
@@ -485,7 +471,6 @@ test("a fellow documents a triage event; another fellow at the school does not s
   page,
   context,
 }) => {
-  // Two fellows, five dialogs and a reload of the attendance list after each save.
   test.slow();
   const note = `e2e-2212-${Date.now()}`;
   await signInWithEmail(context, triage.email);
@@ -539,8 +524,6 @@ test("a fellow documents a triage event; another fellow at the school does not s
   const view = page.getByRole("dialog", { name: "View triage" });
   await expect(view.getByRole("textbox", { name: /Short note/ })).toHaveValue(note);
 
-  // Another fellow at the school documents triage for a student of their own group. Their
-  // session summary counts only that event, not the first fellow's ("2 students triaged").
   await signInWithEmail(context, triage.otherFellowEmail);
   await documentTriage(triage.otherAdmissionNumber);
   const otherAttendance = await openAttendance();

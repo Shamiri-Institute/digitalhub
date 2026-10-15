@@ -30,7 +30,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
+import { COMPLAINT_TYPES } from "#/lib/app-constants/constants";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export default function SubmitComplaint({
@@ -94,7 +94,7 @@ export default function SubmitComplaint({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {SCHOOL_DROPOUT_REASONS.map((reason) => (
+                      {COMPLAINT_TYPES.map((reason) => (
                         <SelectItem key={reason} value={reason}>
                           {reason}
                         </SelectItem>

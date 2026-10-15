@@ -29,7 +29,6 @@ export async function editSchoolFeedback(feedbackId: string, data: SchoolFeedbac
 
     const updated = await db
       .update(schoolFeedback)
-      // Only the answers are editable; the school and the author stay as recorded.
       .set({
         studentTeacherSatisfactionRating: data.studentTeacherSatisfactionRating,
         factorsInfluencedStudentParticipation: data.factorsInfluencedStudentParticipation,

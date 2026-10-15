@@ -5,9 +5,6 @@ const slowMo = process.env.SLOW ? Number.parseInt(process.env.SLOW, 10) : undefi
 const showServerLogs = process.env.LOG ? "pipe" : undefined;
 const useHeadless = process.env.CI ? { headless: true } : devices["Desktop Chrome"];
 
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
 export default defineConfig({
   testDir: "./tests/e2e",
   webServer: {

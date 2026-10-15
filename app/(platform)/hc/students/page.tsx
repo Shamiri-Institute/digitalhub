@@ -95,10 +95,6 @@ export default async function StudentsPage() {
     if (form) studentsGroupedByForm[form] = count + (studentsGroupedByForm[form] || 0);
   });
 
-  /**
-   * Non-blocking - To sync with @WendyMbone on two graphs - student info completion and student group ratings.
-   */
-
   return (
     <div className="container w-full grow space-y-3 py-10">
       <PageHeading title="Students" />

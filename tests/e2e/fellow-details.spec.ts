@@ -6,11 +6,6 @@ import { fellow } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
-/**
- * A hub coordinator edits a fellow of their hub. The edit action scopes the fellow to the caller,
- * so this guards the allowed path. The database is used only to pick the fixture and restore it.
- */
-
 type Fixture = {
   fellowId: string;
   fellowName: string;

@@ -7,7 +7,6 @@ export default function RenderParsedPhoneNumber(number?: string) {
     return number && parsePhoneNumberWithError(number, "KE").formatInternational();
   } catch (error) {
     if (error instanceof ParseError) {
-      // Not a phone number, non-existent country, etc.
       return (
         number && (
           <Tooltip>

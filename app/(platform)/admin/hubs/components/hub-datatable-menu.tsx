@@ -30,7 +30,6 @@ export default function HubDatatableMenu({ row, canManageHubs }: HubDatatableMen
   )[0];
 
   const openEdit = async () => {
-    // A second click while the first load runs would race it and open the form on stale rows.
     if (isLoadingEdit) return;
     setIsLoadingEdit(true);
     try {

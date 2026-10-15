@@ -1,4 +1,3 @@
-// Color values from design system (previously in tailwind.config.ts)
 const COLORS = {
   "shamiri-graph-purple": "#8b2ce9",
   "shamiri-light-red": "#e92c2c",

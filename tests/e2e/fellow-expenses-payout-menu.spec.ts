@@ -8,7 +8,6 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 type Viewer = { path: string; email: string; fellowName: string; payouts: number };
 
-// The hub coordinator view is covered in hub-coordinator/fellow-expenses.spec.ts.
 const viewers: Partial<Record<"sc" | "ops", Viewer>> = {};
 
 test.beforeAll(async () => {

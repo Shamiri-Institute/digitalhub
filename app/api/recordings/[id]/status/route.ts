@@ -13,21 +13,6 @@ export const dynamic = "force-dynamic";
  * Updates the status and feedback for a recording.
  * Called by the fidelity-inference service after processing.
  * Protected by API key authentication.
- *
- * Headers:
- *   x-api-key: API key for authentication
- *   Content-Type: application/json
- *
- * Body:
- *   {
- *     status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED",
- *     overallScore?: string,
- *     fidelityFeedback?: object,
- *     errorMessage?: string
- *   }
- *
- * Response:
- *   { success: boolean, message: string }
  */
 export async function PATCH(
   request: NextRequest,
@@ -37,7 +22,6 @@ export async function PATCH(
     }>;
   },
 ) {
-  // Verify API key
   if (!verifyRecordingsApiKey(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -50,7 +34,6 @@ export async function PATCH(
   }
 
   try {
-    // Parse and validate request body
     const body = await request.json();
     const validationResult = RecordingStatusUpdateSchema.safeParse(body);
 
@@ -66,7 +49,6 @@ export async function PATCH(
 
     const { status, overallScore, fidelityFeedback, errorMessage } = validationResult.data;
 
-    // Update the recording status using the server action
     const result = await updateRecordingStatus(recordingId, status, {
       overallScore,
       fidelityFeedback: fidelityFeedback as JsonValue | undefined,

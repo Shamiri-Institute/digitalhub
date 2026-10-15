@@ -8,11 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 
-/**
- * Shared shell for report-table row actions: the cell-filling trigger and
- * the Actions menu with a View and an Edit item, each wrapped by the
- * report's own view/edit dialog via renderDialog.
- */
 export default function ViewEditReportDropdown({
   viewLabel,
   editLabel,

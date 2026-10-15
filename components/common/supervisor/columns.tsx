@@ -1,6 +1,5 @@
 "use client";
 
-import type { ImplementerRole } from "#/db/enums";
 import type {
   fellow,
   interventionSession,
@@ -41,7 +40,6 @@ export const columns = (state: {
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   sessions: (typeof interventionSession.$inferSelect)[];
   setSupervisor: Dispatch<SetStateAction<SupervisorsData | null>>;
-  role: ImplementerRole;
 }): ColumnDef<SupervisorsData>[] => [
   {
     id: "checkbox",

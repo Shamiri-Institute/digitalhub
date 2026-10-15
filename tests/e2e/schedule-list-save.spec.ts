@@ -8,13 +8,6 @@ import { sessionDisplayName } from "#/lib/utils";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
-/**
- * A save on the schedule once reset the list view from the month to one week (ENG-2266). A
- * supervisor goes from the month view to the list and marks a past session there. The range must
- * not change, and the row must show the new status, also after a reload. afterAll makes the
- * session unmarked again.
- */
-
 const timeZone = "Africa/Nairobi";
 test.use({ timezoneId: timeZone });
 

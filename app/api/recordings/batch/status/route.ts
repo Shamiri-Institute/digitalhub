@@ -114,8 +114,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // All recordings that didn't update are already in final state - this is
-      // OK (idempotent retry by Fidelity API)
       console.log(
         `Webhook processed: ${updateResult.updatedCount} updated, ` +
           `${updates.length - updateResult.updatedCount} already in final state (idempotent retry)`,

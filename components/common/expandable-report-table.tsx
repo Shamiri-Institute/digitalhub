@@ -4,11 +4,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import DataTable from "#/components/data-table";
 import { cn } from "#/lib/utils";
 
-/**
- * Shared shell for the report tables: an outer DataTable whose rows expand
- * into a sub-DataTable of detail rows. Each report supplies its columns,
- * the accessor for a row's detail rows, and the two empty messages.
- */
 export default function ExpandableReportTable<TData, TSub>({
   data,
   columns,

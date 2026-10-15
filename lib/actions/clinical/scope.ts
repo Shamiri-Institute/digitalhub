@@ -9,11 +9,6 @@ import { type SQL, sql } from "drizzle-orm";
  */
 export type ClinicalScope = { hubId: string | null } | { projectId: string };
 
-/**
- * Join/filter pair that scopes a table carrying a hub_id column (aliased)
- * to the given scope. Hub scope filters the column directly; project scope
- * joins up to hubs and filters on the project.
- */
 export function hubScope(scope: ClinicalScope, alias: string): { join: SQL; where: SQL } {
   const col = sql.raw(`${alias}.hub_id`);
   if ("projectId" in scope) {

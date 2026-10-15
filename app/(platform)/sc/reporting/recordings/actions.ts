@@ -98,7 +98,6 @@ export async function checkRecordingExists(params: {
   }
 
   const supervisorId = supervisor.profile.id;
-  // The unique key is (fellowId, schoolId, groupId, sessionId).
   const recording = await db.query.sessionRecording.findFirst({
     where: (r, { and, eq, inArray }) =>
       and(

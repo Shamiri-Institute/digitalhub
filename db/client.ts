@@ -35,7 +35,6 @@ export const db = drizzle({
   logger: process.env.DEBUG === "1",
 });
 
-/** The `tx` handed to a `db.transaction` callback; helpers that must run inside one take it. */
 export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /** Drizzle wraps driver errors; find the Postgres error underneath. */
@@ -45,7 +44,6 @@ function pgError(error: unknown): DatabaseError | undefined {
   return undefined;
 }
 
-/** Postgres `unique_violation`: an insert or update hit a unique index, `constraint` if given. */
 export function isUniqueViolation(error: unknown, constraint?: string) {
   const pg = pgError(error);
   return pg?.code === "23505" && (constraint === undefined || pg.constraint === constraint);

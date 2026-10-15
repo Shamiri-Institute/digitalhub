@@ -30,10 +30,6 @@ export const CLINICAL_SESSION_TYPES = [
   { key: "F2", value: "Follow-Up 2" },
   { key: "F3", value: "Follow-Up 3" },
   { key: "F4", value: "Follow-Up 4" },
-  // { key: 'F5', value: 'Follow-Up 5' },
-  // { key: 'F6', value: 'Follow-Up 6' },
-  // { key: 'F7', value: 'Follow-Up 7' },
-  // { key: 'F8', value: 'Follow-Up 8' },
 ] as const;
 
 export default function ViewMarkClinicalSessions({

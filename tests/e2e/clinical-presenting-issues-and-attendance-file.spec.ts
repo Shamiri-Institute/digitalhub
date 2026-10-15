@@ -7,14 +7,6 @@ import { sessionDisplayName } from "#/lib/utils";
 import { createClinicalCase, signInWithEmail, signableMember } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
-/**
- * A supervisor saves a clinical case's baseline presenting issues (emergency, general and other
- * issues in one save), and a fellow deletes the attendance document of a group they lead. Locally
- * there is no S3, so the delete also proves that a failed object delete still archives the file.
- * Each test saves, reloads and checks what the page shows; the database is used only to pick or
- * add fixtures and to remove them. Each test gets a new case.
- */
-
 test.describe.configure({ mode: "serial" });
 
 type CaseFixture = { email: string; supervisorId: string; schoolId: string };
@@ -153,7 +145,6 @@ test("a save from a page loaded before the case was terminated changes nothing",
   await expandCase(page);
   await issueRow(page, "Family issues").getByRole("checkbox").click();
 
-  // The same supervisor terminates the case in another tab while this page still shows it active.
   const otherTab = await context.newPage();
   await otherTab.goto(getUrl("/sc/clinical"));
   await chooseRowAction(
@@ -189,7 +180,6 @@ test("a fellow deletes their group's attendance document even when the file stor
   page,
   context,
 }) => {
-  // The dialog presigns the file's URL before it shows the Delete button. CI sets mock values.
   test.skip(
     !process.env.S3_STUDENT_ATTENDANCE_BUCKET || !process.env.S3_STUDENT_ATTENDANCE_REGION,
     "set S3_STUDENT_ATTENDANCE_BUCKET and S3_STUDENT_ATTENDANCE_REGION (mock values will do)",

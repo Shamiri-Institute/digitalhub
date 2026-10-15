@@ -3,10 +3,7 @@
 import { ImplementerRole } from "#/db/enums";
 import type { interventionSession, school as schoolTable, sessionName } from "#/db/schema";
 import type { Row } from "@tanstack/react-table";
-import parsePhoneNumberFromString from "libphonenumber-js";
 import { useState } from "react";
-import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
-import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { columns, type SupervisorsData } from "#/components/common/supervisor/columns";
@@ -47,7 +44,6 @@ export default function SupervisorsDataTable({
     setMarkAttendanceDialog,
     sessions: school?.interventionSessions ?? [],
     setSupervisor: setSelectedSupervisor,
-    role,
   });
 
   const renderTableActions = () => {
@@ -94,40 +90,6 @@ export default function SupervisorsDataTable({
         rowSelectionDescription={"supervisors"}
         onRowSelectionChange={setSelectedRows}
       />
-      {supervisor && (
-        <DropoutSupervisor
-          supervisorId={supervisor.id}
-          setDropoutDialog={() => {}}
-          dropoutDialog={false}
-        >
-          <DialogAlertWidget>
-            <div className="flex items-center gap-2">
-              <span>{supervisor?.supervisorName}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
-              <span>
-                {supervisor?.cellNumber &&
-                  parsePhoneNumberFromString(supervisor?.cellNumber, "KE")?.formatNational()}
-              </span>
-            </div>
-          </DialogAlertWidget>
-        </DropoutSupervisor>
-      )}
-      <UndropSupervisor
-        supervisorId={supervisor !== null ? supervisor.id : undefined}
-        setUndropDialog={() => {}}
-        undropDialog={false}
-      >
-        <DialogAlertWidget>
-          <div className="flex items-center gap-2">
-            <span>{supervisor?.supervisorName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
-            <span>
-              {supervisor?.cellNumber &&
-                parsePhoneNumberFromString(supervisor?.cellNumber, "KE")?.formatNational()}
-            </span>
-          </div>
-        </DialogAlertWidget>
-      </UndropSupervisor>
       <MarkAttendance
         title={"Mark supervisor attendance"}
         sessions={school?.interventionSessions.filter((session) => session.occurred) ?? []}

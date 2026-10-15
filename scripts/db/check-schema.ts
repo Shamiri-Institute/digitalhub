@@ -1,7 +1,3 @@
-// Fails when the migrated database or a new migration breaks a rule we learned the hard way.
-//
-//   dotenv -c development -- tsx scripts/db/check-schema.ts
-//
 // 1. Every foreign key needs an index on its referencing columns: ON UPDATE/DELETE on the
 //    parent scans the child table otherwise (ENG-2164). scripts/db/unindexed-fks.txt lists the
 //    keys that predate the rule; it may only shrink.

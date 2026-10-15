@@ -12,7 +12,6 @@ export type TriageEventForSupervisor = Awaited<
 
 export type FellowForSupervisor = { id: string; fellowName: string | null };
 
-/** Events raised by one of the supervisor's fellows, or escalated to the supervisor. */
 function supervisedFellowIds(supervisorId: string) {
   return db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, supervisorId));
 }

@@ -5,11 +5,6 @@ import { db } from "#/db/client";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
-/**
- * The fellow tables do not send a fellow's ID number or M-Pesa number to the browser. The edit
- * dialog loads them when it opens. The database is used only to pick the fixtures.
- */
-
 type Fixture = {
   fellowName: string;
   idNumber: string;
@@ -39,7 +34,6 @@ async function pickFixture(from: SQL) {
   return row;
 }
 
-/** `/sc/fellows` shows the M-Pesa number in its table, so it checks only the ID number. */
 async function expectNoPersonalData(
   page: Page,
   path: string,

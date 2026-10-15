@@ -7,14 +7,6 @@ import { sessionDisplayName } from "#/lib/utils";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
-/**
- * Each write checks that its record is in the caller's scope: a fellow evaluates a group they
- * lead for a session at its school, a supervisor edits a recording of a group their fellow leads
- * at an occurred session, and a hub coordinator reassigns a fellow of their organisation. Each
- * test saves through the UI, reloads and checks what the page shows. The database picks fixtures,
- * puts rows back, and reads the one value no page shows: an evaluation's star rating.
- */
-
 test.describe.configure({ mode: "serial" });
 
 type EvaluationFixture = {
@@ -71,7 +63,6 @@ test.beforeAll(async () => {
     sessionLabel: sessionDisplayName(ledGroup.sessionLabel) ?? ledGroup.sessionLabel,
   };
 
-  // The edit keeps the recording's fellow, group and session, which must be an occurred one.
   const {
     rows: [supervisedRecording],
   } = await db.execute<RecordingFixture>(sql`
@@ -94,7 +85,6 @@ test.beforeAll(async () => {
   }
   recording = supervisedRecording;
 
-  // The coordinator's fellows page lists only fellows whose hub is the coordinator's hub.
   const {
     rows: [hubFellow],
   } = await db.execute<ReassignFixture>(sql`

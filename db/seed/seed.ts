@@ -38,141 +38,6 @@ import {
   generateRecordingFilename,
 } from "#/lib/s3/key-builders/build-recordings-s3-key";
 
-// GETTING STARTED WITH SEEDING
-// ===========================
-
-// STEP 1: CORE SYSTEM SETUP
-// ------------------------
-// First, create the foundational data that other records will depend on
-
-// 1.1 Create Files (Optional for all avatars)
-// - Files are needed before creating any avatars
-// - Required fields: id, key, fileName, byteSize, contentType
-// - Example: Profile pictures, organization logos
-
-// 1.2 Create Users (Core users of the system)
-// - Create basic user profiles first
-// - Required fields: id, name, email
-// - Optional: Create UserAvatar (needs File record from 1.1)
-// - Optional: Add some UserRecentOpen records to simulate usage
-// - Required: if any staff member leaves the org then update the user creation script to prevent logins with shamiri emails
-
-// 1.3 Create Implementers (Organizations running programs)
-// - These are the parent organizations
-// - Required fields: id, visibleId (e.g., "Imp_1"), implementerName, implementerType
-// - Optional: Create ImplementerAvatar (needs File record from 1.1)
-// - Remember: Implementers are the top-level organization entity
-
-// STEP 2: PROJECT AND LOCATION SETUP
-// ---------------------------------
-// Now set up the project structure and physical locations
-
-// 2.1 Create Projects
-// - Projects organize implementation work
-// - Required fields: id, visibleId, name
-// - Link to Implementers using ProjectImplementer join table
-// - Projects are required before creating Hubs
-
-// 2.2 Create Hubs (Regional centers)
-// - Hubs are geographical operation centers
-// - Required fields: id, visibleId, hubName
-// - Must be linked to: Project and Implementer
-// - Hubs are required before creating schools or staff
-
-// STEP 3: STAFF HIERARCHY
-// ----------------------
-// Create staff members in order of hierarchy
-
-// 3.1 Create Hub Coordinators
-// - They manage hubs and supervisors
-// - Required fields: id, visibleId, coordinatorName
-// - Must be linked to: Hub and Implementer
-// - Create corresponding ImplementerMember with role HUB_COORDINATOR
-
-// 3.2 Create Supervisors
-// - They manage fellows and monitor schools
-// - Required fields: id, visibleId, supervisorName
-// - Must be linked to: Hub and Implementer
-// - Create corresponding ImplementerMember with role SUPERVISOR
-
-// 3.3 Create Fellows (Program delivery staff)
-// - They lead intervention groups
-// - Required fields: id, visibleId, fellowName
-// - Must be linked to: Supervisor, Hub, and Implementer
-// - Fellows need to exist before creating intervention groups
-
-// STEP 4: LOCATION AND GROUP SETUP
-// -------------------------------
-// Set up physical locations and intervention groups
-
-// 4.1 Create Schools
-// - Schools are where interventions happen
-// - Required fields: id, visibleId, schoolName
-// - Must be linked to: Hub and Implementer (via SchoolImplementer)
-// - Optional: Create SchoolDropoutHistory if needed
-
-// 4.2 Create Intervention Groups
-// - Groups are where students receive interventions
-// - Required fields: id, groupName
-// - Must be linked to: School, Fellow (as leader), and Project
-// - Groups need to exist before adding students
-
-// 4.3 Create Intervention Sessions
-// - This is where the intervention is delivered
-// - Must be linked to the school.
-
-// STEP 5: PARTICIPANT MANAGEMENT
-// ----------------------------
-// Add program participants and their data
-
-// 5.1 Create Students
-// - They are the program participants
-// - Required fields: id, visibleId, studentName
-// - Must be linked to: School, Implementer, and InterventionGroup
-// - Optional: Create StudentOutcome records for tracking progress
-
-// STEP 6: TRACKING AND MONITORING
-// -----------------------------
-// Add attendance and monitoring records
-
-// 6.1 Create Attendance Records
-// - Create FellowAttendance
-// - Create SupervisorAttendance
-// - Create StudentAttendance
-// All must be linked to appropriate InterventionSession
-
-// 6.2 Create Evaluation Records
-// - Create WeeklyFellowRatings
-// - Create MonthlySupervisorEvaluation
-// - Create InterventionGroupReport
-
-// STEP 7: CLINICAL TRACKING (If needed)
-// -----------------------------------
-// Set up clinical case management
-
-// 7.1 Create Clinical Records
-// - Create ClinicalScreeningInfo for identified students
-// - Add ClinicalSessionAttendance
-// - Add ClinicalCaseTransferTrail if cases are transferred
-
-// STEP 8: FINANCIAL RECORDS
-// -----------------------
-// Set up payment records
-
-// 8.1 Create Payment Records
-// - Create RepaymentRequest
-// - Create PayoutReconciliation
-
-// IMPORTANT TIPS
-// =============
-// 1. Always create parent records before child records
-// 2. Check required fields in the schema
-// 3. Maintain proper visible_id formats
-// 4. Keep track of relationships between models
-// 5. Use realistic dates for historical data
-// 6. Include both active and archived records
-// 7. Test edge cases (e.g., dropouts, transfers)
-
 type AdminUser = InferSelectModel<typeof schema.adminUser>;
 type ClinicalLead = InferSelectModel<typeof schema.clinicalLead>;
 type ClinicalTeam = InferSelectModel<typeof schema.clinicalTeam>;
@@ -217,14 +82,12 @@ function* chunk<T>(rows: T[]) {
   }
 }
 
-/** `createMany`: bulk insert, nothing returned, no-op on an empty list. */
 async function insertMany<T extends PgTable>(table: T, rows: InferInsertModel<T>[]) {
   for (const part of chunk(rows)) {
     await db.insert(table).values(part);
   }
 }
 
-/** `createManyAndReturn`: bulk insert returning the rows in insert order. */
 async function insertManyReturning<T extends PgTable>(table: T, rows: InferInsertModel<T>[]) {
   const inserted: InferSelectModel<T>[] = [];
   for (const part of chunk(rows)) {
@@ -491,7 +354,6 @@ async function createAdminUsers(
   };
 
   const adminPeople: AdminPerson[] = [
-    // a super admin of every implementer
     {
       userId: objectId("user"),
       email: "admin@shamiri.institute",
@@ -500,7 +362,6 @@ async function createAdminUsers(
       isSuperAdmin: true,
       team: null,
     },
-    // a super admin per implementer
     ...implementers.flatMap((implementer) =>
       implementer.pointPersonEmail
         ? [
@@ -542,7 +403,6 @@ async function createAdminUsers(
     },
   ];
 
-  // create one admin profile per person and implementer
   const createdAdminUsers = await insertManyReturning(
     schema.adminUser,
     adminPeople.flatMap((person) =>
@@ -567,7 +427,6 @@ async function createAdminUsers(
     })),
   );
 
-  // Create membership records
   const userIdByEmail = new Map(adminPeople.map((person) => [person.email, person.userId]));
   const membershipData = createdAdminUsers.map((admin) => ({
     userId: userIdByEmail.get(admin.email) ?? "",
@@ -578,7 +437,6 @@ async function createAdminUsers(
 
   await insertMany(schema.implementerMember, membershipData);
 
-  // Add admin emails to set
   createdUsers.forEach((user) => {
     emails.add(user.email ?? "");
   });
@@ -638,16 +496,13 @@ async function createHubCoordinators(
     },
   ];
 
-  // Create users for static coordinators
   const staticUsers = staticCoordinators.map((coord) => ({
     id: objectId("user"),
     email: coord.coordinatorEmail,
   }));
 
-  // Create users in database
   await insertManyReturning(schema.user, staticUsers);
 
-  // Create membership records for static coordinators
   const staticMembershipData = staticUsers.map((user, index) => ({
     userId: user.id,
     implementerId: staticHub?.implementerId ?? "",
@@ -655,12 +510,10 @@ async function createHubCoordinators(
     identifier: staticCoordinators[index]?.id ?? "",
   }));
 
-  // Add static coordinators to database
   await insertMany(schema.hubCoordinator, staticCoordinators);
 
   await insertMany(schema.implementerMember, staticMembershipData);
 
-  // Add static coordinator emails to set
   staticCoordinators.forEach((coord) => {
     emails.add(coord.coordinatorEmail);
   });
@@ -677,13 +530,11 @@ async function createHubCoordinators(
     const userId = objectId("user");
     const coordinatorId = objectId("coord");
 
-    // Create user
     await db.insert(schema.user).values({
       id: userId,
       email: uniqueEmail,
     });
 
-    // Create hub coordinator
     const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
     const subCounty = faker.helpers.arrayElement(county.sub_counties);
     const gender = faker.person.sexType();
@@ -709,7 +560,6 @@ async function createHubCoordinators(
       assignedHubId: hub.id,
     });
 
-    // Create membership
     await db.insert(schema.implementerMember).values({
       userId,
       implementerId: hub.implementerId,
@@ -1013,7 +863,6 @@ async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
   if (!staticHub) throw new Error("No static hub found for clinical team");
   if (!staticImplementer) throw new Error("No static implementer found for clinical team");
 
-  // Create user first
   const userId = objectId("user");
   const clinicalTeamId = objectId("clinicalteam");
 
@@ -1022,7 +871,6 @@ async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
     email: "takehiro.tomiyasu@test.com",
   });
 
-  // Create clinical team member with matching id
   const clinicalTeamMember = {
     id: clinicalTeamId,
     name: "Takehiro Tomiyasu",
@@ -1034,7 +882,6 @@ async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
   const [created] = await db.insert(schema.clinicalTeam).values(clinicalTeamMember).returning();
   if (!created) throw new Error("Clinical team member was not created");
 
-  // Create implementer member with identifier
   await db.insert(schema.implementerMember).values({
     userId,
     implementerId: staticImplementer.id,
@@ -1273,9 +1120,7 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
         fellowName,
         fellowEmail: uniqueEmail,
         mpesaName: faker.number.float() > 0.5 ? fellowName : faker.person.fullName(),
-        // NOTE: if we ever need to make this real, we would have to control the formatting
         mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        // TODO: should we allow some fellows to have no supervisor?
         supervisorId: supervisor.id,
         hubId: supervisor.hubId,
         implementerId: supervisor.implementerId,
@@ -1319,7 +1164,6 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
   return created;
 }
 
-// TODO: should each school have a unique supervisor?
 async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
   console.log("creating schools");
   const schools: (typeof schema.school.$inferInsert)[] = [];
@@ -1431,10 +1275,9 @@ async function createInterventionGroups(schools: SchoolCreationResult, fellows: 
   });
 
   // Continue with dynamic intervention groups
-  const schoolFellowAssignments = new Map<string, Set<string>>(); // Maps schoolId -> Set<fellowId>
-  const fellowSchoolCount = new Map<string, number>(); // Track how many schools each fellow is assigned to
+  const schoolFellowAssignments = new Map<string, Set<string>>();
+  const fellowSchoolCount = new Map<string, number>();
 
-  // Initialize fellowSchoolCount with all fellows
   for (const fellow of fellows) {
     fellowSchoolCount.set(fellow.id, 0);
   }
@@ -1524,7 +1367,7 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
         schoolId: staticSchool?.id,
         assignedGroupId: group.id,
         gender: i % 2 === 0 ? "Male" : "Female",
-        yearOfBirth: 2008, // Fixed birth year for static students
+        yearOfBirth: 2008,
       });
     }
   });
@@ -1536,10 +1379,9 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
       max: school.numbersExpected || 1000,
     });
     for (let i = 0; i < numStudents; i++) {
-      // consider making the form + year of birth more realistic
       students.push({
         id: objectId("stu"),
-        visibleId: objectId("student"), // use short id?
+        visibleId: objectId("student"),
         studentName: faker.person.fullName(),
         admissionNumber: faker.string.numeric({ length: 5 }),
         schoolId: school.id,
@@ -1558,7 +1400,6 @@ async function createSessionNames(hubs: Hub[]) {
   const sessionNamesRecords: (typeof schema.sessionName.$inferInsert)[] = [];
 
   for (const hub of hubs) {
-    // TODO: Modify to create sessionTypes per project per hub
     for (const sessionType of seedHubSessionTypes) {
       sessionNamesRecords.push({
         id: objectId("sessionname"),
@@ -1597,7 +1438,6 @@ async function createInterventionSessionsForSchools(
   const interventionSessions: (typeof schema.interventionSession.$inferInsert)[] = [];
   const fellowSessionDates = new Map<string, Set<string>>();
 
-  // Create static sessions for static school
   const staticSchool = schools[0];
   const staticSessionNames = interventionSessionNames.filter(
     (sn) => sn.hubId === staticSchool?.hub?.id,
@@ -1605,11 +1445,9 @@ async function createInterventionSessionsForSchools(
 
   let staticDate = addHours(subWeeks(seedToday, SESSION_WEEKS_BEFORE_TODAY), 16);
 
-  // Create a Set to track used session types for the static school
   const usedStaticSessionTypes = new Set<string>();
 
   for (const sessionName of staticSessionNames) {
-    // Skip if we've already used this session type for this school
     if (usedStaticSessionTypes.has(sessionName.sessionName)) continue;
     usedStaticSessionTypes.add(sessionName.sessionName);
 
@@ -1630,40 +1468,31 @@ async function createInterventionSessionsForSchools(
     staticDate = addWeeks(staticDate, 1);
   }
 
-  // Continue with dynamic sessions for other schools
   for (const school of schools.slice(1)) {
-    // Skip if school has no hub
     if (!school.hubId) continue;
 
-    // Get session names for this school's hub
     const schoolSessionNames = interventionSessionNames.filter((sn) => sn.hubId === school.hub?.id);
 
-    // Create a Set to track used session types for this school
     const usedSessionTypes = new Set<string>();
 
-    // Get all fellows who lead groups in this school
     const fellowsInSchool = school.interventionGroups.map((group) => group.leader);
     const fellowIds = new Set(fellowsInSchool.map((f) => f.id));
 
     let currentDate = addHours(subWeeks(seedToday, SESSION_WEEKS_BEFORE_TODAY), 9);
 
     for (const sessionName of schoolSessionNames) {
-      // Skip if we've already used this session type for this school
       if (usedSessionTypes.has(sessionName.sessionName)) continue;
       usedSessionTypes.add(sessionName.sessionName);
 
-      // Check if any fellow in this school has a session on this date
       while (
         Array.from(fellowIds).some((fellowId) => {
           const fellowDates = fellowSessionDates.get(fellowId);
           return fellowDates?.has(currentDate.toISOString().split("T")[0] ?? "");
         })
       ) {
-        // If conflict exists, move to next day
         currentDate = addDays(currentDate, 1);
       }
 
-      // Create session for this school
       interventionSessions.push({
         id: objectId("session"),
         sessionDate: currentDate,
@@ -1677,7 +1506,6 @@ async function createInterventionSessionsForSchools(
         hubId: school.hubId,
       });
 
-      // Record the date for all fellows in this school
       fellowsInSchool.forEach((fellow) => {
         if (!fellowSessionDates.has(fellow.id)) {
           fellowSessionDates.set(fellow.id, new Set());
@@ -1691,15 +1519,6 @@ async function createInterventionSessionsForSchools(
 
   return insertManyReturning(schema.interventionSession, interventionSessions);
 }
-
-// ============================================================================
-// DEMO TRACKING / CLINICAL / FINANCIAL DATA
-// ----------------------------------------------------------------------------
-// These records were historically left as TODOs. They are seeded with
-// faker-generated data for a *bounded sample* of schools/groups/students so the
-// staging/preview environment looks realistic end-to-end (attendance, clinical
-// cases, payouts, recordings) without generating production-scale volume.
-// ============================================================================
 
 const DEMO_SCHOOL_SAMPLE = 8; // schools enriched with the records below
 const DEMO_GROUPS_PER_SCHOOL = 6; // cap groups enriched per school
@@ -1741,7 +1560,6 @@ async function createAttendanceRecords(
     const students = (studentsBySchool.get(school.id) ?? []).slice(0, DEMO_STUDENTS_PER_SCHOOL);
 
     for (const session of sessions) {
-      // Fellow attendance: one row per group leader in this school
       for (const group of groups) {
         fellowAttendanceData.push({
           fellowId: group.leaderId,
@@ -1756,7 +1574,6 @@ async function createAttendanceRecords(
         });
       }
 
-      // Supervisor attendance: one row per school's assigned supervisor
       if (school.assignedSupervisorId) {
         supervisorAttendanceData.push({
           supervisorId: school.assignedSupervisorId,
@@ -1766,7 +1583,6 @@ async function createAttendanceRecords(
         });
       }
 
-      // Student attendance: for the sampled students (unique per student+session)
       for (const student of students) {
         const group = groups.find((g) => g.id === student.assignedGroupId);
         studentAttendanceData.push({
@@ -1885,8 +1701,6 @@ async function createClinicalRecords(
 ) {
   console.log("creating clinical records");
 
-  // Pre-generate ids so the whole clinical graph can be built in memory and
-  // written with a few bulk inserts instead of one create per row.
   const screeningData: (typeof schema.clinicalScreeningInfo.$inferInsert)[] = [];
   const sessionData: (typeof schema.clinicalSessionAttendance.$inferInsert)[] = [];
   const notesData: (typeof schema.clinicalCaseNotes.$inferInsert)[] = [];
@@ -1894,8 +1708,6 @@ async function createClinicalRecords(
   const terminationData: (typeof schema.clinicalCaseTermination.$inferInsert)[] = [];
   const triageData: (typeof schema.triageEvent.$inferInsert)[] = [];
 
-  // Cycle through case statuses so every state (incl. Terminated/FollowUp) is
-  // reliably represented for demos, regardless of sample size.
   const CASE_STATUSES = [
     caseStatusOptions.Active,
     caseStatusOptions.FollowUp,
@@ -1947,7 +1759,6 @@ async function createClinicalRecords(
         flaggedReason: riskStatus === riskStatusOptions.High ? faker.lorem.sentence() : undefined,
       });
 
-      // 2-3 clinical session attendances per case, each with one case note
       const numClinicalSessions = faker.number.int({ min: 2, max: 3 });
       const clinicalSessionIds: string[] = [];
       for (let s = 0; s < numClinicalSessions; s++) {
@@ -1985,7 +1796,6 @@ async function createClinicalRecords(
         });
       }
 
-      // Follow-up treatment plan for FollowUp cases (caseId is unique)
       if (caseStatus === caseStatusOptions.FollowUp) {
         followUpData.push({
           caseId,
@@ -2000,7 +1810,6 @@ async function createClinicalRecords(
         });
       }
 
-      // Termination record for Terminated cases
       const lastClinicalSessionId = clinicalSessionIds.at(-1);
       if (caseStatus === caseStatusOptions.Terminated && lastClinicalSessionId) {
         terminationData.push({
@@ -2018,7 +1827,6 @@ async function createClinicalRecords(
         });
       }
 
-      // Triage event on the first intervention session for this case's student
       const firstSession = sessions[0];
       const fellowId = student.assignedGroupId
         ? groupLeaderByGroupId.get(student.assignedGroupId)
@@ -2039,8 +1847,6 @@ async function createClinicalRecords(
     }
   }
 
-  // Insert respecting FK order: screening -> sessions -> (notes/termination),
-  // with the independent leaf tables written in parallel.
   await insertMany(schema.clinicalScreeningInfo, screeningData);
   await insertMany(schema.clinicalSessionAttendance, sessionData);
   await Promise.all([
@@ -2058,7 +1864,6 @@ async function createPayoutRecords(
 ) {
   console.log("creating payout records");
 
-  // Only attendances with a supervisor + resolvable hub can back the payment flows
   const eligible = fellowAttendances.filter(
     (fa) => fa.supervisorId && fa.schoolId && hubIdBySchoolId.has(fa.schoolId),
   );
@@ -2081,8 +1886,6 @@ async function createPayoutRecords(
   await insertMany(schema.payoutStatements, payoutStatementData);
 }
 
-// Pools used to generate varied (V1-shaped) fidelity feedback per recording so
-// the recordings table isn't 378 copies of one canned response.
 const FIDELITY_QUESTIONS = [
   {
     key: "question_1_protocol_adherence",
@@ -2201,8 +2004,6 @@ const SAFETY_FLAG_TEMPLATES = [
   },
 ];
 
-// V2-only pools (newer prompt format: participation stats, competency
-// profile and a supervision-preparation brief).
 const REFLECTIVE_QUESTIONS_POOL = [
   "What helped you decide when to move from group discussion to individual work?",
   "How did you notice and respond to the quieter students in the room?",
@@ -2222,7 +2023,6 @@ const V2_COMPETENCIES = [
 const COMPETENCY_LEVELS = ["Emerging", "Developing", "Proficient", "Advanced"];
 const CONFIDENCE_LEVELS = ["low", "medium", "high"];
 
-// Shared across both feedback versions: ~40% of recordings carry a safety flag.
 function buildSafetyFlags() {
   return faker.datatype.boolean({ probability: 0.4 })
     ? [
@@ -2362,7 +2162,6 @@ function buildFidelityFeedbackV2() {
   return { feedback, overallScore, promptVersion: 2 };
 }
 
-// ~35% of recordings use the newer V2 prompt format, the rest use V1.
 function buildFidelityFeedback() {
   return faker.datatype.boolean({ probability: 0.35 })
     ? buildFidelityFeedbackV2()
@@ -2388,9 +2187,6 @@ async function createSessionRecordings(
       for (const group of groups) {
         const recordingId = objectId("rec");
         const sessionType = session.sessionType ?? "session";
-        // Varied feedback per recording (mix of V1/V2 prompt formats);
-        // overallScore is derived from the per-question scores so it matches
-        // the stored overall_score column.
         const { feedback: fidelityFeedback, overallScore, promptVersion } = buildFidelityFeedback();
 
         // Synthetic key: looks real, points at no real object. The bucket is
@@ -2448,7 +2244,6 @@ async function createDemoRecords(
   const schools = allSchools.slice(0, DEMO_SCHOOL_SAMPLE);
   const schoolIds = new Set(schools.map((s) => s.id));
 
-  // markedBy / createdBy / uploadedBy require a real user FK; reuse one seeded user
   const seeder = await db.query.user.findFirst({ columns: { id: true } });
   if (!seeder) {
     console.warn("No users found - skipping demo tracking/clinical/financial records");
@@ -2456,7 +2251,6 @@ async function createDemoRecords(
   }
   const seederUserId = seeder.id;
 
-  // Lookup maps scoped to the sampled schools
   const studentsBySchool = new Map<string, DemoStudents>();
   for (const student of students) {
     if (!student.schoolId || !schoolIds.has(student.schoolId)) continue;
@@ -2484,8 +2278,6 @@ async function createDemoRecords(
     }
   }
 
-  // Attendance must complete first since payouts reference fellow attendance
-  // rows; the remaining four sets are independent and run concurrently.
   const { fellowAttendances } = await createAttendanceRecords(
     schools,
     studentsBySchool,
@@ -2538,14 +2330,6 @@ async function createSessionRatings(schools: DemoSchool[], sessions: DemoSession
   await insertMany(schema.interventionSessionRating, sessionRatings);
 }
 
-/**
- * fellow complaints (fellow-reports/complaints),
- * group evaluations
- * (fellow-reports/student-group-evaluation),
- * fellow group reports
- * (fellow-reports/group-report; seeded for alternate groups so both the
- * "View report" and "Not yet submitted" states appear).
- */
 async function createReportRecords(
   schools: DemoSchool[],
   sessionsBySchool: Map<string, DemoSessions>,
@@ -2578,8 +2362,6 @@ async function createReportRecords(
         createdBy: seederUserId,
       });
 
-      // A submitted fidelity report for every second group, so the
-      // group-report page shows both submitted and not-yet-submitted rows
       if (projectId && groupIndex % 2 === 0) {
         fellowGroupReportData.push({
           id: objectId("fgr"),
@@ -2608,7 +2390,6 @@ async function createReportRecords(
         });
       }
 
-      // One evaluation per group per session; [sessionId, groupId] is unique
       for (const session of sessions.slice(0, 2)) {
         groupEvaluationData.push({
           id: objectId("ige"),
@@ -2682,8 +2463,6 @@ async function main() {
 
   await createSessionRatings(schoolsWithGroupsAndFellows, interventionSessions);
 
-  // Comprehensive demo data (attendance, clinical cases, payouts, recordings)
-  // for a bounded sample of schools so staging looks realistic end-to-end.
   await createDemoRecords(schoolsWithGroupsAndFellows, students, interventionSessions);
 }
 

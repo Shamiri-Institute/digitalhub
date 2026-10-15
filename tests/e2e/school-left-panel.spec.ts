@@ -7,12 +7,6 @@ import { sessionDisplayName } from "#/lib/utils";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction } from "#/tests/pages/helpers";
 
-/**
- * The school panel shows the school's counts. After a hub coordinator cancels a session on the
- * school's sessions tab, the panel shows the session as cancelled without a reload. The test puts
- * the session's status back afterwards.
- */
-
 type Fixture = {
   email: string;
   sessionId: string;

@@ -1,5 +1,3 @@
-// https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
-
 import * as Sentry from "@sentry/nextjs";
 import { constants } from "#/lib/constants";
 
@@ -9,7 +7,7 @@ export async function register() {
     const databaseHost = url.hostname;
     const databaseName = url.pathname.slice(1);
 
-    const color = databaseHost === "localhost" ? "\x1b[32m" : "\x1b[0m"; // Green for local, default otherwise
+    const color = databaseHost === "localhost" ? "\x1b[32m" : "\x1b[0m";
 
     const leftPad = " ".repeat(3);
     console.info(`${leftPad}\x1b[34mConnecting to database\x1b[0m`);

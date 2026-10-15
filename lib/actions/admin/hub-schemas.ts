@@ -20,7 +20,6 @@ const sessionTypeValues = {
     .max(2_147_483_647, { error: "The amount is too large" }),
 };
 
-// A hub has a few dozen session types; the cap only stops a request from inserting thousands.
 const MAX_SESSION_TYPES = 200;
 
 export const HubNameSchema = z.object(hubFields);

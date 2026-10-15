@@ -6,13 +6,6 @@ import { fellowComplaints } from "#/db/schema";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
-/**
- * A supervisor files a complaint about a fellow they supervise, edits it from the complaints
- * report, reloads and sees the new text. The edit action used to allow hub coordinators only, so
- * the supervisor's save always failed. A supervisor who does not supervise the fellow does not see
- * the complaint. The database is read only to pick fixtures and to delete the complaint.
- */
-
 test.describe.configure({ mode: "serial" });
 
 const complaintComment = `E2E complaint ${Date.now()}`;
@@ -76,7 +69,6 @@ test.afterAll(async () => {
     );
 });
 
-/** The complaint row inside the expanded fellow row of the complaints report. */
 async function expandedComplaintRow(page: Page) {
   const fellowRows = await searchRows(page, targetFellow.fellowName);
   await fellowRows.first().getByRole("button").first().click();

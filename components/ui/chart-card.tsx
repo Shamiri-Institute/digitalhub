@@ -26,8 +26,6 @@ export default function ChartCard({
       </CardContent>
       {showCardFooter && (
         <CardFooter className="border-t border-dashed px-4 py-[14px]">
-          {/* TODO: the change the font type to user Inter in this section */}
-          {/* TODO: also change to a link */}
           <p className="font-medium leading-5 text-shamiri-new-blue">View Summary</p>
         </CardFooter>
       )}

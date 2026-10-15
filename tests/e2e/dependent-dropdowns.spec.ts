@@ -5,12 +5,6 @@ import { db } from "#/db/client";
 import { signInAs } from "#/tests/helpers";
 import { getUrl, chooseRowAction } from "#/tests/pages/helpers";
 
-/**
- * Dropdowns that load their options when another dropdown changes. Each test picks a value and
- * expects the next dropdown to list exactly what belongs to it. The database is used only to pick
- * the fixture and to know the expected options.
- */
-
 test("a hub coordinator picks a school and sees its groups in the move-school form", async ({
   page,
   context,

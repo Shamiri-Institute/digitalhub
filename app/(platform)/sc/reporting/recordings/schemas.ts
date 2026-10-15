@@ -7,9 +7,6 @@ import {
 
 export { ALLOWED_EXTENSIONS, MAX_FILE_SIZE, RECORDINGS_ALLOWED_CONTENT_TYPES };
 
-/**
- * Zod schema for recording upload form validation
- */
 export const RecordingUploadSchema = z.object({
   fellowId: z.string().min(1, "Fellow is required"),
   groupId: z.string().min(1, "Intervention group is required"),
@@ -21,12 +18,7 @@ export type RecordingUploadFormData = z.infer<typeof RecordingUploadSchema>;
 
 export const ALLOWED_AUDIO_TYPES = RECORDINGS_ALLOWED_CONTENT_TYPES;
 
-/**
- * Magic bytes patterns for audio file validation
- * These are the first bytes of valid audio files
- */
 const MAGIC_BYTES: Record<string, readonly (readonly number[])[]> = {
-  // MP3 files start with ID3 tag or sync word
   mp3: [
     [0x49, 0x44, 0x33], // ID3 tag header
     [0xff, 0xfb], // MPEG-1 Layer 3 (No CRC)
@@ -36,26 +28,17 @@ const MAGIC_BYTES: Record<string, readonly (readonly number[])[]> = {
     [0xff, 0xf3], // MPEG-2.5 Layer 3 (No CRC)
     [0xff, 0xf2], // MPEG-2.5 Layer 3 (CRC)
   ],
-  // WAV files start with RIFF header
   wav: [[0x52, 0x49, 0x46, 0x46]], // "RIFF"
-  // M4A/MP4 files have ftyp box
   m4a: [[0x00, 0x00, 0x00]], // ftyp box (variable size prefix)
   mp4: [[0x00, 0x00, 0x00]], // ftyp box (variable size prefix)
 };
 
-/**
- * Result of file validation
- */
 export type FileValidationResult = {
   valid: boolean;
   error?: string;
 };
 
-/**
- * Validate audio file type and size
- */
 export function validateAudioFile(file: File): FileValidationResult {
-  // Check file size
   if (file.size > MAX_FILE_SIZE) {
     const sizeMB = Math.round(file.size / (1024 * 1024));
     return {
@@ -64,11 +47,9 @@ export function validateAudioFile(file: File): FileValidationResult {
     };
   }
 
-  // Check MIME type
   const isValidType = ALLOWED_AUDIO_TYPES.some((type) => file.type === type);
 
   if (!isValidType) {
-    // Check file extension as fallback
     const extension = `.${file.name.split(".").pop()?.toLowerCase()}`;
     const isValidExtension = ALLOWED_EXTENSIONS.some((ext) => ext === extension);
 
@@ -83,18 +64,12 @@ export function validateAudioFile(file: File): FileValidationResult {
   return { valid: true };
 }
 
-/**
- * Read the first bytes of a file
- */
 async function readFileHeader(file: File, bytes: number): Promise<Uint8Array> {
   const slice = file.slice(0, bytes);
   const buffer = await slice.arrayBuffer();
   return new Uint8Array(buffer);
 }
 
-/**
- * Check if header matches any of the magic byte patterns
- */
 function matchesMagicBytes(header: Uint8Array, patterns: readonly (readonly number[])[]): boolean {
   return patterns.some((pattern) => {
     for (let i = 0; i < pattern.length; i++) {
@@ -106,16 +81,11 @@ function matchesMagicBytes(header: Uint8Array, patterns: readonly (readonly numb
   });
 }
 
-/**
- * Validate audio file magic bytes to verify file content
- * This provides additional security against renamed files
- */
 export async function validateAudioMagicBytes(file: File): Promise<FileValidationResult> {
   try {
     // Read first 12 bytes (enough for most signatures)
     const header = await readFileHeader(file, 12);
 
-    // Get file extension
     const extension = file.name.split(".").pop()?.toLowerCase();
 
     if (!extension) {
@@ -125,7 +95,6 @@ export async function validateAudioMagicBytes(file: File): Promise<FileValidatio
       };
     }
 
-    // Check based on extension
     switch (extension) {
       case "mp3": {
         const mp3Patterns = MAGIC_BYTES.mp3;

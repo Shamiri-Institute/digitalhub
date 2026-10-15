@@ -101,7 +101,6 @@ export const columns = (state: {
     id: "Student Name",
   },
   {
-    // TODO: this computation should be done during the fetch and possible user an accessor Function
     accessorKey: "assignedGroup.groupName",
     header: () => wrapColumnHeader("Group Name"),
     id: "Group Name",

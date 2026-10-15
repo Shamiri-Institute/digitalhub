@@ -5,13 +5,6 @@ import { db } from "#/db/client";
 import { signInAs } from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
-/**
- * An admin opens "View fellow attendance" from the schedule. The dialog fills its fellow rows,
- * with each fellow's group at the session's school, from a request made after the page renders,
- * so a page render check does not see them. Those groups were once lost (#849). The test compares
- * the rows with a live query. The database is read only.
- */
-
 test("an admin sees each fellow's group in the fellow attendance dialog", async ({
   page,
   context,

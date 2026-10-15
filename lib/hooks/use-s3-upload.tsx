@@ -73,9 +73,6 @@ function resolveUploadContentType(file: File): string {
   return declared || "application/octet-stream";
 }
 
-/**
- * S3 upload hook using presigned URLs with progress tracking.
- */
 export function useS3Upload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<FileProgress[]>([]);
@@ -121,9 +118,6 @@ export function useS3Upload() {
       );
     }
 
-    // Browsers often send an empty type (or octet-stream) for a valid .mp3.
-    // The route allowlist is exact MIME, so infer from the extension rather
-    // than minting a URL that S3 / the route will then reject.
     const contentType = resolveUploadContentType(file);
 
     const presignedResponse = await fetch("/api/s3/presigned", {
@@ -150,10 +144,8 @@ export function useS3Upload() {
 
     const { url, key, bucket: bucketName, token, fileName, recordingId } = presigned;
 
-    // Track this file
     addFile(file);
 
-    // Upload to S3 using presigned URL with progress tracking
     // Send File directly (not ArrayBuffer) to allow streaming without loading into memory
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();

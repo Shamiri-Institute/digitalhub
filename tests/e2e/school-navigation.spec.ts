@@ -6,13 +6,6 @@ import { dataRows, getUrl } from "#/tests/pages/helpers";
 
 const errorBoundary = "Oops! Something went wrong!";
 
-/**
- * The school drill-down every field role uses: the schools list, "View school" from the row menu,
- * then each tab of the school page. It covers the navigation between the school pages, which the
- * page-by-page render check does not: every tab must keep showing the same school's data.
- *
- * The school tabs are a Radix toggle group, so each tab is a radio named "Select <tab>".
- */
 const flows: { role: Role; list: string; tabs: string[] }[] = [
   { role: "FELLOW", list: "/fel/schools", tabs: ["Sessions", "Students"] },
   { role: "SUPERVISOR", list: "/sc/schools", tabs: ["Sessions", "Fellows", "Students", "Groups"] },

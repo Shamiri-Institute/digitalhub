@@ -62,7 +62,6 @@ function newSessionNameRows(
 ) {
   return rows.flatMap((row, index) => {
     if (row.sessionNameId) return [];
-    // The form only adds rows to a group with an indexed code format.
     if (!isHubSessionCategory(row.type)) {
       throw new AdminActionError(INVALID_SESSION_TYPES_MESSAGE);
     }
@@ -130,7 +129,6 @@ async function updateSessionNames(
     .for("update");
   const storedById = new Map(stored.map((n) => [n.id, n]));
 
-  // A row left out of the form is removed, so the form must hold every row the hub has now.
   const loaded = new Set(loadedSessionNameIds);
   if (loaded.size !== stored.length || stored.some((n) => !loaded.has(n.id))) {
     throw new AdminActionError(

@@ -15,9 +15,6 @@ import {
 } from "#/db/schema";
 import { countOf } from "#/db/sql";
 
-// Shared reads behind the schedule and school sub-pages.
-
-/** `extras` for a `student` relation: the number of clinical cases of each student. */
 export const clinicalCasesCountExtras = (s: { id: typeof student.id }) => ({
   clinicalCasesCount: countOf(clinicalScreeningInfo.studentId, s.id).as("clinical_cases_count"),
 });
@@ -32,7 +29,6 @@ export const groupStudentColumns = {
   updatedAt: true,
 } as const;
 
-/** Schools a session can be scheduled at. */
 export function fetchScheduleSchools(hubId: string) {
   return db.query.school.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
@@ -41,7 +37,6 @@ export function fetchScheduleSchools(hubId: string) {
   });
 }
 
-/** Session types a session can be scheduled with. */
 export function fetchScheduleSessionTypes(hubId: string) {
   return db.query.sessionName.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
@@ -49,10 +44,6 @@ export function fetchScheduleSessionTypes(hubId: string) {
   });
 }
 
-/**
- * Supervisors of the hubs with the fellow and group data the session dialogs read, and their
- * attendance at the sessions that `sessionsWhere` selects.
- */
 export function fetchScheduleSupervisors(hubIds: string[] | SQLWrapper, sessionsWhere: SQL) {
   const sessionIds = db
     .select({ id: interventionSession.id })

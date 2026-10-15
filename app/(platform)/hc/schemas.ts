@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   ATTENDANCE_STATUS,
   BOARDING_DAY_TYPES,
+  COMPLAINT_TYPES,
   KENYAN_COUNTIES,
   SCHOOL_DEMOGRAPHICS,
   SCHOOL_DROPOUT_REASONS,
@@ -11,6 +12,12 @@ import {
   SUPERVISOR_DROP_OUT_REASONS,
 } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
+
+const loginEmail = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .pipe(z.email({ error: "Please enter a valid email." }));
 
 export const DropoutSchoolSchema = z.object({
   schoolId: stringValidation("Missing school ID"),
@@ -21,7 +28,6 @@ export const DropoutSchoolSchema = z.object({
 
 export const DropoutSupervisorSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
-  // TODO: Replace dropout reasons with supervisor specific options
   dropoutReason: z.enum(SUPERVISOR_DROP_OUT_REASONS as unknown as [string, ...string[]], {
     error: "Please select one of the supplied supervisor dropout reason options",
   }),
@@ -54,12 +60,10 @@ export const ArchiveStudentSchema = z.object({
   studentId: stringValidation("Missing student ID"),
 });
 
-// TODO: Depreciate
 export const SubmitComplaintSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
   comments: stringValidation().optional(),
-  // TODO: Replace with complaint types array
-  complaint: z.enum(SCHOOL_DROPOUT_REASONS as [string, ...string[]], {
+  complaint: z.enum(COMPLAINT_TYPES, {
     error: "Please select a complaint",
   }),
 });
@@ -106,7 +110,6 @@ export const MonthlySupervisorEvaluationSchema = z.object({
 
 const counties = KENYAN_COUNTIES.map((county) => county.name) as [string, ...string[]];
 
-// Base schema with common fields
 const BaseSchoolSchema = z.object({
   schoolName: z.string().min(1, "School name is required"),
   schoolType: z.enum(SCHOOL_TYPES, { error: "Please pick a valid option" }).optional(),
@@ -134,7 +137,6 @@ const BaseSchoolSchema = z.object({
     .optional(),
 });
 
-// Schema for adding a new school (requires preSessionDate and numbersExpected)
 export const AddSchoolSchema = BaseSchoolSchema.extend({
   preSessionDate: z.date({ error: "Please select a date" }).transform((val) => {
     if (!val) {
@@ -145,7 +147,6 @@ export const AddSchoolSchema = BaseSchoolSchema.extend({
   numbersExpected: z.number().min(1, "Number of students is required"),
 });
 
-// Schema for editing a school (preSessionDate and numbersExpected are optional)
 export const EditSchoolSchema = BaseSchoolSchema.extend({
   preSessionDate: z
     .date({ error: "Please select a date" })
@@ -172,7 +173,7 @@ export const EditSupervisorSchema = z
       .refine((val) => isValidPhoneNumber(val, "KE"), {
         error: "Please enter a valid kenyan phone number",
       }),
-    personalEmail: z.email({ error: "Please enter a valid email." }),
+    personalEmail: loginEmail,
     county: z.enum(counties, {
       error: "Please pick a valid option",
     }),
@@ -213,7 +214,7 @@ export const AddNewSupervisorSchema = z.object({
     .refine((val) => isValidPhoneNumber(val, "KE"), {
       error: "Please enter a valid kenyan phone number",
     }),
-  personalEmail: z.email({ error: "Please enter a valid email." }),
+  personalEmail: loginEmail,
   county: z.enum(counties, {
     error: "Please pick a valid option",
   }),
@@ -260,7 +261,7 @@ export const FellowDetailsSchema = z
       .refine((val) => isValidPhoneNumber(val, "KE"), {
         error: "Please enter a valid kenyan phone number",
       }),
-    fellowEmail: z.email({ error: "Please enter a valid email." }),
+    fellowEmail: loginEmail,
     county: z
       .enum(counties, {
         error: "Please pick a valid option",

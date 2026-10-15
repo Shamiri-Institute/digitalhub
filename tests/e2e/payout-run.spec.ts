@@ -41,8 +41,6 @@ test.beforeAll(async () => {
   if (!firstOps) throw new Error("seed the database first: no ops user");
   ops = firstOps;
 
-  // An attendance a payout run picks up: attended, unprocessed, at an occurred session, for an
-  // active fellow. The seed executes every statement it writes, so give it an unexecuted one.
   const eligibleAttendance = sql`
     select fa.id as "attendanceId", sn.amount as "sessionAmount",
       h.id as "hubId", h.project_id as "originalProjectId"
@@ -144,7 +142,6 @@ test("an ops user triggers a payout run", async ({ page, context }) => {
     .where(eq(payoutStatements.id, otherImplementerPayoutId));
   expect(otherPayout?.executedAt).toBeNull();
 
-  // The run is listed with the sum of the statements it executed.
   const {
     rows: [run],
   } = await db.execute<{ expectedPayoutAmount: number }>(sql`
@@ -173,7 +170,6 @@ test("an ops user confirms the payout run", async ({ page, context }) => {
   await page.reload();
   await expect(runRow.getByRole("button", { name: "Confirmed" })).toBeDisabled();
 
-  // Every statement of this run, and only this run, is confirmed by this user.
   const confirmedPayouts = await db
     .select({ executedAt: payoutStatements.executedAt, confirmedBy: payoutStatements.confirmedBy })
     .from(payoutStatements)

@@ -29,8 +29,6 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
       ),
     );
 
-  // Every student is in the same school, so its sessions are loaded once and attached below
-  // instead of being recomputed per student row by a lateral join.
   const [rows, schoolRow] = await Promise.all([
     db.query.student.findMany({
       where: (st, { and, inArray, isNull }) =>
