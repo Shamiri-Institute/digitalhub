@@ -1,10 +1,8 @@
-import { InfoIcon } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { DropoutSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import { dropoutSupervisor } from "#/app/(platform)/hc/supervisors/actions";
-import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -32,6 +30,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { SUPERVISOR_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
+import { DropoutConfirmStep, type StepProps } from "#/components/common/dropout-confirm-step";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type Step = "form" | "confirm";
@@ -78,10 +77,7 @@ function DropoutSupervisorSteps({
 }: {
   supervisorId?: string;
   children: React.ReactNode;
-  step: Step;
-  setStep: (step: Step) => void;
-  close: () => void;
-}) {
+} & StepProps<Step>) {
   const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState<z.infer<typeof DropoutSupervisorSchema>>();
 
@@ -117,37 +113,9 @@ function DropoutSupervisorSteps({
 
   if (step === "confirm") {
     return (
-      <>
-        <DialogHeader>
-          <DialogTitle className="text-lg font-bold">Confirm drop out</DialogTitle>
-        </DialogHeader>
+      <DropoutConfirmStep isPending={isPending} onCancel={close} onConfirm={confirmSubmit}>
         {children}
-        <div className="space-y-4">
-          <h3>Are you sure?</h3>
-          <Alert variant="destructive">
-            <AlertTitle className="flex gap-2">
-              <InfoIcon className="h-4 w-4 shrink-0" />
-              Once this change has been made it is irreversible and will need you to contact support
-              in order to modify. Please be sure of your action before you confirm.
-            </AlertTitle>
-          </Alert>
-        </div>
-        <Separator />
-        <DialogFooter className="flex justify-end">
-          <Button className="text-shamiri-light-red" variant="ghost" onClick={close}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="destructive"
-            disabled={isPending}
-            loading={isPending}
-            onClick={confirmSubmit}
-          >
-            Confirm
-          </Button>
-        </DialogFooter>
-      </>
+      </DropoutConfirmStep>
     );
   }
 

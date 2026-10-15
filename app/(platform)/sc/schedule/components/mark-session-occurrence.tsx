@@ -23,6 +23,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { markSessionOccurrence } from "#/lib/actions/session/session";
 import { sessionDisplayName } from "#/lib/utils";
+import type { StepProps } from "#/components/common/dropout-confirm-step";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type Step = "form" | "confirm";
@@ -58,11 +59,7 @@ function MarkSessionOccurrenceSteps({
   step,
   setStep,
   close,
-}: Omit<Props, "isOpen" | "setIsOpen"> & {
-  step: Step;
-  setStep: (step: Step) => void;
-  close: () => void;
-}) {
+}: Omit<Props, "isOpen" | "setIsOpen"> & StepProps<Step>) {
   const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof MarkSessionOccurrenceSchema>>({
     resolver: zodResolver(MarkSessionOccurrenceSchema),
