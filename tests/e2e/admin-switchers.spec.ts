@@ -1,9 +1,9 @@
-import { expect, type Page, test } from "@playwright/test";
-import { eq, sql } from "drizzle-orm";
+import type { Page } from "@playwright/test";
+import { expect, test, type Undo } from "#/tests/fixtures";
+import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { adminUser, implementerMember, session, user } from "#/db/schema";
-import { signInWithEmail } from "#/tests/helpers";
+import { createAdminCopy, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -11,7 +11,7 @@ test.describe.configure({ mode: "serial" });
 type Admin = { userId: string; email: string; activeProjectId: string; activeProjectName: string };
 type Project = { id: string; name: string; implementerName: string | null };
 
-async function loadFixture() {
+async function loadFixture(undo: Undo) {
   const {
     rows: [seededAdmin],
   } = await db.execute<Admin>(sql`
@@ -26,7 +26,9 @@ async function loadFixture() {
     order by u.email
     limit 1`);
   if (!seededAdmin) throw new Error("No admin with memberships in two projects");
-  const admin = await copyAdmin(seededAdmin);
+  const copy = await createAdminCopy(seededAdmin.userId, seededAdmin.activeProjectId);
+  undo(copy.remove);
+  const admin = { ...seededAdmin, userId: copy.id, email: copy.email };
   const { rows: otherProjects } = await db.execute<Project>(sql`
     select p.id, p.name, (
       select i.implementer_name from implementer_members m
@@ -52,51 +54,12 @@ async function switchProject(page: Page, from: string, to: string) {
   await expect(header(page, "button", to)).toBeVisible();
 }
 
-let copies: { userId: string; email: string }[] = [];
-test.afterEach(async () => {
-  for (const { userId, email } of copies) {
-    await db.delete(implementerMember).where(eq(implementerMember.userId, userId));
-    await db.delete(session).where(eq(session.userId, userId));
-    await db.delete(adminUser).where(eq(adminUser.email, email));
-    await db.delete(user).where(eq(user.id, userId));
-  }
-  copies = [];
-});
-
-/**
- * A new user with an admin profile in each of the seeded admin's implementers, so switching its
- * project or implementer changes no user another spec signs in as.
- */
-async function copyAdmin(seededAdmin: Admin): Promise<Admin> {
-  const email = `e2e-switcher-${Date.now()}@example.com`;
-  const [copy] = await db
-    .insert(user)
-    .values({ email, name: "E2E Switcher", activeProjectId: seededAdmin.activeProjectId })
-    .returning({ id: user.id });
-  if (!copy) throw new Error("Could not create the admin copy");
-  copies.push({ userId: copy.id, email });
-  const memberships = await db.query.implementerMember.findMany({
-    where: (m, { and, eq }) => and(eq(m.userId, seededAdmin.userId), eq(m.role, "ADMIN")),
-    columns: { implementerId: true },
-  });
-  for (const { implementerId } of memberships) {
-    const [profile] = await db
-      .insert(adminUser)
-      .values({ email, adminName: "E2E Switcher", implementerId })
-      .returning({ id: adminUser.id });
-    if (!profile) throw new Error("Could not create an admin profile");
-    await db
-      .insert(implementerMember)
-      .values({ implementerId, userId: copy.id, role: "ADMIN", identifier: profile.id });
-  }
-  return { ...seededAdmin, userId: copy.id, email };
-}
-
 test("switching project shows the new project and its implementer in the header", async ({
   page,
   context,
+  undo,
 }) => {
-  const { admin, otherProjects } = await loadFixture();
+  const { admin, otherProjects } = await loadFixture(undo);
   const target = otherProjects.find((p) => p.implementerName);
   if (!target?.implementerName) throw new Error("No other project with one of the admin's hubs");
   await signInWithEmail(context, admin.email);
@@ -113,8 +76,9 @@ test("switching project shows the new project and its implementer in the header"
 test("the project switcher lists only the projects of the admin's implementers", async ({
   page,
   context,
+  undo,
 }) => {
-  const { admin, otherProjects } = await loadFixture();
+  const { admin, otherProjects } = await loadFixture(undo);
   const foreign = otherProjects.find((p) => !p.implementerName);
   if (!foreign) throw new Error("No project without the admin's hubs");
   await signInWithEmail(context, admin.email);

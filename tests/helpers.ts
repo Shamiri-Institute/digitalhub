@@ -3,6 +3,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import {
+  adminUser,
   clinicalCaseNotes,
   clinicalCaseTermination,
   clinicalCaseTransferTrail,
@@ -11,11 +12,53 @@ import {
   clinicalFollowUpTreatmentPlanAuditTrail,
   clinicalScreeningInfo,
   clinicalSessionAttendance,
+  implementerMember,
+  session,
   student,
+  user,
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { createSessionCookie } from "#/lib/auth/test-auth";
 import { type Role, pickUser } from "#/tests/platform-routes";
+
+/**
+ * A new user with an admin profile in each implementer the seeded admin is an ADMIN of, so a test
+ * can sign it out, archive it or switch its project without touching a user another spec signs in
+ * as. Pass `remove` to `undo`.
+ */
+export async function createAdminCopy(seededUserId: string, activeProjectId?: string) {
+  const email = `e2e-admin-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+  const [created] = await db
+    .insert(user)
+    .values({ email, name: "E2E Admin", activeProjectId })
+    .returning({ id: user.id });
+  if (!created) throw new Error("could not create the admin copy");
+  const remove = async () => {
+    await db.delete(session).where(eq(session.userId, created.id));
+    await db.delete(implementerMember).where(eq(implementerMember.userId, created.id));
+    await db.delete(adminUser).where(eq(adminUser.email, email));
+    await db.delete(user).where(eq(user.id, created.id));
+  };
+  const memberships = await db.query.implementerMember.findMany({
+    where: (m, { and, eq }) => and(eq(m.userId, seededUserId), eq(m.role, "ADMIN")),
+    columns: { implementerId: true },
+  });
+  if (memberships.length === 0) {
+    await remove();
+    throw new Error("the seeded user has no ADMIN membership to copy");
+  }
+  for (const { implementerId } of memberships) {
+    const [profile] = await db
+      .insert(adminUser)
+      .values({ email, adminName: "E2E Admin", implementerId })
+      .returning({ id: adminUser.id });
+    if (!profile) throw new Error("could not create an admin profile");
+    await db
+      .insert(implementerMember)
+      .values({ implementerId, userId: created.id, role: "ADMIN", identifier: profile.id });
+  }
+  return { id: created.id, email, remove };
+}
 
 /** A signed session cookie for the user, backed by a new row in `sessions`. */
 export async function sessionCookieFor(email: string) {
