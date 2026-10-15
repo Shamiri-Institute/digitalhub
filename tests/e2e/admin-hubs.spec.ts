@@ -25,9 +25,6 @@ const HUB_PREFIX = `E2E Hub ${RUN_ID}`;
 const HUB_NAME = `${HUB_PREFIX} Nairobi`;
 const RENAMED_HUB_NAME = `${HUB_PREFIX} Mombasa`;
 
-// The dev server compiles each page on first use, which can take longer than the default.
-test.describe.configure({ timeout: 3 * 60 * 1000 });
-
 test.afterAll(async () => {
   const createdHubs = await db.query.hub.findMany({
     where: (h, { like }) => like(h.hubName, `${HUB_PREFIX}%`),
@@ -315,7 +312,7 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
     .getByRole("button", { name: "Save changes" })
     .click();
   await expect(
-    page.getByText("A session type you removed is used by sessions").first(),
+    page.getByText("A session type you removed already has intervention sessions").first(),
   ).toBeVisible();
   await removeDialog.getByRole("button", { name: "Cancel" }).click();
   expect(await codesInEditDialog(page, hubName)).toContain("s2");

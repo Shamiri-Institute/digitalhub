@@ -5,8 +5,6 @@ import { db } from "#/db/client";
 import { signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
-test.describe.configure({ timeout: 4 * 60 * 1000 });
-
 const notFoundText = "This page could not be found.";
 
 type Fixture = { email: string; ownSchool: string; otherSchool: string };
@@ -25,7 +23,7 @@ const callers: { role: string; base: string; tabs: string[]; fixture: SQL }[] = 
           order by s.visible_id limit 1) as "otherSchool"
       from hub_coordinators hc
       join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where ${signableMember()}
       order by u.email`,
   },
@@ -42,7 +40,7 @@ const callers: { role: string; base: string; tabs: string[]; fixture: SQL }[] = 
           order by s.visible_id limit 1) as "otherSchool"
       from supervisors sv
       join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where ${signableMember()}
       order by u.email`,
   },
@@ -60,7 +58,7 @@ const callers: { role: string; base: string; tabs: string[]; fixture: SQL }[] = 
           where h.implementer_id <> m.implementer_id
           order by s.visible_id limit 1) as "otherSchool"
       from implementer_members m
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where m.role = 'ADMIN' and ${signableMember()}
       order by u.email`,
   },
@@ -78,7 +76,7 @@ const callers: { role: string; base: string; tabs: string[]; fixture: SQL }[] = 
           order by s.visible_id limit 1) as "otherSchool"
       from fellows f
       join implementer_members m on m.identifier = f.id and m.role = 'FELLOW'
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where ${signableMember()}
       order by u.email`,
   },
@@ -93,15 +91,11 @@ for (const caller of callers) {
     await signInWithEmail(context, fixture.email);
     for (const tab of caller.tabs) {
       await page.goto(getUrl(`${caller.base}/${fixture.ownSchool}/${tab}`));
-      await expect(page.getByRole("table").first(), `own school ${tab}`).toBeVisible({
-        timeout: 60_000,
-      });
+      await expect(page.getByRole("table").first(), `own school ${tab}`).toBeVisible();
       await expect(page.getByText(notFoundText)).toHaveCount(0);
 
       await page.goto(getUrl(`${caller.base}/${fixture.otherSchool}/${tab}`));
-      await expect(page.getByText(notFoundText), `other school ${tab}`).toBeVisible({
-        timeout: 60_000,
-      });
+      await expect(page.getByText(notFoundText), `other school ${tab}`).toBeVisible();
     }
   });
 }
