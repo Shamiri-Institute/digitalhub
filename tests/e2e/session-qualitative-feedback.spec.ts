@@ -4,7 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { interventionSessionRating, sessionComment } from "#/db/schema";
 import { signableMember, signInAs, signInWithEmail } from "#/tests/helpers";
-import { getUrl } from "#/tests/pages/helpers";
+import { expandRow, getUrl } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -63,14 +63,8 @@ test.afterAll(async () => {
 });
 
 async function openFeedbackDialog(page: Page, menuItem: string, rowSchoolName = schoolName) {
-  await page
-    .getByRole("row")
-    .filter({ hasText: rowSchoolName })
-    .getByRole("button")
-    .first()
-    .click();
-  // The expanded school row shows its sessions in a nested table; the last cell opens the menu.
-  await page.locator("table table tbody tr").first().locator("td").last().click();
+  const sessions = await expandRow(page, page.getByRole("row").filter({ hasText: rowSchoolName }));
+  await sessions.locator("tbody tr").first().locator("td").last().click();
   await page.getByText(menuItem).click();
   return page.getByRole("dialog").filter({ hasText: rowSchoolName });
 }

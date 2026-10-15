@@ -51,6 +51,12 @@ export async function chooseRowAction(page: Page, row: Locator, action: string) 
   }).toPass({ timeout: 30_000 });
 }
 
+/** Expands `row` and returns the cell under it that holds the row's nested table. */
+export async function expandRow(page: Page, row: Locator) {
+  await row.getByRole("button").first().click();
+  return page.locator("td:has(table)");
+}
+
 /** The cell of `row` under the column headed `header`. */
 export async function cellUnder(page: Page, row: Locator, header: string) {
   const headers = await page.getByRole("columnheader").allInnerTexts();

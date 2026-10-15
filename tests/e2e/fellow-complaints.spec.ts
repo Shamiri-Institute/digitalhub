@@ -4,7 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { fellowComplaints } from "#/db/schema";
 import { signableMember, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
-import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
+import { expandRow, getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -84,8 +84,8 @@ test.afterAll(async () => {
 
 async function expandedComplaintRow(page: Page) {
   const fellowRows = await searchRows(page, targetFellow.fellowName);
-  await fellowRows.first().getByRole("button").first().click();
-  return page.locator("table table tbody tr").filter({ hasText: complaintComment });
+  const complaints = await expandRow(page, fellowRows.first());
+  return complaints.locator("tbody tr").filter({ hasText: complaintComment });
 }
 
 test("a supervisor edits a complaint about their fellow and sees it after a reload", async ({
