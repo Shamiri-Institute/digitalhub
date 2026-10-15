@@ -1,6 +1,6 @@
 // @vitest-environment node
 // The survey triggers (drizzle/0023) refuse writes the app must never make: changing a published
-// version or its pages and questions, moving a version's status backwards, rewriting audit
+// version's form, moving a version's status backwards, rewriting audit
 // history. No screen can attempt these writes, so these tests attempt them against the database
 // and expect the refusal; everything a user can do is tested through the UI in
 // tests/e2e/admin-surveys.spec.ts. Same approach as membership-identifier.test.ts for 0014.
@@ -8,7 +8,8 @@ import { eq, sql, TransactionRollbackError } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { db, pool, type Transaction } from "#/db/client";
-import { survey, surveyAuditEvent, surveyPage, surveyQuestion, surveyVersion } from "#/db/schema";
+import { survey, surveyAuditEvent, surveyVersion } from "#/db/schema";
+import type { SurveyForm } from "#/lib/survey/form";
 
 /** The single row an insert returned. */
 function only<T>(rows: T[]): T {
@@ -34,8 +35,17 @@ async function errorOf(write: (tx: Transaction) => Promise<unknown>) {
   return null;
 }
 
+const ONE_QUESTION: SurveyForm = {
+  format: 1,
+  pages: [
+    {
+      items: [{ id: "name", kind: "text", key: "name", prompt: "Name", required: true, lines: 1 }],
+    },
+  ],
+};
+
 /**
- * A survey with one version holding one page and one question, in the given version status. Built
+ * A survey with one version whose form has one page and one question, in the given status. Built
  * with direct inserts because there is no builder or publish screen yet to make a published
  * version; switch to those flows once they exist.
  */
@@ -62,23 +72,11 @@ async function createSurvey(tx: Transaction, status: "DRAFT" | "PUBLISHED" = "DR
   const version = only(
     await tx
       .insert(surveyVersion)
-      .values({ surveyId: created.id, versionNumber: 1, createdBy: member.userId })
-      .returning(),
-  );
-  const page = only(
-    await tx.insert(surveyPage).values({ versionId: version.id, position: 1 }).returning(),
-  );
-  const question = only(
-    await tx
-      .insert(surveyQuestion)
       .values({
-        versionId: version.id,
-        pageId: page.id,
-        position: 1,
-        key: "q1",
-        type: "SHORT_TEXT",
-        prompt: "Name",
-        config: { maxLength: 20 },
+        surveyId: created.id,
+        versionNumber: 1,
+        createdBy: member.userId,
+        form: ONE_QUESTION,
       })
       .returning(),
   );
@@ -88,39 +86,19 @@ async function createSurvey(tx: Transaction, status: "DRAFT" | "PUBLISHED" = "DR
       .set({ status: "PUBLISHED" })
       .where(eq(surveyVersion.id, version.id));
   }
-  return {
-    survey: created,
-    version,
-    page,
-    question,
-    userId: member.userId,
-  };
+  return { survey: created, version, userId: member.userId };
 }
 
 describe("survey versions", () => {
-  it("rejects a page added to a published version", async () => {
+  it("rejects changing the form of a published version", async () => {
     const error = await errorOf(async (tx) => {
       const { version } = await createSurvey(tx, "PUBLISHED");
-      await tx.insert(surveyPage).values({ versionId: version.id, position: 2 });
-    });
-    expect(error).toMatch(/belongs to a PUBLISHED version, which cannot change/);
-  });
-
-  it("rejects editing or deleting a question of a published version", async () => {
-    const editError = await errorOf(async (tx) => {
-      const { question } = await createSurvey(tx, "PUBLISHED");
       await tx
-        .update(surveyQuestion)
-        .set({ prompt: "Changed" })
-        .where(eq(surveyQuestion.id, question.id));
+        .update(surveyVersion)
+        .set({ form: { format: 1, pages: [] } })
+        .where(eq(surveyVersion.id, version.id));
     });
-    expect(editError).toMatch(/belongs to a PUBLISHED version, which cannot change/);
-
-    const deleteError = await errorOf(async (tx) => {
-      const { question } = await createSurvey(tx, "PUBLISHED");
-      await tx.delete(surveyQuestion).where(eq(surveyQuestion.id, question.id));
-    });
-    expect(deleteError).toMatch(/belongs to a PUBLISHED version, which cannot change/);
+    expect(error).toMatch(/cannot change from PUBLISHED to PUBLISHED/);
   });
 
   it("lets a published version be retired, but never reopened", async () => {
@@ -168,9 +146,13 @@ describe("survey versions", () => {
   it("rejects a version created as anything but a draft", async () => {
     const error = await errorOf(async (tx) => {
       const { survey, userId } = await createSurvey(tx, "PUBLISHED");
-      await tx
-        .insert(surveyVersion)
-        .values({ surveyId: survey.id, versionNumber: 2, status: "PUBLISHED", createdBy: userId });
+      await tx.insert(surveyVersion).values({
+        surveyId: survey.id,
+        versionNumber: 2,
+        status: "PUBLISHED",
+        createdBy: userId,
+        form: ONE_QUESTION,
+      });
     });
     expect(error).toMatch(/must be created as a DRAFT, not PUBLISHED/);
   });
@@ -181,23 +163,6 @@ describe("survey versions", () => {
       await tx.delete(surveyVersion).where(eq(surveyVersion.id, version.id));
     });
     expect(error).toMatch(/is PUBLISHED, so it can only be deleted with its survey/);
-  });
-
-  it("rejects a question whose page belongs to another version", async () => {
-    const error = await errorOf(async (tx) => {
-      const first = await createSurvey(tx);
-      const second = await createSurvey(tx);
-      await tx.insert(surveyQuestion).values({
-        versionId: first.version.id,
-        pageId: second.page.id,
-        position: 2,
-        key: "q2",
-        type: "SHORT_TEXT",
-        prompt: "Mixed",
-        config: { maxLength: 20 },
-      });
-    });
-    expect(error).toMatch(/survey_questions_page_id_version_id_fkey/);
   });
 });
 

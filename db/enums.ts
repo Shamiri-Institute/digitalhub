@@ -205,17 +205,6 @@ export const SURVEY_VERSION_STATUS_LABELS: Record<SurveyVersionStatus, string> =
   RETIRED: "Retired",
 };
 
-export const SurveyQuestionType = {
-  SINGLE_CHOICE: "SINGLE_CHOICE",
-  MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
-  RATING: "RATING",
-  NUMBER: "NUMBER",
-  DATE: "DATE",
-  SHORT_TEXT: "SHORT_TEXT",
-  LONG_TEXT: "LONG_TEXT",
-} as const;
-export type SurveyQuestionType = (typeof SurveyQuestionType)[keyof typeof SurveyQuestionType];
-
 export const SurveyAuditActor = {
   USER: "USER",
   PIPELINE: "PIPELINE",

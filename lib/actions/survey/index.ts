@@ -5,12 +5,13 @@ import { refresh } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 
-import { db, isUniqueViolation, type Transaction } from "#/db/client";
+import { db, isUniqueViolation } from "#/db/client";
 import { SurveyAuditActor, SurveyVersionStatus } from "#/db/enums";
-import { survey, surveyPage, surveyQuestion, surveyVersion } from "#/db/schema";
+import { survey, surveyVersion } from "#/db/schema";
 import { requireSurveyScope } from "#/lib/auth/admin-access";
 import { ForbiddenRoleError } from "#/lib/auth/require-auth-role";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
+import { EMPTY_FORM } from "#/lib/survey/form";
 import type { ActionResponse } from "#/types/actions.types";
 import { CreateDraftVersionSchema, CreateSurveySchema } from "./schemas";
 
@@ -63,7 +64,7 @@ export async function createSurvey(
 
       const [version] = await tx
         .insert(surveyVersion)
-        .values({ surveyId: created.id, versionNumber: 1, createdBy: userId })
+        .values({ surveyId: created.id, versionNumber: 1, createdBy: userId, form: EMPTY_FORM })
         .returning({ id: surveyVersion.id });
       if (!version) {
         throw new Error("Could not create the survey's first version");
@@ -99,8 +100,8 @@ export async function createSurvey(
 }
 
 /**
- * Starts the next draft of a survey as a copy of one of its published or retired versions. The
- * pages and questions are copied with their keys, so answers stay comparable across versions.
+ * Starts the next draft of a survey as a copy of one of its published or retired versions' form.
+ * The form keeps its question keys, so answers stay comparable across versions.
  */
 export async function createDraftVersion(
   data: z.infer<typeof CreateDraftVersionSchema>,
@@ -135,6 +136,7 @@ export async function createDraftVersion(
           id: surveyVersion.id,
           versionNumber: surveyVersion.versionNumber,
           status: surveyVersion.status,
+          form: surveyVersion.form,
         })
         .from(surveyVersion)
         .where(eq(surveyVersion.surveyId, owned.id))
@@ -159,13 +161,13 @@ export async function createDraftVersion(
           versionNumber: nextNumber,
           basedOnVersionId: source.id,
           createdBy: userId,
+          form: source.form,
         })
         .returning({ id: surveyVersion.id });
       if (!created) {
         throw new Error("Could not create the draft version");
       }
 
-      await copyVersionContent(tx, source.id, created.id);
       await recordSurveyEvent(tx, {
         actor: { kind: SurveyAuditActor.USER, userId },
         surveyId: owned.id,
@@ -181,47 +183,5 @@ export async function createDraftVersion(
     return { success: true, message: `Created draft v${versionNumber}` };
   } catch (error) {
     return failure(error, "Sorry, could not create the draft.");
-  }
-}
-
-async function copyVersionContent(tx: Transaction, fromVersionId: string, toVersionId: string) {
-  const pages = await tx.query.surveyPage.findMany({
-    where: (p, { eq }) => eq(p.versionId, fromVersionId),
-    columns: { position: true, title: true },
-    with: {
-      questions: {
-        columns: {
-          position: true,
-          key: true,
-          type: true,
-          prompt: true,
-          helpText: true,
-          required: true,
-          config: true,
-        },
-      },
-    },
-  });
-  if (pages.length === 0) {
-    return;
-  }
-
-  const newPages = await tx
-    .insert(surveyPage)
-    .values(pages.map((p) => ({ versionId: toVersionId, position: p.position, title: p.title })))
-    .returning({ id: surveyPage.id, position: surveyPage.position });
-  const newPageIdByPosition = new Map(newPages.map((p) => [p.position, p.id]));
-
-  const questions = pages.flatMap((page) =>
-    page.questions.map((question) => {
-      const pageId = newPageIdByPosition.get(page.position);
-      if (!pageId) {
-        throw new Error(`Page ${page.position} was not copied`);
-      }
-      return { ...question, versionId: toVersionId, pageId };
-    }),
-  );
-  if (questions.length > 0) {
-    await tx.insert(surveyQuestion).values(questions);
   }
 }

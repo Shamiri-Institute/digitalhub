@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 
 import { objectId } from "#/lib/crypto";
+import type { SurveyForm } from "#/lib/survey/form";
 import {
   bigserial,
   boolean,
@@ -37,7 +38,6 @@ import {
   SupervisorHandoffStatus,
   SupportType,
   SurveyAuditActor,
-  SurveyQuestionType,
   SurveyStatus,
   SurveyVersionStatus,
   TicketCategory,
@@ -101,10 +101,6 @@ export const surveyStatusEnum = pgEnum("survey_status", enumValues(SurveyStatus)
 export const surveyVersionStatusEnum = pgEnum(
   "survey_version_status",
   enumValues(SurveyVersionStatus),
-);
-export const surveyQuestionTypeEnum = pgEnum(
-  "survey_question_type",
-  enumValues(SurveyQuestionType),
 );
 export const surveyAuditActorEnum = pgEnum("survey_audit_actor", enumValues(SurveyAuditActor));
 
@@ -2508,9 +2504,8 @@ export const clinicalTeam = pgTable(
   ],
 );
 
-// Research surveys. A survey has versions; a version has pages, and a page has questions. Only a
-// DRAFT version can change: the triggers in the survey migration reject writes to the pages and
-// questions of any other version.
+// Research surveys. A survey has versions, and each version holds its whole form as one document.
+// Only a DRAFT version changes: the guard trigger in the survey migration freezes every other one.
 export const survey = pgTable(
   "surveys",
   {
@@ -2532,10 +2527,6 @@ export const survey = pgTable(
     title: varchar({ length: 255 }).notNull(),
     description: text(),
     status: surveyStatusEnum().default(SurveyStatus.DRAFT).notNull(),
-    reviewConfidenceThreshold: doublePrecision("review_confidence_threshold")
-      .default(0.9)
-      .notNull(),
-    nextSerial: integer("next_serial").default(1).notNull(),
     createdBy: varchar("created_by", { length: 255 }).notNull(),
   },
   (table) => [
@@ -2543,11 +2534,6 @@ export const survey = pgTable(
     index("surveys_implementer_id_project_id_idx").on(table.implementerId, table.projectId),
     index("surveys_project_id_idx").on(table.projectId),
     index("surveys_created_by_idx").on(table.createdBy),
-    check(
-      "surveys_review_confidence_threshold_check",
-      sql`${table.reviewConfidenceThreshold} between 0 and 1`,
-    ),
-    check("surveys_next_serial_check", sql`${table.nextSerial} >= 1`),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -2592,6 +2578,8 @@ export const surveyVersion = pgTable(
     // The version this one was copied from, if any.
     basedOnVersionId: text("based_on_version_id"),
     createdBy: varchar("created_by", { length: 255 }).notNull(),
+    // The whole form, in print order. No default, so every insert says where its form came from.
+    form: jsonb().$type<SurveyForm>().notNull(),
   },
   (table) => [
     uniqueIndex("survey_versions_survey_id_version_number_key").on(
@@ -2605,6 +2593,11 @@ export const surveyVersion = pgTable(
     index("survey_versions_based_on_version_id_idx").on(table.basedOnVersionId),
     index("survey_versions_created_by_idx").on(table.createdBy),
     check("survey_versions_version_number_check", sql`${table.versionNumber} >= 1`),
+    // A backstop against a writer storing something that is not a form; the builder validates the rest.
+    check(
+      "survey_versions_form_check",
+      sql`${table.form}->>'format' = '1' and jsonb_typeof(${table.form}->'pages') = 'array'`,
+    ),
     foreignKey({
       columns: [table.surveyId],
       foreignColumns: [survey.id],
@@ -2626,88 +2619,6 @@ export const surveyVersion = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-  ],
-);
-
-export const surveyPage = pgTable(
-  "survey_pages",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("surveypage")),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-    versionId: text("version_id").notNull(),
-    position: integer().notNull(),
-    title: varchar({ length: 255 }),
-  },
-  (table) => [
-    unique("survey_pages_version_id_position_key").on(table.versionId, table.position),
-    // Target of the composite foreign key that keeps a question's page in the question's version.
-    unique("survey_pages_id_version_id_key").on(table.id, table.versionId),
-    check("survey_pages_position_check", sql`${table.position} >= 1`),
-    foreignKey({
-      columns: [table.versionId],
-      foreignColumns: [surveyVersion.id],
-      name: "survey_pages_version_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("cascade"),
-  ],
-);
-
-export const surveyQuestion = pgTable(
-  "survey_questions",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("surveyquestion")),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-    versionId: text("version_id").notNull(),
-    pageId: text("page_id").notNull(),
-    position: integer().notNull(),
-    // Stable name (such as phq_1) carried into later versions; the export column name.
-    key: varchar({ length: 64 }).notNull(),
-    type: surveyQuestionTypeEnum().notNull(),
-    prompt: text().notNull(),
-    helpText: text("help_text"),
-    required: boolean().default(true).notNull(),
-    // Settings for the question's type, such as the options of a choice question.
-    config: jsonb().$type<JsonValue>().notNull(),
-  },
-  (table) => [
-    unique("survey_questions_page_id_position_key").on(table.pageId, table.position),
-    unique("survey_questions_version_id_key_key").on(table.versionId, table.key),
-    unique("survey_questions_id_version_id_key").on(table.id, table.versionId),
-    index("survey_questions_page_id_version_id_idx").on(table.pageId, table.versionId),
-    check("survey_questions_position_check", sql`${table.position} >= 1`),
-    foreignKey({
-      columns: [table.versionId],
-      foreignColumns: [surveyVersion.id],
-      name: "survey_questions_version_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("cascade"),
-    foreignKey({
-      columns: [table.pageId, table.versionId],
-      foreignColumns: [surveyPage.id, surveyPage.versionId],
-      name: "survey_questions_page_id_version_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("cascade"),
   ],
 );
 

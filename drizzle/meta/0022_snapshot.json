@@ -1,5 +1,5 @@
 {
-  "id": "3ac2799c-af9a-4f2e-8f1d-5e98902dc431",
+  "id": "fe3bea91-f5ce-4321-ba1b-7975587a175a",
   "prevId": "3ff8e87d-ec70-4ebb-9ad6-1885f2e575db",
   "version": "7",
   "dialect": "postgresql",
@@ -7390,20 +7390,6 @@
           "notNull": true,
           "default": "'DRAFT'"
         },
-        "review_confidence_threshold": {
-          "name": "review_confidence_threshold",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0.9
-        },
-        "next_serial": {
-          "name": "next_serial",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
-        },
         "created_by": {
           "name": "created_by",
           "type": "varchar(255)",
@@ -7511,16 +7497,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "surveys_review_confidence_threshold_check": {
-          "name": "surveys_review_confidence_threshold_check",
-          "value": "\"surveys\".\"review_confidence_threshold\" between 0 and 1"
-        },
-        "surveys_next_serial_check": {
-          "name": "surveys_next_serial_check",
-          "value": "\"surveys\".\"next_serial\" >= 1"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.survey_audit_events": {
@@ -7677,232 +7654,6 @@
       },
       "isRLSEnabled": false
     },
-    "public.survey_pages": {
-      "name": "survey_pages",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "version_id": {
-          "name": "version_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "survey_pages_version_id_fkey": {
-          "name": "survey_pages_version_id_fkey",
-          "tableFrom": "survey_pages",
-          "tableTo": "survey_versions",
-          "columnsFrom": ["version_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "survey_pages_version_id_position_key": {
-          "name": "survey_pages_version_id_position_key",
-          "nullsNotDistinct": false,
-          "columns": ["version_id", "position"]
-        },
-        "survey_pages_id_version_id_key": {
-          "name": "survey_pages_id_version_id_key",
-          "nullsNotDistinct": false,
-          "columns": ["id", "version_id"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "survey_pages_position_check": {
-          "name": "survey_pages_position_check",
-          "value": "\"survey_pages\".\"position\" >= 1"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.survey_questions": {
-      "name": "survey_questions",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "version_id": {
-          "name": "version_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "page_id": {
-          "name": "page_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "key": {
-          "name": "key",
-          "type": "varchar(64)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "survey_question_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "prompt": {
-          "name": "prompt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "help_text": {
-          "name": "help_text",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "required": {
-          "name": "required",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "config": {
-          "name": "config",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "survey_questions_page_id_version_id_idx": {
-          "name": "survey_questions_page_id_version_id_idx",
-          "columns": [
-            {
-              "expression": "page_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "version_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "survey_questions_version_id_fkey": {
-          "name": "survey_questions_version_id_fkey",
-          "tableFrom": "survey_questions",
-          "tableTo": "survey_versions",
-          "columnsFrom": ["version_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "survey_questions_page_id_version_id_fkey": {
-          "name": "survey_questions_page_id_version_id_fkey",
-          "tableFrom": "survey_questions",
-          "tableTo": "survey_pages",
-          "columnsFrom": ["page_id", "version_id"],
-          "columnsTo": ["id", "version_id"],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "survey_questions_page_id_position_key": {
-          "name": "survey_questions_page_id_position_key",
-          "nullsNotDistinct": false,
-          "columns": ["page_id", "position"]
-        },
-        "survey_questions_version_id_key_key": {
-          "name": "survey_questions_version_id_key_key",
-          "nullsNotDistinct": false,
-          "columns": ["version_id", "key"]
-        },
-        "survey_questions_id_version_id_key": {
-          "name": "survey_questions_id_version_id_key",
-          "nullsNotDistinct": false,
-          "columns": ["id", "version_id"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "survey_questions_position_check": {
-          "name": "survey_questions_position_check",
-          "value": "\"survey_questions\".\"position\" >= 1"
-        }
-      },
-      "isRLSEnabled": false
-    },
     "public.survey_versions": {
       "name": "survey_versions",
       "schema": "",
@@ -7955,6 +7706,12 @@
         "created_by": {
           "name": "created_by",
           "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "form": {
+          "name": "form",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         }
@@ -8064,6 +7821,10 @@
         "survey_versions_version_number_check": {
           "name": "survey_versions_version_number_check",
           "value": "\"survey_versions\".\"version_number\" >= 1"
+        },
+        "survey_versions_form_check": {
+          "name": "survey_versions_form_check",
+          "value": "\"survey_versions\".\"form\"->>'format' = '1' and jsonb_typeof(\"survey_versions\".\"form\"->'pages') = 'array'"
         }
       },
       "isRLSEnabled": false
@@ -9449,19 +9210,6 @@
       "name": "survey_audit_actor",
       "schema": "public",
       "values": ["USER", "PIPELINE", "SYSTEM"]
-    },
-    "public.survey_question_type": {
-      "name": "survey_question_type",
-      "schema": "public",
-      "values": [
-        "SINGLE_CHOICE",
-        "MULTIPLE_CHOICE",
-        "RATING",
-        "NUMBER",
-        "DATE",
-        "SHORT_TEXT",
-        "LONG_TEXT"
-      ]
     },
     "public.survey_status": {
       "name": "survey_status",

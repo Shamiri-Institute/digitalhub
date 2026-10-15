@@ -15,8 +15,6 @@ import {
   clinicalSessionAttendance,
   clinicalTeam,
   survey,
-  surveyPage,
-  surveyQuestion,
   surveyVersion,
   fellow,
   fellowAttendance,
@@ -272,7 +270,7 @@ export const surveyRelations = relations(survey, ({ one, many }) => ({
   versions: many(surveyVersion, { relationName: "SurveyVersion_survey" }),
 }));
 
-export const surveyVersionRelations = relations(surveyVersion, ({ one, many }) => ({
+export const surveyVersionRelations = relations(surveyVersion, ({ one }) => ({
   survey: one(survey, {
     fields: [surveyVersion.surveyId],
     references: [survey.id],
@@ -282,30 +280,6 @@ export const surveyVersionRelations = relations(surveyVersion, ({ one, many }) =
     fields: [surveyVersion.basedOnVersionId],
     references: [surveyVersion.id],
     relationName: "SurveyVersion_basedOnVersion",
-  }),
-  pages: many(surveyPage, { relationName: "SurveyPage_version" }),
-  questions: many(surveyQuestion, { relationName: "SurveyQuestion_version" }),
-}));
-
-export const surveyPageRelations = relations(surveyPage, ({ one, many }) => ({
-  version: one(surveyVersion, {
-    fields: [surveyPage.versionId],
-    references: [surveyVersion.id],
-    relationName: "SurveyPage_version",
-  }),
-  questions: many(surveyQuestion, { relationName: "SurveyQuestion_page" }),
-}));
-
-export const surveyQuestionRelations = relations(surveyQuestion, ({ one }) => ({
-  version: one(surveyVersion, {
-    fields: [surveyQuestion.versionId],
-    references: [surveyVersion.id],
-    relationName: "SurveyQuestion_version",
-  }),
-  page: one(surveyPage, {
-    fields: [surveyQuestion.pageId],
-    references: [surveyPage.id],
-    relationName: "SurveyQuestion_page",
   }),
 }));
 

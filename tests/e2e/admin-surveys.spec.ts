@@ -2,7 +2,8 @@ import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 import { eq, inArray } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { survey, surveyPage, surveyQuestion, surveyVersion } from "#/db/schema";
+import { survey, surveyVersion } from "#/db/schema";
+import type { SurveyForm } from "#/lib/survey/form";
 import { signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
@@ -49,6 +50,32 @@ async function signInAsResearchAdmin(context: BrowserContext) {
   return { userId: user.id, scope: { implementerId: admin.implementerId, projectId: project.id } };
 }
 
+const TWO_QUESTIONS: SurveyForm = {
+  format: 1,
+  pages: [
+    {
+      items: [
+        {
+          id: "mood",
+          kind: "single_choice",
+          key: "mood",
+          prompt: "How do you feel today?",
+          required: true,
+          options: ["1", "2", "3", "4", "5"].map((code) => ({ code, label: code })),
+        },
+        {
+          id: "notes",
+          kind: "text",
+          key: "notes",
+          prompt: "Anything else?",
+          required: false,
+          lines: 1,
+        },
+      ],
+    },
+  ],
+};
+
 /** A survey whose v1 is published with one page of two questions, created straight in the DB. */
 async function createPublishedSurvey(
   scope: { implementerId: string; projectId: string },
@@ -70,33 +97,9 @@ async function createPublishedSurvey(
   const version = only(
     await db
       .insert(surveyVersion)
-      .values({ surveyId: created.id, versionNumber: 1, createdBy: userId })
+      .values({ surveyId: created.id, versionNumber: 1, createdBy: userId, form: TWO_QUESTIONS })
       .returning(),
   );
-  const page = only(
-    await db.insert(surveyPage).values({ versionId: version.id, position: 1 }).returning(),
-  );
-  await db.insert(surveyQuestion).values([
-    {
-      versionId: version.id,
-      pageId: page.id,
-      position: 1,
-      key: "mood",
-      type: "RATING",
-      prompt: "How do you feel today?",
-      config: { min: 1, max: 5, minLabel: null, maxLabel: null },
-    },
-    {
-      versionId: version.id,
-      pageId: page.id,
-      position: 2,
-      key: "notes",
-      type: "SHORT_TEXT",
-      prompt: "Anything else?",
-      required: false,
-      config: { maxLength: 50 },
-    },
-  ]);
   await db
     .update(surveyVersion)
     .set({ status: "PUBLISHED" })
@@ -172,19 +175,14 @@ test("a new draft copies a published version, and a survey has one draft at a ti
   await expect(page.getByRole("menuitem", { name: "New draft from v1" })).toBeDisabled();
   await page.keyboard.press("Escape");
 
-  // Question keys are not shown on any page yet; they decide which answers line up across versions.
-  const keys = await db
-    .select({ versionNumber: surveyVersion.versionNumber, key: surveyQuestion.key })
-    .from(surveyQuestion)
-    .innerJoin(surveyVersion, eq(surveyVersion.id, surveyQuestion.versionId))
+  // The form is not shown on any page yet; its keys decide which answers line up across versions.
+  const versions = await db
+    .select({ versionNumber: surveyVersion.versionNumber, form: surveyVersion.form })
+    .from(surveyVersion)
     .where(eq(surveyVersion.surveyId, published.id))
-    .orderBy(surveyVersion.versionNumber, surveyQuestion.key);
-  expect(keys).toEqual([
-    { versionNumber: 1, key: "mood" },
-    { versionNumber: 1, key: "notes" },
-    { versionNumber: 2, key: "mood" },
-    { versionNumber: 2, key: "notes" },
-  ]);
+    .orderBy(surveyVersion.versionNumber);
+  expect(versions.map((v) => v.versionNumber)).toEqual([1, 2]);
+  expect(versions[1]?.form).toEqual(versions[0]?.form);
 });
 
 test("a survey of another implementer is not found", async ({ page, context }) => {
