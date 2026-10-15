@@ -1,6 +1,6 @@
 import type { fellow, supervisor } from "#/db/schema";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { ReplaceGroupLeaderSchema } from "#/components/common/fellow/schema";
@@ -26,14 +26,7 @@ import { toast, toastOnError } from "#/components/ui/use-toast";
 import { replaceGroupLeader } from "#/lib/actions/fellow";
 import { zodResolver } from "#/lib/zod-resolver";
 
-export default function ReplaceFellow({
-  fellowId,
-  groupId,
-  open,
-  onOpenChange,
-  children,
-  supervisors,
-}: {
+type ReplaceFellowProps = {
   fellowId: string;
   groupId: string;
   open: boolean;
@@ -42,21 +35,30 @@ export default function ReplaceFellow({
   supervisors: (Pick<typeof supervisor.$inferSelect, "id" | "supervisorName"> & {
     fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName" | "droppedOut">[];
   })[];
-}) {
+};
+
+export default function ReplaceFellow(props: ReplaceFellowProps) {
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent className="w-2/5 max-w-none">
+        <ReplaceFellowForm {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReplaceFellowForm({
+  fellowId,
+  groupId,
+  onOpenChange,
+  children,
+  supervisors,
+}: ReplaceFellowProps) {
   const form = useForm<z.infer<typeof ReplaceGroupLeaderSchema>>({
     resolver: zodResolver(ReplaceGroupLeaderSchema),
+    defaultValues: { leaderId: fellowId, groupId },
   });
   const supervisorWatcher = form.watch("supervisorId");
-
-  // effect: resets the form to the selected group when the parent opens the dialog
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        leaderId: fellowId,
-        groupId,
-      });
-    }
-  }, [open, fellowId, groupId, form]);
 
   const onSubmit = async (data: z.infer<typeof ReplaceGroupLeaderSchema>) => {
     const response = await replaceGroupLeader({
@@ -78,131 +80,126 @@ export default function ReplaceFellow({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-2/5 max-w-none">
-        <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
-            <DialogHeader className="mb-4">
-              <span className="text-xl">Replace fellow</span>
-            </DialogHeader>
-            {children}
-            <div className="space-y-6">
-              <div className="flex flex-col">
-                <div className="col-span-2 py-2">
-                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
-                    Assign group to replacement fellow
-                  </span>
-                </div>
-                <div className="flex flex-col gap-3">
-                  <FormField
-                    control={form.control}
-                    name="supervisorId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Select supervisor <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={(val) => {
-                            field.onChange(val);
-                            form.resetField("newLeaderId");
-                          }}
-                          value={field.value}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={"Select"} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[200px]">
-                            {supervisors.map((supervisor) => {
-                              return (
-                                <SelectItem key={supervisor.id} value={supervisor.id}>
-                                  {supervisor.supervisorName}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="newLeaderId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Select replacement fellow{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={"Select"} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[200px]">
-                            {supervisorWatcher !== undefined
-                              ? supervisors
-                                  .find((supervisor) => supervisorWatcher === supervisor.id)
-                                  ?.fellows.filter(
-                                    (fellow) => !fellow.droppedOut && fellow.id !== fellowId,
-                                  )
-                                  .map((fellow) => {
-                                    return (
-                                      <SelectItem key={fellow.id} value={fellow.id}>
-                                        {fellow.fellowName}
-                                      </SelectItem>
-                                    );
-                                  })
-                              : []}
-                            {supervisorWatcher !== undefined &&
-                            supervisors.find((supervisor) => supervisorWatcher === supervisor.id)
-                              ?.fellows.length === 0 ? (
-                              <SelectItem value={" "} disabled={true}>
-                                Supervisor has no fellows assigned.
-                              </SelectItem>
-                            ) : null}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+    <Form {...form}>
+      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+        <DialogHeader className="mb-4">
+          <span className="text-xl">Replace fellow</span>
+        </DialogHeader>
+        {children}
+        <div className="space-y-6">
+          <div className="flex flex-col">
+            <div className="col-span-2 py-2">
+              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                Assign group to replacement fellow
+              </span>
             </div>
-            <Separator className="my-6" />
-            <DialogFooter className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                type="button"
-                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-                onClick={() => {
-                  onOpenChange(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="brand"
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
-                Replace
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            <div className="flex flex-col gap-3">
+              <FormField
+                control={form.control}
+                name="supervisorId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Select supervisor <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        form.resetField("newLeaderId");
+                      }}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={"Select"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[200px]">
+                        {supervisors.map((supervisor) => {
+                          return (
+                            <SelectItem key={supervisor.id} value={supervisor.id}>
+                              {supervisor.supervisorName}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="newLeaderId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Select replacement fellow <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={"Select"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[200px]">
+                        {supervisorWatcher !== undefined
+                          ? supervisors
+                              .find((supervisor) => supervisorWatcher === supervisor.id)
+                              ?.fellows.filter(
+                                (fellow) => !fellow.droppedOut && fellow.id !== fellowId,
+                              )
+                              .map((fellow) => {
+                                return (
+                                  <SelectItem key={fellow.id} value={fellow.id}>
+                                    {fellow.fellowName}
+                                  </SelectItem>
+                                );
+                              })
+                          : []}
+                        {supervisorWatcher !== undefined &&
+                        supervisors.find((supervisor) => supervisorWatcher === supervisor.id)
+                          ?.fellows.length === 0 ? (
+                          <SelectItem value={" "} disabled={true}>
+                            Supervisor has no fellows assigned.
+                          </SelectItem>
+                        ) : null}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </div>
+        <Separator className="my-6" />
+        <DialogFooter className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            type="button"
+            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            onClick={() => {
+              onOpenChange(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="brand"
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            loading={form.formState.isSubmitting}
+          >
+            Replace
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }

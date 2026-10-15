@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
@@ -29,27 +28,28 @@ import { zodResolver } from "#/lib/zod-resolver";
 import type { SchoolsTableData } from "./columns";
 import type { supervisor } from "#/db/schema";
 
-export default function AssignPointSupervisor({
-  supervisors,
-  open,
-  setOpen,
-  school,
-}: {
+type AssignPointSupervisorProps = {
   supervisors: Pick<typeof supervisor.$inferSelect, "id" | "supervisorName">[];
   open: boolean;
   setOpen: (open: boolean) => void;
   school: SchoolsTableData | null;
-}) {
+};
+
+export default function AssignPointSupervisor(props: AssignPointSupervisorProps) {
+  return (
+    <Dialog open={props.open} onOpenChange={props.setOpen}>
+      <DialogContent>
+        <AssignPointSupervisorForm {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AssignPointSupervisorForm({ supervisors, setOpen, school }: AssignPointSupervisorProps) {
   const form = useForm<z.infer<typeof AssignPointSupervisorSchema>>({
     resolver: zodResolver(AssignPointSupervisorSchema),
+    defaultValues: { assignedSupervisorId: school?.assignedSupervisorId ?? undefined },
   });
-
-  // effect: resets the form to the school the parent selected when the dialog opens
-  useEffect(() => {
-    form.reset({
-      assignedSupervisorId: school?.assignedSupervisorId ?? undefined,
-    });
-  }, [open, school, form]);
 
   const onSubmit = async (data: z.infer<typeof AssignPointSupervisorSchema>) => {
     if (school) {
@@ -73,68 +73,66 @@ export default function AssignPointSupervisor({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="text-xl">
-            {school?.assignedSupervisorId !== null
-              ? "Change point supervisor"
-              : "Assign point supervisor"}
-          </DialogTitle>
-        </DialogHeader>
-        <DialogAlertWidget label={school?.schoolName} />
-        <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
-            <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="assignedSupervisorId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select point supervisor</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Please select a supervisor" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {supervisors.map((supervisor) => {
-                          return (
-                            <SelectItem key={supervisor.id} value={supervisor.id}>
-                              {supervisor.supervisorName}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <Separator className="my-3" />
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting ? "Saving" : "Save"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-xl">
+          {school?.assignedSupervisorId !== null
+            ? "Change point supervisor"
+            : "Assign point supervisor"}
+        </DialogTitle>
+      </DialogHeader>
+      <DialogAlertWidget label={school?.schoolName} />
+      <Form {...form}>
+        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="assignedSupervisorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Select point supervisor</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Please select a supervisor" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {supervisors.map((supervisor) => {
+                        return (
+                          <SelectItem key={supervisor.id} value={supervisor.id}>
+                            {supervisor.supervisorName}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <Separator className="my-3" />
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => {
+                setOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              loading={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? "Saving" : "Save"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </>
   );
 }

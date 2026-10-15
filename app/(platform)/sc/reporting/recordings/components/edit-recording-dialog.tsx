@@ -51,12 +51,17 @@ interface EditRecordingDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function EditRecordingDialog({
-  recording,
-  fellows,
-  open,
-  onOpenChange,
-}: EditRecordingDialogProps) {
+export default function EditRecordingDialog(props: EditRecordingDialogProps) {
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <EditRecordingForm {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditRecordingForm({ recording, fellows, onOpenChange }: EditRecordingDialogProps) {
   const form = useForm<RecordingEditFormData>({
     resolver: zodResolver(RecordingEditSchema),
     defaultValues: {
@@ -83,17 +88,8 @@ export default function EditRecordingDialog({
   const sessions = loadedSessions?.groupId === groupId ? loadedSessions.sessions : [];
   const loadingSessions = !!groupId && loadedSessions?.groupId !== groupId;
 
-  // effect: open is set by the parent; resets the form and loads the recording's groups and sessions when it opens
+  // effect: loads the recording's groups and sessions from the server once the dialog opens
   useEffect(() => {
-    if (!open) return;
-
-    form.reset({
-      fellowId: recording.fellowId,
-      groupId: recording.groupId,
-      sessionId: recording.sessionId,
-      originalFileName: recording.originalFileName,
-    });
-
     let cancelled = false;
     const loadRecordingOptions = async () => {
       let fellowGroups: FellowGroup[] = [];
@@ -131,7 +127,7 @@ export default function EditRecordingDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, recording, form]);
+  }, [recording]);
 
   function selectFellow(selectedFellowId: string) {
     form.setValue("groupId", "");
@@ -192,165 +188,163 @@ export default function EditRecordingDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Edit recording</DialogTitle>
-          <DialogDescription>Update the details for this recording.</DialogDescription>
-          <Separator />
-        </DialogHeader>
+    <>
+      <DialogHeader>
+        <DialogTitle>Edit recording</DialogTitle>
+        <DialogDescription>Update the details for this recording.</DialogDescription>
+        <Separator />
+      </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="fellowId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Fellow <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Combobox
-                      items={fellows.map((f) => ({
-                        id: f.id,
-                        label: f.fellowName ?? "Unknown",
-                      }))}
-                      activeItemId={field.value}
-                      onSelectItem={(value) => {
-                        if (value === field.value) return;
-                        field.onChange(value);
-                        selectFellow(value);
-                      }}
-                      placeholder="Select a fellow"
-                      inputPlaceholder="Search fellows..."
-                      disabled={isSubmitting}
-                      className="w-full"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="groupId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Group <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
+      <Form {...form}>
+        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="fellowId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Fellow <span className="text-shamiri-light-red">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Combobox
+                    items={fellows.map((f) => ({
+                      id: f.id,
+                      label: f.fellowName ?? "Unknown",
+                    }))}
+                    activeItemId={field.value}
+                    onSelectItem={(value) => {
+                      if (value === field.value) return;
                       field.onChange(value);
-                      selectGroup(value);
+                      selectFellow(value);
                     }}
-                    value={field.value}
-                    disabled={!fellowId || loadingGroups || isSubmitting}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            !fellowId
-                              ? "Select fellow first"
-                              : loadingGroups
-                                ? "Loading..."
-                                : "Select group"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {groups.map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.groupName} ({group.school.schoolName})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    placeholder="Select a fellow"
+                    inputPlaceholder="Search fellows..."
+                    disabled={isSubmitting}
+                    className="w-full"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="sessionId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Session <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={!groupId || loadingSessions || isSubmitting}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            !groupId
-                              ? "Select group first"
-                              : loadingSessions
-                                ? "Loading..."
-                                : "Select a session"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {sessions.map((session) => (
-                        <SelectItem key={session.id} value={session.id}>
-                          {sessionDisplayName(session.sessionName ?? undefined)} -{" "}
-                          {format(new Date(session.sessionDate), "dd MMM yyyy")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="originalFileName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Recording name <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+          <FormField
+            control={form.control}
+            name="groupId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Group <span className="text-shamiri-light-red">*</span>
+                </FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    selectGroup(value);
+                  }}
+                  value={field.value}
+                  disabled={!fellowId || loadingGroups || isSubmitting}
+                >
                   <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isSubmitting}
-                      placeholder="e.g. s2_session_recording"
-                    />
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          !fellowId
+                            ? "Select fellow first"
+                            : loadingGroups
+                              ? "Loading..."
+                              : "Select group"
+                        }
+                      />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <SelectContent>
+                    {groups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.groupName} ({group.school.schoolName})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" variant="brand" disabled={isSubmitting} loading={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save changes"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          <FormField
+            control={form.control}
+            name="sessionId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Session <span className="text-shamiri-light-red">*</span>
+                </FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  disabled={!groupId || loadingSessions || isSubmitting}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          !groupId
+                            ? "Select group first"
+                            : loadingSessions
+                              ? "Loading..."
+                              : "Select a session"
+                        }
+                      />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {sessions.map((session) => (
+                      <SelectItem key={session.id} value={session.id}>
+                        {sessionDisplayName(session.sessionName ?? undefined)} -{" "}
+                        {format(new Date(session.sessionDate), "dd MMM yyyy")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="originalFileName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Recording name <span className="text-shamiri-light-red">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    disabled={isSubmitting}
+                    placeholder="e.g. s2_session_recording"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" variant="brand" disabled={isSubmitting} loading={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </Form>
+    </>
   );
 }

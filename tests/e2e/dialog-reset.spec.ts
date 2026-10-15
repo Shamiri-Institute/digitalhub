@@ -344,6 +344,18 @@ test("fellow drop-out for a group leader goes through the replace step and cance
   await confirm.getByRole("button", { name: "Confirm" }).click();
   const replace = page.getByRole("dialog").filter({ hasText: "Replace fellow" });
   await expect(replace.getByRole("button", { name: "Replace" }).first()).toBeVisible();
+  const leader = page.getByRole("dialog").filter({ hasText: "Select replacement fellow" });
+  const leaderSupervisor = leader.getByRole("combobox", { name: /^Select supervisor/ });
+  await replace.getByRole("button", { name: "Replace" }).first().click();
+  await leaderSupervisor.click();
+  await page.getByRole("option").first().click();
+  await expect(leaderSupervisor).not.toContainText("Select");
+  await page.keyboard.press("Escape");
+  await expect(leader).toBeHidden();
+  await replace.getByRole("button", { name: "Replace" }).first().click();
+  await expect(leaderSupervisor).toContainText("Select");
+  await page.keyboard.press("Escape");
+  await expect(leader).toBeHidden();
   await replace.getByRole("button", { name: "Cancel" }).click();
   await expect(replace).toBeHidden();
 
@@ -643,4 +655,195 @@ test("mark attendance clears the absence reason when the status changes", async 
   await expect(reason).toHaveCount(0);
   await dialog.getByRole("radio", { name: "Missed" }).click();
   await expect(reason).toContainText("Select a reason");
+});
+
+async function pickCoordinatorSchools() {
+  const {
+    rows: [row],
+  } = await db.execute<{
+    email: string;
+    schoolNames: string[];
+    visibleIds: string[];
+    supervisorNames: (string | null)[];
+  }>(sql`
+    select u.email,
+      (array_agg(s.school_name order by s.visible_id))[1:2] as "schoolNames",
+      (array_agg(s.visible_id order by s.visible_id))[1:2] as "visibleIds",
+      (array_agg(sv.supervisor_name order by s.visible_id))[1:2] as "supervisorNames"
+    from hub_coordinators hc
+    join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
+    join users u on u.id = m.user_id and u.email is not null
+    join schools s on s.hub_id = hc.assigned_hub_id and s.archived_at is null
+      and s.dropped_out_at is null
+      and (select count(*) from schools o where o.school_name = s.school_name) = 1
+    join supervisors sv on sv.id = s.assigned_supervisor_id and sv.supervisor_name is not null
+    where ${signableMember()}
+    group by u.email
+    having count(distinct sv.id) >= 2
+    order by u.email
+    limit 1`);
+  if (!row) throw new Error("seed the database first: no coordinator with two schools");
+  return row;
+}
+
+test("supervisor complaint starts empty on each open", async ({ page, context }) => {
+  const fixture = await pickCoordinatorAndProfile("supervisors");
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl("/hc/supervisors"));
+  const dialog = page.getByRole("dialog").filter({ hasText: "Submit complaint" });
+  const comments = dialog.getByLabel("Additional comments");
+  async function open() {
+    await chooseRowAction(page, await searchRows(page, fixture.name), "Submit complaint");
+    await expect(dialog).toBeVisible();
+  }
+
+  await open();
+  await dialog.getByRole("combobox").click();
+  await page.getByRole("option").first().click();
+  await comments.fill(typed);
+  await closeDialog(page, dialog);
+
+  await open();
+  await expect(comments).toHaveValue("");
+  await expect(dialog.getByRole("combobox")).toContainText("Select a complaint");
+});
+
+test("weekly hub report starts empty on each open", async ({ page, context }) => {
+  const fixture = await pickCoordinatorSchools();
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl("/hc/schools"));
+  const dialog = page.getByTestId("weekly-hub-report-dialog");
+  const recommendations = dialog.getByRole("textbox", { name: "Recommendations" });
+  await page.getByRole("button", { name: "Weekly Hub Report" }).click();
+  await recommendations.fill(typed);
+  await closeDialog(page, dialog);
+
+  await page.getByRole("button", { name: "Weekly Hub Report" }).click();
+  await expect(recommendations).toHaveValue("");
+});
+
+test("point supervisor shows each school's saved supervisor, not the last choice", async ({
+  page,
+  context,
+}) => {
+  const fixture = await pickCoordinatorSchools();
+  const [nameA = "", nameB = ""] = fixture.schoolNames;
+  const [supervisorA = "", supervisorB = ""] = fixture.supervisorNames.map((n) => n ?? "");
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl("/hc/schools"));
+  const dialog = page.getByRole("dialog", { name: "Change point supervisor" });
+  const supervisor = dialog.getByRole("combobox");
+  async function openFor(name: string) {
+    await chooseRowAction(
+      page,
+      await rowWithCell(page, page.getByRole("main"), name),
+      "Change point supervisor",
+    );
+    await expect(dialog).toBeVisible();
+  }
+
+  await openFor(nameA);
+  await expect(supervisor).toContainText(supervisorA);
+  await supervisor.click();
+  await page.getByRole("option", { name: supervisorB, exact: true }).click();
+  await closeDialog(page, dialog);
+
+  await openFor(nameA);
+  await expect(supervisor).toContainText(supervisorA);
+  await closeDialog(page, dialog);
+
+  await openFor(nameB);
+  await expect(supervisor).toContainText(supervisorB);
+});
+
+test("new group starts with no supervisor chosen on each open", async ({ page, context }) => {
+  const fixture = await pickCoordinatorSchools();
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl(`/hc/schools/${fixture.visibleIds[0]}/groups`));
+  const dialog = page.getByRole("dialog").filter({ hasText: /Select supervisor/ });
+  const supervisor = dialog.getByRole("combobox", { name: /^Select supervisor/ });
+  await page.getByRole("button", { name: "New group" }).click();
+  await supervisor.click();
+  await page.getByRole("option").first().click();
+  await expect(supervisor).not.toContainText("Select");
+  await closeDialog(page, dialog);
+
+  await page.getByRole("button", { name: "New group" }).click();
+  await expect(supervisor).toContainText("Select");
+});
+
+async function pickCoordinatorStudents() {
+  const {
+    rows: [row],
+  } = await db.execute<{
+    email: string;
+    visibleId: string;
+    admissionNumbers: string[];
+    studentNames: string[];
+  }>(sql`
+    select u.email, sc.visible_id as "visibleId",
+      (array_agg(st.admission_number order by st.id))[1:2] as "admissionNumbers",
+      (array_agg(st.student_name order by st.id))[1:2] as "studentNames"
+    from hub_coordinators hc
+    join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
+    join users u on u.id = m.user_id and u.email is not null
+    join schools sc on sc.hub_id = hc.assigned_hub_id and sc.archived_at is null
+    join students st on st.school_id = sc.id and st.archived_at is null
+      and st.student_name is not null and st.admission_number is not null
+      and (select count(*) from students o
+        where o.school_id = st.school_id and o.student_name = st.student_name) = 1
+    where ${signableMember()}
+    group by u.email, sc.visible_id
+    having count(*) >= 2
+    order by u.email, sc.visible_id
+    limit 1`);
+  if (!row) throw new Error("seed the database first: no school with two students");
+  return row;
+}
+
+test("student details, reporting note and school move start from each student's values", async ({
+  page,
+  context,
+}) => {
+  const fixture = await pickCoordinatorStudents();
+  const [nameA = "", nameB = ""] = fixture.studentNames;
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/students`));
+  const main = page.getByRole("main");
+  async function openFor(studentName: string, action: string, dialog: Locator) {
+    await chooseRowAction(page, await searchRows(page, studentName, main), action);
+    await expect(dialog).toBeVisible();
+  }
+
+  const details = page.getByRole("dialog", { name: "Edit student information" });
+  const studentName = details.getByLabel("Student name");
+  await openFor(nameA, "Edit information", details);
+  await expect(studentName).toHaveValue(nameA);
+  await studentName.fill(typed);
+  await closeDialog(page, details);
+  await openFor(nameA, "Edit information", details);
+  await expect(studentName).toHaveValue(nameA);
+  await closeDialog(page, details);
+  await openFor(nameB, "Edit information", details);
+  await expect(studentName).toHaveValue(nameB);
+  await closeDialog(page, details);
+
+  const note = page.getByRole("dialog").filter({ hasText: "Add reporting note" });
+  const incident = note.getByRole("textbox").first();
+  await openFor(nameA, "Reporting notes", note);
+  await incident.fill(typed);
+  await closeDialog(page, note);
+  await openFor(nameA, "Reporting notes", note);
+  await expect(incident).toHaveValue("");
+  await closeDialog(page, note);
+
+  const move = page.getByRole("dialog", { name: "Move student to another school" });
+  const destination = move.getByRole("combobox", { name: /^Destination school/ });
+  await openFor(nameA, "Move to another school", move);
+  await destination.click();
+  await page.getByRole("option").first().click();
+  await expect(destination).not.toContainText("Select a school");
+  await closeDialog(page, move);
+  await openFor(nameB, "Move to another school", move);
+  await expect(destination).toContainText("Select a school");
 });

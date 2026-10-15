@@ -185,7 +185,19 @@ test("a supervisor renames a recording of their fellow's group", async ({
   }
 
   await openEdit();
-  await dialog.getByRole("textbox", { name: /Recording name/ }).fill(newFileName);
+  const recordingName = dialog.getByRole("textbox", { name: /Recording name/ });
+  await recordingName.fill(`unsaved-${Date.now()}`);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await chooseRowAction(
+    page,
+    (await rowWithCell(page, main, recording.groupName)).filter({
+      has: page.getByRole("cell", { name: recording.sessionName, exact: true }),
+    }),
+    "Edit",
+  );
+  await expect(recordingName).toHaveValue(recording.originalFileName);
+  await recordingName.fill(newFileName);
   await dialog.getByRole("button", { name: "Save changes" }).click();
   await expect(dialog).toBeHidden();
 
