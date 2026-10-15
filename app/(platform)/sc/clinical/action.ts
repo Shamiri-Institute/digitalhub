@@ -4,6 +4,7 @@ import { and, count, desc, eq } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentUserSession } from "#/app/auth";
+import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { nextStudentVisibleId } from "#/db/sql";
@@ -89,10 +90,8 @@ async function requireCaseAccess(caseId: string) {
       ? clinicalCase?.currentSupervisorId === actor.profileId
       : clinicalCase?.clinicalLeadId === actor.profileId ||
         (actor.hubId !== null && clinicalCase?.currentSupervisor?.hubId === actor.hubId);
-  // The same message for a missing case and a forbidden one, so the error does not reveal
-  // which case ids exist.
   if (!clinicalCase || !allowed) {
-    throw new Error("Clinical case not found");
+    throw new NotFoundError("Clinical case");
   }
   return { actor, clinicalCase };
 }

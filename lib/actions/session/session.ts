@@ -22,8 +22,8 @@ import {
 } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { clinicalCasesCountExtras, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
+import { NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
+import { hubOfSession, requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 
 function requireHubCoordinatorOrSupervisor() {
@@ -36,22 +36,17 @@ async function findSessionWithSchoolOrThrow(id: string) {
     with: { school: true, session: true },
   });
   if (!session) {
-    throw new Error("No InterventionSession found");
+    throw new NotFoundError("Session");
   }
   return session;
 }
 
-/**
- * Throws unless the session belongs to the caller's hub, the only sessions their schedule lists.
- * A session in another hub gets the same message as a missing one.
- */
 function requireSessionInCallerHub(
   session: { hubId: string | null; school: { hubId: string | null } | null },
   callerHubId: string,
 ) {
-  const sessionHubId = session.hubId ?? session.school?.hubId;
-  if (sessionHubId !== callerHubId) {
-    throw new Error("No InterventionSession found");
+  if (hubOfSession(session) !== callerHubId) {
+    throw new NotFoundError("Session");
   }
 }
 
@@ -373,7 +368,7 @@ async function requireSessionVisibleToCaller(sessionId: string) {
         })
       : undefined;
     if (!sessionHub) {
-      throw new Error("No InterventionSession found");
+      throw new NotFoundError("Session");
     }
     return { membership, fellowId: undefined, sessionHubId };
   }
@@ -388,7 +383,7 @@ async function requireSessionVisibleToCaller(sessionId: string) {
           })
         : undefined;
     if (!fellowId || !ledGroup) {
-      throw new Error("No InterventionSession found");
+      throw new NotFoundError("Session");
     }
     return { membership, fellowId, sessionHubId };
   }
@@ -464,7 +459,7 @@ export async function fetchSessionStudentAttendance(sessionId: string) {
 export async function fetchSessionSupervisors(sessionId: string) {
   const { membership, sessionHubId } = await requireSessionVisibleToCaller(sessionId);
   if (membership.role !== ImplementerRole.ADMIN || !sessionHubId) {
-    throw new Error("No InterventionSession found");
+    throw new NotFoundError("Session");
   }
   return fetchScheduleSupervisors([sessionHubId], eq(interventionSession.id, sessionId));
 }

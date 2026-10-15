@@ -15,6 +15,14 @@ export class ForbiddenRoleError extends Error {
   }
 }
 
+/** Missing rows and rows outside the caller's scope throw the same error, so it does not reveal which ids exist. */
+export class NotFoundError extends Error {
+  constructor(entity: string) {
+    super(`${entity} not found`);
+    this.name = "NotFoundError";
+  }
+}
+
 export interface AuthOnlyContext {
   userId: string;
 }
