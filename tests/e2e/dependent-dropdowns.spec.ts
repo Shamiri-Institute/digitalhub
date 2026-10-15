@@ -111,6 +111,7 @@ test("the profile shows the saved sub-county among the county's options", async 
   context,
 }) => {
   const [supervisor] = arsenalSupervisors;
+  if (!supervisor) throw new Error("no Arsenal supervisor in the seed fixtures");
   await signInWithEmail(context, supervisor.supervisorEmail);
   await page.goto(getUrl("/sc/schedule"));
   await page.getByAltText("Profile arrow drop down icon").click();
