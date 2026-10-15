@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { interventionSession } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -46,7 +46,7 @@ test("the school panel renders on the server and shows a session cancelled on th
         where o.school_id = s.id and o.session_id = i.session_id) = 1
     order by u.email, s.visible_id, i.session_date
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no school with an open session");
+  required(fixture, "no school with an open session");
   const sessionLabel = sessionDisplayName(fixture.sessionName);
 
   const schoolUrl = getUrl(`/hc/schools/${fixture.visibleId}/sessions`);

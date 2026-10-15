@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { arsenalSupervisors } from "#/db/seed/fixtures";
-import { signInAs, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
+import { signInAs, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction } from "#/tests/pages/helpers";
 
 async function pickSchoolWithStudentsAndSchoolWithGroups(coordinatorId: string | null) {
@@ -20,7 +20,7 @@ async function pickSchoolWithStudentsAndSchoolWithGroups(coordinatorId: string |
       and (select count(*) from schools o where o.school_name = dst.school_name) = 1
     order by src.visible_id, dst.visible_id
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no hub with two schools and groups");
+  required(fixture, "no hub with two schools and groups");
   return fixture;
 }
 
@@ -67,7 +67,7 @@ async function pickUniquelyNamedFellowLeadingGroupAtSchoolWithSessions(
         where g.leader_id = f.id)
     order by f.id
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no fellow who leads a group");
+  required(fixture, "no fellow who leads a group");
   return fixture;
 }
 

@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowComplaints } from "#/db/schema";
-import { signableMember, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
+import { signableMember, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
 import { expandRow, getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -57,7 +57,7 @@ test.beforeAll(async () => {
       and ${uniqueFellowName()}
     order by u.email, f.id
     limit 1`);
-  if (!supervisedFellow) throw new Error("seed the database first: no supervised fellow");
+  required(supervisedFellow, "no supervised fellow");
   supervisorEmail = supervisedFellow.email;
 
   const otherSupervisor = await pickSameOrgSupervisorOfOtherFellows(

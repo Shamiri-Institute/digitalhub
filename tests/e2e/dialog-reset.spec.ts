@@ -6,7 +6,7 @@ import { db } from "#/db/client";
 import { monthlySupervisorEvaluation, weeklyFellowRatings } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
 import { expect, test } from "#/tests/fixtures";
-import { signableMember, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
+import { signableMember, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell, searchRows } from "#/tests/pages/helpers";
 
 // Each test opens a dialog for one row, types without saving, closes it and opens it again, then
@@ -41,7 +41,7 @@ async function pickSupervisorWithTwoFellows() {
     having count(*) >= 2
     order by u.email
     limit 1`);
-  if (!row) throw new Error("seed the database first: no supervisor with two fellows");
+  required(row, "no supervisor with two fellows");
   return row;
 }
 
@@ -128,7 +128,7 @@ test("student group evaluation shows the chosen session's saved comment, not typ
         where o.school_id = g.school_id and o.group_name = g.group_name) = 1
     order by u.email, g.id
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no fellow's group with two reports");
+  required(fixture, "no fellow's group with two reports");
 
   await signInWithEmail(context, fixture.email);
   await page.goto(getUrl(`/fel/schools/${fixture.schoolVisibleId}/group`));
@@ -193,7 +193,7 @@ test("monthly supervisor evaluation clears the chosen month and comments when re
     having count(*) >= 2
     order by u.email
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no coordinator with two supervisors");
+  required(fixture, "no coordinator with two supervisors");
   const [supervisorA = ""] = fixture.supervisorIds;
   const [nameA = "", nameB = ""] = fixture.supervisorNames;
   const savedComment = `saved comment ${Date.now()}`;
@@ -321,7 +321,7 @@ test("fellow drop-out for a group leader goes through the replace step and cance
       and exists (select 1 from intervention_groups g where g.leader_id = f.id and g.archived_at is null)
     order by u.email, f.id
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no fellow who leads a group");
+  required(fixture, "no fellow who leads a group");
 
   await signInWithEmail(context, fixture.email);
   await page.goto(getUrl("/hc/fellows"));
@@ -509,7 +509,7 @@ async function pickCoordinatorAndProfile(table: "supervisors" | "fellows") {
     where ${signableMember()}
     order by u.email, p.id
     limit 1`);
-  if (!row) throw new Error(`seed the database first: no ${table} with a sub-county`);
+  required(row, `no ${table} with a sub-county`);
   return row;
 }
 
@@ -582,7 +582,7 @@ test("my profile clears the sub-county when the county changes", async ({ page, 
     where s.sub_county is not null and s.county is not null and ${signableMember()}
     order by u.email
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no supervisor with a sub-county");
+  required(fixture, "no supervisor with a sub-county");
   await signInWithEmail(context, fixture.email);
   await page.goto(getUrl("/sc/schedule"));
   await page.getByAltText("Profile arrow drop down icon").click();
@@ -640,7 +640,7 @@ test("mark attendance clears the absence reason when the status changes", async 
       and exists (select 1 from intervention_sessions i where i.school_id = sc.id and i.occurred)
     order by u.email, sc.visible_id
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no school with an occurred session");
+  required(fixture, "no school with an occurred session");
 
   await signInWithEmail(context, fixture.email);
   await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/supervisors`));
@@ -685,7 +685,7 @@ async function pickCoordinatorSchools() {
     having count(distinct sv.id) >= 2
     order by u.email
     limit 1`);
-  if (!row) throw new Error("seed the database first: no coordinator with two schools");
+  required(row, "no coordinator with two schools");
   return row;
 }
 
@@ -800,7 +800,7 @@ async function pickCoordinatorStudents() {
     having count(*) >= 2
     order by u.email, sc.visible_id
     limit 1`);
-  if (!row) throw new Error("seed the database first: no school with two students");
+  required(row, "no school with two students");
   return row;
 }
 
@@ -956,7 +956,7 @@ test("session occurrence goes back to the saved state after cancelling the confi
           and coalesce(p.status::text, '') <> 'Cancelled')
     order by u.email, s.visible_id, i.session_date
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no markable session");
+  required(fixture, "no markable session");
 
   await signInWithEmail(context, fixture.email);
   await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/sessions`));
@@ -1003,7 +1003,7 @@ test("mark attendance shows each session's saved status on reopen and after swit
       and (select count(*) from intervention_sessions i where i.school_id = sc.id and i.occurred) >= 2
     order by u.email, sc.visible_id
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no school with two occurred sessions");
+  required(fixture, "no school with two occurred sessions");
 
   await signInWithEmail(context, fixture.email);
   await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/supervisors`));

@@ -60,6 +60,14 @@ export async function createAdminCopy(seededUserId: string, activeProjectId?: st
   return { id: created.id, email, remove };
 }
 
+/**
+ * Fails the test when a fixture query finds nothing. CI seeds the same data on every run, so missing
+ * data is a seed regression, not a reason to skip.
+ */
+export function required<T>(value: T, what: string): asserts value is NonNullable<T> {
+  if (!value) throw new Error(`seed the database first: ${what}`);
+}
+
 /** A signed session cookie for the user, backed by a new row in `sessions`. */
 export async function sessionCookieFor(email: string) {
   const user = await db.query.user.findFirst({

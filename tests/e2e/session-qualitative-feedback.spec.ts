@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { interventionSessionRating, sessionComment } from "#/db/schema";
-import { signableMember, signInAs, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInAs, signInWithEmail, required } from "#/tests/helpers";
 import { expandRow, getUrl } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -33,7 +33,7 @@ test.beforeAll(async () => {
     where ${signableMember()}
     order by u.email, i.session_date < now() desc, i.session_date, i.id
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no supervisor with an assigned school");
+  required(fixture, "no supervisor with an assigned school");
 
   supervisorEmail = fixture.email;
   interventionSessionId = fixture.interventionSessionId;
@@ -99,7 +99,7 @@ test("a hub coordinator reads session feedback but cannot add notes", async ({ c
     where h.id = ${coordinator.identifier}
     order by s.school_name
     limit 1`);
-  if (!ratedSchool) throw new Error("seed the database first: no rated session in the hub");
+  required(ratedSchool, "no rated session in the hub");
 
   await page.goto(getUrl("/hc/reporting/school-reports/session"));
   const dialog = await openFeedbackDialog(page, "Edit school report", ratedSchool.schoolName);

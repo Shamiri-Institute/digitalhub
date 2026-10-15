@@ -3,7 +3,12 @@ import { and, eq, gte, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowAttendance, payoutStatements, sessionName } from "#/db/schema";
-import { onlySessionAtSchoolThatWeek, signableMember, signInWithEmail } from "#/tests/helpers";
+import {
+  onlySessionAtSchoolThatWeek,
+  signableMember,
+  signInWithEmail,
+  required,
+} from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -73,7 +78,7 @@ test.describe("fellow attendance", () => {
           order by ps.created_at desc limit 1) <> 'UNMARK_SESSION_ATTENDANCE'
       order by s.session_date desc, fa.id
       limit 1`);
-    if (!row) throw new Error("seed the database first: no attended, paid, unprocessed attendance");
+    required(row, "no attended, paid, unprocessed attendance");
     return row;
   }
 
@@ -162,7 +167,7 @@ test.describe("fellow attendance", () => {
   test("a supervisor in another hub does not see the session", async ({ page, context }) => {
     const supervisors = await signableProfiles("supervisors", "SUPERVISOR", "hub_id");
     const outsider = supervisors.find((s) => s.hubId !== fixture.hubId);
-    if (!outsider) throw new Error("seed the database first: no supervisor in another hub");
+    required(outsider, "no supervisor in another hub");
     await signInWithEmail(context, outsider.email);
 
     const sessionRows = await openSessionWeek(page, fixture.sessionDate, fixture.schoolName);
@@ -210,7 +215,7 @@ test.describe("bulk fellow attendance", () => {
       having count(distinct f.id) >= 2
       order by i.session_date desc, i.id, u.email
       limit 1`);
-    if (!row) throw new Error("seed the database first: no session with two unmarked fellows");
+    required(row, "no session with two unmarked fellows");
     return row;
   }
 

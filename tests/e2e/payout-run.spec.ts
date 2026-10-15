@@ -4,7 +4,7 @@ import { eq, gte, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowAttendance, hub, payoutStatements } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
@@ -38,7 +38,7 @@ test.beforeAll(async () => {
     where ${signableMember()}
     order by o.id
     limit 1`);
-  if (!firstOps) throw new Error("seed the database first: no ops user");
+  required(firstOps, "no ops user");
   ops = firstOps;
 
   const eligibleAttendance = sql`
@@ -56,7 +56,7 @@ test.beforeAll(async () => {
   } = await db.execute<Fixture>(sql`${eligibleAttendance}
     and h.implementer_id = ${ops.implementerId} and h.project_id = ${ops.projectId}
     order by fa.id limit 1`);
-  if (!row) throw new Error("seed the database first: no attended, unprocessed attendance");
+  required(row, "no attended, unprocessed attendance");
   fixture = row;
 
   // Another implementer's hub, moved into the ops user's project until afterAll.
@@ -65,7 +65,7 @@ test.beforeAll(async () => {
   } = await db.execute<OtherImplementerFixture>(sql`${eligibleAttendance}
     and h.implementer_id <> ${ops.implementerId}
     order by fa.id limit 1`);
-  if (!otherRow) throw new Error("seed the database first: no attendance of another implementer");
+  required(otherRow, "no attendance of another implementer");
   otherImplementer = otherRow;
   await db.update(hub).set({ projectId: ops.projectId }).where(eq(hub.id, otherImplementer.hubId));
 

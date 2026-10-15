@@ -3,7 +3,12 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { supervisorAttendance } from "#/db/schema";
-import { onlySessionAtSchoolThatWeek, signableMember, signInWithEmail } from "#/tests/helpers";
+import {
+  onlySessionAtSchoolThatWeek,
+  signableMember,
+  signInWithEmail,
+  required,
+} from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -40,7 +45,7 @@ async function pickLoneOccurredSessionWithUnmarkedSupervisor() {
         where o.hub_id = sv.hub_id and o.supervisor_name = sv.supervisor_name) = 1
     order by i.session_date desc, i.id, sv.id
     limit 1`);
-  if (!row) throw new Error("seed the database first: no unmarked supervisor for a session");
+  required(row, "no unmarked supervisor for a session");
   return row;
 }
 

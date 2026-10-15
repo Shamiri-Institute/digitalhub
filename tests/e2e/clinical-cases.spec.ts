@@ -12,7 +12,7 @@ import {
   student,
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { createClinicalCase, emailForProfile, signInWithEmail } from "#/tests/helpers";
+import { createClinicalCase, emailForProfile, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = { profileId: string; hubId: string; email: string };
@@ -49,7 +49,7 @@ test.beforeAll(async () => {
     columns: { id: true },
     orderBy: (s, { asc }) => asc(s.id),
   });
-  if (!ownerSchool) throw new Error("seed the database first: the supervisor's hub has no school");
+  required(ownerSchool, "the supervisor's hub has no school");
   const ownCase = await createClinicalCase({
     schoolId: ownerSchool.id,
     currentSupervisorId: owner.profileId,
@@ -70,7 +70,7 @@ test.beforeAll(async () => {
       break;
     }
   }
-  if (!clinicalLead) throw new Error("seed the database first: no clinical lead with a hub");
+  required(clinicalLead, "no clinical lead with a hub");
 });
 
 async function openCaseAction(page: Page, name: string, action: string) {
@@ -179,7 +179,7 @@ test("a supervisor opens a case for an existing student with a non-numeric admis
     columns: { id: true, schoolName: true },
     orderBy: (s, { asc }) => asc(s.id),
   });
-  if (!schoolWithSessions) throw new Error("seed the database first: no school with sessions");
+  required(schoolWithSessions, "no school with sessions");
   const existingStudentName = `${casePseudonym} student`;
   await db.insert(student).values({
     id: objectId("stu"),

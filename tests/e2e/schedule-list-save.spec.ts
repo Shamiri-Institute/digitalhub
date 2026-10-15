@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { interventionSession } from "#/db/schema";
 import { TIME_ZONE_COOKIE } from "#/lib/schedule-view";
 import { sessionDisplayName } from "#/lib/utils";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 const timeZone = "Africa/Nairobi";
@@ -57,7 +57,7 @@ async function pickPastUnmarkedSessionWithNoEarlierUnmarked(viewerTimeZone: stri
 
 test("marking a session in the list view keeps the visible range", async ({ page, context }) => {
   fixture = await pickPastUnmarkedSessionWithNoEarlierUnmarked(timeZone);
-  if (!fixture) throw new Error("seed the database first: no past unmarked session");
+  required(fixture, "no past unmarked session");
 
   await signInWithEmail(context, fixture.email);
   await context.addCookies([

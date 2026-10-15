@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -29,7 +29,7 @@ test("the school breadcrumb names the hub and switches between the implementer's
     where m.role = 'ADMIN' and ${signableMember()}
     order by u.email, s.visible_id
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no admin with a school");
+  required(fixture, "no admin with a school");
   const { rows: implementerSchools } = await db.execute<{ schoolName: string }>(sql`
     select s.school_name as "schoolName"
     from schools s

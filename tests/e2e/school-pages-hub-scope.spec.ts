@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { type SQL, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 const notFoundText = "This page could not be found.";
@@ -86,7 +86,7 @@ for (const caller of callers) {
   test(`school pages show only the ${caller.role} caller's schools`, async ({ page, context }) => {
     const { rows } = await db.execute<Fixture>(caller.fixture);
     const fixture = rows.find((row) => row.ownSchool && row.otherSchool);
-    if (!fixture) throw new Error(`seed the database first: no ${caller.role} fixture`);
+    required(fixture, `no ${caller.role} fixture`);
 
     await signInWithEmail(context, fixture.email);
     for (const tab of caller.tabs) {

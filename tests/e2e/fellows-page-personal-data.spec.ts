@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { type SQL, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { signableMember, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
+import { signableMember, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -29,7 +29,7 @@ async function pickFixture(from: SQL) {
       and not exists (select 1 from fellows o where strpos(o.cell_number, f.id_number) > 0)
     order by f.id
     limit 1`);
-  if (!row) throw new Error("seed the database first: no fellow with an ID and M-Pesa number");
+  required(row, "no fellow with an ID and M-Pesa number");
   return row;
 }
 
@@ -127,7 +127,7 @@ test("the fellow portal HTML has no ID or M-Pesa number of the fellow's supervis
       and not exists (select 1 from fellows o where strpos(o.cell_number, sv.id_number) > 0)
     order by f.id
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no fellow with a supervisor");
+  required(fixture, "no fellow with a supervisor");
   await signInWithEmail(context, fixture.email);
   const response = await page.goto(getUrl("/fel/portal"), { waitUntil: "networkidle" });
   const html = (await response?.text()) ?? "";

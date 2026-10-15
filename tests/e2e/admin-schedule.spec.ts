@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { onlySessionAtSchoolThatWeek, signInAs } from "#/tests/helpers";
+import { onlySessionAtSchoolThatWeek, signInAs, required } from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 // The school's supervisor must have fellows who lead a named group there.
@@ -32,7 +32,7 @@ async function pickLoneOccurredSessionInAdminOrg(adminUserId: string) {
       and ${onlySessionAtSchoolThatWeek()}
     order by i.session_date desc, i.id
     limit 1`);
-  if (!session) throw new Error("seed the database first: no occurred session for the admin");
+  required(session, "no occurred session for the admin");
   return session;
 }
 

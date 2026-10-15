@@ -11,7 +11,7 @@ import {
   triageEvent,
   triageEventAudit,
 } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
 import { sessionDisplayName } from "#/lib/utils";
 
@@ -139,7 +139,7 @@ test.beforeAll(async () => {
         where s2.assigned_group_id = other_group.id and t.session_id = i.id)
     order by u.email, i.session_date, st.id, other_user.email, other_student.id
     limit 1`);
-  if (!fellowRow) throw new Error("seed the database first: no fellow with an occurred session");
+  required(fellowRow, "no fellow with an occurred session");
   triage = {
     ...fellowRow,
     sessionLabel: sessionDisplayName(fellowRow.sessionLabel) ?? fellowRow.sessionLabel,

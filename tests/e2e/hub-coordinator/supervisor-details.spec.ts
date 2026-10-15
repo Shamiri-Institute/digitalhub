@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { implementerMember, supervisor, user } from "#/db/schema";
-import { emailForProfile, signInWithEmail } from "#/tests/helpers";
+import { emailForProfile, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 let target: typeof supervisor.$inferSelect;
@@ -63,8 +63,7 @@ test.beforeAll(async () => {
     otherHubEmail = otherEmail;
     break;
   }
-  if (!target)
-    throw new Error("seed the database first: no hub with a supervisor and coordinators");
+  required(target, "no hub with a supervisor and coordinators");
 });
 
 test.afterAll(async () => {

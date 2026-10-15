@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { hub, implementer, school, student } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 type Fixture = { email: string; projectId: string; expected: number };
@@ -39,7 +39,7 @@ test("the admin students page counts only the students of the admin's implemente
       and exists (select 1 from hubs h where h.implementer_id = m.implementer_id and h.project_id = p.id)
     order by u.email
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no admin with a hub");
+  required(fixture, "no admin with a hub");
 
   const suffix = Date.now();
   // Its own implementer, so no seeded user joins the project while the hub exists.

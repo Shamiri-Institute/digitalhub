@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { fellow, interventionGroupReport, sessionRecording } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { signableMember, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
+import { signableMember, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -56,7 +56,7 @@ async function pickUnevaluatedGroupWithUniquelyNamedOccurredSession() {
         where o.school_id = s.id and o.occurred and o.session_id = i.session_id) = 1
     order by u.email desc, g.id, i.session_date
     limit 1`);
-  if (!ledGroup) throw new Error("seed the database first: no fellow group without evaluations");
+  required(ledGroup, "no fellow group without evaluations");
   return ledGroup;
 }
 
@@ -108,7 +108,7 @@ test.beforeAll(async () => {
         where o.hub_id = sv.hub_id and o.supervisor_name = sv.supervisor_name) = 1
     order by u.email desc, f.id desc, sv.id
     limit 1`);
-  if (!hubFellow) throw new Error("seed the database first: no fellow with another supervisor");
+  required(hubFellow, "no fellow with another supervisor");
   reassign = hubFellow;
 });
 

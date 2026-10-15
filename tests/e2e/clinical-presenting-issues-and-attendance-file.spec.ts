@@ -5,7 +5,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { attendanceDocuments, clinicalSessionAttendance } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { createClinicalCase, signInWithEmail, signableMember } from "#/tests/helpers";
+import { createClinicalCase, signInWithEmail, signableMember, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -66,7 +66,7 @@ test.beforeAll(async () => {
       and exists (select 1 from intervention_groups g where g.school_id = sc.id)
     order by sv.id desc, sc.id
     limit 1`);
-  if (!caseRow) throw new Error("seed the database first: no supervisor with a school");
+  required(caseRow, "no supervisor with a school");
   caseOwner = caseRow;
 
   const attendanceRow = await pickOccurredSessionWithTwoMarkedStudents();

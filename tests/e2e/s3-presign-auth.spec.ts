@@ -11,7 +11,7 @@ import {
   sessionRecording,
   user,
 } from "#/db/schema";
-import { emailForProfile, sessionCookieFor } from "#/tests/helpers";
+import { emailForProfile, required, sessionCookieFor } from "#/tests/helpers";
 import { pickUser } from "#/tests/platform-routes";
 
 const PRESIGN = "/api/s3/presigned";
@@ -182,12 +182,6 @@ async function findRecordingUploadTarget(): Promise<UploadTarget | null> {
   };
 }
 
-/** CI seeds the same data on every run, so missing data is a seed regression, not a reason to skip. */
-function required<T>(value: T | null, what: string): T {
-  if (value === null) throw new Error(`seed the database first: no ${what}`);
-  return value;
-}
-
 /** A real group and session, so a refusal comes from the role, not from a missing group. */
 function ownedBy(target: UploadTarget) {
   return { groupId: target.groupId, sessionId: target.sessionId };
@@ -216,10 +210,14 @@ test.beforeAll(async () => {
   hubToken = await sessionCookieHeader(hubUser.email);
   adminToken = await sessionCookieHeader(adminUser.email);
 
-  attendanceTarget = required(await findFellowUploadTarget(), "fellow upload target");
+  const fellowTarget = await findFellowUploadTarget();
+  required(fellowTarget, "no fellow upload target");
+  attendanceTarget = fellowTarget;
   attendanceTargetToken = await sessionCookieHeader(attendanceTarget.email);
 
-  recordingTarget = required(await findRecordingUploadTarget(), "recording upload target");
+  const recordingUploadTarget = await findRecordingUploadTarget();
+  required(recordingUploadTarget, "no recording upload target");
+  recordingTarget = recordingUploadTarget;
   recordingTargetToken = await sessionCookieHeader(recordingTarget.email);
 });
 

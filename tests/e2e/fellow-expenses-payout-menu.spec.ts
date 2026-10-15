@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { emailForProfile, signInWithEmail } from "#/tests/helpers";
+import { emailForProfile, signInWithEmail, required } from "#/tests/helpers";
 import { pickUser } from "#/tests/platform-routes";
 import { expandRow, getUrl, searchRows } from "#/tests/pages/helpers";
 
@@ -51,8 +51,7 @@ test.beforeAll(async () => {
 for (const role of ["sc", "ops"] as const) {
   test(`${role}: the expanded payout rows have no action menu`, async ({ page, context }) => {
     const viewer = viewers[role];
-    if (!viewer)
-      throw new Error(`seed the database first: no ${role} viewer of a fellow's payouts`);
+    required(viewer, `no ${role} viewer of a fellow's payouts`);
     await signInWithEmail(context, viewer.email);
     await page.goto(getUrl(viewer.path));
 

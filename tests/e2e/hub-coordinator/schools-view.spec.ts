@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { school, weeklyHubReport } from "#/db/schema";
-import { signInAs } from "#/tests/helpers";
+import { signInAs, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
 test("Hub Coordinator can submit a weekly hub report", async ({ page, context, undo }) => {
@@ -71,7 +71,7 @@ test("Hub Coordinator edits a school in one dialog", async ({ page, context, und
       and(eq(s.hubId, coordinatorProfile?.assignedHubId ?? ""), isNull(s.archivedAt)),
     orderBy: (s, { asc }) => asc(s.visibleId),
   });
-  if (!template) throw new Error("seed the database first: the hub has no open school");
+  required(template, "the hub has no open school");
   const suffix = Date.now();
   const schoolName = `E2E School ${suffix}`;
   const [targetSchool] = await db
