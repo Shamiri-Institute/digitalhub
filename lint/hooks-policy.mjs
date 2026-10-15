@@ -3,6 +3,18 @@
 // followed by a colon, e.g. `// memo: avoids re-sorting 5k rows on every keystroke`.
 // Policy: CLAUDE.md > React Hooks Policy.
 
+/**
+ * @param {{ type: string; name?: string; property?: { type: string; name?: string } }} callee
+ * @returns {string | null}
+ */
+function calleeName(callee) {
+  if (callee.type === "Identifier") return callee.name ?? null;
+  if (callee.type === "MemberExpression" && callee.property?.type === "Identifier") {
+    return callee.property.name ?? null;
+  }
+  return null;
+}
+
 /** @type {import("oxlint/plugins-dev").Rule} */
 const rule = {
   meta: {
@@ -27,12 +39,7 @@ const rule = {
     return {
       CallExpression(node) {
         const callee = node.callee;
-        const name =
-          callee.type === "Identifier"
-            ? callee.name
-            : callee.type === "MemberExpression" && callee.property.type === "Identifier"
-              ? callee.property.name
-              : null;
+        const name = calleeName(callee);
         if (!name || !hooks.has(name)) return;
         const prefix = name.slice(3).toLowerCase();
         // The statement or declaration that owns this call, so the comment can sit above
@@ -61,7 +68,45 @@ const rule = {
   },
 };
 
+const effectHooks = new Set(["useEffect", "useLayoutEffect", "useEffectEvent"]);
+
+/** @type {import("oxlint/plugins-dev").Rule} */
+const noFormResetInEffect = {
+  meta: {
+    type: "suggestion",
+    docs: { description: "Disallow form.reset/setValue inside effects" },
+    messages: {
+      inEffect:
+        "Reset or set form values in the handler that opens or changes the dialog, or render the form inside DialogContent; not in an effect.",
+    },
+  },
+  create(context) {
+    return {
+      CallExpression(node) {
+        const { callee } = node;
+        if (
+          callee.type !== "MemberExpression" ||
+          !["reset", "setValue"].includes(calleeName(callee) ?? "")
+        )
+          return;
+        for (let fn = node.parent; fn; fn = fn.parent) {
+          const call = fn.parent;
+          if (
+            (fn.type === "ArrowFunctionExpression" || fn.type === "FunctionExpression") &&
+            call?.type === "CallExpression" &&
+            call.arguments[0] === fn &&
+            effectHooks.has(calleeName(call.callee))
+          ) {
+            context.report({ node: callee, messageId: "inEffect" });
+            return;
+          }
+        }
+      },
+    };
+  },
+};
+
 export default {
   meta: { name: "hooks-policy", version: "1.0.0" },
-  rules: { justify: rule },
+  rules: { justify: rule, "no-form-reset-in-effect": noFormResetInEffect },
 };
