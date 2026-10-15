@@ -156,7 +156,7 @@ async function updateSessionNames(
       .catch((error: unknown) => {
         if (!isForeignKeyViolation(error)) throw error;
         throw new AdminActionError(
-          "A session type you removed is used by sessions, so it cannot be removed. Please reload and try again.",
+          "A session type you removed already has intervention sessions attached to it, so it cannot be removed.",
         );
       });
   }

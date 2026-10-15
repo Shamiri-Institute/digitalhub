@@ -405,7 +405,6 @@ export const hub = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    // The app does not read it. Prod hubs carry codes such as "26P2_Hub_08" that reports may use.
     visibleId: varchar("visible_id", { length: 100 }),
     hubName: varchar("hub_name", { length: 255 }).notNull(),
     implementerId: varchar("implementer_id", { length: 255 }).notNull(),
