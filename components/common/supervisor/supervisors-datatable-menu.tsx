@@ -1,6 +1,5 @@
 "use client";
 
-import { ImplementerRole } from "#/db/enums";
 import type { Dispatch, SetStateAction } from "react";
 import type { SupervisorsData } from "#/components/common/supervisor/columns";
 import { Icons } from "#/components/icons";
@@ -21,7 +20,6 @@ export function SupervisorsDataTableMenu({
   state: {
     setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setSupervisor: Dispatch<SetStateAction<SupervisorsData | null>>;
-    role: ImplementerRole;
   };
 }) {
   return (
@@ -47,27 +45,6 @@ export function SupervisorsDataTableMenu({
         >
           Mark attendance
         </DropdownMenuItem>
-        {/* TODO: Remove drop out option and refactor context*/}
-        {state.role === ImplementerRole.HUB_COORDINATOR &&
-          (supervisor.droppedOut === null || !supervisor.droppedOut ? (
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSupervisor(supervisor);
-                // state.setDropoutDialog(true);
-              }}
-            >
-              <div className="text-shamiri-red">Drop out supervisor</div>
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSupervisor(supervisor);
-                // state.setUndropDialog(true);
-              }}
-            >
-              <div>Undo drop out</div>
-            </DropdownMenuItem>
-          ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   ATTENDANCE_STATUS,
   BOARDING_DAY_TYPES,
+  COMPLAINT_TYPES,
   KENYAN_COUNTIES,
   SCHOOL_DEMOGRAPHICS,
   SCHOOL_DROPOUT_REASONS,
@@ -11,6 +12,12 @@ import {
   SUPERVISOR_DROP_OUT_REASONS,
 } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
+
+const loginEmail = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .pipe(z.email({ error: "Please enter a valid email." }));
 
 export const DropoutSchoolSchema = z.object({
   schoolId: stringValidation("Missing school ID"),
@@ -56,8 +63,7 @@ export const ArchiveStudentSchema = z.object({
 export const SubmitComplaintSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
   comments: stringValidation().optional(),
-  // TODO: Replace with complaint types array
-  complaint: z.enum(SCHOOL_DROPOUT_REASONS as [string, ...string[]], {
+  complaint: z.enum(COMPLAINT_TYPES, {
     error: "Please select a complaint",
   }),
 });
@@ -167,7 +173,7 @@ export const EditSupervisorSchema = z
       .refine((val) => isValidPhoneNumber(val, "KE"), {
         error: "Please enter a valid kenyan phone number",
       }),
-    personalEmail: z.email({ error: "Please enter a valid email." }),
+    personalEmail: loginEmail,
     county: z.enum(counties, {
       error: "Please pick a valid option",
     }),
@@ -208,7 +214,7 @@ export const AddNewSupervisorSchema = z.object({
     .refine((val) => isValidPhoneNumber(val, "KE"), {
       error: "Please enter a valid kenyan phone number",
     }),
-  personalEmail: z.email({ error: "Please enter a valid email." }),
+  personalEmail: loginEmail,
   county: z.enum(counties, {
     error: "Please pick a valid option",
   }),
@@ -255,7 +261,7 @@ export const FellowDetailsSchema = z
       .refine((val) => isValidPhoneNumber(val, "KE"), {
         error: "Please enter a valid kenyan phone number",
       }),
-    fellowEmail: z.email({ error: "Please enter a valid email." }),
+    fellowEmail: loginEmail,
     county: z
       .enum(counties, {
         error: "Please pick a valid option",

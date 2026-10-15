@@ -67,8 +67,8 @@ test("a hub coordinator edits a supervisor in their hub", async ({ page, context
   await chooseRowAction(page, row, "Edit supervisor information");
   const dialog = page.getByRole("dialog", { name: "Edit supervisor information" });
   await dialog.getByRole("textbox", { name: "Full name *" }).first().fill(supervisorName);
-  // The form writes this to the login email, so keep the current one.
-  await dialog.getByRole("textbox", { name: "Email address *" }).fill(targetEmail);
+  // The form writes this to the login email, so keep the current one in other casing.
+  await dialog.getByRole("textbox", { name: "Email address *" }).fill(targetEmail.toUpperCase());
   await dialog.getByRole("combobox", { name: "County *", exact: true }).click();
   await page.getByRole("option", { name: "Nairobi", exact: true }).click();
   await dialog.getByRole("combobox", { name: "Sub-county *" }).click();
