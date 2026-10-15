@@ -65,28 +65,30 @@ test("Hub Coordinator edits a school in one dialog", async ({ page, context, und
     where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
     columns: { assignedHubId: true },
   });
-  // The last school, so this does not edit the one other specs open first.
-  const targetSchool = await db.query.school.findFirst({
+  // The form needs the details a real school has, so the new school copies one of the hub.
+  const template = await db.query.school.findFirst({
     where: (s, { and, eq, isNull }) =>
-      and(
-        eq(s.hubId, coordinatorProfile?.assignedHubId ?? ""),
-        isNull(s.archivedAt),
-        isNull(s.droppedOutAt),
-      ),
-    columns: {
-      id: true,
-      schoolName: true,
-      numbersExpected: true,
-      boardingDay: true,
-      schoolType: true,
-    },
-    orderBy: (s, { desc }) => desc(s.visibleId),
+      and(eq(s.hubId, coordinatorProfile?.assignedHubId ?? ""), isNull(s.archivedAt)),
+    orderBy: (s, { asc }) => asc(s.visibleId),
   });
-  if (!targetSchool) throw new Error("seed the database first: the hub has no open school");
-  const { schoolName, id, ...originalFields } = targetSchool;
-  undo(() => db.update(school).set(originalFields).where(eq(school.id, id)));
-  // Four prod schools are Junior; the form must accept the stored type and save.
-  await db.update(school).set({ schoolType: "Junior" }).where(eq(school.id, id));
+  if (!template) throw new Error("seed the database first: the hub has no open school");
+  const suffix = Date.now();
+  const schoolName = `E2E School ${suffix}`;
+  const [targetSchool] = await db
+    .insert(school)
+    .values({
+      ...template,
+      id: `sch_e2e_${suffix}`,
+      visibleId: `E2E_SCH_${suffix}`,
+      schoolName,
+      // Four prod schools are Junior; the form must accept the stored type and save.
+      schoolType: "Junior",
+      droppedOut: false,
+      droppedOutAt: null,
+    })
+    .returning({ id: school.id, numbersExpected: school.numbersExpected });
+  if (!targetSchool) throw new Error("could not create the school");
+  undo(() => db.delete(school).where(eq(school.id, targetSchool.id)));
   const newNumbersExpected = String((targetSchool.numbersExpected ?? 0) + 1);
 
   await page.goto(getUrl("/hc/schools"));
