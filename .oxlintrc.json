@@ -120,6 +120,22 @@
       }
     },
     {
+      "files": ["proxy.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["#/db", "#/db/*", "#/app/auth", "#/lib/auth", "#/lib/auth/*"],
+                "message": "proxy.ts runs where the database is unreachable (Vercel middleware cannot reach RDS)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["next.config.js"],
       "rules": {
         "typescript/require-await": "off"
