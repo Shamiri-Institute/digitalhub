@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellow } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -15,8 +15,7 @@ type Fixture = {
 };
 let fixture: Fixture;
 
-test.beforeAll(async () => {
-  // A fellow with a unique name in the hub of a coordinator who can sign in.
+async function pickUniquelyNamedFellowInCoordinatorHub() {
   const {
     rows: [row],
   } = await db.execute<Fixture>(sql`
@@ -28,11 +27,16 @@ test.beforeAll(async () => {
     join fellows f on f.hub_id = hc.assigned_hub_id and f.fellow_name is not null
       and f.fellow_email is not null
     where ${signableMember()}
-      and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
+      and ${uniqueFellowName()}
       and exists (select 1 from implementer_members fm where fm.identifier = f.id and fm.role = 'FELLOW')
     order by f.id
     limit 1`);
   if (!row) throw new Error("seed the database first: no editable fellow for a coordinator");
+  return row;
+}
+
+test.beforeAll(async () => {
+  const row = await pickUniquelyNamedFellowInCoordinatorHub();
   fixture = row;
 });
 

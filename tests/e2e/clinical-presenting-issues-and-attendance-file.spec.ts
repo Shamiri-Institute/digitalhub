@@ -24,23 +24,8 @@ let caseOwner: CaseFixture;
 let clinicalCase: { caseId: string; pseudonym: string; remove: () => Promise<void> };
 let attendance: AttendanceFixture;
 
-test.beforeAll(async () => {
-  const {
-    rows: [caseRow],
-  } = await db.execute<CaseFixture>(sql`
-    select u.email, sv.id as "supervisorId", sc.id as "schoolId"
-    from supervisors sv
-    join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
-    join users u on u.id = m.user_id and u.email is not null
-    join schools sc on sc.hub_id = sv.hub_id and sc.archived_at is null
-    where ${signableMember()}
-      and exists (select 1 from intervention_groups g where g.school_id = sc.id)
-    order by sv.id desc, sc.id
-    limit 1`);
-  if (!caseRow) throw new Error("seed the database first: no supervisor with a school");
-  caseOwner = caseRow;
-
-  // "Upload attendance" opens only for an occurred session with at least 2 marked students.
+// "Upload attendance" opens only for an occurred session with at least 2 marked students.
+async function pickOccurredSessionWithTwoMarkedStudents() {
   const {
     rows: [attendanceRow],
   } = await db.execute<AttendanceFixture>(sql`
@@ -65,6 +50,26 @@ test.beforeAll(async () => {
       "seed the database first: no fellow with 2 students marked at an occurred session",
     );
   }
+  return attendanceRow;
+}
+
+test.beforeAll(async () => {
+  const {
+    rows: [caseRow],
+  } = await db.execute<CaseFixture>(sql`
+    select u.email, sv.id as "supervisorId", sc.id as "schoolId"
+    from supervisors sv
+    join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
+    join users u on u.id = m.user_id and u.email is not null
+    join schools sc on sc.hub_id = sv.hub_id and sc.archived_at is null
+    where ${signableMember()}
+      and exists (select 1 from intervention_groups g where g.school_id = sc.id)
+    order by sv.id desc, sc.id
+    limit 1`);
+  if (!caseRow) throw new Error("seed the database first: no supervisor with a school");
+  caseOwner = caseRow;
+
+  const attendanceRow = await pickOccurredSessionWithTwoMarkedStudents();
   attendance = {
     ...attendanceRow,
     sessionLabel: sessionDisplayName(attendanceRow.sessionLabel) ?? attendanceRow.sessionLabel,

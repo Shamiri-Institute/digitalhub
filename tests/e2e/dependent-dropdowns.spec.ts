@@ -2,15 +2,10 @@ import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { signInAs } from "#/tests/helpers";
+import { signInAs, uniqueFellowName } from "#/tests/helpers";
 import { getUrl, chooseRowAction } from "#/tests/pages/helpers";
 
-test("a hub coordinator picks a school and sees its groups in the move-school form", async ({
-  page,
-  context,
-}) => {
-  const coordinator = await signInAs(context, "HUB_COORDINATOR");
-  // A school of the hub with students, and another school of the hub with groups.
+async function pickSchoolWithStudentsAndSchoolWithGroups(coordinatorId: string | null) {
   const {
     rows: [fixture],
   } = await db.execute<{ fromVisibleId: string; toSchoolId: string; toSchoolName: string }>(sql`
@@ -18,13 +13,22 @@ test("a hub coordinator picks a school and sees its groups in the move-school fo
     from hub_coordinators hc
     join schools src on src.hub_id = hc.assigned_hub_id and src.archived_at is null
     join schools dst on dst.hub_id = hc.assigned_hub_id and dst.archived_at is null and dst.id <> src.id
-    where hc.id = ${coordinator.identifier}
+    where hc.id = ${coordinatorId}
       and exists (select 1 from students st where st.school_id = src.id)
       and exists (select 1 from intervention_groups g where g.school_id = dst.id and g.archived_at is null)
       and (select count(*) from schools o where o.school_name = dst.school_name) = 1
     order by src.visible_id, dst.visible_id
     limit 1`);
   if (!fixture) throw new Error("seed the database first: no hub with two schools and groups");
+  return fixture;
+}
+
+test("a hub coordinator picks a school and sees its groups in the move-school form", async ({
+  page,
+  context,
+}) => {
+  const coordinator = await signInAs(context, "HUB_COORDINATOR");
+  const fixture = await pickSchoolWithStudentsAndSchoolWithGroups(coordinator.identifier);
   const groups = await db.query.interventionGroup.findMany({
     where: (g, { and, eq, isNull }) =>
       and(eq(g.schoolId, fixture.toSchoolId), isNull(g.archivedAt)),
@@ -47,25 +51,33 @@ test("a hub coordinator picks a school and sees its groups in the move-school fo
   );
 });
 
-test("a supervisor picks a fellow and a group and sees the group's sessions", async ({
-  page,
-  context,
-}) => {
-  const supervisor = await signInAs(context, "SUPERVISOR");
-  // A fellow of the supervisor, with a unique name, who leads a group at a school with sessions.
+async function pickUniquelyNamedFellowLeadingGroupAtSchoolWithSessions(
+  supervisorId: string | null,
+) {
   const {
     rows: [fixture],
   } = await db.execute<{ fellowId: string; fellowName: string }>(sql`
     select f.id as "fellowId", f.fellow_name as "fellowName"
     from fellows f
-    where f.supervisor_id = ${supervisor.identifier} and f.fellow_name is not null
-      and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
+    where f.supervisor_id = ${supervisorId} and f.fellow_name is not null
+      and ${uniqueFellowName()}
       and exists (select 1 from intervention_groups g
         join intervention_sessions s on s.school_id = g.school_id and s.occurred
         where g.leader_id = f.id)
     order by f.id
     limit 1`);
   if (!fixture) throw new Error("seed the database first: no fellow who leads a group");
+  return fixture;
+}
+
+test("a supervisor picks a fellow and a group and sees the group's sessions", async ({
+  page,
+  context,
+}) => {
+  const supervisor = await signInAs(context, "SUPERVISOR");
+  const fixture = await pickUniquelyNamedFellowLeadingGroupAtSchoolWithSessions(
+    supervisor.identifier,
+  );
   const groups = await db.query.interventionGroup.findMany({
     where: (g, { eq }) => eq(g.leaderId, fixture.fellowId),
     columns: { groupName: true },

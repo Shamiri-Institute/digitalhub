@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowComplaints } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -14,6 +14,30 @@ const editedComplaint = `Edited complaint ${Date.now()}`;
 let supervisorEmail: string;
 let targetFellow: { fellowId: string; fellowName: string };
 let otherSupervisorEmail: string;
+
+// Same organisation, so the only reason the complaint is hidden is who supervises the fellow.
+async function pickSameOrgSupervisorOfOtherFellows(
+  implementerId: string,
+  excludedEmail: string,
+  fellowId: string,
+) {
+  const {
+    rows: [otherSupervisor],
+  } = await db.execute<{ email: string }>(sql`
+    select u.email
+    from implementer_members m
+    join users u on u.id = m.user_id and u.email is not null
+    join supervisors s on s.id = m.identifier
+    where m.role = 'SUPERVISOR' and m.implementer_id = ${implementerId}
+      and u.email <> ${excludedEmail}
+      and not exists (select 1 from fellows f where f.id = ${fellowId}
+        and f.supervisor_id = s.id)
+      and ${signableMember()}
+    order by u.email
+    limit 1`);
+  if (!otherSupervisor) throw new Error("No second supervisor in the same organisation");
+  return otherSupervisor;
+}
 
 test.beforeAll(async () => {
   const {
@@ -30,28 +54,17 @@ test.beforeAll(async () => {
     join implementer_members m on m.user_id = u.id and m.role = 'SUPERVISOR'
     join fellows f on f.supervisor_id = m.identifier and f.fellow_name is not null
     where u.email is not null and ${signableMember()}
-      and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
+      and ${uniqueFellowName()}
     order by u.email, f.id
     limit 1`);
   if (!supervisedFellow) throw new Error("seed the database first: no supervised fellow");
   supervisorEmail = supervisedFellow.email;
 
-  // Same organisation, so the only reason the complaint is hidden is who supervises the fellow.
-  const {
-    rows: [otherSupervisor],
-  } = await db.execute<{ email: string }>(sql`
-    select u.email
-    from implementer_members m
-    join users u on u.id = m.user_id and u.email is not null
-    join supervisors s on s.id = m.identifier
-    where m.role = 'SUPERVISOR' and m.implementer_id = ${supervisedFellow.implementerId}
-      and u.email <> ${supervisorEmail}
-      and not exists (select 1 from fellows f where f.id = ${supervisedFellow.fellowId}
-        and f.supervisor_id = s.id)
-      and ${signableMember()}
-    order by u.email
-    limit 1`);
-  if (!otherSupervisor) throw new Error("No second supervisor in the same organisation");
+  const otherSupervisor = await pickSameOrgSupervisorOfOtherFellows(
+    supervisedFellow.implementerId,
+    supervisorEmail,
+    supervisedFellow.fellowId,
+  );
 
   targetFellow = supervisedFellow;
   otherSupervisorEmail = otherSupervisor.email;

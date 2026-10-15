@@ -29,15 +29,15 @@ test.afterAll(async () => {
     .where(eq(interventionSession.id, fixture.sessionId));
 });
 
-test("marking a session in the list view keeps the visible range", async ({ page, context }) => {
-  // The seed leaves the past week unmarked at one school. Pick a session with no earlier unmarked
-  // session of its type, so the dialog lets the supervisor mark it.
-  ({
-    rows: [fixture],
+// The seed leaves the past week unmarked at one school. A session with no earlier unmarked
+// session of its type is one the dialog lets the supervisor mark.
+async function pickPastUnmarkedSessionWithNoEarlierUnmarked(viewerTimeZone: string) {
+  const {
+    rows: [row],
   } = await db.execute<Fixture>(sql`
     select u.email, i.id as "sessionId", n.session_name as "sessionName",
       s.school_name as "schoolName",
-      (i.session_date at time zone ${timeZone})::date::text as "localDate"
+      (i.session_date at time zone ${viewerTimeZone})::date::text as "localDate"
     from intervention_sessions i
     join session_names n on n.id = i.session_id
     join schools s on s.id = i.school_id and s.archived_at is null
@@ -51,7 +51,12 @@ test("marking a session in the list view keeps the visible range", async ({ page
         where p.school_id = s.id and not p.occurred and p.session_date < i.session_date
           and coalesce(p.status::text, '') <> 'Cancelled')
     order by i.session_date desc, i.id
-    limit 1`));
+    limit 1`);
+  return row;
+}
+
+test("marking a session in the list view keeps the visible range", async ({ page, context }) => {
+  fixture = await pickPastUnmarkedSessionWithNoEarlierUnmarked(timeZone);
   if (!fixture) throw new Error("seed the database first: no past unmarked session");
 
   await signInWithEmail(context, fixture.email);

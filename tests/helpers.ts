@@ -50,6 +50,18 @@ export function signableMember(alias = "m") {
       where h.implementer_id = ${member}.implementer_id and p.is_default)`;
 }
 
+export function uniqueFellowName(alias = "f") {
+  const fellow = sql.raw(alias);
+  return sql`(select count(*) from fellows o where o.fellow_name = ${fellow}.fellow_name) = 1`;
+}
+
+export function onlySessionAtSchoolThatWeek(alias = "i") {
+  const session = sql.raw(alias);
+  return sql`not exists (select 1 from intervention_sessions o
+    where o.school_id = ${session}.school_id and o.id <> ${session}.id
+      and abs(extract(epoch from o.session_date - ${session}.session_date)) < 7 * 24 * 3600)`;
+}
+
 /**
  * The email of the user behind a profile (a supervisor, hub coordinator, ...). Only users with one
  * membership qualify, so the session's active role is the one asked for.

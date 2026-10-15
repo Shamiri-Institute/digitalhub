@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { type SQL, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -24,7 +24,7 @@ async function pickFixture(from: SQL) {
     join users u on u.id = m.user_id and u.email is not null
     where ${signableMember()}
       and f.fellow_name is not null and length(f.id_number) >= 5 and length(f.mpesa_number) >= 5
-      and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
+      and ${uniqueFellowName()}
       -- The tables show phone numbers, and some seeded M-Pesa numbers equal one.
       and not exists (select 1 from fellows o
         where strpos(o.cell_number, f.id_number) > 0 or strpos(o.cell_number, f.mpesa_number) > 0)

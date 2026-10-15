@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { fellow, interventionGroupReport, sessionRecording } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -36,8 +36,7 @@ let evaluation: EvaluationFixture;
 let recording: RecordingFixture;
 let reassign: ReassignFixture;
 
-test.beforeAll(async () => {
-  // A group with no evaluations yet, and an occurred session whose name is unique at its school.
+async function pickUnevaluatedGroupWithUniquelyNamedOccurredSession() {
   const {
     rows: [ledGroup],
   } = await db.execute<EvaluationFixture>(sql`
@@ -58,6 +57,11 @@ test.beforeAll(async () => {
     order by u.email desc, g.id, i.session_date
     limit 1`);
   if (!ledGroup) throw new Error("seed the database first: no fellow group without evaluations");
+  return ledGroup;
+}
+
+test.beforeAll(async () => {
+  const ledGroup = await pickUnevaluatedGroupWithUniquelyNamedOccurredSession();
   evaluation = {
     ...ledGroup,
     sessionLabel: sessionDisplayName(ledGroup.sessionLabel) ?? ledGroup.sessionLabel,
@@ -99,7 +103,7 @@ test.beforeAll(async () => {
     join supervisors sv on sv.hub_id = h.id and sv.id <> f.supervisor_id
       and sv.supervisor_name is not null
     where ${signableMember()}
-      and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
+      and ${uniqueFellowName()}
       and (select count(*) from supervisors o
         where o.hub_id = sv.hub_id and o.supervisor_name = sv.supervisor_name) = 1
     order by u.email desc, f.id desc, sv.id

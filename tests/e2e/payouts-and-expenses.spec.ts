@@ -3,7 +3,7 @@ import { and, eq, gte, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowAttendance, payoutStatements, sessionName } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { onlySessionAtSchoolThatWeek, signableMember, signInWithEmail } from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -49,10 +49,9 @@ test.describe("fellow attendance", () => {
   let original: typeof fellowAttendance.$inferSelect;
   const startedAt = new Date();
 
-  test.beforeAll(async () => {
-    // An attended, unprocessed session marked for a fellow of a supervisor who can sign in. The
-    // fellow leads a group the UI lets them mark: a treatment group for an intervention session.
-    // It already has a payout statement, so marking it missed writes a reversal.
+  // The fellow leads a group the UI lets them mark: a treatment group for an intervention session.
+  // It already has a payout statement, so marking it missed writes a reversal.
+  async function pickAttendedUnprocessedSessionOfSignableSupervisor() {
     const {
       rows: [row],
     } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
@@ -75,6 +74,11 @@ test.describe("fellow attendance", () => {
       order by s.session_date desc, fa.id
       limit 1`);
     if (!row) throw new Error("seed the database first: no attended, paid, unprocessed attendance");
+    return row;
+  }
+
+  test.beforeAll(async () => {
+    const row = await pickAttendedUnprocessedSessionOfSignableSupervisor();
     fixture = { ...row, sessionDate: new Date(row.sessionDate) };
     const [attendance] = await db
       .select()
@@ -179,9 +183,7 @@ test.describe("bulk fellow attendance", () => {
   };
   let fixture: Fixture;
 
-  test.beforeAll(async () => {
-    // An occurred intervention session, the only one at its school that week, where a supervisor
-    // who can sign in has two fellows of their hub leading treatment groups and no attendance yet.
+  async function pickLoneSessionWithTwoUnmarkedFellows() {
     const {
       rows: [row],
     } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
@@ -203,14 +205,17 @@ test.describe("bulk fellow attendance", () => {
       where i.occurred and ${signableMember()}
         and not exists (
           select 1 from fellow_attendances fa where fa.session_id = i.id and fa.fellow_id = f.id)
-        and not exists (
-          select 1 from intervention_sessions o where o.school_id = i.school_id and o.id <> i.id
-            and abs(extract(epoch from o.session_date - i.session_date)) < 7 * 24 * 3600)
+        and ${onlySessionAtSchoolThatWeek()}
       group by i.id, i.session_date, sn.amount, s.school_name, u.email
       having count(distinct f.id) >= 2
       order by i.session_date desc, i.id, u.email
       limit 1`);
     if (!row) throw new Error("seed the database first: no session with two unmarked fellows");
+    return row;
+  }
+
+  test.beforeAll(async () => {
+    const row = await pickLoneSessionWithTwoUnmarkedFellows();
     fixture = { ...row, sessionDate: new Date(row.sessionDate) };
   });
 

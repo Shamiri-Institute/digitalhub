@@ -2,16 +2,11 @@ import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { signInAs } from "#/tests/helpers";
+import { onlySessionAtSchoolThatWeek, signInAs } from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
-test("an admin sees each fellow's group in the fellow attendance dialog", async ({
-  page,
-  context,
-}) => {
-  const admin = await signInAs(context, "ADMIN");
-  // An occurred session in the admin's organisation, the only one at its school that week, and
-  // the school's supervisor with the fellows who lead a named group there.
+// The school's supervisor must have fellows who lead a named group there.
+async function pickLoneOccurredSessionInAdminOrg(adminUserId: string) {
   const {
     rows: [session],
   } = await db.execute<{
@@ -30,16 +25,23 @@ test("an admin sees each fellow's group in the fellow attendance dialog", async 
     join supervisors sv on sv.id = s.assigned_supervisor_id and sv.supervisor_name is not null
     join intervention_sessions i on i.school_id = s.id and i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'
-    where m.user_id = ${admin.id} and m.role = 'ADMIN'
+    where m.user_id = ${adminUserId} and m.role = 'ADMIN'
       and exists (
         select 1 from intervention_groups g join fellows f on f.id = g.leader_id
         where g.school_id = s.id and f.supervisor_id = sv.id and g.group_name is not null)
-      and not exists (
-        select 1 from intervention_sessions o where o.school_id = i.school_id and o.id <> i.id
-          and abs(extract(epoch from o.session_date - i.session_date)) < 7 * 24 * 3600)
+      and ${onlySessionAtSchoolThatWeek()}
     order by i.session_date desc, i.id
     limit 1`);
   if (!session) throw new Error("seed the database first: no occurred session for the admin");
+  return session;
+}
+
+test("an admin sees each fellow's group in the fellow attendance dialog", async ({
+  page,
+  context,
+}) => {
+  const admin = await signInAs(context, "ADMIN");
+  const session = await pickLoneOccurredSessionInAdminOrg(admin.id);
   const { rows: expectedFellowGroups } = await db.execute<{
     fellowName: string;
     groupName: string;

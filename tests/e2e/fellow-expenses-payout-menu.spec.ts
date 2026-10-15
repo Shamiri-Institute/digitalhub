@@ -10,9 +10,8 @@ type Viewer = { path: string; email: string; fellowName: string; payouts: number
 
 const viewers: Partial<Record<"sc" | "ops", Viewer>> = {};
 
-test.beforeAll(async () => {
-  // Fellows with payouts in a default-project hub, whose name no other fellow shares.
-  const { rows: fellows } = await db.execute<{
+async function pickUniquelyNamedFellowsWithPayouts() {
+  const { rows } = await db.execute<{
     fellowName: string;
     payouts: number;
     supervisorId: string | null;
@@ -30,6 +29,11 @@ test.beforeAll(async () => {
         join fellow_attendances fa on fa.id = p.fellow_attendance_id
         where fa.fellow_id = f.id)
     order by payouts desc, f.id`);
+  return rows;
+}
+
+test.beforeAll(async () => {
+  const fellows = await pickUniquelyNamedFellowsWithPayouts();
 
   for (const fellow of fellows) {
     if (!viewers.sc && fellow.supervisorId) {
