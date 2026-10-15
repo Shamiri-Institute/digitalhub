@@ -2,7 +2,7 @@
 
 import { format, isBefore } from "date-fns";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useState, useTransition } from "react";
+import { type Dispatch, type SetStateAction, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema";
@@ -25,22 +25,44 @@ import { markSessionOccurrence } from "#/lib/actions/session/session";
 import { sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
-export function MarkSessionOccurrence({
-  children,
-  id,
-  isOpen,
-  setIsOpen,
-  defaultOccurrence,
-  sessions,
-}: {
+type Step = "form" | "confirm";
+type Props = {
   id?: string;
   children: React.ReactNode;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   defaultOccurrence?: boolean | null;
   sessions: Session[];
+};
+
+export function MarkSessionOccurrence({ isOpen, setIsOpen, ...props }: Props) {
+  const [step, setStep] = useState<Step>("form");
+  function close() {
+    setStep("form");
+    setIsOpen(false);
+  }
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => (open ? setIsOpen(true) : close())}>
+      <DialogContent className={step === "form" ? "w-2/5 max-w-none" : "w-1/3 max-w-none"}>
+        <MarkSessionOccurrenceSteps {...props} step={step} setStep={setStep} close={close} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MarkSessionOccurrenceSteps({
+  children,
+  id,
+  defaultOccurrence,
+  sessions,
+  step,
+  setStep,
+  close,
+}: Omit<Props, "isOpen" | "setIsOpen"> & {
+  step: Step;
+  setStep: (step: Step) => void;
+  close: () => void;
 }) {
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof MarkSessionOccurrenceSchema>>({
     resolver: zodResolver(MarkSessionOccurrenceSchema),
@@ -51,7 +73,7 @@ export function MarkSessionOccurrence({
   });
 
   const previousUnmarkedSessions = (() => {
-    if (!isOpen || !id) return [];
+    if (!id) return [];
     const activeSession = sessions.find((session) => session.id === id);
     if (!activeSession) return [];
     return sessions
@@ -67,19 +89,8 @@ export function MarkSessionOccurrence({
       .toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
   })();
 
-  // effect: resets the form to the session the parent selected when the dialog opens
-  useEffect(() => {
-    if (isOpen && id) {
-      form.reset({
-        sessionId: id,
-        occurrence: defaultOccurrence ? "attended" : "unmarked",
-      });
-    }
-  }, [isOpen, id, defaultOccurrence, form]);
-
   const onSubmit = () => {
-    setIsOpen(false);
-    setConfirmDialogOpen(true);
+    setStep("confirm");
   };
 
   const onConfirmSubmit = () => {
@@ -95,8 +106,7 @@ export function MarkSessionOccurrence({
           });
           return;
         }
-        setConfirmDialogOpen(false);
-        setIsOpen(false);
+        close();
         toast({
           description: response.message,
         });
@@ -104,147 +114,146 @@ export function MarkSessionOccurrence({
     );
   };
 
-  return (
-    <Form {...form}>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="w-2/5 max-w-none">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Mark session occurrence</DialogTitle>
-          </DialogHeader>
-          {children}
-          {previousUnmarkedSessions.length === 0 ? (
-            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
-              <FormField
-                control={form.control}
-                name="occurrence"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel>Select occurrence</FormLabel>
-                    <RadioGroup
-                      value={field.value}
-                      name="attended"
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                      }}
-                      className="grid grid-cols-2 gap-2"
-                    >
-                      <div className="relative">
-                        <CustomIndicator className="green" label={"Attended"} />
-                        <RadioGroupItem
-                          aria-label="Attended"
-                          value="attended"
-                          id="mark_attended"
-                          className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
-                        />
-                      </div>
-                      <div className="relative">
-                        <CustomIndicator className="blue" label={"Unmarked"} />
-                        <RadioGroupItem
-                          aria-label="Unmarked"
-                          value="unmarked"
-                          id="Unmarked_"
-                          className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
-                        />
-                      </div>
-                    </RadioGroup>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Separator />
-              <DialogFooter className="flex justify-end">
-                <Button
-                  className="text-shamiri-new-blue hover:bg-blue-bg"
-                  variant="ghost"
-                  onClick={() => {
-                    setIsOpen(false);
-                  }}
-                  type="button"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Submit</Button>
-              </DialogFooter>
-            </form>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-col">
-                <span>Unmarked sessions found</span>
-                <span className="text-muted-foreground">
-                  Please mark attendances for the following sessions before proceeding:
-                </span>
-              </div>
-              <div className="flex flex-col gap-2 py-2">
-                {previousUnmarkedSessions.map((session, index) => (
-                  <div
-                    // oxlint-disable-next-line react/no-array-index-key -- static display list
-                    key={index.toString()}
-                    className="flex items-center gap-x-2 rounded-lg border bg-background-secondary px-4 py-3"
-                  >
-                    <span>{sessionDisplayName(session.session?.sessionName)}</span>
-                    <span>- {session.school?.schoolName ?? session.venue} -</span>
-                    <span className="text-muted-foreground">
-                      {format(session.sessionDate, "dd/MM/yyyy - h:mm a")}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <Separator />
-              <div className="flex justify-end">
-                <Button
-                  variant="brand"
-                  onClick={() => {
-                    setIsOpen(false);
-                  }}
-                  type="button"
-                >
-                  Done
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent className="w-1/3 max-w-none">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Mark session occurrence</DialogTitle>
-          </DialogHeader>
-          {children}
-          <div className="flex flex-col gap-y-4">
-            <Separator />
-            <span>Are you sure?</span>
-            <div className="flex gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
-              <Icons.info className="mt-1 h-4 w-4 shrink-0 stroke-2" />
-              <div>
-                Once this change has been made it is irreversible and will need you to contact
-                support in order to modify. Please be sure of your action before you confirm.
-              </div>
+  if (step === "confirm") {
+    return (
+      <>
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">Mark session occurrence</DialogTitle>
+        </DialogHeader>
+        {children}
+        <div className="flex flex-col gap-y-4">
+          <Separator />
+          <span>Are you sure?</span>
+          <div className="flex gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
+            <Icons.info className="mt-1 h-4 w-4 shrink-0 stroke-2" />
+            <div>
+              Once this change has been made it is irreversible and will need you to contact support
+              in order to modify. Please be sure of your action before you confirm.
             </div>
           </div>
+        </div>
+        <Separator />
+        <div className="flex justify-end gap-4">
+          <Button
+            className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
+            variant="ghost"
+            type="button"
+            onClick={() => {
+              close();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={isPending}
+            loading={isPending}
+            onClick={onConfirmSubmit}
+          >
+            Confirm
+          </Button>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <Form {...form}>
+      <DialogHeader>
+        <DialogTitle className="text-lg font-bold">Mark session occurrence</DialogTitle>
+      </DialogHeader>
+      {children}
+      {previousUnmarkedSessions.length === 0 ? (
+        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+          <FormField
+            control={form.control}
+            name="occurrence"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>Select occurrence</FormLabel>
+                <RadioGroup
+                  value={field.value}
+                  name="attended"
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                  }}
+                  className="grid grid-cols-2 gap-2"
+                >
+                  <div className="relative">
+                    <CustomIndicator className="green" label={"Attended"} />
+                    <RadioGroupItem
+                      aria-label="Attended"
+                      value="attended"
+                      id="mark_attended"
+                      className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
+                    />
+                  </div>
+                  <div className="relative">
+                    <CustomIndicator className="blue" label={"Unmarked"} />
+                    <RadioGroupItem
+                      aria-label="Unmarked"
+                      value="unmarked"
+                      id="Unmarked_"
+                      className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
+                    />
+                  </div>
+                </RadioGroup>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <Separator />
-          <div className="flex justify-end gap-4">
+          <DialogFooter className="flex justify-end">
             <Button
-              className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
+              className="text-shamiri-new-blue hover:bg-blue-bg"
               variant="ghost"
-              type="button"
               onClick={() => {
-                setConfirmDialogOpen(false);
+                close();
               }}
+              type="button"
             >
               Cancel
             </Button>
+            <Button type="submit">Submit</Button>
+          </DialogFooter>
+        </form>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col">
+            <span>Unmarked sessions found</span>
+            <span className="text-muted-foreground">
+              Please mark attendances for the following sessions before proceeding:
+            </span>
+          </div>
+          <div className="flex flex-col gap-2 py-2">
+            {previousUnmarkedSessions.map((session, index) => (
+              <div
+                // oxlint-disable-next-line react/no-array-index-key -- static display list
+                key={index.toString()}
+                className="flex items-center gap-x-2 rounded-lg border bg-background-secondary px-4 py-3"
+              >
+                <span>{sessionDisplayName(session.session?.sessionName)}</span>
+                <span>- {session.school?.schoolName ?? session.venue} -</span>
+                <span className="text-muted-foreground">
+                  {format(session.sessionDate, "dd/MM/yyyy - h:mm a")}
+                </span>
+              </div>
+            ))}
+          </div>
+          <Separator />
+          <div className="flex justify-end">
             <Button
-              variant="destructive"
-              disabled={isPending}
-              loading={isPending}
-              onClick={onConfirmSubmit}
+              variant="brand"
+              onClick={() => {
+                close();
+              }}
+              type="button"
             >
-              Confirm
+              Done
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </Form>
   );
 }

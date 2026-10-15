@@ -847,3 +847,138 @@ test("student details, reporting note and school move start from each student's 
   await openFor(nameB, "Move to another school", move);
   await expect(destination).toContainText("Select a school");
 });
+
+async function expectDropoutDiscardedOnCancel(
+  page: Page,
+  open: () => Promise<void>,
+  title: string,
+  validationError: string,
+  cancelReturnsToForm = false,
+) {
+  const form = page.getByRole("dialog").filter({ hasText: title });
+  const reason = form.getByRole("combobox", { name: /^Select reason/ });
+  await open();
+  await reason.click();
+  await page.getByRole("option").first().click();
+  await form.getByRole("button", { name: "Submit" }).click();
+  const confirm = page.getByRole("dialog").filter({ hasText: "Confirm drop out" });
+  await expect(confirm.getByText("Are you sure?")).toBeVisible();
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toBeHidden();
+
+  if (cancelReturnsToForm) await expect(form).toBeVisible();
+  else await open();
+  await expect(reason).toContainText("Select a dropout reason");
+  await form.getByRole("button", { name: "Submit" }).click();
+  await expect(form.getByText(validationError)).toBeVisible();
+  await closeDialog(page, form);
+}
+
+test("supervisor drop-out discards the reason after cancelling the confirm", async ({
+  page,
+  context,
+}) => {
+  const fixture = await pickCoordinatorAndProfile("supervisors");
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl("/hc/supervisors"));
+  await expectDropoutDiscardedOnCancel(
+    page,
+    async () => chooseRowAction(page, await searchRows(page, fixture.name), "Drop out supervisor"),
+    "Drop out supervisor",
+    "Please select one of the supplied supervisor dropout reason options",
+  );
+});
+
+test("school drop-out discards the reason after cancelling the confirm", async ({
+  page,
+  context,
+}) => {
+  const fixture = await pickCoordinatorSchools();
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl("/hc/schools"));
+  await expectDropoutDiscardedOnCancel(
+    page,
+    async () => {
+      const row = await rowWithCell(page, page.getByRole("main"), fixture.schoolNames[0] ?? "");
+      await row.getByRole("cell").last().click();
+      await page.getByRole("menuitem", { name: "Dropout school" }).click();
+    },
+    "Drop out school",
+    "Please select one of the supplied school dropout reason options",
+    true,
+  );
+});
+
+test("student drop-out discards the reason after cancelling the confirm", async ({
+  page,
+  context,
+}) => {
+  const fixture = await pickCoordinatorStudents();
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/students`));
+  await expectDropoutDiscardedOnCancel(
+    page,
+    async () =>
+      chooseRowAction(
+        page,
+        await searchRows(page, fixture.studentNames[0] ?? "", page.getByRole("main")),
+        "Drop-out student",
+      ),
+    "Drop out student",
+    "Please select reason for drop out.",
+  );
+});
+
+test("session occurrence goes back to the saved state after cancelling the confirm", async ({
+  page,
+  context,
+}) => {
+  const {
+    rows: [fixture],
+  } = await db.execute<{ email: string; visibleId: string; sessionName: string }>(sql`
+    select u.email, s.visible_id as "visibleId", n.session_name as "sessionName"
+    from hub_coordinators hc
+    join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
+    join users u on u.id = m.user_id and u.email is not null
+    join schools s on s.hub_id = hc.assigned_hub_id and s.archived_at is null
+    join intervention_sessions i on i.school_id = s.id and not i.occurred
+      and coalesce(i.status::text, '') <> 'Cancelled'
+    join session_names n on n.id = i.session_id and n.session_type = 'INTERVENTION'
+    where ${signableMember()}
+      and (select count(*) from intervention_sessions o
+        where o.school_id = s.id and o.session_id = i.session_id) = 1
+      and not exists (select 1 from intervention_sessions p
+        join session_names pn on pn.id = p.session_id and pn.session_type = n.session_type
+        where p.school_id = s.id and not p.occurred and p.session_date < i.session_date
+          and coalesce(p.status::text, '') <> 'Cancelled')
+    order by u.email, s.visible_id, i.session_date
+    limit 1`);
+  if (!fixture) throw new Error("seed the database first: no markable session");
+
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/sessions`));
+  const main = page.getByRole("main");
+  const label = sessionDisplayName(fixture.sessionName) ?? fixture.sessionName;
+  const mark = page
+    .getByRole("dialog", { name: "Mark session occurrence" })
+    .filter({ hasNotText: "Are you sure?" });
+  async function open() {
+    await chooseRowAction(
+      page,
+      main.getByRole("row").filter({ has: page.getByRole("cell", { name: label, exact: true }) }),
+      "Mark session occurrence",
+    );
+    await expect(mark).toBeVisible();
+  }
+
+  await open();
+  await expect(mark.getByRole("radio", { name: "Unmarked" })).toBeChecked();
+  await mark.getByRole("radio", { name: "Attended" }).click();
+  await mark.getByRole("button", { name: "Submit" }).click();
+  const confirm = page.getByRole("dialog").filter({ hasText: "Are you sure?" });
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toBeHidden();
+
+  await open();
+  await expect(mark.getByRole("radio", { name: "Unmarked" })).toBeChecked();
+});
