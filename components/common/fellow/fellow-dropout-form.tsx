@@ -1,7 +1,7 @@
 import type { fellow as fellowTable, supervisor } from "#/db/schema";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
-import { type Dispatch, type SetStateAction, useEffect, useState, useTransition } from "react";
+import { type Dispatch, type SetStateAction, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
@@ -58,32 +58,23 @@ export default function FellowDropoutForm({
 
   const activeGroups = fellow.groups?.filter((group) => !group.archivedAt) ?? [];
 
+  const fellowValues = {
+    fellowId: fellow.id,
+    mode: fellow.droppedOut ? ("undo" as const) : ("dropout" as const),
+  };
   const form = useForm<z.infer<typeof DropoutFellowSchema>>({
     resolver: zodResolver(DropoutFellowSchema),
-    defaultValues: {
-      fellowId: fellow.id,
-      mode: fellow.droppedOut ? "undo" : "dropout",
-    },
+    values: fellowValues,
   });
+  // Once every group has a new leader or is archived, the replace step hands over to the confirm.
+  const groupsHandedOver = replaceDialog && activeGroups.length === 0;
 
-  // effect: resets the form to the fellow the parent selected when the dialog opens
-  useEffect(() => {
-    if (isOpen) {
-      form.reset({
-        fellowId: fellow.id,
-        mode: fellow.droppedOut ? "undo" : "dropout",
-      });
-    }
-  }, [fellow, isOpen, form]);
-
-  // effect: reacts to the group list shrinking after a replacement is saved
-  useEffect(() => {
-    if (activeGroups.length === 0 && replaceDialog) {
-      // oxlint-disable-next-line react/set-state-in-effect -- reacts to the group list shrinking after a replacement is saved; the dialog switch is not a user event in this component
-      setConfirmDialog(true);
-      setReplaceDialog(false);
-    }
-  }, [activeGroups.length, replaceDialog]);
+  function discardDropout() {
+    form.reset(fellowValues);
+    setIsOpen(false);
+    setConfirmDialog(false);
+    setReplaceDialog(false);
+  }
 
   function confirmSubmit() {
     if (activeGroups.length > 0 && form.getValues("mode") === "dropout") {
@@ -100,6 +91,7 @@ export default function FellowDropoutForm({
             description: response.message ?? "Something went wrong, please try again",
           });
           setConfirmDialog(false);
+          setReplaceDialog(false);
           return;
         }
         toast({
@@ -108,6 +100,7 @@ export default function FellowDropoutForm({
         form.reset();
         if (form.getValues("mode") === "dropout") {
           setConfirmDialog(false);
+          setReplaceDialog(false);
         } else {
           setIsOpen(false);
         }
@@ -142,7 +135,7 @@ export default function FellowDropoutForm({
 
   return (
     <Form {...form}>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={(open) => (open ? setIsOpen(true) : discardDropout())}>
         <DialogContent className="p-5 text-base font-medium leading-6">
           <DialogHeader>
             {fellow.droppedOut ? (
@@ -191,9 +184,7 @@ export default function FellowDropoutForm({
                 )}
                 variant="ghost"
                 type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                }}
+                onClick={discardDropout}
               >
                 Cancel
               </Button>
@@ -210,7 +201,10 @@ export default function FellowDropoutForm({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={confirmDialog} onOpenChange={setConfirmDialog}>
+      <Dialog
+        open={confirmDialog || groupsHandedOver}
+        onOpenChange={(open) => (open ? setConfirmDialog(true) : discardDropout())}
+      >
         <DialogContent className="p-5">
           <DialogHeader>
             <h2 className="text-lg font-bold">Confirm drop out</h2>
@@ -231,9 +225,7 @@ export default function FellowDropoutForm({
             <Button
               className="text-shamiri-light-red hover:bg-red-bg"
               variant="ghost"
-              onClick={() => {
-                setConfirmDialog(false);
-              }}
+              onClick={discardDropout}
             >
               Cancel
             </Button>
@@ -252,7 +244,10 @@ export default function FellowDropoutForm({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={replaceDialog} onOpenChange={setReplaceDialog}>
+      <Dialog
+        open={replaceDialog && !groupsHandedOver}
+        onOpenChange={(open) => (open ? setReplaceDialog(true) : discardDropout())}
+      >
         <DialogContent className="min-h-[200px] w-5/6 max-w-none p-5 lg:w-2/5">
           <DialogHeader>
             <h2 className="text-lg font-bold">Replace fellow</h2>
@@ -294,12 +289,7 @@ export default function FellowDropoutForm({
           </div>
           <Separator />
           <DialogFooter className="flex justify-end">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setReplaceDialog(false);
-              }}
-            >
+            <Button variant="ghost" onClick={discardDropout}>
               Cancel
             </Button>
           </DialogFooter>
