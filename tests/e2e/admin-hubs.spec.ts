@@ -218,100 +218,105 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
   });
   if (!created) throw new Error("the hub was not created");
 
-  // A session now uses sv6. Sessions are not scheduled from this page, so the spec inserts one.
-  const sv6 = await db.query.sessionName.findFirst({
-    where: (n, { and, eq }) => and(eq(n.hubId, created.id), eq(n.sessionName, "sv6")),
-    columns: { id: true },
+  await test.step("a type that a session uses stays while others are added and removed", async () => {
+    // Sessions are not scheduled from this page, so the spec inserts one.
+    const sv6 = await db.query.sessionName.findFirst({
+      where: (n, { and, eq }) => and(eq(n.hubId, created.id), eq(n.sessionName, "sv6")),
+      columns: { id: true },
+    });
+    await db.insert(interventionSession).values({
+      id: objectId("session"),
+      hubId: created.id,
+      sessionId: sv6?.id,
+      projectId: created.projectId,
+      occurred: false,
+      yearOfImplementation: new Date().getFullYear(),
+      sessionDate: new Date(),
+    });
+
+    await page.reload();
+    const row = (await searchRows(page, hubName)).first();
+    await row.locator('[aria-haspopup="menu"]').click();
+    await page.getByRole("menuitem", { name: "Edit hub details", exact: true }).click();
+    const editDialog = page.getByRole("dialog");
+    await editDialog.getByRole("button", { name: /Supervision sessions/ }).click();
+    await expect(editDialog.getByRole("button", { name: "Remove sv6" })).toHaveCount(0);
+    await expect(
+      editDialog.getByText("sv6 is used by 1 session, so it cannot be removed."),
+    ).toBeVisible();
+
+    await editDialog.getByRole("button", { name: /Clinical sessions/ }).click();
+    await editDialog.getByRole("button", { name: "Add clinical session" }).click();
+    await expect(editDialog.getByLabel("cl1 label")).toHaveValue("Clinical 1");
+    await editDialog.getByRole("button", { name: /Intervention sessions/ }).click();
+    await editDialog.getByRole("button", { name: "Remove s3" }).click();
+    await editDialog.getByRole("button", { name: "Save" }).click();
+    const saveConfirm = page.getByRole("dialog", { name: "Save changes to hub?" });
+    await expect(saveConfirm).toContainText("2 session types will change");
+    await saveConfirm.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+
+    const editedCodes = await codesInEditDialog(page, hubName);
+    expect(editedCodes).toContain("cl1");
+    expect(editedCodes).toContain("sv6");
+    expect(editedCodes).not.toContain("s3");
+    expect(editedCodes).toContain("s2");
   });
-  await db.insert(interventionSession).values({
-    id: objectId("session"),
-    hubId: created.id,
-    sessionId: sv6?.id,
-    projectId: created.projectId,
-    occurred: false,
-    yearOfImplementation: new Date().getFullYear(),
-    sessionDate: new Date(),
+
+  await test.step("a form opened before another admin saved cannot save", async () => {
+    const staleDialog = await openEditDialog(page, hubName);
+    const other = await context.newPage();
+    const otherDialog = await openEditDialog(other, hubName);
+    await otherDialog.getByRole("button", { name: /Training sessions/ }).click();
+    await otherDialog.getByRole("button", { name: "Add training session" }).click();
+    await otherDialog.getByRole("button", { name: "Save" }).click();
+    await other
+      .getByRole("dialog", { name: "Save changes to hub?" })
+      .getByRole("button", { name: "Save changes" })
+      .click();
+    await expect(other.getByRole("dialog")).toHaveCount(0);
+    await other.close();
+    await staleDialog.getByLabel("Hub name").fill(`${hubName} renamed`);
+    await staleDialog.getByRole("button", { name: "Save" }).click();
+    await page
+      .getByRole("dialog", { name: "Save changes to hub?" })
+      .getByRole("button", { name: "Save changes" })
+      .click();
+    await expect(
+      page.getByText("This hub's session types changed since you opened it").first(),
+    ).toBeVisible();
+    await staleDialog.getByRole("button", { name: "Cancel" }).click();
+    expect(await codesInEditDialog(page, hubName)).toContain("t6");
   });
 
-  await page.reload();
-  const row = (await searchRows(page, hubName)).first();
-  await row.locator('[aria-haspopup="menu"]').click();
-  await page.getByRole("menuitem", { name: "Edit hub details", exact: true }).click();
-  const editDialog = page.getByRole("dialog");
-  await editDialog.getByRole("button", { name: /Supervision sessions/ }).click();
-  await expect(editDialog.getByRole("button", { name: "Remove sv6" })).toHaveCount(0);
-  await expect(
-    editDialog.getByText("sv6 is used by 1 session, so it cannot be removed."),
-  ).toBeVisible();
-
-  await editDialog.getByRole("button", { name: /Clinical sessions/ }).click();
-  await editDialog.getByRole("button", { name: "Add clinical session" }).click();
-  await expect(editDialog.getByLabel("cl1 label")).toHaveValue("Clinical 1");
-  await editDialog.getByRole("button", { name: /Intervention sessions/ }).click();
-  await editDialog.getByRole("button", { name: "Remove s3" }).click();
-  await editDialog.getByRole("button", { name: "Save" }).click();
-  const saveConfirm = page.getByRole("dialog", { name: "Save changes to hub?" });
-  await expect(saveConfirm).toContainText("2 session types will change");
-  await saveConfirm.getByRole("button", { name: "Save changes" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-
-  const editedCodes = await codesInEditDialog(page, hubName);
-  expect(editedCodes).toContain("cl1");
-  expect(editedCodes).toContain("sv6");
-  expect(editedCodes).not.toContain("s3");
-  expect(editedCodes).toContain("s2");
-
-  const staleDialog = await openEditDialog(page, hubName);
-  const other = await context.newPage();
-  const otherDialog = await openEditDialog(other, hubName);
-  await otherDialog.getByRole("button", { name: /Training sessions/ }).click();
-  await otherDialog.getByRole("button", { name: "Add training session" }).click();
-  await otherDialog.getByRole("button", { name: "Save" }).click();
-  await other
-    .getByRole("dialog", { name: "Save changes to hub?" })
-    .getByRole("button", { name: "Save changes" })
-    .click();
-  await expect(other.getByRole("dialog")).toHaveCount(0);
-  await other.close();
-  await staleDialog.getByLabel("Hub name").fill(`${hubName} renamed`);
-  await staleDialog.getByRole("button", { name: "Save" }).click();
-  await page
-    .getByRole("dialog", { name: "Save changes to hub?" })
-    .getByRole("button", { name: "Save changes" })
-    .click();
-  await expect(
-    page.getByText("This hub's session types changed since you opened it").first(),
-  ).toBeVisible();
-  await staleDialog.getByRole("button", { name: "Cancel" }).click();
-  expect(await codesInEditDialog(page, hubName)).toContain("t6");
-
-  // A session starts using s2 after the form opened, so only the server can refuse the removal.
-  const removeDialog = await openEditDialog(page, hubName);
-  const s2 = await db.query.sessionName.findFirst({
-    where: (n, { and, eq }) => and(eq(n.hubId, created.id), eq(n.sessionName, "s2")),
-    columns: { id: true },
+  await test.step("the server refuses to remove a type that a session starts using after the form opened", async () => {
+    const removeDialog = await openEditDialog(page, hubName);
+    const s2 = await db.query.sessionName.findFirst({
+      where: (n, { and, eq }) => and(eq(n.hubId, created.id), eq(n.sessionName, "s2")),
+      columns: { id: true },
+    });
+    await db.insert(interventionSession).values({
+      id: objectId("session"),
+      hubId: created.id,
+      sessionId: s2?.id,
+      projectId: created.projectId,
+      occurred: false,
+      yearOfImplementation: new Date().getFullYear(),
+      sessionDate: new Date(),
+    });
+    await removeDialog.getByRole("button", { name: /Intervention sessions/ }).click();
+    await removeDialog.getByRole("button", { name: "Remove s2" }).click();
+    await removeDialog.getByRole("button", { name: "Save" }).click();
+    await page
+      .getByRole("dialog", { name: "Save changes to hub?" })
+      .getByRole("button", { name: "Save changes" })
+      .click();
+    await expect(
+      page.getByText("A session type you removed already has intervention sessions").first(),
+    ).toBeVisible();
+    await removeDialog.getByRole("button", { name: "Cancel" }).click();
+    expect(await codesInEditDialog(page, hubName)).toContain("s2");
   });
-  await db.insert(interventionSession).values({
-    id: objectId("session"),
-    hubId: created.id,
-    sessionId: s2?.id,
-    projectId: created.projectId,
-    occurred: false,
-    yearOfImplementation: new Date().getFullYear(),
-    sessionDate: new Date(),
-  });
-  await removeDialog.getByRole("button", { name: /Intervention sessions/ }).click();
-  await removeDialog.getByRole("button", { name: "Remove s2" }).click();
-  await removeDialog.getByRole("button", { name: "Save" }).click();
-  await page
-    .getByRole("dialog", { name: "Save changes to hub?" })
-    .getByRole("button", { name: "Save changes" })
-    .click();
-  await expect(
-    page.getByText("A session type you removed already has intervention sessions").first(),
-  ).toBeVisible();
-  await removeDialog.getByRole("button", { name: "Cancel" }).click();
-  expect(await codesInEditDialog(page, hubName)).toContain("s2");
 });
 
 const SESSION_GROUPS = [
