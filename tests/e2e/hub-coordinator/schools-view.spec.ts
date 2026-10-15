@@ -73,12 +73,20 @@ test("Hub Coordinator edits a school in one dialog", async ({ page, context, und
         isNull(s.archivedAt),
         isNull(s.droppedOutAt),
       ),
-    columns: { id: true, schoolName: true, numbersExpected: true, boardingDay: true },
+    columns: {
+      id: true,
+      schoolName: true,
+      numbersExpected: true,
+      boardingDay: true,
+      schoolType: true,
+    },
     orderBy: (s, { desc }) => desc(s.visibleId),
   });
   if (!targetSchool) throw new Error("seed the database first: the hub has no open school");
   const { schoolName, id, ...originalFields } = targetSchool;
   undo(() => db.update(school).set(originalFields).where(eq(school.id, id)));
+  // Four prod schools are Junior; the form must accept the stored type and save.
+  await db.update(school).set({ schoolType: "Junior" }).where(eq(school.id, id));
   const newNumbersExpected = String((targetSchool.numbersExpected ?? 0) + 1);
 
   await page.goto(getUrl("/hc/schools"));

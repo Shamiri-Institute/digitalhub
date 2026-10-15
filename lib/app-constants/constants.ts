@@ -79,6 +79,7 @@ export const SCHOOL_TYPES = [
   "Extra-county",
   "Community",
   "National",
+  "Junior",
 ] as const;
 
 // https://github.com/Mondieki/kenya-counties-subcounties/blob/master/counties.json
