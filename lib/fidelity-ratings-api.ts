@@ -57,30 +57,25 @@ const fidelityDispatcher = new Agent({
   },
 });
 
-function getConfig() {
-  const { FIDELITY_API_URL: baseUrl, RECORDINGS_API_KEY: apiKey } = env;
-  if (!baseUrl || !apiKey) {
-    throw new Error(
-      "Missing Fidelity API configuration: set FIDELITY_API_URL and RECORDINGS_API_KEY.",
-    );
-  }
-  return { baseUrl: baseUrl.replace(/\/$/, ""), apiKey };
-}
-
 /**
  * Submit recordings for processing.
  * Returns immediately with a job_id, does NOT wait for processing to complete.
  * The Fidelity API will call the completion_webhook_url when done.
  */
 export async function createJob(request: CreateJobRequest): Promise<JobResponse> {
-  const config = getConfig();
+  const { FIDELITY_API_URL: baseUrl, RECORDINGS_API_KEY: apiKey } = env;
+  if (!baseUrl || !apiKey) {
+    throw new Error(
+      "Missing Fidelity API configuration: set FIDELITY_API_URL and RECORDINGS_API_KEY.",
+    );
+  }
 
   try {
-    const response = await fetch(`${config.baseUrl}/jobs`, {
+    const response = await fetch(`${baseUrl.replace(/\/$/, "")}/jobs`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-API-Key": config.apiKey,
+        "X-API-Key": apiKey,
       },
       body: JSON.stringify(request),
       signal: AbortSignal.timeout(30_000),
