@@ -3,7 +3,7 @@
 import type { interventionSession, sessionName } from "#/db/schema";
 import { addHours, format } from "date-fns";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useEffectEvent } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
@@ -47,23 +47,7 @@ type Attendance = {
   comments?: string | null;
 };
 
-export function MarkAttendance({
-  title,
-  children,
-  sessions,
-  attendances,
-  id,
-  isOpen,
-  setIsOpen,
-  markAttendanceAction,
-  markBulkAttendanceAction,
-  selectedSessionId,
-  sessionMode = "many",
-  bulkMode = false,
-  setBulkMode,
-  selectedIds,
-  onSuccess,
-}: {
+type MarkAttendanceProps = {
   id?: string;
   title: string;
   children: React.ReactNode;
@@ -90,18 +74,50 @@ export function MarkAttendance({
   setBulkMode?: Dispatch<SetStateAction<boolean>>;
   selectedIds?: string[];
   onSuccess?: () => void;
-}) {
+};
+
+export function MarkAttendance(props: MarkAttendanceProps) {
+  return (
+    <Dialog
+      open={props.isOpen}
+      onOpenChange={(open) => {
+        if (!open) props.setBulkMode?.(false);
+        props.setIsOpen(open);
+      }}
+    >
+      <DialogContent className="lg:w-2/5 lg:max-w-none">
+        <MarkAttendanceContent {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MarkAttendanceContent({
+  title,
+  children,
+  sessions,
+  attendances,
+  id,
+  setIsOpen,
+  markAttendanceAction,
+  markBulkAttendanceAction,
+  selectedSessionId,
+  sessionMode = "many",
+  bulkMode = false,
+  setBulkMode,
+  selectedIds,
+  onSuccess,
+}: MarkAttendanceProps) {
   const selectableSessions = (sessions ?? [])
     .filter((session) => session.occurred)
     .toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
 
   const form = useForm<z.infer<typeof MarkAttendanceSchema>>({
     resolver: zodResolver(MarkAttendanceSchema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues(selectedSessionId),
   });
 
   const statusWatcher = form.watch("attended");
-  const sessionIdWatcher = form.watch("sessionId");
 
   function getDefaultValues(sessionId?: string) {
     const defaultSession = sessionId || selectableSessions.at(-1)?.id;
@@ -118,26 +134,10 @@ export function MarkAttendance({
     };
   }
 
-  const resetForOpenState = useEffectEvent(() => {
-    form.reset(getDefaultValues(sessionIdWatcher));
-    if (!isOpen) {
-      setBulkMode?.(false);
-    }
-  });
-
-  // effect: resets the form when the parent changes sessions, attendances or open state, or the watched session changes
-  useEffect(() => {
-    resetForOpenState();
-  }, [sessions, id, form, isOpen, attendances, sessionIdWatcher]);
-
-  const resetForSelectedSession = useEffectEvent(() => {
-    form.reset(getDefaultValues(selectedSessionId));
-  });
-
-  // effect: resets the form when the parent preselects a session
-  useEffect(() => {
-    resetForSelectedSession();
-  }, [selectedSessionId]);
+  function close() {
+    setBulkMode?.(false);
+    setIsOpen(false);
+  }
 
   const onSubmit = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     let response:
@@ -164,7 +164,7 @@ export function MarkAttendance({
     });
 
     onSuccess?.();
-    setIsOpen(false);
+    close();
   };
 
   function getAttendanceStatus(attendance: Attendance) {
@@ -182,197 +182,192 @@ export function MarkAttendance({
 
   return (
     <Form {...form}>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="lg:w-2/5 lg:max-w-none">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
-          </DialogHeader>
-          {children}
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
-            {sessionMode === "many" && (
-              <FormField
-                control={form.control}
-                name="sessionId"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel>Select session</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a session" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {selectableSessions.map((session) => {
-                          const time = `${format(session.sessionDate, "h:mm")} - ${format(
-                            session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
-                            "h:mm a",
-                          )}`;
-                          return (
-                            <SelectItem key={session.id} value={session.id}>
-                              <div className="flex items-center gap-2">
-                                <span>
-                                  {sessionDisplayName(session.session?.sessionName ?? "")}
-                                </span>
-                                <span>-</span>
-                                <span>{format(new Date(session.sessionDate), "dd MMM yyyy")}</span>
-                                <span className="h-1 w-1 rounded-full bg-black" />
-                                <span>{time}</span>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <DialogHeader>
+        <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
+      </DialogHeader>
+      {children}
+      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+        {sessionMode === "many" && (
+          <FormField
+            control={form.control}
+            name="sessionId"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>Select session</FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    form.reset(getDefaultValues(value));
+                  }}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a session" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {selectableSessions.map((session) => {
+                      const time = `${format(session.sessionDate, "h:mm")} - ${format(
+                        session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
+                        "h:mm a",
+                      )}`;
+                      return (
+                        <SelectItem key={session.id} value={session.id}>
+                          <div className="flex items-center gap-2">
+                            <span>{sessionDisplayName(session.session?.sessionName ?? "")}</span>
+                            <span>-</span>
+                            <span>{format(new Date(session.sessionDate), "dd MMM yyyy")}</span>
+                            <span className="h-1 w-1 rounded-full bg-black" />
+                            <span>{time}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
             )}
+          />
+        )}
+        <FormField
+          control={form.control}
+          name="attended"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Select attendance</FormLabel>
+              <RadioGroup
+                defaultValue={field.value}
+                value={field.value}
+                name="attended"
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  form.setValue("comments", undefined);
+                  form.setValue("absenceReason", undefined);
+                }}
+                className="grid grid-cols-2 gap-2 lg:grid-cols-3"
+              >
+                <div className="relative">
+                  <CustomIndicator className="green" label={"Attended"} />
+                  <RadioGroupItem
+                    aria-label="Attended"
+                    value="attended"
+                    id="mark_attended"
+                    className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
+                  />
+                </div>
+                <div className="relative">
+                  <CustomIndicator className="red" label={"Missed"} />
+                  <RadioGroupItem
+                    aria-label="Missed"
+                    value="missed"
+                    id="mark_missed"
+                    className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-red"
+                  />
+                </div>
+                <div className="relative">
+                  <CustomIndicator className="blue" label={"Unmarked"} />
+                  <RadioGroupItem
+                    aria-label="Unmarked"
+                    value="unmarked"
+                    id="Unmarked_"
+                    className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
+                  />
+                </div>
+              </RadioGroup>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {statusWatcher === "missed" && (
+          <div className="space-y-5">
             <FormField
               control={form.control}
-              name="attended"
+              name="absenceReason"
               render={({ field }) => (
                 <FormItem className="space-y-2">
-                  <FormLabel>Select attendance</FormLabel>
-                  <RadioGroup
-                    defaultValue={field.value}
-                    value={field.value}
-                    name="attended"
+                  <FormLabel>Select reason for above</FormLabel>
+                  <Select
                     onValueChange={(value) => {
                       field.onChange(value);
-                      form.setValue("comments", undefined);
-                      form.setValue("absenceReason", undefined);
                     }}
-                    className="grid grid-cols-2 gap-2 lg:grid-cols-3"
+                    defaultValue={field.value}
                   >
-                    <div className="relative">
-                      <CustomIndicator className="green" label={"Attended"} />
-                      <RadioGroupItem
-                        aria-label="Attended"
-                        value="attended"
-                        id="mark_attended"
-                        className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
-                      />
-                    </div>
-                    <div className="relative">
-                      <CustomIndicator className="red" label={"Missed"} />
-                      <RadioGroupItem
-                        aria-label="Missed"
-                        value="missed"
-                        id="mark_missed"
-                        className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-red"
-                      />
-                    </div>
-                    <div className="relative">
-                      <CustomIndicator className="blue" label={"Unmarked"} />
-                      <RadioGroupItem
-                        aria-label="Unmarked"
-                        value="unmarked"
-                        id="Unmarked_"
-                        className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
-                      />
-                    </div>
-                  </RadioGroup>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a reason" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[200px]">
+                      {[
+                        "School fees",
+                        "Sickness",
+                        "Suspension",
+                        "School transfer",
+                        "Group transfer",
+                        "Other priorities",
+                        "Mistrust",
+                        "Other reason",
+                      ].map((reason) => {
+                        return (
+                          <SelectItem key={reason} value={reason}>
+                            {reason}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {statusWatcher === "missed" && (
-              <div className="space-y-5">
-                <FormField
-                  control={form.control}
-                  name="absenceReason"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel>Select reason for above</FormLabel>
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                        }}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a reason" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="max-h-[200px]">
-                          {[
-                            "School fees",
-                            "Sickness",
-                            "Suspension",
-                            "School transfer",
-                            "Group transfer",
-                            "Other priorities",
-                            "Mistrust",
-                            "Other reason",
-                          ].map((reason) => {
-                            return (
-                              <SelectItem key={reason} value={reason}>
-                                {reason}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="comments"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel>Additional comments</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="" className="resize-none" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
             <FormField
               control={form.control}
-              name="id"
+              name="comments"
               render={({ field }) => (
-                <FormItem>
-                  <Input id="id" name="id" type="hidden" value={field.value} />
+                <FormItem className="space-y-2">
+                  <FormLabel>Additional comments</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="" className="resize-none" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Separator />
-            <DialogFooter className="flex justify-end">
-              <Button
-                className="text-shamiri-new-blue hover:bg-blue-bg"
-                variant="ghost"
-                onClick={() => {
-                  setIsOpen(false);
-                }}
-                type="button"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
-                Submit
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </div>
+        )}
+        <FormField
+          control={form.control}
+          name="id"
+          render={({ field }) => (
+            <FormItem>
+              <Input id="id" name="id" type="hidden" value={field.value} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Separator />
+        <DialogFooter className="flex justify-end">
+          <Button
+            className="text-shamiri-new-blue hover:bg-blue-bg"
+            variant="ghost"
+            onClick={() => {
+              close();
+            }}
+            type="button"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            loading={form.formState.isSubmitting}
+          >
+            Submit
+          </Button>
+        </DialogFooter>
+      </form>
     </Form>
   );
 }

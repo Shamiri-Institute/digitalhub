@@ -982,3 +982,56 @@ test("session occurrence goes back to the saved state after cancelling the confi
   await open();
   await expect(mark.getByRole("radio", { name: "Unmarked" })).toBeChecked();
 });
+
+test("mark attendance shows each session's saved status on reopen and after switching sessions", async ({
+  page,
+  context,
+}) => {
+  const {
+    rows: [fixture],
+  } = await db.execute<{ email: string; visibleId: string; supervisorName: string }>(sql`
+    select u.email, sc.visible_id as "visibleId", sv.supervisor_name as "supervisorName"
+    from hub_coordinators hc
+    join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
+    join users u on u.id = m.user_id and u.email is not null
+    join schools sc on sc.hub_id = hc.assigned_hub_id and sc.archived_at is null
+    join supervisors sv on sv.id = sc.assigned_supervisor_id and sv.supervisor_name is not null
+    where ${signableMember()}
+      and (select count(*) from intervention_sessions i where i.school_id = sc.id and i.occurred) >= 2
+    order by u.email, sc.visible_id
+    limit 1`);
+  if (!fixture) throw new Error("seed the database first: no school with two occurred sessions");
+
+  await signInWithEmail(context, fixture.email);
+  await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/supervisors`));
+  const row = page.getByRole("row").filter({ hasText: fixture.supervisorName }).first();
+  const dialog = page.getByRole("dialog").filter({ hasText: "Select attendance" });
+  const session = dialog.getByRole("combobox", { name: /^Select session/ });
+  async function checkedStatus() {
+    for (const name of ["Attended", "Missed", "Unmarked"]) {
+      if (await dialog.getByRole("radio", { name }).isChecked()) return name;
+    }
+    return null;
+  }
+  async function open() {
+    await chooseRowAction(page, row, "Mark attendance");
+    await expect(dialog).toBeVisible();
+  }
+
+  await open();
+  const savedSession = (await session.textContent()) ?? "";
+  const saved = await checkedStatus();
+  const other = saved === "Missed" ? "Attended" : "Missed";
+  await dialog.getByRole("radio", { name: other }).click();
+  await closeDialog(page, dialog);
+
+  await open();
+  await expect(session).toHaveText(savedSession);
+  expect(await checkedStatus()).toBe(saved);
+  await dialog.getByRole("radio", { name: other }).click();
+  await session.click();
+  await page.getByRole("option").first().click();
+  await session.click();
+  await page.getByRole("option").last().click();
+  expect(await checkedStatus()).toBe(saved);
+});
