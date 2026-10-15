@@ -17,6 +17,13 @@ const schema = z.object({
   // TODO: make this required once S3_STUDENT_ATTENDANCE_BUCKET is set in all environments
   S3_STUDENT_ATTENDANCE_BUCKET: z.string().default(""),
   S3_STUDENT_ATTENDANCE_REGION: z.string().default("af-south-1"),
+
+  FIDELITY_API_URL: z.url().optional(),
+  // The fidelity service sends it to our recording webhooks, and we send it to the service.
+  RECORDINGS_API_KEY: z.string().optional(),
+
+  METABASE_SECRET_KEY: z.string().optional(),
+  METABASE_MONITORING_DASHBOARD_ID: z.coerce.number().int().positive().optional(),
 });
 
 export const env = process.env.CI

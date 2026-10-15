@@ -1,25 +1,17 @@
 import jwt from "jsonwebtoken";
 
+import { env } from "#/env";
+
 const METABASE_SITE_URL = "https://dash.shamiri.institute";
 const EMBED_FRAGMENT = "bordered=true&titled=true";
 const TOKEN_EXPIRY_SECONDS = 10 * 60;
 
 export type MetabaseEmbedParams = Record<string, string[]>;
 
-export function getMetabaseMonitoringDashboardId(): number | null {
-  const raw = process.env.METABASE_MONITORING_DASHBOARD_ID ?? "";
-  const id = Number.parseInt(raw, 10);
-  if (Number.isNaN(id) || id < 1) return null;
-  return id;
-}
-
-export function getMetabaseEmbedConfig(): {
-  secretKey: string | undefined;
-  dashboardId: number | null;
-} {
+export function getMetabaseEmbedConfig() {
   return {
-    secretKey: process.env.METABASE_SECRET_KEY,
-    dashboardId: getMetabaseMonitoringDashboardId(),
+    secretKey: env.METABASE_SECRET_KEY,
+    dashboardId: env.METABASE_MONITORING_DASHBOARD_ID ?? null,
   };
 }
 

@@ -8,7 +8,9 @@
  * via webhook callbacks. Both transcript and fidelity_ratings are included in results.
  */
 
-import { Agent } from "undici";
+import { Agent, fetch } from "undici";
+
+import { env } from "#/env";
 
 export type FidelityRecording = {
   id: string;
@@ -49,42 +51,20 @@ export type JobResponse = {
   result?: JobResult; // only present when status is "completed"
 };
 
-type FidelityConfig = {
-  baseUrl: string;
-  apiKey: string;
-};
-
-let _config: FidelityConfig | null = null;
-
 const fidelityDispatcher = new Agent({
   connect: {
     rejectUnauthorized: false,
   },
 });
 
-/**
- * Initialize the Fidelity client configuration.
- * Lazily called on first API request to avoid crashing at import time.
- */
-function getConfig(): FidelityConfig {
-  if (!_config) {
-    const baseUrl = process.env.FIDELITY_API_URL;
-    const apiKey = process.env.RECORDINGS_API_KEY;
-
-    if (!baseUrl || !apiKey) {
-      throw new Error(
-        "Missing Fidelity API configuration. Ensure FIDELITY_API_URL and " +
-          "RECORDINGS_API_KEY environment variables are set.",
-      );
-    }
-
-    _config = {
-      baseUrl: baseUrl.replace(/\/$/, ""),
-      apiKey,
-    };
+function getConfig() {
+  const { FIDELITY_API_URL: baseUrl, RECORDINGS_API_KEY: apiKey } = env;
+  if (!baseUrl || !apiKey) {
+    throw new Error(
+      "Missing Fidelity API configuration: set FIDELITY_API_URL and RECORDINGS_API_KEY.",
+    );
   }
-
-  return _config;
+  return { baseUrl: baseUrl.replace(/\/$/, ""), apiKey };
 }
 
 /**
@@ -104,7 +84,6 @@ export async function createJob(request: CreateJobRequest): Promise<JobResponse>
       },
       body: JSON.stringify(request),
       signal: AbortSignal.timeout(30_000),
-      // @ts-expect-error — dispatcher is a valid undici option on Node's native fetch
       dispatcher: fidelityDispatcher,
     });
 

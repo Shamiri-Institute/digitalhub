@@ -1,9 +1,11 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
+import { env } from "#/env";
+
 export function verifyRecordingsApiKey(request: NextRequest): boolean {
   const apiKey = request.headers.get("x-api-key");
-  const expectedKey = process.env.RECORDINGS_API_KEY;
+  const expectedKey = env.RECORDINGS_API_KEY;
 
   if (!expectedKey) {
     console.error("RECORDINGS_API_KEY environment variable not set");
