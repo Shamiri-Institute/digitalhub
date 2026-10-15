@@ -17,7 +17,7 @@ import { getUrl } from "#/tests/pages/helpers";
 test.describe.configure({ mode: "serial" });
 
 type Fixture = { attendanceId: number; sessionAmount: number };
-type OtherImplementerFixture = Fixture & { hubId: string; originalProjectId: string | null };
+type OtherImplementerFixture = Fixture & { hubId: string; originalProjectId: string };
 let ops: { email: string; userId: string; implementerId: string; projectId: string };
 let fixture: Fixture;
 let otherImplementer: OtherImplementerFixture;

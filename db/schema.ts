@@ -405,11 +405,11 @@ export const hub = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    // Deprecated: nothing reads or writes it. New hubs leave it null; drop it with its index later.
+    // The app does not read it. Prod hubs carry codes such as "26P2_Hub_08" that reports may use.
     visibleId: varchar("visible_id", { length: 100 }),
     hubName: varchar("hub_name", { length: 255 }).notNull(),
     implementerId: varchar("implementer_id", { length: 255 }).notNull(),
-    projectId: varchar("project_id", { length: 100 }),
+    projectId: varchar("project_id", { length: 100 }).notNull(),
   },
   (table) => [
     uniqueIndex("hubs_visible_id_key").using("btree", table.visibleId),
@@ -431,7 +431,7 @@ export const hub = pgTable(
       name: "hubs_project_id_fkey",
     })
       .onUpdate("cascade")
-      .onDelete("set null"),
+      .onDelete("restrict"),
   ],
 );
 
@@ -721,7 +721,7 @@ export const interventionSession = pgTable(
       name: "intervention_sessions_session_id_fkey",
     })
       .onUpdate("cascade")
-      .onDelete("set null"),
+      .onDelete("restrict"),
     foreignKey({
       columns: [table.schoolId],
       foreignColumns: [school.id],

@@ -291,6 +291,34 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
   ).toBeVisible();
   await staleDialog.getByRole("button", { name: "Cancel" }).click();
   expect(await codesInEditDialog(page, hubName)).toContain("t6");
+
+  // A session starts using s2 after the form opened, so only the server can refuse the removal.
+  const removeDialog = await openEditDialog(page, hubName);
+  const s2 = await db.query.sessionName.findFirst({
+    where: (n, { and, eq }) => and(eq(n.hubId, created.id), eq(n.sessionName, "s2")),
+    columns: { id: true },
+  });
+  await db.insert(interventionSession).values({
+    id: objectId("session"),
+    hubId: created.id,
+    sessionId: s2?.id,
+    projectId: created.projectId,
+    occurred: false,
+    yearOfImplementation: new Date().getFullYear(),
+    sessionDate: new Date(),
+  });
+  await removeDialog.getByRole("button", { name: /Intervention sessions/ }).click();
+  await removeDialog.getByRole("button", { name: "Remove s2" }).click();
+  await removeDialog.getByRole("button", { name: "Save" }).click();
+  await page
+    .getByRole("dialog", { name: "Save changes to hub?" })
+    .getByRole("button", { name: "Save changes" })
+    .click();
+  await expect(
+    page.getByText("A session type you removed is used by sessions").first(),
+  ).toBeVisible();
+  await removeDialog.getByRole("button", { name: "Cancel" }).click();
+  expect(await codesInEditDialog(page, hubName)).toContain("s2");
 });
 
 const SESSION_GROUPS = [
