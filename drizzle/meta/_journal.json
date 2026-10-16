@@ -187,15 +187,22 @@
     {
       "idx": 26,
       "version": "7",
-      "when": 1792150032686,
-      "tag": "0026_surveys",
+      "when": 1792149341610,
+      "tag": "0026_merge_duplicate_users",
       "breakpoints": true
     },
     {
       "idx": 27,
       "version": "7",
-      "when": 1792150033284,
-      "tag": "0027_survey_integrity_triggers",
+      "when": 1792150596989,
+      "tag": "0027_surveys",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1792150597566,
+      "tag": "0028_survey_integrity_triggers",
       "breakpoints": true
     }
   ]
