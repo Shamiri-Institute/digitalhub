@@ -417,13 +417,11 @@ export const hub = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    visibleId: varchar("visible_id", { length: 100 }),
     hubName: varchar("hub_name", { length: 255 }).notNull(),
     implementerId: varchar("implementer_id", { length: 255 }).notNull(),
     projectId: varchar("project_id", { length: 100 }).notNull(),
   },
   (table) => [
-    uniqueIndex("hubs_visible_id_key").using("btree", table.visibleId),
     uniqueIndex("hubs_implementer_id_project_id_name_key").on(
       table.implementerId,
       table.projectId,
@@ -450,7 +448,6 @@ export const fellowAttendance = pgTable(
   "fellow_attendances",
   {
     id: serial().primaryKey().notNull(),
-    visibleId: varchar("visible_id", { length: 100 }),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -473,7 +470,6 @@ export const fellowAttendance = pgTable(
     markedBy: text("marked_by"),
   },
   (table) => [
-    uniqueIndex("fellow_attendances_visible_id_key").using("btree", table.visibleId),
     // 2024 data holds 193 duplicate rows that predate payout statements; they stay as they are.
     uniqueIndex("fellow_attendances_fellow_id_session_id_key")
       .on(table.fellowId, table.sessionId)
@@ -536,7 +532,6 @@ export const fellow = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    visibleId: varchar("visible_id", { length: 100 }),
     fellowName: varchar("fellow_name", { length: 255 }),
     fellowEmail: varchar("fellow_email", { length: 255 }),
     yearOfImplementation: integer("year_of_implementation"),
@@ -763,7 +758,6 @@ export const supervisor = pgTable(
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
     hubId: varchar("hub_id", { length: 255 }),
-    visibleId: varchar("visible_id", { length: 100 }),
     supervisorName: varchar("supervisor_name", { length: 255 }),
     supervisorEmail: varchar("supervisor_email", { length: 255 }),
     idNumber: varchar("id_number", { length: 255 }),
@@ -785,7 +779,6 @@ export const supervisor = pgTable(
     dropOutReason: text("drop_out_reason"),
   },
   (table) => [
-    uniqueIndex("supervisors_visible_id_key").using("btree", table.visibleId),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],

@@ -66,12 +66,11 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   let row = (await searchRows(page, HUB_NAME)).first();
   await expect(row).toBeVisible();
 
-  // The hub was stored without a visible ID, which is deprecated.
+  // No page shows the project the new hub is stored in.
   const created = await db.query.hub.findFirst({
     where: (h, { eq }) => eq(h.hubName, HUB_NAME),
-    columns: { id: true, visibleId: true, projectId: true },
+    columns: { id: true, projectId: true },
   });
-  expect(created?.visibleId).toBeNull();
   expect(created?.projectId).not.toBeNull();
 
   const createdSessionNames = await db.query.sessionName.findMany({

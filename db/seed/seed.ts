@@ -201,7 +201,6 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
     for (let j = 0; j < numHubs; j++) {
       hubs.push({
         id: objectId("hub"),
-        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         hubName: faker.company.name(),
         projectId: projects[i]?.id as string,
         implementerId: implementers[i]?.id as string,
@@ -566,7 +565,6 @@ async function createSupervisors(arsenal: Hub, otherHubs: Hub[], emails: Set<str
         supervisorEmail: uniqueEmail,
         hubId: hub.id,
         implementerId: hub.implementerId,
-        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
       };
     });
   });
@@ -602,7 +600,6 @@ async function createSupervisors(arsenal: Hub, otherHubs: Hub[], emails: Set<str
     return {
       id: supervisorIdFor(_user.id),
       implementerId: _user.implementerId,
-      visibleId: _user.visibleId || faker.string.alpha({ casing: "upper", length: 6 }),
       supervisorName: faker.person.fullName(),
       supervisorEmail: _user.supervisorEmail,
       county: county.name,
@@ -918,8 +915,8 @@ async function createFellows(arsenal: Hub, supervisors: Supervisor[], emails: Se
   console.log("creating fellows");
   const fellows: (typeof schema.fellow.$inferInsert)[] = [];
 
-  const staticFellows = arsenalFellows.map(({ supervisorVisibleId, ...fellow }) => {
-    const supervisor = supervisors.find((s) => s.visibleId === supervisorVisibleId);
+  const staticFellows = arsenalFellows.map(({ supervisorEmail, ...fellow }) => {
+    const supervisor = supervisors.find((s) => s.supervisorEmail === supervisorEmail);
     return {
       id: objectId("user"),
       ...fellow,
@@ -954,7 +951,6 @@ async function createFellows(arsenal: Hub, supervisors: Supervisor[], emails: Se
 
       fellows.push({
         id: objectId("user"),
-        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         fellowName,
         fellowEmail: uniqueEmail,
         mpesaName: faker.number.float() > 0.5 ? fellowName : faker.person.fullName(),
@@ -1011,12 +1007,12 @@ async function createSchools(
   console.log("creating schools");
   const schools: (typeof schema.school.$inferInsert)[] = [];
 
-  for (const { supervisorVisibleId, ...school } of [emiratesAcademy, sobhaAcademy]) {
+  for (const { supervisorEmail, ...school } of [emiratesAcademy, sobhaAcademy]) {
     schools.push({
       id: objectId("sch"),
       ...school,
       hubId: arsenal.id,
-      assignedSupervisorId: supervisors.find((s) => s.visibleId === supervisorVisibleId)?.id,
+      assignedSupervisorId: supervisors.find((s) => s.supervisorEmail === supervisorEmail)?.id,
     });
   }
 
@@ -1073,8 +1069,10 @@ async function createInterventionGroups(schools: SchoolCreationResult, fellows: 
   const interventionGroups: (typeof schema.interventionGroup.$inferInsert)[] = [];
 
   const staticSchool = schools.find((s) => s.visibleId === emiratesAcademy.visibleId);
-  const arsenalFellowIds = new Set(arsenalFellows.map((f) => f.visibleId));
-  const staticFellows = fellows.filter((f) => f.visibleId && arsenalFellowIds.has(f.visibleId));
+  const arsenalFellowEmails = new Set(arsenalFellows.map((f) => f.fellowEmail));
+  const staticFellows = fellows.filter(
+    (f) => f.fellowEmail && arsenalFellowEmails.has(f.fellowEmail),
+  );
 
   staticFellows.forEach((fellow, index) => {
     interventionGroups.push({
@@ -2240,7 +2238,7 @@ async function main() {
   const defaultProjectId = projects[0]?.id ?? "";
   const admins = await createAdminUsers(implementers, userEmailSet, defaultProjectId);
   const hubs = await createHubs(projects, implementers);
-  const arsenal = hubs.find((hub) => hub.visibleId === arsenalHub.visibleId);
+  const arsenal = hubs.find((hub) => hub.hubName === arsenalHub.hubName);
   if (!arsenal) throw new Error("The Arsenal hub was not created");
   const otherHubs = hubs.filter((hub) => hub !== arsenal);
   const hubCoordinators = await createHubCoordinators(arsenal, otherHubs, userEmailSet);

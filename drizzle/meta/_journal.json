@@ -204,6 +204,13 @@
       "when": 1792150597566,
       "tag": "0028_survey_integrity_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792157398113,
+      "tag": "0029_drop_dead_visible_ids",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 // The Arsenal hub: a fixed hub, staff and school that e2e tests and demos can name.
 
-export const arsenalHub = { visibleId: "ARSENAL1", hubName: "Arsenal Hub" };
+export const arsenalHub = { hubName: "Arsenal Hub" };
 
 export const superAdminEmail = "admin@shamiri.institute";
 export const careAdminEmail = "care.admin@shamiri.institute";
@@ -47,7 +47,6 @@ export const arsenalCoordinators = [
 export const arsenalSupervisors = [
   {
     ...arsenalStaffDetails,
-    visibleId: "SUPERVISOR1",
     supervisorName: "Martin Ødegaard",
     supervisorEmail: "martin.odegaard@test.com",
     bankAccountNumber: "41000003",
@@ -60,7 +59,6 @@ export const arsenalSupervisors = [
   },
   {
     ...arsenalStaffDetails,
-    visibleId: "SUPERVISOR2",
     supervisorName: "Declan Rice",
     supervisorEmail: "declan.rice@test.com",
     bankAccountNumber: "41000004",
@@ -73,7 +71,6 @@ export const arsenalSupervisors = [
   },
   {
     ...arsenalStaffDetails,
-    visibleId: "SUPERVISOR3",
     supervisorName: "William Saliba",
     supervisorEmail: "william.saliba@test.com",
     bankAccountNumber: "41000005",
@@ -101,8 +98,7 @@ export const arsenalClinicalTeamMember = {
 
 export const arsenalFellows = [
   {
-    supervisorVisibleId: "SUPERVISOR1",
-    visibleId: "FELLOW1",
+    supervisorEmail: "martin.odegaard@test.com",
     fellowName: "Bukayo Saka",
     fellowEmail: "bukayo.saka@test.com",
     mpesaName: "Bukayo Saka",
@@ -115,8 +111,7 @@ export const arsenalFellows = [
     subCounty: "Westlands",
   },
   {
-    supervisorVisibleId: "SUPERVISOR2",
-    visibleId: "FELLOW2",
+    supervisorEmail: "declan.rice@test.com",
     fellowName: "Gabriel Martinelli",
     fellowEmail: "gabriel.martinelli@test.com",
     mpesaName: "Gabriel Martinelli",
@@ -129,8 +124,7 @@ export const arsenalFellows = [
     subCounty: "Westlands",
   },
   {
-    supervisorVisibleId: "SUPERVISOR3",
-    visibleId: "FELLOW3",
+    supervisorEmail: "william.saliba@test.com",
     fellowName: "Gabriel Jesus",
     fellowEmail: "gabriel.jesus@test.com",
     mpesaName: "Gabriel Jesus",
@@ -159,7 +153,7 @@ const arsenalSchoolDetails = {
 // any other school.
 export const emiratesAcademy = {
   ...arsenalSchoolDetails,
-  supervisorVisibleId: "SUPERVISOR1",
+  supervisorEmail: "martin.odegaard@test.com",
   visibleId: "ARSENAL_SCH",
   schoolName: "Emirates Academy",
   schoolEmail: "Gabriel.academy@test.com",
@@ -170,7 +164,7 @@ export const emiratesAcademy = {
 
 export const sobhaAcademy = {
   ...arsenalSchoolDetails,
-  supervisorVisibleId: "SUPERVISOR2",
+  supervisorEmail: "declan.rice@test.com",
   visibleId: "SOBHA_SCH",
   schoolName: "Sobha Academy",
   schoolEmail: "sobha.academy@test.com",
