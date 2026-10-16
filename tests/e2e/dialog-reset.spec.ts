@@ -814,7 +814,7 @@ test("student details, reporting note and school move start from each student's 
   await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/students`));
   const main = page.getByRole("main");
   async function openFor(studentName: string, action: string, dialog: Locator) {
-    await chooseRowAction(page, await searchRows(page, studentName, main), action);
+    await chooseRowAction(page, await rowWithCell(page, main, studentName), action);
     await expect(dialog).toBeVisible();
   }
 
