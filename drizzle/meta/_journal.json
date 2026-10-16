@@ -183,6 +183,13 @@
       "when": 1792075612186,
       "tag": "0025_hub_project_required_session_type_restrict",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792149341610,
+      "tag": "0026_merge_duplicate_users",
+      "breakpoints": true
     }
   ]
 }

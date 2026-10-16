@@ -814,6 +814,7 @@ export const user = pgTable(
   },
   (table) => [
     uniqueIndex("users_email_key").using("btree", table.email),
+    uniqueIndex("users_lower_email_key").on(sql`lower(${table.email})`),
     foreignKey({
       columns: [table.activeProjectId],
       foreignColumns: [project.id],

@@ -29,15 +29,8 @@ export async function createAdmin(
         throw new AdminActionError("An admin with this email already exists");
       }
 
-      // Emails are stored as the sign-in provider sent them, so a user can have capitals the
-      // lowercased input lacks. Match without case, preferring an active user, then the oldest.
       const existingUser = await tx.query.user.findFirst({
-        where: (u, { sql }) => sql`lower(trim(${u.email})) = ${parsed.email}`,
-        orderBy: (u, { asc, sql }) => [
-          sql`${u.archivedAt} is not null`,
-          asc(u.createdAt),
-          asc(u.id),
-        ],
+        where: (u, { sql }) => sql`lower(${u.email}) = ${parsed.email}`,
         columns: { id: true, archivedAt: true },
         with: { memberships: { columns: { id: true }, limit: 1 } },
       });
