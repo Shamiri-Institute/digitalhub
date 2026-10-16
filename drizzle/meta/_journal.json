@@ -211,6 +211,13 @@
       "when": 1792157398113,
       "tag": "0029_drop_dead_visible_ids",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1792164338420,
+      "tag": "0030_index_foreign_keys",
+      "breakpoints": true
     }
   ]
 }
