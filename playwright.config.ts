@@ -25,7 +25,8 @@ export default defineConfig({
   retries: isCI ? 2 : 0,
   workers: isCI ? 1 : undefined,
   // Server actions write to a real database; 5s is short when several workers share one machine.
-  expect: { timeout: 10_000 },
+  // `next dev` also compiles a page on first visit, so a cold dev server needs longer.
+  expect: { timeout: process.env.E2E_PROD ? 10_000 : 60_000 },
   use: { trace: "retain-on-failure" },
   projects: [
     {

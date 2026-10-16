@@ -1,4 +1,4 @@
--- Integrity rules for the survey tables from 0023 that drizzle cannot express in db/schema.ts.
+-- Integrity rules for the survey tables from 0026 that drizzle cannot express in db/schema.ts.
 --
 -- A version's status only moves DRAFT -> PUBLISHED -> RETIRED. Nothing is unpublished: changing a
 -- published survey means a new DRAFT version copied from it. Printed copies are read back against

@@ -1,27 +1,16 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { school, weeklyHubReport } from "#/db/schema";
-import { signInAs } from "#/tests/helpers";
+import { signInAs, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
-const recommendations = `E2E weekly hub report ${Date.now()}`;
-let originalSchool:
-  | Pick<typeof school.$inferSelect, "id" | "numbersExpected" | "boardingDay">
-  | undefined;
-
-// Cleanup runs in afterAll, not in a finally block: when a test times out, Playwright abandons
-// its body but still runs the hooks.
-test.afterAll(async () => {
-  await db.delete(weeklyHubReport).where(eq(weeklyHubReport.recommendations, recommendations));
-  if (originalSchool) {
-    const { id, ...originalFields } = originalSchool;
-    await db.update(school).set(originalFields).where(eq(school.id, id));
-  }
-});
-
-test("Hub Coordinator can submit a weekly hub report", async ({ page, context }) => {
+test("Hub Coordinator can submit a weekly hub report", async ({ page, context, undo }) => {
+  const recommendations = `E2E weekly hub report ${Date.now()}`;
+  undo(() =>
+    db.delete(weeklyHubReport).where(eq(weeklyHubReport.recommendations, recommendations)),
+  );
   const coordinator = await signInAs(context, "HUB_COORDINATOR");
   await page.goto(getUrl("/hc/schools"));
   const ratings = [
@@ -70,26 +59,36 @@ test("Hub Coordinator can submit a weekly hub report", async ({ page, context })
   });
 });
 
-test("Hub Coordinator edits a school in one dialog", async ({ page, context }) => {
+test("Hub Coordinator edits a school in one dialog", async ({ page, context, undo }) => {
   const coordinator = await signInAs(context, "HUB_COORDINATOR");
   const coordinatorProfile = await db.query.hubCoordinator.findFirst({
     where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
     columns: { assignedHubId: true },
   });
-  // The last school, so this does not edit the one other specs open first.
-  const targetSchool = await db.query.school.findFirst({
+  // The form needs the details a real school has, so the new school copies one of the hub.
+  const template = await db.query.school.findFirst({
     where: (s, { and, eq, isNull }) =>
-      and(
-        eq(s.hubId, coordinatorProfile?.assignedHubId ?? ""),
-        isNull(s.archivedAt),
-        isNull(s.droppedOutAt),
-      ),
-    columns: { id: true, schoolName: true, numbersExpected: true, boardingDay: true },
-    orderBy: (s, { desc }) => desc(s.visibleId),
+      and(eq(s.hubId, coordinatorProfile?.assignedHubId ?? ""), isNull(s.archivedAt)),
+    orderBy: (s, { asc }) => asc(s.visibleId),
   });
-  if (!targetSchool) throw new Error("seed the database first: the hub has no open school");
-  const { schoolName, ...original } = targetSchool;
-  originalSchool = original;
+  required(template, "the hub has no open school");
+  const suffix = Date.now();
+  const schoolName = `E2E School ${suffix}`;
+  const [targetSchool] = await db
+    .insert(school)
+    .values({
+      ...template,
+      id: `sch_e2e_${suffix}`,
+      visibleId: `E2E_SCH_${suffix}`,
+      schoolName,
+      // Four prod schools are Junior; the form must accept the stored type and save.
+      schoolType: "Junior",
+      droppedOut: false,
+      droppedOutAt: null,
+    })
+    .returning({ id: school.id, numbersExpected: school.numbersExpected });
+  if (!targetSchool) throw new Error("could not create the school");
+  undo(() => db.delete(school).where(eq(school.id, targetSchool.id)));
   const newNumbersExpected = String((targetSchool.numbersExpected ?? 0) + 1);
 
   await page.goto(getUrl("/hc/schools"));

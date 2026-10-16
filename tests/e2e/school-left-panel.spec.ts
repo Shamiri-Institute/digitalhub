@@ -1,10 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { interventionSession } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -22,6 +22,7 @@ type Fixture = {
 test("the school panel renders on the server and shows a session cancelled on the tab", async ({
   page,
   context,
+  undo,
 }) => {
   const {
     rows: [fixture],
@@ -34,7 +35,7 @@ test("the school panel renders on the server and shows a session cancelled on th
         as "studentsCount"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.hub_id = hc.assigned_hub_id
     join intervention_sessions i on i.school_id = s.id and not i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'
@@ -45,7 +46,7 @@ test("the school panel renders on the server and shows a session cancelled on th
         where o.school_id = s.id and o.session_id = i.session_id) = 1
     order by u.email, s.visible_id, i.session_date
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no school with an open session");
+  required(fixture, "no school with an open session");
   const sessionLabel = sessionDisplayName(fixture.sessionName);
 
   const schoolUrl = getUrl(`/hc/schools/${fixture.visibleId}/sessions`);
@@ -64,13 +65,12 @@ test("the school panel renders on the server and shows a session cancelled on th
     .getByRole("row")
     .filter({ has: page.getByRole("cell", { name: sessionLabel, exact: true }) });
   await chooseRowAction(page, sessionRow, "Cancel session");
-  try {
-    await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click();
-    await expect(panel.getByTitle(`${sessionLabel}: Cancelled`)).toBeVisible();
-  } finally {
-    await db
+  undo(() =>
+    db
       .update(interventionSession)
       .set({ status: fixture.status })
-      .where(eq(interventionSession.id, fixture.sessionId));
-  }
+      .where(eq(interventionSession.id, fixture.sessionId)),
+  );
+  await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click();
+  await expect(panel.getByTitle(`${sessionLabel}: Cancelled`)).toBeVisible();
 });

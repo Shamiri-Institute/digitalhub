@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.1.2](https://github.com/Shamiri-Institute/digitalhub/compare/v2.1.1...v2.1.2) (2026-10-15)
+
+### Bug Fixes
+
+- **data:** trim stray spaces from counties and sub-counties ([#964](https://github.com/Shamiri-Institute/digitalhub/issues/964)) ([e8b347a](https://github.com/Shamiri-Institute/digitalhub/commit/e8b347aebb814940d44cc5b00bc13e9c02f8c557))
+
+## [2.1.1](https://github.com/Shamiri-Institute/digitalhub/compare/v2.1.0...v2.1.1) (2026-10-15)
+
+### Bug Fixes
+
+- **students:** number new students from a sequence so visible IDs cannot repeat ([#960](https://github.com/Shamiri-Institute/digitalhub/issues/960)) ([cfe3494](https://github.com/Shamiri-Institute/digitalhub/commit/cfe3494ea6c614062dec2c250071e48a364549b3))
+- **supervisors:** complaint types, dead drop-out items, lowercase login emails ([#959](https://github.com/Shamiri-Institute/digitalhub/issues/959)) ([1b54a3e](https://github.com/Shamiri-Institute/digitalhub/commit/1b54a3ef266823382339d44716bda44744abb393))
+
 ## [2.1.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.0.0...v2.1.0) (2026-10-14)
 
 ### Features

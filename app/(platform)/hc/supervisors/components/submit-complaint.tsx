@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { SubmitComplaintSchema } from "#/app/(platform)/hc/schemas";
@@ -33,19 +33,27 @@ import { toast, toastOnError } from "#/components/ui/use-toast";
 import { COMPLAINT_TYPES } from "#/lib/app-constants/constants";
 import { zodResolver } from "#/lib/zod-resolver";
 
-export default function SubmitComplaint({
-  supervisorId,
-  children,
-  isOpen,
-  setIsOpen,
-}: {
+type SubmitComplaintProps = {
   supervisorId?: string;
   children: React.ReactNode;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-}) {
+};
+
+export default function SubmitComplaint(props: SubmitComplaintProps) {
+  return (
+    <Dialog open={props.isOpen} onOpenChange={props.setIsOpen}>
+      <DialogContent className="p-5 text-base font-medium leading-6">
+        <SubmitComplaintForm {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SubmitComplaintForm({ supervisorId, children, setIsOpen }: SubmitComplaintProps) {
   const form = useForm<z.infer<typeof SubmitComplaintSchema>>({
     resolver: zodResolver(SubmitComplaintSchema),
+    defaultValues: { supervisorId },
   });
 
   const onSubmit = async (data: z.infer<typeof SubmitComplaintSchema>) => {
@@ -63,95 +71,84 @@ export default function SubmitComplaint({
     setIsOpen(false);
   };
 
-  // effect: resets the form to the supervisor the parent selected when the dialog opens
-  useEffect(() => {
-    form.reset({
-      supervisorId,
-    });
-  }, [supervisorId, isOpen, form]);
-
   return (
     <Form {...form}>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="p-5 text-base font-medium leading-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Submit complaint</DialogTitle>
-          </DialogHeader>
-          {children}
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
-            <FormField
-              control={form.control}
-              name="complaint"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>
-                    Select complaint <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <Select onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a complaint" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {COMPLAINT_TYPES.map((reason) => (
-                        <SelectItem key={reason} value={reason}>
-                          {reason}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="comments"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>Additional comments</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="" className="resize-none" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="supervisorId"
-              render={({ field }) => (
-                <FormItem>
-                  <Input id="supervisorId" name="supervisorId" type="hidden" value={field.value} />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Separator />
-            <DialogFooter className="flex justify-end">
-              <Button
-                className="text-shamiri-new-blue"
-                variant="ghost"
-                type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="brand"
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
-                Submit
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <DialogHeader>
+        <DialogTitle className="text-lg font-bold">Submit complaint</DialogTitle>
+      </DialogHeader>
+      {children}
+      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+        <FormField
+          control={form.control}
+          name="complaint"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>
+                Select complaint <span className="text-shamiri-light-red">*</span>
+              </FormLabel>
+              <Select onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a complaint" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {COMPLAINT_TYPES.map((reason) => (
+                    <SelectItem key={reason} value={reason}>
+                      {reason}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="comments"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Additional comments</FormLabel>
+              <FormControl>
+                <Textarea placeholder="" className="resize-none" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="supervisorId"
+          render={({ field }) => (
+            <FormItem>
+              <Input id="supervisorId" name="supervisorId" type="hidden" value={field.value} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Separator />
+        <DialogFooter className="flex justify-end">
+          <Button
+            className="text-shamiri-new-blue"
+            variant="ghost"
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="brand"
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            loading={form.formState.isSubmitting}
+          >
+            Submit
+          </Button>
+        </DialogFooter>
+      </form>
     </Form>
   );
 }

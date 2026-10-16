@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -24,7 +24,7 @@ test("the school sessions page lists earlier unmarked sessions before marking on
       p.session_date as "earlierSessionDate"
     from supervisors sv
     join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.assigned_supervisor_id = sv.id and s.archived_at is null
     join intervention_sessions i on i.school_id = s.id and not i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'
@@ -38,7 +38,7 @@ test("the school sessions page lists earlier unmarked sessions before marking on
         where o.school_id = s.id and o.session_date::date = i.session_date::date) = 1
     order by s.visible_id, i.session_date, p.session_date desc
     limit 1`);
-  if (!fixture) throw new Error("seed the database first: no school with two unmarked sessions");
+  required(fixture, "no school with two unmarked sessions");
 
   await signInWithEmail(context, fixture.email);
   await page.goto(getUrl(`/sc/schools/${fixture.visibleId}/sessions`), {

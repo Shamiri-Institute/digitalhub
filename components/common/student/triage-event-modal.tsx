@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
@@ -67,18 +66,7 @@ const RISK_NOT_COMPLETED_OPTIONS: {
   { value: "OTHER", label: "Other" },
 ];
 
-export default function TriageEventModal({
-  onClose,
-  studentId,
-  studentName,
-  sessionId,
-  sessionName,
-  existingEvent,
-  loadingExistingEvent = false,
-  supervisors,
-  readOnly = false,
-  onSuccess,
-}: {
+type TriageEventModalProps = {
   onClose: () => void;
   studentId: string;
   studentName?: string | null;
@@ -89,19 +77,57 @@ export default function TriageEventModal({
   supervisors: { id: string; supervisorName: string | null }[];
   readOnly?: boolean;
   onSuccess?: () => void;
-}) {
+};
+
+export default function TriageEventModal(props: TriageEventModalProps) {
+  return (
+    <Dialog open onOpenChange={props.onClose}>
+      <DialogContent className="lg:max-w-lg">
+        <TriageEventForm
+          key={`${props.existingEvent?.id ?? "new"}-${props.studentId}-${props.sessionId}`}
+          {...props}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TriageEventForm({
+  onClose,
+  studentId,
+  studentName,
+  sessionId,
+  sessionName,
+  existingEvent,
+  loadingExistingEvent = false,
+  supervisors,
+  readOnly = false,
+  onSuccess,
+}: TriageEventModalProps) {
   const form = useForm<TriageEventFormData>({
     resolver: zodResolver(TriageEventSchema),
-    defaultValues: {
-      studentId,
-      sessionId,
-      riskScreenOutcome: undefined,
-      riskNotCompletedReason: undefined,
-      actionTaken: undefined,
-      referredSupervisorId: undefined,
-      supervisorHandoffStatus: undefined,
-      note: undefined,
-    },
+    defaultValues: existingEvent
+      ? {
+          id: existingEvent.id,
+          studentId: existingEvent.studentId,
+          sessionId: existingEvent.sessionId,
+          riskScreenOutcome: existingEvent.riskScreenOutcome ?? undefined,
+          riskNotCompletedReason: existingEvent.riskNotCompletedReason ?? undefined,
+          actionTaken: existingEvent.actionTaken ?? undefined,
+          referredSupervisorId: existingEvent.referredSupervisorId ?? undefined,
+          supervisorHandoffStatus: existingEvent.supervisorHandoffStatus ?? undefined,
+          note: existingEvent.note ?? undefined,
+        }
+      : {
+          studentId,
+          sessionId,
+          riskScreenOutcome: undefined,
+          riskNotCompletedReason: undefined,
+          actionTaken: undefined,
+          referredSupervisorId: undefined,
+          supervisorHandoffStatus: undefined,
+          note: undefined,
+        },
   });
 
   const riskScreenOutcome = form.watch("riskScreenOutcome");
@@ -112,42 +138,6 @@ export default function TriageEventModal({
     actionTaken === "REFERRED" || actionTaken === "ESCALATED" || actionTaken === "REFUSED";
   const showSupervisorSelect = actionTaken === "REFERRED" || actionTaken === "ESCALATED";
   const forceEscalated = riskScreenOutcome === "ANY_YES";
-
-  // effect: forces the action to ESCALATED when the risk screen outcome requires it
-  useEffect(() => {
-    if (forceEscalated) {
-      form.setValue("actionTaken", "ESCALATED");
-    }
-  }, [forceEscalated, form]);
-
-  // effect: copies the existing triage event into the form when the parent's read resolves
-  useEffect(() => {
-    if (existingEvent) {
-      form.reset({
-        id: existingEvent.id,
-        studentId: existingEvent.studentId,
-        sessionId: existingEvent.sessionId,
-        riskScreenOutcome: existingEvent.riskScreenOutcome ?? undefined,
-        riskNotCompletedReason: existingEvent.riskNotCompletedReason ?? undefined,
-        actionTaken: existingEvent.actionTaken ?? undefined,
-        referredSupervisorId: existingEvent.referredSupervisorId ?? undefined,
-        supervisorHandoffStatus: existingEvent.supervisorHandoffStatus ?? undefined,
-        note: existingEvent.note ?? undefined,
-      });
-    } else {
-      form.reset({
-        studentId,
-        sessionId,
-        riskScreenOutcome: undefined,
-        riskNotCompletedReason: undefined,
-        actionTaken: undefined,
-        referredSupervisorId: undefined,
-        supervisorHandoffStatus: undefined,
-        note: undefined,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset when session/student/event identity changes
-  }, [existingEvent, studentId, sessionId]);
 
   const onSubmit = async (data: z.infer<typeof TriageEventSchema>) => {
     if (loadingExistingEvent) return;
@@ -171,244 +161,243 @@ export default function TriageEventModal({
   };
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="lg:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            {readOnly ? "View triage" : "Document triage"}
-          </DialogTitle>
-          <p className="text-sm text-shamiri-text-grey">
-            {studentName ? (
-              <span className="capitalize">{studentName.toLowerCase()}</span>
-            ) : (
-              "Student"
-            )}{" "}
-            {sessionName && (
-              <>
-                <span className="mx-1">·</span>
-                {sessionName}
-              </>
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-xl font-bold">
+          {readOnly ? "View triage" : "Document triage"}
+        </DialogTitle>
+        <p className="text-sm text-shamiri-text-grey">
+          {studentName ? (
+            <span className="capitalize">{studentName.toLowerCase()}</span>
+          ) : (
+            "Student"
+          )}{" "}
+          {sessionName && (
+            <>
+              <span className="mx-1">·</span>
+              {sessionName}
+            </>
+          )}
+        </p>
+      </DialogHeader>
+      <Form {...form}>
+        <form
+          onSubmit={readOnly ? (e) => e.preventDefault() : form.handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
+          <FormField
+            control={form.control}
+            name="riskScreenOutcome"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm">Risk screen outcome (required)</FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    if (value === "ANY_YES") form.setValue("actionTaken", "ESCALATED");
+                  }}
+                  value={field.value ?? ""}
+                  disabled={readOnly || loadingExistingEvent}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select outcome" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {RISK_SCREEN_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
             )}
-          </p>
-        </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={readOnly ? (e) => e.preventDefault() : form.handleSubmit(onSubmit)}
-            className="space-y-4"
-          >
+          />
+          {showNotCompletedReason && (
             <FormField
               control={form.control}
-              name="riskScreenOutcome"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel className="text-sm">Risk screen outcome (required)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value ?? ""}
-                    disabled={readOnly || loadingExistingEvent}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select outcome" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {RISK_SCREEN_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {showNotCompletedReason && (
-              <FormField
-                control={form.control}
-                name="riskNotCompletedReason"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-sm">
-                      Reason risk screen not completed (required)
-                    </FormLabel>
-                    <p className="text-xs text-shamiri-text-grey">
-                      Shown when Risk screen outcome is Not completed.
-                    </p>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value ?? ""}
-                      disabled={readOnly || loadingExistingEvent}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select reason" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {RISK_NOT_COMPLETED_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-            <FormField
-              control={form.control}
-              name="actionTaken"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel className="text-sm">Action taken (required)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value ?? ""}
-                    disabled={readOnly || loadingExistingEvent}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select action" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {ACTION_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {forceEscalated && (
-                    <p className="text-xs text-shamiri-text-grey">
-                      Risk positive requires escalation to supervisor.
-                    </p>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {showSupervisorSelect && (
-              <FormField
-                control={form.control}
-                name="referredSupervisorId"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-sm">Supervisor (in the session hub)</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value ?? ""}
-                      disabled={readOnly || loadingExistingEvent}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select supervisor" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {supervisors.map((sup) => (
-                          <SelectItem key={sup.id} value={sup.id}>
-                            {sup.supervisorName ?? sup.id}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-            {showHandoff && (
-              <FormField
-                control={form.control}
-                name="supervisorHandoffStatus"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-sm">Supervisor handoff status (required)</FormLabel>
-                    <p className="text-xs text-shamiri-text-grey">
-                      Shown when Action taken is Referred, Escalated, or Student refused.
-                    </p>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value ?? ""}
-                      disabled={readOnly || loadingExistingEvent}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {HANDOFF_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-            <FormField
-              control={form.control}
-              name="note"
+              name="riskNotCompletedReason"
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel className="text-sm">
-                    Short note (optional, max 200 characters)
+                    Reason risk screen not completed (required)
                   </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Add context if needed"
-                      className="resize-none"
-                      maxLength={200}
-                      rows={2}
-                      disabled={readOnly || loadingExistingEvent}
-                      {...field}
-                    />
-                  </FormControl>
-                  <p className="text-xs text-shamiri-text-grey">{field.value?.length ?? 0}/200</p>
+                  <p className="text-xs text-shamiri-text-grey">
+                    Shown when Risk screen outcome is Not completed.
+                  </p>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? ""}
+                    disabled={readOnly || loadingExistingEvent}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select reason" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {RISK_NOT_COMPLETED_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <DialogFooter className="flex justify-end gap-2 pt-2">
-              {readOnly ? (
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Close
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="text-shamiri-new-blue hover:bg-blue-bg"
-                    onClick={onClose}
+          )}
+          <FormField
+            control={form.control}
+            name="actionTaken"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm">Action taken (required)</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value ?? ""}
+                  disabled={readOnly || loadingExistingEvent}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select action" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {ACTION_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {forceEscalated && (
+                  <p className="text-xs text-shamiri-text-grey">
+                    Risk positive requires escalation to supervisor.
+                  </p>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {showSupervisorSelect && (
+            <FormField
+              control={form.control}
+              name="referredSupervisorId"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-sm">Supervisor (in the session hub)</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? ""}
+                    disabled={readOnly || loadingExistingEvent}
                   >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={form.formState.isSubmitting || loadingExistingEvent}
-                  >
-                    {loadingExistingEvent
-                      ? "Loading…"
-                      : form.formState.isSubmitting
-                        ? "Saving…"
-                        : "Save triage"}
-                  </Button>
-                </>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select supervisor" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {supervisors.map((sup) => (
+                        <SelectItem key={sup.id} value={sup.id}>
+                          {sup.supervisorName ?? sup.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            />
+          )}
+          {showHandoff && (
+            <FormField
+              control={form.control}
+              name="supervisorHandoffStatus"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-sm">Supervisor handoff status (required)</FormLabel>
+                  <p className="text-xs text-shamiri-text-grey">
+                    Shown when Action taken is Referred, Escalated, or Student refused.
+                  </p>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? ""}
+                    disabled={readOnly || loadingExistingEvent}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {HANDOFF_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          <FormField
+            control={form.control}
+            name="note"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm">Short note (optional, max 200 characters)</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Add context if needed"
+                    className="resize-none"
+                    maxLength={200}
+                    rows={2}
+                    disabled={readOnly || loadingExistingEvent}
+                    {...field}
+                  />
+                </FormControl>
+                <p className="text-xs text-shamiri-text-grey">{field.value?.length ?? 0}/200</p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <DialogFooter className="flex justify-end gap-2 pt-2">
+            {readOnly ? (
+              <Button type="button" variant="outline" onClick={onClose}>
+                Close
+              </Button>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-shamiri-new-blue hover:bg-blue-bg"
+                  onClick={onClose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={form.formState.isSubmitting || loadingExistingEvent}
+                >
+                  {loadingExistingEvent
+                    ? "Loading…"
+                    : form.formState.isSubmitting
+                      ? "Saving…"
+                      : "Save triage"}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </form>
+      </Form>
+    </>
   );
 }

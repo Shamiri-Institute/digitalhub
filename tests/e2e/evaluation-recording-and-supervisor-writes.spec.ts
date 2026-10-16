@@ -1,10 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellow, interventionGroupReport, sessionRecording } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -36,8 +36,7 @@ let evaluation: EvaluationFixture;
 let recording: RecordingFixture;
 let reassign: ReassignFixture;
 
-test.beforeAll(async () => {
-  // A group with no evaluations yet, and an occurred session whose name is unique at its school.
+async function pickUnevaluatedGroupWithUniquelyNamedOccurredSession() {
   const {
     rows: [ledGroup],
   } = await db.execute<EvaluationFixture>(sql`
@@ -45,7 +44,7 @@ test.beforeAll(async () => {
       i.id as "sessionId", sn.session_name as "sessionLabel"
     from intervention_groups g
     join implementer_members m on m.identifier = g.leader_id and m.role = 'FELLOW'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.id = g.school_id
     join intervention_sessions i on i.school_id = s.id and i.occurred
     join session_names sn on sn.id = i.session_id
@@ -57,7 +56,12 @@ test.beforeAll(async () => {
         where o.school_id = s.id and o.occurred and o.session_id = i.session_id) = 1
     order by u.email desc, g.id, i.session_date
     limit 1`);
-  if (!ledGroup) throw new Error("seed the database first: no fellow group without evaluations");
+  required(ledGroup, "no fellow group without evaluations");
+  return ledGroup;
+}
+
+test.beforeAll(async () => {
+  const ledGroup = await pickUnevaluatedGroupWithUniquelyNamedOccurredSession();
   evaluation = {
     ...ledGroup,
     sessionLabel: sessionDisplayName(ledGroup.sessionLabel) ?? ledGroup.sessionLabel,
@@ -76,7 +80,7 @@ test.beforeAll(async () => {
       and i.occurred
     join session_names sn on sn.id = i.session_id
     join implementer_members m on m.identifier = r.supervisor_id and m.role = 'SUPERVISOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where ${signableMember()} and r.archived_at is null
     order by r.id desc
     limit 1`);
@@ -93,34 +97,24 @@ test.beforeAll(async () => {
     from hub_coordinators hc
     join hubs h on h.id = hc.assigned_hub_id
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join fellows f on f.hub_id = h.id and f.implementer_id = h.implementer_id
       and f.supervisor_id is not null and f.fellow_name is not null
     join supervisors sv on sv.hub_id = h.id and sv.id <> f.supervisor_id
       and sv.supervisor_name is not null
     where ${signableMember()}
-      and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
+      and ${uniqueFellowName()}
       and (select count(*) from supervisors o
         where o.hub_id = sv.hub_id and o.supervisor_name = sv.supervisor_name) = 1
     order by u.email desc, f.id desc, sv.id
     limit 1`);
-  if (!hubFellow) throw new Error("seed the database first: no fellow with another supervisor");
+  required(hubFellow, "no fellow with another supervisor");
   reassign = hubFellow;
 });
 
-// Each test's undo steps run in afterEach, not in a finally block: when a test times out,
-// Playwright abandons its body but still runs the hooks.
-let undo: (() => Promise<unknown>)[] = [];
-test.afterEach(async () => {
-  for (const step of undo.reverse()) {
-    await step();
-  }
-  undo = [];
-});
-
-test("a fellow evaluates a group they lead", async ({ page, context }) => {
+test("a fellow evaluates a group they lead", async ({ page, context, undo }) => {
   const comment = `e2e-scoped-write-${Date.now()}`;
-  undo.push(() =>
+  undo(() =>
     db
       .delete(interventionGroupReport)
       .where(eq(interventionGroupReport.groupId, evaluation.groupId)),
@@ -163,9 +157,13 @@ test("a fellow evaluates a group they lead", async ({ page, context }) => {
   expect(savedReport).toEqual({ content: 5 });
 });
 
-test("a supervisor renames a recording of their fellow's group", async ({ page, context }) => {
+test("a supervisor renames a recording of their fellow's group", async ({
+  page,
+  context,
+  undo,
+}) => {
   const newFileName = `e2e-scoped-write-${Date.now()}`;
-  undo.push(() =>
+  undo(() =>
     db
       .update(sessionRecording)
       .set({ originalFileName: recording.originalFileName })
@@ -187,7 +185,19 @@ test("a supervisor renames a recording of their fellow's group", async ({ page, 
   }
 
   await openEdit();
-  await dialog.getByRole("textbox", { name: /Recording name/ }).fill(newFileName);
+  const recordingName = dialog.getByRole("textbox", { name: /Recording name/ });
+  await recordingName.fill(`unsaved-${Date.now()}`);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await chooseRowAction(
+    page,
+    (await rowWithCell(page, main, recording.groupName)).filter({
+      has: page.getByRole("cell", { name: recording.sessionName, exact: true }),
+    }),
+    "Edit",
+  );
+  await expect(recordingName).toHaveValue(recording.originalFileName);
+  await recordingName.fill(newFileName);
   await dialog.getByRole("button", { name: "Save changes" }).click();
   await expect(dialog).toBeHidden();
 
@@ -198,8 +208,9 @@ test("a supervisor renames a recording of their fellow's group", async ({ page, 
 test("a hub coordinator assigns a fellow of their hub to another supervisor", async ({
   page,
   context,
+  undo,
 }) => {
-  undo.push(() =>
+  undo(() =>
     db
       .update(fellow)
       .set({ supervisorId: reassign.originalSupervisorId })

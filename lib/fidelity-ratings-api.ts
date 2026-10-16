@@ -8,7 +8,9 @@
  * via webhook callbacks. Both transcript and fidelity_ratings are included in results.
  */
 
-import { Agent } from "undici";
+import { Agent, fetch } from "undici";
+
+import { env } from "#/env";
 
 export type FidelityRecording = {
   id: string;
@@ -49,13 +51,6 @@ export type JobResponse = {
   result?: JobResult; // only present when status is "completed"
 };
 
-type FidelityConfig = {
-  baseUrl: string;
-  apiKey: string;
-};
-
-let _config: FidelityConfig | null = null;
-
 const fidelityDispatcher = new Agent({
   connect: {
     rejectUnauthorized: false,
@@ -63,48 +58,27 @@ const fidelityDispatcher = new Agent({
 });
 
 /**
- * Initialize the Fidelity client configuration.
- * Lazily called on first API request to avoid crashing at import time.
- */
-function getConfig(): FidelityConfig {
-  if (!_config) {
-    const baseUrl = process.env.FIDELITY_API_URL;
-    const apiKey = process.env.RECORDINGS_API_KEY;
-
-    if (!baseUrl || !apiKey) {
-      throw new Error(
-        "Missing Fidelity API configuration. Ensure FIDELITY_API_URL and " +
-          "RECORDINGS_API_KEY environment variables are set.",
-      );
-    }
-
-    _config = {
-      baseUrl: baseUrl.replace(/\/$/, ""),
-      apiKey,
-    };
-  }
-
-  return _config;
-}
-
-/**
  * Submit recordings for processing.
  * Returns immediately with a job_id, does NOT wait for processing to complete.
  * The Fidelity API will call the completion_webhook_url when done.
  */
 export async function createJob(request: CreateJobRequest): Promise<JobResponse> {
-  const config = getConfig();
+  const { FIDELITY_API_URL: baseUrl, RECORDINGS_API_KEY: apiKey } = env;
+  if (!baseUrl || !apiKey) {
+    throw new Error(
+      "Missing Fidelity API configuration: set FIDELITY_API_URL and RECORDINGS_API_KEY.",
+    );
+  }
 
   try {
-    const response = await fetch(`${config.baseUrl}/jobs`, {
+    const response = await fetch(`${baseUrl.replace(/\/$/, "")}/jobs`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-API-Key": config.apiKey,
+        "X-API-Key": apiKey,
       },
       body: JSON.stringify(request),
       signal: AbortSignal.timeout(30_000),
-      // @ts-expect-error — dispatcher is a valid undici option on Node's native fetch
       dispatcher: fidelityDispatcher,
     });
 

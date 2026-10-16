@@ -4,7 +4,7 @@ import { eq, gte, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowAttendance, hub, payoutStatements } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
@@ -17,7 +17,7 @@ import { getUrl } from "#/tests/pages/helpers";
 test.describe.configure({ mode: "serial" });
 
 type Fixture = { attendanceId: number; sessionAmount: number };
-type OtherImplementerFixture = Fixture & { hubId: string; originalProjectId: string | null };
+type OtherImplementerFixture = Fixture & { hubId: string; originalProjectId: string };
 let ops: { email: string; userId: string; implementerId: string; projectId: string };
 let fixture: Fixture;
 let otherImplementer: OtherImplementerFixture;
@@ -34,11 +34,11 @@ test.beforeAll(async () => {
       coalesce(u.active_project_id, (select id from projects where is_default)) as "projectId"
     from ops_users o
     join implementer_members m on m.identifier = o.id and m.role = 'OPERATIONS'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where ${signableMember()}
     order by o.id
     limit 1`);
-  if (!firstOps) throw new Error("seed the database first: no ops user");
+  required(firstOps, "no ops user");
   ops = firstOps;
 
   const eligibleAttendance = sql`
@@ -56,7 +56,7 @@ test.beforeAll(async () => {
   } = await db.execute<Fixture>(sql`${eligibleAttendance}
     and h.implementer_id = ${ops.implementerId} and h.project_id = ${ops.projectId}
     order by fa.id limit 1`);
-  if (!row) throw new Error("seed the database first: no attended, unprocessed attendance");
+  required(row, "no attended, unprocessed attendance");
   fixture = row;
 
   // Another implementer's hub, moved into the ops user's project until afterAll.
@@ -65,7 +65,7 @@ test.beforeAll(async () => {
   } = await db.execute<OtherImplementerFixture>(sql`${eligibleAttendance}
     and h.implementer_id <> ${ops.implementerId}
     order by fa.id limit 1`);
-  if (!otherRow) throw new Error("seed the database first: no attendance of another implementer");
+  required(otherRow, "no attendance of another implementer");
   otherImplementer = otherRow;
   await db.update(hub).set({ projectId: ops.projectId }).where(eq(hub.id, otherImplementer.hubId));
 

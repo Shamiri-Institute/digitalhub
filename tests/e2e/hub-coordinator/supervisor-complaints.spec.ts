@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { supervisorComplaints } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 const complaintComment = `E2E supervisor complaint ${Date.now()}`;
@@ -21,11 +21,11 @@ test.beforeAll(async () => {
     join hub_coordinators hc on hc.id = m.identifier
     join supervisors s on s.hub_id = hc.assigned_hub_id and s.supervisor_name is not null
       and s.dropped_out is not true
-    where u.email is not null and ${signableMember()}
+    where ${signableMember()}
       and (select count(*) from supervisors o where o.supervisor_name = s.supervisor_name) = 1
     order by u.email, s.id desc
     limit 1`);
-  if (!match) throw new Error("seed the database first: no supervisor in a coordinator's hub");
+  required(match, "no supervisor in a coordinator's hub");
   coordinatorEmail = match.email;
   targetSupervisor = match;
 });

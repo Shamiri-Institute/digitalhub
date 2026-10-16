@@ -4,7 +4,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { refresh } from "next/cache";
 import type { z } from "zod";
 
-import { db, isUniqueViolation, type Transaction } from "#/db/client";
+import { db, isForeignKeyViolation, isUniqueViolation, type Transaction } from "#/db/client";
 import { hub, interventionSession, sessionName } from "#/db/schema";
 import { countOf } from "#/db/sql";
 import { getActiveProjectId } from "#/lib/active-project-id";
@@ -150,21 +150,15 @@ async function updateSessionNames(
   // Removed first, so a new row can take the code of a removed one.
   const removedIds = stored.filter((n) => !kept.has(n.id)).map((n) => n.id);
   if (removedIds.length > 0) {
-    // Deleting a session name sets the session_id of its sessions to null, so a session type that
-    // sessions use stays.
-    const [used] = await tx
-      .select({ id: interventionSession.id })
-      .from(interventionSession)
-      .where(inArray(interventionSession.sessionId, removedIds))
-      .limit(1);
-    if (used) {
-      throw new AdminActionError(
-        "A session type you removed is used by sessions, so it cannot be removed. Please reload and try again.",
-      );
-    }
     await tx
       .delete(sessionName)
-      .where(and(inArray(sessionName.id, removedIds), eq(sessionName.hubId, hubId)));
+      .where(and(inArray(sessionName.id, removedIds), eq(sessionName.hubId, hubId)))
+      .catch((error: unknown) => {
+        if (!isForeignKeyViolation(error)) throw error;
+        throw new AdminActionError(
+          "A session type you removed already has intervention sessions attached to it, so it cannot be removed.",
+        );
+      });
   }
 
   if (changed.length > 0) {
@@ -242,15 +236,12 @@ export async function updateHub(data: z.infer<typeof UpdateHubSchema>): Promise<
       }
 
       if (parsed.hubName !== existing.hubName) {
-        // A hub with no project predates project scoping, so it has no peers to clash with.
-        if (existing.projectId) {
-          await assertHubNameIsFree(tx, {
-            implementerId,
-            projectId: existing.projectId,
-            hubName: parsed.hubName,
-            exceptHubId: parsed.hubId,
-          });
-        }
+        await assertHubNameIsFree(tx, {
+          implementerId,
+          projectId: existing.projectId,
+          hubName: parsed.hubName,
+          exceptHubId: parsed.hubId,
+        });
         await tx
           .update(hub)
           .set({ hubName: parsed.hubName })

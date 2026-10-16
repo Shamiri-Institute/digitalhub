@@ -1,14 +1,7 @@
 "use client";
 
 import { ImplementerRole, QuestionnaireType } from "#/db/enums";
-import {
-  type Dispatch,
-  type SetStateAction,
-  useEffect,
-  useEffectEvent,
-  useState,
-  useTransition,
-} from "react";
+import { type Dispatch, type SetStateAction, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -54,17 +47,7 @@ import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
-export default function StudentDetailsForm({
-  open,
-  onOpenChange,
-  student,
-  mode,
-  children,
-  schoolId,
-  assignedGroupId,
-  groupName,
-  role,
-}: {
+type StudentDetailsFormProps = {
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   student?: SchoolStudentTableData;
@@ -74,7 +57,28 @@ export default function StudentDetailsForm({
   assignedGroupId?: string;
   groupName?: string;
   role: ImplementerRole;
-}) {
+};
+
+export default function StudentDetailsForm(props: StudentDetailsFormProps) {
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent>
+        <StudentDetailsFormContent {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function StudentDetailsFormContent({
+  onOpenChange,
+  student,
+  mode,
+  children,
+  schoolId,
+  assignedGroupId,
+  groupName,
+  role,
+}: StudentDetailsFormProps) {
   const [transferDialog, setTransferDialog] = useState(false);
   const [transferOption, setTransferOption] = useState<number | undefined>();
   const closeTransferDialog = () => {
@@ -108,15 +112,6 @@ export default function StudentDetailsForm({
       phoneNumber: student?.phoneNumber ?? "",
     };
   }
-
-  const resetFormForStudent = useEffectEvent(() => {
-    form.reset(getDefaultValues());
-  });
-
-  // effect: loads the selected student into the form when the parent opens the dialog or changes the student
-  useEffect(() => {
-    resetFormForStudent();
-  }, [open, student, mode, assignedGroupId]);
 
   const checkMatchingAdmissions = async (values: z.infer<typeof StudentDetailsSchema>) => {
     if (schoolId !== null && values.admissionNumber !== undefined) {
@@ -187,233 +182,224 @@ export default function StudentDetailsForm({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
-              {mode === "view"
-                ? "View student information"
-                : mode === "edit"
-                  ? "Edit student information"
-                  : "Add student to group"}
-            </DialogTitle>
-          </DialogHeader>
-          {children}
-          <Form {...form}>
-            <form
-              onSubmit={toastOnError(
-                form.handleSubmit(mode === "edit" ? onSubmit : checkMatchingAdmissions),
-              )}
-            >
-              <div className="space-y-6">
-                <div className="flex flex-col">
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="studentName"
-                      render={({ field }) => (
-                        <FormItem className="col-span-2">
-                          <FormLabel>
-                            Student name <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input {...field} disabled={mode === "view"} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="phoneNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact number</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="tel" disabled={mode === "view"} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="gender"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Gender <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            defaultValue={field.value}
-                            disabled={mode === "view"}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select gender" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="max-h-[200px]">
-                              {GENDER_OPTIONS.map((g) => (
-                                <SelectItem key={g} value={g}>
-                                  {g}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="yearOfBirth"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Year of birth <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              min={new Date().getFullYear() - 35}
-                              max={new Date().getFullYear() - 9}
-                              placeholder="Enter year of birth"
-                              disabled={mode === "view"}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="admissionNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Admission number <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              disabled={
-                                mode === "view" ||
-                                (mode === "edit" && role === ImplementerRole.FELLOW)
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="questionnaireType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Type of questionnaire</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value ?? "none"}
-                            disabled={mode === "view" || role === ImplementerRole.FELLOW}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select questionnaire type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="max-h-[200px]">
-                              <SelectItem value="none">None</SelectItem>
-                              {QUESTIONNAIRE_TYPE_OPTIONS.filter(
-                                (type) => type !== QuestionnaireType.JSS,
-                              ).map((type) => (
-                                <SelectItem key={type} value={type}>
-                                  {type}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="form"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Grade/Form <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input {...field} type="text" disabled={mode === "view"} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="stream"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Stream <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input {...field} disabled={mode === "view"} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <Input
-                            type="hidden"
-                            defaultValue={field.value}
-                            disabled={mode === "view"}
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
+      <DialogHeader>
+        <DialogTitle className="text-xl font-bold">
+          {mode === "view"
+            ? "View student information"
+            : mode === "edit"
+              ? "Edit student information"
+              : "Add student to group"}
+        </DialogTitle>
+      </DialogHeader>
+      {children}
+      <Form {...form}>
+        <form
+          onSubmit={toastOnError(
+            form.handleSubmit(mode === "edit" ? onSubmit : checkMatchingAdmissions),
+          )}
+        >
+          <div className="space-y-6">
+            <div className="flex flex-col">
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="studentName"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>
+                        Student name <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled={mode === "view"} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact number</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="tel" disabled={mode === "view"} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Gender <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        defaultValue={field.value}
+                        disabled={mode === "view"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-[200px]">
+                          {GENDER_OPTIONS.map((g) => (
+                            <SelectItem key={g} value={g}>
+                              {g}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="yearOfBirth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Year of birth <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          min={new Date().getFullYear() - 35}
+                          max={new Date().getFullYear() - 9}
+                          placeholder="Enter year of birth"
+                          disabled={mode === "view"}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="admissionNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Admission number <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          disabled={
+                            mode === "view" || (mode === "edit" && role === ImplementerRole.FELLOW)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="questionnaireType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type of questionnaire</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? "none"}
+                        disabled={mode === "view" || role === ImplementerRole.FELLOW}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select questionnaire type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-[200px]">
+                          <SelectItem value="none">None</SelectItem>
+                          {QUESTIONNAIRE_TYPE_OPTIONS.filter(
+                            (type) => type !== QuestionnaireType.JSS,
+                          ).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="form"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Grade/Form <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} type="text" disabled={mode === "view"} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="stream"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Stream <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled={mode === "view"} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Input type="hidden" defaultValue={field.value} disabled={mode === "view"} />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <Separator className="my-6" />
-              <DialogFooter className="flex justify-end gap-2">
-                <Button
-                  variant={mode === "view" ? "brand" : "ghost"}
-                  type="button"
-                  onClick={() => {
-                    onOpenChange(false);
-                  }}
-                >
-                  {mode === "view" ? "Done" : "Cancel"}
-                </Button>
-                {mode !== "view" && (
-                  <Button
-                    variant="brand"
-                    type="submit"
-                    disabled={form.formState.isSubmitting}
-                    loading={form.formState.isSubmitting}
-                  >
-                    {mode === "edit" ? "Update & save" : "Submit"}
-                  </Button>
-                )}
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+            </div>
+          </div>
+          <Separator className="my-6" />
+          <DialogFooter className="flex justify-end gap-2">
+            <Button
+              variant={mode === "view" ? "brand" : "ghost"}
+              type="button"
+              onClick={() => {
+                onOpenChange(false);
+              }}
+            >
+              {mode === "view" ? "Done" : "Cancel"}
+            </Button>
+            {mode !== "view" && (
+              <Button
+                variant="brand"
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                loading={form.formState.isSubmitting}
+              >
+                {mode === "edit" ? "Update & save" : "Submit"}
+              </Button>
+            )}
+          </DialogFooter>
+        </form>
+      </Form>
       <Dialog
         open={transferDialog}
         onOpenChange={(next) => (next ? setTransferDialog(true) : closeTransferDialog())}

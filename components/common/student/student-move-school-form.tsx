@@ -1,6 +1,6 @@
 "use client";
 
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
@@ -36,19 +36,30 @@ import { zodResolver } from "#/lib/zod-resolver";
 
 type SchoolGroup = Awaited<ReturnType<typeof getSchoolGroupsForStudentTransfer>>[number];
 
-export default function StudentMoveSchoolForm({
-  student,
-  schools,
-  isOpen,
-  setIsOpen,
-  children,
-}: {
+type StudentMoveSchoolFormProps = {
   student: SchoolStudentTableData;
   schools: TransferSchool[];
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
-}) {
+};
+
+export default function StudentMoveSchoolForm(props: StudentMoveSchoolFormProps) {
+  return (
+    <Dialog open={props.isOpen} onOpenChange={props.setIsOpen}>
+      <DialogContent className="p-5">
+        <StudentMoveSchoolFormForm {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function StudentMoveSchoolFormForm({
+  student,
+  schools,
+  setIsOpen,
+  children,
+}: StudentMoveSchoolFormProps) {
   const [loadedGroups, setLoadedGroups] = useState<{
     schoolId: string;
     groups: SchoolGroup[];
@@ -64,13 +75,6 @@ export default function StudentMoveSchoolForm({
   const selectedSchoolId = form.watch("schoolId") ?? "";
   const groups = loadedGroups?.schoolId === selectedSchoolId ? loadedGroups.groups : [];
   const loadingGroups = !!selectedSchoolId && loadedGroups?.schoolId !== selectedSchoolId;
-
-  // effect: resets the form when the parent opens the dialog
-  useEffect(() => {
-    if (!isOpen) return;
-
-    form.reset({ studentId: student.id });
-  }, [isOpen, student.id, form]);
 
   function loadGroups(schoolId: string) {
     const keepIfStillSelected = (schoolGroups: SchoolGroup[]) => {
@@ -102,123 +106,119 @@ export default function StudentMoveSchoolForm({
 
   return (
     <Form {...form}>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="p-5">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Move student to another school</DialogTitle>
-          </DialogHeader>
-          {children}
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
-            <div className="flex items-start gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-sm text-red-base">
-              <Icons.info className="mt-0.5 h-5 w-5 shrink-0" />
-              <span>
-                Moving this student reassigns them to a new school, group and fellow. Their existing
-                attendance records under{" "}
-                <span className="font-semibold">
-                  {student.school?.schoolName ?? "their old school"}
-                </span>{" "}
-                will be permanently deleted. This cannot be undone.
-              </span>
-            </div>
-            <FormField
-              control={form.control}
-              name="schoolId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Destination school <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      form.resetField("assignedGroupId");
-                      loadGroups(value);
-                    }}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a school" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="max-h-[200px]">
-                      {schools.length === 0 ? (
-                        <div className="px-2 py-1.5 text-sm text-shamiri-text-grey">
-                          No other schools available
-                        </div>
-                      ) : (
-                        schools.map((school) => (
-                          <SelectItem key={school.id} value={school.id}>
-                            {school.schoolName}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="assignedGroupId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Group / Fellow <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={!selectedSchoolId || loadingGroups}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            !selectedSchoolId
-                              ? "Select a school first"
-                              : loadingGroups
-                                ? "Loading groups..."
-                                : "Select a group/fellow"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="max-h-[200px]">
-                      {groups.length === 0 && !loadingGroups && selectedSchoolId ? (
-                        <div className="px-2 py-1.5 text-sm text-shamiri-text-grey">
-                          No groups found in this school
-                        </div>
-                      ) : (
-                        groups.map((group) => (
-                          <SelectItem key={group.id} value={group.id}>
-                            {group.groupName} · {group.leader.fellowName}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter className="flex justify-end gap-2">
-              <Button variant="ghost" type="button" onClick={() => setIsOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="brand"
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
+      <DialogHeader>
+        <DialogTitle className="text-lg font-bold">Move student to another school</DialogTitle>
+      </DialogHeader>
+      {children}
+      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+        <div className="flex items-start gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-sm text-red-base">
+          <Icons.info className="mt-0.5 h-5 w-5 shrink-0" />
+          <span>
+            Moving this student reassigns them to a new school, group and fellow. Their existing
+            attendance records under{" "}
+            <span className="font-semibold">
+              {student.school?.schoolName ?? "their old school"}
+            </span>{" "}
+            will be permanently deleted. This cannot be undone.
+          </span>
+        </div>
+        <FormField
+          control={form.control}
+          name="schoolId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Destination school <span className="text-shamiri-light-red">*</span>
+              </FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  form.resetField("assignedGroupId");
+                  loadGroups(value);
+                }}
+                value={field.value}
               >
-                Move student
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a school" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="max-h-[200px]">
+                  {schools.length === 0 ? (
+                    <div className="px-2 py-1.5 text-sm text-shamiri-text-grey">
+                      No other schools available
+                    </div>
+                  ) : (
+                    schools.map((school) => (
+                      <SelectItem key={school.id} value={school.id}>
+                        {school.schoolName}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="assignedGroupId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Group / Fellow <span className="text-shamiri-light-red">*</span>
+              </FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={!selectedSchoolId || loadingGroups}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        !selectedSchoolId
+                          ? "Select a school first"
+                          : loadingGroups
+                            ? "Loading groups..."
+                            : "Select a group/fellow"
+                      }
+                    />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="max-h-[200px]">
+                  {groups.length === 0 && !loadingGroups && selectedSchoolId ? (
+                    <div className="px-2 py-1.5 text-sm text-shamiri-text-grey">
+                      No groups found in this school
+                    </div>
+                  ) : (
+                    groups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.groupName} · {group.leader.fellowName}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <DialogFooter className="flex justify-end gap-2">
+          <Button variant="ghost" type="button" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="brand"
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            loading={form.formState.isSubmitting}
+          >
+            Move student
+          </Button>
+        </DialogFooter>
+      </form>
     </Form>
   );
 }

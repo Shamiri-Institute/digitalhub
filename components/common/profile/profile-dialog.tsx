@@ -4,7 +4,7 @@ import { ImplementerRole } from "#/db/enums";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import Image from "next/image";
-import { useEffect } from "react";
+import {} from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import type { CurrentPersonnel } from "#/app/auth";
@@ -122,13 +122,6 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
   });
 
   const countyWatcher = form.watch("county");
-
-  // effect: clears the sub-county when the user changes the watched county field
-  useEffect(() => {
-    if (form.formState.dirtyFields.county) {
-      form.setValue("subCounty", "");
-    }
-  }, [countyWatcher, form]);
 
   const onSubmit = async (data: z.infer<typeof ProfileSchema>) => {
     if (!session) return;
@@ -386,7 +379,10 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
                           County <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            form.setValue("subCounty", "");
+                          }}
                           value={field.value}
                           defaultValue={field.value}
                           disabled={isFellow}

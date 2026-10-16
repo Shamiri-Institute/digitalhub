@@ -14,6 +14,7 @@ import {
   json,
   jsonb,
   pgEnum,
+  pgSequence,
   pgTable,
   serial,
   text,
@@ -298,6 +299,8 @@ export const interventionSessionRating = pgTable(
   ],
 );
 
+export const studentVisibleNumber = pgSequence("student_visible_number_seq");
+
 export const student = pgTable(
   "students",
   {
@@ -414,11 +417,10 @@ export const hub = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    // Deprecated: nothing reads or writes it. New hubs leave it null; drop it with its index later.
     visibleId: varchar("visible_id", { length: 100 }),
     hubName: varchar("hub_name", { length: 255 }).notNull(),
     implementerId: varchar("implementer_id", { length: 255 }).notNull(),
-    projectId: varchar("project_id", { length: 100 }),
+    projectId: varchar("project_id", { length: 100 }).notNull(),
   },
   (table) => [
     uniqueIndex("hubs_visible_id_key").using("btree", table.visibleId),
@@ -440,7 +442,7 @@ export const hub = pgTable(
       name: "hubs_project_id_fkey",
     })
       .onUpdate("cascade")
-      .onDelete("set null"),
+      .onDelete("restrict"),
   ],
 );
 
@@ -730,7 +732,7 @@ export const interventionSession = pgTable(
       name: "intervention_sessions_session_id_fkey",
     })
       .onUpdate("cascade")
-      .onDelete("set null"),
+      .onDelete("restrict"),
     foreignKey({
       columns: [table.schoolId],
       foreignColumns: [school.id],

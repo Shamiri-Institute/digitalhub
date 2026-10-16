@@ -28,7 +28,7 @@ for (const role of ROLES) {
           if (message.type() === "error") consoleErrors.push(message.text());
         };
         // A server action the page fires on its own (on mount) that throws answers with a 5xx; the
-        // page can still render, so check the responses (#844).
+        // page can still render, so check the responses.
         const failedActions: string[] = [];
         const onResponse = (response: Response) => {
           if (response.status() >= 500 && response.request().headers()["next-action"]) {

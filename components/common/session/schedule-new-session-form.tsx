@@ -1,7 +1,7 @@
 import type { ImplementerRole } from "#/db/enums";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import RescheduleSession from "#/components/common/session/reschedule-session";
@@ -49,8 +49,6 @@ export function ScheduleNewSession({
 }) {
   const { toast } = useToast();
 
-  const [mode, setMode] = useState<"school" | "venue">("school");
-
   const [hour, setHour] = useState("9");
   const [minutes, setMinutes] = useState("00");
   const [time, setTime] = useState("AM");
@@ -58,12 +56,14 @@ export function ScheduleNewSession({
   const [rescheduleDialog, setRescheduleDialog] = useState(false);
   const [existingSession, setExistingSession] = useState<Session>();
 
+  const defaultSession = hubSessionTypes.find(
+    (sessionType) => sessionType.sessionType !== "INTERVENTION",
+  );
   const form = useForm<z.infer<typeof ScheduleNewSessionSchema>>({
     resolver: zodResolver(ScheduleNewSessionSchema),
     defaultValues: {
-      sessionId: hubSessionTypes.filter((sessionType) => {
-        return sessionType.sessionType !== "INTERVENTION";
-      })[0]?.id,
+      sessionId: defaultSession?.id,
+      sessionType: defaultSession?.sessionType,
       sessionStartTime: undefined,
       schoolId: "",
       venue: "",
@@ -72,26 +72,14 @@ export function ScheduleNewSession({
 
   const sessionIdWatcher = form.watch("sessionId");
 
-  // effect: sets the session type and clears venue or school when the watched session select changes
-  useEffect(() => {
-    const sessionType = hubSessionTypes.find((x) => x.id === sessionIdWatcher);
-    if (sessionType) {
-      form.setValue("sessionType", sessionType.sessionType);
-      if (
-        sessionType.sessionType !== "INTERVENTION" &&
-        sessionType.sessionType !== "CLINICAL" &&
-        sessionType.sessionType !== "DATA_COLLECTION"
-      ) {
-        form.resetField("venue");
-        form.resetField("schoolId");
-        setMode("venue");
-      } else {
-        form.resetField("schoolId");
-        form.resetField("venue");
-        setMode("school");
-      }
-    }
-  }, [hubSessionTypes, sessionIdWatcher, form]);
+  const selectedType = hubSessionTypes.find((x) => x.id === sessionIdWatcher)?.sessionType;
+  const mode =
+    selectedType &&
+    selectedType !== "INTERVENTION" &&
+    selectedType !== "CLINICAL" &&
+    selectedType !== "DATA_COLLECTION"
+      ? "venue"
+      : "school";
 
   const onSubmit = async (data: z.infer<typeof ScheduleNewSessionSchema>) => {
     const combinedDateTime = new Date(
@@ -157,7 +145,16 @@ export function ScheduleNewSession({
             render={({ field }) => (
               <FormItem className="space-y-2">
                 <FormLabel>Select a session type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    const sessionType = hubSessionTypes.find((x) => x.id === value)?.sessionType;
+                    if (sessionType) form.setValue("sessionType", sessionType);
+                    form.resetField("venue");
+                    form.resetField("schoolId");
+                  }}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue />
@@ -221,7 +218,9 @@ export function ScheduleNewSession({
                   <FormLabel>
                     Enter venue <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
-                  <Input {...field} type="text" />
+                  <FormControl>
+                    <Input {...field} type="text" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -290,6 +289,7 @@ export function ScheduleNewSession({
                           <div className="relative w-16">
                             <Input
                               type="number"
+                              aria-label="Hour"
                               onChange={(e) => {
                                 setHour(e.target.value);
                               }}
@@ -306,6 +306,7 @@ export function ScheduleNewSession({
                           <div className="relative w-16">
                             <Input
                               type="number"
+                              aria-label="Minutes"
                               onChange={(e) => {
                                 setMinutes(handleMinutesChange(e.target.value));
                               }}

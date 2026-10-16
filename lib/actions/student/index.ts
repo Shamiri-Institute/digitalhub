@@ -17,6 +17,7 @@ import {
 } from "#/components/common/student/schemas";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
+import { nextStudentVisibleId } from "#/db/sql";
 import {
   interventionGroup,
   school,
@@ -28,7 +29,6 @@ import {
 import { fetchSessionAttendances } from "#/lib/actions/session/session";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
-import { generateStudentVisibleID } from "#/lib/utils";
 
 type StudentRole =
   | typeof ImplementerRole.FELLOW
@@ -97,7 +97,6 @@ async function requireSession(sessionId: string) {
 }
 
 export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSchema>) {
-  // TODO: Add db transactions
   try {
     const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
 
@@ -149,14 +148,13 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
       throw new Error("A group and a school are required to add a student");
     }
     await requireCallerAtSchool(caller, schoolId);
-    const [group, schoolRow, studentCount] = await Promise.all([
+    const [group, schoolRow] = await Promise.all([
       db.query.interventionGroup.findFirst({
         where: (g, { eq }) => eq(g.id, assignedGroupId),
       }),
       db.query.school.findFirst({
         where: (s, { eq }) => eq(s.id, schoolId),
       }),
-      db.$count(student),
     ]);
     const callerMayUseGroup =
       group?.schoolId === schoolId &&
@@ -172,7 +170,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
       .insert(student)
       .values({
         id: objectId("stu"),
-        visibleId: generateStudentVisibleID(group?.groupName ?? "NA", studentCount),
+        visibleId: nextStudentVisibleId(group.groupName ?? "NA"),
         studentName,
         schoolId: schoolRow.id,
         admissionNumber,

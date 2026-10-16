@@ -13,7 +13,7 @@ import {
   triageEvent,
   triageEventAudit,
 } from "#/db/schema";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import { NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
 import { hubOfSession } from "#/lib/auth/require-hub-role";
 
 const triageEventWith = {
@@ -155,7 +155,6 @@ export async function createTriageEvent(
       return { success: false, message: "This session has not occurred yet." };
     }
 
-    // A student outside the fellow's groups gets the same message as a missing student.
     const studentInLedGroup = await db.$count(
       student,
       and(
@@ -164,7 +163,7 @@ export async function createTriageEvent(
       ),
     );
     if (!studentInLedGroup) {
-      throw new Error("Student not found.");
+      throw new NotFoundError("Student");
     }
 
     const existing = await db.query.triageEvent.findFirst({

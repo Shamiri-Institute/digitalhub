@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellow } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -15,8 +15,7 @@ type Fixture = {
 };
 let fixture: Fixture;
 
-test.beforeAll(async () => {
-  // A fellow with a unique name in the hub of a coordinator who can sign in.
+async function pickUniquelyNamedFellowInCoordinatorHub() {
   const {
     rows: [row],
   } = await db.execute<Fixture>(sql`
@@ -24,15 +23,19 @@ test.beforeAll(async () => {
       f.sub_county as "subCounty", u.email
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join fellows f on f.hub_id = hc.assigned_hub_id and f.fellow_name is not null
-      and f.fellow_email is not null
     where ${signableMember()}
-      and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
+      and ${uniqueFellowName()}
       and exists (select 1 from implementer_members fm where fm.identifier = f.id and fm.role = 'FELLOW')
     order by f.id
     limit 1`);
-  if (!row) throw new Error("seed the database first: no editable fellow for a coordinator");
+  required(row, "no editable fellow for a coordinator");
+  return row;
+}
+
+test.beforeAll(async () => {
+  const row = await pickUniquelyNamedFellowInCoordinatorHub();
   fixture = row;
 });
 
@@ -56,9 +59,6 @@ test("a hub coordinator edits a fellow of their hub", async ({ page, context }) 
   const dialog = await openEditDialog(page);
   const newMpesaName = `${fixture.fellowName} E2E`;
   await dialog.locator('input[name="mpesaName"]').fill(newMpesaName);
-  // Seeded fellows can carry a sub-county outside their county, which the form rejects.
-  await dialog.getByRole("combobox", { name: /Sub-county/ }).click();
-  await page.getByRole("option").first().click();
   await dialog.getByRole("button", { name: "Update & Save" }).click();
   await expect(dialog).toBeHidden();
 

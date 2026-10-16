@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { and } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -14,7 +15,6 @@ let bystander: Supervisor;
 let referrerSchoolId: string;
 let pseudonym: string;
 let studentName: string;
-let removeCase: () => Promise<void>;
 
 test.describe.configure({ mode: "serial" });
 
@@ -61,20 +61,14 @@ test.beforeAll(async () => {
   bystander = other;
 });
 
-test.beforeEach(async () => {
+test.beforeEach(async ({ undo }) => {
   const created = await createClinicalCase({
     schoolId: referrerSchoolId,
     currentSupervisorId: referrer.profileId,
   });
   pseudonym = created.pseudonym;
   studentName = created.studentName;
-  removeCase = created.remove;
-});
-
-// Cleanup runs in afterEach, not in a finally block: when a test times out, Playwright abandons
-// its body but still runs the hooks.
-test.afterEach(async () => {
-  await removeCase?.();
+  undo(created.remove);
 });
 
 function referredCases(page: Page) {
@@ -90,10 +84,7 @@ async function referCaseToRecipient(page: Page) {
   await page.goto(getUrl("/sc/clinical"));
   await chooseRowAction(page, await searchRows(page, pseudonym), "Refer case");
 
-  // This dialog's heading is not linked to it, so it has no accessible name.
-  const dialog = page
-    .getByRole("dialog")
-    .filter({ has: page.getByRole("heading", { name: "Refer clinical case" }) });
+  const dialog = page.getByRole("dialog", { name: "Refer clinical case" });
   await dialog.getByRole("combobox", { name: "Refer to" }).click();
   await page.getByRole("option", { name: "Supervisor", exact: true }).click();
   await dialog.getByRole("button", { name: "Select a supervisor..." }).click();

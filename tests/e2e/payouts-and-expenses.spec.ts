@@ -3,7 +3,12 @@ import { and, eq, gte, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowAttendance, payoutStatements, sessionName } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import {
+  onlySessionAtSchoolThatWeek,
+  signableMember,
+  signInWithEmail,
+  required,
+} from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -14,7 +19,7 @@ async function signableProfiles(table: string, role: string, hubColumn: string) 
     select p.id, p.${sql.raw(hubColumn)} as "hubId", u.email, u.id as "userId"
     from ${sql.raw(table)} p
     join implementer_members m on m.identifier = p.id and m.role = ${role}
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where p.${sql.raw(hubColumn)} is not null
       and ${signableMember()}
     order by p.id`,
@@ -49,10 +54,9 @@ test.describe("fellow attendance", () => {
   let original: typeof fellowAttendance.$inferSelect;
   const startedAt = new Date();
 
-  test.beforeAll(async () => {
-    // An attended, unprocessed session marked for a fellow of a supervisor who can sign in. The
-    // fellow leads a group the UI lets them mark: a treatment group for an intervention session.
-    // It already has a payout statement, so marking it missed writes a reversal.
+  // The fellow leads a group the UI lets them mark: a treatment group for an intervention session.
+  // It already has a payout statement, so marking it missed writes a reversal.
+  async function pickAttendedUnprocessedSessionOfSignableSupervisor() {
     const {
       rows: [row],
     } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
@@ -68,13 +72,18 @@ test.describe("fellow attendance", () => {
       join intervention_groups g on g.school_id = sc.id and g.leader_id = f.id
         and (sn."session_type" <> 'INTERVENTION' or g.group_type = 'TREATMENT')
       join implementer_members m on m.identifier = f.supervisor_id and m.role = 'SUPERVISOR'
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where fa.attended and fa.processed_at is null and ${signableMember()}
         and (select ps.reason from payout_statements ps where ps.fellow_attendance_id = fa.id
           order by ps.created_at desc limit 1) <> 'UNMARK_SESSION_ATTENDANCE'
       order by s.session_date desc, fa.id
       limit 1`);
-    if (!row) throw new Error("seed the database first: no attended, paid, unprocessed attendance");
+    required(row, "no attended, paid, unprocessed attendance");
+    return row;
+  }
+
+  test.beforeAll(async () => {
+    const row = await pickAttendedUnprocessedSessionOfSignableSupervisor();
     fixture = { ...row, sessionDate: new Date(row.sessionDate) };
     const [attendance] = await db
       .select()
@@ -121,7 +130,7 @@ test.describe("fellow attendance", () => {
 
     await chooseRowAction(page, fellowRow, "Mark attendance");
     const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
-    await mark.getByRole("radio").nth(1).click();
+    await mark.getByRole("radio", { name: "Missed" }).click();
     await mark.getByRole("combobox", { name: "Select reason for above" }).click();
     const absenceReason = (await page.getByRole("option").first().innerText()).trim();
     await page.getByRole("option").first().click();
@@ -158,7 +167,7 @@ test.describe("fellow attendance", () => {
   test("a supervisor in another hub does not see the session", async ({ page, context }) => {
     const supervisors = await signableProfiles("supervisors", "SUPERVISOR", "hub_id");
     const outsider = supervisors.find((s) => s.hubId !== fixture.hubId);
-    if (!outsider) throw new Error("seed the database first: no supervisor in another hub");
+    required(outsider, "no supervisor in another hub");
     await signInWithEmail(context, outsider.email);
 
     const sessionRows = await openSessionWeek(page, fixture.sessionDate, fixture.schoolName);
@@ -179,9 +188,7 @@ test.describe("bulk fellow attendance", () => {
   };
   let fixture: Fixture;
 
-  test.beforeAll(async () => {
-    // An occurred intervention session, the only one at its school that week, where a supervisor
-    // who can sign in has two fellows of their hub leading treatment groups and no attendance yet.
+  async function pickLoneSessionWithTwoUnmarkedFellows() {
     const {
       rows: [row],
     } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
@@ -199,18 +206,21 @@ test.describe("bulk fellow attendance", () => {
       join supervisors sv on sv.id = f.supervisor_id and sv.hub_id = f.hub_id
         and sv.hub_id = s.hub_id
       join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where i.occurred and ${signableMember()}
         and not exists (
           select 1 from fellow_attendances fa where fa.session_id = i.id and fa.fellow_id = f.id)
-        and not exists (
-          select 1 from intervention_sessions o where o.school_id = i.school_id and o.id <> i.id
-            and abs(extract(epoch from o.session_date - i.session_date)) < 7 * 24 * 3600)
+        and ${onlySessionAtSchoolThatWeek()}
       group by i.id, i.session_date, sn.amount, s.school_name, u.email
       having count(distinct f.id) >= 2
       order by i.session_date desc, i.id, u.email
       limit 1`);
-    if (!row) throw new Error("seed the database first: no session with two unmarked fellows");
+    required(row, "no session with two unmarked fellows");
+    return row;
+  }
+
+  test.beforeAll(async () => {
+    const row = await pickLoneSessionWithTwoUnmarkedFellows();
     fixture = { ...row, sessionDate: new Date(row.sessionDate) };
   });
 

@@ -12,7 +12,13 @@ import {
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -204,7 +210,7 @@ export default function CaseNotesForm({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
-          <h2>Case Notes</h2>
+          <DialogTitle>Case Notes</DialogTitle>
           {hasExistingNotes && (
             <p className="text-sm text-muted-foreground">
               This session already has notes and cannot be edited

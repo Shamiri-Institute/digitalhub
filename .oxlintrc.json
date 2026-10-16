@@ -102,7 +102,8 @@
       {
         "hooks": ["useEffect", "useLayoutEffect", "useMemo", "useCallback"]
       }
-    ]
+    ],
+    "hooks-policy/no-form-reset-in-effect": "error"
   },
   "ignorePatterns": [".next", "node_modules", "playwright-report", ".artifacts"],
   "overrides": [
@@ -116,6 +117,22 @@
       "files": ["tests/**"],
       "rules": {
         "typescript/unbound-method": "off"
+      }
+    },
+    {
+      "files": ["proxy.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["#/db", "#/db/*", "#/app/auth", "#/lib/auth", "#/lib/auth/*"],
+                "message": "proxy.ts runs where the database is unreachable (Vercel middleware cannot reach RDS)."
+              }
+            ]
+          }
+        ]
       }
     },
     {

@@ -1,11 +1,10 @@
 "use client";
-import { InfoIcon } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { dropoutSchool } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { Alert, AlertTitle } from "#/components/ui/alert";
+import { DropoutConfirmStep, type StepProps } from "#/components/common/dropout-confirm-step";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -37,6 +36,8 @@ import { zodResolver } from "#/lib/zod-resolver";
 import { DropoutSchoolSchema } from "../../../app/(platform)/hc/schemas";
 import type { SchoolsTableData } from "./columns";
 
+type Step = "form" | "confirm";
+
 export function DropoutSchool({
   school,
   open,
@@ -46,10 +47,33 @@ export function DropoutSchool({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
+  const [step, setStep] = useState<Step>("form");
+  function close() {
+    setStep("form");
+    setOpen(false);
+  }
+  return (
+    <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : close())}>
+      <DialogContent className={step === "form" ? "p-5 text-base font-medium leading-6" : "p-5"}>
+        <DropoutSchoolSteps school={school} step={step} setStep={setStep} close={close} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DropoutSchoolSteps({
+  school,
+  step,
+  setStep,
+  close,
+}: {
+  school: SchoolsTableData | null;
+} & StepProps<Step>) {
   const [formData, setFormData] = useState<z.infer<typeof DropoutSchoolSchema>>();
   const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof DropoutSchoolSchema>>({
     resolver: zodResolver(DropoutSchoolSchema),
+    defaultValues: { schoolId: school?.id },
   });
 
   function confirmSubmit() {
@@ -67,8 +91,7 @@ export function DropoutSchool({
         toast({
           description: response.message,
         });
-        form.reset();
-        setConfirmDialogOpen(false);
+        close();
       }),
     );
   }
@@ -78,125 +101,81 @@ export function DropoutSchool({
       return;
     }
     setFormData(data);
-    setOpen(false);
-    setConfirmDialogOpen(true);
+    setStep("confirm");
   };
 
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
-
-  // effect: resets the form to the school the parent selected when the dialog opens
-  useEffect(() => {
-    form.reset({
-      schoolId: school?.id,
-    });
-  }, [school?.id, open, form]);
+  if (step === "confirm") {
+    return (
+      <DropoutConfirmStep
+        isPending={isPending}
+        onCancel={() => {
+          form.reset({ schoolId: school?.id });
+          setStep("form");
+        }}
+        onConfirm={confirmSubmit}
+      >
+        <DialogAlertWidget label={school?.schoolName} />
+      </DropoutConfirmStep>
+    );
+  }
 
   return (
     <Form {...form}>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="p-5 text-base font-medium leading-6">
-          <DialogHeader>
-            <DialogTitle>Drop out school</DialogTitle>
-          </DialogHeader>
-          <DialogAlertWidget label={school?.schoolName} />
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
-            <FormField
-              control={form.control}
-              name="dropoutReason"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>
-                    Select reason <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <Select onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a dropout reason" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {SCHOOL_DROPOUT_REASONS.map((reason) => (
-                        <SelectItem key={reason} value={reason}>
-                          {reason}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="schoolId"
-              render={({ field }) => (
-                <FormItem>
-                  <Input id="schoolId" name="schoolId" type="hidden" value={field.value} />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Separator />
-            <DialogFooter className="flex justify-end">
-              <Button
-                className="text-shamiri-light-red hover:bg-red-bg"
-                variant="ghost"
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button variant="destructive" type="submit">
-                Submit
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent className="p-5">
-          <DialogHeader>
-            <DialogTitle>Confirm drop out</DialogTitle>
-            <DialogAlertWidget label={school?.schoolName} />
-          </DialogHeader>
-          <div className="space-y-4">
-            <h3>Are you sure?</h3>
-            <Alert variant="destructive">
-              <AlertTitle className="flex gap-2">
-                <InfoIcon className="h-4 w-4 shrink-0" />
-                Once this change has been made it is irreversible and will need you to contact
-                support in order to modify. Please be sure of your action before you confirm.
-              </AlertTitle>
-            </Alert>
-          </div>
-          <Separator />
-          <DialogFooter className="flex justify-end">
-            <Button
-              className="text-shamiri-light-red"
-              variant="ghost"
-              onClick={() => {
-                setConfirmDialogOpen(false);
-                setOpen(true);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="destructive"
-              disabled={isPending}
-              loading={isPending}
-              onClick={() => {
-                confirmSubmit();
-              }}
-            >
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogHeader>
+        <DialogTitle>Drop out school</DialogTitle>
+      </DialogHeader>
+      <DialogAlertWidget label={school?.schoolName} />
+      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+        <FormField
+          control={form.control}
+          name="dropoutReason"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>
+                Select reason <span className="text-shamiri-light-red">*</span>
+              </FormLabel>
+              <Select onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a dropout reason" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {SCHOOL_DROPOUT_REASONS.map((reason) => (
+                    <SelectItem key={reason} value={reason}>
+                      {reason}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="schoolId"
+          render={({ field }) => (
+            <FormItem>
+              <Input id="schoolId" name="schoolId" type="hidden" value={field.value} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Separator />
+        <DialogFooter className="flex justify-end">
+          <Button
+            className="text-shamiri-light-red hover:bg-red-bg"
+            variant="ghost"
+            onClick={close}
+          >
+            Cancel
+          </Button>
+          <Button variant="destructive" type="submit">
+            Submit
+          </Button>
+        </DialogFooter>
+      </form>
     </Form>
   );
 }

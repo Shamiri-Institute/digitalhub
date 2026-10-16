@@ -3,7 +3,12 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { supervisorAttendance } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import {
+  onlySessionAtSchoolThatWeek,
+  signableMember,
+  signInWithEmail,
+  required,
+} from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -18,9 +23,7 @@ type Fixture = {
 };
 let fixture: Fixture;
 
-test.beforeAll(async () => {
-  // An occurred session, the only one at its school that week, in the hub of a coordinator who
-  // can sign in, with a supervisor of that hub whose attendance is not marked yet.
+async function pickLoneOccurredSessionWithUnmarkedSupervisor() {
   const {
     rows: [row],
   } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
@@ -28,7 +31,7 @@ test.beforeAll(async () => {
       sv.id as "supervisorId", sv.supervisor_name as "supervisorName", u.email
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.hub_id = hc.assigned_hub_id and s.archived_at is null
     join intervention_sessions i on i.school_id = s.id and i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'
@@ -37,14 +40,17 @@ test.beforeAll(async () => {
     where ${signableMember()}
       and not exists (
         select 1 from supervisor_attendances a where a.session_id = i.id and a.supervisor_id = sv.id)
-      and not exists (
-        select 1 from intervention_sessions o where o.school_id = i.school_id and o.id <> i.id
-          and abs(extract(epoch from o.session_date - i.session_date)) < 7 * 24 * 3600)
+      and ${onlySessionAtSchoolThatWeek()}
       and (select count(*) from supervisors o
         where o.hub_id = sv.hub_id and o.supervisor_name = sv.supervisor_name) = 1
     order by i.session_date desc, i.id, sv.id
     limit 1`);
-  if (!row) throw new Error("seed the database first: no unmarked supervisor for a session");
+  required(row, "no unmarked supervisor for a session");
+  return row;
+}
+
+test.beforeAll(async () => {
+  const row = await pickLoneOccurredSessionWithUnmarkedSupervisor();
   fixture = { ...row, sessionDate: new Date(row.sessionDate) };
 });
 
@@ -105,7 +111,7 @@ test("a hub coordinator marks a supervisor attended, then missed in bulk", async
     .getByRole("button", { name: "Mark supervisor attendance" })
     .click();
   const bulkMark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
-  await bulkMark.getByRole("radio").nth(1).click();
+  await bulkMark.getByRole("radio", { name: "Missed" }).click();
   await bulkMark.getByRole("combobox", { name: "Select reason for above" }).click();
   await page.getByRole("option").first().click();
   await bulkMark.getByRole("button", { name: "Submit" }).click();

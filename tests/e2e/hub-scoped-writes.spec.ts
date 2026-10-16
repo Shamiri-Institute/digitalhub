@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { format } from "date-fns";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
@@ -10,7 +11,7 @@ import {
   triageEvent,
   triageEventAudit,
 } from "#/db/schema";
-import { signableMember, signInWithEmail } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
 import { sessionDisplayName } from "#/lib/utils";
 
@@ -52,7 +53,7 @@ test.beforeAll(async () => {
     select u.email, h.assigned_hub_id as "hubId", h.implementer_id as "implementerId"
     from hub_coordinators h
     join implementer_members m on m.identifier = h.id and m.role = 'HUB_COORDINATOR'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     where h.assigned_hub_id is not null and ${signableMember()}
     order by u.email`);
 
@@ -66,7 +67,7 @@ test.beforeAll(async () => {
     } = await db.execute<{ email: string }>(sql`
       select u.email from supervisors sup
       join implementer_members m on m.identifier = sup.id and m.role = 'SUPERVISOR'
-      join users u on u.id = m.user_id and u.email is not null
+      join users u on u.id = m.user_id
       where sup.hub_id = ${candidate.hubId} and ${signableMember()}
       order by u.email
       limit 1`);
@@ -116,7 +117,7 @@ test.beforeAll(async () => {
       other_student.admission_number as "otherAdmissionNumber"
     from intervention_groups g
     join implementer_members m on m.identifier = g.leader_id and m.role = 'FELLOW'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.id = g.school_id
     join intervention_sessions i on i.school_id = s.id and i.occurred
     join session_names sn on sn.id = i.session_id
@@ -127,7 +128,7 @@ test.beforeAll(async () => {
     join implementer_members other_member on other_member.identifier = other_group.leader_id
       and other_member.role = 'FELLOW'
       and ${signableMember("other_member")}
-    join users other_user on other_user.id = other_member.user_id and other_user.email is not null
+    join users other_user on other_user.id = other_member.user_id
     join students other_student on other_student.assigned_group_id = other_group.id
       and other_student.archived_at is null and other_student.admission_number is not null
     where ${signableMember()} and m.implementer_id = ${coordinator.implementerId}
@@ -138,21 +139,11 @@ test.beforeAll(async () => {
         where s2.assigned_group_id = other_group.id and t.session_id = i.id)
     order by u.email, i.session_date, st.id, other_user.email, other_student.id
     limit 1`);
-  if (!fellowRow) throw new Error("seed the database first: no fellow with an occurred session");
+  required(fellowRow, "no fellow with an occurred session");
   triage = {
     ...fellowRow,
     sessionLabel: sessionDisplayName(fellowRow.sessionLabel) ?? fellowRow.sessionLabel,
   };
-});
-
-// Each test's undo steps run in afterEach, not in a finally block: when a test times out,
-// Playwright abandons its body but still runs the hooks.
-let undo: (() => Promise<unknown>)[] = [];
-test.afterEach(async () => {
-  for (const step of undo.reverse()) {
-    await step();
-  }
-  undo = [];
 });
 
 /**
@@ -180,11 +171,11 @@ async function openStudentAttendance(page: Page) {
   return attendance;
 }
 
-test("a hub coordinator drops out a student in their hub", async ({ page, context }) => {
+test("a hub coordinator drops out a student in their hub", async ({ page, context, undo }) => {
   await signInWithEmail(context, coordinator.email);
   const studentsPage = getUrl(`/hc/schools/${school.visibleId}/students`);
   await page.goto(studentsPage);
-  undo.push(() =>
+  undo(() =>
     db
       .update(student)
       .set({ droppedOut: false, dropOutReason: null, droppedOutAt: null })
@@ -209,12 +200,16 @@ test("a hub coordinator drops out a student in their hub", async ({ page, contex
   await expect(await rowWithCell(page, main, school.studentName)).toContainText("Inactive");
 });
 
-test("a hub coordinator marks a session in their hub as occurred", async ({ page, context }) => {
+test("a hub coordinator marks a session in their hub as occurred", async ({
+  page,
+  context,
+  undo,
+}) => {
   await db
     .update(interventionSession)
     .set({ occurred: false })
     .where(eq(interventionSession.id, school.sessionId));
-  undo.push(() =>
+  undo(() =>
     db
       .update(interventionSession)
       .set({ occurred: school.sessionOccurred })
@@ -229,14 +224,13 @@ test("a hub coordinator marks a session in their hub as occurred", async ({ page
     await sessionRow(page, main, school.sessionLabel),
     "Mark session occurrence",
   );
-  const dialog = page
-    .getByRole("dialog")
-    .filter({ has: page.getByRole("heading", { name: "Mark session occurrence" }) });
-  // The radios are unlabelled; "Attended" is the first option.
-  await dialog.getByRole("radio").first().click();
+  const dialog = page.getByRole("dialog", { name: "Mark session occurrence" });
+  await dialog.getByRole("radio", { name: "Attended" }).click();
   await dialog.getByRole("button", { name: "Submit" }).click();
-  // Submit only opens a confirmation, whose title is not linked to the dialog; Confirm saves.
-  const confirm = page.getByRole("dialog").filter({ hasText: "Are you sure?" });
+  // Submit only opens a confirmation; Confirm saves.
+  const confirm = page
+    .getByRole("dialog", { name: "Mark session occurrence" })
+    .filter({ hasText: "Are you sure?" });
   await confirm.getByRole("button", { name: "Confirm" }).click();
   await expect(confirm).toBeHidden();
 
@@ -258,6 +252,7 @@ test("a hub coordinator in another hub does not see the school", async ({ page, 
 test("a hub coordinator marks a student in their hub missed at a session", async ({
   page,
   context,
+  undo,
 }) => {
   const attendanceAtSession = and(
     eq(studentAttendance.studentId, school.studentId),
@@ -265,7 +260,7 @@ test("a hub coordinator marks a student in their hub missed at a session", async
   );
   const originalAttendances = await db.select().from(studentAttendance).where(attendanceAtSession);
   await db.delete(studentAttendance).where(attendanceAtSession);
-  undo.push(async () => {
+  undo(async () => {
     await db.delete(studentAttendance).where(attendanceAtSession);
     if (originalAttendances.length > 0) {
       await db.insert(studentAttendance).values(originalAttendances);
@@ -292,8 +287,7 @@ test("a hub coordinator marks a student in their hub missed at a session", async
     .filter({ hasText: school.sessionLabel })
     .filter({ hasText: format(session.sessionDate, "dd MMM yyyy") })
     .click();
-  // The radios are unlabelled: Attended, Missed, Unmarked.
-  await mark.getByRole("radio").nth(1).click();
+  await mark.getByRole("radio", { name: "Missed" }).click();
   await mark.getByRole("combobox", { name: "Select reason for above" }).click();
   await page.getByRole("option").first().click();
   await mark.getByRole("button", { name: "Submit" }).click();
@@ -313,13 +307,17 @@ test("a hub coordinator marks a student in their hub missed at a session", async
   ).toContainText("Missed");
 });
 
-test("a supervisor edits the details of a student in their hub", async ({ page, context }) => {
+test("a supervisor edits the details of a student in their hub", async ({
+  page,
+  context,
+  undo,
+}) => {
   const [originalDetails] = await db
     .select({ studentName: student.studentName, form: student.form, stream: student.stream })
     .from(student)
     .where(eq(student.id, school.studentId));
   if (!originalDetails) throw new Error(`student ${school.studentId} is gone`);
-  undo.push(() => db.update(student).set(originalDetails).where(eq(student.id, school.studentId)));
+  undo(() => db.update(student).set(originalDetails).where(eq(student.id, school.studentId)));
   await signInWithEmail(context, school.supervisorEmail);
   await page.goto(getUrl(`/sc/schools/${school.visibleId}/students`));
 
@@ -335,9 +333,6 @@ test("a supervisor edits the details of a student in their hub", async ({ page, 
   await expect(nameInput).toHaveValue(school.studentName);
   const editedName = `${school.studentName} Edited`;
   await nameInput.fill(editedName);
-  // The seed leaves these required fields empty.
-  await dialog.getByLabel("Grade/Form").fill("2");
-  await dialog.getByLabel("Stream").fill("East");
   await dialog.getByRole("button", { name: "Update & save" }).click();
   await expect(dialog).toBeHidden();
 
@@ -345,9 +340,13 @@ test("a supervisor edits the details of a student in their hub", async ({ page, 
   await expect(await rowWithCell(page, main, editedName)).toHaveCount(1);
 });
 
-test("a hub coordinator adds a student to a group in their hub", async ({ page, context }) => {
+test("a hub coordinator adds a student to a group in their hub", async ({
+  page,
+  context,
+  undo,
+}) => {
   const newStudentName = `E2E Student ${Date.now()}`;
-  undo.push(() => db.delete(student).where(eq(student.studentName, newStudentName)));
+  undo(() => db.delete(student).where(eq(student.studentName, newStudentName)));
   await signInWithEmail(context, coordinator.email);
   await page.goto(getUrl(`/hc/schools/${school.visibleId}/groups`));
 
@@ -379,6 +378,7 @@ test("a hub coordinator adds a student to a group in their hub", async ({ page, 
 test("a fellow marks one student missed and two students attended at once", async ({
   page,
   context,
+  undo,
 }) => {
   const groupStudents = await db
     .select({ id: student.id, admissionNumber: student.admissionNumber })
@@ -404,7 +404,7 @@ test("a fellow marks one student missed and two students attended at once", asyn
     inArray(studentAttendance.studentId, studentIds),
   );
   const originalAttendances = await db.select().from(studentAttendance).where(attendanceAtSession);
-  undo.push(async () => {
+  undo(async () => {
     await db.delete(studentAttendance).where(attendanceAtSession);
     if (originalAttendances.length > 0) {
       await db.insert(studentAttendance).values(originalAttendances);
@@ -418,10 +418,8 @@ test("a fellow marks one student missed and two students attended at once", asyn
     await rowWithCell(page, attendance, missedStudent.admissionNumber ?? ""),
     "Mark attendance",
   );
-  // The mark dialog's heading is not linked to it, so it has no accessible name.
   const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
-  // The radios are unlabelled: Attended, Missed, Unmarked.
-  await mark.getByRole("radio").nth(1).click();
+  await mark.getByRole("radio", { name: "Missed" }).click();
   await mark.getByRole("combobox", { name: "Select reason for above" }).click();
   const absenceReason = (await page.getByRole("option").first().innerText()).trim();
   await page.getByRole("option").first().click();
@@ -470,6 +468,7 @@ test("a fellow marks one student missed and two students attended at once", asyn
 test("a fellow documents a triage event; another fellow at the school does not see it", async ({
   page,
   context,
+  undo,
 }) => {
   test.slow();
   const note = `e2e-2212-${Date.now()}`;
@@ -493,7 +492,7 @@ test("a fellow documents a triage event; another fellow at the school does not s
     await expect(form).toBeHidden();
   }
 
-  undo.push(async () => {
+  undo(async () => {
     const events = await db
       .select({ id: triageEvent.id })
       .from(triageEvent)
@@ -512,7 +511,14 @@ test("a fellow documents a triage event; another fellow at the school does not s
   await documentTriage(triage.admissionNumber);
 
   await chooseStudentAction("Edit triage");
-  await form.getByRole("combobox", { name: "Risk screen outcome (required)" }).click();
+  const riskOutcome = form.getByRole("combobox", { name: "Risk screen outcome (required)" });
+  await expect(riskOutcome).toContainText("All NO (Risk negative)");
+  await riskOutcome.click();
+  await page.getByRole("option", { name: "Any YES (Risk positive)" }).click();
+  await expect(form.getByRole("combobox", { name: "Action taken (required)" })).toContainText(
+    "Escalated immediately to supervisor (risk-positive)",
+  );
+  await riskOutcome.click();
   await page.getByRole("option", { name: "All NO (Risk negative)" }).click();
   await form.getByRole("combobox", { name: "Action taken (required)" }).click();
   await page.getByRole("option", { name: "Provided peer counselling" }).click();

@@ -1,9 +1,9 @@
 "use client";
 
 import type { interventionGroupReport, interventionSession, sessionName } from "#/db/schema";
-import { addDays, differenceInSeconds, format } from "date-fns";
+import { addDays, format } from "date-fns";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -37,7 +37,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitGroupEvaluation } from "#/lib/actions/group";
-import { cn, sessionDisplayName } from "#/lib/utils";
+import { cn, sessionDisplayName, updateWindowFor } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type FormInput = {
@@ -50,15 +50,7 @@ type FormInput = {
   commentsInputName: string;
 };
 
-export default function StudentGroupEvaluation({
-  groupId,
-  open,
-  onOpenChange,
-  evaluations,
-  sessions,
-  mode,
-  children,
-}: {
+type StudentGroupEvaluationProps = {
   groupId: string;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
@@ -70,7 +62,26 @@ export default function StudentGroupEvaluation({
   })[];
   mode: "view" | "add";
   children: React.ReactNode;
-}) {
+};
+
+export default function StudentGroupEvaluation(props: StudentGroupEvaluationProps) {
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent className="p-5 text-base font-medium leading-6 lg:w-2/5 lg:max-w-none">
+        <StudentGroupEvaluationForm {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function StudentGroupEvaluationForm({
+  groupId,
+  onOpenChange,
+  evaluations,
+  sessions,
+  mode,
+  children,
+}: StudentGroupEvaluationProps) {
   const formInputs: FormInput[] = [
     {
       section: "Group Engagement & Participation",
@@ -140,55 +151,46 @@ export default function StudentGroupEvaluation({
       })
     | undefined
   >(_evaluation);
-  const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
+  const [updateWindowDuration, setUpdateWindowDuration] = useState(() =>
+    updateWindowFor(_evaluation),
+  );
   const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(
     _evaluation?.sessionId ?? undefined,
   );
 
-  const getDefaultValues = () => {
+  const getDefaultValues = (
+    evaluation: (typeof evaluations)[number] | undefined,
+    sessionId: string | undefined,
+  ) => {
     return {
       mode,
       groupId,
-      engagementComment: existingEvaluation?.engagementComment ?? "",
-      engagement1: existingEvaluation?.engagement1 ?? 0,
-      engagement2: existingEvaluation?.engagement2 ?? 0,
-      engagement3: existingEvaluation?.engagement3 ?? 0,
-      cooperationComment: existingEvaluation?.cooperationComment ?? "",
-      cooperation1: existingEvaluation?.cooperation1 ?? 0,
-      cooperation2: existingEvaluation?.cooperation2 ?? 0,
-      cooperation3: existingEvaluation?.cooperation3 ?? 0,
-      contentComment: existingEvaluation?.contentComment ?? "",
-      content: existingEvaluation?.content ?? 0,
-      sessionId: selectedSessionId ?? existingEvaluation?.sessionId ?? undefined,
+      engagementComment: evaluation?.engagementComment ?? "",
+      engagement1: evaluation?.engagement1 ?? 0,
+      engagement2: evaluation?.engagement2 ?? 0,
+      engagement3: evaluation?.engagement3 ?? 0,
+      cooperationComment: evaluation?.cooperationComment ?? "",
+      cooperation1: evaluation?.cooperation1 ?? 0,
+      cooperation2: evaluation?.cooperation2 ?? 0,
+      cooperation3: evaluation?.cooperation3 ?? 0,
+      contentComment: evaluation?.contentComment ?? "",
+      content: evaluation?.content ?? 0,
+      sessionId: sessionId ?? evaluation?.sessionId ?? undefined,
     };
   };
 
   const form = useForm<z.infer<typeof StudentGroupEvaluationSchema>>({
     resolver: zodResolver(StudentGroupEvaluationSchema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues(existingEvaluation, selectedSessionId),
   });
 
-  const syncOpenState = useEffectEvent(() => {
-    if (open) {
-      const match = evaluations.find((evaluation) => {
-        return evaluation.sessionId === selectedSessionId;
-      });
-      setExistingEvaluation(match);
-      form.reset(getDefaultValues());
-    }
-
-    if (existingEvaluation) {
-      setUpdateWindowDuration(
-        differenceInSeconds(addDays(existingEvaluation.createdAt, 14), new Date()),
-      );
-    }
-  });
-
-  // effect: open is set by the parent from a row menu; selects the evaluation for the chosen session on open
-  useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the sync cannot live in an open handler here
-    syncOpenState();
-  }, [selectedSessionId, open, existingEvaluation, form, evaluations]);
+  function selectSession(sessionId: string) {
+    const match = evaluations.find((evaluation) => evaluation.sessionId === sessionId);
+    setSelectedSessionId(sessionId);
+    setExistingEvaluation(match);
+    setUpdateWindowDuration(updateWindowFor(match));
+    form.reset(getDefaultValues(match, sessionId));
+  }
 
   const onSubmit = async (data: z.infer<typeof StudentGroupEvaluationSchema>) => {
     const response = await submitGroupEvaluation(data);
@@ -208,197 +210,189 @@ export default function StudentGroupEvaluation({
 
   return (
     <Form {...form}>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="p-5 text-base font-medium leading-6 lg:w-2/5 lg:max-w-none">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Student group evaluation</DialogTitle>
-          </DialogHeader>
-          {children}
-          {mode === "view" && evaluations.length === 0 ? (
-            <div className="space-y-3">
-              <div className="item-center flex justify-center text-shamiri-text-dark-grey">
-                No evaluations found.
+      <DialogHeader>
+        <DialogTitle className="text-xl font-bold">Student group evaluation</DialogTitle>
+      </DialogHeader>
+      {children}
+      {mode === "view" && evaluations.length === 0 ? (
+        <div className="space-y-3">
+          <div className="item-center flex justify-center text-shamiri-text-dark-grey">
+            No evaluations found.
+          </div>
+          <Separator />
+          <DialogFooter className="flex justify-end">
+            <Button
+              className=""
+              variant="brand"
+              type="button"
+              onClick={() => {
+                onOpenChange(false);
+              }}
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </div>
+      ) : (
+        <form
+          onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+          className={cn("space-y-5", mode === "view" ? "form-view-mode" : "")}
+        >
+          <FormField
+            control={form.control}
+            name="sessionId"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>
+                  Select session <span className="text-shamiri-light-red">*</span>
+                </FormLabel>{" "}
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    selectSession(value);
+                  }}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a session" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="max-h-[200px]">
+                    {sessions
+                      .filter((session) => session.occurred)
+                      .map((session) => {
+                        return (
+                          <SelectItem key={session.id} value={session.id}>
+                            <span>{sessionDisplayName(session.session?.sessionName)}</span> -{" "}
+                            <span>{format(session.sessionDate, "dd MMM yyyy")}</span> -{" "}
+                            <span>{format(session.sessionDate, "h:mm a")}</span>{" "}
+                          </SelectItem>
+                        );
+                      })}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {mode !== "view" && existingEvaluation && updateWindowDuration > 0 ? (
+            <DialogAlertWidget separator={false}>
+              <div className="flex items-center gap-2">
+                <span>
+                  Update ratings by{" "}
+                  {format(addDays(existingEvaluation.createdAt, 14), "dd-MM-yyyy")} (
+                  <CountdownTimer duration={updateWindowDuration} />)
+                </span>
               </div>
-              <Separator />
+            </DialogAlertWidget>
+          ) : null}
+          <Separator />
+          <div className="flex flex-col space-y-4 divide-y">
+            {formInputs.map((input) => {
+              return (
+                <div key={input.section} className="flex flex-col space-y-2 py-4">
+                  <div>
+                    <span className="text-bold text-lg">{input.section}</span>{" "}
+                    <span className="text-shamiri-light-red">*</span>
+                  </div>
+                  <span>{input.description}</span>
+                  <div className="flex flex-col space-y-3 text-sm">
+                    {input.fields.map((inputField) => (
+                      <FormField
+                        key={inputField.name}
+                        control={form.control}
+                        name={inputField.name as keyof typeof form.formState.defaultValues}
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col space-y-2">
+                            <FormLabel>
+                              <span className="text-shamiri-text-dark-grey">
+                                {inputField.label}
+                              </span>{" "}
+                              {inputField.label && (
+                                <span className="text-shamiri-light-red">*</span>
+                              )}
+                            </FormLabel>
+                            <RatingStarsInput
+                              value={field.value}
+                              onChange={field.onChange}
+                              disabled={
+                                mode === "view" ||
+                                (existingEvaluation && updateWindowDuration === 0)
+                              }
+                            />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                    <FormField
+                      control={form.control}
+                      name={input.commentsInputName as keyof typeof form.formState.defaultValues}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Textarea
+                              rows={mode === "view" ? 5 : 3}
+                              disabled={
+                                mode === "view" ||
+                                (existingEvaluation && updateWindowDuration === 0)
+                              }
+                              className="resize-none"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <Separator />
+          {mode !== "view" &&
+          (existingEvaluation === undefined || (existingEvaluation && updateWindowDuration > 0)) ? (
+            <div className="space-y-5">
               <DialogFooter className="flex justify-end">
                 <Button
                   className=""
-                  variant="brand"
+                  variant="ghost"
                   type="button"
                   onClick={() => {
                     onOpenChange(false);
                   }}
                 >
-                  Done
+                  Cancel
+                </Button>
+                <Button
+                  variant="brand"
+                  type="submit"
+                  disabled={
+                    form.formState.isSubmitting || (existingEvaluation && updateWindowDuration < 0)
+                  }
+                  loading={form.formState.isSubmitting}
+                >
+                  {existingEvaluation ? "Update & save" : "Submit"}
                 </Button>
               </DialogFooter>
             </div>
           ) : (
-            <form
-              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-              className={cn("space-y-5", mode === "view" ? "form-view-mode" : "")}
-            >
-              <FormField
-                control={form.control}
-                name="sessionId"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel>
-                      Select session <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>{" "}
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setSelectedSessionId(value);
-                      }}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a session" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-[200px]">
-                        {sessions
-                          .filter((session) => session.occurred)
-                          .map((session) => {
-                            return (
-                              <SelectItem key={session.id} value={session.id}>
-                                <span>{sessionDisplayName(session.session?.sessionName)}</span> -{" "}
-                                <span>{format(session.sessionDate, "dd MMM yyyy")}</span> -{" "}
-                                <span>{format(session.sessionDate, "h:mm a")}</span>{" "}
-                              </SelectItem>
-                            );
-                          })}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {mode !== "view" && existingEvaluation && updateWindowDuration > 0 ? (
-                <DialogAlertWidget separator={false}>
-                  <div className="flex items-center gap-2">
-                    <span>
-                      Update ratings by{" "}
-                      {format(addDays(existingEvaluation.createdAt, 14), "dd-MM-yyyy")} (
-                      <CountdownTimer duration={updateWindowDuration} />)
-                    </span>
-                  </div>
-                </DialogAlertWidget>
-              ) : null}
-              <Separator />
-              <div className="flex flex-col space-y-4 divide-y">
-                {formInputs.map((input) => {
-                  return (
-                    <div key={input.section} className="flex flex-col space-y-2 py-4">
-                      <div>
-                        <span className="text-bold text-lg">{input.section}</span>{" "}
-                        <span className="text-shamiri-light-red">*</span>
-                      </div>
-                      <span>{input.description}</span>
-                      <div className="flex flex-col space-y-3 text-sm">
-                        {input.fields.map((inputField) => (
-                          <FormField
-                            key={inputField.name}
-                            control={form.control}
-                            name={inputField.name as keyof typeof form.formState.defaultValues}
-                            render={({ field }) => (
-                              <FormItem className="flex flex-col space-y-2">
-                                <FormLabel>
-                                  <span className="text-shamiri-text-dark-grey">
-                                    {inputField.label}
-                                  </span>{" "}
-                                  {inputField.label && (
-                                    <span className="text-shamiri-light-red">*</span>
-                                  )}
-                                </FormLabel>
-                                <RatingStarsInput
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  disabled={
-                                    mode === "view" ||
-                                    (existingEvaluation && updateWindowDuration === 0)
-                                  }
-                                />
-                              </FormItem>
-                            )}
-                          />
-                        ))}
-                        <FormField
-                          control={form.control}
-                          name={
-                            input.commentsInputName as keyof typeof form.formState.defaultValues
-                          }
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Textarea
-                                  rows={mode === "view" ? 5 : 3}
-                                  disabled={
-                                    mode === "view" ||
-                                    (existingEvaluation && updateWindowDuration === 0)
-                                  }
-                                  className="resize-none"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <Separator />
-              {mode !== "view" &&
-              (existingEvaluation === undefined ||
-                (existingEvaluation && updateWindowDuration > 0)) ? (
-                <div className="space-y-5">
-                  <DialogFooter className="flex justify-end">
-                    <Button
-                      className=""
-                      variant="ghost"
-                      type="button"
-                      onClick={() => {
-                        onOpenChange(false);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="brand"
-                      type="submit"
-                      disabled={
-                        form.formState.isSubmitting ||
-                        (existingEvaluation && updateWindowDuration < 0)
-                      }
-                      loading={form.formState.isSubmitting}
-                    >
-                      {existingEvaluation ? "Update & save" : "Submit"}
-                    </Button>
-                  </DialogFooter>
-                </div>
-              ) : (
-                <DialogFooter className="flex justify-end">
-                  <Button
-                    className=""
-                    variant="brand"
-                    type="button"
-                    onClick={() => {
-                      onOpenChange(false);
-                    }}
-                  >
-                    Done
-                  </Button>
-                </DialogFooter>
-              )}
-            </form>
+            <DialogFooter className="flex justify-end">
+              <Button
+                className=""
+                variant="brand"
+                type="button"
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+              >
+                Done
+              </Button>
+            </DialogFooter>
           )}
-        </DialogContent>
-      </Dialog>
+        </form>
+      )}
     </Form>
   );
 }

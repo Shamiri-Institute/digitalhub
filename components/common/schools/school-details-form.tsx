@@ -2,7 +2,7 @@
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Resolver } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -50,15 +50,23 @@ import { addSchool, editSchoolInformation } from "../../../app/(platform)/hc/sch
 
 type FormData = z.infer<typeof AddSchoolSchema>;
 
-export default function SchoolDetailsForm({
-  school,
-  open,
-  setOpen,
-}: {
+type SchoolDetailsFormProps = {
   school: SchoolsTableData | null;
   open: boolean;
   setOpen: (open: boolean) => void;
-}) {
+};
+
+export default function SchoolDetailsForm(props: SchoolDetailsFormProps) {
+  return (
+    <Dialog open={props.open} onOpenChange={props.setOpen}>
+      <DialogContent className="w-1/2 max-w-none">
+        <SchoolDetailsFormContent {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
   const isEditing = !!school;
   const isCountySelectionValid = KENYAN_COUNTIES.some(
     (county) => county.name === school?.schoolCounty,
@@ -78,13 +86,7 @@ export default function SchoolDetailsForm({
 
   const form = useForm<FormData>({
     resolver: zodResolver(isEditing ? EditSchoolSchema : AddSchoolSchema) as Resolver<FormData>,
-  });
-
-  const pointPersonPhoneWatcher = form.watch("pointPersonPhone");
-
-  // effect: loads the selected school into the form when the parent opens the dialog
-  useEffect(() => {
-    const defaultValues: Partial<FormData> = {
+    defaultValues: {
       numbersExpected: school?.numbersExpected ?? 0,
       schoolEmail: school?.schoolEmail ?? "",
       schoolDemographics: school?.schoolDemographics as
@@ -101,14 +103,10 @@ export default function SchoolDetailsForm({
       principalName: school?.principalName ?? undefined,
       principalPhone: school?.principalPhone ?? undefined,
       preSessionDate: undefined,
-    };
-    if (open) {
-      form.reset(defaultValues);
-      // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the reset cannot live in an open handler here
-      setPointPersonPhone("");
-      setPointPersonPhoneErrors([]);
-    }
-  }, [open, school, form]);
+    },
+  });
+
+  const pointPersonPhoneWatcher = form.watch("pointPersonPhone");
 
   const onSubmit = async (data: FormData) => {
     const pendingPointPersonPhone = pointPersonPhone.trim();
@@ -179,464 +177,455 @@ export default function SchoolDetailsForm({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="w-1/2 max-w-none">
-        <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
-            <DialogHeader>
-              <DialogTitle className="text-xl">
-                {isEditing ? "Edit school information" : "Add new school"}
-              </DialogTitle>
-            </DialogHeader>
-            {isEditing && (
-              <div className="pb-2 pt-4">
-                <DialogAlertWidget label={school?.schoolName} separator={false} />
-              </div>
-            )}
-            <div className="space-y-6">
-              <div className="flex flex-col">
-                <div className="col-span-2 py-2">
-                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
-                    School Information
-                  </span>
-                  <Separator />
-                </div>
-                <div className="grid grid-cols-6 gap-5">
-                  <FormField
-                    control={form.control}
-                    name="schoolName"
-                    render={({ field }) => (
-                      <FormItem className="col-span-4">
-                        <FormLabel>
-                          School name <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input {...field} type="text" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="numbersExpected"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>
-                          Expected no. of students <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            min="1"
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="schoolEmail"
-                    render={({ field }) => (
-                      <FormItem className="col-span-4">
-                        <FormLabel>School email</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="schoolDemographics"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>School demographics</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select demographic" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {SCHOOL_DEMOGRAPHICS.map((demographic) => (
-                              <SelectItem key={demographic} value={demographic}>
-                                {demographic}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="schoolCounty"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>School county</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              {isCountySelectionValid ? (
-                                <SelectValue placeholder="Select county" />
-                              ) : (
-                                <SelectValue>{school?.schoolCounty}</SelectValue>
-                              )}
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[200px]">
-                            {KENYAN_COUNTIES.map((x) => x.name).map((county) => (
-                              <SelectItem key={county} value={county}>
-                                {county}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="schoolSubCounty"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>School sub-county</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              {isSubCountyValid() ? (
-                                <SelectValue placeholder="Select sub-county" />
-                              ) : (
-                                <SelectValue>{form.getValues("schoolSubCounty")}</SelectValue>
-                              )}
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[200px]">
-                            {form.getValues("schoolCounty") ? (
-                              KENYAN_COUNTIES.find(
-                                (county) => county.name === form.getValues("schoolCounty"),
-                              )?.sub_counties.map((subCounty) => {
-                                return (
-                                  <SelectItem key={subCounty} value={subCounty}>
-                                    {subCounty}
-                                  </SelectItem>
-                                );
-                              })
-                            ) : (
-                              <SelectItem value="select county first">
-                                Please pick a county first
-                              </SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="boardingDay"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>School boarding status</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select boarding status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {BOARDING_DAY_TYPES.map((t) => (
-                              <SelectItem key={t} value={t}>
-                                {t}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="schoolType"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>School type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select school type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {SCHOOL_TYPES.map((t) => (
-                              <SelectItem key={t} value={t}>
-                                {t}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {!isEditing && (
-                    <FormField
-                      control={form.control}
-                      name="preSessionDate"
-                      render={({ field }) => (
-                        <FormItem className="col-span-3">
-                          <FormLabel>
-                            Pre-session date <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground",
-                                )}
-                              >
-                                <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                                {field.value ? (
-                                  format(field.value, "dd/MM/yyyy")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <Calendar
-                                mode="single"
-                                selected={field.value || undefined}
-                                captionLayout="dropdown"
-                                onSelect={field.onChange}
-                                autoFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <div className="col-span-2 py-2">
-                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
-                    Contact Information
-                  </span>
-                  <Separator />
-                </div>
-                <div className="grid grid-cols-6 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="principalName"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>Principal name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="principalPhone"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>Principal phone number</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="tel" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="pointPersonName"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>Point teacher name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="pointPersonEmail"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>Point person email</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="pointPersonPhone"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>Point teacher phone number</FormLabel>
-                        <FormControl>
-                          <div className="flex flex-col gap-3">
-                            {field.value?.split("/").map((number: string, index: number) => {
-                              return (
-                                // oxlint-disable-next-line react/no-array-index-key -- duplicate phone numbers would collide on number alone; index disambiguates
-                                <div key={`phone-${index}-${number}`}>
-                                  <div
-                                    className={cn(
-                                      "flex gap-2",
-                                      pointPersonPhoneWatcher?.split("/")[index] === " "
-                                        ? "hidden"
-                                        : "",
-                                    )}
-                                  >
-                                    <Input
-                                      defaultValue={number}
-                                      disabled={pointPersonPhoneWatcher?.split("/")[index] === " "}
-                                      type="tel"
-                                      onChange={(e) => {
-                                        const newValue = field.value?.split("/") ?? [];
-                                        newValue.splice(index, 1, e.target.value);
-                                        form.setValue("pointPersonPhone", newValue.join("/"));
-                                      }}
-                                      onBlur={(e) => {
-                                        if (
-                                          !isValidPhoneNumber(e.target.value, "KE") &&
-                                          e.target.value !== ""
-                                        ) {
-                                          const errors = [...pointPersonPhoneErrors];
-                                          errors.push(index);
-                                          setPointPersonPhoneErrors(errors);
-                                        }
-
-                                        if (isValidPhoneNumber(e.target.value, "KE")) {
-                                          const matchIndex = pointPersonPhoneErrors.indexOf(index);
-                                          if (matchIndex !== -1) {
-                                            const errors = [...pointPersonPhoneErrors];
-                                            errors.splice(matchIndex, 1);
-                                            setPointPersonPhoneErrors(errors);
-                                          }
-                                        }
-                                      }}
-                                    />
-                                    <Button
-                                      variant="ghost"
-                                      type="button"
-                                      className="flex items-center text-shamiri-light-red hover:bg-red-bg"
-                                      onClick={() => {
-                                        const newValue = field.value?.split("/");
-                                        newValue?.splice(index, 1, " ");
-                                        form.setValue(
-                                          "pointPersonPhone",
-                                          newValue?.join("/") ?? "",
-                                        );
-                                      }}
-                                    >
-                                      <Icons.minusCircle className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                  {pointPersonPhoneErrors.includes(index) ? (
-                                    <div className="py-1">
-                                      <FormMessage>Please enter a valid kenyan number</FormMessage>
-                                    </div>
-                                  ) : null}
-                                </div>
-                              );
-                            })}
-                            <div className="flex gap-2">
-                              <Input
-                                onChange={(e) => {
-                                  setPointPersonPhone(e.target.value);
-                                  void form.trigger("pointPersonPhone");
-                                }}
-                                onBlur={(e) => {
-                                  validatePhoneNumber(
-                                    "pointPersonPhone" as keyof typeof form.formState.defaultValues,
-                                    e.target.value,
-                                  );
-                                }}
-                                value={pointPersonPhone}
-                                name={field.name}
-                                type="tel"
-                              />
-                              <Button
-                                variant="ghost"
-                                type="button"
-                                className="flex items-center text-shamiri-new-blue"
-                                onClick={() => {
-                                  if (isValidPhoneNumber(pointPersonPhone, "KE")) {
-                                    const newValue = `${field.value}/${pointPersonPhone}`;
-                                    form.setValue(
-                                      "pointPersonPhone",
-                                      field.value !== undefined ? newValue : pointPersonPhone,
-                                    );
-                                    setPointPersonPhone("");
-                                  } else {
-                                    form.setError("pointPersonPhone", {
-                                      message: "Please enter a valid kenyan number",
-                                    });
-                                  }
-                                }}
-                              >
-                                <Icons.plusCircle className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </FormControl>
-                        {pointPersonPhone !== "" && <FormMessage />}
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+    <Form {...form}>
+      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+        <DialogHeader>
+          <DialogTitle className="text-xl">
+            {isEditing ? "Edit school information" : "Add new school"}
+          </DialogTitle>
+        </DialogHeader>
+        {isEditing && (
+          <div className="pb-2 pt-4">
+            <DialogAlertWidget label={school?.schoolName} separator={false} />
+          </div>
+        )}
+        <div className="space-y-6">
+          <div className="flex flex-col">
+            <div className="col-span-2 py-2">
+              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                School Information
+              </span>
+              <Separator />
             </div>
-            <Separator className="my-6" />
-            <DialogFooter className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                type="button"
-                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
-                type="submit"
-                disabled={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                {isEditing ? "Save Changes" : "Add School"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            <div className="grid grid-cols-6 gap-5">
+              <FormField
+                control={form.control}
+                name="schoolName"
+                render={({ field }) => (
+                  <FormItem className="col-span-4">
+                    <FormLabel>
+                      School name <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} type="text" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="numbersExpected"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>
+                      Expected no. of students <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        min="1"
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="schoolEmail"
+                render={({ field }) => (
+                  <FormItem className="col-span-4">
+                    <FormLabel>School email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="schoolDemographics"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>School demographics</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select demographic" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {SCHOOL_DEMOGRAPHICS.map((demographic) => (
+                          <SelectItem key={demographic} value={demographic}>
+                            {demographic}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="schoolCounty"
+                render={({ field }) => (
+                  <FormItem className="col-span-3">
+                    <FormLabel>School county</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          {isCountySelectionValid ? (
+                            <SelectValue placeholder="Select county" />
+                          ) : (
+                            <SelectValue>{school?.schoolCounty}</SelectValue>
+                          )}
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[200px]">
+                        {KENYAN_COUNTIES.map((x) => x.name).map((county) => (
+                          <SelectItem key={county} value={county}>
+                            {county}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="schoolSubCounty"
+                render={({ field }) => (
+                  <FormItem className="col-span-3">
+                    <FormLabel>School sub-county</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          {isSubCountyValid() ? (
+                            <SelectValue placeholder="Select sub-county" />
+                          ) : (
+                            <SelectValue>{form.getValues("schoolSubCounty")}</SelectValue>
+                          )}
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[200px]">
+                        {form.getValues("schoolCounty") ? (
+                          KENYAN_COUNTIES.find(
+                            (county) => county.name === form.getValues("schoolCounty"),
+                          )?.sub_counties.map((subCounty) => {
+                            return (
+                              <SelectItem key={subCounty} value={subCounty}>
+                                {subCounty}
+                              </SelectItem>
+                            );
+                          })
+                        ) : (
+                          <SelectItem value="select county first">
+                            Please pick a county first
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="boardingDay"
+                render={({ field }) => (
+                  <FormItem className="col-span-3">
+                    <FormLabel>School boarding status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select boarding status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {BOARDING_DAY_TYPES.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="schoolType"
+                render={({ field }) => (
+                  <FormItem className="col-span-3">
+                    <FormLabel>School type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select school type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {SCHOOL_TYPES.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {!isEditing && (
+                <FormField
+                  control={form.control}
+                  name="preSessionDate"
+                  render={({ field }) => (
+                    <FormItem className="col-span-3">
+                      <FormLabel>
+                        Pre-session date <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {field.value ? (
+                              format(field.value, "dd/MM/yyyy")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={field.value || undefined}
+                            captionLayout="dropdown"
+                            onSelect={field.onChange}
+                            autoFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <div className="col-span-2 py-2">
+              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                Contact Information
+              </span>
+              <Separator />
+            </div>
+            <div className="grid grid-cols-6 gap-4">
+              <FormField
+                control={form.control}
+                name="principalName"
+                render={({ field }) => (
+                  <FormItem className="col-span-3">
+                    <FormLabel>Principal name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="principalPhone"
+                render={({ field }) => (
+                  <FormItem className="col-span-3">
+                    <FormLabel>Principal phone number</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="tel" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pointPersonName"
+                render={({ field }) => (
+                  <FormItem className="col-span-3">
+                    <FormLabel>Point teacher name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pointPersonEmail"
+                render={({ field }) => (
+                  <FormItem className="col-span-3">
+                    <FormLabel>Point person email</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pointPersonPhone"
+                render={({ field }) => (
+                  <FormItem className="col-span-3">
+                    <FormLabel>Point teacher phone number</FormLabel>
+                    <FormControl>
+                      <div className="flex flex-col gap-3">
+                        {field.value?.split("/").map((number: string, index: number) => {
+                          return (
+                            // oxlint-disable-next-line react/no-array-index-key -- duplicate phone numbers would collide on number alone; index disambiguates
+                            <div key={`phone-${index}-${number}`}>
+                              <div
+                                className={cn(
+                                  "flex gap-2",
+                                  pointPersonPhoneWatcher?.split("/")[index] === " "
+                                    ? "hidden"
+                                    : "",
+                                )}
+                              >
+                                <Input
+                                  defaultValue={number}
+                                  disabled={pointPersonPhoneWatcher?.split("/")[index] === " "}
+                                  type="tel"
+                                  onChange={(e) => {
+                                    const newValue = field.value?.split("/") ?? [];
+                                    newValue.splice(index, 1, e.target.value);
+                                    form.setValue("pointPersonPhone", newValue.join("/"));
+                                  }}
+                                  onBlur={(e) => {
+                                    if (
+                                      !isValidPhoneNumber(e.target.value, "KE") &&
+                                      e.target.value !== ""
+                                    ) {
+                                      const errors = [...pointPersonPhoneErrors];
+                                      errors.push(index);
+                                      setPointPersonPhoneErrors(errors);
+                                    }
+
+                                    if (isValidPhoneNumber(e.target.value, "KE")) {
+                                      const matchIndex = pointPersonPhoneErrors.indexOf(index);
+                                      if (matchIndex !== -1) {
+                                        const errors = [...pointPersonPhoneErrors];
+                                        errors.splice(matchIndex, 1);
+                                        setPointPersonPhoneErrors(errors);
+                                      }
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  type="button"
+                                  className="flex items-center text-shamiri-light-red hover:bg-red-bg"
+                                  onClick={() => {
+                                    const newValue = field.value?.split("/");
+                                    newValue?.splice(index, 1, " ");
+                                    form.setValue("pointPersonPhone", newValue?.join("/") ?? "");
+                                  }}
+                                >
+                                  <Icons.minusCircle className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              {pointPersonPhoneErrors.includes(index) ? (
+                                <div className="py-1">
+                                  <FormMessage>Please enter a valid kenyan number</FormMessage>
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                        <div className="flex gap-2">
+                          <Input
+                            onChange={(e) => {
+                              setPointPersonPhone(e.target.value);
+                              void form.trigger("pointPersonPhone");
+                            }}
+                            onBlur={(e) => {
+                              validatePhoneNumber(
+                                "pointPersonPhone" as keyof typeof form.formState.defaultValues,
+                                e.target.value,
+                              );
+                            }}
+                            value={pointPersonPhone}
+                            name={field.name}
+                            type="tel"
+                          />
+                          <Button
+                            variant="ghost"
+                            type="button"
+                            className="flex items-center text-shamiri-new-blue"
+                            onClick={() => {
+                              if (isValidPhoneNumber(pointPersonPhone, "KE")) {
+                                const newValue = `${field.value}/${pointPersonPhone}`;
+                                form.setValue(
+                                  "pointPersonPhone",
+                                  field.value !== undefined ? newValue : pointPersonPhone,
+                                );
+                                setPointPersonPhone("");
+                              } else {
+                                form.setError("pointPersonPhone", {
+                                  message: "Please enter a valid kenyan number",
+                                });
+                              }
+                            }}
+                          >
+                            <Icons.plusCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </FormControl>
+                    {pointPersonPhone !== "" && <FormMessage />}
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </div>
+        <Separator className="my-6" />
+        <DialogFooter className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            type="button"
+            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            onClick={() => {
+              setOpen(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
+            type="submit"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isEditing ? "Save Changes" : "Add School"}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }

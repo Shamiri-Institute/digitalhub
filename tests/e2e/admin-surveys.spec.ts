@@ -3,17 +3,16 @@ import { eq, inArray } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { survey, surveyVersion } from "#/db/schema";
+import { careAdminEmail, researchAdminEmail } from "#/db/seed/fixtures";
 import type { SurveyForm } from "#/lib/survey/form";
 import { signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
  * Super admins and Research team admins manage surveys; other admins do not see them. The seed
- * makes research.admin@shamiri.institute a Research team admin and care.admin@shamiri.institute a
- * Care team admin (db/seed/seed.ts).
+ * makes `researchAdminEmail` a Research team admin and `careAdminEmail` a Care team admin
+ * (db/seed/fixtures.ts).
  */
-const RESEARCH_ADMIN = "research.admin@shamiri.institute";
-const CARE_ADMIN = "care.admin@shamiri.institute";
 
 /** The single row an insert returned. */
 function only<T>(rows: T[]): T {
@@ -40,10 +39,10 @@ function uniqueCode() {
 
 /** Signs in as the Research team admin; returns their user id and the scope they work in. */
 async function signInAsResearchAdmin(context: BrowserContext) {
-  await signInWithEmail(context, RESEARCH_ADMIN);
+  await signInWithEmail(context, researchAdminEmail);
   const [admin, user, project] = await Promise.all([
-    db.query.adminUser.findFirst({ where: (a, { eq }) => eq(a.email, RESEARCH_ADMIN) }),
-    db.query.user.findFirst({ where: (u, { eq }) => eq(u.email, RESEARCH_ADMIN) }),
+    db.query.adminUser.findFirst({ where: (a, { eq }) => eq(a.email, researchAdminEmail) }),
+    db.query.user.findFirst({ where: (u, { eq }) => eq(u.email, researchAdminEmail) }),
     db.query.project.findFirst({ where: (p, { eq }) => eq(p.isDefault, true) }),
   ]);
   if (!admin || !user || !project) throw new Error("The seed has no Research team admin");
@@ -206,7 +205,7 @@ test("an admin outside the Research team has no Surveys tab and cannot open surv
   page,
   context,
 }) => {
-  await signInWithEmail(context, CARE_ADMIN);
+  await signInWithEmail(context, careAdminEmail);
   await page.goto(getUrl("/admin/schedule"));
   await expect(page.getByRole("link", { name: "Hubs", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Surveys", exact: true })).toHaveCount(0);

@@ -27,9 +27,24 @@ import {
 } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { TypeID } from "typeid-js";
-import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
+import { KENYAN_COUNTIES, SCHOOL_TYPES } from "#/lib/app-constants/constants";
 import { db, pool } from "#/db/client";
 import * as schema from "#/db/schema";
+import {
+  arsenalClinicalLead,
+  arsenalClinicalTeamMember,
+  arsenalCoordinators,
+  arsenalFellows,
+  arsenalHub,
+  arsenalOpsUser,
+  arsenalSupervisors,
+  careAdminEmail,
+  emiratesAcademy,
+  plainAdminEmail,
+  researchAdminEmail,
+  sobhaAcademy,
+  superAdminEmail,
+} from "#/db/seed/fixtures";
 import type { SurveyForm } from "#/lib/survey/form";
 import { seedHubSessionTypes } from "#/db/seed/hub-session-types";
 import { createTickets } from "#/db/seed/tickets";
@@ -173,17 +188,13 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
   const hubs = [];
   const minLength = Math.min(projects.length, implementers.length);
 
-  // Add static hub first
-  const staticHub = {
+  hubs.push({
     id: objectId("hub"),
-    visibleId: "ARSENAL1",
-    hubName: "Arsenal Hub",
+    ...arsenalHub,
     projectId: projects[0]?.id as string,
     implementerId: implementers[0]?.id as string,
-  };
-  hubs.push(staticHub);
+  });
 
-  // Continue with dynamic hubs
   for (let i = 0; i < minLength; i++) {
     const numHubs = faker.number.int({ min: 3, max: 6 });
 
@@ -300,8 +311,7 @@ async function createCoreUsers(
         implementerId: implementer.id,
         role,
         identifier: admins.find(
-          (admin) =>
-            admin.email === "admin@shamiri.institute" && admin.implementerId === implementer.id,
+          (admin) => admin.email === superAdminEmail && admin.implementerId === implementer.id,
         )?.id,
       }));
     }
@@ -356,7 +366,7 @@ async function createAdminUsers(
   const adminPeople: AdminPerson[] = [
     {
       userId: objectId("user"),
-      email: "admin@shamiri.institute",
+      email: superAdminEmail,
       adminName: "Super Admin",
       implementerIds: implementers.map((implementer) => implementer.id),
       isSuperAdmin: true,
@@ -379,7 +389,7 @@ async function createAdminUsers(
     // a team admin and a plain admin, to exercise every access state
     {
       userId: objectId("user"),
-      email: "care.admin@shamiri.institute",
+      email: careAdminEmail,
       adminName: "Care Admin",
       implementerIds: [shamiri.id],
       isSuperAdmin: false,
@@ -387,7 +397,7 @@ async function createAdminUsers(
     },
     {
       userId: objectId("user"),
-      email: "research.admin@shamiri.institute",
+      email: researchAdminEmail,
       adminName: "Research Admin",
       implementerIds: [shamiri.id],
       isSuperAdmin: false,
@@ -395,7 +405,7 @@ async function createAdminUsers(
     },
     {
       userId: objectId("user"),
-      email: "plain.admin@shamiri.institute",
+      email: plainAdminEmail,
       adminName: "Plain Admin",
       implementerIds: [shamiri.id],
       isSuperAdmin: false,
@@ -444,57 +454,15 @@ async function createAdminUsers(
   return createdAdminUsers;
 }
 
-async function createHubCoordinators(
-  hubs: Hub[],
-  _implementers: Implementer[],
-  emails: Set<string>,
-) {
+async function createHubCoordinators(arsenal: Hub, otherHubs: Hub[], emails: Set<string>) {
   console.log("creating hub coordinators");
 
-  // Add two static hub coordinators for the static hub
-  const staticHub = hubs[0];
-  const staticCoordinators = [
-    {
-      id: objectId("coord"),
-      visibleId: "HC_ARTETA",
-      coordinatorName: "Mikel Arteta",
-      coordinatorEmail: "mikel.arteta@test.com",
-      implementerId: staticHub?.implementerId ?? "",
-      assignedHubId: staticHub?.id ?? "",
-      county: "Nairobi",
-      subCounty: "Westlands",
-      bankName: "Arsenal Bank",
-      bankBranch: "Emirates Branch",
-      bankAccountNumber: "12345678",
-      bankAccountName: "Mikel Arteta",
-      kra: "A123456789B",
-      dateOfBirth: new Date(1982, 2, 26),
-      cellNumber: "254712345678",
-      mpesaNumber: "254712345678",
-      gender: "Male",
-      idNumber: "12345678",
-    },
-    {
-      id: objectId("coord"),
-      visibleId: "HC_GASPAR",
-      coordinatorName: "Edu Gaspar",
-      coordinatorEmail: "edu.gaspar@test.com",
-      implementerId: staticHub?.implementerId ?? "",
-      assignedHubId: staticHub?.id ?? "",
-      county: "Nairobi",
-      subCounty: "Westlands",
-      bankName: "Arsenal Bank",
-      bankBranch: "Emirates Branch",
-      bankAccountNumber: "23456789",
-      bankAccountName: "Edu Gaspar",
-      kra: "B234567890C",
-      dateOfBirth: new Date(1978, 6, 15),
-      cellNumber: "254723456789",
-      mpesaNumber: "254723456789",
-      gender: "Male",
-      idNumber: "23456789",
-    },
-  ];
+  const staticCoordinators = arsenalCoordinators.map((coordinator) => ({
+    id: objectId("coord"),
+    ...coordinator,
+    implementerId: arsenal.implementerId,
+    assignedHubId: arsenal.id,
+  }));
 
   const staticUsers = staticCoordinators.map((coord) => ({
     id: objectId("user"),
@@ -505,7 +473,7 @@ async function createHubCoordinators(
 
   const staticMembershipData = staticUsers.map((user, index) => ({
     userId: user.id,
-    implementerId: staticHub?.implementerId ?? "",
+    implementerId: arsenal.implementerId,
     role: ImplementerRole.HUB_COORDINATOR,
     identifier: staticCoordinators[index]?.id ?? "",
   }));
@@ -518,9 +486,7 @@ async function createHubCoordinators(
     emails.add(coord.coordinatorEmail);
   });
 
-  // Continue with dynamic coordinators
-  const hubsWithoutStatic = hubs.slice(1);
-  for (const hub of hubsWithoutStatic) {
+  for (const hub of otherHubs) {
     let uniqueEmail = faker.internet.email().toLowerCase();
     while (emails.has(uniqueEmail)) {
       uniqueEmail = faker.internet.email().toLowerCase();
@@ -553,7 +519,7 @@ async function createHubCoordinators(
       bankAccountName: faker.person.fullName(),
       kra: faker.finance.accountNumber(),
       dateOfBirth: faker.date.birthdate(),
-      cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+      cellNumber: faker.helpers.fromRegExp("2541[1-9]{8}"),
       mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
       gender: faker.number.float() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
       idNumber: faker.string.numeric({ length: 8 }),
@@ -571,83 +537,23 @@ async function createHubCoordinators(
   return db.query.hubCoordinator.findMany();
 }
 
-async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
+async function createSupervisors(arsenal: Hub, otherHubs: Hub[], emails: Set<string>, n = 6) {
   console.log("creating supervisors");
   const supervisors: (typeof schema.supervisor.$inferInsert)[] = [];
 
-  // Add three static supervisors for the static hub
-  const staticHub = hubs[0];
-  const staticSupervisors = [
-    {
-      id: objectId("user"),
-      visibleId: "SUPERVISOR1",
-      supervisorName: "Martin Ødegaard",
-      supervisorEmail: "martin.odegaard@test.com",
-      hubId: staticHub?.id ?? "",
-      implementerId: staticHub?.implementerId ?? "",
-      county: "Nairobi",
-      subCounty: "Westlands",
-      bankName: "Arsenal Bank",
-      bankBranch: "Emirates Branch",
-      bankAccountNumber: "12345678",
-      bankAccountName: "Martin Ødegaard",
-      kra: "A123456789B",
-      dateOfBirth: new Date(1998, 11, 17),
-      cellNumber: "254712345678",
-      mpesaNumber: "254712345678",
-      gender: "Male",
-      idNumber: "12345678",
-    },
-    {
-      id: objectId("user"),
-      visibleId: "SUPERVISOR2",
-      supervisorName: "Declan Rice",
-      supervisorEmail: "declan.rice@test.com",
-      hubId: staticHub?.id ?? "",
-      implementerId: staticHub?.implementerId ?? "",
-      county: "Nairobi",
-      subCounty: "Westlands",
-      bankName: "Arsenal Bank",
-      bankBranch: "Emirates Branch",
-      bankAccountNumber: "23456789",
-      bankAccountName: "Declan Rice",
-      kra: "B234567890C",
-      dateOfBirth: new Date(1999, 0, 14),
-      cellNumber: "254723456789",
-      mpesaNumber: "254723456789",
-      gender: "Male",
-      idNumber: "23456789",
-    },
-    {
-      id: objectId("user"),
-      visibleId: "SUPERVISOR3",
-      supervisorName: "William Saliba",
-      supervisorEmail: "william.saliba@test.com",
-      hubId: staticHub?.id ?? "",
-      implementerId: staticHub?.implementerId ?? "",
-      county: "Nairobi",
-      subCounty: "Westlands",
-      bankName: "Arsenal Bank",
-      bankBranch: "Emirates Branch",
-      bankAccountNumber: "34567890",
-      bankAccountName: "William Saliba",
-      kra: "C345678901D",
-      dateOfBirth: new Date(2001, 2, 24),
-      cellNumber: "254734567890",
-      mpesaNumber: "254734567890",
-      gender: "Male",
-      idNumber: "34567890",
-    },
-  ];
+  const staticSupervisors = arsenalSupervisors.map((supervisor) => ({
+    id: objectId("user"),
+    ...supervisor,
+    hubId: arsenal.id,
+    implementerId: arsenal.implementerId,
+  }));
 
   supervisors.push(...staticSupervisors);
   staticSupervisors.forEach((sup) => {
     emails.add(sup.supervisorEmail);
   });
 
-  // Continue with dynamic supervisors
-  const hubsWithoutStatic = hubs.slice(1);
-  const dynamicSupervisors = hubsWithoutStatic.flatMap((hub) => {
+  const dynamicSupervisors = otherHubs.flatMap((hub) => {
     return Array.from(Array(n).keys()).map(() => {
       let uniqueEmail = faker.internet.email().toLowerCase();
       while (emails.has(uniqueEmail)) {
@@ -657,8 +563,7 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
 
       return {
         id: objectId("user"),
-        email: uniqueEmail,
-        role: ImplementerRole.SUPERVISOR,
+        supervisorEmail: uniqueEmail,
         hubId: hub.id,
         implementerId: hub.implementerId,
         visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
@@ -683,29 +588,23 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
     identifier: objectId("sup"),
   }));
 
-  const supervisorRecords = supervisors.map((_user) => {
-    // Check if this is a static supervisor
-    const isStaticSupervisor = _user.visibleId?.startsWith("SUPERVISOR");
-    if (isStaticSupervisor) {
-      // Return the static supervisor data as-is
-      const { id: _id, ...rest } = _user;
-      return {
-        id: membershipData.find((x) => x.userId === _user.id)?.identifier ?? "",
-        ...rest,
-      };
-    }
-
-    // For dynamic supervisors, generate random data
+  const supervisorIdFor = (userId: string) =>
+    membershipData.find((x) => x.userId === userId)?.identifier ?? "";
+  const staticSupervisorRecords = staticSupervisors.map(({ id: userId, ...rest }) => ({
+    id: supervisorIdFor(userId),
+    ...rest,
+  }));
+  const dynamicSupervisorRecords = dynamicSupervisors.map((_user) => {
     const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
     const subCounty = faker.helpers.arrayElement(county.sub_counties);
     const gender = faker.person.sexType();
 
     return {
-      id: membershipData.find((x) => x.userId === _user.id)?.identifier ?? "",
+      id: supervisorIdFor(_user.id),
       implementerId: _user.implementerId,
       visibleId: _user.visibleId || faker.string.alpha({ casing: "upper", length: 6 }),
       supervisorName: faker.person.fullName(),
-      supervisorEmail: faker.internet.email(),
+      supervisorEmail: _user.supervisorEmail,
       county: county.name,
       subCounty: subCounty,
       bankName: faker.company.name(),
@@ -714,7 +613,7 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
       bankAccountName: faker.person.fullName(),
       kra: faker.finance.accountNumber(),
       dateOfBirth: faker.date.birthdate(),
-      cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+      cellNumber: faker.helpers.fromRegExp("2541[1-9]{8}"),
       mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
       gender: faker.number.float() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
       idNumber: faker.string.numeric({ length: 8 }),
@@ -722,30 +621,27 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
     };
   });
 
-  const created = await insertManyReturning(schema.supervisor, supervisorRecords);
+  const created = await insertManyReturning(schema.supervisor, [
+    ...staticSupervisorRecords,
+    ...dynamicSupervisorRecords,
+  ]);
   await insertMany(schema.implementerMember, membershipData);
   return created;
 }
 
-async function createOperations(hubs: Hub[], emails: Set<string>) {
+async function createOperations(arsenal: Hub, otherHubs: Hub[], emails: Set<string>) {
   console.log("creating operations users");
   const operations: (typeof schema.opsUser.$inferInsert)[] = [];
 
-  // Add static operations user for static hub
-  const staticHub = hubs[0];
   const staticOps = {
     id: objectId("user"),
-    email: "kai.havertz@test.com",
-    implementerId: staticHub?.implementerId ?? "",
-    name: "Kai Havertz",
+    ...arsenalOpsUser,
+    implementerId: arsenal.implementerId,
   };
   operations.push(staticOps);
   emails.add(staticOps.email);
 
-  // Continue with dynamic operations users
-  const selectedHubs = hubs.slice(1);
-
-  for (const hub of selectedHubs) {
+  for (const hub of otherHubs) {
     let uniqueEmail = faker.internet.email().toLowerCase();
     while (emails.has(uniqueEmail)) {
       uniqueEmail = faker.internet.email().toLowerCase();
@@ -790,24 +686,20 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
   return created;
 }
 
-async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
+async function createClinicalLeads(arsenal: Hub, otherHubs: Hub[], emails: Set<string>) {
   console.log("creating clinical leads");
   const clinicalLeads: (typeof schema.clinicalLead.$inferInsert)[] = [];
 
-  // Add static clinical lead for static hub
-  const staticHub = hubs[0];
   const staticClinicalLead = {
     id: objectId("user"),
-    clinicalLeadEmail: "ben.white@test.com",
-    clinicalLeadName: "Ben White",
-    implementerId: staticHub?.implementerId ?? "",
-    assignedHubId: staticHub?.id ?? "",
+    ...arsenalClinicalLead,
+    implementerId: arsenal.implementerId,
+    assignedHubId: arsenal.id,
   };
   clinicalLeads.push(staticClinicalLead);
   emails.add(staticClinicalLead.clinicalLeadEmail);
 
-  // Continue with dynamic clinical leads
-  for (const hub of hubs.slice(1)) {
+  for (const hub of otherHubs) {
     let uniqueEmail = faker.internet.email().toLowerCase();
     while (emails.has(uniqueEmail)) {
       uniqueEmail = faker.internet.email().toLowerCase();
@@ -855,36 +747,28 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
   return created;
 }
 
-async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
+async function createClinicalTeam(arsenal: Hub) {
   console.log("creating clinical team");
-  // Assign to Arsenal Hub (static hub) and same implementer
-  const staticHub = hubs[0];
-  const staticImplementer = implementers[0];
-  if (!staticHub) throw new Error("No static hub found for clinical team");
-  if (!staticImplementer) throw new Error("No static implementer found for clinical team");
-
   const userId = objectId("user");
   const clinicalTeamId = objectId("clinicalteam");
 
   await db.insert(schema.user).values({
     id: userId,
-    email: "takehiro.tomiyasu@test.com",
+    email: arsenalClinicalTeamMember.email,
   });
 
   const clinicalTeamMember = {
     id: clinicalTeamId,
-    name: "Takehiro Tomiyasu",
-    email: "takehiro.tomiyasu@test.com",
-    cellNumber: "254712345679",
-    assignedHubId: staticHub.id,
-    implementerId: staticImplementer.id,
+    ...arsenalClinicalTeamMember,
+    assignedHubId: arsenal.id,
+    implementerId: arsenal.implementerId,
   };
   const [created] = await db.insert(schema.clinicalTeam).values(clinicalTeamMember).returning();
   if (!created) throw new Error("Clinical team member was not created");
 
   await db.insert(schema.implementerMember).values({
     userId,
-    implementerId: staticImplementer.id,
+    implementerId: arsenal.implementerId,
     role: ImplementerRole.CLINICAL_TEAM,
     identifier: clinicalTeamId,
   });
@@ -989,11 +873,11 @@ const BASELINE_FORM: SurveyForm = {
 async function createResearchSurveys(projectId: string) {
   console.log("creating research surveys");
   const researchAdmin = await db.query.adminUser.findFirst({
-    where: (a, { eq }) => eq(a.email, "research.admin@shamiri.institute"),
+    where: (a, { eq }) => eq(a.email, researchAdminEmail),
     columns: { implementerId: true },
   });
   const researchAdminUser = await db.query.user.findFirst({
-    where: (u, { eq }) => eq(u.email, "research.admin@shamiri.institute"),
+    where: (u, { eq }) => eq(u.email, researchAdminEmail),
     columns: { id: true },
   });
   if (!researchAdmin || !researchAdminUser)
@@ -1030,77 +914,31 @@ async function createResearchSurveys(projectId: string) {
     .where(eq(schema.survey.id, survey.id));
 }
 
-async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
+async function createFellows(arsenal: Hub, supervisors: Supervisor[], emails: Set<string>) {
   console.log("creating fellows");
   const fellows: (typeof schema.fellow.$inferInsert)[] = [];
 
-  // Add three static fellows for the static supervisors
-  const staticSupervisors = supervisors.slice(0, 3);
-  const staticFellows = [
-    {
+  const staticFellows = arsenalFellows.map(({ supervisorVisibleId, ...fellow }) => {
+    const supervisor = supervisors.find((s) => s.visibleId === supervisorVisibleId);
+    return {
       id: objectId("user"),
-      visibleId: "FELLOW1",
-      fellowName: "Bukayo Saka",
-      fellowEmail: "bukayo.saka@test.com",
-      supervisorId: staticSupervisors[0]?.id,
-      hubId: staticSupervisors[0]?.hubId,
-      implementerId: staticSupervisors[0]?.implementerId,
-      mpesaName: "Bukayo Saka",
-      mpesaNumber: "254712345678",
-      cellNumber: "254712345678",
-      gender: "Male",
-      dateOfBirth: new Date(2001, 8, 5),
-      idNumber: "12345678",
-      county: "Nairobi",
-      subCounty: "Westlands",
-    },
-    {
-      id: objectId("user"),
-      visibleId: "FELLOW2",
-      fellowName: "Gabriel Martinelli",
-      fellowEmail: "gabriel.martinelli@test.com",
-      supervisorId: staticSupervisors[1]?.id,
-      hubId: staticSupervisors[1]?.hubId,
-      implementerId: staticSupervisors[1]?.implementerId,
-      mpesaName: "Gabriel Martinelli",
-      mpesaNumber: "254723456789",
-      cellNumber: "254723456789",
-      gender: "Male",
-      dateOfBirth: new Date(2001, 5, 18),
-      idNumber: "23456789",
-      county: "Nairobi",
-      subCounty: "Westlands",
-    },
-    {
-      id: objectId("user"),
-      visibleId: "FELLOW3",
-      fellowName: "Gabriel Jesus",
-      fellowEmail: "gabriel.jesus@test.com",
-      supervisorId: staticSupervisors[2]?.id,
-      hubId: staticSupervisors[2]?.hubId,
-      implementerId: staticSupervisors[2]?.implementerId,
-      mpesaName: "Gabriel Jesus",
-      mpesaNumber: "254734567890",
-      cellNumber: "254734567890",
-      gender: "Male",
-      dateOfBirth: new Date(1997, 3, 3),
-      idNumber: "34567890",
-      county: "Nairobi",
-      subCounty: "Westlands",
-    },
-  ];
+      ...fellow,
+      supervisorId: supervisor?.id,
+      hubId: supervisor?.hubId,
+      implementerId: supervisor?.implementerId,
+    };
+  });
   fellows.push(...staticFellows);
   staticFellows.forEach((fellow) => {
     emails.add(fellow.fellowEmail);
   });
 
-  // Continue with dynamic fellows
   const counties = KENYAN_COUNTIES.map((county) => {
     const { name, sub_counties } = county;
     return { name, sub_counties };
   });
 
-  for (const supervisor of supervisors.slice(3)) {
+  for (const supervisor of supervisors.filter((s) => s.hubId !== arsenal.id)) {
     const numFellows = faker.number.int({ min: 10, max: 15 });
     const subCounties = counties.find((county) => county.name === supervisor.county)?.sub_counties;
 
@@ -1127,7 +965,7 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
         county: supervisor.county,
         subCounty: subCounties ? faker.helpers.arrayElement(subCounties) : supervisor.subCounty,
         dateOfBirth: faker.date.birthdate(),
-        cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+        cellNumber: faker.helpers.fromRegExp("2541[1-9]{8}"),
         gender:
           faker.number.float() > 0.9 ? "Other" : gender[0]?.toUpperCase() + gender.substring(1),
         idNumber: faker.string.numeric({ length: 8 }),
@@ -1164,55 +1002,25 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
   return created;
 }
 
-async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
+async function createSchools(
+  hubs: Hub[],
+  arsenal: Hub,
+  otherHubs: Hub[],
+  supervisors: Supervisor[],
+) {
   console.log("creating schools");
   const schools: (typeof schema.school.$inferInsert)[] = [];
 
-  // Add static school for static hub
-  const staticHub = hubs[0];
-  schools.push(
-    {
+  for (const { supervisorVisibleId, ...school } of [emiratesAcademy, sobhaAcademy]) {
+    schools.push({
       id: objectId("sch"),
-      visibleId: "ARSENAL_SCH",
-      schoolName: "Emirates Academy",
-      hubId: staticHub?.id ?? "",
-      schoolType: "National",
-      schoolEmail: "Gabriel.academy@test.com",
-      schoolCounty: "Nairobi",
-      schoolSubCounty: "Westlands",
-      schoolDemographics: "Mixed",
-      pointPersonName: "Thomas Partey",
-      pointPersonPhone: "254700000000",
-      numbersExpected: 300,
-      principalName: "David Raya",
-      droppedOut: false,
-      dropoutReason: null,
-      droppedOutAt: null,
-      assignedSupervisorId: supervisors.find((s) => s.visibleId === "SUPERVISOR1")?.id,
-    },
-    {
-      id: objectId("sch"),
-      visibleId: "SOBHA_SCH",
-      schoolName: "Sobha Academy",
-      hubId: staticHub?.id ?? "",
-      schoolType: "National",
-      schoolEmail: "sobha.academy@test.com",
-      schoolCounty: "Nairobi",
-      schoolSubCounty: "Westlands",
-      schoolDemographics: "Mixed",
-      pointPersonName: "Kai Havertz",
-      pointPersonPhone: "254700000000",
-      numbersExpected: 350,
-      principalName: "Mikel Merino",
-      droppedOut: false,
-      dropoutReason: null,
-      droppedOutAt: null,
-      assignedSupervisorId: supervisors.find((s) => s.visibleId === "SUPERVISOR2")?.id,
-    },
-  );
+      ...school,
+      hubId: arsenal.id,
+      assignedSupervisorId: supervisors.find((s) => s.visibleId === supervisorVisibleId)?.id,
+    });
+  }
 
-  // Continue with dynamic schools
-  hubs.slice(1).forEach((hub) => {
+  otherHubs.forEach((hub) => {
     const hubSupervisors = supervisors.filter((supervisor) => supervisor.hubId === hub.id);
     const numSchools = faker.number.int({
       min: hubSupervisors.length,
@@ -1228,7 +1036,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
         visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         schoolName: faker.company.name(),
         hubId: hub.id,
-        schoolType: faker.helpers.arrayElement(["National", "County", "Subcounty"]),
+        schoolType: faker.helpers.arrayElement(SCHOOL_TYPES),
         schoolEmail: faker.internet.email(),
         schoolCounty: county.name,
         schoolSubCounty: subCounty,
@@ -1254,15 +1062,20 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
 
 type SchoolCreationResult = Awaited<ReturnType<typeof createSchools>>;
 
+function leastAssignedFellow(fellows: Fellow[], schoolCountByFellowId: Map<string, number>) {
+  return fellows
+    .map((fellow) => ({ id: fellow.id, count: schoolCountByFellowId.get(fellow.id) ?? 0 }))
+    .toSorted((a, b) => a.count - b.count)[0]?.id;
+}
+
 async function createInterventionGroups(schools: SchoolCreationResult, fellows: Fellow[]) {
   console.log("creating intervention groups");
   const interventionGroups: (typeof schema.interventionGroup.$inferInsert)[] = [];
 
-  // Add static intervention groups for static school
-  const staticSchool = schools[0];
-  const staticFellows = fellows.filter((f) => f.visibleId?.startsWith("FELLOW"));
+  const staticSchool = schools.find((s) => s.visibleId === emiratesAcademy.visibleId);
+  const arsenalFellowIds = new Set(arsenalFellows.map((f) => f.visibleId));
+  const staticFellows = fellows.filter((f) => f.visibleId && arsenalFellowIds.has(f.visibleId));
 
-  // Create one group for each static fellow
   staticFellows.forEach((fellow, index) => {
     interventionGroups.push({
       id: objectId("group"),
@@ -1274,7 +1087,6 @@ async function createInterventionGroups(schools: SchoolCreationResult, fellows: 
     });
   });
 
-  // Continue with dynamic intervention groups
   const schoolFellowAssignments = new Map<string, Set<string>>();
   const fellowSchoolCount = new Map<string, number>();
 
@@ -1282,7 +1094,7 @@ async function createInterventionGroups(schools: SchoolCreationResult, fellows: 
     fellowSchoolCount.set(fellow.id, 0);
   }
 
-  for (const school of schools.slice(1)) {
+  for (const school of schools.filter((s) => s !== staticSchool)) {
     const numGroups = school.numbersExpected
       ? Math.ceil(school.numbersExpected / 16)
       : Math.ceil(1000 / 16);
@@ -1300,22 +1112,13 @@ async function createInterventionGroups(schools: SchoolCreationResult, fellows: 
         break;
       }
 
-      // Sort fellows by how many schools they have been assigned to (ascending)
-      const sortedFellows = availableFellows
-        .map((fellow) => ({
-          id: fellow.id,
-          count: fellowSchoolCount.get(fellow.id) ?? 0,
-        }))
-        .toSorted((a, b) => a.count - b.count);
-
-      const leader = sortedFellows[0]?.id; // Pick the fellow with the least assignments
+      const leader = leastAssignedFellow(availableFellows, fellowSchoolCount);
 
       if (!leader) {
         console.warn(`No fellows assigned for school ${school.schoolName}`);
         continue;
       }
 
-      // Assign the fellow to the school and update the tracking maps
       schoolFellowAssignments.get(school.id)?.add(leader);
       fellowSchoolCount.set(leader, (fellowSchoolCount.get(leader) ?? 0) + 1);
 
@@ -1352,11 +1155,9 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
   console.log("creating students");
   const students: (typeof schema.student.$inferInsert)[] = [];
 
-  // Add static students for static school
-  const staticSchool = schools[0];
+  const staticSchool = schools.find((s) => s.visibleId === emiratesAcademy.visibleId);
   const staticGroups = staticSchool?.interventionGroups ?? [];
 
-  // Create 30 static students (10 for each group)
   staticGroups.forEach((group, groupIndex) => {
     for (let i = 0; i < 10; i++) {
       students.push({
@@ -1368,12 +1169,13 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
         assignedGroupId: group.id,
         gender: i % 2 === 0 ? "Male" : "Female",
         yearOfBirth: 2008,
+        form: 2,
+        stream: "East",
       });
     }
   });
 
-  // Continue with dynamic students for other schools
-  for (const school of schools.slice(1)) {
+  for (const school of schools.filter((s) => s !== staticSchool)) {
     const numStudents = faker.number.int({
       min: school.numbersExpected || 1000 - Math.ceil(faker.number.float() * 60),
       max: school.numbersExpected || 1000,
@@ -1388,6 +1190,8 @@ async function createStudentsForSchools(schools: DemoSchool[]) {
         assignedGroupId: faker.helpers.arrayElement(school.interventionGroups).id,
         gender: faker.helpers.arrayElement(["Male", "Female"]),
         yearOfBirth: faker.date.birthdate({ mode: "age", min: 12, max: 20 }).getFullYear(),
+        form: faker.number.int({ min: 1, max: 4 }),
+        stream: faker.helpers.arrayElement(["East", "West", "North", "South"]),
       });
     }
   }
@@ -1430,6 +1234,22 @@ async function createSessionNames(hubs: Hub[]) {
   );
 }
 
+function nextFreeDate(
+  from: Date,
+  fellowIds: Set<string>,
+  busyDatesByFellowId: Map<string, Set<string>>,
+) {
+  let date = from;
+  while (
+    Array.from(fellowIds).some((fellowId) =>
+      busyDatesByFellowId.get(fellowId)?.has(date.toISOString().split("T")[0] ?? ""),
+    )
+  ) {
+    date = addDays(date, 1);
+  }
+  return date;
+}
+
 async function createInterventionSessionsForSchools(
   schools: DemoSchool[],
   interventionSessionNames: SessionName[],
@@ -1438,7 +1258,7 @@ async function createInterventionSessionsForSchools(
   const interventionSessions: (typeof schema.interventionSession.$inferInsert)[] = [];
   const fellowSessionDates = new Map<string, Set<string>>();
 
-  const staticSchool = schools[0];
+  const staticSchool = schools.find((s) => s.visibleId === emiratesAcademy.visibleId);
   const staticSessionNames = interventionSessionNames.filter(
     (sn) => sn.hubId === staticSchool?.hub?.id,
   );
@@ -1468,7 +1288,7 @@ async function createInterventionSessionsForSchools(
     staticDate = addWeeks(staticDate, 1);
   }
 
-  for (const school of schools.slice(1)) {
+  for (const school of schools.filter((s) => s !== staticSchool)) {
     if (!school.hubId) continue;
 
     const schoolSessionNames = interventionSessionNames.filter((sn) => sn.hubId === school.hub?.id);
@@ -1484,14 +1304,7 @@ async function createInterventionSessionsForSchools(
       if (usedSessionTypes.has(sessionName.sessionName)) continue;
       usedSessionTypes.add(sessionName.sessionName);
 
-      while (
-        Array.from(fellowIds).some((fellowId) => {
-          const fellowDates = fellowSessionDates.get(fellowId);
-          return fellowDates?.has(currentDate.toISOString().split("T")[0] ?? "");
-        })
-      ) {
-        currentDate = addDays(currentDate, 1);
-      }
+      currentDate = nextFreeDate(currentDate, fellowIds, fellowSessionDates);
 
       interventionSessions.push({
         id: objectId("session"),
@@ -2427,13 +2240,16 @@ async function main() {
   const defaultProjectId = projects[0]?.id ?? "";
   const admins = await createAdminUsers(implementers, userEmailSet, defaultProjectId);
   const hubs = await createHubs(projects, implementers);
-  const hubCoordinators = await createHubCoordinators(hubs, implementers, userEmailSet);
-  const supervisors = await createSupervisors(hubs, userEmailSet, 6);
-  const clinicalLeads = await createClinicalLeads(hubs, userEmailSet);
-  const clinicalTeam = await createClinicalTeam(hubs, implementers);
+  const arsenal = hubs.find((hub) => hub.visibleId === arsenalHub.visibleId);
+  if (!arsenal) throw new Error("The Arsenal hub was not created");
+  const otherHubs = hubs.filter((hub) => hub !== arsenal);
+  const hubCoordinators = await createHubCoordinators(arsenal, otherHubs, userEmailSet);
+  const supervisors = await createSupervisors(arsenal, otherHubs, userEmailSet, 6);
+  const clinicalLeads = await createClinicalLeads(arsenal, otherHubs, userEmailSet);
+  const clinicalTeam = await createClinicalTeam(arsenal);
   await createResearchSurveys(defaultProjectId);
-  const operations = await createOperations(hubs, userEmailSet);
-  const fellows = await createFellows(supervisors, userEmailSet);
+  const operations = await createOperations(arsenal, otherHubs, userEmailSet);
+  const fellows = await createFellows(arsenal, supervisors, userEmailSet);
 
   await createTickets();
 
@@ -2449,8 +2265,11 @@ async function main() {
     hubs,
     defaultProjectId,
   );
+  // One creation time for every seeded user, so a picker that orders by it and then by email picks
+  // the same user after every reset, and users a test adds come after them.
+  await db.update(schema.user).set({ createdAt: seedToday });
 
-  const schools = await createSchools(hubs, supervisors);
+  const schools = await createSchools(hubs, arsenal, otherHubs, supervisors);
   await createInterventionGroups(schools, fellows);
   const schoolsWithGroupsAndFellows = await loadSchoolsWithGroupsAndHub();
   const students = await createStudentsForSchools(schoolsWithGroupsAndFellows);

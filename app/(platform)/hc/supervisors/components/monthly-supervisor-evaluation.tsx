@@ -1,6 +1,6 @@
-import { addDays, differenceInSeconds, eachMonthOfInterval, format, isEqual } from "date-fns";
+import { addDays, eachMonthOfInterval, format, isEqual } from "date-fns";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -35,7 +35,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { cn } from "#/lib/utils";
+import { cn, updateWindowFor } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { monthlySupervisorEvaluation, project as projectTable } from "#/db/schema";
 
@@ -50,15 +50,7 @@ type FormInput = {
   }[];
   commentsInputName: string;
 };
-export default function MonthlySupervisorEvaluation({
-  supervisorId,
-  children,
-  isOpen,
-  setIsOpen,
-  project,
-  evaluations,
-  mode = "edit",
-}: {
+type MonthlySupervisorEvaluationProps = {
   supervisorId?: string;
   children: React.ReactNode;
   isOpen: boolean;
@@ -66,36 +58,60 @@ export default function MonthlySupervisorEvaluation({
   project: Pick<typeof projectTable.$inferSelect, "actualStartDate" | "actualEndDate"> | null;
   evaluations: MonthlySupervisorEvaluationType[];
   mode?: "view" | "edit";
-}) {
-  const [existingEvaluation, setExistingEvaluation] = useState<
-    MonthlySupervisorEvaluationType | undefined
-  >();
-  const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
+};
+
+export default function MonthlySupervisorEvaluation(props: MonthlySupervisorEvaluationProps) {
+  return (
+    <Dialog open={props.isOpen} onOpenChange={props.setIsOpen}>
+      <DialogContent className="w-2/5 max-w-none p-5 text-base font-medium leading-6">
+        <MonthlySupervisorEvaluationForm {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MonthlySupervisorEvaluationForm({
+  supervisorId,
+  children,
+  setIsOpen,
+  project,
+  evaluations,
+  mode = "edit",
+}: MonthlySupervisorEvaluationProps) {
   const isViewMode = mode === "view";
+  const firstEvaluation = isViewMode ? evaluations[0] : undefined;
+  const [existingEvaluation, setExistingEvaluation] = useState(firstEvaluation);
+  const [updateWindowDuration, setUpdateWindowDuration] = useState(() =>
+    updateWindowFor(firstEvaluation),
+  );
+
+  const defaultValues = {
+    supervisorId,
+    respectfulness: undefined,
+    attitude: undefined,
+    collaboration: undefined,
+    reliability: undefined,
+    identificationOfIssues: undefined,
+    leadership: undefined,
+    communicationStyle: undefined,
+    conflictResolution: undefined,
+    adaptability: undefined,
+    recognitionAndFeedback: undefined,
+    decisionMaking: undefined,
+    fellowRecruitmentEffectiveness: undefined,
+    fellowTrainingEffectiveness: undefined,
+    programLogisticsCoordination: undefined,
+    programSessionAttendance: undefined,
+    workplaceDemeanorComments: undefined,
+    managementStyleComments: undefined,
+    programExecutionComments: undefined,
+  };
 
   const form = useForm<z.infer<typeof MonthlySupervisorEvaluationSchema>>({
     resolver: zodResolver(MonthlySupervisorEvaluationSchema),
-    defaultValues: {
-      supervisorId: supervisorId ?? "",
-      respectfulness: undefined,
-      attitude: undefined,
-      collaboration: undefined,
-      reliability: undefined,
-      identificationOfIssues: undefined,
-      leadership: undefined,
-      communicationStyle: undefined,
-      conflictResolution: undefined,
-      adaptability: undefined,
-      recognitionAndFeedback: undefined,
-      decisionMaking: undefined,
-      fellowRecruitmentEffectiveness: undefined,
-      fellowTrainingEffectiveness: undefined,
-      programLogisticsCoordination: undefined,
-      programSessionAttendance: undefined,
-      workplaceDemeanorComments: undefined,
-      managementStyleComments: undefined,
-      programExecutionComments: undefined,
-    },
+    defaultValues: firstEvaluation
+      ? evaluationValues(firstEvaluation)
+      : { ...defaultValues, supervisorId: supervisorId ?? "" },
   });
 
   const formInputs: FormInput[] = [
@@ -208,28 +224,6 @@ export default function MonthlySupervisorEvaluation({
     },
   ];
 
-  const defaultValues = {
-    supervisorId,
-    respectfulness: undefined,
-    attitude: undefined,
-    collaboration: undefined,
-    reliability: undefined,
-    identificationOfIssues: undefined,
-    leadership: undefined,
-    communicationStyle: undefined,
-    conflictResolution: undefined,
-    adaptability: undefined,
-    recognitionAndFeedback: undefined,
-    decisionMaking: undefined,
-    fellowRecruitmentEffectiveness: undefined,
-    fellowTrainingEffectiveness: undefined,
-    programLogisticsCoordination: undefined,
-    programSessionAttendance: undefined,
-    workplaceDemeanorComments: undefined,
-    managementStyleComments: undefined,
-    programExecutionComments: undefined,
-  };
-
   const months =
     project !== null && project.actualStartDate !== null
       ? eachMonthOfInterval({
@@ -252,24 +246,6 @@ export default function MonthlySupervisorEvaluation({
     setIsOpen(false);
   };
 
-  const syncOpenState = useEffectEvent(() => {
-    if (!isOpen) {
-      setExistingEvaluation(undefined);
-      form.reset(defaultValues);
-    } else if (isOpen && isViewMode && evaluations.length > 0) {
-      const firstEvaluation = evaluations[0];
-      if (firstEvaluation) {
-        updateFormValues(format(firstEvaluation.month, "yyyy-MM-dd"));
-      }
-    }
-  });
-
-  // effect: isOpen is set by the parent from a row menu; initialises or clears the form when it changes
-  useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- isOpen is controlled by the parent, which opens this dialog from a row menu; the reset cannot live in an open handler here
-    syncOpenState();
-  }, [supervisorId, isOpen, isViewMode, evaluations]);
-
   function updateFormValues(value: string) {
     const match = evaluations.find((evaluation) =>
       isEqual(new Date(evaluation.month), new Date(value)),
@@ -277,244 +253,241 @@ export default function MonthlySupervisorEvaluation({
 
     if (match) {
       setExistingEvaluation(match);
-      setUpdateWindowDuration(differenceInSeconds(addDays(match.createdAt, 14), new Date()));
-      const {
-        respectfulness,
-        attitude,
-        collaboration,
-        reliability,
-        identificationOfIssues,
-        workplaceDemeanorComments,
-        leadership,
-        communicationStyle,
-        conflictResolution,
-        adaptability,
-        recognitionAndFeedback,
-        decisionMaking,
-        managementStyleComments,
-        fellowRecruitmentEffectiveness,
-        fellowTrainingEffectiveness,
-        programLogisticsCoordination,
-        programSessionAttendance,
-        programExecutionComments,
-        month,
-      } = match;
-      form.reset({
-        month,
-        supervisorId,
-        respectfulness,
-        attitude,
-        collaboration,
-        reliability,
-        identificationOfIssues,
-        leadership,
-        communicationStyle,
-        conflictResolution,
-        adaptability,
-        recognitionAndFeedback,
-        decisionMaking,
-        fellowRecruitmentEffectiveness,
-        fellowTrainingEffectiveness,
-        programLogisticsCoordination,
-        programSessionAttendance,
-        workplaceDemeanorComments: workplaceDemeanorComments ?? undefined,
-        managementStyleComments: managementStyleComments ?? undefined,
-        programExecutionComments: programExecutionComments ?? undefined,
-      });
+      setUpdateWindowDuration(updateWindowFor(match));
+      form.reset(evaluationValues(match));
     } else {
       form.reset({ month: new Date(value), ...defaultValues });
       setExistingEvaluation(undefined);
     }
   }
 
+  function evaluationValues(match: MonthlySupervisorEvaluationType) {
+    const {
+      respectfulness,
+      attitude,
+      collaboration,
+      reliability,
+      identificationOfIssues,
+      workplaceDemeanorComments,
+      leadership,
+      communicationStyle,
+      conflictResolution,
+      adaptability,
+      recognitionAndFeedback,
+      decisionMaking,
+      managementStyleComments,
+      fellowRecruitmentEffectiveness,
+      fellowTrainingEffectiveness,
+      programLogisticsCoordination,
+      programSessionAttendance,
+      programExecutionComments,
+      month,
+    } = match;
+    return {
+      month,
+      supervisorId,
+      respectfulness,
+      attitude,
+      collaboration,
+      reliability,
+      identificationOfIssues,
+      leadership,
+      communicationStyle,
+      conflictResolution,
+      adaptability,
+      recognitionAndFeedback,
+      decisionMaking,
+      fellowRecruitmentEffectiveness,
+      fellowTrainingEffectiveness,
+      programLogisticsCoordination,
+      programSessionAttendance,
+      workplaceDemeanorComments: workplaceDemeanorComments ?? undefined,
+      managementStyleComments: managementStyleComments ?? undefined,
+      programExecutionComments: programExecutionComments ?? undefined,
+    };
+  }
+
   return (
     <Form {...form}>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="w-2/5 max-w-none p-5 text-base font-medium leading-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">
-              {isViewMode ? "View supervisor evaluations" : "Monthly supervisor evaluation"}
-            </DialogTitle>
-          </DialogHeader>
-          {children}
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
-            <FormField
-              control={form.control}
-              name="month"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>
-                    Select month {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                  </FormLabel>
-                  <Select
-                    value={field.value ? format(field.value, "yyyy-MM-dd") : undefined}
-                    onValueChange={(value) => {
-                      field.onChange(new Date(value));
-                      updateFormValues(value);
-                    }}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a month" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {months.map((month, index) => {
-                        return (
-                          // oxlint-disable-next-line react/no-array-index-key -- static month list
-                          <SelectItem key={index.toString()} value={format(month, "yyyy-MM-dd")}>
-                            Month {index + 1} - {format(month, "MMM yyyy")}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {existingEvaluation && updateWindowDuration >= 0 ? (
-              <DialogAlertWidget separator={false}>
-                <div className="flex items-center gap-2">
-                  <span>
-                    Update ratings by{" "}
-                    {format(addDays(existingEvaluation.createdAt, 14), "dd-MM-yyyy")} (
-                    <CountdownTimer duration={updateWindowDuration} />)
-                  </span>
-                </div>
-              </DialogAlertWidget>
-            ) : null}
-            <FormField
-              control={form.control}
-              name="supervisorId"
-              render={({ field }) => (
-                <FormItem>
-                  <Input
-                    id="supervisorId"
-                    name="supervisorId"
-                    type="hidden"
-                    value={field.value ?? ""}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Separator />
-            <div className="flex flex-col space-y-4 divide-y">
-              {formInputs.map((input) => {
-                return (
-                  <div key={input.section} className="flex flex-col space-y-2 py-4">
-                    <div>
-                      <span className="text-bold text-lg">{input.section}</span>{" "}
-                      {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </div>
-                    <div className="flex flex-col space-y-3 text-sm">
-                      {input.fields.map((inputField) => (
-                        <FormField
-                          key={inputField.name}
-                          control={form.control}
-                          name={inputField.name as keyof typeof form.formState.defaultValues}
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col space-y-2">
-                              <FormLabel>
-                                <span>{inputField.label}</span>{" "}
-                                {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                              </FormLabel>
-                              <span className="text-shamiri-text-grey">
-                                {inputField.description}
-                              </span>
-                              <RatingStarsInput
-                                value={field.value}
-                                onChange={field.onChange}
-                                disabled={
-                                  isViewMode || (existingEvaluation && updateWindowDuration === 0)
-                                }
-                              />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                      <FormField
-                        control={form.control}
-                        name={input.commentsInputName as keyof typeof form.formState.defaultValues}
-                        disabled={isViewMode || (existingEvaluation && updateWindowDuration <= 0)}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Textarea
-                                className="resize-none"
-                                {...field}
-                                disabled={
-                                  isViewMode || (existingEvaluation && updateWindowDuration <= 0)
-                                }
-                                readOnly={isViewMode}
-                                placeholder={
-                                  isViewMode
-                                    ? ""
-                                    : existingEvaluation && updateWindowDuration <= 0
-                                      ? ""
-                                      : "Type additional comments"
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+      <DialogHeader>
+        <DialogTitle className="text-lg font-bold">
+          {isViewMode ? "View supervisor evaluations" : "Monthly supervisor evaluation"}
+        </DialogTitle>
+      </DialogHeader>
+      {children}
+      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+        <FormField
+          control={form.control}
+          name="month"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>
+                Select month {!isViewMode && <span className="text-shamiri-light-red">*</span>}
+              </FormLabel>
+              <Select
+                value={field.value ? format(field.value, "yyyy-MM-dd") : undefined}
+                onValueChange={(value) => {
+                  field.onChange(new Date(value));
+                  updateFormValues(value);
+                }}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a month" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {months.map((month, index) => {
+                    return (
+                      // oxlint-disable-next-line react/no-array-index-key -- static month list
+                      <SelectItem key={index.toString()} value={format(month, "yyyy-MM-dd")}>
+                        Month {index + 1} - {format(month, "MMM yyyy")}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {existingEvaluation && updateWindowDuration >= 0 ? (
+          <DialogAlertWidget separator={false}>
+            <div className="flex items-center gap-2">
+              <span>
+                Update ratings by {format(addDays(existingEvaluation.createdAt, 14), "dd-MM-yyyy")}{" "}
+                (
+                <CountdownTimer duration={updateWindowDuration} />)
+              </span>
             </div>
-            {!isViewMode &&
-              (existingEvaluation === undefined ||
-                (existingEvaluation && updateWindowDuration >= 0)) && (
-                <div className="space-y-5">
-                  <Separator />
-                  <DialogFooter className="flex justify-end">
-                    <Button
-                      className=""
-                      variant="ghost"
-                      type="button"
-                      onClick={() => {
-                        setIsOpen(false);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="brand"
-                      type="submit"
-                      disabled={
-                        form.formState.isSubmitting ||
-                        (existingEvaluation && updateWindowDuration < 0)
-                      }
-                      loading={form.formState.isSubmitting}
-                    >
-                      {existingEvaluation ? "Update & save" : "Submit"}
-                    </Button>
-                  </DialogFooter>
+          </DialogAlertWidget>
+        ) : null}
+        <FormField
+          control={form.control}
+          name="supervisorId"
+          render={({ field }) => (
+            <FormItem>
+              <Input
+                id="supervisorId"
+                name="supervisorId"
+                type="hidden"
+                value={field.value ?? ""}
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Separator />
+        <div className="flex flex-col space-y-4 divide-y">
+          {formInputs.map((input) => {
+            return (
+              <div key={input.section} className="flex flex-col space-y-2 py-4">
+                <div>
+                  <span className="text-bold text-lg">{input.section}</span>{" "}
+                  {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                 </div>
-              )}
-            {isViewMode && (
-              <div className="space-y-5">
-                <Separator />
-                <DialogFooter className="flex justify-end">
-                  <Button
-                    variant="brand"
-                    type="button"
-                    onClick={() => {
-                      setIsOpen(false);
-                    }}
-                  >
-                    Close
-                  </Button>
-                </DialogFooter>
+                <div className="flex flex-col space-y-3 text-sm">
+                  {input.fields.map((inputField) => (
+                    <FormField
+                      key={inputField.name}
+                      control={form.control}
+                      name={inputField.name as keyof typeof form.formState.defaultValues}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col space-y-2">
+                          <FormLabel>
+                            <span>{inputField.label}</span>{" "}
+                            {!isViewMode && <span className="text-shamiri-light-red">*</span>}
+                          </FormLabel>
+                          <span className="text-shamiri-text-grey">{inputField.description}</span>
+                          <RatingStarsInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            disabled={
+                              isViewMode || (existingEvaluation && updateWindowDuration === 0)
+                            }
+                          />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                  <FormField
+                    control={form.control}
+                    name={input.commentsInputName as keyof typeof form.formState.defaultValues}
+                    disabled={isViewMode || (existingEvaluation && updateWindowDuration <= 0)}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            className="resize-none"
+                            {...field}
+                            disabled={
+                              isViewMode || (existingEvaluation && updateWindowDuration <= 0)
+                            }
+                            readOnly={isViewMode}
+                            placeholder={
+                              isViewMode
+                                ? ""
+                                : existingEvaluation && updateWindowDuration <= 0
+                                  ? ""
+                                  : "Type additional comments"
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
-            )}
-          </form>
-        </DialogContent>
-      </Dialog>
+            );
+          })}
+        </div>
+        {!isViewMode &&
+          (existingEvaluation === undefined ||
+            (existingEvaluation && updateWindowDuration >= 0)) && (
+            <div className="space-y-5">
+              <Separator />
+              <DialogFooter className="flex justify-end">
+                <Button
+                  className=""
+                  variant="ghost"
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="brand"
+                  type="submit"
+                  disabled={
+                    form.formState.isSubmitting || (existingEvaluation && updateWindowDuration < 0)
+                  }
+                  loading={form.formState.isSubmitting}
+                >
+                  {existingEvaluation ? "Update & save" : "Submit"}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        {isViewMode && (
+          <div className="space-y-5">
+            <Separator />
+            <DialogFooter className="flex justify-end">
+              <Button
+                variant="brand"
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                }}
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+      </form>
     </Form>
   );
 }

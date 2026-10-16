@@ -1,6 +1,6 @@
 "use client";
 
-import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { StudentReportingNotesSchema } from "#/app/(platform)/hc/schemas";
@@ -22,17 +22,24 @@ import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitStudentReportingNotes } from "#/lib/actions/student";
 import { zodResolver } from "#/lib/zod-resolver";
 
-export function AddReportingNote({
-  isOpen,
-  setIsOpen,
-  student,
-  children,
-}: {
+type AddReportingNoteProps = {
   student: SchoolStudentTableData;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
-}) {
+};
+
+export function AddReportingNote(props: AddReportingNoteProps) {
+  return (
+    <Dialog open={props.isOpen} onOpenChange={props.setIsOpen}>
+      <DialogContent className="lg:w-2/5 lg:max-w-none">
+        <AddReportingNoteForm {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AddReportingNoteForm({ setIsOpen, student, children }: AddReportingNoteProps) {
   const form = useForm<z.infer<typeof StudentReportingNotesSchema>>({
     resolver: zodResolver(StudentReportingNotesSchema),
     defaultValues: {
@@ -55,68 +62,59 @@ export function AddReportingNote({
     setIsOpen(false);
   };
 
-  // effect: clears the form whenever the parent opens or closes the dialog
-  useEffect(() => {
-    form.reset();
-  }, [isOpen, form]);
-
   return (
     <Form {...form}>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="lg:w-2/5 lg:max-w-none">
-          <DialogHeader>
-            <h2 className="text-lg font-bold">Add reporting note</h2>
-          </DialogHeader>
-          {children}
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>
-                    Report incident <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="" className="resize-none" rows={6} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="studentId"
-              render={({ field }) => (
-                <FormItem>
-                  <Input id="studentId" name="studentId" type="hidden" value={field.value} />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Separator />
-            <DialogFooter className="flex justify-end">
-              <Button
-                className="text-shamiri-new-blue hover:bg-blue-bg"
-                variant="ghost"
-                onClick={() => {
-                  setIsOpen(false);
-                }}
-                type="button"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
-                Submit
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <DialogHeader>
+        <h2 className="text-lg font-bold">Add reporting note</h2>
+      </DialogHeader>
+      {children}
+      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>
+                Report incident <span className="text-shamiri-light-red">*</span>
+              </FormLabel>
+              <FormControl>
+                <Textarea placeholder="" className="resize-none" rows={6} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="studentId"
+          render={({ field }) => (
+            <FormItem>
+              <Input id="studentId" name="studentId" type="hidden" value={field.value} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Separator />
+        <DialogFooter className="flex justify-end">
+          <Button
+            className="text-shamiri-new-blue hover:bg-blue-bg"
+            variant="ghost"
+            onClick={() => {
+              setIsOpen(false);
+            }}
+            type="button"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            loading={form.formState.isSubmitting}
+          >
+            Submit
+          </Button>
+        </DialogFooter>
+      </form>
     </Form>
   );
 }

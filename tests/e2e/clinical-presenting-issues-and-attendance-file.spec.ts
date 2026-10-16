@@ -1,10 +1,11 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "#/tests/fixtures";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { attendanceDocuments, clinicalSessionAttendance } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { createClinicalCase, signInWithEmail, signableMember } from "#/tests/helpers";
+import { createClinicalCase, signInWithEmail, signableMember, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -23,23 +24,8 @@ let caseOwner: CaseFixture;
 let clinicalCase: { caseId: string; pseudonym: string; remove: () => Promise<void> };
 let attendance: AttendanceFixture;
 
-test.beforeAll(async () => {
-  const {
-    rows: [caseRow],
-  } = await db.execute<CaseFixture>(sql`
-    select u.email, sv.id as "supervisorId", sc.id as "schoolId"
-    from supervisors sv
-    join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
-    join users u on u.id = m.user_id and u.email is not null
-    join schools sc on sc.hub_id = sv.hub_id and sc.archived_at is null
-    where ${signableMember()}
-      and exists (select 1 from intervention_groups g where g.school_id = sc.id)
-    order by sv.id desc, sc.id
-    limit 1`);
-  if (!caseRow) throw new Error("seed the database first: no supervisor with a school");
-  caseOwner = caseRow;
-
-  // "Upload attendance" opens only for an occurred session with at least 2 marked students.
+// "Upload attendance" opens only for an occurred session with at least 2 marked students.
+async function pickOccurredSessionWithTwoMarkedStudents() {
   const {
     rows: [attendanceRow],
   } = await db.execute<AttendanceFixture>(sql`
@@ -47,7 +33,7 @@ test.beforeAll(async () => {
       s.visible_id as "schoolVisibleId", sn.session_name as "sessionLabel"
     from intervention_groups g
     join implementer_members m on m.identifier = g.leader_id and m.role = 'FELLOW'
-    join users u on u.id = m.user_id and u.email is not null
+    join users u on u.id = m.user_id
     join schools s on s.id = g.school_id
     join intervention_sessions i on i.school_id = s.id and i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'
@@ -64,35 +50,41 @@ test.beforeAll(async () => {
       "seed the database first: no fellow with 2 students marked at an occurred session",
     );
   }
+  return attendanceRow;
+}
+
+test.beforeAll(async () => {
+  const {
+    rows: [caseRow],
+  } = await db.execute<CaseFixture>(sql`
+    select u.email, sv.id as "supervisorId", sc.id as "schoolId"
+    from supervisors sv
+    join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
+    join users u on u.id = m.user_id
+    join schools sc on sc.hub_id = sv.hub_id and sc.archived_at is null
+    where ${signableMember()}
+      and exists (select 1 from intervention_groups g where g.school_id = sc.id)
+    order by sv.id desc, sc.id
+    limit 1`);
+  required(caseRow, "no supervisor with a school");
+  caseOwner = caseRow;
+
+  const attendanceRow = await pickOccurredSessionWithTwoMarkedStudents();
   attendance = {
     ...attendanceRow,
     sessionLabel: sessionDisplayName(attendanceRow.sessionLabel) ?? attendanceRow.sessionLabel,
   };
 });
 
-// Cleanup runs in afterEach, not in a finally block: when a test times out, Playwright abandons
-// its body but still runs the hooks.
-let undo: (() => Promise<unknown>)[] = [];
-test.beforeEach(async () => {
+test.beforeEach(async ({ undo }) => {
   clinicalCase = await createClinicalCase({
     schoolId: caseOwner.schoolId,
     currentSupervisorId: caseOwner.supervisorId,
   });
-  undo.push(() => clinicalCase.remove());
+  undo(() => clinicalCase.remove());
 });
-test.afterEach(async () => {
-  for (const step of undo.reverse()) {
-    await step();
-  }
-  undo = [];
-});
-
-/** A row of the expanded diagnosing board. The case's own row also contains it, so take the last. */
-function issueRow(page: Page, issue: string) {
-  return page
-    .getByRole("row")
-    .filter({ has: page.getByRole("cell", { name: issue, exact: true }) })
-    .last();
+function familyIssues(page: Page) {
+  return page.getByRole("checkbox", { name: "Family issues" });
 }
 
 async function expandCase(page: Page) {
@@ -106,14 +98,13 @@ test("a supervisor saves emergency, general and other presenting issues together
   context,
 }) => {
   const otherIssues = `e2e other issues ${Date.now()}`;
-  // The checkboxes are unlabelled; the emergency columns are Low, Moderate, High, Severe risk.
-  const highRiskBullying = (row: Locator) => row.getByRole("checkbox").nth(2);
+  const highRiskBullying = page.getByRole("checkbox", { name: "Bullying: High risk" });
 
   await signInWithEmail(context, caseOwner.email);
   await page.goto(getUrl("/sc/clinical"));
   await expandCase(page);
-  await highRiskBullying(issueRow(page, "Bullying")).click();
-  await issueRow(page, "Family issues").getByRole("checkbox").click();
+  await highRiskBullying.click();
+  await familyIssues(page).click();
   await page.getByRole("textbox", { name: "Other Issues" }).fill(otherIssues);
   await page.getByRole("button", { name: "Save Baseline" }).click();
   await expect(
@@ -122,8 +113,8 @@ test("a supervisor saves emergency, general and other presenting issues together
 
   await page.reload();
   await expandCase(page);
-  await expect(highRiskBullying(issueRow(page, "Bullying"))).toBeChecked();
-  await expect(issueRow(page, "Family issues").getByRole("checkbox")).toBeChecked();
+  await expect(highRiskBullying).toBeChecked();
+  await expect(familyIssues(page)).toBeChecked();
   await expect(page.getByRole("textbox", { name: "Other Issues" })).toHaveValue(otherIssues);
 });
 
@@ -143,7 +134,7 @@ test("a save from a page loaded before the case was terminated changes nothing",
   await signInWithEmail(context, caseOwner.email);
   await page.goto(getUrl("/sc/clinical"));
   await expandCase(page);
-  await issueRow(page, "Family issues").getByRole("checkbox").click();
+  await familyIssues(page).click();
 
   const otherTab = await context.newPage();
   await otherTab.goto(getUrl("/sc/clinical"));
@@ -173,12 +164,13 @@ test("a save from a page loaded before the case was terminated changes nothing",
   const caseRow = await searchRows(page, clinicalCase.pseudonym);
   await expect(caseRow).toContainText("Terminated");
   await caseRow.getByRole("button").first().click();
-  await expect(issueRow(page, "Family issues").getByRole("checkbox")).not.toBeChecked();
+  await expect(familyIssues(page)).not.toBeChecked();
 });
 
 test("a fellow deletes their group's attendance document even when the file store fails", async ({
   page,
   context,
+  undo,
 }) => {
   test.skip(
     !process.env.S3_STUDENT_ATTENDANCE_BUCKET || !process.env.S3_STUDENT_ATTENDANCE_REGION,
@@ -196,7 +188,7 @@ test("a fellow deletes their group's attendance document even when the file stor
     })
     .returning({ id: attendanceDocuments.id });
   if (!document) throw new Error("could not insert the attendance document fixture");
-  undo.push(() => db.delete(attendanceDocuments).where(eq(attendanceDocuments.id, document.id)));
+  undo(() => db.delete(attendanceDocuments).where(eq(attendanceDocuments.id, document.id)));
 
   await signInWithEmail(context, attendance.email);
   const dialog = page.getByRole("dialog", { name: "Attendance Document" });

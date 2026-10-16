@@ -23,7 +23,7 @@ describe("proxy", () => {
   });
 
   it("lets a request with a cookie through without touching the database", () => {
-    // The proxy runs where the database is unreachable (see proxy.ts). A database call would
+    // The proxy runs where the database is unreachable (see .oxlintrc.json). A database call would
     // have to be awaited, so a synchronous response is the proof that none is made.
     const res = proxy(request("/hc/schools", "better-auth.session_token=abc"));
     expect(res).not.toBeInstanceOf(Promise);

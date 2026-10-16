@@ -1,5 +1,5 @@
 import type { fellow, school as schoolTable, supervisor } from "#/db/schema";
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { CreateGroupSchema } from "#/components/common/group/schema";
@@ -34,20 +34,40 @@ import { createInterventionGroup } from "#/lib/actions/group";
 import { getSchoolInitials } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
-export default function CreateGroup({
-  supervisors,
-  school,
-  groupCount,
-  disabled,
-}: {
+type CreateGroupProps = {
   supervisors: (Pick<typeof supervisor.$inferSelect, "id" | "supervisorName"> & {
     fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName" | "droppedOut">[];
   })[];
   school: typeof schoolTable.$inferSelect;
   groupCount: number;
   disabled?: boolean;
-}) {
+};
+
+export default function CreateGroup(props: CreateGroupProps) {
   const [open, setOpen] = React.useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <div className="flex items-center gap-2">
+          <Button variant="brand" className="flex gap-1" disabled={props.disabled}>
+            <Icons.plusCircle className="h-4 w-4" />
+            <span>New group</span>
+          </Button>
+        </div>
+      </DialogTrigger>
+      <DialogContent className="w-2/5 max-w-none">
+        <CreateGroupForm {...props} close={() => setOpen(false)} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CreateGroupForm({
+  supervisors,
+  school,
+  groupCount,
+  close,
+}: CreateGroupProps & { close: () => void }) {
   const form = useForm<z.infer<typeof CreateGroupSchema>>({
     resolver: zodResolver(CreateGroupSchema),
     defaultValues: {
@@ -56,13 +76,6 @@ export default function CreateGroup({
     },
   });
   const supervisorWatcher = form.watch("supervisorId");
-
-  // effect: clears the form when the dialog closes; open is shared with the trigger
-  useEffect(() => {
-    if (!open) {
-      form.reset();
-    }
-  }, [open, form]);
 
   const onSubmit = async (data: z.infer<typeof CreateGroupSchema>) => {
     const response = await createInterventionGroup(data);
@@ -76,154 +89,142 @@ export default function CreateGroup({
     toast({
       description: response.message,
     });
-    setOpen(false);
+    close();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <div className="flex items-center gap-2">
-          <Button variant="brand" className="flex gap-1" disabled={disabled}>
-            <Icons.plusCircle className="h-4 w-4" />
-            <span>New group</span>
-          </Button>
-        </div>
-      </DialogTrigger>
-      <DialogContent className="w-2/5 max-w-none">
-        <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
-            <DialogHeader className="mb-4">
-              <span className="text-xl">Create new group</span>
-            </DialogHeader>
-            <div className="space-y-6">
-              <div className="flex flex-col">
-                <FormField
-                  control={form.control}
-                  name="groupName"
-                  disabled={true}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Group Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Separator className="my-2" />
-                <div className="col-span-2 py-2">
-                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
-                    Assign a leader to this group
-                  </span>
-                </div>
-                <div className="flex flex-col gap-3">
-                  <FormField
-                    control={form.control}
-                    name="supervisorId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Select supervisor <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={(val) => {
-                            field.onChange(val);
-                            form.resetField("fellowId");
-                          }}
-                          value={field.value}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={"Select"} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[200px]">
-                            {supervisors.map((supervisor) => {
-                              return (
-                                <SelectItem key={supervisor.id} value={supervisor.id}>
-                                  {supervisor.supervisorName}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="fellowId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Select fellow <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          defaultValue={field.value}
-                          disabled={!form.getValues("supervisorId")}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={"Select"} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[200px]">
-                            {supervisorWatcher !== undefined
-                              ? supervisors
-                                  .find((supervisor) => supervisorWatcher === supervisor.id)
-                                  ?.fellows.map((fellow) => {
-                                    return (
-                                      <SelectItem key={fellow.id} value={fellow.id}>
-                                        {fellow.fellowName}
-                                      </SelectItem>
-                                    );
-                                  })
-                              : []}
-                            {supervisorWatcher !== undefined &&
-                            supervisors.find((supervisor) => supervisorWatcher === supervisor.id)
-                              ?.fellows.length === 0 ? (
-                              <SelectItem value={" "} disabled={true}>
-                                Supervisor has no fellows assigned.
-                              </SelectItem>
-                            ) : null}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+    <Form {...form}>
+      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+        <DialogHeader className="mb-4">
+          <span className="text-xl">Create new group</span>
+        </DialogHeader>
+        <div className="space-y-6">
+          <div className="flex flex-col">
+            <FormField
+              control={form.control}
+              name="groupName"
+              disabled={true}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Group Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Separator className="my-2" />
+            <div className="col-span-2 py-2">
+              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                Assign a leader to this group
+              </span>
             </div>
-            <Separator className="my-6" />
-            <DialogFooter className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                type="button"
-                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="brand"
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
-                Submit
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            <div className="flex flex-col gap-3">
+              <FormField
+                control={form.control}
+                name="supervisorId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Select supervisor <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        form.resetField("fellowId");
+                      }}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={"Select"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[200px]">
+                        {supervisors.map((supervisor) => {
+                          return (
+                            <SelectItem key={supervisor.id} value={supervisor.id}>
+                              {supervisor.supervisorName}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="fellowId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Select fellow <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={field.value}
+                      disabled={!form.getValues("supervisorId")}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={"Select"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[200px]">
+                        {supervisorWatcher !== undefined
+                          ? supervisors
+                              .find((supervisor) => supervisorWatcher === supervisor.id)
+                              ?.fellows.map((fellow) => {
+                                return (
+                                  <SelectItem key={fellow.id} value={fellow.id}>
+                                    {fellow.fellowName}
+                                  </SelectItem>
+                                );
+                              })
+                          : []}
+                        {supervisorWatcher !== undefined &&
+                        supervisors.find((supervisor) => supervisorWatcher === supervisor.id)
+                          ?.fellows.length === 0 ? (
+                          <SelectItem value={" "} disabled={true}>
+                            Supervisor has no fellows assigned.
+                          </SelectItem>
+                        ) : null}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </div>
+        <Separator className="my-6" />
+        <DialogFooter className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            type="button"
+            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            onClick={() => {
+              close();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="brand"
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            loading={form.formState.isSubmitting}
+          >
+            Submit
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }

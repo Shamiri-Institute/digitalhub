@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { db, pool } from "#/db/client";
-import { clinicalScreeningInfo, student } from "#/db/schema";
+import { clinicalScreeningInfo, school, student } from "#/db/schema";
 import { countOf } from "#/db/sql";
 
 afterAll(() => pool.end());
@@ -51,5 +51,31 @@ describe("countOf", () => {
     expect(
       await db.$count(clinicalScreeningInfo, eq(clinicalScreeningInfo.studentId, target.studentId)),
     ).toBe(target.n);
+  });
+
+  it("applies the filter to the counted table, at the root of a query with `with`", async () => {
+    const {
+      rows: [target],
+    } = await db.execute<{ schoolId: string; female: number; all: number }>(sql`
+      select school_id as "schoolId", count(*) filter (where gender = 'Female')::int as female,
+        count(*)::int as all
+      from students where school_id is not null
+      group by school_id having count(*) filter (where gender <> 'Female') > 0
+      order by school_id limit 1`);
+    if (!target)
+      throw new Error("seed the database first: no school with students of both genders");
+    expect(target.female).toBeGreaterThan(0);
+
+    const found = await db.query.school.findFirst({
+      where: (sc, { eq }) => eq(sc.id, target.schoolId),
+      columns: { id: true },
+      with: { hub: { columns: { id: true } } },
+      extras: (sc: { id: typeof school.id }) => ({
+        femaleStudents: countOf(student.schoolId, sc.id, sql`gender = 'Female'`).as("female"),
+        allStudents: countOf(student.schoolId, sc.id).as("all_students"),
+      }),
+    });
+    expect(found?.femaleStudents).toBe(target.female);
+    expect(found?.allStudents).toBe(target.all);
   });
 });

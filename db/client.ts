@@ -49,6 +49,12 @@ export function isUniqueViolation(error: unknown, constraint?: string) {
   return pg?.code === "23505" && (constraint === undefined || pg.constraint === constraint);
 }
 
+/** `foreign_key_violation`, or `restrict_violation` from an `ON DELETE RESTRICT` key. */
+export function isForeignKeyViolation(error: unknown) {
+  const code = pgError(error)?.code;
+  return code === "23503" || code === "23001";
+}
+
 /** Postgres `serialization_failure`: a serializable transaction conflicted; retry it. */
 export function isSerializationFailure(error: unknown) {
   return pgError(error)?.code === "40001";

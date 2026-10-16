@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fellow, hub, interventionGroup, school } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
-import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
+import { ForbiddenRoleError, NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
 
 type HubRole =
   | typeof ImplementerRole.SUPERVISOR
@@ -57,10 +57,6 @@ export function hubOfSession(session: {
   return session.hubId ?? session.school?.hubId ?? null;
 }
 
-/**
- * Throws unless the school belongs to the hub. A missing school and a school in another hub get
- * the same message, so the error does not reveal which ids exist.
- */
 export async function requireSchoolInHub(schoolId: string | null | undefined, hubId: string) {
   const schoolInHub = schoolId
     ? await db.query.school.findFirst({
@@ -69,11 +65,10 @@ export async function requireSchoolInHub(schoolId: string | null | undefined, hu
       })
     : undefined;
   if (!schoolInHub) {
-    throw new Error("School not found");
+    throw new NotFoundError("School");
   }
 }
 
-/** Throws unless every fellow belongs to the hub. A missing and a forbidden fellow look the same. */
 export async function requireFellowsInHub(fellowIds: string[], hubId: string) {
   const uniqueIds = [...new Set(fellowIds)];
   const inHub =
@@ -84,7 +79,7 @@ export async function requireFellowsInHub(fellowIds: string[], hubId: string) {
           .from(fellow)
           .where(and(inArray(fellow.id, uniqueIds), eq(fellow.hubId, hubId)));
   if (inHub.length !== uniqueIds.length) {
-    throw new Error("Fellow not found in your hub");
+    throw new NotFoundError("Fellow");
   }
 }
 

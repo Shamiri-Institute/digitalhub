@@ -2,9 +2,9 @@
 
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import type { ImplementerRole } from "#/db/enums";
-import { addDays, addHours, differenceInSeconds, format } from "date-fns";
+import { addDays, addHours, format } from "date-fns";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useEffectEvent, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -40,22 +40,13 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitSessionRatings } from "#/lib/actions/session/session";
-import { cn, sessionDisplayName } from "#/lib/utils";
+import { cn, sessionDisplayName, updateWindowFor } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { interventionSessionRating } from "#/db/schema";
 
 type InterventionSessionRating = typeof interventionSessionRating.$inferSelect;
 
-export default function SessionRatings({
-  selectedSession,
-  open,
-  onOpenChange,
-  mode,
-  children,
-  supervisorId,
-  supervisors,
-  role,
-}: {
+type SessionRatingsProps = {
   selectedSession: Session;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
@@ -64,7 +55,27 @@ export default function SessionRatings({
   supervisorId?: string;
   role: ImplementerRole;
   supervisors?: ScheduleSupervisor[];
-}) {
+};
+
+export default function SessionRatings(props: SessionRatingsProps) {
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent className="w-2/5 max-w-none p-5 text-base font-medium leading-6">
+        <SessionRatingsForm {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SessionRatingsForm({
+  selectedSession,
+  onOpenChange,
+  mode,
+  children,
+  supervisorId,
+  supervisors,
+  role,
+}: SessionRatingsProps) {
   const sessionRatings = selectedSession.sessionRatings;
   const rating =
     role === "SUPERVISOR"
@@ -77,7 +88,7 @@ export default function SessionRatings({
   const [existingRating, setExistingRating] = useState<InterventionSessionRating | undefined>(
     rating,
   );
-  const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
+  const [updateWindowDuration, setUpdateWindowDuration] = useState(() => updateWindowFor(rating));
 
   const form = useForm<z.infer<typeof SessionRatingsSchema>>({
     resolver: zodResolver(SessionRatingsSchema),
@@ -103,19 +114,9 @@ export default function SessionRatings({
     setExistingRating(next);
     form.reset(getDefaultValues(next));
     if (next) {
-      setUpdateWindowDuration(differenceInSeconds(addDays(next.createdAt, 14), new Date()));
+      setUpdateWindowDuration(updateWindowFor(next));
     }
   }
-
-  const syncRating = useEffectEvent(() => {
-    selectRating(rating);
-  });
-
-  // effect: open is set by the parent from a row menu; selects the rating on open
-  useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- open is controlled by the parent, which opens this dialog from a row menu; the sync cannot live in an open handler here
-    syncRating();
-  }, [open, rating]);
 
   const onSubmit = async (data: z.infer<typeof SessionRatingsSchema>) => {
     const response = await submitSessionRatings(data);
@@ -134,119 +135,119 @@ export default function SessionRatings({
     onOpenChange(false);
   };
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-2/5 max-w-none p-5 text-base font-medium leading-6">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Weekly session report</DialogTitle>
-        </DialogHeader>
-        {children}
-        {mode === "view" && sessionRatings.length === 0 ? (
-          <div className="space-y-3">
-            <div className="item-center flex justify-center text-shamiri-text-dark-grey">
-              No reports found.
-            </div>
-            <Separator />
-            <DialogFooter className="flex justify-end">
-              <Button
-                className=""
-                variant="brand"
-                type="button"
-                onClick={() => {
-                  onOpenChange(false);
-                }}
-              >
-                Done
-              </Button>
-            </DialogFooter>
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-xl font-bold">Weekly session report</DialogTitle>
+      </DialogHeader>
+      {children}
+      {mode === "view" && sessionRatings.length === 0 ? (
+        <div className="space-y-3">
+          <div className="item-center flex justify-center text-shamiri-text-dark-grey">
+            No reports found.
           </div>
-        ) : (
-          <Form {...form}>
-            <form
-              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-              className={cn("space-y-5", mode === "view" ? "form-view-mode" : "")}
+          <Separator />
+          <DialogFooter className="flex justify-end">
+            <Button
+              className=""
+              variant="brand"
+              type="button"
+              onClick={() => {
+                onOpenChange(false);
+              }}
             >
-              {mode === "view" && (
+              Done
+            </Button>
+          </DialogFooter>
+        </div>
+      ) : (
+        <Form {...form}>
+          <form
+            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+            className={cn("space-y-5", mode === "view" ? "form-view-mode" : "")}
+          >
+            {mode === "view" && (
+              <FormField
+                control={form.control}
+                name="ratingId"
+                render={({ field }) => (
+                  <FormItem className="space-y-2 mt-4">
+                    <FormLabel>
+                      Select session {mode === "view" && " report"}
+                      <span className="ml-1 text-shamiri-light-red">*</span>
+                    </FormLabel>{" "}
+                    <Select
+                      defaultValue={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        const match = sessionRatings.find((_rating) => {
+                          return _rating.id === value;
+                        });
+                        selectRating(match);
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="mt-2">
+                          <SelectValue placeholder="Select a session" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[200px]">
+                        {sessionRatings.map((_rating) => {
+                          return (
+                            <SelectItem key={_rating.id} value={_rating.id}>
+                              <span>
+                                {sessionDisplayName(selectedSession?.session?.sessionName)}
+                              </span>{" "}
+                              -{" "}
+                              <span>
+                                {selectedSession?.sessionDate &&
+                                  format(selectedSession?.sessionDate, "dd MMM yyyy")}
+                              </span>{" "}
+                              -{" "}
+                              <span>
+                                {selectedSession?.sessionDate &&
+                                  format(selectedSession?.sessionDate, "h:mm a")}
+                              </span>{" "}
+                              -{" "}
+                              <span>
+                                {selectedSession?.sessionDate &&
+                                  format(
+                                    selectedSession?.sessionEndTime ??
+                                      addHours(selectedSession?.sessionDate, 1),
+                                    "h:mm a",
+                                  )}
+                              </span>
+                              {role === "HUB_COORDINATOR" || role === "ADMIN" ? (
+                                <span>
+                                  {" "}
+                                  -{" "}
+                                  {
+                                    supervisors?.find(
+                                      (supervisor) => supervisor.id === _rating?.supervisorId,
+                                    )?.supervisorName
+                                  }
+                                </span>
+                              ) : null}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <Separator className="my-2" />
+            <div className="flex flex-col">
+              <div className="flex flex-col space-y-3 py-2 text-sm">
                 <FormField
                   control={form.control}
-                  name="ratingId"
+                  name="headcount"
                   render={({ field }) => (
-                    <FormItem className="space-y-2 mt-4">
-                      <FormLabel>
-                        Select session {mode === "view" && " report"}
-                        <span className="ml-1 text-shamiri-light-red">*</span>
-                      </FormLabel>{" "}
-                      <Select
-                        defaultValue={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          const match = sessionRatings.find((_rating) => {
-                            return _rating.id === value;
-                          });
-                          selectRating(match);
-                        }}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="mt-2">
-                            <SelectValue placeholder="Select a session" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="max-h-[200px]">
-                          {sessionRatings.map((_rating) => {
-                            return (
-                              <SelectItem key={_rating.id} value={_rating.id}>
-                                <span>
-                                  {sessionDisplayName(selectedSession?.session?.sessionName)}
-                                </span>{" "}
-                                -{" "}
-                                <span>
-                                  {selectedSession?.sessionDate &&
-                                    format(selectedSession?.sessionDate, "dd MMM yyyy")}
-                                </span>{" "}
-                                -{" "}
-                                <span>
-                                  {selectedSession?.sessionDate &&
-                                    format(selectedSession?.sessionDate, "h:mm a")}
-                                </span>{" "}
-                                -{" "}
-                                <span>
-                                  {selectedSession?.sessionDate &&
-                                    format(
-                                      selectedSession?.sessionEndTime ??
-                                        addHours(selectedSession?.sessionDate, 1),
-                                      "h:mm a",
-                                    )}
-                                </span>
-                                {role === "HUB_COORDINATOR" || role === "ADMIN" ? (
-                                  <span>
-                                    {" "}
-                                    -{" "}
-                                    {
-                                      supervisors?.find(
-                                        (supervisor) => supervisor.id === _rating?.supervisorId,
-                                      )?.supervisorName
-                                    }
-                                  </span>
-                                ) : null}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              <Separator className="my-2" />
-              <div className="flex flex-col">
-                <div className="flex flex-col space-y-3 py-2 text-sm">
-                  <FormField
-                    control={form.control}
-                    name="headcount"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormLabel>Student headcount</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel>Student headcount</FormLabel>
+                      <FormControl>
                         <Input
                           type="number"
                           placeholder="No of. students who attended"
@@ -258,188 +259,182 @@ export default function SessionRatings({
                             field.onChange(value);
                           }}
                         />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex flex-col space-y-3 py-2 text-sm">
-                  <FormField
-                    control={form.control}
-                    name="studentBehaviorRating"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col space-y-2">
-                        <FormLabel>
-                          Student behaviour (1-unacceptable to 5-outstanding){" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <RatingStarsInput
-                          value={field.value}
-                          onChange={field.onChange}
-                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
-                        />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="adminSupportRating"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col space-y-2">
-                        <FormLabel>
-                          Admin support (1-unacceptable to 5-outstanding){" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <RatingStarsInput
-                          value={field.value}
-                          onChange={field.onChange}
-                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
-                        />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="workloadRating"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col space-y-2">
-                        <FormLabel>
-                          Workload (1-unacceptable to 5-outstanding){" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <RatingStarsInput
-                          value={field.value}
-                          onChange={field.onChange}
-                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
-                        />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex flex-col space-y-3 py-2 text-sm">
-                  <FormField
-                    control={form.control}
-                    name="positiveHighlights"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Positive Highlights"
-                            className="resize-none"
-                            rows={4}
-                            disabled={
-                              mode === "view" || (existingRating && updateWindowDuration < 0)
-                            }
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="challenges"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormControl>
-                          <Textarea
-                            placeholder="Challenges"
-                            className="resize-none"
-                            rows={4}
-                            disabled={
-                              mode === "view" || (existingRating && updateWindowDuration < 0)
-                            }
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="recommendations"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormControl>
-                          <Textarea
-                            placeholder="Recommendations"
-                            className="resize-none"
-                            rows={4}
-                            disabled={
-                              mode === "view" || (existingRating && updateWindowDuration < 0)
-                            }
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-              <Separator />
-              {mode !== "view" &&
-              (existingRating === undefined || (existingRating && updateWindowDuration > 0)) ? (
-                <div className="space-y-5">
-                  {existingRating && updateWindowDuration > 0 && (
-                    <>
-                      <DialogAlertWidget separator={false}>
-                        <div className="flex items-center gap-2">
-                          <span>
-                            Update ratings by{" "}
-                            {existingRating &&
-                              format(addDays(existingRating.createdAt, 14), "dd-MM-yyyy")}{" "}
-                            (
-                            <CountdownTimer duration={updateWindowDuration} />)
-                          </span>
-                        </div>
-                      </DialogAlertWidget>
-                      <Separator />
-                    </>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                  <DialogFooter className="flex justify-end">
-                    <Button
-                      className=""
-                      variant="ghost"
-                      type="button"
-                      onClick={() => {
-                        onOpenChange(false);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="brand"
-                      type="submit"
-                      disabled={
-                        form.formState.isSubmitting || (existingRating && updateWindowDuration < 0)
-                      }
-                      loading={form.formState.isSubmitting}
-                    >
-                      {existingRating ? "Update & save" : "Submit"}
-                    </Button>
-                  </DialogFooter>
-                </div>
-              ) : (
+                />
+              </div>
+              <div className="flex flex-col space-y-3 py-2 text-sm">
+                <FormField
+                  control={form.control}
+                  name="studentBehaviorRating"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col space-y-2">
+                      <FormLabel>
+                        Student behaviour (1-unacceptable to 5-outstanding){" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <RatingStarsInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                      />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="adminSupportRating"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col space-y-2">
+                      <FormLabel>
+                        Admin support (1-unacceptable to 5-outstanding){" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <RatingStarsInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                      />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="workloadRating"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col space-y-2">
+                      <FormLabel>
+                        Workload (1-unacceptable to 5-outstanding){" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <RatingStarsInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                      />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex flex-col space-y-3 py-2 text-sm">
+                <FormField
+                  control={form.control}
+                  name="positiveHighlights"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Positive Highlights"
+                          className="resize-none"
+                          rows={4}
+                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="challenges"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormControl>
+                        <Textarea
+                          placeholder="Challenges"
+                          className="resize-none"
+                          rows={4}
+                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="recommendations"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormControl>
+                        <Textarea
+                          placeholder="Recommendations"
+                          className="resize-none"
+                          rows={4}
+                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            <Separator />
+            {mode !== "view" &&
+            (existingRating === undefined || (existingRating && updateWindowDuration > 0)) ? (
+              <div className="space-y-5">
+                {existingRating && updateWindowDuration > 0 && (
+                  <>
+                    <DialogAlertWidget separator={false}>
+                      <div className="flex items-center gap-2">
+                        <span>
+                          Update ratings by{" "}
+                          {existingRating &&
+                            format(addDays(existingRating.createdAt, 14), "dd-MM-yyyy")}{" "}
+                          (
+                          <CountdownTimer duration={updateWindowDuration} />)
+                        </span>
+                      </div>
+                    </DialogAlertWidget>
+                    <Separator />
+                  </>
+                )}
                 <DialogFooter className="flex justify-end">
                   <Button
                     className=""
-                    variant="brand"
+                    variant="ghost"
                     type="button"
                     onClick={() => {
                       onOpenChange(false);
                     }}
                   >
-                    Done
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="brand"
+                    type="submit"
+                    disabled={
+                      form.formState.isSubmitting || (existingRating && updateWindowDuration < 0)
+                    }
+                    loading={form.formState.isSubmitting}
+                  >
+                    {existingRating ? "Update & save" : "Submit"}
                   </Button>
                 </DialogFooter>
-              )}
-            </form>
-          </Form>
-        )}
-      </DialogContent>
-    </Dialog>
+              </div>
+            ) : (
+              <DialogFooter className="flex justify-end">
+                <Button
+                  className=""
+                  variant="brand"
+                  type="button"
+                  onClick={() => {
+                    onOpenChange(false);
+                  }}
+                >
+                  Done
+                </Button>
+              </DialogFooter>
+            )}
+          </form>
+        </Form>
+      )}
+    </>
   );
 }
