@@ -3,7 +3,13 @@ import type React from "react";
 import { type Dispatch, type SetStateAction, useTransition } from "react";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { toast, toastOnFailure } from "#/components/ui/use-toast";
 import { archiveInterventionGroup } from "#/lib/actions/group";
@@ -43,7 +49,7 @@ export default function ArchiveGroup({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-5 text-base font-medium leading-6">
         <DialogHeader>
-          <h2 className="text-xl font-bold">Confirm group archive</h2>
+          <DialogTitle className="text-xl font-bold">Confirm group archive</DialogTitle>
         </DialogHeader>
         {children}
         <div className="space-y-4">

@@ -369,9 +369,7 @@ test("a supervisor terminates their case", async ({ page, context, undo }) => {
   await page.goto(getUrl("/sc/clinical"));
 
   await openCaseAction(page, pseudonym, "Terminate case");
-  const dialog = page
-    .getByRole("dialog")
-    .filter({ has: page.getByRole("heading", { name: "Terminate Case" }) });
+  const dialog = page.getByRole("dialog", { name: "Terminate Case" });
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
   await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
   await dialog.getByRole("combobox").filter({ hasText: "Student no-show" }).click();

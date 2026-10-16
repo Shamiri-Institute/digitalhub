@@ -6,7 +6,13 @@ import type { z } from "zod";
 import { StudentReportingNotesSchema } from "#/app/(platform)/hc/schemas";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -65,7 +71,7 @@ function AddReportingNoteForm({ setIsOpen, student, children }: AddReportingNote
   return (
     <Form {...form}>
       <DialogHeader>
-        <h2 className="text-lg font-bold">Add reporting note</h2>
+        <DialogTitle className="text-lg font-bold">Add reporting note</DialogTitle>
       </DialogHeader>
       {children}
       <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">

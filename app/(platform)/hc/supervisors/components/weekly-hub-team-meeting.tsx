@@ -47,7 +47,7 @@ function generateWeekFieldValues() {
     const date = subWeeks(today, i);
     const week = startOfWeek(date, { weekStartsOn: 1 });
     selectValues.push(
-      <SelectItem value={format(week, "yyyy-MM-dd")}>
+      <SelectItem key={i} value={format(week, "yyyy-MM-dd")}>
         Week {numWeeks - i + 1} - {format(week, "dd/MM/yyyy")}
       </SelectItem>,
     );
@@ -56,14 +56,41 @@ function generateWeekFieldValues() {
   return selectValues;
 }
 
-export default function WeeklyHubReportButtonAndForm({
+export default function WeeklyHubTeamMeetingButton({
   hubCoordinatorId,
   hubId,
 }: {
   hubCoordinatorId: string;
   hubId: string;
 }) {
-  const [open, setDialogOpen] = useState<boolean>(false);
+  const [open, setDialogOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>
+        <Button variant="brand">
+          <span className="text-white">Weekly team meeting</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <WeeklyHubTeamMeetingForm
+          hubCoordinatorId={hubCoordinatorId}
+          hubId={hubId}
+          close={() => setDialogOpen(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function WeeklyHubTeamMeetingForm({
+  hubCoordinatorId,
+  hubId,
+  close,
+}: {
+  hubCoordinatorId: string;
+  hubId: string;
+  close: () => void;
+}) {
   const form = useForm<z.infer<typeof WeeklyHubTeamMeetingSchema>>({
     resolver: zodResolver(WeeklyHubTeamMeetingSchema),
     defaultValues: {
@@ -98,144 +125,51 @@ export default function WeeklyHubReportButtonAndForm({
       description: "Successfully submitted weekly hub team meeting report",
     });
 
-    form.reset();
-    setDialogOpen(false);
+    close();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <DialogTrigger asChild>
-          <Button variant="brand" className="">
-            <span className="text-white">Weekly team meeting</span>
-          </Button>
-        </DialogTrigger>
-      </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold leading-7">Weekly team meeting</DialogTitle>
-        </DialogHeader>
-        <Separator />
-        <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
-            <div className="space-y-4">
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-xl font-semibold leading-7">Weekly team meeting</DialogTitle>
+      </DialogHeader>
+      <Separator />
+      <Form {...form}>
+        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="week"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Select week</FormLabel>
+                  <Select onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select week" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>{generateWeekFieldValues()}</SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+            <div className="flex items-center">
               <FormField
                 control={form.control}
-                name="week"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select week</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      // @ts-expect-error
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select week" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>{generateWeekFieldValues()}</SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-              <div className="flex items-center">
-                <FormField
-                  control={form.control}
-                  name="logisticsRelatedIssues"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex gap-4">
-                        Logistics related issues <br /> (transport, payments)
-                        <FormField
-                          control={form.control}
-                          name="logisticsRelatedIssuesRating"
-                          render={({ field }) => (
-                            <RatingStarsInput value={field.value} onChange={field.onChange} />
-                          )}
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="" className="resize-none" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="relationshipManagement"
+                name="logisticsRelatedIssues"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex gap-4">
-                      Relationship management <br /> (schools & fellows)
+                      Logistics related issues <br /> (transport, payments)
                       <FormField
                         control={form.control}
-                        name="relationshipManagementRating"
+                        name="logisticsRelatedIssuesRating"
                         render={({ field }) => (
                           <RatingStarsInput value={field.value} onChange={field.onChange} />
                         )}
                       />
                     </FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="" className="resize-none" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="digitalHubIssues"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex gap-4">
-                      Digital hub issues
-                      <FormField
-                        control={form.control}
-                        name="digitalHubIssuesRating"
-                        render={({ field }) => (
-                          <RatingStarsInput value={field.value} onChange={field.onChange} />
-                        )}
-                      />
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="" className="resize-none" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="anyOtherChallenges"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex gap-4">
-                      Any other challenges
-                      <FormField
-                        control={form.control}
-                        name="anyOtherChallengesRating"
-                        render={({ field }) => (
-                          <RatingStarsInput value={field.value} onChange={field.onChange} />
-                        )}
-                      />
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="" className="resize-none" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="recommendations"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Recommendations (to be followed up by the HQ team)</FormLabel>
                     <FormControl>
                       <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
@@ -244,28 +178,104 @@ export default function WeeklyHubReportButtonAndForm({
                 )}
               />
             </div>
-            <Separator className="my-4" />
-            <DialogFooter>
-              <Button
-                variant="ghost"
-                className="text-base font-semibold leading-6 text-shamiri-red"
-                onClick={() => {
-                  form.reset();
-                  setDialogOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
-                {form.formState.isSubmitting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Submit
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            <FormField
+              control={form.control}
+              name="relationshipManagement"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex gap-4">
+                    Relationship management <br /> (schools & fellows)
+                    <FormField
+                      control={form.control}
+                      name="relationshipManagementRating"
+                      render={({ field }) => (
+                        <RatingStarsInput value={field.value} onChange={field.onChange} />
+                      )}
+                    />
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="" className="resize-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="digitalHubIssues"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex gap-4">
+                    Digital hub issues
+                    <FormField
+                      control={form.control}
+                      name="digitalHubIssuesRating"
+                      render={({ field }) => (
+                        <RatingStarsInput value={field.value} onChange={field.onChange} />
+                      )}
+                    />
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="" className="resize-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="anyOtherChallenges"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex gap-4">
+                    Any other challenges
+                    <FormField
+                      control={form.control}
+                      name="anyOtherChallengesRating"
+                      render={({ field }) => (
+                        <RatingStarsInput value={field.value} onChange={field.onChange} />
+                      )}
+                    />
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="" className="resize-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="recommendations"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Recommendations (to be followed up by the HQ team)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="" className="resize-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <Separator className="my-4" />
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              className="text-base font-semibold leading-6 text-shamiri-red"
+              onClick={close}
+            >
+              Cancel
+            </Button>
+            <Button className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
+              {form.formState.isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Submit
+            </Button>
+          </DialogFooter>
+        </form>
+      </Form>
+    </>
   );
 }

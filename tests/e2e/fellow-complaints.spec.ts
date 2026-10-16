@@ -107,7 +107,7 @@ test("a supervisor edits a complaint about their fellow and sees it after a relo
   await page.goto(getUrl("/sc/reporting/fellow-reports/complaints"));
   const complaintRow = await expandedComplaintRow(page);
   await chooseRowAction(page, complaintRow, "Edit fellow complaint");
-  const editDialog = page.getByRole("dialog").filter({ hasText: "Edit Fellow Complaint" });
+  const editDialog = page.getByRole("dialog", { name: "Edit Fellow Complaint" });
   await editDialog.getByRole("textbox").fill(editedComplaint);
   await editDialog.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByText("Complaint updated successfully").first()).toBeVisible();

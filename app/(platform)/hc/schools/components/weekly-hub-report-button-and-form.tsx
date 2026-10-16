@@ -49,7 +49,7 @@ function generateWeekFieldValues() {
     const date = subWeeks(today, i);
     const week = startOfWeek(date, { weekStartsOn: 1 });
     selectValues.push(
-      <SelectItem value={format(week, "yyyy-MM-dd")}>
+      <SelectItem key={i} value={format(week, "yyyy-MM-dd")}>
         Week {numWeeks - i + 1} - {format(week, "dd/MM/yyyy")}
       </SelectItem>,
     );
@@ -120,7 +120,6 @@ function WeeklyHubReportButtonAndFormForm({ close }: { close: () => void }) {
       description: "Successfully submitted weekly hub report",
     });
 
-    form.reset();
     close();
   };
 
@@ -141,11 +140,7 @@ function WeeklyHubReportButtonAndFormForm({ close }: { close: () => void }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Select week</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    // @ts-expect-error
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select week" />
@@ -306,10 +301,7 @@ function WeeklyHubReportButtonAndFormForm({ close }: { close: () => void }) {
             <Button
               variant="ghost"
               className="text-base font-semibold leading-6 text-shamiri-red"
-              onClick={() => {
-                form.reset();
-                close();
-              }}
+              onClick={close}
             >
               Cancel
             </Button>

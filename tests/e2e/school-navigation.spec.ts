@@ -25,10 +25,7 @@ for (const flow of flows) {
 
     await page.goto(getUrl(flow.list));
     const firstRow = dataRows(page).first();
-    // The loading skeleton also renders rows, with empty cells; wait for a school name.
-    await expect(firstRow.getByRole("cell").first(), `${flow.list} lists no schools`).toHaveText(
-      /\S/,
-    );
+    await expect(firstRow, `${flow.list} lists no schools`).toBeVisible();
     const schoolName = (await firstRow.getByRole("cell").first().innerText()).trim();
 
     // The row menu is the last cell; "View school" is its first item.

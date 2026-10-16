@@ -13,6 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTrigger,
+  DialogTitle,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -22,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
+import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
@@ -82,7 +84,7 @@ export default function ViewEditQualitativeFeedback({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
-          <h2>{`${action === "view" ? "View" : "Edit"} school report`}</h2>
+          <DialogTitle>{`${action === "view" ? "View" : "Edit"} school report`}</DialogTitle>
         </DialogHeader>
         <DialogAlertWidget
           label={`${action === "view" ? "View" : "Edit"} ${sessionReport.schoolName} - ${sessionReport.session} - ${sessionReport.date}`}
@@ -106,8 +108,16 @@ export default function ViewEditQualitativeFeedback({
         <Separator />
         {sessionReport.sessionNotes.map((note) => (
           <div key={note.sessionNoteId}>
-            <p className="capitalize">{note.kind.replace("-", " ")}</p>
-            <Textarea value={note.content} rows={5} disabled={action === "view"} />
+            <Label htmlFor={`session-note-${note.sessionNoteId}`} className="capitalize">
+              {note.kind.replace("-", " ")}
+            </Label>
+            <Textarea
+              id={`session-note-${note.sessionNoteId}`}
+              value={note.content}
+              rows={5}
+              readOnly
+              disabled={action === "view"}
+            />
           </div>
         ))}
 

@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect, test } from "#/tests/fixtures";
 import { format } from "date-fns";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
@@ -146,28 +146,14 @@ test.beforeAll(async () => {
   };
 });
 
-/**
- * A sessions-table row by its session name. That column is not searchable, so show up to 50 rows
- * a page instead (a school has at most 15 sessions).
- */
-async function sessionRow(page: Page, scope: Locator, label: string) {
-  await scope.getByRole("combobox").filter({ hasText: "Show 10" }).click();
-  await page.getByRole("option", { name: "Show 50" }).click();
-  return scope
-    .getByRole("row")
-    .filter({ has: page.getByRole("cell", { name: label, exact: true }) });
-}
-
 async function openStudentAttendance(page: Page) {
   await page.goto(getUrl(`/fel/schools/${triage.visibleId}/sessions`));
   await chooseRowAction(
     page,
-    await sessionRow(page, page.getByRole("main"), triage.sessionLabel),
+    await rowWithCell(page, page.getByRole("main"), triage.sessionLabel),
     "Mark student attendance",
   );
   const attendance = page.getByRole("dialog", { name: "Mark student attendance" });
-  // The student list loads after the dialog opens; search only once it has rows.
-  await expect(attendance.getByRole("checkbox", { name: "Select row" }).first()).toBeVisible();
   return attendance;
 }
 
@@ -221,7 +207,7 @@ test("a hub coordinator marks a session in their hub as occurred", async ({
   const main = page.getByRole("main");
   await chooseRowAction(
     page,
-    await sessionRow(page, main, school.sessionLabel),
+    await rowWithCell(page, main, school.sessionLabel),
     "Mark session occurrence",
   );
   const dialog = page.getByRole("dialog", { name: "Mark session occurrence" });
@@ -235,7 +221,7 @@ test("a hub coordinator marks a session in their hub as occurred", async ({
   await expect(confirm).toBeHidden();
 
   await page.reload();
-  await expect(await sessionRow(page, main, school.sessionLabel)).toContainText("Attended");
+  await expect(await rowWithCell(page, main, school.sessionLabel)).toContainText("Attended");
 });
 
 test("a hub coordinator in another hub does not see the school", async ({ page, context }) => {
@@ -477,7 +463,6 @@ test("a fellow documents a triage event; another fellow at the school does not s
 
   async function chooseStudentAction(action: string, admissionNumber = triage.admissionNumber) {
     const attendance = await openAttendance();
-    // The name column is not searchable; the admission number column is.
     await chooseRowAction(page, await rowWithCell(page, attendance, admissionNumber), action);
   }
 

@@ -12,6 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTrigger,
+  DialogTitle,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -86,7 +87,7 @@ export default function ViewEditSchoolFeedback({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
-          <h2>{`${action === "view" ? "View" : "Edit"} School Feedback`}</h2>
+          <DialogTitle>{`${action === "view" ? "View" : "Edit"} School Feedback`}</DialogTitle>
         </DialogHeader>
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <Form {...form}>

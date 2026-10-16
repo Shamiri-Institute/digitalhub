@@ -6,7 +6,7 @@ import { db } from "#/db/client";
 import { attendanceDocuments, clinicalSessionAttendance } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
 import { createClinicalCase, signInWithEmail, signableMember, required } from "#/tests/helpers";
-import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
+import { getUrl, chooseRowAction, rowWithCell, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -143,9 +143,7 @@ test("a save from a page loaded before the case was terminated changes nothing",
     await searchRows(otherTab, clinicalCase.pseudonym),
     "Terminate case",
   );
-  const terminate = otherTab
-    .getByRole("dialog")
-    .filter({ has: otherTab.getByRole("heading", { name: "Terminate Case" }) });
+  const terminate = otherTab.getByRole("dialog", { name: "Terminate Case" });
   await terminate.getByRole("combobox").filter({ hasText: "Select session" }).click();
   await otherTab.getByRole("option", { name: new RegExp(sessionLabel) }).click();
   await terminate.getByRole("combobox").filter({ hasText: "Student no-show" }).click();
@@ -194,12 +192,7 @@ test("a fellow deletes their group's attendance document even when the file stor
   const dialog = page.getByRole("dialog", { name: "Attendance Document" });
   async function openAttendanceDocument() {
     await page.goto(getUrl(`/fel/schools/${attendance.schoolVisibleId}/sessions`));
-    const main = page.getByRole("main");
-    await main.getByRole("combobox").filter({ hasText: "Show 10" }).click();
-    await page.getByRole("option", { name: "Show 50" }).click();
-    const sessionRow = main
-      .getByRole("row")
-      .filter({ has: page.getByRole("cell", { name: attendance.sessionLabel, exact: true }) });
+    const sessionRow = await rowWithCell(page, page.getByRole("main"), attendance.sessionLabel);
     await chooseRowAction(page, sessionRow, "Upload attendance");
     await expect(dialog).toBeVisible();
   }

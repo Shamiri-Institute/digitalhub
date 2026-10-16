@@ -831,7 +831,7 @@ test("student details, reporting note and school move start from each student's 
   await expect(studentName).toHaveValue(nameB);
   await closeDialog(page, details);
 
-  const note = page.getByRole("dialog").filter({ hasText: "Add reporting note" });
+  const note = page.getByRole("dialog", { name: "Add reporting note" });
   const incident = note.getByRole("textbox").first();
   await openFor(nameA, "Reporting notes", note);
   await incident.fill(typed);

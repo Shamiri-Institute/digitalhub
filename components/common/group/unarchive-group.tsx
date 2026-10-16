@@ -2,7 +2,13 @@ import type React from "react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { unarchiveInterventionGroup } from "#/lib/actions/group";
@@ -43,7 +49,7 @@ export default function UnarchiveGroup({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-5 text-base leading-6 font-medium">
         <DialogHeader>
-          <h2 className="text-xl font-bold">Confirm group unarchive</h2>
+          <DialogTitle className="text-xl font-bold">Confirm group unarchive</DialogTitle>
         </DialogHeader>
         {children}
         <div className="space-y-4 pt-2">

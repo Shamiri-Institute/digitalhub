@@ -10,7 +10,13 @@ import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import { DropoutFellowSchema } from "#/components/common/fellow/schema";
 import ArchiveGroup from "#/components/common/group/archive-group";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -184,7 +190,7 @@ function FellowDropoutSteps({
     return (
       <>
         <DialogHeader>
-          <h2 className="text-lg font-bold">Replace fellow</h2>
+          <DialogTitle className="text-lg font-bold">Replace fellow</DialogTitle>
         </DialogHeader>
         {alertWidget}
         <div className="space-y-4">
