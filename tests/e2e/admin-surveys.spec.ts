@@ -174,14 +174,12 @@ test("a new draft copies a published version, and a survey has one draft at a ti
   await expect(page.getByRole("menuitem", { name: "New draft from v1" })).toBeDisabled();
   await page.keyboard.press("Escape");
 
-  // The form is not shown on any page yet; its keys decide which answers line up across versions.
-  const versions = await db
-    .select({ versionNumber: surveyVersion.versionNumber, form: surveyVersion.form })
-    .from(surveyVersion)
-    .where(eq(surveyVersion.surveyId, published.id))
-    .orderBy(surveyVersion.versionNumber);
-  expect(versions.map((v) => v.versionNumber)).toEqual([1, 2]);
-  expect(versions[1]?.form).toEqual(versions[0]?.form);
+  // The copy keeps v1's questions and their keys, so answers line up across versions.
+  await page.getByRole("link", { name: "v2", exact: true }).click();
+  await expect(outlinePage(page, 1).getByRole("listitem")).toHaveText([
+    /mood.*How do you feel today\?/,
+    /notes.*Anything else\?/,
+  ]);
 });
 
 test("a survey of another implementer is not found", async ({ page, context }) => {
@@ -284,9 +282,26 @@ test("the builder saves a form of several pages and every item kind", async ({ p
   await page.getByLabel("Required").check();
 
   // Leaving with unsaved changes asks first; dismissing stays on the builder.
-  page.once("dialog", (dialog) => void dialog.dismiss());
+  // The confirm blocks the click until it is answered, so answer it in the handler.
+  let prompt = "";
+  page.once("dialog", (dialog) => {
+    prompt = dialog.message();
+    void dialog.dismiss();
+  });
   await page.getByRole("link", { name: draft.title }).click();
+  expect(prompt).toContain("unsaved changes");
   await expect(page).toHaveURL(/\/versions\/1$/);
+
+  // So does the browser's Back button. Dismissed, the navigation is cancelled and never loads.
+  prompt = "";
+  page.once("dialog", (dialog) => {
+    prompt = dialog.message();
+    void dialog.dismiss();
+  });
+  await page.goBack({ timeout: 3000 }).catch(() => null);
+  expect(prompt).toContain("unsaved changes");
+  await expect(page).toHaveURL(/\/versions\/1$/);
+  await expect(page.getByLabel("Required")).toBeChecked();
 
   await save(page);
   await page.reload();
@@ -373,6 +388,10 @@ test("a draft keeps the keys of its published version; new questions take any ke
   await page.getByRole("button", { name: /How do you feel today/ }).click();
   await expect(page.getByLabel("Key")).toBeDisabled();
   await expect(page.getByText("Published in v1, so it can't change")).toBeVisible();
+  // Answers to v1 store its option codes, so they stay; their labels can still change.
+  await expect(page.getByLabel("Option 1 code")).toBeDisabled();
+  await expect(page.getByLabel("Option 1 label")).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Remove option 1" })).toBeDisabled();
 
   await addItem(page, 1, "Single choice", "How much energy do you have?");
   await page.getByLabel("Key").fill("energy");
@@ -423,4 +442,55 @@ test("a published version opens read-only", async ({ page, context }) => {
   for (const name of ["Save", "Add page", "Add item to page 1", "Delete", "Move up"]) {
     await expect(page.getByRole("button", { name, exact: true })).toHaveCount(0);
   }
+});
+
+test("after a save, going back to the builder keeps the saved form", async ({ page, context }) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const draft = await createDraftSurvey(scope, userId, TWO_QUESTIONS);
+  await page.goto(getUrl(`/admin/surveys/${draft.id}`));
+  await page.getByRole("link", { name: "v1", exact: true }).click();
+
+  await page.getByRole("button", { name: /Anything else/ }).click();
+  await page.getByLabel("Prompt").fill("Anything else to tell us?");
+  await save(page);
+  await page.getByRole("link", { name: draft.title }).click();
+  await expect(page).toHaveURL(new RegExp(`/admin/surveys/${draft.id}$`));
+  await page.goBack();
+
+  await page.getByRole("button", { name: /Anything else to tell us/ }).click();
+  await page.getByLabel("Prompt").fill("Any other comments?");
+  await save(page);
+  await page.reload();
+  await expect(page.getByRole("button", { name: /Any other comments/ })).toBeVisible();
+});
+
+test("a save whose reply was lost is not taken for a change made elsewhere", async ({
+  page,
+  context,
+}) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const draft = await createDraftSurvey(scope, userId, TWO_QUESTIONS);
+  const url = getUrl(`/admin/surveys/${draft.id}/versions/1`);
+  await page.goto(url);
+
+  // The first save reaches the server and is stored, but its reply never arrives.
+  let dropReply = true;
+  await page.route(url, async (route) => {
+    if (dropReply && route.request().method() === "POST") {
+      dropReply = false;
+      await route.fetch();
+      await route.abort();
+      return;
+    }
+    await route.fallback();
+  });
+  await page.getByRole("button", { name: /Anything else/ }).click();
+  await page.getByLabel("Prompt").fill("Anything else to tell us?");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Sorry, could not save the draft.").first()).toBeVisible();
+
+  await page.getByLabel("Prompt").fill("Any other comments?");
+  await save(page);
+  await page.reload();
+  await expect(page.getByRole("button", { name: /Any other comments/ })).toBeVisible();
 });
