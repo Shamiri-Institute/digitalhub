@@ -28,4 +28,6 @@ export const SaveDraftFormSchema = z.object({
   revision: z.int().min(0),
   // Checked by checkForm, which also needs the survey's published questions.
   form: z.unknown(),
+  /** A form this editor sent earlier whose reply was lost, so it may be the stored revision. */
+  unconfirmedForm: z.unknown().optional(),
 });

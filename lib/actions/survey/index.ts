@@ -240,53 +240,74 @@ export async function saveDraftForm(
             eq(surveyVersion.surveyId, version.surveyId),
             ne(surveyVersion.status, SurveyVersionStatus.DRAFT),
           ),
-        );
+        )
+        .orderBy(desc(surveyVersion.versionNumber));
       const check = checkForm(parsed.form, lockedQuestions(published));
       if (!check.success) {
         return { outcome: "invalid", issues: check.issues };
       }
 
-      const [saved] = await tx
-        .update(surveyVersion)
-        .set({ form: check.form, revision: sql`${surveyVersion.revision} + 1` })
-        .where(
-          and(
-            eq(surveyVersion.id, version.id),
-            eq(surveyVersion.status, SurveyVersionStatus.DRAFT),
-            eq(surveyVersion.revision, parsed.revision),
-          ),
-        )
-        .returning({ revision: surveyVersion.revision });
-      if (!saved) {
-        // A retry of a save whose reply was lost finds its own form already stored: that is a
-        // success, not someone else's change.
-        const [same] = await tx
-          .select({ revision: surveyVersion.revision })
-          .from(surveyVersion)
+      const form = check.form;
+      /** Stores the form if the draft is still at `seen`, with its audit event; the new revision. */
+      const write = async (seen: number) => {
+        const [saved] = await tx
+          .update(surveyVersion)
+          .set({ form, revision: sql`${surveyVersion.revision} + 1` })
           .where(
             and(
               eq(surveyVersion.id, version.id),
-              eq(surveyVersion.revision, parsed.revision + 1),
-              sql`${surveyVersion.form} = ${JSON.stringify(check.form)}::jsonb`,
+              eq(surveyVersion.status, SurveyVersionStatus.DRAFT),
+              eq(surveyVersion.revision, seen),
             ),
-          );
-        return same ? { outcome: "saved", revision: same.revision } : { outcome: "stale" };
+          )
+          .returning({ revision: surveyVersion.revision });
+        if (saved) {
+          await recordSurveyEvent(tx, {
+            actor: { kind: SurveyAuditActor.USER, userId },
+            surveyId: version.surveyId,
+            entityType: SurveyAuditEntity.SURVEY_VERSION,
+            entityId: version.id,
+            action: SurveyAuditAction.FORM_SAVED,
+            before: { revision: seen },
+            after: { revision: saved.revision, ...summarizeForm(form) },
+          });
+        }
+        return saved?.revision;
+      };
+
+      const revision = await write(parsed.revision);
+      if (revision !== undefined) {
+        return { outcome: "saved", revision };
       }
 
-      await recordSurveyEvent(tx, {
-        actor: { kind: SurveyAuditActor.USER, userId },
-        surveyId: version.surveyId,
-        entityType: SurveyAuditEntity.SURVEY_VERSION,
-        entityId: version.id,
-        action: SurveyAuditAction.FORM_SAVED,
-        before: { revision: parsed.revision },
-        after: { revision: saved.revision, ...summarizeForm(check.form) },
-      });
-      return { outcome: "saved", revision: saved.revision };
+      // The draft moved on. If the one save since is this tab's own, whose reply was lost, it is
+      // not a change made elsewhere: a retry of the same form is already saved, and a newer form
+      // goes on top of it.
+      const [current] = await tx
+        .select({
+          revision: surveyVersion.revision,
+          isThisForm: sql<boolean>`${surveyVersion.form} = ${JSON.stringify(form)}::jsonb`,
+          isUnconfirmed:
+            parsed.unconfirmedForm === undefined
+              ? sql<boolean>`false`
+              : sql<boolean>`${surveyVersion.form} = ${JSON.stringify(parsed.unconfirmedForm)}::jsonb`,
+        })
+        .from(surveyVersion)
+        .where(eq(surveyVersion.id, version.id));
+      if (current?.revision !== parsed.revision + 1) {
+        return { outcome: "stale" };
+      }
+      if (current.isThisForm) {
+        return { outcome: "saved", revision: current.revision };
+      }
+      const onTop = current.isUnconfirmed ? await write(current.revision) : undefined;
+      return onTop === undefined ? { outcome: "stale" } : { outcome: "saved", revision: onTop };
     });
 
     switch (result.outcome) {
       case "saved":
+        // So going back to this page, or to the survey's versions, shows the saved form.
+        refresh();
         return { success: true, message: "Saved", data: result };
       case "invalid":
         return {
