@@ -85,7 +85,7 @@ export default function SchoolTableDropdown({
                   state.setPointSupervisorDialog(true);
                 }}
               >
-                {state.school?.assignedSupervisorId !== null
+                {schoolRow.assignedSupervisorId !== null
                   ? "Change point supervisor"
                   : "Assign point supervisor"}
               </DropdownMenuItem>
