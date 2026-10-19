@@ -1,0 +1,1 @@
+ALTER TABLE "survey_versions" ADD COLUMN "revision" integer DEFAULT 0 NOT NULL;

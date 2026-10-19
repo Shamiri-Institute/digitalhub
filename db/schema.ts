@@ -2580,6 +2580,8 @@ export const surveyVersion = pgTable(
     createdBy: varchar("created_by", { length: 255 }).notNull(),
     // The whole form, in print order. No default, so every insert says where its form came from.
     form: jsonb().$type<SurveyForm>().notNull(),
+    // Bumped by every save of a draft's form, so a save from a stale copy is refused.
+    revision: integer().default(0).notNull(),
   },
   (table) => [
     uniqueIndex("survey_versions_survey_id_version_number_key").on(
