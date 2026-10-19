@@ -5,7 +5,7 @@ import {
   builderReducer,
   findItem,
   initBuilder,
-  newItem,
+  newItemId,
   pageOf,
   suggestKey,
 } from "#/lib/survey/builder";
@@ -41,7 +41,8 @@ const FORM: SurveyForm = {
   ],
 };
 
-const start = () => initBuilder({ form: FORM, revision: 3 });
+const start = (publishedKeys: string[] = []) =>
+  initBuilder({ form: FORM, revision: 3, publishedKeys });
 const ids = (state: BuilderState) => state.form.pages.map((page) => page.items.map((i) => i.id));
 
 describe("builderReducer", () => {
@@ -62,11 +63,15 @@ describe("builderReducer", () => {
     expect(builderReducer(before, { type: "moveItem", itemId: "intro", by: -1 })).toBe(before);
   });
 
-  it("keeps the selected page selected when it moves", () => {
+  it("keeps the selected page selected when it moves or another moves past it", () => {
     const selected = builderReducer(start(), { type: "select", selection: { page: 0 } });
-    const state = builderReducer(selected, { type: "movePage", page: 0, by: 1 });
-    expect(state.selection).toEqual({ page: 1 });
-    expect(state.form.pages[1]?.title).toBe("About you");
+    const moved = builderReducer(selected, { type: "movePage", page: 0, by: 1 });
+    expect(moved.selection).toEqual({ page: 1 });
+    expect(moved.form.pages[1]?.title).toBe("About you");
+
+    const passed = builderReducer(selected, { type: "movePage", page: 1, by: -1 });
+    expect(passed.selection).toEqual({ page: 1 });
+    expect(passed.form.pages[1]?.title).toBe("About you");
   });
 
   it("deletes only an empty page", () => {
@@ -78,16 +83,32 @@ describe("builderReducer", () => {
 
   it("adds an item after the selected one and selects it", () => {
     const selected = builderReducer(start(), { type: "select", selection: { item: "intro" } });
-    const item = newItem("date", selected.form);
-    const state = builderReducer(selected, { type: "addItem", page: 0, item });
-    expect(ids(state)[0]).toEqual(["intro", item.id, "age"]);
-    expect(state.selection).toEqual({ item: item.id });
-    expect(pageOf(state.form, item.id)).toBe(0);
+    const id = newItemId();
+    const state = builderReducer(selected, { type: "addItem", page: 0, kind: "date", id });
+    expect(ids(state)[0]).toEqual(["intro", id, "age"]);
+    expect(state.selection).toEqual({ item: id });
+    expect(pageOf(state.form, id)).toBe(0);
+    expect(findItem(state.form, id)).toMatchObject({ kind: "date", key: "question" });
+  });
+
+  it("never suggests a key a published version used", () => {
+    const id = newItemId();
+    let state = builderReducer(start(["question", "energy"]), {
+      type: "addItem",
+      page: 0,
+      kind: "text",
+      id,
+    });
+    expect(findItem(state.form, id)).toMatchObject({ key: "question_2" });
+    const item = findItem(state.form, id);
+    if (item?.kind !== "text") throw new Error("missing");
+    state = builderReducer(state, { type: "replaceItem", item: { ...item, prompt: "Energy" } });
+    expect(findItem(state.form, id)).toMatchObject({ key: "energy_2" });
   });
 
   it("lets a new question's key follow its prompt until the key is typed", () => {
-    const item = newItem("text", FORM);
-    let state = builderReducer(start(), { type: "addItem", page: 1, item });
+    const item = { id: newItemId() };
+    let state = builderReducer(start(), { type: "addItem", page: 1, kind: "text", id: item.id });
     const edit = (change: { prompt?: string; key?: string }) => {
       const current = findItem(state.form, item.id);
       if (current?.kind !== "text") throw new Error("missing");
@@ -119,6 +140,12 @@ describe("builderReducer", () => {
     expect(saved.savedForm).toBe(sent.form);
     expect(saved.form.pages[1]?.title).toBe("Feelings");
   });
+
+  it("remembers a save whose reply was lost until a save is confirmed", () => {
+    const lost = builderReducer(start(), { type: "saveUnconfirmed", form: FORM });
+    expect(lost.unconfirmed).toBe(FORM);
+    expect(builderReducer(lost, { type: "saved", revision: 5, form: FORM }).unconfirmed).toBeNull();
+  });
 });
 
 describe("suggestKey", () => {
@@ -127,6 +154,16 @@ describe("suggestKey", () => {
     expect(suggestKey("2nd language", new Set())).toBe("q_2nd_language");
     expect(suggestKey("?!", new Set())).toBeNull();
     expect(suggestKey("Age", new Set(["age", "age_2"]))).toBe("age_3");
+  });
+
+  it("keeps a key within 64 characters, prefix and number included", () => {
+    const long = `9${"x".repeat(80)}`;
+    const first = suggestKey(long, new Set());
+    expect(first).toHaveLength(64);
+    expect(first).toMatch(/^q_9x+$/);
+    const second = suggestKey(long, new Set([first ?? ""]));
+    expect(second).toHaveLength(64);
+    expect(second).toMatch(/_2$/);
   });
 });
 
@@ -201,6 +238,52 @@ describe("checkForm", () => {
     expect(checkForm(reused, locked).issues).toEqual([
       { itemId: "new", field: "key", message: "v1 used this key for a single choice question" },
     ]);
+  });
+
+  it("keeps a published question's option codes first and in order", () => {
+    const locked = lockedQuestions([{ versionNumber: 1, form: FORM }]);
+    const withOptions = (options: { code: string; label: string }[]) => {
+      const form = structuredClone(FORM);
+      const mood = form.pages[1]?.items[0];
+      if (mood?.kind === "single_choice") mood.options = options;
+      return checkForm(form, locked).issues;
+    };
+
+    // Relabelling and adding after the published codes is fine.
+    expect(
+      withOptions([
+        { code: "1", label: "Very low" },
+        { code: "2", label: "Very high" },
+        { code: "3", label: "Unsure" },
+      ]),
+    ).toEqual([]);
+    // Swapping codes changes what stored answers mean.
+    expect(
+      withOptions([
+        { code: "2", label: "Low" },
+        { code: "1", label: "High" },
+      ]),
+    ).toEqual([
+      {
+        itemId: "mood",
+        field: "options.0.code",
+        message: "v1 published 1 here; published options keep their code and place",
+      },
+    ]);
+    expect(withOptions([{ code: "1", label: "Low" }])).toEqual([
+      { itemId: "mood", field: "options", message: "Keep v1's options 1, 2 first, in order" },
+    ]);
+  });
+
+  it("names the newest version that published a key", () => {
+    const locked = lockedQuestions([
+      { versionNumber: 1, form: FORM },
+      { versionNumber: 2, form: FORM },
+    ]);
+    const renamed = structuredClone(FORM);
+    const age = renamed.pages[0]?.items[1];
+    if (age?.kind === "number") age.key = "years";
+    expect(checkForm(renamed, locked).issues[0]?.message).toMatch(/^v2 /);
   });
 
   it("rejects input that is not a form", () => {

@@ -16,7 +16,7 @@ import {
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import type { BuilderAction } from "#/lib/survey/builder";
-import { issueKey, type LockedQuestion } from "#/lib/survey/check-form";
+import { issueKey, type LockedQuestion, publishedQuestion } from "#/lib/survey/check-form";
 import {
   ITEM_KIND_LABELS,
   isQuestion,
@@ -148,6 +148,9 @@ function QuestionSettings({
   locked,
 }: QuestionSettingsProps) {
   const lockedBy = locked.find((q) => q.id === question.id);
+  // The published question asked under this key, whose codes stay fixed; another kind is an error
+  // shown on the key instead.
+  const published = publishedQuestion(locked, question.key);
   const review = question.review ?? {};
   const setReview = (change: Partial<NonNullable<QuestionItem["review"]>>) => {
     const next = { ...review, ...change };
@@ -215,6 +218,7 @@ function QuestionSettings({
       </div>
 
       <KindSettings
+        published={published?.kind === question.kind ? published : undefined}
         question={question}
         replace={replace}
         message={message}
@@ -270,7 +274,9 @@ function KindSettings({
   fieldId,
   messages,
   editable,
-}: Omit<QuestionSettingsProps, "locked">) {
+  published,
+}: Omit<QuestionSettingsProps, "locked"> & { published: LockedQuestion | undefined }) {
+  const publishedIn = published && `v${published.versionNumber}`;
   switch (question.kind) {
     case "single_choice":
     case "multiple_choice":
@@ -284,6 +290,8 @@ function KindSettings({
           onChange={(options) => replace({ ...question, options })}
           messages={messages}
           editable={editable}
+          publishedCount={published?.codes.length ?? 0}
+          publishedIn={publishedIn}
         />
       );
     case "grid":
@@ -298,6 +306,8 @@ function KindSettings({
             onChange={(options) => replace({ ...question, options })}
             messages={messages}
             editable={editable}
+            publishedCount={published?.codes.length ?? 0}
+            publishedIn={publishedIn}
           />
           <EntryListEditor
             itemId={question.id}
@@ -313,6 +323,8 @@ function KindSettings({
             }
             messages={messages}
             editable={editable}
+            publishedCount={published?.rowKeys.length ?? 0}
+            publishedIn={publishedIn}
           />
         </>
       );

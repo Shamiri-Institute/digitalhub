@@ -33,20 +33,25 @@ interface SurveyBuilderProps {
 
 /** Edits a draft's form and saves it whole; shows a published version the same way, read-only. */
 export default function SurveyBuilder({ version, locked, editable }: SurveyBuilderProps) {
-  const [state, dispatch] = useReducer(builderReducer, version, initBuilder);
+  const [state, dispatch] = useReducer(
+    builderReducer,
+    { ...version, publishedKeys: locked.map((q) => q.key) },
+    initBuilder,
+  );
   const [saving, setSaving] = useState(false);
   const [stale, setStale] = useState(false);
 
   const unsaved = editable && hasUnsavedChanges(state);
-  useLeaveGuard(unsaved);
+  const allowLeave = useLeaveGuard(unsaved);
 
-  // Checked on every render so a message clears as soon as the field is fixed.
-  const check = checkForm(state.form, locked);
-  const issues = state.showIssues ? check.issues : [];
+  // Once Save has shown the problems, they are checked again as the form changes, so a message
+  // clears as soon as its field is fixed. Before that, typing runs no checks.
+  const issues = state.showIssues ? checkForm(state.form, locked).issues : [];
   const messages = indexIssues(issues);
   const itemsWithIssues = new Set(issues.flatMap((issue) => issue.itemId ?? []));
 
   const handleSave = async () => {
+    const check = checkForm(state.form, locked);
     if (!check.success) {
       dispatch({ type: "showIssues", itemId: check.issues.find((i) => i.itemId)?.itemId });
       toast({
@@ -62,6 +67,7 @@ export default function SurveyBuilder({ version, locked, editable }: SurveyBuild
         versionId: version.id,
         revision: state.revision,
         form: sent,
+        unconfirmedForm: state.unconfirmed ?? undefined,
       });
       const result = response.data;
       if (response.success && result?.outcome === "saved") {
@@ -74,6 +80,8 @@ export default function SurveyBuilder({ version, locked, editable }: SurveyBuild
       }
       toast({ variant: "destructive", description: response.message });
     } catch {
+      // The reply was lost, so the save may have been stored all the same.
+      dispatch({ type: "saveUnconfirmed", form: sent });
       toast({ variant: "destructive", description: "Sorry, could not save the draft." });
     } finally {
       setSaving(false);
@@ -122,7 +130,10 @@ export default function SurveyBuilder({ version, locked, editable }: SurveyBuild
             variant="outline"
             size="sm"
             className="shrink-0 gap-1"
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              allowLeave();
+              window.location.reload();
+            }}
           >
             <RefreshCw className="h-4 w-4" />
             Reload

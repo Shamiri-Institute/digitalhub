@@ -83,9 +83,12 @@ export async function fetchVersionForBuilder(
       and(eq(s.id, surveyId), eq(s.implementerId, implementerId), eq(s.projectId, projectId)),
     columns: { id: true, code: true, title: true },
     with: {
+      // Only the forms needed: this version's, and the published ones that lock keys.
       versions: {
         columns: { id: true, versionNumber: true, status: true, revision: true, form: true },
-        orderBy: (v, { asc }) => asc(v.versionNumber),
+        where: (v, { eq, ne, or }) =>
+          or(eq(v.versionNumber, versionNumber), ne(v.status, SurveyVersionStatus.DRAFT)),
+        orderBy: (v, { desc }) => desc(v.versionNumber),
       },
     },
   });

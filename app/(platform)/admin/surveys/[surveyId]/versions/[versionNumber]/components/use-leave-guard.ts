@@ -1,19 +1,33 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const LEAVE_MESSAGE = "You have unsaved changes. Leave without saving?";
 
 /**
- * Asks before leaving while there are unsaved changes: on reload or closing the tab, and on a click
- * of any link in the app, including the sidebar's.
+ * The parts of the browser's Navigation API used here. TypeScript's DOM types don't include it
+ * yet, and not every browser has it, so it is optional.
+ */
+type NavigateEvent = Event & { navigationType: string; cancelable: boolean };
+type NavigationApi = Pick<EventTarget, "addEventListener" | "removeEventListener">;
+
+/**
+ * Asks before leaving while there are unsaved changes: on reload or closing the tab, on a click of
+ * any link in the app (the sidebar's included), and on the browser's Back and Forward. Returns a
+ * function to call just before leaving on purpose, such as a reload the page offers.
  */
 export function useLeaveGuard(unsaved: boolean) {
-  // effect: listens to the window and document, outside React, only while there are unsaved changes
+  const leaving = useRef(false);
+
+  // effect: listens to the window, document and navigation, outside React, while there are unsaved changes
   useEffect(() => {
     if (!unsaved) {
       return;
     }
+    const confirmLeave = () => leaving.current || window.confirm(LEAVE_MESSAGE);
+
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
+      if (!leaving.current) {
+        event.preventDefault();
+      }
     };
     // Capture phase, so it runs before the router handles the click of a Link.
     const onClick = (event: MouseEvent) => {
@@ -25,16 +39,31 @@ export function useLeaveGuard(unsaved: boolean) {
       const here = window.location;
       if (url.origin !== here.origin) return;
       if (url.pathname === here.pathname && url.search === here.search) return;
-      if (!window.confirm(LEAVE_MESSAGE)) {
+      if (!confirmLeave()) {
         event.preventDefault();
         event.stopPropagation();
       }
     };
+    // Back and Forward within the app don't unload the page; the router handles them.
+    const onNavigate = (event: Event) => {
+      const navigate = event as NavigateEvent;
+      if (navigate.navigationType === "traverse" && navigate.cancelable && !confirmLeave()) {
+        event.preventDefault();
+      }
+    };
+    const navigation = (window as Window & { navigation?: NavigationApi }).navigation;
+
     window.addEventListener("beforeunload", onBeforeUnload);
     document.addEventListener("click", onClick, true);
+    navigation?.addEventListener("navigate", onNavigate);
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload);
       document.removeEventListener("click", onClick, true);
+      navigation?.removeEventListener("navigate", onNavigate);
     };
   }, [unsaved]);
+
+  return () => {
+    leaving.current = true;
+  };
 }

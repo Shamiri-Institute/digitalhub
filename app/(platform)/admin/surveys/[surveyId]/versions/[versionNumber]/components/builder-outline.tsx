@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import type { ComponentProps, Dispatch } from "react";
+import type { Dispatch } from "react";
 
 import { Button } from "#/components/ui/button";
 import {
@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { type BuilderAction, newItem, type Selection } from "#/lib/survey/builder";
+import { type BuilderAction, newItemId, type Selection } from "#/lib/survey/builder";
 import {
   type DisplayItem,
   ITEM_KIND_LABELS,
@@ -22,6 +22,7 @@ import {
   type SurveyItem,
 } from "#/lib/survey/form";
 import { cn } from "#/lib/utils";
+import IconButton from "./icon-button";
 
 const DISPLAY_KINDS: ItemKind[] = [
   "heading",
@@ -188,7 +189,7 @@ export default function BuilderOutline({
                 <AddItemMenu
                   pageNumber={number}
                   onAdd={(kind) =>
-                    dispatch({ type: "addItem", page: pageIndex, item: newItem(kind, form) })
+                    dispatch({ type: "addItem", page: pageIndex, kind, id: newItemId() })
                   }
                 />
               </div>
@@ -248,24 +249,6 @@ function AddItemMenu({
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-function IconButton({
-  label,
-  className,
-  ...props
-}: ComponentProps<typeof Button> & { label: string }) {
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      aria-label={label}
-      title={label}
-      className={cn("h-8 w-8 shrink-0 text-shamiri-text-grey", className)}
-      {...props}
-    />
   );
 }
 

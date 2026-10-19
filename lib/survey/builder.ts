@@ -1,6 +1,6 @@
 // The survey builder's editing state: the draft form being edited and what the editor needs around
 // it. Every change is a pure step of `builderReducer`, so moves and edits are tested without a
-// browser. Ids for new items are made by the caller (`newItem`), which keeps the reducer pure.
+// browser. Ids for new items are made by the caller (`newItemId`), which keeps the reducer pure.
 
 import { objectId } from "#/lib/crypto";
 import {
@@ -25,6 +25,13 @@ export type BuilderState = {
   keyFollowsPrompt: ReadonlySet<string>;
   /** Off until the first Save, so a question being typed isn't marked wrong. */
   showIssues: boolean;
+  /** Keys that published versions used. A suggested key never takes one. */
+  publishedKeys: ReadonlySet<string>;
+  /**
+   * A form sent to be saved whose reply never came. If it was stored, the next save recognises
+   * the draft's newer revision as this tab's own rather than as a change made elsewhere.
+   */
+  unconfirmed: SurveyForm | null;
 };
 
 export type BuilderAction =
@@ -32,7 +39,8 @@ export type BuilderAction =
   | { type: "renamePage"; page: number; title: string }
   | { type: "movePage"; page: number; by: -1 | 1 }
   | { type: "deletePage"; page: number }
-  | { type: "addItem"; page: number; item: SurveyItem }
+  /** A blank item of a kind; a question gets a key no question in the form or a published version uses. */
+  | { type: "addItem"; page: number; kind: ItemKind; id: string }
   /** Every edit of an item's settings replaces the whole item. */
   | { type: "replaceItem"; item: SurveyItem }
   /** Past the first or last item of a page, an item moves on to the end of the page before it or
@@ -44,14 +52,18 @@ export type BuilderAction =
   /** A blocked Save: show every issue and select the first item with one. */
   | { type: "showIssues"; itemId?: string }
   /** `form` is the form that was sent, so changes made while it was saving stay unsaved. */
-  | { type: "saved"; revision: number; form: SurveyForm };
+  | { type: "saved"; revision: number; form: SurveyForm }
+  /** A save whose reply was lost: it may or may not have been stored. */
+  | { type: "saveUnconfirmed"; form: SurveyForm };
 
 export function initBuilder({
   form,
   revision,
+  publishedKeys,
 }: {
   form: SurveyForm;
   revision: number;
+  publishedKeys: Iterable<string>;
 }): BuilderState {
   const firstItem = form.pages[0]?.items[0];
   return {
@@ -61,6 +73,8 @@ export function initBuilder({
     selection: firstItem ? { item: firstItem.id } : form.pages.length > 0 ? { page: 0 } : null,
     keyFollowsPrompt: new Set<string>(),
     showIssues: false,
+    publishedKeys: new Set(publishedKeys),
+    unconfirmed: null,
   };
 }
 
@@ -83,10 +97,18 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
         return state;
       }
       const next = withPages(state, swap(state.form.pages, action.page, target));
+      // A selected page is either of the two swapped, so the selection follows it.
       const selected = state.selection;
-      return selected && "page" in selected && selected.page === action.page
-        ? { ...next, selection: { page: target } }
-        : next;
+      if (!selected || !("page" in selected)) {
+        return next;
+      }
+      const followed =
+        selected.page === action.page
+          ? target
+          : selected.page === target
+            ? action.page
+            : selected.page;
+      return { ...next, selection: { page: followed } };
     }
     case "deletePage": {
       // A page goes only once it is empty, so no question is lost by one click.
@@ -102,6 +124,7 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
       };
     }
     case "addItem": {
+      const item = blankItem(action.kind, action.id, takenKeys(state));
       const selected = state.selection;
       const pages = state.form.pages.map((page, index) => {
         if (index !== action.page) {
@@ -110,14 +133,14 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
         const after =
           selected && "item" in selected ? page.items.findIndex((i) => i.id === selected.item) : -1;
         const at = after === -1 ? page.items.length : after + 1;
-        return { ...page, items: page.items.toSpliced(at, 0, action.item) };
+        return { ...page, items: page.items.toSpliced(at, 0, item) };
       });
-      const keyFollowsPrompt = isQuestion(action.item)
-        ? new Set([...state.keyFollowsPrompt, action.item.id])
+      const keyFollowsPrompt = isQuestion(item)
+        ? new Set([...state.keyFollowsPrompt, item.id])
         : state.keyFollowsPrompt;
       return {
         ...withPages(state, pages),
-        selection: { item: action.item.id },
+        selection: { item: item.id },
         keyFollowsPrompt,
       };
     }
@@ -149,7 +172,9 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
         selection: action.itemId ? { item: action.itemId } : state.selection,
       };
     case "saved":
-      return { ...state, savedForm: action.form, revision: action.revision };
+      return { ...state, savedForm: action.form, revision: action.revision, unconfirmed: null };
+    case "saveUnconfirmed":
+      return { ...state, unconfirmed: action.form };
   }
 }
 
@@ -169,11 +194,14 @@ export function pageOf(form: SurveyForm, itemId: string) {
   return form.pages.findIndex((page) => page.items.some((item) => item.id === itemId));
 }
 
-/** A blank item of a kind, with a fresh id; a question gets a key not yet used in the form. */
-export function newItem(kind: ItemKind, form: SurveyForm): SurveyItem {
-  const id = objectId("item");
+/** An id for a new item; made outside the reducer, which stays pure. */
+export function newItemId() {
+  return objectId("item");
+}
+
+function blankItem(kind: ItemKind, id: string, taken: ReadonlySet<string>): SurveyItem {
   const base = { id, prompt: "", required: false };
-  const key = () => uniqueKey("question", takenKeys(form));
+  const key = () => uniqueKey("question", taken);
   const scale = [
     { code: "1", label: "Option 1" },
     { code: "2", label: "Option 2" },
@@ -206,38 +234,39 @@ export function newItem(kind: ItemKind, form: SurveyForm): SurveyItem {
 export function suggestKey(prompt: string, taken: ReadonlySet<string>) {
   const slug = prompt
     .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    // Room for a `_99` suffix within the length limit.
-    .slice(0, KEY_MAX_LENGTH - 4)
-    .replace(/_+$/, "");
+    .replace(/^_+|_+$/g, "");
   if (!slug) {
     return null;
   }
   return uniqueKey(/^[a-z]/.test(slug) ? slug : `q_${slug}`, taken);
 }
 
+/** `base`, or `base_2`, `base_3` and so on when taken, cut to fit the key length limit. */
 function uniqueKey(base: string, taken: ReadonlySet<string>) {
-  if (!taken.has(base)) {
-    return base;
-  }
-  let n = 2;
-  while (taken.has(`${base}_${n}`)) {
+  const fit = (suffix: string) =>
+    base.slice(0, KEY_MAX_LENGTH - suffix.length).replace(/_+$/, "") + suffix;
+  let n = 1;
+  let key = fit("");
+  while (taken.has(key)) {
     n++;
+    key = fit(`_${n}`);
   }
-  return `${base}_${n}`;
+  return key;
 }
 
-function takenKeys(form: SurveyForm, exceptId?: string) {
-  return new Set(
-    form.pages
+/** Keys a new or re-suggested key must avoid: the form's other questions' and published ones. */
+function takenKeys(state: BuilderState, exceptId?: string) {
+  return new Set([
+    ...state.publishedKeys,
+    ...state.form.pages
       .flatMap((page) => page.items)
       .filter(isQuestion)
       .filter((q) => q.id !== exceptId)
       .map((q) => q.key),
-  );
+  ]);
 }
 
 /**
@@ -255,7 +284,7 @@ function replaceItem(state: BuilderState, item: SurveyItem): BuilderState {
     if (item.key !== current.key) {
       keyFollowsPrompt = new Set([...keyFollowsPrompt].filter((id) => id !== item.id));
     } else if (item.prompt !== current.prompt) {
-      const key = suggestKey(item.prompt, takenKeys(state.form, item.id));
+      const key = suggestKey(item.prompt, takenKeys(state, item.id));
       next = key ? { ...item, key } : item;
     }
   }
