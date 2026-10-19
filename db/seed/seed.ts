@@ -1375,7 +1375,6 @@ async function createAttendanceRecords(
         fellowAttendanceData.push({
           fellowId: group.leaderId,
           sessionId: session.id,
-          schoolId: school.id,
           supervisorId: school.assignedSupervisorId ?? undefined,
           groupId: group.id,
           sessionDate: session.sessionDate,
@@ -1441,7 +1440,6 @@ async function createHubAttendance(
         fellowAttendanceData.push({
           fellowId: group.leaderId,
           sessionId: session.id,
-          schoolId: school.id,
           supervisorId: school.assignedSupervisorId ?? undefined,
           groupId: group.id,
           sessionDate: session.sessionDate,
@@ -1668,16 +1666,10 @@ async function createClinicalRecords(
   ]);
 }
 
-async function createPayoutRecords(
-  fellowAttendances: DemoFellowAttendances,
-  hubIdBySchoolId: Map<string, string>,
-  seederUserId: string,
-) {
+async function createPayoutRecords(fellowAttendances: DemoFellowAttendances, seederUserId: string) {
   console.log("creating payout records");
 
-  const eligible = fellowAttendances.filter(
-    (fa) => fa.supervisorId && fa.schoolId && hubIdBySchoolId.has(fa.schoolId),
-  );
+  const eligible = fellowAttendances.filter((fa) => fa.supervisorId);
   const sample = eligible.slice(0, DEMO_PAYOUT_SAMPLE);
 
   const payoutStatementData = sample.map((fa) => ({
@@ -2078,11 +2070,9 @@ async function createDemoRecords(
     sessionsBySchool.set(session.schoolId, list);
   }
 
-  const hubIdBySchoolId = new Map<string, string>();
   const groupLeaderByGroupId = new Map<string, string>();
   const groupTypeByGroupId = new Map<string, string>();
   for (const school of schools) {
-    if (school.hubId) hubIdBySchoolId.set(school.id, school.hubId);
     for (const group of school.interventionGroups) {
       groupLeaderByGroupId.set(group.id, group.leaderId);
       groupTypeByGroupId.set(group.id, group.groupType);
@@ -2105,7 +2095,7 @@ async function createDemoRecords(
       groupLeaderByGroupId,
       seederUserId,
     ),
-    createPayoutRecords(fellowAttendances, hubIdBySchoolId, seederUserId),
+    createPayoutRecords(fellowAttendances, seederUserId),
     createSessionRecordings(schools, sessionsBySchool, seederUserId),
     createReportRecords(schools, sessionsBySchool, seederUserId),
   ]);

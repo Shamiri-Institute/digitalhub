@@ -72,7 +72,7 @@ export async function loadHubFellowAttendance() {
       .innerJoin(fellow, eq(fellow.id, fellowAttendance.fellowId))
       .leftJoin(interventionSession, eq(interventionSession.id, fellowAttendance.sessionId))
       .leftJoin(sessionName, eq(sessionName.id, interventionSession.sessionId))
-      .leftJoin(school, eq(school.id, fellowAttendance.schoolId))
+      .leftJoin(school, eq(school.id, interventionSession.schoolId))
       .leftJoin(interventionGroup, eq(interventionGroup.id, fellowAttendance.groupId))
       .where(eq(fellow.hubId, hubId))
       .orderBy(

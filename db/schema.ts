@@ -443,7 +443,6 @@ export const fellowAttendance = pgTable(
     sessionNumber: integer("session_number"),
     sessionDate: timestamp("session_date", { precision: 3, mode: "date" }),
     yearOfImplementation: integer("year_of_implementation"),
-    schoolId: varchar("school_id", { length: 255 }),
     supervisorId: varchar("supervisor_id", { length: 255 }),
     attended: boolean(),
     absenceReason: text("absence_reason"),
@@ -487,14 +486,6 @@ export const fellowAttendance = pgTable(
       columns: [table.markedBy],
       foreignColumns: [user.id],
       name: "fellow_attendances_marked_by_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
-    index("fellow_attendances_school_id_idx").on(table.schoolId),
-    foreignKey({
-      columns: [table.schoolId],
-      foreignColumns: [school.id],
-      name: "fellow_attendances_school_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("set null"),

@@ -246,6 +246,13 @@
       "when": 1792407833006,
       "tag": "0034_enforce_session_hub",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1792418238820,
+      "tag": "0035_backfill_legacy_fellow_attendance_sessions",
+      "breakpoints": true
     }
   ]
 }

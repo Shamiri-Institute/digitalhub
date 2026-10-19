@@ -98,7 +98,6 @@ export default function FellowAttendance({
           supervisorName: supervisor.supervisorName,
           supervisorId: supervisor.id,
           schoolName: session?.school?.schoolName ?? session?.venue,
-          schoolId: sessionAttendance?.schoolId,
           groupName: group?.groupName ?? null,
           groupType: group?.groupType,
           groupId: group?.id,
@@ -381,7 +380,6 @@ export type FellowAttendancesTableData = {
   supervisorName?: string | null;
   supervisorId: string | null;
   schoolName?: string | null;
-  schoolId?: string | null;
   groupName: string | null;
   groupId?: string;
   groupType?: string;

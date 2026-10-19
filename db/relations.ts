@@ -315,11 +315,6 @@ export const fellowAttendanceRelations = relations(fellowAttendance, ({ one, man
     references: [fellow.id],
     relationName: "FellowAttendance_fellow",
   }),
-  school: one(school, {
-    fields: [fellowAttendance.schoolId],
-    references: [school.id],
-    relationName: "FellowAttendance_school",
-  }),
   supervisor: one(supervisor, {
     fields: [fellowAttendance.supervisorId],
     references: [supervisor.id],
@@ -665,7 +660,6 @@ export const projectRelations = relations(project, ({ many }) => ({
 
 export const schoolRelations = relations(school, ({ one, many }) => ({
   students: many(student, { relationName: "Student_school" }),
-  fellowAttendances: many(fellowAttendance, { relationName: "FellowAttendance_school" }),
   hub: one(hub, { fields: [school.hubId], references: [hub.id], relationName: "School_hub" }),
   assignedSupervisor: one(supervisor, {
     fields: [school.assignedSupervisorId],

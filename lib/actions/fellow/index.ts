@@ -577,7 +577,6 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
           .values({
             fellowId: fellowRow.id,
             groupId,
-            schoolId: session.schoolId,
             sessionId,
             absenceReason,
             absenceComments: comments,
@@ -761,7 +760,6 @@ export async function markManyFellowAttendance(
 
         const attendanceRows = validFellows.map(({ fellow: fellowRow, groupId }) => ({
           fellowId: fellowRow.id,
-          schoolId: session.schoolId,
           groupId,
           absenceReason: attendanceStatus === false ? absenceReason : null,
           absenceComments: attendanceStatus === false ? comments : null,
