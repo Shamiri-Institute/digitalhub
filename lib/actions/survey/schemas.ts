@@ -21,3 +21,11 @@ export const CreateDraftVersionSchema = z.object({
   surveyId: stringValidation("Missing survey"),
   fromVersionId: stringValidation("Missing version"),
 });
+
+export const SaveDraftFormSchema = z.object({
+  versionId: stringValidation("Missing version"),
+  /** The revision the editor loaded; the save is refused if the draft has moved on. */
+  revision: z.int().min(0),
+  // Checked by checkForm, which also needs the survey's published questions.
+  form: z.unknown(),
+});
