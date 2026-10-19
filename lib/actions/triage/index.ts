@@ -14,7 +14,6 @@ import {
   triageEventAudit,
 } from "#/db/schema";
 import { NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
-import { hubOfSession } from "#/lib/auth/require-hub-role";
 
 const triageEventWith = {
   session: true,
@@ -76,15 +75,13 @@ export async function getSupervisorsInFellowHub(
         ),
       ),
     columns: { hubId: true },
-    with: { school: { columns: { hubId: true } } },
   });
-  const sessionHubId = session ? hubOfSession(session) : null;
-  if (!sessionHubId) {
+  if (!session) {
     return [];
   }
 
   const supervisors = await db.query.supervisor.findMany({
-    where: (s, { eq }) => eq(s.hubId, sessionHubId),
+    where: (s, { eq }) => eq(s.hubId, session.hubId),
     columns: { id: true, supervisorName: true },
     orderBy: (s, { asc }) => asc(s.supervisorName),
   });
@@ -146,7 +143,6 @@ export async function createTriageEvent(
     const session = await db.query.interventionSession.findFirst({
       where: (s, { eq }) => eq(s.id, parsed.sessionId),
       columns: { occurred: true, hubId: true },
-      with: { school: { columns: { hubId: true } } },
     });
     if (!session) {
       throw new Error("Intervention session not found.");
@@ -177,15 +173,13 @@ export async function createTriageEvent(
       );
     }
 
-    const sessionHubId = hubOfSession(session);
-
     const [created] = await db
       .insert(triageEvent)
       .values({
         studentId: parsed.studentId,
         sessionId: parsed.sessionId,
         fellowId,
-        hubId: sessionHubId,
+        hubId: session.hubId,
         studentAttendanceId: studentAttendanceId ?? null,
         triageOccurred: true,
         riskScreenOutcome: parsed.riskScreenOutcome,

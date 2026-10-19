@@ -658,6 +658,7 @@ export const school = pgTable(
   },
   (table) => [
     uniqueIndex("schools_visible_id_key").using("btree", table.visibleId),
+    uniqueIndex("schools_id_hub_id_key").on(table.id, table.hubId),
     index("schools_hub_id_idx").on(table.hubId),
     check("schools_boarding_day_check", sql`${table.boardingDay} in ('Day', 'Boarding', 'Both')`),
     foreignKey({
@@ -706,10 +707,10 @@ export const interventionSession = pgTable(
       withTimezone: true,
       mode: "date",
     }).notNull(),
-    hubId: varchar("hub_id", { length: 255 }),
+    hubId: varchar("hub_id", { length: 255 }).notNull(),
   },
   (table) => [
-    index("intervention_sessions_school_id_idx").using("btree", table.schoolId),
+    index("intervention_sessions_school_id_hub_id_idx").on(table.schoolId, table.hubId),
     index("intervention_sessions_project_id_idx").on(table.projectId),
     foreignKey({
       columns: [table.projectId],
@@ -718,7 +719,7 @@ export const interventionSession = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
-    index("intervention_sessions_session_id_idx").on(table.sessionId),
+    index("intervention_sessions_session_id_hub_id_idx").on(table.sessionId, table.hubId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [sessionName.id],
@@ -740,7 +741,17 @@ export const interventionSession = pgTable(
       name: "intervention_sessions_hub_id_fkey",
     })
       .onUpdate("cascade")
-      .onDelete("set null"),
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.schoolId, table.hubId],
+      foreignColumns: [school.id, school.hubId],
+      name: "intervention_sessions_school_id_hub_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.sessionId, table.hubId],
+      foreignColumns: [sessionName.id, sessionName.hubId],
+      name: "intervention_sessions_session_id_hub_id_fkey",
+    }),
   ],
 );
 
@@ -2010,6 +2021,7 @@ export const sessionName = pgTable(
   },
   (table) => [
     uniqueIndex("session_names_hub_id_session_name_key").on(table.hubId, table.sessionName),
+    uniqueIndex("session_names_id_hub_id_key").on(table.id, table.hubId),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],

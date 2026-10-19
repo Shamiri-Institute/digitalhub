@@ -1280,7 +1280,7 @@ async function createInterventionSessionsForSchools(
       occurred: isBefore(staticDate, subWeeks(seedToday, 1)),
       yearOfImplementation: 2024,
       projectId: staticSchool?.hub?.projectId || undefined,
-      hubId: staticSchool?.hubId,
+      hubId: sessionName.hubId,
     });
 
     staticDate = addWeeks(staticDate, 1);
@@ -1314,7 +1314,7 @@ async function createInterventionSessionsForSchools(
         occurred: isBefore(currentDate, seedToday),
         yearOfImplementation: seedToday.getFullYear(),
         projectId: school.hub?.projectId || undefined,
-        hubId: school.hubId,
+        hubId: sessionName.hubId,
       });
 
       fellowsInSchool.forEach((fellow) => {

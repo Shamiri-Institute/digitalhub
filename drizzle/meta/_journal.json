@@ -239,6 +239,13 @@
       "when": 1792405586714,
       "tag": "0033_schools_boarding_day_check",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1792407833006,
+      "tag": "0034_enforce_session_hub",
+      "breakpoints": true
     }
   ]
 }

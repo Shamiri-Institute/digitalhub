@@ -29,7 +29,6 @@ import { countOf } from "#/db/sql";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import {
   fellowsInCallerScope,
-  hubOfSession,
   requireFellowsInHub,
   requireHubRole,
   requireSchoolInHub,
@@ -85,9 +84,9 @@ async function requireFellow(tx: Transaction | typeof db, id: string) {
 async function requireSessionWithName(tx: Transaction, sessionId: string, hubId: string) {
   const row = await tx.query.interventionSession.findFirst({
     where: (s, { eq }) => eq(s.id, sessionId),
-    with: { session: true, school: { columns: { hubId: true } } },
+    with: { session: true },
   });
-  if (!row || hubOfSession(row) !== hubId) {
+  if (!row || row.hubId !== hubId) {
     throw new Error(`Intervention session ${sessionId} not found`);
   }
   return row;
