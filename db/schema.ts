@@ -234,26 +234,6 @@ export const implementer = pgTable(
   ],
 );
 
-export const file = pgTable("files", {
-  id: varchar({ length: 255 }).primaryKey().notNull(),
-  createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
-  updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-    .notNull()
-    .$defaultFn(() => new Date())
-    .$onUpdate(() => new Date()),
-  archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-  key: text().notNull(),
-  fileName: text("file_name").notNull(),
-  byteSize: integer("byte_size").notNull(),
-  contentType: text("content_type").notNull(),
-  width: integer(),
-  height: integer(),
-  signedUrl: varchar("signed_url", { length: 2048 }),
-  expiresAt: timestamp("expires_at", { precision: 3, mode: "date" }),
-});
-
 export const interventionSessionRating = pgTable(
   "intervention_session_ratings",
   {

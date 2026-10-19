@@ -218,6 +218,13 @@
       "when": 1792164338420,
       "tag": "0030_index_foreign_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1792401920614,
+      "tag": "0031_drop_files_table",
+      "breakpoints": true
     }
   ]
 }
