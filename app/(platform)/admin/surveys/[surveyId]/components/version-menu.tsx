@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -20,9 +22,7 @@ interface VersionMenuProps {
 }
 
 export default function VersionMenu({ surveyId, version, hasDraft }: VersionMenuProps) {
-  if (version.status === SurveyVersionStatus.DRAFT) {
-    return null;
-  }
+  const isDraft = version.status === SurveyVersionStatus.DRAFT;
 
   const handleCreateDraft = toastOnError(async () => {
     const response = await createDraftVersion({ surveyId, fromVersionId: version.id });
@@ -44,9 +44,16 @@ export default function VersionMenu({ surveyId, version, hasDraft }: VersionMenu
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem disabled={hasDraft} onClick={handleCreateDraft}>
-          New draft from v{version.versionNumber}
+        <DropdownMenuItem asChild>
+          <Link href={`/admin/surveys/${surveyId}/versions/${version.versionNumber}`}>
+            {isDraft ? "Edit form" : "View form"}
+          </Link>
         </DropdownMenuItem>
+        {!isDraft && (
+          <DropdownMenuItem disabled={hasDraft} onClick={handleCreateDraft}>
+            New draft from v{version.versionNumber}
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

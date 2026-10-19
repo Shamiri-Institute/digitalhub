@@ -1,0 +1,379 @@
+"use client";
+
+import { Lock, Trash2 } from "lucide-react";
+import type { Dispatch } from "react";
+
+import { Button } from "#/components/ui/button";
+import { Checkbox } from "#/components/ui/checkbox";
+import { Input } from "#/components/ui/input";
+import { Label } from "#/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
+import { Textarea } from "#/components/ui/textarea";
+import type { BuilderAction } from "#/lib/survey/builder";
+import { issueKey, type LockedQuestion } from "#/lib/survey/check-form";
+import {
+  ITEM_KIND_LABELS,
+  isQuestion,
+  type QuestionItem,
+  type SurveyForm,
+  type SurveyItem,
+} from "#/lib/survey/form";
+import { cn } from "#/lib/utils";
+import EntryListEditor from "./entry-list-editor";
+import { Field } from "./field";
+
+interface ItemSettingsProps {
+  item: SurveyItem;
+  form: SurveyForm;
+  pageIndex: number;
+  dispatch: Dispatch<BuilderAction>;
+  editable: boolean;
+  messages: Map<string, string>;
+  locked: LockedQuestion[];
+}
+
+/** The right pane for one item: every setting of its kind. */
+export default function ItemSettings({
+  item,
+  form,
+  pageIndex,
+  dispatch,
+  editable,
+  messages,
+  locked,
+}: ItemSettingsProps) {
+  const replace = (next: SurveyItem) => dispatch({ type: "replaceItem", item: next });
+  const message = (field: string) => messages.get(issueKey(item.id, field));
+  const fieldId = (field: string) => `${item.id}-${field}`;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0 space-y-0.5">
+          <h2 className="text-lg font-semibold">{ITEM_KIND_LABELS[item.kind]}</h2>
+          <p className="text-sm text-shamiri-text-grey">
+            {isQuestion(item) ? "Question" : "Printed, not answered"} · page {pageIndex + 1}
+          </p>
+        </div>
+        {editable && (
+          <div className="flex items-center gap-2">
+            <Select
+              value={String(pageIndex)}
+              onValueChange={(value) =>
+                dispatch({ type: "moveItemToPage", itemId: item.id, page: Number(value) })
+              }
+            >
+              <SelectTrigger aria-label="Page" className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {form.pages.map((page, index) => (
+                  // oxlint-disable-next-line react/no-array-index-key -- a page is identified by its position
+                  <SelectItem key={index} value={String(index)}>
+                    Page {index + 1}
+                    {page.title ? ` · ${page.title}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              variant="ghost"
+              className="gap-1 text-shamiri-light-red hover:text-shamiri-light-red"
+              onClick={() => dispatch({ type: "deleteItem", itemId: item.id })}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* A disabled fieldset turns every control below read-only for a published version. */}
+      <fieldset disabled={!editable} className="space-y-5">
+        {item.kind === "divider" && (
+          <p className="text-sm text-muted-foreground">
+            A line across the page. It has no settings.
+          </p>
+        )}
+        {(item.kind === "heading" || item.kind === "paragraph") && (
+          <Field id={fieldId("text")} label="Text" message={message("text")}>
+            <Textarea
+              id={fieldId("text")}
+              rows={item.kind === "heading" ? 2 : 5}
+              value={item.text}
+              onChange={(e) => replace({ ...item, text: e.target.value })}
+            />
+          </Field>
+        )}
+        {isQuestion(item) && (
+          <QuestionSettings
+            question={item}
+            replace={replace}
+            message={message}
+            fieldId={fieldId}
+            messages={messages}
+            editable={editable}
+            locked={locked}
+          />
+        )}
+      </fieldset>
+    </div>
+  );
+}
+
+interface QuestionSettingsProps {
+  question: QuestionItem;
+  replace: (item: SurveyItem) => void;
+  message: (field: string) => string | undefined;
+  fieldId: (field: string) => string;
+  messages: Map<string, string>;
+  editable: boolean;
+  locked: LockedQuestion[];
+}
+
+function QuestionSettings({
+  question,
+  replace,
+  message,
+  fieldId,
+  messages,
+  editable,
+  locked,
+}: QuestionSettingsProps) {
+  const lockedBy = locked.find((q) => q.id === question.id);
+  const review = question.review ?? {};
+  const setReview = (change: Partial<NonNullable<QuestionItem["review"]>>) => {
+    const next = { ...review, ...change };
+    const empty = next.confidenceThreshold === undefined && !next.verifyAlways;
+    replace({ ...question, review: empty ? undefined : next });
+  };
+
+  return (
+    <>
+      <Field id={fieldId("prompt")} label="Prompt" message={message("prompt")}>
+        <Textarea
+          id={fieldId("prompt")}
+          rows={2}
+          value={question.prompt}
+          onChange={(e) => replace({ ...question, prompt: e.target.value })}
+        />
+      </Field>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Field
+          id={fieldId("key")}
+          label="Key"
+          message={message("key")}
+          description={
+            lockedBy
+              ? `Published in v${lockedBy.versionNumber}, so it can't change`
+              : "The export column; answers line up across versions by key"
+          }
+        >
+          <div className="relative">
+            <Input
+              id={fieldId("key")}
+              aria-invalid={Boolean(message("key"))}
+              aria-describedby={message("key") ? `${fieldId("key")}-message` : undefined}
+              value={question.key}
+              disabled={Boolean(lockedBy)}
+              onChange={(e) => replace({ ...question, key: e.target.value })}
+              className={cn(
+                "font-mono",
+                message("key") && "border-destructive",
+                lockedBy && "pr-8",
+              )}
+            />
+            {lockedBy && (
+              <Lock className="absolute right-2.5 top-2.5 h-4 w-4 text-shamiri-text-grey" />
+            )}
+          </div>
+        </Field>
+        <Field id={fieldId("helpText")} label="Help text" message={message("helpText")}>
+          <Input
+            id={fieldId("helpText")}
+            value={question.helpText ?? ""}
+            onChange={(e) => replace({ ...question, helpText: e.target.value || undefined })}
+          />
+        </Field>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={fieldId("required")}
+          checked={question.required}
+          onCheckedChange={(checked) => replace({ ...question, required: checked === true })}
+        />
+        <Label htmlFor={fieldId("required")}>Required</Label>
+      </div>
+
+      <KindSettings
+        question={question}
+        replace={replace}
+        message={message}
+        fieldId={fieldId}
+        messages={messages}
+        editable={editable}
+      />
+
+      <div className="space-y-4 rounded-lg border bg-muted/40 p-4">
+        <div>
+          <h3 className="text-sm font-semibold">Scan review</h3>
+          <p className="text-xs text-muted-foreground">
+            Overrides how this question&apos;s scanned answers are checked.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2">
+          <Field
+            id={fieldId("review.confidenceThreshold")}
+            label="Confidence threshold"
+            message={message("review.confidenceThreshold")}
+            description="From 0 to 1; blank uses the survey's default"
+          >
+            <Input
+              id={fieldId("review.confidenceThreshold")}
+              type="number"
+              step="0.05"
+              min={0}
+              max={1}
+              value={review.confidenceThreshold ?? ""}
+              onChange={(e) => setReview({ confidenceThreshold: optionalNumber(e.target.value) })}
+            />
+          </Field>
+          <div className="flex items-center gap-2 pb-6">
+            <Checkbox
+              id={fieldId("review.verifyAlways")}
+              checked={review.verifyAlways ?? false}
+              onCheckedChange={(checked) =>
+                setReview({ verifyAlways: checked === true || undefined })
+              }
+            />
+            <Label htmlFor={fieldId("review.verifyAlways")}>Always verify</Label>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function KindSettings({
+  question,
+  replace,
+  message,
+  fieldId,
+  messages,
+  editable,
+}: Omit<QuestionSettingsProps, "locked">) {
+  switch (question.kind) {
+    case "single_choice":
+    case "multiple_choice":
+      return (
+        <EntryListEditor
+          itemId={question.id}
+          noun="Option"
+          field="options"
+          codeName="code"
+          entries={question.options}
+          onChange={(options) => replace({ ...question, options })}
+          messages={messages}
+          editable={editable}
+        />
+      );
+    case "grid":
+      return (
+        <>
+          <EntryListEditor
+            itemId={question.id}
+            noun="Option"
+            field="options"
+            codeName="code"
+            entries={question.options}
+            onChange={(options) => replace({ ...question, options })}
+            messages={messages}
+            editable={editable}
+          />
+          <EntryListEditor
+            itemId={question.id}
+            noun="Row"
+            field="rows"
+            codeName="key"
+            entries={question.rows.map((row) => ({ code: row.key, label: row.label }))}
+            onChange={(rows) =>
+              replace({
+                ...question,
+                rows: rows.map((row) => ({ key: row.code, label: row.label })),
+              })
+            }
+            messages={messages}
+            editable={editable}
+          />
+        </>
+      );
+    case "number":
+      return (
+        <div className="grid grid-cols-3 gap-4">
+          <Field id={fieldId("digits")} label="Digits" message={message("digits")}>
+            <Input
+              id={fieldId("digits")}
+              type="number"
+              min={1}
+              max={12}
+              value={Number.isNaN(question.digits) ? "" : question.digits}
+              onChange={(e) => replace({ ...question, digits: e.target.valueAsNumber })}
+            />
+          </Field>
+          <Field id={fieldId("min")} label="Minimum" message={message("min")}>
+            <Input
+              id={fieldId("min")}
+              type="number"
+              value={question.min ?? ""}
+              onChange={(e) => replace({ ...question, min: optionalNumber(e.target.value) })}
+            />
+          </Field>
+          <Field id={fieldId("max")} label="Maximum" message={message("max")}>
+            <Input
+              id={fieldId("max")}
+              type="number"
+              value={question.max ?? ""}
+              onChange={(e) => replace({ ...question, max: optionalNumber(e.target.value) })}
+            />
+          </Field>
+        </div>
+      );
+    case "text":
+      return (
+        <Field
+          id={fieldId("lines")}
+          label="Lines"
+          message={message("lines")}
+          description="Writing lines printed for the answer"
+          className="max-w-40"
+        >
+          <Input
+            id={fieldId("lines")}
+            type="number"
+            min={1}
+            max={30}
+            value={Number.isNaN(question.lines) ? "" : question.lines}
+            onChange={(e) => replace({ ...question, lines: e.target.valueAsNumber })}
+          />
+        </Field>
+      );
+    case "date":
+      return <p className="text-sm text-muted-foreground">Printed as day, month and year boxes.</p>;
+    case "signature":
+      return <p className="text-sm text-muted-foreground">Printed as a box to sign in.</p>;
+  }
+}
+
+/** A number input's value, or undefined when it is blank. */
+function optionalNumber(value: string) {
+  return value === "" ? undefined : Number(value);
+}
