@@ -659,6 +659,7 @@ export const school = pgTable(
   (table) => [
     uniqueIndex("schools_visible_id_key").using("btree", table.visibleId),
     index("schools_hub_id_idx").on(table.hubId),
+    check("schools_boarding_day_check", sql`${table.boardingDay} in ('Day', 'Boarding', 'Both')`),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],

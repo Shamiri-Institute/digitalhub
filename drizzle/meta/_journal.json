@@ -225,6 +225,20 @@
       "when": 1792401920614,
       "tag": "0031_drop_files_table",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1792405574301,
+      "tag": "0032_normalize_school_boarding_day",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1792405586714,
+      "tag": "0033_schools_boarding_day_check",
+      "breakpoints": true
     }
   ]
 }
