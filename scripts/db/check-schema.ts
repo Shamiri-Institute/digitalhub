@@ -1,5 +1,4 @@
-// 1. Every foreign key needs an index on its referencing columns: ON UPDATE/DELETE on the
-//    parent scans the child table otherwise (ENG-2164).
+// 1. Every foreign key needs an index on its referencing columns
 // 2. A migration that drops a column or table sets lock_timeout, so a busy table fails the
 //    deploy instead of queueing all traffic behind the lock.
 import { readdirSync, readFileSync } from "node:fs";
