@@ -13,26 +13,46 @@ import {
 } from "#/lib/survey/form";
 
 /**
- * A question as a published or retired version of the survey has it. Answers already use its key,
- * so the key keeps its meaning: the question (matched by id, which survives draft copies) keeps its
- * key, and no question asks something of another kind under it.
+ * A question as a published or retired version of the survey has it. Answers already use its key
+ * and codes, so they keep their meaning: the question (matched by id, which survives draft copies)
+ * keeps its key, no question asks something of another kind under it, and its option codes and
+ * grid row keys stay, in place, ahead of any new ones.
  */
-export type LockedQuestion = { id: string; key: string; kind: QuestionKind; versionNumber: number };
+export type LockedQuestion = {
+  id: string;
+  key: string;
+  kind: QuestionKind;
+  versionNumber: number;
+  /** Option codes in order; empty for a kind without options. */
+  codes: string[];
+  /** Grid row keys in order; empty for any other kind. */
+  rowKeys: string[];
+};
 
-/** Every question of the given published and retired versions. */
+/** Every question of the given published and retired versions, newest version first. */
 export function lockedQuestions(
   versions: { versionNumber: number; form: SurveyForm }[],
 ): LockedQuestion[] {
-  return versions.flatMap(({ versionNumber, form }) =>
-    form.pages
-      .flatMap((page) => page.items)
-      .filter(isQuestion)
-      .map((q) => ({ id: q.id, key: q.key, kind: q.kind, versionNumber })),
-  );
+  return versions
+    .toSorted((a, b) => b.versionNumber - a.versionNumber)
+    .flatMap(({ versionNumber, form }) =>
+      form.pages
+        .flatMap((page) => page.items)
+        .filter(isQuestion)
+        .map((q) => ({
+          id: q.id,
+          key: q.key,
+          kind: q.kind,
+          versionNumber,
+          codes: "options" in q ? q.options.map((o) => o.code) : [],
+          rowKeys: q.kind === "grid" ? q.rows.map((r) => r.key) : [],
+        })),
+    );
 }
 
-export function isLockedItem(locked: LockedQuestion[], itemId: string) {
-  return locked.some((q) => q.id === itemId);
+/** The newest published question asked under a key, if any. */
+export function publishedQuestion(locked: LockedQuestion[], key: string) {
+  return locked.find((q) => q.key === key);
 }
 
 /**
@@ -146,17 +166,70 @@ function lockIssues(question: QuestionItem, locked: LockedQuestion[]): FormIssue
       },
     ];
   }
-  const otherKind = locked.find((q) => q.key === question.key && q.kind !== question.kind);
-  if (otherKind) {
+  const published = publishedQuestion(locked, question.key);
+  if (!published) {
+    return [];
+  }
+  if (published.kind !== question.kind) {
     return [
       {
         itemId: question.id,
         field: "key",
-        message: `v${otherKind.versionNumber} used this key for a ${ITEM_KIND_LABELS[otherKind.kind].toLowerCase()} question`,
+        message: `v${published.versionNumber} used this key for a ${ITEM_KIND_LABELS[published.kind].toLowerCase()} question`,
       },
     ];
   }
-  return [];
+  const version = `v${published.versionNumber}`;
+  return [
+    ...keptInPlace(question.id, "options", "code", published.codes, codesOf(question), version),
+    ...keptInPlace(
+      question.id,
+      "rows",
+      "key",
+      published.rowKeys,
+      question.kind === "grid" ? question.rows.map((r) => r.key) : [],
+      version,
+    ),
+  ];
+}
+
+function codesOf(question: QuestionItem) {
+  return "options" in question ? question.options.map((o) => o.code) : [];
+}
+
+/**
+ * Published codes (or row keys) must lead the list unchanged and in order, so an answer's code
+ * means the same choice in every version. New entries go after them.
+ */
+function keptInPlace(
+  itemId: string,
+  field: "options" | "rows",
+  name: "code" | "key",
+  published: string[],
+  current: string[],
+  version: string,
+): FormIssue[] {
+  const noun = field === "options" ? "option" : "row";
+  const changed = published.findIndex((code, index) => current[index] !== code);
+  if (changed === -1) {
+    return [];
+  }
+  if (changed >= current.length) {
+    return [
+      {
+        itemId,
+        field,
+        message: `Keep ${version}'s ${noun}s ${published.join(", ")} first, in order`,
+      },
+    ];
+  }
+  return [
+    {
+      itemId,
+      field: `${field}.${changed}.${name}`,
+      message: `${version} published ${published[changed]} here; published ${noun}s keep their ${name} and place`,
+    },
+  ];
 }
 
 /** The positions of values that already appeared earlier in the list. */

@@ -11,7 +11,7 @@ export const KEY_MAX_LENGTH = 64;
 
 const Key = z
   .string()
-  .max(KEY_MAX_LENGTH, { error: `Keep the key under ${KEY_MAX_LENGTH} characters` })
+  .max(KEY_MAX_LENGTH, { error: `Use at most ${KEY_MAX_LENGTH} characters` })
   .regex(KEY_PATTERN, {
     error: "Use lowercase letters, digits and _, starting with a letter",
   });
@@ -22,14 +22,14 @@ const Key = z
  */
 const RowKey = z
   .string()
-  .max(KEY_MAX_LENGTH, { error: `Keep the key under ${KEY_MAX_LENGTH} characters` })
+  .max(KEY_MAX_LENGTH, { error: `Use at most ${KEY_MAX_LENGTH} characters` })
   .regex(/^[a-z0-9_]+$/, { error: "Use lowercase letters, digits and _" });
 
 /** One answer choice. `code` is what an answer stores and exports; labels may change. */
 const ChoiceOptionSchema = z.object({
   code: z
     .string()
-    .max(32, { error: "Keep the code under 32 characters" })
+    .max(32, { error: "Use at most 32 characters" })
     .regex(/^[A-Za-z0-9_]+$/, { error: "Use letters, digits and _" }),
   label: z.string(),
 });
