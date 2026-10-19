@@ -213,3 +213,214 @@ test("an admin outside the Research team has no Surveys tab and cannot open surv
   await page.goto(getUrl("/admin/surveys"));
   await expect(page).toHaveURL(/\/admin\/schedule$/);
 });
+
+/** A survey whose v1 is a draft holding `form`, created straight in the DB. */
+async function createDraftSurvey(
+  scope: { implementerId: string; projectId: string },
+  userId: string,
+  form: SurveyForm,
+) {
+  const code = uniqueCode();
+  const created = only(
+    await db
+      .insert(survey)
+      .values({ ...scope, code, title: `Draft ${code}`, createdBy: userId })
+      .returning(),
+  );
+  await db
+    .insert(surveyVersion)
+    .values({ surveyId: created.id, versionNumber: 1, createdBy: userId, form });
+  return created;
+}
+
+function outlinePage(page: Page, pageNumber: number) {
+  return page.getByRole("region", { name: `Page ${pageNumber}`, exact: true });
+}
+
+async function addItem(page: Page, pageNumber: number, kind: string, prompt?: string) {
+  await page.getByRole("button", { name: `Add item to page ${pageNumber}` }).click();
+  await page.getByRole("menuitem", { name: kind, exact: true }).click();
+  if (prompt !== undefined) {
+    await page.getByLabel("Prompt").fill(prompt);
+  }
+}
+
+async function save(page: Page) {
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("All changes saved")).toBeVisible();
+}
+
+test("the builder saves a form of several pages and every item kind", async ({ page, context }) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const draft = await createDraftSurvey(scope, userId, { format: 1, pages: [] });
+  await page.goto(getUrl(`/admin/surveys/${draft.id}`));
+  await page.getByRole("link", { name: "v1", exact: true }).click();
+  await expect(page).toHaveURL(/\/versions\/1$/);
+  await expect(page.getByText("This form has no pages yet")).toBeVisible();
+
+  await page.getByRole("button", { name: "Add page" }).click();
+  await page.getByLabel("Page title").fill("About you");
+  await addItem(page, 1, "Heading");
+  await page.getByLabel("Text").fill("About you");
+  await addItem(page, 1, "Number", "How old are you?");
+  await page.getByLabel("Digits").fill("3");
+  await addItem(page, 1, "Single choice", "How do you feel today?");
+  await page.getByLabel("Option 1 label").fill("Low");
+  await page.getByLabel("Option 2 label").fill("High");
+  await addItem(page, 1, "Date", "Date of birth");
+  await addItem(page, 1, "Grid", "Over the last two weeks");
+  await page.getByLabel("Row 1 label").fill("Little interest in doing things");
+  await page.getByRole("button", { name: "Add row" }).click();
+  await page.getByLabel("Row 2 label").fill("Feeling down");
+
+  await page.getByRole("button", { name: "Add page" }).click();
+  await addItem(page, 2, "Paragraph");
+  await page.getByLabel("Text").fill("Tell us more.");
+  await addItem(page, 2, "Multiple choice", "Which clubs are you in?");
+  await addItem(page, 2, "Text", "Anything else?");
+  await page.getByLabel("Lines").fill("4");
+  await addItem(page, 2, "Divider");
+  await addItem(page, 2, "Signature", "Signature");
+  await page.getByLabel("Required").check();
+
+  // Leaving with unsaved changes asks first; dismissing stays on the builder.
+  page.once("dialog", (dialog) => void dialog.dismiss());
+  await page.getByRole("link", { name: draft.title }).click();
+  await expect(page).toHaveURL(/\/versions\/1$/);
+
+  await save(page);
+  await page.reload();
+
+  await expect(outlinePage(page, 1)).toContainText("About you");
+  await expect(outlinePage(page, 1).getByRole("listitem")).toHaveText([
+    /Heading.*About you/,
+    /Number.*how_old_are_you.*How old are you\?/,
+    /Single choice.*how_do_you_feel_today.*How do you feel today\?/,
+    /Date.*date_of_birth.*Date of birth/,
+    /Grid.*over_the_last_two_weeks.*Over the last two weeks/,
+  ]);
+  await expect(outlinePage(page, 2).getByRole("listitem")).toHaveText([
+    /Paragraph.*Tell us more\./,
+    /Multiple choice.*which_clubs_are_you_in/,
+    /Text.*anything_else.*Anything else\?/,
+    /Divider/,
+    /Signature.*signature.*Signature/,
+  ]);
+
+  await page.getByRole("button", { name: /Over the last two weeks/ }).click();
+  await expect(page.getByLabel("Row 2 label")).toHaveValue("Feeling down");
+  await page.getByRole("button", { name: /How old are you/ }).click();
+  await expect(page.getByLabel("Digits")).toHaveValue("3");
+  await page.getByRole("button", { name: /Signature.*Signature/ }).click();
+  await expect(page.getByLabel("Required")).toBeChecked();
+});
+
+test("moving a question to another page keeps its key and settings", async ({ page, context }) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const form: SurveyForm = { format: 1, pages: [...TWO_QUESTIONS.pages, { items: [] }] };
+  const draft = await createDraftSurvey(scope, userId, form);
+  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
+
+  await page.getByRole("button", { name: /How do you feel today/ }).click();
+  await page.getByRole("combobox", { name: "Page", exact: true }).click();
+  await page.getByRole("option", { name: "Page 2" }).click();
+  await save(page);
+  await page.reload();
+
+  await expect(outlinePage(page, 1).getByRole("listitem")).toHaveText([/notes/]);
+  await expect(outlinePage(page, 2).getByRole("listitem")).toHaveText([/mood.*How do you feel/]);
+  await page.getByRole("button", { name: /How do you feel today/ }).click();
+  await expect(page.getByLabel("Key")).toHaveValue("mood");
+  await expect(page.getByLabel("Required")).toBeChecked();
+  await expect(page.getByLabel("Option 5 code")).toHaveValue("5");
+});
+
+test("a duplicate key is rejected on its field", async ({ page, context }) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const draft = await createDraftSurvey(scope, userId, TWO_QUESTIONS);
+  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
+
+  await page.getByRole("button", { name: /Anything else/ }).click();
+  await page.getByLabel("Key").fill("mood");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+
+  await expect(page.getByLabel("Key")).toHaveAccessibleDescription(
+    "Another question already uses this key",
+  );
+  await expect(page.getByText("Unsaved changes")).toBeVisible();
+});
+
+test("a draft keeps the keys of its published version; new questions take any key", async ({
+  page,
+  context,
+}) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const published = await createPublishedSurvey(scope, userId);
+  await db.insert(surveyVersion).values({
+    surveyId: published.id,
+    versionNumber: 2,
+    basedOnVersionId: only(
+      await db
+        .select({ id: surveyVersion.id })
+        .from(surveyVersion)
+        .where(eq(surveyVersion.surveyId, published.id)),
+    ).id,
+    createdBy: userId,
+    form: TWO_QUESTIONS,
+  });
+  await page.goto(getUrl(`/admin/surveys/${published.id}/versions/2`));
+
+  await page.getByRole("button", { name: /How do you feel today/ }).click();
+  await expect(page.getByLabel("Key")).toBeDisabled();
+  await expect(page.getByText("Published in v1, so it can't change")).toBeVisible();
+
+  await addItem(page, 1, "Single choice", "How much energy do you have?");
+  await page.getByLabel("Key").fill("energy");
+  await save(page);
+  await page.reload();
+
+  await page.getByRole("button", { name: /How much energy/ }).click();
+  await expect(page.getByLabel("Key")).toHaveValue("energy");
+  await expect(page.getByLabel("Key")).toBeEnabled();
+});
+
+test("saving from a stale tab reports that the draft changed elsewhere", async ({
+  page,
+  context,
+}) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const draft = await createDraftSurvey(scope, userId, TWO_QUESTIONS);
+  const url = getUrl(`/admin/surveys/${draft.id}/versions/1`);
+  const other = await context.newPage();
+  await Promise.all([page.goto(url), other.goto(url)]);
+
+  await other.getByRole("button", { name: /Anything else/ }).click();
+  await other.getByLabel("Prompt").fill("Anything else to tell us?");
+  await save(other);
+
+  await page.getByRole("button", { name: /Anything else/ }).click();
+  await page.getByLabel("Prompt").fill("Any other comments?");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(
+    page.getByText("This draft was changed elsewhere since you opened it"),
+  ).toBeVisible();
+
+  await other.reload();
+  await expect(other.getByRole("button", { name: /Anything else to tell us/ })).toBeVisible();
+});
+
+test("a published version opens read-only", async ({ page, context }) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const published = await createPublishedSurvey(scope, userId);
+  await page.goto(getUrl(`/admin/surveys/${published.id}`));
+  await page.getByLabel("Actions for v1").click();
+  await page.getByRole("menuitem", { name: "View form" }).click();
+
+  await expect(page.getByText("Published versions can't be edited")).toBeVisible();
+  await page.getByRole("button", { name: /How do you feel today/ }).click();
+  await expect(page.getByLabel("Prompt")).toBeDisabled();
+  await expect(page.getByLabel("Key")).toBeDisabled();
+  for (const name of ["Save", "Add page", "Add item to page 1", "Delete", "Move up"]) {
+    await expect(page.getByRole("button", { name, exact: true })).toHaveCount(0);
+  }
+});
