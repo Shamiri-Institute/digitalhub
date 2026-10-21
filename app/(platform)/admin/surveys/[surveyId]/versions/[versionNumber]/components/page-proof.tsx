@@ -1,5 +1,13 @@
+import { Figtree } from "next/font/google";
+
 import { cn } from "#/lib/utils";
 import { isQuestion, type SurveyItem, type SurveyPage } from "#/lib/survey/form";
+
+/**
+ * The sheet's own copy of the app font with the weights printed text uses. The app loads Figtree
+ * at 600 only, which would draw normal, semibold and **bold** text all the same.
+ */
+const printFont = Figtree({ subsets: ["latin"], weight: ["400", "600", "700"] });
 
 interface PageProofProps {
   page: SurveyPage;
@@ -34,7 +42,12 @@ export default function PageProof({
         <span className="text-xs text-shamiri-text-grey">A4 · approximate fit</span>
       </figcaption>
       <div aria-hidden="true" className="overflow-x-auto rounded-xl bg-muted p-4">
-        <div className="relative isolate mx-auto w-198 text-shamiri-black [zoom:0.6]">
+        <div
+          className={cn(
+            "relative isolate mx-auto w-198 font-normal text-shamiri-black [zoom:0.6]",
+            printFont.className,
+          )}
+        >
           <div className="absolute inset-x-0 top-0 z-10 aspect-[210/297] bg-white shadow-lg">
             <span className="absolute left-8 top-8 size-5 bg-shamiri-black" />
             <span className="absolute bottom-8 left-8 size-5 bg-shamiri-black" />
@@ -43,8 +56,10 @@ export default function PageProof({
               QR
             </span>
           </div>
-          <div className="flex aspect-[210/297] flex-col px-16 pb-16 pt-14">
-            <header className="relative z-20 mb-8 flex items-baseline gap-6 mr-20 border-b border-shamiri-light-grey pb-3 text-xs tabular-nums text-shamiri-text-dark-grey">
+          {/* Text runs between the corner markers' outer edges, the same small margin on both
+              sides; the header stops short of the QR code. */}
+          <div className="flex aspect-[210/297] flex-col px-8 pb-16 pt-16">
+            <header className="relative z-20 mb-8 mr-22 flex items-baseline gap-6 border-b border-shamiri-light-grey pb-3 text-xs tabular-nums text-shamiri-text-dark-grey">
               <span className="font-semibold text-shamiri-black">
                 Page {index + 1} of {pageCount}
               </span>
@@ -64,6 +79,8 @@ export default function PageProof({
                     "relative z-20 -mx-3 rounded-md px-3 py-2",
                     // A heading sits closer to what it introduces than to what came before.
                     item.kind === "heading" && "-mb-3 mt-3",
+                    // A divider is a thin rule, so it takes 12px each side instead of a full gap.
+                    item.kind === "divider" && "-my-4 py-1",
                     itemsWithIssues.has(item.id) && "bg-red-bg ring-2 ring-red-base",
                     item.id === openItemId && "bg-blue-bg ring-4 ring-shamiri-new-blue",
                   )}
@@ -71,9 +88,14 @@ export default function PageProof({
                   <PrintedItem item={item} />
                 </div>
               ))}
-              <p className="relative z-0 rounded-md bg-red-bg px-4 py-3 text-base font-medium text-red-base">
-                The items above this note don&apos;t fit on one A4 page. Move some to another page.
-              </p>
+              {/* No height of its own and no gap before it, so the note starts where the items
+                  end. It is one line as tall as the sheet's bottom margin, so any of it showing
+                  below the sheet means the items run into that margin. */}
+              <div className="relative z-0 -mt-6 h-0">
+                <p className="h-16 truncate rounded-md bg-red-bg px-4 text-base font-medium leading-16 text-red-base">
+                  Doesn&apos;t fit on one A4 page; move items to another page.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -94,7 +116,7 @@ function PrintedItem({ item }: { item: SurveyItem }) {
           <Printed
             text={item.text}
             empty="Paragraph"
-            className="max-w-prose whitespace-pre-line text-sm leading-relaxed"
+            className="whitespace-pre-line text-sm leading-relaxed"
           />
         );
       case "divider":
