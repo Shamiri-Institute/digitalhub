@@ -524,9 +524,12 @@ test("bold words and a centred paragraph show in the print preview after a save"
   // The button edits the field as typing does, so undo takes the markers back out.
   await page.keyboard.press("ControlOrMeta+z");
   await expect(text).toHaveValue("Answer every question");
-  // The keyboard shortcut bolds the selection too.
+  // The keyboard shortcut bolds the selection too: Cmd+B where the page runs on Apple's systems,
+  // Ctrl+B elsewhere. The page decides from its user agent, which the test device may set to
+  // another system than the machine running it.
   await text.evaluate((field: HTMLTextAreaElement) => field.setSelectionRange(7, 12));
-  await page.keyboard.press("ControlOrMeta+b");
+  const apple = await page.evaluate(() => /Mac|iPhone|iPad/.test(navigator.userAgent));
+  await page.keyboard.press(apple ? "Meta+b" : "Control+b");
   await expect(text).toHaveValue("Answer **every** question");
   await page.getByRole("radio", { name: "Align centre" }).click();
   await save(page);

@@ -1,6 +1,6 @@
 import { Figtree } from "next/font/google";
 
-import { parseBold, plainText } from "#/lib/survey/rich-text";
+import { isBlank, parseBold, type TextRun } from "#/lib/survey/rich-text";
 import { cn } from "#/lib/utils";
 import { isQuestion, type SurveyItem, type SurveyPage } from "#/lib/survey/form";
 
@@ -137,6 +137,7 @@ function PrintedItem({ item }: { item: SurveyItem }) {
         return <hr className="border-shamiri-black" />;
     }
   }
+  const help = parseBold(item.helpText ?? "");
   return (
     <div className="space-y-2.5">
       <div className="space-y-0.5">
@@ -145,9 +146,9 @@ function PrintedItem({ item }: { item: SurveyItem }) {
           empty="Question"
           className="text-sm font-semibold leading-snug"
         />
-        {item.helpText && (
+        {!isBlank(help) && (
           <p className="text-xs text-shamiri-text-dark-grey">
-            <RichText text={item.helpText} />
+            <RichText runs={help} />
           </p>
         )}
       </div>
@@ -158,17 +159,18 @@ function PrintedItem({ item }: { item: SurveyItem }) {
 
 /** Printed text, or a grey stand-in while it reads as nothing, markers alone included. */
 function Printed({ text, empty, className }: { text: string; empty: string; className: string }) {
-  const blank = plainText(text).trim() === "";
+  const runs = parseBold(text);
+  const blank = isBlank(runs);
   return (
     <p className={cn(className, blank && "font-normal italic text-shamiri-text-grey")}>
-      {blank ? empty : <RichText text={text} />}
+      {blank ? empty : <RichText runs={runs} />}
     </p>
   );
 }
 
-/** Text with its `**bold**` words in bold, as it prints. */
-function RichText({ text }: { text: string }) {
-  return parseBold(text).map((run, i) =>
+/** Text with its `**bold**` words in bold, as it prints, from its parsed runs. */
+function RichText({ runs }: { runs: TextRun[] }) {
+  return runs.map((run, i) =>
     run.bold ? (
       // oxlint-disable-next-line react/no-array-index-key -- runs are derived from the text and never reorder
       <strong key={i} className="font-bold">
@@ -190,7 +192,7 @@ function Response({ item }: { item: Extract<SurveyItem, { key: string }> }) {
             // oxlint-disable-next-line react/no-array-index-key -- codes may repeat while being typed
             <span key={i} className="flex items-center gap-2 text-sm">
               <Mark round={item.kind === "single_choice"} />
-              <RichText text={option.label} />
+              <RichText runs={parseBold(option.label)} />
             </span>
           ))}
         </div>
@@ -204,7 +206,7 @@ function Response({ item }: { item: Extract<SurveyItem, { key: string }> }) {
               {item.options.map((option, i) => (
                 // oxlint-disable-next-line react/no-array-index-key -- codes may repeat while being typed
                 <th key={i} className="w-20 pb-2 align-bottom text-xs font-medium leading-tight">
-                  <RichText text={option.label} />
+                  <RichText runs={parseBold(option.label)} />
                 </th>
               ))}
             </tr>
@@ -214,7 +216,7 @@ function Response({ item }: { item: Extract<SurveyItem, { key: string }> }) {
               // oxlint-disable-next-line react/no-array-index-key -- row keys may repeat while being typed
               <tr key={r} className="border-t border-shamiri-light-grey">
                 <td className="py-2 pr-4 leading-snug">
-                  <RichText text={row.label} />
+                  <RichText runs={parseBold(row.label)} />
                 </td>
                 {item.options.map((_, c) => (
                   // oxlint-disable-next-line react/no-array-index-key -- codes may repeat while being typed
