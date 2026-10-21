@@ -57,7 +57,6 @@ test("the admin students page counts only the students of the admin's implemente
   });
   await db.insert(hub).values({
     id: created.hubId,
-    visibleId: `E2E_HUB_${suffix}`,
     hubName: "E2E other implementer hub",
     implementerId: created.implementerId,
     projectId: fixture.projectId,

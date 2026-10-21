@@ -65,13 +65,7 @@ export default async function StudentsPage() {
     incompleteStudentCount,
     studentGroupRatingsRaw,
   ] = await Promise.all([
-    db.$count(
-      interventionSession,
-      or(
-        inArray(interventionSession.hubId, projectHubIds),
-        inArray(interventionSession.schoolId, projectSchoolIds),
-      ),
-    ),
+    db.$count(interventionSession, inArray(interventionSession.hubId, projectHubIds)),
     fetchStudentClinicalStats(projectCaseFilter),
     db.query.student.findMany({
       where: () => activeProjectStudentFilter,

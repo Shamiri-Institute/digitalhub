@@ -814,7 +814,7 @@ test("student details, reporting note and school move start from each student's 
   await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/students`));
   const main = page.getByRole("main");
   async function openFor(studentName: string, action: string, dialog: Locator) {
-    await chooseRowAction(page, await searchRows(page, studentName, main), action);
+    await chooseRowAction(page, await rowWithCell(page, main, studentName), action);
     await expect(dialog).toBeVisible();
   }
 
@@ -831,7 +831,7 @@ test("student details, reporting note and school move start from each student's 
   await expect(studentName).toHaveValue(nameB);
   await closeDialog(page, details);
 
-  const note = page.getByRole("dialog").filter({ hasText: "Add reporting note" });
+  const note = page.getByRole("dialog", { name: "Add reporting note" });
   const incident = note.getByRole("textbox").first();
   await openFor(nameA, "Reporting notes", note);
   await incident.fill(typed);

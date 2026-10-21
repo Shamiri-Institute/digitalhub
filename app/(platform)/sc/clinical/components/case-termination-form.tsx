@@ -7,7 +7,13 @@ import { z } from "zod";
 import { type ClinicalCases, terminateClinicalCase } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -98,7 +104,7 @@ export default function CaseTerminationForm({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-w-[500px] bg-white p-5">
         <DialogHeader className="bg-white">
-          <h2>Terminate Case</h2>
+          <DialogTitle>Terminate Case</DialogTitle>
         </DialogHeader>
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <Form {...form}>

@@ -1,0 +1,1 @@
+ALTER TABLE "schools" ADD CONSTRAINT "schools_boarding_day_check" CHECK ("schools"."boarding_day" in ('Day', 'Boarding', 'Both'));

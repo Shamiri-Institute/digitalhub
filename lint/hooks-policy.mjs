@@ -1,7 +1,7 @@
 // oxlint JS plugin: every listed React hook call must carry a justification comment
 // directly above it. The comment starts with the hook name minus "use", lower-cased,
 // followed by a colon, e.g. `// memo: avoids re-sorting 5k rows on every keystroke`.
-// Policy: CLAUDE.md > React Hooks Policy.
+// Policy: AGENTS.md > React Hooks Policy.
 
 /**
  * @param {{ type: string; name?: string; property?: { type: string; name?: string } }} callee

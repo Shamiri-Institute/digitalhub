@@ -4,7 +4,13 @@ import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import { attendanceColumns } from "#/app/(platform)/sc/clinical/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+  DialogTitle,
+} from "#/components/ui/dialog";
 
 export default function ClinicalCaseSessionsAttendanceHistory({
   children,
@@ -20,7 +26,7 @@ export default function ClinicalCaseSessionsAttendanceHistory({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-h-[90%] max-w-[90vw] overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
-          <h2>Clinical attendance history</h2>
+          <DialogTitle>Clinical attendance history</DialogTitle>
         </DialogHeader>
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <div className="mt-1 max-w-full overflow-x-auto overflow-y-scroll px-[0.4rem]">

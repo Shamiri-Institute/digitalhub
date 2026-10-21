@@ -1,5 +1,5 @@
 {
-  "id": "33f67946-76ba-46ae-a125-f955584e9551",
+  "id": "06dfdb46-da0c-481d-ad79-080b9b09ddde",
   "prevId": "8bad5ff8-f91e-4f9c-a763-06ed802e838f",
   "version": "7",
   "dialect": "postgresql",
@@ -1604,12 +1604,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "visible_id": {
-          "name": "visible_id",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "fellow_name": {
           "name": "fellow_name",
           "type": "varchar(255)",
@@ -1781,12 +1775,6 @@
           "primaryKey": true,
           "notNull": true
         },
-        "visible_id": {
-          "name": "visible_id",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp (3)",
@@ -1880,21 +1868,6 @@
         }
       },
       "indexes": {
-        "fellow_attendances_visible_id_key": {
-          "name": "fellow_attendances_visible_id_key",
-          "columns": [
-            {
-              "expression": "visible_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "fellow_attendances_fellow_id_session_id_key": {
           "name": "fellow_attendances_fellow_id_session_id_key",
           "columns": [
@@ -2515,12 +2488,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "visible_id": {
-          "name": "visible_id",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "hub_name": {
           "name": "hub_name",
           "type": "varchar(255)",
@@ -2541,21 +2508,6 @@
         }
       },
       "indexes": {
-        "hubs_visible_id_key": {
-          "name": "hubs_visible_id_key",
-          "columns": [
-            {
-              "expression": "visible_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "hubs_implementer_id_project_id_name_key": {
           "name": "hubs_implementer_id_project_id_name_key",
           "columns": [
@@ -6957,12 +6909,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "visible_id": {
-          "name": "visible_id",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "supervisor_name": {
           "name": "supervisor_name",
           "type": "varchar(255)",
@@ -7078,23 +7024,7 @@
           "notNull": false
         }
       },
-      "indexes": {
-        "supervisors_visible_id_key": {
-          "name": "supervisors_visible_id_key",
-          "columns": [
-            {
-              "expression": "visible_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "supervisors_hub_id_fkey": {
           "name": "supervisors_hub_id_fkey",
@@ -7714,13 +7644,6 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
-        },
-        "revision": {
-          "name": "revision",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
         }
       },
       "indexes": {

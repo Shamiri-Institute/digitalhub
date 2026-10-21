@@ -13,6 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTrigger,
+  DialogTitle,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -89,7 +90,7 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
         <Form {...form}>
           <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <DialogHeader className="mb-4">
-              <span className="text-xl">Create new ticket</span>
+              <DialogTitle className="text-xl">Create new ticket</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
               <FormField

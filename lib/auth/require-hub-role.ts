@@ -50,13 +50,6 @@ export const requireHubRole = cache(async (...allowedRoles: HubRole[]) => {
   };
 });
 
-export function hubOfSession(session: {
-  hubId: string | null;
-  school: { hubId: string | null } | null;
-}) {
-  return session.hubId ?? session.school?.hubId ?? null;
-}
-
 export async function requireSchoolInHub(schoolId: string | null | undefined, hubId: string) {
   const schoolInHub = schoolId
     ? await db.query.school.findFirst({

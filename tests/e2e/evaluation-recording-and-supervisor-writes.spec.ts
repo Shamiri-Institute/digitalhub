@@ -178,10 +178,6 @@ test("a supervisor renames a recording of their fellow's group", async ({
       has: page.getByRole("cell", { name: recording.sessionName, exact: true }),
     });
     await chooseRowAction(page, recordingRow, "Edit");
-    // The dialog resets its form once its lists load; wait for the session to show.
-    await expect(dialog.getByRole("combobox", { name: /^Session/ })).toContainText(
-      sessionDisplayName(recording.sessionName) ?? recording.sessionName,
-    );
   }
 
   await openEdit();

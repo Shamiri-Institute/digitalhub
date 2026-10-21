@@ -226,12 +226,7 @@ export default function DataTable<TData, TValue>({
                     className={cn(
                       "min-w-[80px] bg-background-secondary/50 px-4! text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
                       header.column.columnDef.id !== "checkbox" && "truncate",
-                      ["actions", "select"].includes(
-                        //@ts-expect-error
-                        header.column.columnDef.header,
-                      )
-                        ? "py-3"
-                        : "py-2",
+                      "py-2",
                       header.column.columnDef.id === "button" ||
                         header.column.columnDef.id === "checkbox" ||
                         header.column.columnDef.id === "expand"

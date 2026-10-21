@@ -68,8 +68,8 @@ export default function SchoolTableDropdown({
             View school
           </Link>
         </DropdownMenuItem>
-        {role === "HUB_COORDINATOR" || role === "SUPERVISOR" ? (
-          !schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
+        {role === "HUB_COORDINATOR" &&
+          (!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
             <div>
               <DropdownMenuItem
                 onClick={() => {
@@ -79,38 +79,16 @@ export default function SchoolTableDropdown({
               >
                 Edit school information
               </DropdownMenuItem>
-              {role === "HUB_COORDINATOR" && (
-                <DropdownMenuItem
-                  onClick={() => {
-                    state.setSchool(schoolRow);
-                    state.setPointSupervisorDialog(true);
-                  }}
-                >
-                  {state.school?.assignedSupervisorId !== null
-                    ? "Change point supervisor"
-                    : "Assign point supervisor"}
-                </DropdownMenuItem>
-              )}
-              {role === "SUPERVISOR" && (
-                <>
-                  <DropdownMenuItem
-                    disabled={true}
-                    onClick={() => {
-                      // context.setPointSupervisorDialog(true);
-                    }}
-                  >
-                    Submit school report
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={true}
-                    onClick={() => {
-                      // context.setPointSupervisorDialog(true);
-                    }}
-                  >
-                    Submit school feedback
-                  </DropdownMenuItem>
-                </>
-              )}
+              <DropdownMenuItem
+                onClick={() => {
+                  state.setSchool(schoolRow);
+                  state.setPointSupervisorDialog(true);
+                }}
+              >
+                {schoolRow.assignedSupervisorId !== null
+                  ? "Change point supervisor"
+                  : "Assign point supervisor"}
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-shamiri-red"
                 onClick={() => {
@@ -131,8 +109,7 @@ export default function SchoolTableDropdown({
             >
               Undo dropout
             </DropdownMenuItem>
-          )
-        ) : null}
+          ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

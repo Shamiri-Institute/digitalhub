@@ -234,26 +234,6 @@ export const implementer = pgTable(
   ],
 );
 
-export const file = pgTable("files", {
-  id: varchar({ length: 255 }).primaryKey().notNull(),
-  createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
-  updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-    .notNull()
-    .$defaultFn(() => new Date())
-    .$onUpdate(() => new Date()),
-  archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-  key: text().notNull(),
-  fileName: text("file_name").notNull(),
-  byteSize: integer("byte_size").notNull(),
-  contentType: text("content_type").notNull(),
-  width: integer(),
-  height: integer(),
-  signedUrl: varchar("signed_url", { length: 2048 }),
-  expiresAt: timestamp("expires_at", { precision: 3, mode: "date" }),
-});
-
 export const interventionSessionRating = pgTable(
   "intervention_session_ratings",
   {
@@ -289,6 +269,7 @@ export const interventionSessionRating = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("intervention_session_ratings_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -388,6 +369,7 @@ export const interventionSessionNote = pgTable(
     supervisorId: varchar("supervisor_id", { length: 255 }).notNull(),
   },
   (table) => [
+    index("intervention_session_notes_session_id_idx").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [interventionSession.id],
@@ -395,6 +377,7 @@ export const interventionSessionNote = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("intervention_session_notes_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -417,13 +400,11 @@ export const hub = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    visibleId: varchar("visible_id", { length: 100 }),
     hubName: varchar("hub_name", { length: 255 }).notNull(),
     implementerId: varchar("implementer_id", { length: 255 }).notNull(),
     projectId: varchar("project_id", { length: 100 }).notNull(),
   },
   (table) => [
-    uniqueIndex("hubs_visible_id_key").using("btree", table.visibleId),
     uniqueIndex("hubs_implementer_id_project_id_name_key").on(
       table.implementerId,
       table.projectId,
@@ -436,6 +417,7 @@ export const hub = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("hubs_project_id_idx").on(table.projectId),
     foreignKey({
       columns: [table.projectId],
       foreignColumns: [project.id],
@@ -450,7 +432,6 @@ export const fellowAttendance = pgTable(
   "fellow_attendances",
   {
     id: serial().primaryKey().notNull(),
-    visibleId: varchar("visible_id", { length: 100 }),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -462,7 +443,6 @@ export const fellowAttendance = pgTable(
     sessionNumber: integer("session_number"),
     sessionDate: timestamp("session_date", { precision: 3, mode: "date" }),
     yearOfImplementation: integer("year_of_implementation"),
-    schoolId: varchar("school_id", { length: 255 }),
     supervisorId: varchar("supervisor_id", { length: 255 }),
     attended: boolean(),
     absenceReason: text("absence_reason"),
@@ -473,7 +453,6 @@ export const fellowAttendance = pgTable(
     markedBy: text("marked_by"),
   },
   (table) => [
-    uniqueIndex("fellow_attendances_visible_id_key").using("btree", table.visibleId),
     // 2024 data holds 193 duplicate rows that predate payout statements; they stay as they are.
     uniqueIndex("fellow_attendances_fellow_id_session_id_key")
       .on(table.fellowId, table.sessionId)
@@ -486,6 +465,7 @@ export const fellowAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("fellow_attendances_session_id_idx").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [interventionSession.id],
@@ -493,6 +473,7 @@ export const fellowAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("fellow_attendances_group_id_idx").on(table.groupId),
     foreignKey({
       columns: [table.groupId],
       foreignColumns: [interventionGroup.id],
@@ -500,6 +481,7 @@ export const fellowAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("fellow_attendances_marked_by_idx").on(table.markedBy),
     foreignKey({
       columns: [table.markedBy],
       foreignColumns: [user.id],
@@ -507,13 +489,7 @@ export const fellowAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
-    foreignKey({
-      columns: [table.schoolId],
-      foreignColumns: [school.id],
-      name: "fellow_attendances_school_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("set null"),
+    index("fellow_attendances_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -536,7 +512,6 @@ export const fellow = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    visibleId: varchar("visible_id", { length: 100 }),
     fellowName: varchar("fellow_name", { length: 255 }),
     fellowEmail: varchar("fellow_email", { length: 255 }),
     yearOfImplementation: integer("year_of_implementation"),
@@ -565,6 +540,7 @@ export const fellow = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("fellows_implementer_id_idx").on(table.implementerId),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -572,6 +548,7 @@ export const fellow = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("fellows_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -616,6 +593,7 @@ export const hubCoordinator = pgTable(
   (table) => [
     uniqueIndex("hub_coordinators_coordinator_email_key").using("btree", table.coordinatorEmail),
     uniqueIndex("hub_coordinators_visible_id_key").using("btree", table.visibleId),
+    index("hub_coordinators_implementer_id_idx").on(table.implementerId),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -623,6 +601,7 @@ export const hubCoordinator = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("hub_coordinators_assigned_hub_id_idx").on(table.assignedHubId),
     foreignKey({
       columns: [table.assignedHubId],
       foreignColumns: [hub.id],
@@ -670,6 +649,9 @@ export const school = pgTable(
   },
   (table) => [
     uniqueIndex("schools_visible_id_key").using("btree", table.visibleId),
+    uniqueIndex("schools_id_hub_id_key").on(table.id, table.hubId),
+    index("schools_hub_id_idx").on(table.hubId),
+    check("schools_boarding_day_check", sql`${table.boardingDay} in ('Day', 'Boarding', 'Both')`),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],
@@ -677,6 +659,7 @@ export const school = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("schools_assigned_supervisor_id_idx").on(table.assignedSupervisorId),
     foreignKey({
       columns: [table.assignedSupervisorId],
       foreignColumns: [supervisor.id],
@@ -715,10 +698,11 @@ export const interventionSession = pgTable(
       withTimezone: true,
       mode: "date",
     }).notNull(),
-    hubId: varchar("hub_id", { length: 255 }),
+    hubId: varchar("hub_id", { length: 255 }).notNull(),
   },
   (table) => [
-    index("intervention_sessions_school_id_idx").using("btree", table.schoolId),
+    index("intervention_sessions_school_id_hub_id_idx").on(table.schoolId, table.hubId),
+    index("intervention_sessions_project_id_idx").on(table.projectId),
     foreignKey({
       columns: [table.projectId],
       foreignColumns: [project.id],
@@ -726,6 +710,7 @@ export const interventionSession = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("intervention_sessions_session_id_hub_id_idx").on(table.sessionId, table.hubId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [sessionName.id],
@@ -740,13 +725,24 @@ export const interventionSession = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("intervention_sessions_hub_id_idx").on(table.hubId),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],
       name: "intervention_sessions_hub_id_fkey",
     })
       .onUpdate("cascade")
-      .onDelete("set null"),
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.schoolId, table.hubId],
+      foreignColumns: [school.id, school.hubId],
+      name: "intervention_sessions_school_id_hub_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.sessionId, table.hubId],
+      foreignColumns: [sessionName.id, sessionName.hubId],
+      name: "intervention_sessions_session_id_hub_id_fkey",
+    }),
   ],
 );
 
@@ -763,7 +759,6 @@ export const supervisor = pgTable(
       .$onUpdate(() => new Date()),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
     hubId: varchar("hub_id", { length: 255 }),
-    visibleId: varchar("visible_id", { length: 100 }),
     supervisorName: varchar("supervisor_name", { length: 255 }),
     supervisorEmail: varchar("supervisor_email", { length: 255 }),
     idNumber: varchar("id_number", { length: 255 }),
@@ -785,7 +780,7 @@ export const supervisor = pgTable(
     dropOutReason: text("drop_out_reason"),
   },
   (table) => [
-    uniqueIndex("supervisors_visible_id_key").using("btree", table.visibleId),
+    index("supervisors_hub_id_idx").on(table.hubId),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],
@@ -793,6 +788,7 @@ export const supervisor = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("supervisors_implementer_id_idx").on(table.implementerId),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -827,6 +823,7 @@ export const user = pgTable(
   (table) => [
     uniqueIndex("users_email_key").using("btree", table.email),
     uniqueIndex("users_lower_email_key").on(sql`lower(${table.email})`),
+    index("users_active_project_id_idx").on(table.activeProjectId),
     foreignKey({
       columns: [table.activeProjectId],
       foreignColumns: [project.id],
@@ -1023,6 +1020,7 @@ export const studentOutcome = pgTable(
     fb2Feas: integer("fb2_feas"),
   },
   (table) => [
+    index("student_outcomes_shamiri_id_idx").on(table.shamiriId),
     foreignKey({
       columns: [table.shamiriId],
       foreignColumns: [student.visibleId],
@@ -1030,6 +1028,7 @@ export const studentOutcome = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("student_outcomes_implementer_id_idx").on(table.implementerId),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.visibleId],
@@ -1060,6 +1059,7 @@ export const studentReportingNotes = pgTable(
     addedBy: text("added_by"),
   },
   (table) => [
+    index("student_reporting_notes_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -1067,6 +1067,7 @@ export const studentReportingNotes = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("student_reporting_notes_student_id_idx").on(table.studentId),
     foreignKey({
       columns: [table.studentId],
       foreignColumns: [student.id],
@@ -1074,6 +1075,7 @@ export const studentReportingNotes = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("student_reporting_notes_addedBy_idx").on(table.addedBy),
     foreignKey({
       columns: [table.addedBy],
       foreignColumns: [user.id],
@@ -1103,6 +1105,7 @@ export const fellowReportingNotes = pgTable(
     notes: text().notNull(),
   },
   (table) => [
+    index("fellow_reporting_notes_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -1110,6 +1113,7 @@ export const fellowReportingNotes = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("fellow_reporting_notes_fellow_id_idx").on(table.fellowId),
     foreignKey({
       columns: [table.fellowId],
       foreignColumns: [fellow.id],
@@ -1143,6 +1147,7 @@ export const overallFellowEvaluation = pgTable(
     punctualityNotes: text("punctuality_notes").notNull(),
   },
   (table) => [
+    index("overall_fellow_evaluations_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -1150,6 +1155,7 @@ export const overallFellowEvaluation = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("overall_fellow_evaluations_fellow_id_idx").on(table.fellowId),
     foreignKey({
       columns: [table.fellowId],
       foreignColumns: [fellow.id],
@@ -1176,6 +1182,7 @@ export const implementerMember = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    index("implementer_members_implementer_id_idx").on(table.implementerId),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -1183,6 +1190,7 @@ export const implementerMember = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("implementer_members_user_id_idx").on(table.userId),
     foreignKey({
       columns: [table.userId],
       foreignColumns: [user.id],
@@ -1212,6 +1220,7 @@ export const clinicalExpertCaseNotes = pgTable(
     comment: text().notNull(),
   },
   (table) => [
+    index("clinical_expert_case_notes_caseId_idx").on(table.caseId),
     foreignKey({
       columns: [table.caseId],
       foreignColumns: [clinicalScreeningInfo.id],
@@ -1247,6 +1256,7 @@ export const clinicalCaseTransferTrail = pgTable(
     referralStatus: referralStatusOptionsEnum("referral_status"),
   },
   (table) => [
+    index("clinical_case_transfer_trail_caseId_idx").on(table.caseId),
     foreignKey({
       columns: [table.caseId],
       foreignColumns: [clinicalScreeningInfo.id],
@@ -1278,6 +1288,7 @@ export const fellowComplaints = pgTable(
     createdBy: text("created_by"),
   },
   (table) => [
+    index("fellow_complaints_fellow_id_idx").on(table.fellowId),
     foreignKey({
       columns: [table.fellowId],
       foreignColumns: [fellow.id],
@@ -1285,6 +1296,7 @@ export const fellowComplaints = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("fellow_complaints_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -1292,6 +1304,7 @@ export const fellowComplaints = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("fellow_complaints_created_by_idx").on(table.createdBy),
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [user.id],
@@ -1326,6 +1339,7 @@ export const clinicalSessionAttendance = pgTable(
     clinicalLeadId: text("clinical_lead_id"),
   },
   (table) => [
+    index("clinical_session_attendance_caseId_idx").on(table.caseId),
     foreignKey({
       columns: [table.caseId],
       foreignColumns: [clinicalScreeningInfo.id],
@@ -1400,6 +1414,7 @@ export const weeklyFellowRatings = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("weekly_fellow_ratings_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -1477,6 +1492,7 @@ export const clinicalScreeningInfo = pgTable(
     clinicalLeadId: text("clinical_lead_id"),
   },
   (table) => [
+    index("clinical_screening_info_student_id_idx").on(table.studentId),
     foreignKey({
       columns: [table.studentId],
       foreignColumns: [student.id],
@@ -1484,6 +1500,7 @@ export const clinicalScreeningInfo = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("clinical_screening_info_referredTo_supervisor_id_idx").on(table.referredToSupervisorId),
     foreignKey({
       columns: [table.referredToSupervisorId],
       foreignColumns: [supervisor.id],
@@ -1491,6 +1508,9 @@ export const clinicalScreeningInfo = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("clinical_screening_info_session_when_case_is_flagged_id_idx").on(
+      table.sessionWhenCaseIsFlaggedId,
+    ),
     foreignKey({
       columns: [table.sessionWhenCaseIsFlaggedId],
       foreignColumns: [interventionSession.id],
@@ -1498,6 +1518,7 @@ export const clinicalScreeningInfo = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("clinical_screening_info_clinicalLeadId_idx").on(table.clinicalLeadId),
     foreignKey({
       columns: [table.clinicalLeadId],
       foreignColumns: [clinicalLead.id],
@@ -1505,6 +1526,7 @@ export const clinicalScreeningInfo = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("clinical_screening_info_current_supervisor_id_idx").on(table.currentSupervisorId),
     foreignKey({
       columns: [table.currentSupervisorId],
       foreignColumns: [supervisor.id],
@@ -1540,6 +1562,7 @@ export const interventionGroup = pgTable(
       table.schoolId,
     ),
     index("intervention_groups_school_id_idx").on(table.schoolId),
+    index("intervention_groups_project_id_idx").on(table.projectId),
     foreignKey({
       columns: [table.projectId],
       foreignColumns: [project.id],
@@ -1592,6 +1615,7 @@ export const weeklyTeamMeetingReport = pgTable(
     hubId: varchar("hub_id", { length: 255 }).notNull(),
   },
   (table) => [
+    index("weekly_team_meeting_reports_submitted_by_idx").on(table.submittedBy),
     foreignKey({
       columns: [table.submittedBy],
       foreignColumns: [hubCoordinator.id],
@@ -1599,6 +1623,7 @@ export const weeklyTeamMeetingReport = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("weekly_team_meeting_reports_hub_id_idx").on(table.hubId),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],
@@ -1640,6 +1665,7 @@ export const interventionGroupReport = pgTable(
       table.sessionId,
       table.groupId,
     ),
+    index("intervention_group_reports_group_id_idx").on(table.groupId),
     foreignKey({
       columns: [table.groupId],
       foreignColumns: [interventionGroup.id],
@@ -1676,6 +1702,7 @@ export const studentGroupTransferTrail = pgTable(
     fromGroupId: text("from_group_id"),
   },
   (table) => [
+    index("student_group_transfer_trail_student_id_idx").on(table.studentId),
     foreignKey({
       columns: [table.studentId],
       foreignColumns: [student.id],
@@ -1683,6 +1710,7 @@ export const studentGroupTransferTrail = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("student_group_transfer_trail_from_group_id_idx").on(table.fromGroupId),
     foreignKey({
       columns: [table.fromGroupId],
       foreignColumns: [interventionGroup.id],
@@ -1733,6 +1761,7 @@ export const weeklyHubReport = pgTable(
     ).notNull(),
   },
   (table) => [
+    index("weekly_hub_reports_submitted_by_idx").on(table.submittedBy),
     foreignKey({
       columns: [table.submittedBy],
       foreignColumns: [hubCoordinator.id],
@@ -1740,6 +1769,7 @@ export const weeklyHubReport = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("weekly_hub_reports_hub_id_idx").on(table.hubId),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],
@@ -1770,6 +1800,7 @@ export const schoolDropoutHistory = pgTable(
     schoolId: text("school_id").notNull(),
   },
   (table) => [
+    index("school_dropout_history_user_id_idx").on(table.userId),
     foreignKey({
       columns: [table.userId],
       foreignColumns: [user.id],
@@ -1777,6 +1808,7 @@ export const schoolDropoutHistory = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("school_dropout_history_school_id_idx").on(table.schoolId),
     foreignKey({
       columns: [table.schoolId],
       foreignColumns: [school.id],
@@ -1820,6 +1852,7 @@ export const supervisorAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("supervisor_attendances_session_id_idx").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [interventionSession.id],
@@ -1827,6 +1860,7 @@ export const supervisorAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("supervisor_attendances_marked_by_idx").on(table.markedBy),
     foreignKey({
       columns: [table.markedBy],
       foreignColumns: [user.id],
@@ -1858,6 +1892,7 @@ export const supervisorComplaints = pgTable(
     hubCoordinatorId: varchar("hub_coordinator_id", { length: 255 }).notNull(),
   },
   (table) => [
+    index("supervisor_complaints_project_id_idx").on(table.projectId),
     foreignKey({
       columns: [table.projectId],
       foreignColumns: [project.id],
@@ -1865,6 +1900,7 @@ export const supervisorComplaints = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("supervisor_complaints_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -1872,6 +1908,7 @@ export const supervisorComplaints = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("supervisor_complaints_hub_coordinator_id_idx").on(table.hubCoordinatorId),
     foreignKey({
       columns: [table.hubCoordinatorId],
       foreignColumns: [hubCoordinator.id],
@@ -1933,6 +1970,7 @@ export const monthlySupervisorEvaluation = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("monthly_supervisor_evaluation_supervisor_id_idx").on(table.supervisorId),
     foreignKey({
       columns: [table.supervisorId],
       foreignColumns: [supervisor.id],
@@ -1940,6 +1978,7 @@ export const monthlySupervisorEvaluation = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("monthly_supervisor_evaluation_hub_coordinator_id_idx").on(table.hubCoordinatorId),
     foreignKey({
       columns: [table.hubCoordinatorId],
       foreignColumns: [hubCoordinator.id],
@@ -1973,6 +2012,7 @@ export const sessionName = pgTable(
   },
   (table) => [
     uniqueIndex("session_names_hub_id_session_name_key").on(table.hubId, table.sessionName),
+    uniqueIndex("session_names_id_hub_id_key").on(table.id, table.hubId),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],
@@ -2024,6 +2064,7 @@ export const studentAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("student_attendances_group_id_idx").on(table.groupId),
     foreignKey({
       columns: [table.groupId],
       foreignColumns: [interventionGroup.id],
@@ -2031,6 +2072,7 @@ export const studentAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("student_attendances_fellow_id_idx").on(table.fellowId),
     foreignKey({
       columns: [table.fellowId],
       foreignColumns: [fellow.id],
@@ -2038,6 +2080,7 @@ export const studentAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("student_attendances_marked_by_idx").on(table.markedBy),
     foreignKey({
       columns: [table.markedBy],
       foreignColumns: [user.id],
@@ -2067,6 +2110,7 @@ export const sessionComment = pgTable(
     sessionId: varchar("session_id", { length: 255 }).notNull(),
   },
   (table) => [
+    index("session_comments_session_id_idx").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [interventionSession.id],
@@ -2074,6 +2118,7 @@ export const sessionComment = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("session_comments_user_id_idx").on(table.userId),
     foreignKey({
       columns: [table.userId],
       foreignColumns: [user.id],
@@ -2117,6 +2162,7 @@ export const payoutStatements = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("payout_statements_created_by_idx").on(table.createdBy),
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [user.id],
@@ -2124,6 +2170,7 @@ export const payoutStatements = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("payout_statements_confirmed_by_idx").on(table.confirmedBy),
     foreignKey({
       columns: [table.confirmedBy],
       foreignColumns: [user.id],
@@ -2156,6 +2203,7 @@ export const schoolFeedback = pgTable(
     userId: varchar("user_id", { length: 255 }).notNull(),
   },
   (table) => [
+    index("school_feedbacks_schoolId_idx").on(table.schoolId),
     foreignKey({
       columns: [table.schoolId],
       foreignColumns: [school.id],
@@ -2163,6 +2211,7 @@ export const schoolFeedback = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("school_feedbacks_user_id_idx").on(table.userId),
     foreignKey({
       columns: [table.userId],
       foreignColumns: [user.id],
@@ -2226,6 +2275,7 @@ export const clinicalFollowUpTreatmentPlanAuditTrail = pgTable(
     caseId: text("case_id").notNull(),
   },
   (table) => [
+    index("clinical_follow_up_treatment_plan_audit_trail_user_id_idx").on(table.userId),
     foreignKey({
       columns: [table.userId],
       foreignColumns: [user.id],
@@ -2233,6 +2283,7 @@ export const clinicalFollowUpTreatmentPlanAuditTrail = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("clinical_follow_up_treatment_plan_audit_trail_case_id_idx").on(table.caseId),
     foreignKey({
       columns: [table.caseId],
       foreignColumns: [clinicalScreeningInfo.id],
@@ -2297,6 +2348,7 @@ export const opsUser = pgTable(
     assignedHubId: varchar("assigned_hub_id", { length: 255 }),
   },
   (table) => [
+    index("ops_users_implementer_id_idx").on(table.implementerId),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -2304,6 +2356,7 @@ export const opsUser = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("ops_users_assigned_hub_id_idx").on(table.assignedHubId),
     foreignKey({
       columns: [table.assignedHubId],
       foreignColumns: [hub.id],
@@ -2355,6 +2408,7 @@ export const clinicalCaseNotes = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("clinical_case_notes_session_id_idx").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [clinicalSessionAttendance.id],
@@ -2362,6 +2416,7 @@ export const clinicalCaseNotes = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("clinical_case_notes_created_by_idx").on(table.createdBy),
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [user.id],
@@ -2394,6 +2449,7 @@ export const clinicalCaseTermination = pgTable(
     createdBy: text("created_by").notNull(),
   },
   (table) => [
+    index("clinical_case_termination_case_id_idx").on(table.caseId),
     foreignKey({
       columns: [table.caseId],
       foreignColumns: [clinicalScreeningInfo.id],
@@ -2401,6 +2457,7 @@ export const clinicalCaseTermination = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("clinical_case_termination_session_id_idx").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [clinicalSessionAttendance.id],
@@ -2408,6 +2465,7 @@ export const clinicalCaseTermination = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("clinical_case_termination_created_by_idx").on(table.createdBy),
     foreignKey({
       columns: [table.createdBy],
       foreignColumns: [user.id],
@@ -2449,6 +2507,7 @@ export const clinicalLead = pgTable(
     cellNumber: varchar("cell_number", { length: 255 }),
   },
   (table) => [
+    index("clinical_leads_assigned_hub_id_idx").on(table.assignedHubId),
     foreignKey({
       columns: [table.assignedHubId],
       foreignColumns: [hub.id],
@@ -2456,6 +2515,7 @@ export const clinicalLead = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("clinical_leads_implementer_id_idx").on(table.implementerId),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -2487,6 +2547,7 @@ export const clinicalTeam = pgTable(
     implementerId: varchar("implementer_id", { length: 255 }).notNull(),
   },
   (table) => [
+    index("clinical_teams_assigned_hub_id_idx").on(table.assignedHubId),
     foreignKey({
       columns: [table.assignedHubId],
       foreignColumns: [hub.id],
@@ -2494,6 +2555,7 @@ export const clinicalTeam = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("clinical_teams_implementer_id_idx").on(table.implementerId),
     foreignKey({
       columns: [table.implementerId],
       foreignColumns: [implementer.id],
@@ -2687,6 +2749,7 @@ export const tickets = pgTable(
   },
   (table) => [
     uniqueIndex("tickets_visible_id_key").using("btree", table.visibleId),
+    index("tickets_created_by_idx").on(table.createdById),
     foreignKey({
       columns: [table.createdById],
       foreignColumns: [user.id],
@@ -2718,6 +2781,7 @@ export const ticketEscalations = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    index("ticket_escalations_ticket_id_idx").on(table.ticketId),
     foreignKey({
       columns: [table.ticketId],
       foreignColumns: [tickets.id],
@@ -2725,6 +2789,7 @@ export const ticketEscalations = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("ticket_escalations_escalated_by_idx").on(table.escalatedById),
     foreignKey({
       columns: [table.escalatedById],
       foreignColumns: [user.id],
@@ -2732,6 +2797,7 @@ export const ticketEscalations = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("ticket_escalations_escalated_to_idx").on(table.escalatedToId),
     foreignKey({
       columns: [table.escalatedToId],
       foreignColumns: [user.id],
@@ -2758,6 +2824,7 @@ export const triageEventAudit = pgTable(
     afterData: jsonb("after_data").$type<JsonValue>(),
   },
   (table) => [
+    index("triage_event_audits_triage_event_id_idx").on(table.triageEventId),
     foreignKey({
       columns: [table.triageEventId],
       foreignColumns: [triageEvent.id],
@@ -2765,6 +2832,7 @@ export const triageEventAudit = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
+    index("triage_event_audits_edited_by_id_idx").on(table.editedById),
     foreignKey({
       columns: [table.editedById],
       foreignColumns: [user.id],
@@ -2823,6 +2891,7 @@ export const triageEvent = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("triage_events_session_id_idx").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [interventionSession.id],
@@ -2837,6 +2906,7 @@ export const triageEvent = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
+    index("triage_events_fellow_id_idx").on(table.fellowId),
     foreignKey({
       columns: [table.fellowId],
       foreignColumns: [fellow.id],
@@ -2844,6 +2914,7 @@ export const triageEvent = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
+    index("triage_events_hub_id_idx").on(table.hubId),
     foreignKey({
       columns: [table.hubId],
       foreignColumns: [hub.id],
@@ -2851,6 +2922,7 @@ export const triageEvent = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("triage_events_referred_supervisor_id_idx").on(table.referredSupervisorId),
     foreignKey({
       columns: [table.referredSupervisorId],
       foreignColumns: [supervisor.id],
@@ -2858,6 +2930,7 @@ export const triageEvent = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("set null"),
+    index("triage_events_reviewed_by_id_idx").on(table.reviewedById),
     foreignKey({
       columns: [table.reviewedById],
       foreignColumns: [user.id],
@@ -2922,6 +2995,7 @@ export const sessionRecording = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("session_recordings_school_id_idx").on(table.schoolId),
     foreignKey({
       columns: [table.schoolId],
       foreignColumns: [school.id],
@@ -2929,6 +3003,7 @@ export const sessionRecording = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("session_recordings_group_id_idx").on(table.groupId),
     foreignKey({
       columns: [table.groupId],
       foreignColumns: [interventionGroup.id],
@@ -2936,6 +3011,7 @@ export const sessionRecording = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("session_recordings_intervention_session_id_idx").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [interventionSession.id],
@@ -2943,6 +3019,7 @@ export const sessionRecording = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("session_recordings_uploaded_by_idx").on(table.uploadedBy),
     foreignKey({
       columns: [table.uploadedBy],
       foreignColumns: [user.id],
@@ -2981,6 +3058,7 @@ export const attendanceDocuments = pgTable(
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
   },
   (table) => [
+    index("attendance_documents_group_id_idx").on(table.groupId),
     foreignKey({
       columns: [table.groupId],
       foreignColumns: [interventionGroup.id],
@@ -2988,6 +3066,7 @@ export const attendanceDocuments = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("attendance_documents_session_id_idx").on(table.sessionId),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [interventionSession.id],
@@ -2995,6 +3074,7 @@ export const attendanceDocuments = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("attendance_documents_uploaded_by_idx").on(table.uploadedBy),
     foreignKey({
       columns: [table.uploadedBy],
       foreignColumns: [user.id],
@@ -3032,6 +3112,7 @@ export const ticketResolutions = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("ticket_resolutions_resolved_by_idx").on(table.resolvedById),
     foreignKey({
       columns: [table.resolvedById],
       foreignColumns: [user.id],
@@ -3125,6 +3206,7 @@ export const ticketReassignments = pgTable(
   },
   (table) => [
     uniqueIndex("ticket_reassignments_escalation_id_key").using("btree", table.escalationId),
+    index("ticket_reassignments_ticket_id_idx").on(table.ticketId),
     foreignKey({
       columns: [table.ticketId],
       foreignColumns: [tickets.id],
@@ -3139,6 +3221,7 @@ export const ticketReassignments = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("ticket_reassignments_reassigned_from_idx").on(table.reassignedFrom),
     foreignKey({
       columns: [table.reassignedFrom],
       foreignColumns: [user.id],
@@ -3146,6 +3229,7 @@ export const ticketReassignments = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("ticket_reassignments_reassigned_to_idx").on(table.reassignedTo),
     foreignKey({
       columns: [table.reassignedTo],
       foreignColumns: [user.id],

@@ -1,6 +1,4 @@
-// 1. Every foreign key needs an index on its referencing columns: ON UPDATE/DELETE on the
-//    parent scans the child table otherwise (ENG-2164). scripts/db/unindexed-fks.txt lists the
-//    keys that predate the rule; it may only shrink.
+// 1. Every foreign key needs an index on its referencing columns
 // 2. A migration that drops a column or table sets lock_timeout, so a busy table fails the
 //    deploy instead of queueing all traffic behind the lock.
 import { readdirSync, readFileSync } from "node:fs";
@@ -8,7 +6,6 @@ import path from "node:path";
 
 import { pool } from "#/db/client";
 
-const allowlistPath = path.join(__dirname, "unindexed-fks.txt");
 const migrationsDir = path.join(__dirname, "../../drizzle");
 const firstMigrationNeedingLockTimeout = 18;
 
@@ -41,25 +38,16 @@ function dropMigrationsWithoutLockTimeout() {
 }
 
 async function main() {
-  const allowed = new Set(
-    readFileSync(allowlistPath, "utf8")
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean),
-  );
   let unindexed: string[];
   try {
     unindexed = await unindexedForeignKeys();
   } finally {
     await pool.end();
   }
-  const newUnindexed = unindexed.filter((name) => !allowed.has(name));
-  const nowIndexed = [...allowed].filter((name) => !unindexed.includes(name));
   const missingLockTimeout = dropMigrationsWithoutLockTimeout();
 
   const problems = [
-    ...newUnindexed.map((name) => `foreign key without an index: ${name}`),
-    ...nowIndexed.map((name) => `remove from unindexed-fks.txt, it is indexed or gone: ${name}`),
+    ...unindexed.map((name) => `foreign key without an index: ${name}`),
     ...missingLockTimeout.map(
       (file) => `drop migration without SET LOCAL lock_timeout = '5s': drizzle/${file}`,
     ),
@@ -68,7 +56,7 @@ async function main() {
     console.error(problems.join("\n"));
     process.exitCode = 1;
   } else {
-    console.log(`check-schema: ok (${unindexed.length} allowlisted unindexed foreign keys)`);
+    console.log("check-schema: ok");
   }
 }
 

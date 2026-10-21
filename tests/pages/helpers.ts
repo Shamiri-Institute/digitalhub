@@ -31,7 +31,10 @@ export async function searchRows(page: Page, text: string, scope: Page | Locator
 
 /** Rows that carry data; the empty state renders one row with a single spanning cell. */
 export function dataRows(page: Page) {
-  return page.locator("tbody tr").filter({ hasNot: page.locator("td[colspan]") });
+  return page
+    .locator("tbody tr")
+    .filter({ hasNot: page.locator("td[colspan]") })
+    .filter({ hasNot: page.locator('[data-slot="skeleton"]') });
 }
 
 /** A row by the exact text of one of its cells, after searching the table for it. */

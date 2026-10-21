@@ -208,8 +208,57 @@
     {
       "idx": 29,
       "version": "7",
-      "when": 1792154026364,
-      "tag": "0029_survey_version_revision",
+      "when": 1792157398113,
+      "tag": "0029_drop_dead_visible_ids",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1792164338420,
+      "tag": "0030_index_foreign_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1792401920614,
+      "tag": "0031_drop_files_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1792405574301,
+      "tag": "0032_normalize_school_boarding_day",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1792405586714,
+      "tag": "0033_schools_boarding_day_check",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1792407833006,
+      "tag": "0034_enforce_session_hub",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1792418238820,
+      "tag": "0035_backfill_legacy_fellow_attendance_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792577435605,
+      "tag": "0036_survey_version_revision",
       "breakpoints": true
     }
   ]

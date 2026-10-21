@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTrigger,
+  DialogTitle,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -96,7 +97,7 @@ function CreateGroupForm({
     <Form {...form}>
       <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
         <DialogHeader className="mb-4">
-          <span className="text-xl">Create new group</span>
+          <DialogTitle className="text-xl">Create new group</DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           <div className="flex flex-col">

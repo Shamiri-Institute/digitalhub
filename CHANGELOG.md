@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.2.6](https://github.com/Shamiri-Institute/digitalhub/compare/v2.2.5...v2.2.6) (2026-10-19)
+
+### Bug Fixes
+
+- remove actions from the Supervisor schools table that did nothing. ([#977](https://github.com/Shamiri-Institute/digitalhub/issues/977)) ([3e91bdc](https://github.com/Shamiri-Institute/digitalhub/commit/3e91bdc5756389a9d64a036deebab7494bfcfc81))
+
+## [2.2.5](https://github.com/Shamiri-Institute/digitalhub/compare/v2.2.4...v2.2.5) (2026-10-19)
+
+## [2.2.4](https://github.com/Shamiri-Institute/digitalhub/compare/v2.2.3...v2.2.4) (2026-10-19)
+
+### Bug Fixes
+
+- **db:** enforce intervention_sessions.hub_id with composite FKs to school and session type ([#976](https://github.com/Shamiri-Institute/digitalhub/issues/976)) ([e776835](https://github.com/Shamiri-Institute/digitalhub/commit/e776835882f2362c20997784ecab072bd502b613))
+
+## [2.2.3](https://github.com/Shamiri-Institute/digitalhub/compare/v2.2.2...v2.2.3) (2026-10-19)
+
+### Bug Fixes
+
+- **db:** normalize schools.boarding_day and constrain it ([#974](https://github.com/Shamiri-Institute/digitalhub/issues/974)) ([0771dff](https://github.com/Shamiri-Institute/digitalhub/commit/0771dff51419b97ca08e09a3651d8cdb6957b620))
+
+## [2.2.2](https://github.com/Shamiri-Institute/digitalhub/compare/v2.2.1...v2.2.2) (2026-10-19)
+
+## [2.2.1](https://github.com/Shamiri-Institute/digitalhub/compare/v2.2.0...v2.2.1) (2026-10-16)
+
+### Bug Fixes
+
+- **ui:** name untitled dialogs, label the session note, drop ts-expect-error and make two columns searchable ([#969](https://github.com/Shamiri-Institute/digitalhub/issues/969)) ([f343daf](https://github.com/Shamiri-Institute/digitalhub/commit/f343dafd764537e7eece78ad030d2b08cc24fbf1))
+
 ## [2.2.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.1.2...v2.2.0) (2026-10-16)
 
 ### Features

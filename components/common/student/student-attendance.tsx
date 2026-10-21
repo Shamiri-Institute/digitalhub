@@ -574,6 +574,7 @@ const columns = (state: {
   {
     id: "Student name",
     header: "Student name",
+    accessorKey: "studentName",
     cell: ({ row }) => {
       return <span className="capitalize">{row.original.studentName?.toLowerCase()}</span>;
     },

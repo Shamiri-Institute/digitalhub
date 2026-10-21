@@ -50,9 +50,8 @@ export const columns = (state: {
   },
   {
     header: "Session type",
-    cell: ({ row }) => {
-      return sessionDisplayName(row.original.session?.sessionName);
-    },
+    id: "Session type",
+    accessorFn: (row) => sessionDisplayName(row.session?.sessionName),
   },
   {
     header: "Assigned supervisor",

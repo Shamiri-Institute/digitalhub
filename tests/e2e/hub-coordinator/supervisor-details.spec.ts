@@ -44,7 +44,6 @@ test.beforeAll(async () => {
       .values({
         ...template,
         id: `sup_e2e_${suffix}`,
-        visibleId: `E2E_SUP_${suffix}`,
         supervisorName: `E2E Supervisor ${suffix}`,
         supervisorEmail: targetEmail,
         archivedAt: null,

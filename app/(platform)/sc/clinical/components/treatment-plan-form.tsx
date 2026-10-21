@@ -7,7 +7,13 @@ import { type ClinicalCases, createTreatmentPlan } from "#/app/(platform)/sc/cli
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -114,7 +120,7 @@ export default function TreatmentPlanForm({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
-          <h2>Treatment Plan</h2>
+          <DialogTitle>Treatment Plan</DialogTitle>
         </DialogHeader>
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <Form {...form}>

@@ -77,7 +77,6 @@ export function fetchScheduleSupervisors(hubIds: string[] | SQLWrapper, sessions
             columns: {
               id: true,
               sessionId: true,
-              schoolId: true,
               attended: true,
               processedAt: true,
             },

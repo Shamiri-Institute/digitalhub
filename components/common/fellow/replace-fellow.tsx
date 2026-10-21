@@ -5,7 +5,13 @@ import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { ReplaceGroupLeaderSchema } from "#/components/common/fellow/schema";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -83,7 +89,7 @@ function ReplaceFellowForm({
     <Form {...form}>
       <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
         <DialogHeader className="mb-4">
-          <span className="text-xl">Replace fellow</span>
+          <DialogTitle className="text-xl">Replace fellow</DialogTitle>
         </DialogHeader>
         {children}
         <div className="space-y-6">

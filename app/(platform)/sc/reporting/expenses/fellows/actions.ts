@@ -22,9 +22,8 @@ export async function loadSupervisorFellowAttendance() {
       supervisor: { columns: { supervisorName: true } },
       fellowAttendances: {
         with: {
-          session: { with: { session: true } },
+          session: { with: { session: true, school: { columns: { schoolName: true } } } },
           group: true,
-          school: { columns: { schoolName: true } },
           PayoutStatements: { orderBy: (p, { asc }) => asc(p.createdAt) },
         },
       },
@@ -43,7 +42,7 @@ export async function loadSupervisorFellowAttendance() {
         fellowName: fellow.fellowName,
         session: attendance?.session?.session?.sessionLabel,
         mpesaNo: fellow.mpesaNumber,
-        schoolVenue: attendance.school?.schoolName,
+        schoolVenue: attendance.session?.school?.schoolName,
         dateOfAttendance: attendance?.session?.sessionDate,
         dateMarked: attendance?.updatedAt,
         group: attendance.group?.groupName,

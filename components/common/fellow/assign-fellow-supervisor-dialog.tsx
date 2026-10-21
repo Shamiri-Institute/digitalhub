@@ -9,7 +9,7 @@ import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "#/components/ui/form";
 import {
   Select,
@@ -77,7 +77,7 @@ export default function AssignFellowSupervisorDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <span className="text-xl">Assign supervisor</span>
+          <DialogTitle className="text-xl">Assign supervisor</DialogTitle>
         </DialogHeader>
         {children}
         <Form {...form}>

@@ -36,18 +36,18 @@ export default async function SchoolFellowsPage({
         and(eq(s.visibleId, visibleId), inArray(s.id, visibleSchools.ids)),
       columns: { id: true },
       with: {
-        fellowAttendances: {
-          columns: { fellowId: true, attended: true },
+        interventionSessions: {
+          columns: { sessionDate: true, venue: true },
           with: {
-            session: {
-              columns: { sessionDate: true, venue: true },
+            session: { columns: { sessionLabel: true } },
+            school: { columns: { schoolName: true } },
+            fellowAttendances: {
+              columns: { fellowId: true, attended: true },
               with: {
-                session: { columns: { sessionLabel: true } },
-                school: { columns: { schoolName: true } },
+                group: { columns: { groupName: true } },
+                PayoutStatements: { columns: { mpesaNumber: true, executedAt: true } },
               },
             },
-            group: { columns: { groupName: true } },
-            PayoutStatements: { columns: { mpesaNumber: true, executedAt: true } },
           },
         },
       },
@@ -104,7 +104,9 @@ export default async function SchoolFellowsPage({
       schoolId={schoolRow.id}
       role={role}
       hideActions={hideActions}
-      attendances={schoolRow.fellowAttendances}
+      attendances={schoolRow.interventionSessions.flatMap(({ fellowAttendances, ...session }) =>
+        fellowAttendances.map((attendance) => ({ ...attendance, session })),
+      )}
     />
   );
 }

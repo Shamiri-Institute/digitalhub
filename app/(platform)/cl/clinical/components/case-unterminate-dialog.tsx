@@ -4,7 +4,13 @@ import { useState } from "react";
 import { unterminateClinicalCase } from "#/app/(platform)/sc/clinical/action";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 
@@ -48,7 +54,7 @@ export default function CaseUnterminateDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="w-1/3 max-w-none">
         <DialogHeader>
-          <span className="text-xl font-bold">Un-terminate case - {pseudonym}</span>
+          <DialogTitle className="text-xl font-bold">Un-terminate case - {pseudonym}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-y-4">
           <Separator />
