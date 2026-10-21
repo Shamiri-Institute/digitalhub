@@ -46,7 +46,7 @@ function scan(text: string) {
       tokens.push({ kind: "char", char: t.char, at: t.at, length: t.length, bold });
     }
   }
-  return { tokens, endBold: bold };
+  return { tokens, endBold: bold, unpairedAt: unpaired?.at };
 }
 
 export function parseBold(text: string): TextRun[] {
@@ -82,6 +82,16 @@ export function applyEdit(value: string, edit: TextEdit) {
   return value.slice(0, edit.from) + edit.insert + value.slice(edit.to);
 }
 
+/** Every readable character of the text, where it sits in the raw text, and whether it is bold. */
+export function readableChars(text: string) {
+  return readable(scan(text).tokens).map(({ char, at, length, bold }) => ({
+    char,
+    at,
+    length,
+    bold,
+  }));
+}
+
 /**
  * Bolds the selected words, or un-bolds them when every selected character is already bold. The
  * edit covers the selection, widened to whole markers and escapes, and keeps the bold state at
@@ -90,10 +100,12 @@ export function applyEdit(value: string, edit: TextEdit) {
  * itself.
  *
  * With nothing selected it adds an empty pair, the caret between; with the caret already between
- * two markers it takes them out. Returns null when the selection holds no readable text.
+ * two markers it takes them out. Returns null when the selection holds no readable text, or when
+ * the edit would not read as intended, so the field is left alone.
  */
 export function toggleBold(value: string, start: number, end: number): TextEdit | null {
-  const { tokens, endBold } = scan(value);
+  const scanned = scan(value);
+  const { tokens, endBold } = scanned;
   const chars = readable(tokens);
 
   if (start === end) {
@@ -110,11 +122,17 @@ export function toggleBold(value: string, start: number, end: number): TextEdit 
         start: start - 2,
         end: start - 2,
       };
-      return settle(value, tokens, remove, chars, () => true);
+      return checked(value, remove, chars, () => true);
     }
-    const add = { from: start, to: start, insert: "****", start: start + 2, end: start + 2 };
-    // The caret must end up between the two new markers, so a second press finds them.
-    return settle(value, tokens, add, chars, (result, edit) => {
+    const add = guard(value, scanned, {
+      from: start,
+      to: start,
+      insert: "****",
+      start: start + 2,
+      end: start + 2,
+    });
+    // The caret must sit between the two new markers, so a second press finds them.
+    return checked(value, add, chars, (result, edit) => {
       const isMarker = (at: number) => result.some((t) => t.kind === "marker" && t.at === at);
       return isMarker(edit.start - 2) && isMarker(edit.start);
     });
@@ -146,19 +164,20 @@ export function toggleBold(value: string, start: number, end: number): TextEdit 
   const selectEnd = from + insert.length;
   if (closeMarker) insert += "**";
 
-  const expected = chars.map((c) => (selected.includes(c) ? { ...c, bold } : c));
+  const edit = guard(value, scanned, { from, to, insert, start: selectStart, end: selectEnd });
+  const isSelected = new Set(selected);
+  const expected = chars.map((c) => (isSelected.has(c) ? { ...c, bold } : c));
   const selectedText = selected.map((t) => t.char).join("");
   // The selection must still hold exactly the selected words, without splitting a token.
-  return settle(
+  return checked(
     value,
-    tokens,
-    { from, to, insert, start: selectStart, end: selectEnd },
+    edit,
     expected,
-    (result, edit) =>
-      result.every((t) => t.at + t.length <= edit.start || t.at >= edit.start) &&
-      result.every((t) => t.at + t.length <= edit.end || t.at >= edit.end) &&
+    (result, e) =>
+      result.every((t) => t.at + t.length <= e.start || t.at >= e.start) &&
+      result.every((t) => t.at + t.length <= e.end || t.at >= e.end) &&
       readable(result)
-        .filter((t) => t.at >= edit.start && t.at < edit.end)
+        .filter((t) => t.at >= e.start && t.at < e.end)
         .map((t) => t.char)
         .join("") === selectedText,
   );
@@ -172,55 +191,54 @@ function readable(tokens: Token[]) {
 }
 
 /**
- * Widens an edit until the text reads as `expected` and has the shape `shaped` asks for. Text
- * next to an edit can join what it writes: a lone `\` before a marker turns it into an escape, a
- * lone `*` beside a marker makes a different marker, and an unpaired `**` before it pairs with
- * the new marker. Each round rescans the result, and where it first goes wrong, takes the
- * neighbouring token on that side into the edit, rewritten escaped. Nothing else changes.
+ * Keeps the text around an edit from joining what it writes, by looking only at its neighbours.
+ * Tokens are read left to right and the edit ends on a whole token, so only the left side can
+ * join: a lone `\` before an edit starting with `*` or `\` makes an escape, and a lone `*` before
+ * one starting with `*` makes a different marker; that token is rewritten, escaped, in the edit.
+ * And an unpaired `**` before the edit would pair with a marker it adds, since it is always the
+ * last marker; escaping one of its asterisks keeps it literal, with the text between copied as is.
  */
-function settle(
+function guard(value: string, { tokens, unpairedAt }: ReturnType<typeof scan>, edit: TextEdit) {
+  let { from, insert, start, end } = edit;
+  const left = tokens.find((t) => t.at + t.length === from);
+  const strayBefore = unpairedAt !== undefined && unpairedAt + 2 <= from ? unpairedAt : undefined;
+  const joins =
+    left?.kind === "char" &&
+    left.length === 1 &&
+    ((left.char === "\\" && /^[*\\]/.test(insert)) ||
+      (left.char === "*" && insert.startsWith("*")));
+  // A stray's own asterisk next to the edit is handled with the stray.
+  if (joins && (strayBefore === undefined || left.at >= strayBefore + 2)) {
+    insert = escape(left.char) + insert;
+    start += 1;
+    end += 1;
+    from = left.at;
+  }
+  if (strayBefore !== undefined) {
+    const prefix = `*\\*${value.slice(strayBefore + 2, from)}`;
+    const shift = prefix.length - (from - strayBefore);
+    insert = prefix + insert;
+    start += shift;
+    end += shift;
+    from = strayBefore;
+  }
+  return { from, to: edit.to, insert, start, end };
+}
+
+/**
+ * The edit, once a rescan of the result confirms it reads as `expected` and has the shape
+ * `shaped` asks for; otherwise null, so the field is left as it was rather than changed wrongly.
+ */
+function checked(
   value: string,
-  tokens: Token[],
   edit: TextEdit,
   expected: { char: string; bold: boolean }[],
   shaped: (result: Token[], edit: TextEdit) => boolean,
-): TextEdit {
-  let { from, to, insert, start, end } = edit;
-  for (;;) {
-    const current = { from, to, insert, start, end };
-    const result = scan(applyEdit(value, current)).tokens;
-    // Where the text first reads wrong, widen on that side. When it reads right but is shaped
-    // wrong, a neighbour on either side may be joining, so take in one from each.
-    const wrong = firstDifference(readable(result), expected);
-    if (wrong === -1 && shaped(result, current)) return current;
-    const left = tokens.find((t) => t.at + t.length === from);
-    const right = tokens.find((t) => t.at === to);
-    if (!left && !right) return current; // every token rewritten; can't be reached
-    const readableBefore = tokens.filter((t) => t.kind === "char" && t.at < from).length;
-    const takeLeft = left && (wrong === -1 || wrong <= readableBefore || !right);
-    const takeRight = right && (wrong === -1 || !takeLeft);
-    if (takeLeft) {
-      const rewritten = rewrite(left);
-      insert = rewritten + insert;
-      start += rewritten.length - left.length;
-      end += rewritten.length - left.length;
-      from = left.at;
-    }
-    if (takeRight) {
-      insert += rewrite(right);
-      to = right.at + right.length;
-    }
-  }
-}
-
-function rewrite(token: Token) {
-  return token.kind === "marker" ? "**" : escape(token.char);
-}
-
-function firstDifference(actual: { char: string; bold: boolean }[], expected: typeof actual) {
-  const length = Math.max(actual.length, expected.length);
-  for (let i = 0; i < length; i++) {
-    if (actual[i]?.char !== expected[i]?.char || actual[i]?.bold !== expected[i]?.bold) return i;
-  }
-  return -1;
+): TextEdit | null {
+  const result = scan(applyEdit(value, edit)).tokens;
+  const actual = readable(result);
+  const reads =
+    actual.length === expected.length &&
+    actual.every((c, i) => c.char === expected[i]?.char && c.bold === expected[i]?.bold);
+  return reads && shaped(result, edit) ? edit : null;
 }

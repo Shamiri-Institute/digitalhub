@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { applyEdit, isBlank, parseBold, plainText, toggleBold } from "#/lib/survey/rich-text";
+import {
+  applyEdit,
+  isBlank,
+  parseBold,
+  plainText,
+  readableChars,
+  toggleBold,
+} from "#/lib/survey/rich-text";
 
 /** The text and selection after toggling bold on `value` from `start` to `end`. */
 function bolded(value: string, start: number, end: number) {
@@ -94,6 +101,12 @@ describe("toggleBold", () => {
     ]);
   });
 
+  it("escapes only the stray ** before the edit, copying the text between as it is", () => {
+    expect(boldWords("2 ** 3 times 4 * 5 is C:\\ bold", "bold")?.value).toBe(
+      "2 *\\* 3 times 4 * 5 is C:\\ **bold**",
+    );
+  });
+
   it("leaves an unpaired ** after the edit as written", () => {
     expect(boldWords("bold me then 2 ** 3", "bold")?.value).toBe("**bold** me then 2 ** 3");
   });
@@ -139,33 +152,62 @@ describe("toggleBold", () => {
 });
 
 describe("toggleBold on any text", () => {
-  it("never changes what the text reads as, and a second press undoes an added pair", () => {
-    // A fixed seed, so a failure reproduces.
-    let seed = 7;
-    const random = () => {
-      seed = (seed * 1103515245 + 12345) % 2147483648;
-      return seed / 2147483648;
-    };
-    const alphabet = ["a", "b", " ", "*", "**", "***", "\\", "\\*", "\\\\"];
+  // A fixed seed, so a failure reproduces.
+  let seed = 7;
+  const random = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 2147483648;
+  };
+  const pick = <T>(list: T[]) => list[Math.floor(random() * list.length)] as T;
+  const messy = ["a", "b", " ", "*", "**", "***", "\\", "\\*", "\\\\"];
+  // Every asterisk a marker, every marker paired, no empty pairs: text a second press restores.
+  const tidy = ["a", "b", " ", "**"];
+
+  it("changes only the selected characters' bold, keeps them selected, and undoes itself", () => {
     for (let run = 0; run < 5000; run++) {
-      const value = Array.from(
-        { length: 1 + Math.floor(random() * 12) },
-        () => alphabet[Math.floor(random() * alphabet.length)],
+      const isTidy = random() < 0.3;
+      const value = Array.from({ length: 1 + Math.floor(random() * 12) }, () =>
+        pick(isTidy ? tidy : messy),
       ).join("");
       const start = Math.floor(random() * (value.length + 1));
       const end =
         random() < 0.4 ? start : start + Math.floor(random() * (value.length - start + 1));
+      const context = JSON.stringify({ value, start, end });
+
+      const chars = readableChars(value);
+      const selected =
+        start === end ? [] : chars.filter((c) => c.at + c.length > start && c.at < end);
       const edit = toggleBold(value, start, end);
-      if (!edit) continue;
-      const next = applyEdit(value, edit);
-      const context = JSON.stringify({ value, start, end, next });
-      expect(plainText(next), context).toBe(plainText(value));
-      if (start === end && next.length > value.length) {
-        // The caret sits between the new pair, so pressing again takes it out rather than adding
-        // another.
-        const again = toggleBold(next, edit.start, edit.end);
-        expect(again && applyEdit(next, again).length < next.length, context).toBe(true);
+      if (!edit) {
+        // Only a selection of markers alone is refused.
+        expect(start !== end && selected.length === 0, context).toBe(true);
+        continue;
       }
+      const next = applyEdit(value, edit);
+      const after = readableChars(next);
+
+      // The same characters, and only the selected ones change bold, all the same way.
+      expect(plainText(next), context).toBe(plainText(value));
+      const bold = !selected.every((c) => c.bold);
+      chars.forEach((c, i) => {
+        expect(after[i]?.bold, context).toBe(selected.includes(c) ? bold : c.bold);
+      });
+      // The returned selection holds exactly the selected characters.
+      const reselected = after.filter((c) => c.at >= edit.start && c.at < edit.end);
+      expect(reselected.map((c) => c.char).join(""), context).toBe(
+        selected.map((c) => c.char).join(""),
+      );
+
+      // Pressing again on all-bold or all-plain words, or at the caret, brings them back.
+      if (selected.some((c) => c.bold !== selected[0]?.bold)) continue;
+      const again = toggleBold(next, edit.start, edit.end);
+      const back = again ? applyEdit(next, again) : next;
+      expect(
+        readableChars(back).map((c) => c.bold),
+        context,
+      ).toEqual(chars.map((c) => c.bold));
+      const paired = (value.match(/\*\*/g) ?? []).length % 2 === 0;
+      if (isTidy && paired && !value.includes("****")) expect(back, context).toBe(value);
     }
   });
 });

@@ -67,6 +67,15 @@ describe("the bold button without execCommand", () => {
     expect([field.selectionStart, field.selectionEnd]).toEqual([6, 8]);
   });
 
+  it("leaves the field alone when there is nothing to bold", () => {
+    const { field, button } = render("a****b");
+    // Only the empty pair is selected.
+    field.setSelectionRange(1, 5);
+    act(() => button.click());
+    expect(field.value).toBe("a****b");
+    expect([field.selectionStart, field.selectionEnd]).toEqual([1, 5]);
+  });
+
   it("bolds on Ctrl+B once, however long the key is held", () => {
     const { field } = render("How do you feel");
     field.setSelectionRange(4, 6);
