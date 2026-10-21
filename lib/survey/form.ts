@@ -35,6 +35,12 @@ const ChoiceOptionSchema = z.object({
   label: z.string(),
 });
 
+/**
+ * How a heading or paragraph sits on the page; left when absent. Questions keep one layout, so
+ * the scanner always finds their answer areas where it expects them.
+ */
+const Align = z.enum(["center"]).optional();
+
 /** Stable within the form and kept when a draft is copied; not an export name. */
 const ItemId = z.string().min(1);
 
@@ -60,8 +66,8 @@ const QuestionBase = {
 
 const SurveyItemSchema = z.discriminatedUnion("kind", [
   // Printed only, never answered, so they have no key.
-  z.object({ id: ItemId, kind: z.literal("heading"), text: z.string() }),
-  z.object({ id: ItemId, kind: z.literal("paragraph"), text: z.string() }),
+  z.object({ id: ItemId, kind: z.literal("heading"), text: z.string(), align: Align }),
+  z.object({ id: ItemId, kind: z.literal("paragraph"), text: z.string(), align: Align }),
   z.object({ id: ItemId, kind: z.literal("divider") }),
   // Every item with a key is answered; nothing else is.
   z.object({

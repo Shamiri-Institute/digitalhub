@@ -502,3 +502,31 @@ test("a save whose reply was lost is not taken for a change made elsewhere", asy
   await page.reload();
   await expect(page.getByRole("button", { name: /Any other comments/ })).toBeVisible();
 });
+
+test("bold words and a centred paragraph show in the print preview after a save", async ({
+  page,
+  context,
+}) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const draft = await createDraftSurvey(scope, userId, {
+    format: 1,
+    pages: [{ items: [{ id: "intro", kind: "paragraph", text: "Answer every question" }] }],
+  });
+  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
+
+  await page.getByRole("button", { name: /Answer every question/ }).click();
+  const text = page.getByLabel("Text");
+  // Select "every" and bold it with the button.
+  await text.evaluate((field: HTMLTextAreaElement) => field.setSelectionRange(7, 12));
+  await page.getByRole("button", { name: "Bold the selected words" }).click();
+  await expect(text).toHaveValue("Answer **every** question");
+  await page.getByRole("radio", { name: "Align centre" }).click();
+  await save(page);
+  await page.reload();
+
+  // The preview is drawn for the eye only (aria-hidden), so it is found by its markup.
+  const preview = page.locator("figure");
+  await expect(preview.locator("strong")).toHaveText("every");
+  await expect(preview.getByText("Answer every question")).toHaveCSS("text-align", "center");
+  await expect(page.getByRole("button", { name: /Answer every question/ })).toBeVisible();
+});

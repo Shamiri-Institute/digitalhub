@@ -110,14 +110,24 @@ function PrintedItem({ item }: { item: SurveyItem }) {
     switch (item.kind) {
       case "heading":
         return (
-          <Printed text={item.text} empty="Heading" className="text-xl font-bold leading-snug" />
+          <Printed
+            text={item.text}
+            empty="Heading"
+            className={cn(
+              "text-xl font-bold leading-snug",
+              item.align === "center" && "text-center",
+            )}
+          />
         );
       case "paragraph":
         return (
           <Printed
             text={item.text}
             empty="Paragraph"
-            className="whitespace-pre-line text-sm leading-relaxed"
+            className={cn(
+              "whitespace-pre-line text-sm leading-relaxed",
+              item.align === "center" && "text-center",
+            )}
           />
         );
       case "divider":

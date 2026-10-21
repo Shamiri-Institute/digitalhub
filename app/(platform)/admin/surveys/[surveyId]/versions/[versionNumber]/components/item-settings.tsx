@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock } from "lucide-react";
+import { AlignCenter, AlignLeft, Lock } from "lucide-react";
 import { type Dispatch, useState } from "react";
 
 import {
@@ -13,6 +13,7 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import type { BuilderAction } from "#/lib/survey/builder";
 import { issueKey, type LockedQuestion, publishedQuestion } from "#/lib/survey/check-form";
 import { isQuestion, type QuestionItem, type SurveyItem } from "#/lib/survey/form";
@@ -50,28 +51,52 @@ export default function ItemSettings({
         <p className="text-sm text-muted-foreground">A line across the page. It has no settings.</p>
       )}
       {(item.kind === "heading" || item.kind === "paragraph") && (
-        <Field
-          id={fieldId("text")}
-          label="Text"
-          message={message("text")}
-          description={BOLD_HINT}
-          action={
-            editable && (
-              <BoldButton
-                fieldId={fieldId("text")}
-                value={item.text}
-                onChange={(text) => replace({ ...item, text })}
-              />
-            )
-          }
-        >
-          <Textarea
+        <>
+          <Field
             id={fieldId("text")}
-            rows={item.kind === "heading" ? 2 : 5}
-            value={item.text}
-            onChange={(e) => replace({ ...item, text: e.target.value })}
-          />
-        </Field>
+            label="Text"
+            message={message("text")}
+            description={BOLD_HINT}
+            action={
+              editable && (
+                <BoldButton
+                  fieldId={fieldId("text")}
+                  value={item.text}
+                  onChange={(text) => replace({ ...item, text })}
+                />
+              )
+            }
+          >
+            <Textarea
+              id={fieldId("text")}
+              rows={item.kind === "heading" ? 2 : 5}
+              value={item.text}
+              onChange={(e) => replace({ ...item, text: e.target.value })}
+            />
+          </Field>
+          <div className="flex items-center gap-3">
+            <Label id={fieldId("align")}>Align</Label>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              aria-labelledby={fieldId("align")}
+              value={item.align ?? "left"}
+              // Left is the default, so it is stored as no value; an empty value is a click on the
+              // pressed option, which keeps it.
+              onValueChange={(value) =>
+                value && replace({ ...item, align: value === "center" ? "center" : undefined })
+              }
+            >
+              <ToggleGroupItem value="left" aria-label="Align left">
+                <AlignLeft className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="center" aria-label="Align centre">
+                <AlignCenter className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        </>
       )}
       {isQuestion(item) && (
         <QuestionSettings
