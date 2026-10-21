@@ -18,11 +18,12 @@ import type { BuilderAction } from "#/lib/survey/builder";
 import { issueKey, type LockedQuestion, publishedQuestion } from "#/lib/survey/check-form";
 import { isQuestion, type QuestionItem, type SurveyItem } from "#/lib/survey/form";
 import { cn } from "#/lib/utils";
-import BoldButton from "./bold-button";
+import BoldButton, { boldOnShortcut } from "./bold-button";
 import EntryListEditor from "./entry-list-editor";
 import { Field } from "./field";
 
-const BOLD_HINT = "Select words and press B, or type **like this**, to print them bold";
+const BOLD_HINT =
+  "Select words and click B or press Ctrl/Cmd+B, or type **like this**, to print them bold";
 
 interface ItemSettingsProps {
   item: SurveyItem;
@@ -56,22 +57,15 @@ export default function ItemSettings({
             id={fieldId("text")}
             label="Text"
             message={message("text")}
-            description={BOLD_HINT}
-            action={
-              editable && (
-                <BoldButton
-                  fieldId={fieldId("text")}
-                  value={item.text}
-                  onChange={(text) => replace({ ...item, text })}
-                />
-              )
-            }
+            description={editable ? BOLD_HINT : undefined}
+            action={editable && <BoldButton fieldId={fieldId("text")} />}
           >
             <Textarea
               id={fieldId("text")}
               rows={item.kind === "heading" ? 2 : 5}
               value={item.text}
               onChange={(e) => replace({ ...item, text: e.target.value })}
+              onKeyDown={boldOnShortcut}
             />
           </Field>
           <div className="flex items-center gap-3">
@@ -154,22 +148,15 @@ function QuestionSettings({
         id={fieldId("prompt")}
         label="Prompt"
         message={message("prompt")}
-        description={BOLD_HINT}
-        action={
-          editable && (
-            <BoldButton
-              fieldId={fieldId("prompt")}
-              value={question.prompt}
-              onChange={(prompt) => replace({ ...question, prompt })}
-            />
-          )
-        }
+        description={editable ? BOLD_HINT : undefined}
+        action={editable && <BoldButton fieldId={fieldId("prompt")} />}
       >
         <Textarea
           id={fieldId("prompt")}
           rows={2}
           value={question.prompt}
           onChange={(e) => replace({ ...question, prompt: e.target.value })}
+          onKeyDown={boldOnShortcut}
         />
       </Field>
 
@@ -207,20 +194,13 @@ function QuestionSettings({
           id={fieldId("helpText")}
           label="Help text"
           message={message("helpText")}
-          action={
-            editable && (
-              <BoldButton
-                fieldId={fieldId("helpText")}
-                value={question.helpText ?? ""}
-                onChange={(helpText) => replace({ ...question, helpText: helpText || undefined })}
-              />
-            )
-          }
+          action={editable && <BoldButton fieldId={fieldId("helpText")} />}
         >
           <Input
             id={fieldId("helpText")}
             value={question.helpText ?? ""}
             onChange={(e) => replace({ ...question, helpText: e.target.value || undefined })}
+            onKeyDown={boldOnShortcut}
           />
         </Field>
       </div>

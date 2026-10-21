@@ -447,6 +447,7 @@ test("a published version opens read-only", async ({ page, context }) => {
   await page.getByRole("button", { name: /How do you feel today/ }).click();
   await expect(page.getByLabel("Prompt")).toBeDisabled();
   await expect(page.getByLabel("Key")).toBeDisabled();
+  await expect(page.getByText(/to print them bold/)).toHaveCount(0);
   for (const name of ["Save", "Add page", "Add item to page 1", "Delete", "Move up"]) {
     await expect(page.getByRole("button", { name, exact: true })).toHaveCount(0);
   }
@@ -519,6 +520,13 @@ test("bold words and a centred paragraph show in the print preview after a save"
   // Select "every" and bold it with the button.
   await text.evaluate((field: HTMLTextAreaElement) => field.setSelectionRange(7, 12));
   await page.getByRole("button", { name: "Bold the selected words" }).click();
+  await expect(text).toHaveValue("Answer **every** question");
+  // The button edits the field as typing does, so undo takes the markers back out.
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(text).toHaveValue("Answer every question");
+  // The keyboard shortcut bolds the selection too.
+  await text.evaluate((field: HTMLTextAreaElement) => field.setSelectionRange(7, 12));
+  await page.keyboard.press("ControlOrMeta+b");
   await expect(text).toHaveValue("Answer **every** question");
   await page.getByRole("radio", { name: "Align centre" }).click();
   await save(page);

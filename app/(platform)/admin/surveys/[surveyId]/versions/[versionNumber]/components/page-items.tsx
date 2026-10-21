@@ -168,6 +168,7 @@ export default function PageItems({
           );
 
           if (item.id !== openItemId) {
+            const summary = itemSummary(item);
             return (
               <li
                 key={item.id}
@@ -192,10 +193,10 @@ export default function PageItems({
                   <span
                     className={cn(
                       "w-full truncate text-sm",
-                      !itemSummary(item) && "italic text-shamiri-text-grey",
+                      !summary && "italic text-shamiri-text-grey",
                     )}
                   >
-                    {itemSummary(item) || placeholder(item)}
+                    {summary || placeholder(item)}
                   </span>
                 </button>
                 {moveControls}

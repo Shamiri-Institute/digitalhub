@@ -1,14 +1,15 @@
 import { Figtree } from "next/font/google";
 
-import { parseBold } from "#/lib/survey/rich-text";
+import { parseBold, plainText } from "#/lib/survey/rich-text";
 import { cn } from "#/lib/utils";
 import { isQuestion, type SurveyItem, type SurveyPage } from "#/lib/survey/form";
 
 /**
- * The sheet's own copy of the app font with the weights printed text uses. The app loads Figtree
- * at 600 only, which would draw normal, semibold and **bold** text all the same.
+ * The sheet's own copy of the app font, as Figtree's variable font: one file holding every weight
+ * printed text uses. The app loads Figtree at 600 only, which would draw normal, semibold and
+ * **bold** text all the same.
  */
-const printFont = Figtree({ subsets: ["latin"], weight: ["400", "600", "700"] });
+const printFont = Figtree({ subsets: ["latin"] });
 
 interface PageProofProps {
   page: SurveyPage;
@@ -82,6 +83,8 @@ export default function PageProof({
                     item.kind === "heading" && "-mb-3 mt-3",
                     // A divider is a thin rule, so it takes 12px each side instead of a full gap.
                     item.kind === "divider" && "-my-4 py-1",
+                    // The last item ends where its box ends, so the note below starts there.
+                    "last:mb-0",
                     itemsWithIssues.has(item.id) && "bg-red-bg ring-2 ring-red-base",
                     item.id === openItemId && "bg-blue-bg ring-4 ring-shamiri-new-blue",
                   )}
@@ -89,14 +92,14 @@ export default function PageProof({
                   <PrintedItem item={item} />
                 </div>
               ))}
-              {/* No height of its own and no gap before it, so the note starts where the items
-                  end. It is one line as tall as the sheet's bottom margin, so any of it showing
-                  below the sheet means the items run into that margin. */}
-              <div className="relative z-0 -mt-6 h-0">
-                <p className="h-16 truncate rounded-md bg-red-bg px-4 text-base font-medium leading-16 text-red-base">
-                  Doesn&apos;t fit on one A4 page; move items to another page.
-                </p>
-              </div>
+            </div>
+            {/* No height of its own, outside the items' gaps, so the note starts where the items
+                end. It is one line as tall as the sheet's bottom margin, so any of it showing
+                below the sheet means the items run into that margin. */}
+            <div className="relative z-0 h-0">
+              <p className="h-16 truncate rounded-md bg-red-bg px-4 text-base font-medium leading-16 text-red-base">
+                Doesn&apos;t fit on one A4 page; move items to another page.
+              </p>
             </div>
           </div>
         </div>
@@ -153,11 +156,12 @@ function PrintedItem({ item }: { item: SurveyItem }) {
   );
 }
 
-/** Printed text, or a grey stand-in while it is empty. */
+/** Printed text, or a grey stand-in while it reads as nothing, markers alone included. */
 function Printed({ text, empty, className }: { text: string; empty: string; className: string }) {
+  const blank = plainText(text).trim() === "";
   return (
-    <p className={cn(className, !text && "font-normal italic text-shamiri-text-grey")}>
-      {text ? <RichText text={text} /> : empty}
+    <p className={cn(className, blank && "font-normal italic text-shamiri-text-grey")}>
+      {blank ? empty : <RichText text={text} />}
     </p>
   );
 }

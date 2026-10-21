@@ -55,6 +55,19 @@ describe("toggleBold", () => {
     });
   });
 
+  it("bolds all of a selection that crosses bold and plain words", () => {
+    // "b** c" runs from inside the bold "ab" into the plain " cd".
+    expect(toggleBold("x **ab** cd", 5, 10)).toEqual({ value: "x **ab c**d", start: 5, end: 8 });
+  });
+
+  it("unbolds a selection that takes in its markers", () => {
+    expect(toggleBold("x **ab** cd", 2, 8)).toEqual({ value: "x ab cd", start: 2, end: 4 });
+  });
+
+  it("unbolds part of a bold run, leaving the rest bold", () => {
+    expect(toggleBold("**abc**", 2, 3)).toEqual({ value: "a**bc**", start: 0, end: 1 });
+  });
+
   it("inserts an empty pair at the caret", () => {
     expect(toggleBold("Hi ", 3, 3)).toEqual({ value: "Hi ****", start: 5, end: 5 });
   });
