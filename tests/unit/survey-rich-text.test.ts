@@ -7,6 +7,7 @@ import {
   plainText,
   readableChars,
   toggleBold,
+  widenEdit,
 } from "#/lib/survey/rich-text";
 
 /** The text and selection after toggling bold on `value` from `start` to `end`. */
@@ -151,6 +152,27 @@ describe("toggleBold", () => {
   });
 });
 
+describe("widenEdit, the fallback for an edit that came out wrong", () => {
+  // A bold marker written straight after a lone backslash turns into an escape: `\**a**`.
+  const value = "\\a";
+  const unguarded = { from: 1, to: 2, insert: "**a**", start: 3, end: 4 };
+  const isRight = (edit: typeof unguarded) => {
+    const chars = readableChars(applyEdit(value, edit));
+    return chars.map((c) => c.char).join("") === "\\a" && chars[1]?.bold === true;
+  };
+
+  it("takes in the neighbour that joined, escaped", () => {
+    expect(isRight(unguarded)).toBe(false);
+    const edit = widenEdit(value, unguarded, isRight);
+    expect(edit && applyEdit(value, edit)).toBe("\\\\**a**");
+  });
+
+  it("gives up with null after its rounds, or when nothing is left to take in", () => {
+    expect(widenEdit(value, unguarded, isRight, 0)).toBeNull();
+    expect(widenEdit(value, unguarded, () => false)).toBeNull();
+  });
+});
+
 describe("toggleBold on any text", () => {
   // A fixed seed, so a failure reproduces.
   let seed = 7;
@@ -197,6 +219,18 @@ describe("toggleBold on any text", () => {
       expect(reselected.map((c) => c.char).join(""), context).toBe(
         selected.map((c) => c.char).join(""),
       );
+
+      // Text outside the selection keeps its words as written. Besides markers, the edit may add
+      // one backslash for an unpaired ** before it and one for a neighbour that would join a
+      // marker, and none after the selection.
+      const strip = (text: string) => text.replace(/[*\\]/g, "");
+      const slashes = (text: string) => text.split("\\").length - 1;
+      const head = { was: value.slice(0, start), now: next.slice(0, edit.start) };
+      const tail = { was: value.slice(end), now: next.slice(edit.end) };
+      expect(strip(head.now), context).toBe(strip(head.was));
+      expect(strip(tail.now), context).toBe(strip(tail.was));
+      expect(slashes(head.now) - slashes(head.was), context).toBeLessThanOrEqual(2);
+      expect(slashes(tail.now) - slashes(tail.was), context).toBeLessThanOrEqual(0);
 
       // Pressing again on all-bold or all-plain words, or at the caret, brings them back.
       if (selected.some((c) => c.bold !== selected[0]?.bold)) continue;

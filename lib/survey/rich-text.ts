@@ -227,7 +227,9 @@ function guard(value: string, { tokens, unpairedAt }: ReturnType<typeof scan>, e
 
 /**
  * The edit, once a rescan of the result confirms it reads as `expected` and has the shape
- * `shaped` asks for; otherwise null, so the field is left as it was rather than changed wrongly.
+ * `shaped` asks for. If the neighbour rules above ever miss a case, the edit is widened instead
+ * (see `widenEdit`), so the button gives a wider edit rather than doing nothing; only when that
+ * fails too is the answer null and the field left as it was.
  */
 function checked(
   value: string,
@@ -235,10 +237,48 @@ function checked(
   expected: { char: string; bold: boolean }[],
   shaped: (result: Token[], edit: TextEdit) => boolean,
 ): TextEdit | null {
-  const result = scan(applyEdit(value, edit)).tokens;
-  const actual = readable(result);
-  const reads =
-    actual.length === expected.length &&
-    actual.every((c, i) => c.char === expected[i]?.char && c.bold === expected[i]?.bold);
-  return reads && shaped(result, edit) ? edit : null;
+  const isRight = (candidate: TextEdit) => {
+    const result = scan(applyEdit(value, candidate)).tokens;
+    const actual = readable(result);
+    return (
+      actual.length === expected.length &&
+      actual.every((c, i) => c.char === expected[i]?.char && c.bold === expected[i]?.bold) &&
+      shaped(result, candidate)
+    );
+  };
+  return isRight(edit) ? edit : widenEdit(value, edit, isRight);
+}
+
+/**
+ * A fallback for an edit that came out wrong: takes in one neighbouring token on each side,
+ * rewritten escaped, and tries again, for at most `rounds` rounds. Returns the first edit
+ * `isRight` accepts, or null.
+ */
+export function widenEdit(
+  value: string,
+  edit: TextEdit,
+  isRight: (edit: TextEdit) => boolean,
+  rounds = 8,
+): TextEdit | null {
+  const { tokens } = scan(value);
+  let { from, to, insert, start, end } = edit;
+  for (let round = 0; round < rounds; round++) {
+    const left = tokens.find((t) => t.at + t.length === from);
+    const right = tokens.find((t) => t.at === to);
+    if (!left && !right) return null;
+    if (left) {
+      const rewritten = left.kind === "marker" ? "**" : escape(left.char);
+      insert = rewritten + insert;
+      start += rewritten.length - left.length;
+      end += rewritten.length - left.length;
+      from = left.at;
+    }
+    if (right) {
+      insert += right.kind === "marker" ? "**" : escape(right.char);
+      to = right.at + right.length;
+    }
+    const candidate = { from, to, insert, start, end };
+    if (isRight(candidate)) return candidate;
+  }
+  return null;
 }

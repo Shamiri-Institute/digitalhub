@@ -23,7 +23,7 @@ import EntryListEditor from "./entry-list-editor";
 import { Field } from "./field";
 
 const BOLD_HINT =
-  "Select words and click B or press Ctrl+B (Cmd+B on a Mac), or type **like this**, to print them bold";
+  "Select words and click B or press Ctrl+B (Cmd+B on Apple devices), or type **like this**, to print them bold. To print ** itself, type \\*\\*.";
 
 interface ItemSettingsProps {
   item: SurveyItem;
