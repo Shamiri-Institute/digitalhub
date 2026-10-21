@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   type BuilderState,
   builderReducer,
+  currentPage,
   findItem,
   initBuilder,
   newItemId,
@@ -79,6 +80,23 @@ describe("builderReducer", () => {
     expect(builderReducer(before, { type: "deletePage", page: 1 })).toBe(before);
     const emptied = builderReducer(before, { type: "deleteItem", itemId: "mood" });
     expect(builderReducer(emptied, { type: "deletePage", page: 1 }).form.pages).toHaveLength(1);
+  });
+
+  it("stays on the page of a deleted item, and on the page before a deleted page", () => {
+    const emptied = builderReducer(start(), { type: "deleteItem", itemId: "mood" });
+    expect(emptied.selection).toEqual({ page: 1 });
+    expect(currentPage(emptied.form, emptied.selection)).toBe(1);
+
+    const deleted = builderReducer(emptied, { type: "deletePage", page: 1 });
+    expect(deleted.selection).toEqual({ page: 0 });
+  });
+
+  it("shows the selected item's page, else the selected page, else the first", () => {
+    const state = start();
+    expect(currentPage(state.form, { item: "mood" })).toBe(1);
+    expect(currentPage(state.form, { page: 1 })).toBe(1);
+    expect(currentPage(state.form, null)).toBe(0);
+    expect(currentPage({ format: 1, pages: [] }, null)).toBe(-1);
   });
 
   it("adds an item after the selected one and selects it", () => {

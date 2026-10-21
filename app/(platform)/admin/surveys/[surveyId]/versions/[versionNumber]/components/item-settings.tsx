@@ -1,48 +1,36 @@
 "use client";
 
-import { Lock, Trash2 } from "lucide-react";
-import type { Dispatch } from "react";
+import { Lock } from "lucide-react";
+import { type Dispatch, useState } from "react";
 
-import { Button } from "#/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "#/components/ui/accordion";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import type { BuilderAction } from "#/lib/survey/builder";
 import { issueKey, type LockedQuestion, publishedQuestion } from "#/lib/survey/check-form";
-import {
-  ITEM_KIND_LABELS,
-  isQuestion,
-  type QuestionItem,
-  type SurveyForm,
-  type SurveyItem,
-} from "#/lib/survey/form";
+import { isQuestion, type QuestionItem, type SurveyItem } from "#/lib/survey/form";
 import { cn } from "#/lib/utils";
 import EntryListEditor from "./entry-list-editor";
 import { Field } from "./field";
 
 interface ItemSettingsProps {
   item: SurveyItem;
-  form: SurveyForm;
-  pageIndex: number;
   dispatch: Dispatch<BuilderAction>;
   editable: boolean;
   messages: Map<string, string>;
   locked: LockedQuestion[];
 }
 
-/** The right pane for one item: every setting of its kind. */
+/** An open item card's body: every setting of its kind. */
 export default function ItemSettings({
   item,
-  form,
-  pageIndex,
   dispatch,
   editable,
   messages,
@@ -53,78 +41,33 @@ export default function ItemSettings({
   const fieldId = (field: string) => `${item.id}-${field}`;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-        <div className="min-w-0 space-y-0.5">
-          <h2 className="text-lg font-semibold">{ITEM_KIND_LABELS[item.kind]}</h2>
-          <p className="text-sm text-shamiri-text-grey">
-            {isQuestion(item) ? "Question" : "Printed, not answered"} · page {pageIndex + 1}
-          </p>
-        </div>
-        {editable && (
-          <div className="flex items-center gap-2">
-            <Select
-              value={String(pageIndex)}
-              onValueChange={(value) =>
-                dispatch({ type: "moveItemToPage", itemId: item.id, page: Number(value) })
-              }
-            >
-              <SelectTrigger aria-label="Page" className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {form.pages.map((page, index) => (
-                  // oxlint-disable-next-line react/no-array-index-key -- a page is identified by its position
-                  <SelectItem key={index} value={String(index)}>
-                    Page {index + 1}
-                    {page.title ? ` · ${page.title}` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              type="button"
-              variant="ghost"
-              className="gap-1 text-shamiri-light-red hover:text-shamiri-light-red"
-              onClick={() => dispatch({ type: "deleteItem", itemId: item.id })}
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* A disabled fieldset turns every control below read-only for a published version. */}
-      <fieldset disabled={!editable} className="space-y-5">
-        {item.kind === "divider" && (
-          <p className="text-sm text-muted-foreground">
-            A line across the page. It has no settings.
-          </p>
-        )}
-        {(item.kind === "heading" || item.kind === "paragraph") && (
-          <Field id={fieldId("text")} label="Text" message={message("text")}>
-            <Textarea
-              id={fieldId("text")}
-              rows={item.kind === "heading" ? 2 : 5}
-              value={item.text}
-              onChange={(e) => replace({ ...item, text: e.target.value })}
-            />
-          </Field>
-        )}
-        {isQuestion(item) && (
-          <QuestionSettings
-            question={item}
-            replace={replace}
-            message={message}
-            fieldId={fieldId}
-            messages={messages}
-            editable={editable}
-            locked={locked}
+    // A disabled fieldset turns every control below read-only for a published version.
+    <fieldset disabled={!editable} className="space-y-5">
+      {item.kind === "divider" && (
+        <p className="text-sm text-muted-foreground">A line across the page. It has no settings.</p>
+      )}
+      {(item.kind === "heading" || item.kind === "paragraph") && (
+        <Field id={fieldId("text")} label="Text" message={message("text")}>
+          <Textarea
+            id={fieldId("text")}
+            rows={item.kind === "heading" ? 2 : 5}
+            value={item.text}
+            onChange={(e) => replace({ ...item, text: e.target.value })}
           />
-        )}
-      </fieldset>
-    </div>
+        </Field>
+      )}
+      {isQuestion(item) && (
+        <QuestionSettings
+          question={item}
+          replace={replace}
+          message={message}
+          fieldId={fieldId}
+          messages={messages}
+          editable={editable}
+          locked={locked}
+        />
+      )}
+    </fieldset>
   );
 }
 
@@ -152,6 +95,11 @@ function QuestionSettings({
   // shown on the key instead.
   const published = publishedQuestion(locked, question.key);
   const review = question.review ?? {};
+  // Open from the start when the question overrides the survey's review, and always when
+  // read-only, since a disabled fieldset disables the toggle too. A problem in it keeps it open,
+  // so a message from Save is never hidden in a closed section.
+  const [reviewOpen, setReviewOpen] = useState(!editable || question.review !== undefined);
+  const reviewOpenNow = reviewOpen || Boolean(message("review.confidenceThreshold"));
   const setReview = (change: Partial<NonNullable<QuestionItem["review"]>>) => {
     const next = { ...review, ...change };
     const empty = next.confidenceThreshold === undefined && !next.verifyAlways;
@@ -227,42 +175,55 @@ function QuestionSettings({
         editable={editable}
       />
 
-      <div className="space-y-4 rounded-lg border bg-muted/40 p-4">
-        <div>
-          <h3 className="text-sm font-semibold">Scan review</h3>
-          <p className="text-xs text-muted-foreground">
-            Overrides how this question&apos;s scanned answers are checked.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2">
-          <Field
-            id={fieldId("review.confidenceThreshold")}
-            label="Confidence threshold"
-            message={message("review.confidenceThreshold")}
-            description="From 0 to 1; blank uses the survey's default"
-          >
-            <Input
-              id={fieldId("review.confidenceThreshold")}
-              type="number"
-              step="0.05"
-              min={0}
-              max={1}
-              value={review.confidenceThreshold ?? ""}
-              onChange={(e) => setReview({ confidenceThreshold: optionalNumber(e.target.value) })}
-            />
-          </Field>
-          <div className="flex items-center gap-2 pb-6">
-            <Checkbox
-              id={fieldId("review.verifyAlways")}
-              checked={review.verifyAlways ?? false}
-              onCheckedChange={(checked) =>
-                setReview({ verifyAlways: checked === true || undefined })
-              }
-            />
-            <Label htmlFor={fieldId("review.verifyAlways")}>Always verify</Label>
-          </div>
-        </div>
-      </div>
+      <Accordion
+        type="single"
+        collapsible
+        value={reviewOpenNow ? "review" : ""}
+        onValueChange={(value) => setReviewOpen(value === "review")}
+        className="rounded-lg border bg-muted/40 px-4"
+      >
+        <AccordionItem value="review">
+          <AccordionTrigger className="gap-2 py-3 hover:no-underline">
+            <span className="font-semibold">Scan review</span>
+            <span className="font-normal text-shamiri-text-grey">{reviewSummary(review)}</span>
+          </AccordionTrigger>
+          <AccordionContent className="space-y-4 pb-4">
+            <p className="text-xs text-muted-foreground">
+              Overrides how this question&apos;s scanned answers are checked.
+            </p>
+            <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2">
+              <Field
+                id={fieldId("review.confidenceThreshold")}
+                label="Confidence threshold"
+                message={message("review.confidenceThreshold")}
+                description="From 0 to 1; blank uses the survey's default"
+              >
+                <Input
+                  id={fieldId("review.confidenceThreshold")}
+                  type="number"
+                  step="0.05"
+                  min={0}
+                  max={1}
+                  value={review.confidenceThreshold ?? ""}
+                  onChange={(e) =>
+                    setReview({ confidenceThreshold: optionalNumber(e.target.value) })
+                  }
+                />
+              </Field>
+              <div className="flex items-center gap-2 pb-6">
+                <Checkbox
+                  id={fieldId("review.verifyAlways")}
+                  checked={review.verifyAlways ?? false}
+                  onCheckedChange={(checked) =>
+                    setReview({ verifyAlways: checked === true || undefined })
+                  }
+                />
+                <Label htmlFor={fieldId("review.verifyAlways")}>Always verify</Label>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </>
   );
 }
@@ -383,6 +344,15 @@ function KindSettings({
     case "signature":
       return <p className="text-sm text-muted-foreground">Printed as a box to sign in.</p>;
   }
+}
+
+/** The scan review settings in a few words, for the closed section. */
+function reviewSummary(review: NonNullable<QuestionItem["review"]>) {
+  const parts = [
+    review.confidenceThreshold !== undefined && `threshold ${review.confidenceThreshold}`,
+    review.verifyAlways && "always verified",
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : "survey default";
 }
 
 /** A number input's value, or undefined when it is blank. */

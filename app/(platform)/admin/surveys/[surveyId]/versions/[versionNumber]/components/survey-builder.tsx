@@ -1,28 +1,18 @@
 "use client";
 
-import { Check, RefreshCw } from "lucide-react";
-import { type Dispatch, useReducer, useState } from "react";
+import { Check, Plus, RefreshCw } from "lucide-react";
+import { useReducer, useState } from "react";
 
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import { Card } from "#/components/ui/card";
-import { Input } from "#/components/ui/input";
 import { toast } from "#/components/ui/use-toast";
 import { saveDraftForm } from "#/lib/actions/survey";
-import {
-  type BuilderAction,
-  builderReducer,
-  findItem,
-  hasUnsavedChanges,
-  initBuilder,
-  pageOf,
-} from "#/lib/survey/builder";
+import { builderReducer, currentPage, hasUnsavedChanges, initBuilder } from "#/lib/survey/builder";
 import { checkForm, indexIssues } from "#/lib/survey/check-form";
-import { isQuestion, type SurveyPage } from "#/lib/survey/form";
 import type { BuilderData } from "../../../../queries";
-import BuilderOutline from "./builder-outline";
-import { Field } from "./field";
-import ItemSettings from "./item-settings";
+import PageItems from "./page-items";
+import PageProof from "./page-proof";
+import PageTabs from "./page-tabs";
 import { useLeaveGuard } from "./use-leave-guard";
 
 interface SurveyBuilderProps {
@@ -31,7 +21,10 @@ interface SurveyBuilderProps {
   editable: boolean;
 }
 
-/** Edits a draft's form and saves it whole; shows a published version the same way, read-only. */
+/**
+ * Edits a draft's form one page at a time, beside that page's print preview, and saves it whole.
+ * Shows a published version the same way, read-only.
+ */
 export default function SurveyBuilder({ version, locked, editable }: SurveyBuilderProps) {
   const [state, dispatch] = useReducer(
     builderReducer,
@@ -88,35 +81,46 @@ export default function SurveyBuilder({ version, locked, editable }: SurveyBuild
     }
   };
 
-  const selection = state.selection;
-  const selectedItem =
-    selection && "item" in selection ? findItem(state.form, selection.item) : undefined;
-  const selectedPage =
-    selection && "page" in selection ? state.form.pages[selection.page] : undefined;
+  const pageIndex = currentPage(state.form, state.selection);
+  const page = state.form.pages[pageIndex];
+  const openItemId =
+    state.selection && "item" in state.selection ? state.selection.item : undefined;
 
   return (
-    <div className="space-y-4">
-      <div className="sticky top-0 z-10 -mx-1 flex items-center justify-between gap-4 border-b bg-white/95 px-1 py-3 backdrop-blur-sm">
-        <p className="text-sm text-shamiri-text-grey" aria-live="polite">
-          {!editable
-            ? "Published versions can't be edited. Start a new draft from the survey page."
-            : unsaved
-              ? "Unsaved changes"
-              : "All changes saved"}
-        </p>
-        {editable && (
-          <Button
-            type="button"
-            variant="brand"
-            className="gap-2"
-            disabled={!unsaved || saving || stale}
-            loading={saving}
-            onClick={() => void handleSave()}
-          >
-            {!unsaved && !saving && <Check className="h-4 w-4" />}
-            Save
-          </Button>
-        )}
+    <div className="space-y-6">
+      <div className="sticky top-0 z-10 -mx-1 flex flex-col-reverse gap-2 border-b bg-white/95 px-1 pt-2 backdrop-blur-sm sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+        <PageTabs
+          form={state.form}
+          current={pageIndex}
+          dispatch={dispatch}
+          editable={editable}
+          itemsWithIssues={itemsWithIssues}
+        />
+        <div className="flex shrink-0 items-center justify-end gap-4 sm:pb-2">
+          <p className="text-sm text-shamiri-text-grey" aria-live="polite">
+            {!editable
+              ? "Published versions can't be edited. Start a new draft from the survey page."
+              : unsaved
+                ? "Unsaved changes"
+                : "All changes saved"}
+            {itemsWithIssues.size > 0 && (
+              <span className="font-medium text-red-base"> · {itemsWithIssues.size} to fix</span>
+            )}
+          </p>
+          {editable && (
+            <Button
+              type="button"
+              variant="brand"
+              className="gap-2"
+              disabled={!unsaved || saving || stale}
+              loading={saving}
+              onClick={() => void handleSave()}
+            >
+              {!unsaved && !saving && <Check className="h-4 w-4" />}
+              Save
+            </Button>
+          )}
+        </div>
       </div>
 
       {stale && (
@@ -141,80 +145,51 @@ export default function SurveyBuilder({ version, locked, editable }: SurveyBuild
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-2">
-          <BuilderOutline
-            form={state.form}
-            selection={state.selection}
-            dispatch={dispatch}
-            editable={editable}
-            itemsWithIssues={itemsWithIssues}
-          />
-        </div>
-        <Card className="h-fit p-6 lg:sticky lg:top-20 lg:col-span-3">
-          {selectedItem ? (
-            <ItemSettings
-              // A fresh pane per item, so its field ids and inputs never carry over.
-              key={selectedItem.id}
-              item={selectedItem}
+      {page ? (
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+          <div className="min-w-0 grow">
+            <PageItems
               form={state.form}
-              pageIndex={pageOf(state.form, selectedItem.id)}
+              pageIndex={pageIndex}
+              openItemId={openItemId}
               dispatch={dispatch}
               editable={editable}
               messages={messages}
               locked={locked}
+              itemsWithIssues={itemsWithIssues}
             />
-          ) : selectedPage && selection && "page" in selection ? (
-            <PageSettings
-              page={selectedPage}
-              index={selection.page}
-              dispatch={dispatch}
-              editable={editable}
+          </div>
+          <div className="lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:w-128 lg:shrink-0 lg:overflow-y-auto">
+            <PageProof
+              page={page}
+              index={pageIndex}
+              pageCount={state.form.pages.length}
+              openItemId={openItemId}
+              itemsWithIssues={itemsWithIssues}
             />
-          ) : (
-            <div className="py-12 text-center">
-              <p className="text-sm font-medium">Nothing selected</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Select a page or an item on the left to see its settings.
-              </p>
-            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mx-auto max-w-md rounded-xl border border-dashed px-6 py-16 text-center">
+          <p className="font-medium">This form has no pages yet</p>
+          <p className="mt-1 text-sm text-shamiri-text-grey">
+            {editable
+              ? "Each page here prints as one A4 sheet. Add a page, then add questions to it."
+              : "Nothing was added to this version."}
+          </p>
+          {editable && (
+            <Button
+              type="button"
+              variant="brand"
+              className="mt-6 gap-2"
+              onClick={() => dispatch({ type: "addPage" })}
+            >
+              <Plus className="h-4 w-4" />
+              Add page
+            </Button>
           )}
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-function PageSettings({
-  page,
-  index,
-  dispatch,
-  editable,
-}: {
-  page: SurveyPage;
-  index: number;
-  dispatch: Dispatch<BuilderAction>;
-  editable: boolean;
-}) {
-  const questions = page.items.filter(isQuestion).length;
-  return (
-    <div className="space-y-6">
-      <div className="space-y-0.5">
-        <h2 className="text-lg font-semibold">Page {index + 1}</h2>
-        <p className="text-sm text-shamiri-text-grey">
-          {page.items.length} {page.items.length === 1 ? "item" : "items"}, {questions}{" "}
-          {questions === 1 ? "question" : "questions"}. Each page prints as one sheet.
-        </p>
-      </div>
-      <fieldset disabled={!editable}>
-        <Field id={`page-${index}-title`} label="Page title">
-          <Input
-            id={`page-${index}-title`}
-            value={page.title ?? ""}
-            onChange={(e) => dispatch({ type: "renamePage", page: index, title: e.target.value })}
-          />
-        </Field>
-      </fieldset>
+        </div>
+      )}
     </div>
   );
 }

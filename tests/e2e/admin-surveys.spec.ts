@@ -176,7 +176,7 @@ test("a new draft copies a published version, and a survey has one draft at a ti
 
   // The copy keeps v1's questions and their keys, so answers line up across versions.
   await page.getByRole("link", { name: "v2", exact: true }).click();
-  await expect(outlinePage(page, 1).getByRole("listitem")).toHaveText([
+  await expect((await showPage(page, 1)).getByRole("listitem")).toHaveText([
     /mood.*How do you feel today\?/,
     /notes.*Anything else\?/,
   ]);
@@ -231,7 +231,12 @@ async function createDraftSurvey(
   return created;
 }
 
-function outlinePage(page: Page, pageNumber: number) {
+/** Shows a page by its tab, with every item card closed, and returns the page's items. */
+async function showPage(page: Page, pageNumber: number) {
+  await page
+    .getByRole("navigation", { name: "Pages" })
+    .getByRole("button", { name: new RegExp(`^Page ${pageNumber}(?!\\d)`) })
+    .click();
   return page.getByRole("region", { name: `Page ${pageNumber}`, exact: true });
 }
 
@@ -306,15 +311,15 @@ test("the builder saves a form of several pages and every item kind", async ({ p
   await save(page);
   await page.reload();
 
-  await expect(outlinePage(page, 1)).toContainText("About you");
-  await expect(outlinePage(page, 1).getByRole("listitem")).toHaveText([
+  await expect(page.getByRole("button", { name: /^Page 1.*About you/ })).toBeVisible();
+  await expect((await showPage(page, 1)).getByRole("listitem")).toHaveText([
     /Heading.*About you/,
     /Number.*how_old_are_you.*How old are you\?/,
     /Single choice.*how_do_you_feel_today.*How do you feel today\?/,
     /Date.*date_of_birth.*Date of birth/,
     /Grid.*over_the_last_two_weeks.*Over the last two weeks/,
   ]);
-  await expect(outlinePage(page, 2).getByRole("listitem")).toHaveText([
+  await expect((await showPage(page, 2)).getByRole("listitem")).toHaveText([
     /Paragraph.*Tell us more\./,
     /Multiple choice.*which_clubs_are_you_in/,
     /Text.*anything_else.*Anything else\?/,
@@ -322,10 +327,12 @@ test("the builder saves a form of several pages and every item kind", async ({ p
     /Signature.*signature.*Signature/,
   ]);
 
+  await showPage(page, 1);
   await page.getByRole("button", { name: /Over the last two weeks/ }).click();
   await expect(page.getByLabel("Row 2 label")).toHaveValue("Feeling down");
   await page.getByRole("button", { name: /How old are you/ }).click();
   await expect(page.getByLabel("Digits")).toHaveValue("3");
+  await showPage(page, 2);
   await page.getByRole("button", { name: /Signature.*Signature/ }).click();
   await expect(page.getByLabel("Required")).toBeChecked();
 });
@@ -342,9 +349,10 @@ test("moving a question to another page keeps its key and settings", async ({ pa
   await save(page);
   await page.reload();
 
-  await expect(outlinePage(page, 1).getByRole("listitem")).toHaveText([/notes/]);
-  await expect(outlinePage(page, 2).getByRole("listitem")).toHaveText([/mood.*How do you feel/]);
-  await page.getByRole("button", { name: /How do you feel today/ }).click();
+  await expect((await showPage(page, 1)).getByRole("listitem")).toHaveText([/notes/]);
+  const second = await showPage(page, 2);
+  await expect(second.getByRole("listitem")).toHaveText([/mood.*How do you feel/]);
+  await second.getByRole("button", { name: /How do you feel today/ }).click();
   await expect(page.getByLabel("Key")).toHaveValue("mood");
   await expect(page.getByLabel("Required")).toBeChecked();
   await expect(page.getByLabel("Option 5 code")).toHaveValue("5");

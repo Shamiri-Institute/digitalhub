@@ -65,12 +65,12 @@ export function initBuilder({
   revision: number;
   publishedKeys: Iterable<string>;
 }): BuilderState {
-  const firstItem = form.pages[0]?.items[0];
   return {
     form,
     savedForm: form,
     revision,
-    selection: firstItem ? { item: firstItem.id } : form.pages.length > 0 ? { page: 0 } : null,
+    // The first page with every item closed, so the page reads as a whole before any is opened.
+    selection: form.pages.length > 0 ? { page: 0 } : null,
     keyFollowsPrompt: new Set<string>(),
     showIssues: false,
     publishedKeys: new Set(publishedKeys),
@@ -115,12 +115,11 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
       if (state.form.pages[action.page]?.items.length !== 0) {
         return state;
       }
+      const pages = state.form.pages.filter((_, index) => index !== action.page);
+      // The builder stays near where it was: on the page before, or the new first page.
       return {
-        ...withPages(
-          state,
-          state.form.pages.filter((_, index) => index !== action.page),
-        ),
-        selection: null,
+        ...withPages(state, pages),
+        selection: pages.length > 0 ? { page: Math.max(0, action.page - 1) } : null,
       };
     }
     case "addItem": {
@@ -158,11 +157,13 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
       );
       return withPages(state, pages);
     }
-    case "deleteItem":
+    case "deleteItem": {
+      const page = pageOf(state.form, action.itemId);
       return {
         ...withPages(state, withoutItem(state.form.pages, action.itemId)),
-        selection: null,
+        selection: page === -1 ? state.selection : { page },
       };
+    }
     case "select":
       return { ...state, selection: action.selection };
     case "showIssues":
@@ -187,6 +188,18 @@ export function hasUnsavedChanges(state: BuilderState) {
 
 export function findItem(form: SurveyForm, itemId: string) {
   return form.pages.flatMap((page) => page.items).find((item) => item.id === itemId);
+}
+
+/** The page the builder shows: the selected item's page or the selected page, else the first. */
+export function currentPage(form: SurveyForm, selection: Selection) {
+  if (selection && "item" in selection) {
+    const page = pageOf(form, selection.item);
+    if (page !== -1) {
+      return page;
+    }
+  }
+  const page = selection && "page" in selection ? selection.page : 0;
+  return Math.min(page, form.pages.length - 1);
 }
 
 /** The position of the page holding an item, or -1. */
