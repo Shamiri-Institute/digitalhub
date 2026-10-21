@@ -75,10 +75,20 @@ describe("the bold button without execCommand", () => {
     expect(field.value).toBe("How **do** you feel");
   });
 
-  it("reads the physical key, whatever the layout types", () => {
+  it("falls back to the key in B's place on a layout without Latin letters", () => {
     const { field } = render("How do you feel");
     field.setSelectionRange(4, 6);
     press(field, { ctrlKey: true, key: "и" });
+    expect(field.value).toBe("How **do** you feel");
+  });
+
+  it("goes by the letter a Latin layout types, so Dvorak's B bolds and its Ctrl+X does not", () => {
+    const { field } = render("How do you feel");
+    field.setSelectionRange(4, 6);
+    // On Dvorak, QWERTY's B key types "x", and the key typing "b" sits where QWERTY's N is.
+    press(field, { ctrlKey: true, key: "x", code: "KeyB" });
+    expect(field.value).toBe("How do you feel");
+    press(field, { ctrlKey: true, key: "b", code: "KeyN" });
     expect(field.value).toBe("How **do** you feel");
   });
 

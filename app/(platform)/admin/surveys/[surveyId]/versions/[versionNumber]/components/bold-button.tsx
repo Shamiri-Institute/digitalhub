@@ -44,12 +44,15 @@ function onApple() {
 
 /**
  * Cmd+B on a Mac, Ctrl+B elsewhere, in a text field does what its bold button does. On a Mac
- * Ctrl+B keeps its own meaning, a step back. It reads the physical key, so it works on any
- * keyboard layout, and a held key toggles once.
+ * Ctrl+B keeps its own meaning, a step back. The key is the letter the layout types, so B is B on
+ * Dvorak too; a layout that types no Latin letters there falls back to the key in B's place on a
+ * QWERTY keyboard. A held key toggles once.
  */
 export function boldOnShortcut(event: KeyboardEvent<TextField>) {
   const command = onApple() ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey;
-  if (!command || event.altKey || event.shiftKey || event.code !== "KeyB") {
+  const latin = /^[a-z]$/i.test(event.key);
+  const isB = latin ? event.key.toLowerCase() === "b" : event.code === "KeyB";
+  if (!command || event.altKey || event.shiftKey || !isB) {
     return;
   }
   // A held key still keeps the browser's own Ctrl+B (bookmarks, in some) from opening.

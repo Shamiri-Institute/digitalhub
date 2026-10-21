@@ -22,8 +22,10 @@ import BoldButton, { boldOnShortcut } from "./bold-button";
 import EntryListEditor from "./entry-list-editor";
 import { Field } from "./field";
 
+// Says "the bold shortcut", not its keys: those depend on the system, which the server rendering
+// this can't know.
 const BOLD_HINT =
-  "Select words and click B or press Ctrl/Cmd+B, or type **like this**, to print them bold";
+  "Select words and click B or use the bold shortcut, or type **like this**, to print them bold. Type \\* for a plain asterisk.";
 
 interface ItemSettingsProps {
   item: SurveyItem;

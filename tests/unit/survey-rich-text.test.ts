@@ -86,11 +86,21 @@ describe("toggleBold", () => {
 
   it("keeps a literal ** from pairing with the new marker", () => {
     const result = boldWords("5 ** 2 is 25", "25");
-    expect(result?.value).toBe("5 \\*\\* 2 is **25**");
+    // Escaping one asterisk of the pair is enough to keep it from being a marker.
+    expect(result?.value).toBe("5 *\\* 2 is **25**");
     expect(parseBold(result?.value ?? "")).toEqual([
       { text: "5 ** 2 is ", bold: false, start: 0 },
-      { text: "25", bold: true, start: 14 },
+      { text: "25", bold: true, start: 13 },
     ]);
+  });
+
+  it("leaves an unpaired ** after the edit as written", () => {
+    expect(boldWords("bold me then 2 ** 3", "bold")?.value).toBe("**bold** me then 2 ** 3");
+  });
+
+  it("escapes nothing that could not join the edit", () => {
+    expect(boldWords("b* c", "b")?.value).toBe("**b*** c");
+    expect(plainText("**b*** c")).toBe("b* c");
   });
 
   it("escapes a literal asterisk beside a new marker, and undoes itself", () => {
@@ -120,28 +130,42 @@ describe("toggleBold", () => {
     expect(first).toEqual({ value: "Hi ****", start: 5, end: 5 });
     expect(bolded("Hi ****", 5, 5)).toEqual({ value: "Hi ", start: 3, end: 3 });
   });
+
+  it("takes out an empty pair inside bold text on a second press", () => {
+    const first = bolded("**abc**", 3, 3);
+    expect(first).toEqual({ value: "**a****bc**", start: 5, end: 5 });
+    expect(bolded("**a****bc**", 5, 5)).toEqual({ value: "**abc**", start: 3, end: 3 });
+  });
 });
 
 describe("toggleBold on any text", () => {
-  it("never changes what the text reads as, only which characters are bold", () => {
+  it("never changes what the text reads as, and a second press undoes an added pair", () => {
     // A fixed seed, so a failure reproduces.
     let seed = 7;
     const random = () => {
       seed = (seed * 1103515245 + 12345) % 2147483648;
       return seed / 2147483648;
     };
-    const alphabet = ["a", "b", " ", "*", "**", "\\", "\\*"];
-    for (let run = 0; run < 3000; run++) {
+    const alphabet = ["a", "b", " ", "*", "**", "***", "\\", "\\*", "\\\\"];
+    for (let run = 0; run < 5000; run++) {
       const value = Array.from(
-        { length: 1 + Math.floor(random() * 10) },
+        { length: 1 + Math.floor(random() * 12) },
         () => alphabet[Math.floor(random() * alphabet.length)],
       ).join("");
       const start = Math.floor(random() * (value.length + 1));
-      const end = start + Math.floor(random() * (value.length - start + 1));
+      const end =
+        random() < 0.4 ? start : start + Math.floor(random() * (value.length - start + 1));
       const edit = toggleBold(value, start, end);
       if (!edit) continue;
       const next = applyEdit(value, edit);
-      expect(plainText(next), JSON.stringify({ value, start, end, next })).toBe(plainText(value));
+      const context = JSON.stringify({ value, start, end, next });
+      expect(plainText(next), context).toBe(plainText(value));
+      if (start === end && next.length > value.length) {
+        // The caret sits between the new pair, so pressing again takes it out rather than adding
+        // another.
+        const again = toggleBold(next, edit.start, edit.end);
+        expect(again && applyEdit(next, again).length < next.length, context).toBe(true);
+      }
     }
   });
 });

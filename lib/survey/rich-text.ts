@@ -46,7 +46,7 @@ function scan(text: string) {
       tokens.push({ kind: "char", char: t.char, at: t.at, length: t.length, bold });
     }
   }
-  return { tokens, endBold: bold, unpairedAt: unpaired?.at };
+  return { tokens, endBold: bold };
 }
 
 export function parseBold(text: string): TextRun[] {
@@ -84,30 +84,39 @@ export function applyEdit(value: string, edit: TextEdit) {
 
 /**
  * Bolds the selected words, or un-bolds them when every selected character is already bold. The
- * edit stays inside the selection, widened to whole markers and escapes, and keeps the bold state
- * at both of its ends, so markup elsewhere reads as before. It escapes asterisks and backslashes
- * it writes, and takes in a literal one beside a marker it adds, so the result reads back exactly.
+ * edit covers the selection, widened to whole markers and escapes, and keeps the bold state at
+ * both of its ends, so markup elsewhere reads as before; a marker it would add beside an existing
+ * one cancels that one instead. It escapes the asterisks and backslashes it writes, so it undoes
+ * itself.
  *
- * With nothing selected it adds an empty pair, the caret between; with the caret already in an
- * empty pair it takes the pair out. Returns null when the selection holds no readable text.
+ * With nothing selected it adds an empty pair, the caret between; with the caret already between
+ * two markers it takes them out. Returns null when the selection holds no readable text.
  */
 export function toggleBold(value: string, start: number, end: number): TextEdit | null {
-  const { tokens, endBold, unpairedAt } = scan(value);
+  const { tokens, endBold } = scan(value);
+  const chars = readable(tokens);
+
   if (start === end) {
     // A caret inside a marker or an escape moves past it, so the pair never splits one.
     const inside = tokens.find((t) => t.at < start && start < t.at + t.length);
     if (inside) return toggleBold(value, inside.at + inside.length, inside.at + inside.length);
     const before = tokens.find((t) => t.at === start - 2);
     const after = tokens.find((t) => t.at === start);
-    if (before?.kind === "marker" && after?.kind === "marker" && !before.bold) {
-      return { from: start - 2, to: start + 2, insert: "", start: start - 2, end: start - 2 };
+    if (before?.kind === "marker" && after?.kind === "marker") {
+      const remove = {
+        from: start - 2,
+        to: start + 2,
+        insert: "",
+        start: start - 2,
+        end: start - 2,
+      };
+      return settle(value, tokens, remove, chars, () => true);
     }
-    return finish(value, tokens, unpairedAt, {
-      from: start,
-      to: start,
-      insert: "****",
-      start: start + 2,
-      end: start + 2,
+    const add = { from: start, to: start, insert: "****", start: start + 2, end: start + 2 };
+    // The caret must end up between the two new markers, so a second press finds them.
+    return settle(value, tokens, add, chars, (result, edit) => {
+      const isMarker = (at: number) => result.some((t) => t.kind === "marker" && t.at === at);
+      return isMarker(edit.start - 2) && isMarker(edit.start);
     });
   }
 
@@ -127,11 +136,6 @@ export function toggleBold(value: string, start: number, end: number): TextEdit 
   const closeMarker = bold !== boldOut && tokens[last + 1]?.kind !== "marker";
   if (boldIn !== bold && !openMarker) first -= 1;
   if (bold !== boldOut && !closeMarker) last += 1;
-  // A literal asterisk after a marker this adds would join it, so it is rewritten, escaped, as
-  // part of the edit. One before the edit is guardStart's.
-  const after = tokens[last + 1];
-  const trailing = closeMarker && after?.kind === "char" && after.char === "*" ? after : undefined;
-  if (trailing) last += 1;
 
   const from = tokens[first]?.at ?? start;
   const lastToken = tokens[last];
@@ -141,69 +145,82 @@ export function toggleBold(value: string, start: number, end: number): TextEdit 
   insert += selected.map((t) => escape(t.char)).join("");
   const selectEnd = from + insert.length;
   if (closeMarker) insert += "**";
-  if (trailing) insert += escape(trailing.char);
 
-  return finish(value, tokens, unpairedAt, {
-    from,
-    to,
-    insert,
-    start: selectStart,
-    end: selectEnd,
-  });
-}
-
-/**
- * Makes an edit safe against the text around it: the character just before it, and a stray
- * unpaired `**`, along with the character just before that once the edit reaches it.
- */
-function finish(value: string, tokens: Token[], stray: number | undefined, edit: TextEdit) {
-  return guardStart(tokens, escapeStray(value, stray, guardStart(tokens, edit)));
+  const expected = chars.map((c) => (selected.includes(c) ? { ...c, bold } : c));
+  const selectedText = selected.map((t) => t.char).join("");
+  // The selection must still hold exactly the selected words, without splitting a token.
+  return settle(
+    value,
+    tokens,
+    { from, to, insert, start: selectStart, end: selectEnd },
+    expected,
+    (result, edit) =>
+      result.every((t) => t.at + t.length <= edit.start || t.at >= edit.start) &&
+      result.every((t) => t.at + t.length <= edit.end || t.at >= edit.end) &&
+      readable(result)
+        .filter((t) => t.at >= edit.start && t.at < edit.end)
+        .map((t) => t.char)
+        .join("") === selectedText,
+  );
 }
 
 const escape = (char: string) => (char === "*" || char === "\\" ? `\\${char}` : char);
 
-/**
- * A lone literal asterisk or backslash just before an edit would join what the edit starts with
- * (a marker, or an escape), so the edit takes it in, escaped.
- */
-function guardStart(tokens: Token[], edit: TextEdit): TextEdit {
-  const before = tokens.find((t) => t.at + t.length === edit.from);
-  if (
-    before?.kind !== "char" ||
-    before.length !== 1 ||
-    (before.char !== "*" && before.char !== "\\")
-  ) {
-    return edit;
-  }
-  return {
-    from: before.at,
-    to: edit.to,
-    insert: escape(before.char) + edit.insert,
-    start: edit.start + 1,
-    end: edit.end + 1,
-  };
+/** The readable characters among the tokens. */
+function readable(tokens: Token[]) {
+  return tokens.filter((t): t is Extract<Token, { kind: "char" }> => t.kind === "char");
 }
 
 /**
- * An edit that adds markers to text holding an unpaired `**` would pair the new marker with it,
- * so the edit takes it in, escaped. A stray inside the edit was escaped with the rest.
+ * Widens an edit until the text reads as `expected` and has the shape `shaped` asks for. Text
+ * next to an edit can join what it writes: a lone `\` before a marker turns it into an escape, a
+ * lone `*` beside a marker makes a different marker, and an unpaired `**` before it pairs with
+ * the new marker. Each round rescans the result, and where it first goes wrong, takes the
+ * neighbouring token on that side into the edit, rewritten escaped. Nothing else changes.
  */
-function escapeStray(value: string, stray: number | undefined, edit: TextEdit): TextEdit {
-  if (stray === undefined) return edit;
-  const escaped = "\\*\\*";
-  if (stray + 2 <= edit.from) {
-    const prefix = escaped + value.slice(stray + 2, edit.from);
-    const shift = prefix.length - (edit.from - stray);
-    return {
-      from: stray,
-      to: edit.to,
-      insert: prefix + edit.insert,
-      start: edit.start + shift,
-      end: edit.end + shift,
-    };
+function settle(
+  value: string,
+  tokens: Token[],
+  edit: TextEdit,
+  expected: { char: string; bold: boolean }[],
+  shaped: (result: Token[], edit: TextEdit) => boolean,
+): TextEdit {
+  let { from, to, insert, start, end } = edit;
+  for (;;) {
+    const current = { from, to, insert, start, end };
+    const result = scan(applyEdit(value, current)).tokens;
+    // Where the text first reads wrong, widen on that side. When it reads right but is shaped
+    // wrong, a neighbour on either side may be joining, so take in one from each.
+    const wrong = firstDifference(readable(result), expected);
+    if (wrong === -1 && shaped(result, current)) return current;
+    const left = tokens.find((t) => t.at + t.length === from);
+    const right = tokens.find((t) => t.at === to);
+    if (!left && !right) return current; // every token rewritten; can't be reached
+    const readableBefore = tokens.filter((t) => t.kind === "char" && t.at < from).length;
+    const takeLeft = left && (wrong === -1 || wrong <= readableBefore || !right);
+    const takeRight = right && (wrong === -1 || !takeLeft);
+    if (takeLeft) {
+      const rewritten = rewrite(left);
+      insert = rewritten + insert;
+      start += rewritten.length - left.length;
+      end += rewritten.length - left.length;
+      from = left.at;
+    }
+    if (takeRight) {
+      insert += rewrite(right);
+      to = right.at + right.length;
+    }
   }
-  if (stray >= edit.to) {
-    return { ...edit, to: stray + 2, insert: edit.insert + value.slice(edit.to, stray) + escaped };
+}
+
+function rewrite(token: Token) {
+  return token.kind === "marker" ? "**" : escape(token.char);
+}
+
+function firstDifference(actual: { char: string; bold: boolean }[], expected: typeof actual) {
+  const length = Math.max(actual.length, expected.length);
+  for (let i = 0; i < length; i++) {
+    if (actual[i]?.char !== expected[i]?.char || actual[i]?.bold !== expected[i]?.bold) return i;
   }
-  return edit;
+  return -1;
 }
