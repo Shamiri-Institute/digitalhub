@@ -1,5 +1,6 @@
 import { Figtree } from "next/font/google";
 
+import { parseBold } from "#/lib/survey/rich-text";
 import { cn } from "#/lib/utils";
 import { isQuestion, type SurveyItem, type SurveyPage } from "#/lib/survey/form";
 
@@ -131,7 +132,11 @@ function PrintedItem({ item }: { item: SurveyItem }) {
           empty="Question"
           className="text-sm font-semibold leading-snug"
         />
-        {item.helpText && <p className="text-xs text-shamiri-text-dark-grey">{item.helpText}</p>}
+        {item.helpText && (
+          <p className="text-xs text-shamiri-text-dark-grey">
+            <RichText text={item.helpText} />
+          </p>
+        )}
       </div>
       <Response item={item} />
     </div>
@@ -142,8 +147,22 @@ function PrintedItem({ item }: { item: SurveyItem }) {
 function Printed({ text, empty, className }: { text: string; empty: string; className: string }) {
   return (
     <p className={cn(className, !text && "font-normal italic text-shamiri-text-grey")}>
-      {text || empty}
+      {text ? <RichText text={text} /> : empty}
     </p>
+  );
+}
+
+/** Text with its `**bold**` words in bold, as it prints. */
+function RichText({ text }: { text: string }) {
+  return parseBold(text).map((run, i) =>
+    run.bold ? (
+      // oxlint-disable-next-line react/no-array-index-key -- runs are derived from the text and never reorder
+      <strong key={i} className="font-bold">
+        {run.text}
+      </strong>
+    ) : (
+      run.text
+    ),
   );
 }
 
@@ -157,7 +176,7 @@ function Response({ item }: { item: Extract<SurveyItem, { key: string }> }) {
             // oxlint-disable-next-line react/no-array-index-key -- codes may repeat while being typed
             <span key={i} className="flex items-center gap-2 text-sm">
               <Mark round={item.kind === "single_choice"} />
-              {option.label}
+              <RichText text={option.label} />
             </span>
           ))}
         </div>
@@ -171,7 +190,7 @@ function Response({ item }: { item: Extract<SurveyItem, { key: string }> }) {
               {item.options.map((option, i) => (
                 // oxlint-disable-next-line react/no-array-index-key -- codes may repeat while being typed
                 <th key={i} className="w-20 pb-2 align-bottom text-xs font-medium leading-tight">
-                  {option.label}
+                  <RichText text={option.label} />
                 </th>
               ))}
             </tr>
@@ -180,7 +199,9 @@ function Response({ item }: { item: Extract<SurveyItem, { key: string }> }) {
             {item.rows.map((row, r) => (
               // oxlint-disable-next-line react/no-array-index-key -- row keys may repeat while being typed
               <tr key={r} className="border-t border-shamiri-light-grey">
-                <td className="py-2 pr-4 leading-snug">{row.label}</td>
+                <td className="py-2 pr-4 leading-snug">
+                  <RichText text={row.label} />
+                </td>
                 {item.options.map((_, c) => (
                   // oxlint-disable-next-line react/no-array-index-key -- codes may repeat while being typed
                   <td key={c} className="text-center align-middle">

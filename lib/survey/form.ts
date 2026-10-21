@@ -1,7 +1,8 @@
 // A survey version's form: one document holding every printed page and item in order. It is
 // stored whole in survey_versions.form, and freezes when the version is published, so printed
 // copies and their answers can rely on it never changing. The schema below is its only
-// definition; the types are inferred from it.
+// definition; the types are inferred from it. Printed text (headings, paragraphs, prompts, help
+// text and labels) may mark words bold with `**…**`, read by `parseBold` in ./rich-text.
 
 import { z } from "zod";
 

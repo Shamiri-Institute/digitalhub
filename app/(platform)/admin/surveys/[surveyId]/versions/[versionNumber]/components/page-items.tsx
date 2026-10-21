@@ -30,6 +30,7 @@ import {
   type SurveyForm,
   type SurveyItem,
 } from "#/lib/survey/form";
+import { plainText } from "#/lib/survey/rich-text";
 import { cn } from "#/lib/utils";
 import { Field } from "./field";
 import IconButton from "./icon-button";
@@ -317,8 +318,8 @@ function AddItemMenu({
 
 /** What a closed card shows for an item: its prompt or text. */
 function itemSummary(item: SurveyItem) {
-  if (isQuestion(item)) return item.prompt;
-  return item.kind === "divider" ? "" : item.text;
+  if (isQuestion(item)) return plainText(item.prompt);
+  return item.kind === "divider" ? "" : plainText(item.text);
 }
 
 function placeholder(item: SurveyItem) {

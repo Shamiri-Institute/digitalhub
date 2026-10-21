@@ -17,8 +17,11 @@ import type { BuilderAction } from "#/lib/survey/builder";
 import { issueKey, type LockedQuestion, publishedQuestion } from "#/lib/survey/check-form";
 import { isQuestion, type QuestionItem, type SurveyItem } from "#/lib/survey/form";
 import { cn } from "#/lib/utils";
+import BoldButton from "./bold-button";
 import EntryListEditor from "./entry-list-editor";
 import { Field } from "./field";
+
+const BOLD_HINT = "Select words and press B, or type **like this**, to print them bold";
 
 interface ItemSettingsProps {
   item: SurveyItem;
@@ -47,7 +50,21 @@ export default function ItemSettings({
         <p className="text-sm text-muted-foreground">A line across the page. It has no settings.</p>
       )}
       {(item.kind === "heading" || item.kind === "paragraph") && (
-        <Field id={fieldId("text")} label="Text" message={message("text")}>
+        <Field
+          id={fieldId("text")}
+          label="Text"
+          message={message("text")}
+          description={BOLD_HINT}
+          action={
+            editable && (
+              <BoldButton
+                fieldId={fieldId("text")}
+                value={item.text}
+                onChange={(text) => replace({ ...item, text })}
+              />
+            )
+          }
+        >
           <Textarea
             id={fieldId("text")}
             rows={item.kind === "heading" ? 2 : 5}
@@ -108,7 +125,21 @@ function QuestionSettings({
 
   return (
     <>
-      <Field id={fieldId("prompt")} label="Prompt" message={message("prompt")}>
+      <Field
+        id={fieldId("prompt")}
+        label="Prompt"
+        message={message("prompt")}
+        description={BOLD_HINT}
+        action={
+          editable && (
+            <BoldButton
+              fieldId={fieldId("prompt")}
+              value={question.prompt}
+              onChange={(prompt) => replace({ ...question, prompt })}
+            />
+          )
+        }
+      >
         <Textarea
           id={fieldId("prompt")}
           rows={2}
@@ -147,7 +178,20 @@ function QuestionSettings({
             )}
           </div>
         </Field>
-        <Field id={fieldId("helpText")} label="Help text" message={message("helpText")}>
+        <Field
+          id={fieldId("helpText")}
+          label="Help text"
+          message={message("helpText")}
+          action={
+            editable && (
+              <BoldButton
+                fieldId={fieldId("helpText")}
+                value={question.helpText ?? ""}
+                onChange={(helpText) => replace({ ...question, helpText: helpText || undefined })}
+              />
+            )
+          }
+        >
           <Input
             id={fieldId("helpText")}
             value={question.helpText ?? ""}
