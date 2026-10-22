@@ -253,6 +253,13 @@
       "when": 1792418238820,
       "tag": "0035_backfill_legacy_fellow_attendance_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792577435605,
+      "tag": "0036_survey_version_revision",
+      "breakpoints": true
     }
   ]
 }

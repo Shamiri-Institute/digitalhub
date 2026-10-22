@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
+import Link from "next/link";
 
 import DataTable from "#/components/data-table";
 import { SurveyVersionStatus } from "#/db/enums";
@@ -15,7 +16,14 @@ function versionColumns(surveyId: string, hasDraft: boolean): ColumnDef<SurveyVe
       accessorKey: "versionNumber",
       header: "Version",
       id: "Version",
-      cell: ({ row }) => `v${row.original.versionNumber}`,
+      cell: ({ row }) => (
+        <Link
+          href={`/admin/surveys/${surveyId}/versions/${row.original.versionNumber}`}
+          className="font-medium text-shamiri-new-blue hover:underline"
+        >
+          v{row.original.versionNumber}
+        </Link>
+      ),
     },
     {
       accessorKey: "status",

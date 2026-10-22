@@ -1,5 +1,7 @@
 import { db } from "#/db/client";
 import type { SurveyScope } from "#/lib/auth/admin-access";
+import { SurveyVersionStatus } from "#/db/enums";
+import { lockedQuestions } from "#/lib/survey/check-form";
 import { summarizeForm } from "#/lib/survey/form";
 
 /** The surveys of an implementer in a project, newest first, with their latest version. */
@@ -66,3 +68,39 @@ export async function fetchSurveyWithVersions(
 
 export type SurveyWithVersions = NonNullable<Awaited<ReturnType<typeof fetchSurveyWithVersions>>>;
 export type SurveyVersionRow = SurveyWithVersions["versions"][number];
+
+/**
+ * One version of a survey with its form, for the builder, and the questions its survey's published
+ * and retired versions lock; undefined outside the caller's scope or for an unknown number.
+ */
+export async function fetchVersionForBuilder(
+  surveyId: string,
+  versionNumber: number,
+  { implementerId, projectId }: SurveyScope,
+) {
+  const found = await db.query.survey.findFirst({
+    where: (s, { and, eq }) =>
+      and(eq(s.id, surveyId), eq(s.implementerId, implementerId), eq(s.projectId, projectId)),
+    columns: { id: true, code: true, title: true },
+    with: {
+      // Only the forms needed: this version's, and the published ones that lock keys.
+      versions: {
+        columns: { id: true, versionNumber: true, status: true, revision: true, form: true },
+        where: (v, { eq, ne, or }) =>
+          or(eq(v.versionNumber, versionNumber), ne(v.status, SurveyVersionStatus.DRAFT)),
+        orderBy: (v, { desc }) => desc(v.versionNumber),
+      },
+    },
+  });
+  const version = found?.versions.find((v) => v.versionNumber === versionNumber);
+  return (
+    found &&
+    version && {
+      survey: { id: found.id, code: found.code, title: found.title },
+      version,
+      locked: lockedQuestions(found.versions.filter((v) => v.status !== SurveyVersionStatus.DRAFT)),
+    }
+  );
+}
+
+export type BuilderData = NonNullable<Awaited<ReturnType<typeof fetchVersionForBuilder>>>;
