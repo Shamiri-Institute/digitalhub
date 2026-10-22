@@ -453,6 +453,19 @@ test("a published version opens read-only", async ({ page, context }) => {
   }
 });
 
+test("a retired version opens read-only and says it is retired", async ({ page, context }) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const retired = await createPublishedSurvey(scope, userId);
+  await db
+    .update(surveyVersion)
+    .set({ status: "RETIRED" })
+    .where(eq(surveyVersion.surveyId, retired.id));
+  await page.goto(getUrl(`/admin/surveys/${retired.id}/versions/1`));
+
+  await expect(page.getByText("Retired versions can't be edited")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save", exact: true })).toHaveCount(0);
+});
+
 test("after a save, going back to the builder keeps the saved form", async ({ page, context }) => {
   const { userId, scope } = await signInAsResearchAdmin(context);
   const draft = await createDraftSurvey(scope, userId, TWO_QUESTIONS);

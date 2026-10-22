@@ -5,6 +5,7 @@ import { useReducer, useState } from "react";
 
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
+import { SURVEY_VERSION_STATUS_LABELS } from "#/db/enums";
 import { toast } from "#/components/ui/use-toast";
 import { saveDraftForm } from "#/lib/actions/survey";
 import { builderReducer, currentPage, hasUnsavedChanges, initBuilder } from "#/lib/survey/builder";
@@ -99,7 +100,7 @@ export default function SurveyBuilder({ version, locked, editable }: SurveyBuild
         <div className="flex shrink-0 items-center justify-end gap-4 sm:pb-2">
           <p className="text-sm text-shamiri-text-grey" aria-live="polite">
             {!editable
-              ? "Published versions can't be edited. Start a new draft from the survey page."
+              ? `${SURVEY_VERSION_STATUS_LABELS[version.status]} versions can't be edited. Start a new draft from the survey page.`
               : unsaved
                 ? "Unsaved changes"
                 : "All changes saved"}
