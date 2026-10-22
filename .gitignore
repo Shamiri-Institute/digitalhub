@@ -66,3 +66,5 @@ vscode
 # potetos-for-everyone:begin
 .potetos/
 # potetos-for-everyone:end
+
+.agents/skills/verify-fellow-attendance-payout/.cache/
