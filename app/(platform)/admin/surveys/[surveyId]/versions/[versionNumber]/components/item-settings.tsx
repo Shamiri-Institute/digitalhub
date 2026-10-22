@@ -18,12 +18,10 @@ import type { BuilderAction } from "#/lib/survey/builder";
 import { issueKey, type LockedQuestion, publishedQuestion } from "#/lib/survey/check-form";
 import { isQuestion, type QuestionItem, type SurveyItem } from "#/lib/survey/form";
 import { cn } from "#/lib/utils";
-import BoldButton, { boldOnShortcut } from "./bold-button";
 import EntryListEditor from "./entry-list-editor";
 import { Field } from "./field";
 
-const BOLD_HINT =
-  "Select words and click B or press Ctrl+B (Cmd+B on Apple devices), or type **like this**, to print them bold. To print ** itself, type \\*\\*.";
+const BOLD_HINT = "Type **like this** to print words bold. To print ** itself, type \\*\\*.";
 
 interface ItemSettingsProps {
   item: SurveyItem;
@@ -58,14 +56,12 @@ export default function ItemSettings({
             label="Text"
             message={message("text")}
             description={editable ? BOLD_HINT : undefined}
-            action={editable && <BoldButton fieldId={fieldId("text")} />}
           >
             <Textarea
               id={fieldId("text")}
               rows={item.kind === "heading" ? 2 : 5}
               value={item.text}
               onChange={(e) => replace({ ...item, text: e.target.value })}
-              onKeyDown={boldOnShortcut}
             />
           </Field>
           <div className="flex items-center gap-3">
@@ -149,14 +145,12 @@ function QuestionSettings({
         label="Prompt"
         message={message("prompt")}
         description={editable ? BOLD_HINT : undefined}
-        action={editable && <BoldButton fieldId={fieldId("prompt")} />}
       >
         <Textarea
           id={fieldId("prompt")}
           rows={2}
           value={question.prompt}
           onChange={(e) => replace({ ...question, prompt: e.target.value })}
-          onKeyDown={boldOnShortcut}
         />
       </Field>
 
@@ -190,17 +184,11 @@ function QuestionSettings({
             )}
           </div>
         </Field>
-        <Field
-          id={fieldId("helpText")}
-          label="Help text"
-          message={message("helpText")}
-          action={editable && <BoldButton fieldId={fieldId("helpText")} />}
-        >
+        <Field id={fieldId("helpText")} label="Help text" message={message("helpText")}>
           <Input
             id={fieldId("helpText")}
             value={question.helpText ?? ""}
             onChange={(e) => replace({ ...question, helpText: e.target.value || undefined })}
-            onKeyDown={boldOnShortcut}
           />
         </Field>
       </div>

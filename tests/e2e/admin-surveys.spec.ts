@@ -529,21 +529,7 @@ test("bold words and a centred paragraph show in the print preview after a save"
   await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
 
   await page.getByRole("button", { name: /Answer every question/ }).click();
-  const text = page.getByLabel("Text");
-  // Select "every" and bold it with the button.
-  await text.evaluate((field: HTMLTextAreaElement) => field.setSelectionRange(7, 12));
-  await page.getByRole("button", { name: "Bold the selected words" }).click();
-  await expect(text).toHaveValue("Answer **every** question");
-  // The button edits the field as typing does, so undo takes the markers back out.
-  await page.keyboard.press("ControlOrMeta+z");
-  await expect(text).toHaveValue("Answer every question");
-  // The keyboard shortcut bolds the selection too: Cmd+B where the page runs on Apple's systems,
-  // Ctrl+B elsewhere. The page decides from its user agent, which the test device may set to
-  // another system than the machine running it.
-  await text.evaluate((field: HTMLTextAreaElement) => field.setSelectionRange(7, 12));
-  const apple = await page.evaluate(() => /Mac|iPhone|iPad/.test(navigator.userAgent));
-  await page.keyboard.press(apple ? "Meta+b" : "Control+b");
-  await expect(text).toHaveValue("Answer **every** question");
+  await page.getByLabel("Text").fill("Answer **every** question");
   await page.getByRole("radio", { name: "Align centre" }).click();
   await save(page);
   await page.reload();
