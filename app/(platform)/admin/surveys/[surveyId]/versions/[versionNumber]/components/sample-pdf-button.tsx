@@ -38,7 +38,8 @@ export default function SamplePdfButton({ layout, fileName, disabled }: SamplePd
       document.body.appendChild(link);
       link.click();
       link.remove();
-      URL.revokeObjectURL(url);
+      // Safari starts the download after the click returns, so the file must outlive it.
+      setTimeout(() => URL.revokeObjectURL(url), 40_000);
     } catch {
       toast({ variant: "destructive", description: "Sorry, could not make the sample PDF." });
     } finally {
