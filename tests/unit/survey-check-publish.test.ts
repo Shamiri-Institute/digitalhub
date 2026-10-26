@@ -143,7 +143,7 @@ describe("checkPublish", () => {
     if (result.ok) return;
     expect(result.issues).toEqual([]);
     expect(result.problems.map((p) => describeProblem(p, tooLong))).toEqual([
-      "Page 2 doesn't fit on A4: it runs 343 mm past the bottom. Move “Question 1” and 1 more item to another page.",
+      "Page 2 doesn't fit on A4: it runs 343 mm past the bottom. Move item 1 (“Question 1”) and 1 more item to another page.",
     ]);
   });
 });

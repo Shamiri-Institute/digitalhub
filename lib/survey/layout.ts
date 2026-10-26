@@ -8,7 +8,7 @@
 
 import { SurveyVersionPrefill } from "#/db/enums";
 import { isQuestion, type SurveyForm, type SurveyItem } from "#/lib/survey/form";
-import { plainText } from "#/lib/survey/rich-text";
+import { isBlank, plainText } from "#/lib/survey/rich-text";
 import {
   breakText,
   CAP_HEIGHT,
@@ -198,7 +198,7 @@ export function layOutForm<P extends Prefill>(
   const pages = form.pages.map((page, index): LayoutPage => {
     const number = index + 1;
     const content = pageHeading(number, form.pages.length, page.title);
-    const titleChar = unprintableChar(page.title ?? "");
+    const titleChar = unprintableChar(oneLine(plainText(page.title ?? "")));
     if (titleChar) {
       problems.push({ kind: "unprintable_title", page: number, char: titleChar });
     }
@@ -281,21 +281,31 @@ export function sampleCopy<L extends Layout>(layout: L): CopyValues<L["prefill"]
 
 /** A copy's value for a header slot, shrunk and then shortened until it fits its slot. */
 export function headerValueRun(slot: HeaderSlot, copy: CopyValues<Prefill>): TextRun {
-  const text = (copy as Partial<Record<HeaderSlotId, string>>)[slot.slot] ?? "";
+  const raw = (copy as Partial<Record<HeaderSlotId, string>>)[slot.slot] ?? "";
+  // Values come from school and student records, not the form, so nobody can fix them before
+  // printing. A character the font lacks is left out: drawn, it would print wider than measured.
+  const text = Array.from(oneLine(raw))
+    .filter((char) => unprintableChar(char) === undefined)
+    .join("");
   const { x, baseline, weight, minSize } = slot.value;
   return { x, baseline, weight, ...fitText(text, slot.value, minSize) };
 }
 
 /**
- * Text on one line within `maxWidth`: smaller down to `minSize`, then cut short with "…". Tabs and
- * line breaks become spaces, since a line measured without them must print without them.
+ * Text set on one line as printed: tabs, line breaks and unusual spaces become single spaces,
+ * since a line measured without them must print without them.
  */
+function oneLine(text: string) {
+  return normalizeText(text).replaceAll(/\s+/g, " ").trim();
+}
+
+/** Text on one line (see `oneLine`) within `maxWidth`: smaller down to `minSize`, then cut short with "…". */
 function fitText(
   raw: string,
   { size, weight, maxWidth }: { size: number; weight: FontWeight; maxWidth: number },
   minSize: number,
 ) {
-  const text = normalizeText(raw).replaceAll(/\s+/g, " ").trim();
+  const text = oneLine(raw);
   let fittedSize = size;
   while (fittedSize > minSize && measure(text, weight, fittedSize) > maxWidth) {
     fittedSize -= 0.5;
@@ -378,10 +388,16 @@ export function isRatingScale(item: Extract<SurveyItem, { kind: "single_choice" 
 
 /** A problem in words, the same in the builder and in the publish action's reply. */
 export function describeProblem(problem: LayoutProblem, form: SurveyForm) {
-  const items = form.pages.flatMap((page) => page.items);
+  // By position as well as text, so two items that read the same are told apart.
   const name = (itemId: string) => {
-    const item = items.find((i) => i.id === itemId);
-    return item ? itemName(item) : "an item";
+    for (const page of form.pages) {
+      const index = page.items.findIndex((item) => item.id === itemId);
+      const item = page.items[index];
+      if (item) {
+        return itemName(item, index + 1);
+      }
+    }
+    return "an item";
   };
   switch (problem.kind) {
     case "overflow": {
@@ -406,14 +422,15 @@ function charName(char: string) {
   return /^[\p{M}\p{C}\p{Z}]+$/u.test(char) ? `“${char}” (${codePoint})` : `“${char}”`;
 }
 
-function itemName(item: SurveyItem) {
+function itemName(item: SurveyItem, position: number) {
   const text = isQuestion(item) ? item.prompt : item.kind === "divider" ? "" : item.text;
   // By character, not UTF-16 unit, so shortening never splits an emoji.
   const chars = Array.from(plainText(text).replaceAll(/\s+/g, " ").trim());
   if (chars.length === 0) {
-    return `a ${item.kind === "divider" ? "divider" : "blank item"}`;
+    return `item ${position}`;
   }
-  return `“${chars.length > 30 ? `${chars.slice(0, 29).join("").trimEnd()}…` : chars.join("")}”`;
+  const shown = chars.length > 30 ? `${chars.slice(0, 29).join("").trimEnd()}…` : chars.join("");
+  return `item ${position} (“${shown}”)`;
 }
 
 /** Every printed string of an item, raw. */
@@ -540,39 +557,37 @@ function layOutItem(item: SurveyItem, top: number): Block {
   const helpTop = prompt.bottom + 2;
   const help = textBlock(responseHelp(item), STYLES.help, CONTENT.left, helpTop, CONTENT_WIDTH);
   const headerBottom = help.drawables.length > 0 ? help.bottom : prompt.bottom;
-  const header = [...prompt.drawables, ...help.drawables];
-  const responseTop = headerBottom + 6;
-  const base = { field: item.key, questionId: item.id };
-  const { standIn } = prompt;
+  const response = responseBlock(item, headerBottom + 6);
+  return {
+    ...response,
+    content: [...prompt.drawables, ...help.drawables, ...response.content],
+    standIn: prompt.standIn,
+  };
+}
 
+/** A question's answer area, below its prompt and help, starting at `top`. */
+function responseBlock(item: Extract<SurveyItem, { key: string }>, top: number): Block {
+  const base = { field: item.key, questionId: item.id };
   switch (item.kind) {
     case "single_choice":
     case "multiple_choice": {
       const multiple = item.kind === "multiple_choice";
       const block =
         item.kind === "single_choice" && isRatingScale(item)
-          ? ratingRow(item.options, responseTop)
-          : choiceFlow(item.options, responseTop, multiple ? "square" : "circle");
+          ? ratingRow(item.options, top)
+          : choiceFlow(item.options, top, multiple ? "square" : "circle");
       return {
-        content: [...header, ...block.content],
+        content: block.content,
         fields: [{ ...base, kind: "choice", multiple, mark: block.mark, marks: block.marks }],
         bottom: block.bottom,
-        standIn,
       };
     }
-    case "grid": {
-      const block = grid(item, responseTop);
-      return { ...block, content: [...header, ...block.content], standIn };
-    }
+    case "grid":
+      return grid(item, top);
     case "number": {
       const digits = wholeCount(item.digits, 12);
-      const cells = cellRow([{ count: digits }], responseTop).groups.flat();
-      return {
-        content: header,
-        fields: [{ ...base, kind: "digits", cells }],
-        bottom: responseTop + CELL.h,
-        standIn,
-      };
+      const cells = cellRow([{ count: digits }], top).groups.flat();
+      return { content: [], fields: [{ ...base, kind: "digits", cells }], bottom: top + CELL.h };
     }
     case "date": {
       const groups = [
@@ -580,9 +595,9 @@ function layOutItem(item: SurveyItem, top: number): Block {
         { count: 2, hint: "MM" },
         { count: 4, hint: "YYYY" },
       ];
-      const { groups: cells, hints } = cellRow(groups, responseTop);
+      const { groups: cells, hints } = cellRow(groups, top);
       return {
-        content: [...header, ...hints],
+        content: hints,
         fields: [
           {
             ...base,
@@ -592,27 +607,24 @@ function layOutItem(item: SurveyItem, top: number): Block {
             year: cells[2] ?? [],
           },
         ],
-        bottom: responseTop + CELL.h + 2 + STYLES.hint.lineHeight,
-        standIn,
+        bottom: top + CELL.h + 2 + STYLES.hint.lineHeight,
       };
     }
     case "text": {
       const lines = wholeCount(item.lines, 30);
-      const area = rect(CONTENT.left, responseTop, CONTENT_WIDTH, lines * TEXT_LINE_GAP);
+      const area = rect(CONTENT.left, top, CONTENT_WIDTH, lines * TEXT_LINE_GAP);
       return {
-        content: header,
+        content: [],
         fields: [{ ...base, kind: "text", area, lines }],
         bottom: area.y + area.h,
-        standIn,
       };
     }
     case "signature": {
-      const area = rect(CONTENT.left, responseTop, CONTENT_WIDTH / 2, SIGNATURE_HEIGHT);
+      const area = rect(CONTENT.left, top, CONTENT_WIDTH / 2, SIGNATURE_HEIGHT);
       return {
-        content: header,
+        content: [],
         fields: [{ ...base, kind: "signature", area }],
         bottom: area.y + area.h,
-        standIn,
       };
     }
   }
@@ -808,10 +820,16 @@ function textBlock(
   width: number,
   { align, standIn }: { align?: "center"; standIn?: string } = {},
 ) {
-  const lines = breakText(raw, style, width, align);
-  if (lines.length === 0 && standIn) {
-    return { drawables: [], bottom: top + style.lineHeight, standIn: run(standIn, style, x, top) };
+  if (standIn && isBlank(raw)) {
+    const standInWidth = measure(standIn, style.weight, style.size);
+    const standInX = align === "center" ? x + (width - standInWidth) / 2 : x;
+    return {
+      drawables: [],
+      bottom: top + style.lineHeight,
+      standIn: run(standIn, style, standInX, top),
+    };
   }
+  const lines = breakText(raw, style, width, align);
   return {
     drawables: placeLines(lines, style, x, top),
     bottom: top + lines.length * style.lineHeight,

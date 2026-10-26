@@ -182,7 +182,7 @@ describe("layOutForm", () => {
     ]);
     const [problem] = result.problems;
     expect(problem && describeProblem(problem, form)).toBe(
-      "Page 2 doesn't fit on A4: it runs 134 mm past the bottom. Move “Question 8” and 4 more items to another page.",
+      "Page 2 doesn't fit on A4: it runs 134 mm past the bottom. Move item 8 (“Question 8”) and 4 more items to another page.",
     );
     // The items that don't fit still have places, below the paper's content box.
     expect(result.layout.pages[1]?.items.at(-1)?.box.y).toBeGreaterThan(CONTENT.bottom);
@@ -261,7 +261,7 @@ describe("layOutForm", () => {
     };
     const [problem] = layOutForm(form, "NONE").problems;
     expect(problem && describeProblem(problem, form)).toBe(
-      "Page 1: “Kind\u200bly” uses “\u200b” (U+200B), which the print font can't print. Remove it.",
+      "Page 1: item 1 (“Kind\u200bly”) uses “\u200b” (U+200B), which the print font can't print. Remove it.",
     );
   });
 
@@ -288,6 +288,60 @@ describe("layOutForm", () => {
     );
   });
 
+  it("centres a centred heading's stand-in, and gives text of only line breaks one", () => {
+    const form: SurveyForm = {
+      format: 1,
+      pages: [
+        {
+          items: [
+            { id: "c", kind: "heading", text: "", align: "center" },
+            { id: "n", kind: "paragraph", text: "\n\n\n" },
+          ],
+        },
+      ],
+    };
+    const [centred, breaks] = layOutForm(form, "NONE").layout.pages[0]?.items ?? [];
+    const standIn = centred?.standIn ?? { x: 0, width: 0 };
+    expect(standIn.x + standIn.width / 2).toBeCloseTo((24 + 571.28) / 2, 1);
+    expect(breaks?.standIn?.text).toBe("Paragraph");
+    expect(breaks?.box.h).toBe(15);
+  });
+
+  it("prints a page title's unusual spaces as plain ones instead of refusing them", () => {
+    const form: SurveyForm = {
+      format: 1,
+      pages: [
+        {
+          title: "\uFEFFAbout\u2003you\u2009today",
+          items: [{ id: "h", kind: "heading", text: "Hi" }],
+        },
+      ],
+    };
+    const { layout, problems: found } = layOutForm(form, "NONE");
+    expect(found).toEqual([]);
+    const title = layout.pages[0]?.content[1];
+    expect(title?.kind === "text" && title.run.text).toBe("About you today");
+  });
+
+  it("tells apart two items that read the same by their position", () => {
+    const form: SurveyForm = {
+      format: 1,
+      pages: [
+        {
+          items: [
+            { id: "a", kind: "heading", text: "Mood 😀" },
+            { id: "b", kind: "heading", text: "Mood 😀" },
+          ],
+        },
+      ],
+    };
+    const messages = layOutForm(form, "NONE").problems.map((p) => describeProblem(p, form));
+    expect(messages).toEqual([
+      "Page 1: item 1 (“Mood 😀”) uses “😀”, which the print font can't print. Remove it.",
+      "Page 1: item 2 (“Mood 😀”) uses “😀”, which the print font can't print. Remove it.",
+    ]);
+  });
+
   it("shortens a long item name in a problem without splitting an emoji", () => {
     const form: SurveyForm = {
       format: 1,
@@ -295,7 +349,7 @@ describe("layOutForm", () => {
     };
     const [problem] = layOutForm(form, "NONE").problems;
     expect(problem && describeProblem(problem, form)).toBe(
-      `Page 1: “${"a".repeat(28)}😀…” uses “😀”, which the print font can't print. Remove it.`,
+      `Page 1: item 1 (“${"a".repeat(28)}😀…”) uses “😀”, which the print font can't print. Remove it.`,
     );
   });
 
@@ -398,5 +452,13 @@ describe("headerValueRun", () => {
     expect(long.size).toBe(6);
     expect(long.text.endsWith("…")).toBe(true);
     expect(long.width).toBeLessThanOrEqual(school.value.maxWidth);
+  });
+
+  it("leaves out characters the font lacks, so the value prints as wide as measured", () => {
+    const { layout } = layOutForm(PRINT_FORM, "SCHOOL");
+    const school = layout.pages[0]?.header[1];
+    if (!school) throw new Error("no school slot");
+    const run = headerValueRun(school, { serial: "S", school: "Moi\u200b Girls 😀" });
+    expect(run).toMatchObject({ text: "Moi Girls", size: 9 });
   });
 });

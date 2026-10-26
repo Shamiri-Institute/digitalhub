@@ -620,7 +620,7 @@ test("a page that doesn't fit is named and can't be published", async ({ page, c
   ).toContainText("Doesn't print");
   await showPage(page, 2);
   const warning =
-    "Page 2 doesn't fit on A4: it runs 153 mm past the bottom. Move “Tell us about friends” to another page.";
+    "Page 2 doesn't fit on A4: it runs 153 mm past the bottom. Move item 2 (“Tell us about friends”) to another page.";
   await expect(page.locator("figure").getByText(warning)).toBeVisible();
   await expect(page.getByRole("button", { name: "Sample PDF" })).toBeDisabled();
 

@@ -60,8 +60,7 @@ export default function PageProof({
           {problems.length > 0 ? "Doesn't print" : "A4 · fits"}
         </span>
       </figcaption>
-      {/* Two problems can read the same, so each message shows once. */}
-      {[...new Set(problems)].map((problem) => (
+      {problems.map((problem) => (
         <p key={problem} className="rounded-md bg-red-bg px-3 py-2 text-sm text-red-base">
           {problem}
         </p>

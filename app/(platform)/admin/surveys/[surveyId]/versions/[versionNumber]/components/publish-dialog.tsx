@@ -71,7 +71,7 @@ function PublishSteps({
   const [refusal, setRefusal] = useState<string>();
 
   const check = checkPublish(form, locked, prefill);
-  // Two problems can read the same, so each message shows once.
+  // The save rules can give several items the same message, so each message shows once.
   const reasons = check.ok
     ? []
     : [
