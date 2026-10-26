@@ -9,7 +9,6 @@ import { db, isUniqueViolation } from "#/db/client";
 import {
   SURVEY_VERSION_STATUS_LABELS,
   SurveyAuditActor,
-  SurveyStatus,
   type SurveyVersionPrefill,
   SurveyVersionStatus,
 } from "#/db/enums";
@@ -19,8 +18,9 @@ import { ForbiddenRoleError } from "#/lib/auth/require-auth-role";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
 import { checkForm, type FormIssue, lockedQuestions } from "#/lib/survey/check-form";
 import { EMPTY_FORM, summarizeForm } from "#/lib/survey/form";
-import { describeProblem, LAYOUT_ENGINE_VERSION, type LayoutProblem } from "#/lib/survey/layout";
+import { describeProblem, type LayoutProblem } from "#/lib/survey/layout";
 import { checkPublish } from "#/lib/survey/publish";
+import { storePublished } from "#/lib/survey/store-published";
 import type { ActionResponse } from "#/types/actions.types";
 import {
   CreateDraftVersionSchema,
@@ -431,60 +431,18 @@ export async function publishVersion(
             };
       }
 
-      const [stored] = await tx
-        .update(surveyVersion)
-        .set({
-          status: SurveyVersionStatus.PUBLISHED,
-          prefill: parsed.prefill,
-          layout: check.layout,
-          layoutEngineVersion: LAYOUT_ENGINE_VERSION,
-          publishedAt: new Date(),
-          publishedBy: userId,
-        })
-        .where(
-          and(
-            eq(surveyVersion.id, version.id),
-            eq(surveyVersion.status, SurveyVersionStatus.DRAFT),
-            eq(surveyVersion.revision, parsed.revision),
-          ),
-        )
-        .returning({ id: surveyVersion.id });
+      const stored = await storePublished(tx, {
+        version,
+        form: check.form,
+        layout: check.layout,
+        userId,
+      });
       if (!stored) {
         return stale;
       }
-      await recordSurveyEvent(tx, {
-        actor: { kind: SurveyAuditActor.USER, userId },
-        surveyId: version.surveyId,
-        entityType: SurveyAuditEntity.SURVEY_VERSION,
-        entityId: version.id,
-        action: SurveyAuditAction.VERSION_PUBLISHED,
-        before: { status: SurveyVersionStatus.DRAFT, revision: version.revision },
-        after: {
-          status: SurveyVersionStatus.PUBLISHED,
-          prefill: parsed.prefill,
-          layoutEngineVersion: LAYOUT_ENGINE_VERSION,
-          ...summarizeForm(check.form),
-        },
-      });
-
-      const [activated] = await tx
-        .update(survey)
-        .set({ status: SurveyStatus.ACTIVE })
-        .where(and(eq(survey.id, version.surveyId), eq(survey.status, SurveyStatus.DRAFT)))
-        .returning({ id: survey.id });
-      if (!activated) {
-        return published;
-      }
-      await recordSurveyEvent(tx, {
-        actor: { kind: SurveyAuditActor.USER, userId },
-        surveyId: version.surveyId,
-        entityType: SurveyAuditEntity.SURVEY,
-        entityId: version.surveyId,
-        action: SurveyAuditAction.SURVEY_ACTIVATED,
-        before: { status: SurveyStatus.DRAFT },
-        after: { status: SurveyStatus.ACTIVE, versionNumber: version.versionNumber },
-      });
-      return { ...published, message: `${published.message}. The survey is now active.` };
+      return stored.surveyActivated
+        ? { ...published, message: `${published.message}. The survey is now active.` }
+        : published;
     });
 
     if (result.outcome === "published") {

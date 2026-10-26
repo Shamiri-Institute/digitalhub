@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import {
@@ -12,8 +12,6 @@ import {
   referralStatusOptions,
   riskStatusOptions,
   sessionTypes,
-  SurveyStatus,
-  SurveyVersionStatus,
   TriageActionTaken,
 } from "#/db/enums";
 import {
@@ -46,8 +44,8 @@ import {
   superAdminEmail,
 } from "#/db/seed/fixtures";
 import type { SurveyForm } from "#/lib/survey/form";
-import { LAYOUT_ENGINE_VERSION } from "#/lib/survey/layout";
 import { checkPublish } from "#/lib/survey/publish";
+import { storePublished } from "#/lib/survey/store-published";
 import { seedHubSessionTypes } from "#/db/seed/hub-session-types";
 import { createTickets } from "#/db/seed/tickets";
 import {
@@ -896,8 +894,8 @@ async function createResearchSurveys(projectId: string) {
     .returning();
   if (!survey) throw new Error("Research survey was not created");
 
-  // Written as a draft, then published as publishVersion does it: a version is created as a draft
-  // and frozen, with its print layout, once published.
+  // Written as a draft, then published as publishVersion does it, which also makes the survey
+  // active: a version is created as a draft and frozen, with its print layout, once published.
   const publishable = checkPublish(BASELINE_FORM, [], "STUDENT");
   if (!publishable.ok) throw new Error("The seed's baseline form can't be published");
   const [version] = await db
@@ -906,21 +904,15 @@ async function createResearchSurveys(projectId: string) {
     .returning();
   if (!version) throw new Error("Research survey version was not created");
 
-  await db
-    .update(schema.surveyVersion)
-    .set({
-      status: SurveyVersionStatus.PUBLISHED,
-      prefill: publishable.layout.prefill,
+  const stored = await db.transaction((tx) =>
+    storePublished(tx, {
+      version,
+      form: publishable.form,
       layout: publishable.layout,
-      layoutEngineVersion: LAYOUT_ENGINE_VERSION,
-      publishedAt: new Date(),
-      publishedBy: createdBy,
-    })
-    .where(eq(schema.surveyVersion.id, version.id));
-  await db
-    .update(schema.survey)
-    .set({ status: SurveyStatus.ACTIVE })
-    .where(eq(schema.survey.id, survey.id));
+      userId: createdBy,
+    }),
+  );
+  if (!stored) throw new Error("Research survey version was not published");
 }
 
 async function createFellows(arsenal: Hub, supervisors: Supervisor[], emails: Set<string>) {

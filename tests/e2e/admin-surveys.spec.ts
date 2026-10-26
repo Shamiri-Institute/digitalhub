@@ -7,6 +7,8 @@ import { db } from "#/db/client";
 import { survey, surveyVersion } from "#/db/schema";
 import { careAdminEmail, researchAdminEmail } from "#/db/seed/fixtures";
 import type { SurveyForm } from "#/lib/survey/form";
+import { checkPublish } from "#/lib/survey/publish";
+import { storePublished } from "#/lib/survey/store-published";
 import { signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 import { PRINT_FORM } from "#/tests/unit/fixtures/survey-print-form";
@@ -78,7 +80,10 @@ const TWO_QUESTIONS: SurveyForm = {
   ],
 };
 
-/** A survey whose v1 is published with one page of two questions, created straight in the DB. */
+/**
+ * A survey whose v1 is published with one page of two questions, written straight to the DB the
+ * way the publish action writes it, so the survey is active and v1 has its print layout.
+ */
 async function createPublishedSurvey(
   scope: { implementerId: string; projectId: string },
   userId: string,
@@ -102,10 +107,11 @@ async function createPublishedSurvey(
       .values({ surveyId: created.id, versionNumber: 1, createdBy: userId, form: TWO_QUESTIONS })
       .returning(),
   );
-  await db
-    .update(surveyVersion)
-    .set({ status: "PUBLISHED" })
-    .where(eq(surveyVersion.id, version.id));
+  const publishable = checkPublish(TWO_QUESTIONS, [], "NONE");
+  if (!publishable.ok) throw new Error("TWO_QUESTIONS can't be published");
+  await db.transaction((tx) =>
+    storePublished(tx, { version, form: publishable.form, layout: publishable.layout, userId }),
+  );
   return created;
 }
 
