@@ -47,10 +47,11 @@ export function measure(text: string, weight: FontWeight, size: number) {
 
 /**
  * Text as the engine measures and prints it: accents composed into one character (macOS often
- * stores "é" as "e" plus a combining accent) and Windows line breaks as plain ones.
+ * stores "é" as "e" plus a combining accent), Windows line breaks as plain ones, and the fraction
+ * slash (⁄) as "/", since the PDF's font shaping would stack "1⁄2" narrower than it measures.
  */
 export function normalizeText(text: string) {
-  return text.normalize("NFC").replaceAll(/\r\n?/g, "\n");
+  return text.normalize("NFC").replaceAll(/\r\n?/g, "\n").replaceAll("\u2044", "/");
 }
 
 /** The first character of the text the print font can't draw, if any. Line breaks and tabs are allowed. */

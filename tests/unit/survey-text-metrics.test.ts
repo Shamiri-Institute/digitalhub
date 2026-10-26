@@ -108,6 +108,18 @@ describe("breakText", () => {
     ]);
   });
 
+  it("prints a fraction slash as a slash, as wide as pdf-lib draws it", async () => {
+    const doc = await PDFDocument.create();
+    doc.registerFontkit(fontkit);
+    const font = await doc.embedFont(fontBytes(400), {
+      subset: false,
+      features: { kern: false, liga: false, clig: false, calt: false },
+    });
+    const [line] = breakText("1\u20442 cup", style, 1000);
+    expect(line?.runs.map((run) => run.text)).toEqual(["1/2 cup"]);
+    expect(line?.width).toBeCloseTo(font.widthOfTextAtSize("1/2 cup", style.size), 2);
+  });
+
   it("gives no lines for empty text", () => {
     expect(breakText("", style, 100)).toEqual([]);
   });
