@@ -11,15 +11,18 @@ interface PageTabsProps {
   dispatch: Dispatch<BuilderAction>;
   editable: boolean;
   itemsWithIssues: Set<string>;
+  /** Numbers of the pages the print layout can't print as they are. */
+  unprintablePages: Set<number>;
 }
 
-/** One tab per printed page, in order, with how many of its items need a fix. */
+/** One tab per printed page, in order, with how many of its items need a fix and whether it prints. */
 export default function PageTabs({
   form,
   current,
   dispatch,
   editable,
   itemsWithIssues,
+  unprintablePages,
 }: PageTabsProps) {
   return (
     <nav aria-label="Pages" className="-mb-px flex min-w-0 items-end overflow-x-auto">
@@ -38,11 +41,16 @@ export default function PageTabs({
               selected ? "border-shamiri-new-blue text-shamiri-black" : "text-shamiri-text-grey",
             )}
           >
-            <span className="font-semibold">Page {index + 1}</span>
+            <span className="shrink-0 font-semibold">Page {index + 1}</span>
             {page.title && <span className="truncate">{page.title}</span>}
             {issues > 0 && (
               <span className="shrink-0 rounded-full bg-red-bg px-1.5 text-xs font-medium text-red-base">
                 {issues} to fix
+              </span>
+            )}
+            {unprintablePages.has(index + 1) && (
+              <span className="shrink-0 rounded-full bg-red-bg px-1.5 text-xs font-medium text-red-base">
+                Doesn&apos;t print
               </span>
             )}
           </button>

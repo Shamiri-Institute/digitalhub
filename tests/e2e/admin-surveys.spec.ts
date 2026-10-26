@@ -1,5 +1,7 @@
 import { type BrowserContext, expect, type Page, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 import { eq, inArray } from "drizzle-orm";
+import { PDFDocument } from "pdf-lib";
 
 import { db } from "#/db/client";
 import { survey, surveyVersion } from "#/db/schema";
@@ -7,6 +9,7 @@ import { careAdminEmail, researchAdminEmail } from "#/db/seed/fixtures";
 import type { SurveyForm } from "#/lib/survey/form";
 import { signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
+import { PRINT_FORM } from "#/tests/unit/fixtures/survey-print-form";
 
 /**
  * Super admins and Research team admins manage surveys; other admins do not see them. The seed
@@ -262,9 +265,14 @@ test("the builder saves a form of several pages and every item kind", async ({ p
   await expect(page.getByText("This form has no pages yet")).toBeVisible();
 
   await page.getByRole("button", { name: "Add page" }).click();
+  // The preview is drawn for the eye only (aria-hidden), so its text is found by its markup.
+  const preview = page.locator("figure svg");
+  await expect(preview.getByText("Items you add appear here as they print.")).toBeVisible();
   await page.getByLabel("Page title").fill("About you");
   await addItem(page, 1, "Heading");
+  await expect(preview.getByText("Heading", { exact: true })).toBeVisible();
   await page.getByLabel("Text").fill("About you");
+  await expect(preview.getByText("Heading", { exact: true })).toHaveCount(0);
   await addItem(page, 1, "Number", "How old are you?");
   await page.getByLabel("Digits").fill("3");
   await addItem(page, 1, "Single choice", "How do you feel today?");
@@ -534,9 +542,90 @@ test("bold words and a centred paragraph show in the print preview after a save"
   await save(page);
   await page.reload();
 
-  // The preview is drawn for the eye only (aria-hidden), so it is found by its markup.
-  const preview = page.locator("figure");
-  await expect(preview.locator("strong")).toHaveText("every");
-  await expect(preview.getByText("Answer every question")).toHaveCSS("text-align", "center");
+  // The preview is drawn for the eye only (aria-hidden), so it is found by its markup: an SVG
+  // with one <text> per run, in PDF points.
+  const runs = page.locator('figure svg text[font-size="10.5"]');
+  await expect(runs).toHaveText(["Answer", "every", "question"]);
+  await expect(runs.nth(1)).toHaveAttribute("font-weight", "700");
+  await expect(runs.first()).toHaveAttribute("font-weight", "400");
+  const [left, right] = await runs.evaluateAll((texts) => {
+    const xs = texts.map((t) => Number(t.getAttribute("x")));
+    const last = texts.at(-1);
+    return [
+      Math.min(...xs),
+      Number(last?.getAttribute("x")) + Number(last?.getAttribute("textLength")),
+    ];
+  });
+  // Centred between the A4 sheet's 24 pt margins.
+  expect(((left ?? 0) + (right ?? 0)) / 2).toBeCloseTo(595.28 / 2, 0);
   await expect(page.getByRole("button", { name: /Answer every question/ })).toBeVisible();
+});
+
+test("publishing a draft with a prefill freezes it with a sample PDF of every page", async ({
+  page,
+  context,
+}) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const draft = await createDraftSurvey(scope, userId, PRINT_FORM);
+  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
+
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("radio", { name: /School name/ }).click();
+  await dialog.getByRole("button", { name: "Continue" }).click();
+  await expect(dialog).toContainText("It can't be undone");
+  await dialog.getByRole("button", { name: "Publish v1" }).click();
+  await expect(page.getByText("Published v1. The survey is now active.").first()).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText("Published versions can't be edited")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Publish", exact: true })).toHaveCount(0);
+  // The header shows the prefill chosen at publish: the school, and no student.
+  const header = page.locator("figure svg text");
+  await expect(header.filter({ hasText: /^School$/ })).toHaveCount(1);
+  await expect(header.filter({ hasText: /^Student( ID)?$/ })).toHaveCount(0);
+
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Sample PDF" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe(`${draft.code}-v1-sample.pdf`);
+  const pdf = await PDFDocument.load(await readFile(await file.path()));
+  expect(pdf.getPageCount()).toBe(PRINT_FORM.pages.length);
+
+  await page.goto(getUrl(`/admin/surveys/${draft.id}`));
+  await expect(versionRow(page, 1)).toContainText("Published");
+  // The survey was a draft; its first published version makes it active.
+  await expect(page.getByText("Active", { exact: true })).toBeVisible();
+});
+
+test("a page that doesn't fit is named and can't be published", async ({ page, context }) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const text = (id: string) =>
+    ({
+      id,
+      kind: "text",
+      key: id,
+      prompt: `Tell us about ${id}`,
+      required: false,
+      lines: 20,
+    }) as const;
+  const draft = await createDraftSurvey(scope, userId, {
+    format: 1,
+    pages: [{ items: [text("home")] }, { items: [text("school"), text("friends")] }],
+  });
+  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
+
+  await expect(
+    page.getByRole("navigation", { name: "Pages" }).getByRole("button", { name: /^Page 2/ }),
+  ).toContainText("Doesn't print");
+  await showPage(page, 2);
+  const warning =
+    "Page 2 doesn't fit on A4: it runs 153 mm past the bottom. Move “Tell us about friends” to another page.";
+  await expect(page.locator("figure").getByText(warning)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sample PDF" })).toBeDisabled();
+
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("listitem")).toHaveText([warning]);
+  await expect(dialog.getByRole("button", { name: "Continue" })).toBeDisabled();
 });

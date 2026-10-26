@@ -10,13 +10,17 @@ import { toast } from "#/components/ui/use-toast";
 import { saveDraftForm } from "#/lib/actions/survey";
 import { builderReducer, currentPage, hasUnsavedChanges, initBuilder } from "#/lib/survey/builder";
 import { checkForm, indexIssues } from "#/lib/survey/check-form";
+import { describeProblem, layOutForm, sampleCopy } from "#/lib/survey/layout";
 import type { BuilderData } from "../../../../queries";
 import PageItems from "./page-items";
 import PageProof from "./page-proof";
 import PageTabs from "./page-tabs";
+import PublishDialog from "./publish-dialog";
+import SamplePdfButton from "./sample-pdf-button";
 import { useLeaveGuard } from "./use-leave-guard";
 
 interface SurveyBuilderProps {
+  surveyCode: string;
   version: BuilderData["version"];
   locked: BuilderData["locked"];
   editable: boolean;
@@ -26,7 +30,12 @@ interface SurveyBuilderProps {
  * Edits a draft's form one page at a time, beside that page's print preview, and saves it whole.
  * Shows a published version the same way, read-only.
  */
-export default function SurveyBuilder({ version, locked, editable }: SurveyBuilderProps) {
+export default function SurveyBuilder({
+  surveyCode,
+  version,
+  locked,
+  editable,
+}: SurveyBuilderProps) {
   const [state, dispatch] = useReducer(
     builderReducer,
     { ...version, publishedKeys: locked.map((q) => q.key) },
@@ -84,6 +93,16 @@ export default function SurveyBuilder({ version, locked, editable }: SurveyBuild
 
   const pageIndex = currentPage(state.form, state.selection);
   const page = state.form.pages[pageIndex];
+  // A published version shows the layout it froze. A draft is laid out again on every change, as
+  // blank copies: the prefill only fills the header, so the fit is the same as when published.
+  const proof = version.layout
+    ? { layout: version.layout, problems: [] }
+    : layOutForm(state.form, "NONE");
+  const proofPage = proof.layout.pages[pageIndex];
+  const unprintablePages = new Set(proof.problems.map((problem) => problem.page));
+  const pageProblems = proof.problems
+    .filter((problem) => problem.page === pageIndex + 1)
+    .map((problem) => describeProblem(problem, state.form));
   const openItemId =
     state.selection && "item" in state.selection ? state.selection.item : undefined;
 
@@ -96,6 +115,7 @@ export default function SurveyBuilder({ version, locked, editable }: SurveyBuild
           dispatch={dispatch}
           editable={editable}
           itemsWithIssues={itemsWithIssues}
+          unprintablePages={unprintablePages}
         />
         <div className="flex shrink-0 items-center justify-end gap-4 sm:pb-2">
           <p className="text-sm text-shamiri-text-grey" aria-live="polite">
@@ -120,6 +140,21 @@ export default function SurveyBuilder({ version, locked, editable }: SurveyBuild
               {!unsaved && !saving && <Check className="h-4 w-4" />}
               Save
             </Button>
+          )}
+          <SamplePdfButton
+            layout={proof.layout}
+            fileName={`${surveyCode}-v${version.versionNumber}-sample.pdf`}
+            disabled={proof.layout.pages.length === 0 || proof.problems.length > 0}
+          />
+          {editable && (
+            <PublishDialog
+              versionId={version.id}
+              versionNumber={version.versionNumber}
+              revision={state.revision}
+              form={state.form}
+              locked={locked}
+              unsaved={unsaved}
+            />
           )}
         </div>
       </div>
@@ -161,13 +196,16 @@ export default function SurveyBuilder({ version, locked, editable }: SurveyBuild
             />
           </div>
           <div className="lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:w-128 lg:shrink-0 lg:overflow-y-auto">
-            <PageProof
-              page={page}
-              index={pageIndex}
-              pageCount={state.form.pages.length}
-              openItemId={openItemId}
-              itemsWithIssues={itemsWithIssues}
-            />
+            {proofPage && (
+              <PageProof
+                paper={proof.layout.paper}
+                page={proofPage}
+                copy={sampleCopy(proof.layout)}
+                problems={pageProblems}
+                openItemId={openItemId}
+                itemsWithIssues={itemsWithIssues}
+              />
+            )}
           </div>
         </div>
       ) : (
