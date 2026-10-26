@@ -46,6 +46,8 @@ import {
   superAdminEmail,
 } from "#/db/seed/fixtures";
 import type { SurveyForm } from "#/lib/survey/form";
+import { LAYOUT_ENGINE_VERSION } from "#/lib/survey/layout";
+import { checkPublish } from "#/lib/survey/publish";
 import { seedHubSessionTypes } from "#/db/seed/hub-session-types";
 import { createTickets } from "#/db/seed/tickets";
 import {
@@ -894,7 +896,10 @@ async function createResearchSurveys(projectId: string) {
     .returning();
   if (!survey) throw new Error("Research survey was not created");
 
-  // Written as a draft, then published: a version is created as a draft and frozen once published.
+  // Written as a draft, then published as publishVersion does it: a version is created as a draft
+  // and frozen, with its print layout, once published.
+  const publishable = checkPublish(BASELINE_FORM, [], "STUDENT");
+  if (!publishable.ok) throw new Error("The seed's baseline form can't be published");
   const [version] = await db
     .insert(schema.surveyVersion)
     .values({ surveyId: survey.id, versionNumber: 1, createdBy, form: BASELINE_FORM })
@@ -903,7 +908,14 @@ async function createResearchSurveys(projectId: string) {
 
   await db
     .update(schema.surveyVersion)
-    .set({ status: SurveyVersionStatus.PUBLISHED })
+    .set({
+      status: SurveyVersionStatus.PUBLISHED,
+      prefill: publishable.layout.prefill,
+      layout: publishable.layout,
+      layoutEngineVersion: LAYOUT_ENGINE_VERSION,
+      publishedAt: new Date(),
+      publishedBy: createdBy,
+    })
     .where(eq(schema.surveyVersion.id, version.id));
   await db
     .update(schema.survey)

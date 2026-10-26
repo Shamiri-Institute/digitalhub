@@ -6,15 +6,28 @@ import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 
 import { db, isUniqueViolation } from "#/db/client";
-import { SurveyAuditActor, SurveyVersionStatus } from "#/db/enums";
+import {
+  SURVEY_VERSION_STATUS_LABELS,
+  SurveyAuditActor,
+  SurveyStatus,
+  type SurveyVersionPrefill,
+  SurveyVersionStatus,
+} from "#/db/enums";
 import { survey, surveyVersion } from "#/db/schema";
 import { requireSurveyScope } from "#/lib/auth/admin-access";
 import { ForbiddenRoleError } from "#/lib/auth/require-auth-role";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
 import { checkForm, type FormIssue, lockedQuestions } from "#/lib/survey/check-form";
 import { EMPTY_FORM, summarizeForm } from "#/lib/survey/form";
+import { describeProblem, LAYOUT_ENGINE_VERSION, type LayoutProblem } from "#/lib/survey/layout";
+import { checkPublish } from "#/lib/survey/publish";
 import type { ActionResponse } from "#/types/actions.types";
-import { CreateDraftVersionSchema, CreateSurveySchema, SaveDraftFormSchema } from "./schemas";
+import {
+  CreateDraftVersionSchema,
+  CreateSurveySchema,
+  PublishVersionSchema,
+  SaveDraftFormSchema,
+} from "./schemas";
 
 /** An expected failure whose message is safe to show the research user. */
 class SurveyError extends Error {}
@@ -325,4 +338,173 @@ export async function saveDraftForm(
   } catch (error) {
     return failure(error, "Sorry, could not save the draft.");
   }
+}
+
+export type PublishVersionResult =
+  | { outcome: "published" }
+  | { outcome: "invalid"; issues: FormIssue[] }
+  | { outcome: "unfit"; problems: LayoutProblem[] }
+  | { outcome: "stale" };
+
+/**
+ * Publishes a draft as it is stored, at the revision the publisher saw: lays out its form with the
+ * chosen prefill and stores the layout with it. From then on the version, its layout included,
+ * can't change. A draft survey becomes active with its first published version; a closed one stays
+ * closed. A retry whose first reply was lost finds it published and succeeds again.
+ */
+export async function publishVersion(
+  data: z.infer<typeof PublishVersionSchema>,
+): Promise<ActionResponse<PublishVersionResult>> {
+  try {
+    const { userId, implementerId, projectId } = await requireSurveyScope();
+    const input = PublishVersionSchema.safeParse(data);
+    if (!input.success) {
+      return invalid(input.error);
+    }
+    const parsed = input.data;
+
+    const { result, message } = await db.transaction(async (tx) => {
+      const [version] = await tx
+        .select({
+          id: surveyVersion.id,
+          surveyId: surveyVersion.surveyId,
+          versionNumber: surveyVersion.versionNumber,
+          status: surveyVersion.status,
+          revision: surveyVersion.revision,
+          prefill: surveyVersion.prefill,
+          form: surveyVersion.form,
+        })
+        .from(surveyVersion)
+        .innerJoin(survey, eq(survey.id, surveyVersion.surveyId))
+        .where(
+          and(
+            eq(surveyVersion.id, parsed.versionId),
+            eq(survey.implementerId, implementerId),
+            eq(survey.projectId, projectId),
+          ),
+        )
+        .for("update", { of: surveyVersion });
+      if (!version) {
+        throw new SurveyError("Version not found");
+      }
+      const published = {
+        result: { outcome: "published" } as const,
+        message: `Published v${version.versionNumber}`,
+      };
+      if (isRepeatOfThisPublish(version, parsed)) {
+        return published;
+      }
+      if (version.status !== SurveyVersionStatus.DRAFT) {
+        const status = SURVEY_VERSION_STATUS_LABELS[version.status].toLowerCase();
+        throw new SurveyError(`v${version.versionNumber} is already ${status}`);
+      }
+      const stale = {
+        result: { outcome: "stale" } as const,
+        message: "This draft was changed since you opened it. Reload to see the latest version.",
+      };
+      if (version.revision !== parsed.revision) {
+        return stale;
+      }
+
+      const lockingVersions = await tx
+        .select({ versionNumber: surveyVersion.versionNumber, form: surveyVersion.form })
+        .from(surveyVersion)
+        .where(
+          and(
+            eq(surveyVersion.surveyId, version.surveyId),
+            ne(surveyVersion.status, SurveyVersionStatus.DRAFT),
+          ),
+        )
+        .orderBy(desc(surveyVersion.versionNumber));
+      const check = checkPublish(version.form, lockedQuestions(lockingVersions), parsed.prefill);
+      if (!check.ok) {
+        const [issue] = check.issues;
+        const [problem] = check.problems;
+        return issue || !problem
+          ? {
+              result: { outcome: "invalid", issues: check.issues } as const,
+              message: issue?.message ?? "Please check the form",
+            }
+          : {
+              result: { outcome: "unfit", problems: check.problems } as const,
+              message: describeProblem(problem, version.form),
+            };
+      }
+
+      const [stored] = await tx
+        .update(surveyVersion)
+        .set({
+          status: SurveyVersionStatus.PUBLISHED,
+          prefill: parsed.prefill,
+          layout: check.layout,
+          layoutEngineVersion: LAYOUT_ENGINE_VERSION,
+          publishedAt: new Date(),
+          publishedBy: userId,
+        })
+        .where(
+          and(
+            eq(surveyVersion.id, version.id),
+            eq(surveyVersion.status, SurveyVersionStatus.DRAFT),
+            eq(surveyVersion.revision, parsed.revision),
+          ),
+        )
+        .returning({ id: surveyVersion.id });
+      if (!stored) {
+        return stale;
+      }
+      await recordSurveyEvent(tx, {
+        actor: { kind: SurveyAuditActor.USER, userId },
+        surveyId: version.surveyId,
+        entityType: SurveyAuditEntity.SURVEY_VERSION,
+        entityId: version.id,
+        action: SurveyAuditAction.VERSION_PUBLISHED,
+        before: { status: SurveyVersionStatus.DRAFT, revision: version.revision },
+        after: {
+          status: SurveyVersionStatus.PUBLISHED,
+          prefill: parsed.prefill,
+          layoutEngineVersion: LAYOUT_ENGINE_VERSION,
+          ...summarizeForm(check.form),
+        },
+      });
+
+      const [activated] = await tx
+        .update(survey)
+        .set({ status: SurveyStatus.ACTIVE })
+        .where(and(eq(survey.id, version.surveyId), eq(survey.status, SurveyStatus.DRAFT)))
+        .returning({ id: survey.id });
+      if (!activated) {
+        return published;
+      }
+      await recordSurveyEvent(tx, {
+        actor: { kind: SurveyAuditActor.USER, userId },
+        surveyId: version.surveyId,
+        entityType: SurveyAuditEntity.SURVEY,
+        entityId: version.surveyId,
+        action: SurveyAuditAction.SURVEY_ACTIVATED,
+        before: { status: SurveyStatus.DRAFT },
+        after: { status: SurveyStatus.ACTIVE, versionNumber: version.versionNumber },
+      });
+      return { ...published, message: `${published.message}. The survey is now active.` };
+    });
+
+    if (result.outcome === "published") {
+      // So the builder, the survey list, its versions and later drafts see what publishing changed.
+      refresh();
+    }
+    return { success: result.outcome === "published", message, data: result };
+  } catch (error) {
+    return failure(error, "Sorry, could not publish the version.");
+  }
+}
+
+/** The version is already published as this request asks: a retry whose first reply was lost. */
+function isRepeatOfThisPublish(
+  version: { status: SurveyVersionStatus; revision: number; prefill: SurveyVersionPrefill | null },
+  request: { revision: number; prefill: SurveyVersionPrefill },
+) {
+  return (
+    version.status === SurveyVersionStatus.PUBLISHED &&
+    version.revision === request.revision &&
+    version.prefill === request.prefill
+  );
 }

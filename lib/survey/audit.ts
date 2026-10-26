@@ -12,6 +12,8 @@ export const SurveyAuditAction = {
   SURVEY_CREATED: "SURVEY_CREATED",
   VERSION_CREATED: "VERSION_CREATED",
   FORM_SAVED: "FORM_SAVED",
+  VERSION_PUBLISHED: "VERSION_PUBLISHED",
+  SURVEY_ACTIVATED: "SURVEY_ACTIVATED",
 } as const;
 export type SurveyAuditAction = (typeof SurveyAuditAction)[keyof typeof SurveyAuditAction];
 
