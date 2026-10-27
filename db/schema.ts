@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 
 import { objectId } from "#/lib/crypto";
 import type { SurveyForm } from "#/lib/survey/form";
+import type { Layout } from "#/lib/survey/layout";
 import {
   bigserial,
   boolean,
@@ -40,6 +41,7 @@ import {
   SupportType,
   SurveyAuditActor,
   SurveyStatus,
+  SurveyVersionPrefill,
   SurveyVersionStatus,
   TicketCategory,
   TicketPriorityLevel,
@@ -102,6 +104,10 @@ export const surveyStatusEnum = pgEnum("survey_status", enumValues(SurveyStatus)
 export const surveyVersionStatusEnum = pgEnum(
   "survey_version_status",
   enumValues(SurveyVersionStatus),
+);
+export const surveyVersionPrefillEnum = pgEnum(
+  "survey_version_prefill",
+  enumValues(SurveyVersionPrefill),
 );
 export const surveyAuditActorEnum = pgEnum("survey_audit_actor", enumValues(SurveyAuditActor));
 
@@ -2644,6 +2650,14 @@ export const surveyVersion = pgTable(
     form: jsonb().$type<SurveyForm>().notNull(),
     // Bumped by every save of a draft's form, so a save from a stale copy is refused.
     revision: integer().default(0).notNull(),
+    // Set together by publishing, never before: the per-copy header fields chosen, the print layout
+    // laid out from the form with them, the engine version that laid it out, and who published.
+    // Versions published before layouts existed have none.
+    prefill: surveyVersionPrefillEnum(),
+    layout: jsonb().$type<Layout>(),
+    layoutEngineVersion: integer("layout_engine_version"),
+    publishedAt: timestamp("published_at", { withTimezone: true, mode: "date" }),
+    publishedBy: varchar("published_by", { length: 255 }),
   },
   (table) => [
     uniqueIndex("survey_versions_survey_id_version_number_key").on(
@@ -2656,11 +2670,18 @@ export const surveyVersion = pgTable(
       .where(sql`${table.status} = 'DRAFT'`),
     index("survey_versions_based_on_version_id_idx").on(table.basedOnVersionId),
     index("survey_versions_created_by_idx").on(table.createdBy),
+    index("survey_versions_published_by_idx").on(table.publishedBy),
     check("survey_versions_version_number_check", sql`${table.versionNumber} >= 1`),
     // A backstop against a writer storing something that is not a form; the builder validates the rest.
     check(
       "survey_versions_form_check",
       sql`${table.form}->>'format' = '1' and jsonb_typeof(${table.form}->'pages') = 'array'`,
+    ),
+    // Publishing sets all of these at once, on a version leaving DRAFT, with the layout laid out
+    // for the stored prefill.
+    check(
+      "survey_versions_publish_check",
+      sql`(${table.layout} IS NULL) = (${table.prefill} IS NULL) AND (${table.layout} IS NULL) = (${table.layoutEngineVersion} IS NULL) AND (${table.layout} IS NULL) = (${table.publishedAt} IS NULL) AND (${table.layout} IS NULL) = (${table.publishedBy} IS NULL) AND (${table.layout} IS NULL OR (${table.status} <> 'DRAFT' AND ${table.layout}->>'prefill' = ${table.prefill}::text))`,
     ),
     foreignKey({
       columns: [table.surveyId],
@@ -2682,6 +2703,15 @@ export const surveyVersion = pgTable(
       name: "survey_versions_created_by_fkey",
     })
       .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.publishedBy],
+      foreignColumns: [user.id],
+      name: "survey_versions_published_by_fkey",
+    })
+      // Restrict, not cascade: the guard trigger freezes a published row, so a cascaded update
+      // could never apply.
+      .onUpdate("restrict")
       .onDelete("restrict"),
   ],
 );

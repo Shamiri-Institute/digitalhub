@@ -260,6 +260,13 @@
       "when": 1792577435605,
       "tag": "0036_survey_version_revision",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1792834250672,
+      "tag": "0037_survey_version_publish",
+      "breakpoints": true
     }
   ]
 }

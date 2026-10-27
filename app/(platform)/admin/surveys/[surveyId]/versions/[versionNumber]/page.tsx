@@ -44,7 +44,10 @@ export default async function SurveyVersionPage(props: {
             <SurveyVersionStatusBadge status={version.status} />
           </div>
         </PageHeading>
+        {/* Keyed by status, so publishing starts the builder afresh from what was stored. */}
         <SurveyBuilder
+          key={`${version.id}:${version.status}`}
+          surveyCode={survey.code}
           version={version}
           locked={locked}
           editable={version.status === SurveyVersionStatus.DRAFT}

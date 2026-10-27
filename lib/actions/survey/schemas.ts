@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { SurveyVersionPrefill } from "#/db/enums";
 import { stringValidation } from "#/lib/utils";
 
 export const CreateSurveySchema = z.object({
@@ -30,4 +31,11 @@ export const SaveDraftFormSchema = z.object({
   form: z.unknown(),
   /** A form this editor sent earlier whose reply was lost, so it may be the stored revision. */
   unconfirmedForm: z.unknown().optional(),
+});
+
+export const PublishVersionSchema = z.object({
+  versionId: stringValidation("Missing version"),
+  /** The revision the publisher saw laid out; publishing is refused if the draft has moved on. */
+  revision: z.int().min(0),
+  prefill: z.enum(SurveyVersionPrefill, { error: "Choose what each copy prints" }),
 });

@@ -1,7 +1,7 @@
 // The rules a draft's form must meet to be saved, in one place: the builder runs them on every
 // render to show messages beside the fields, and the save action runs them again as the authority.
-// Rules about a finished form (no empty pages, enough options) belong to publish, so a half-built
-// draft still saves.
+// Rules about a finished form (no empty pages, enough options) are in `checkPublishable`, which
+// only publishing runs, so a half-built draft still saves.
 
 import {
   ITEM_KIND_LABELS,
@@ -11,6 +11,7 @@ import {
   type SurveyForm,
   SurveyFormSchema,
 } from "#/lib/survey/form";
+import { isBlank } from "#/lib/survey/rich-text";
 
 /**
  * A question as a published or retired version of the survey has it. Answers already use its key
@@ -121,6 +122,86 @@ export function checkForm(input: unknown, locked: LockedQuestion[]): FormCheck {
   }
 
   return issues.length === 0 ? { success: true, form, issues: [] } : { success: false, issues };
+}
+
+/**
+ * What a form must have to be published, on top of `checkForm`: at least one page, no empty page,
+ * a question, no blank heading, paragraph, prompt, option or row label, at least two options on
+ * every choice question and grid, and a row on every grid. Item messages say where the item is,
+ * since the publish dialog lists them away from the fields.
+ */
+export function checkPublishable(form: SurveyForm): FormIssue[] {
+  const issues: FormIssue[] = [];
+  if (form.pages.length === 0) {
+    issues.push({ field: "form", message: "Add a page before publishing" });
+  }
+  if (form.pages.length > 0 && !form.pages.some((page) => page.items.some(isQuestion))) {
+    issues.push({ field: "form", message: "Add a question before publishing" });
+  }
+  form.pages.forEach((page, pageIndex) => {
+    if (page.items.length === 0) {
+      issues.push({
+        field: `pages.${pageIndex}`,
+        message: `Page ${pageIndex + 1} is empty. Add items to it or remove it.`,
+      });
+    }
+    page.items.forEach((item, itemIndex) => {
+      const where = `Page ${pageIndex + 1}, item ${itemIndex + 1}`;
+      if (item.kind === "heading" || item.kind === "paragraph") {
+        if (isBlank(item.text)) {
+          issues.push({
+            itemId: item.id,
+            field: "text",
+            message: `${where}: write the ${item.kind}'s text, or remove it`,
+          });
+        }
+        return;
+      }
+      if (!isQuestion(item)) {
+        return;
+      }
+      if (isBlank(item.prompt)) {
+        issues.push({ itemId: item.id, field: "prompt", message: `${where}: write the question` });
+      }
+      if ("options" in item) {
+        if (item.options.length < 2) {
+          issues.push({
+            itemId: item.id,
+            field: "options",
+            message: `${where}: add at least two options`,
+          });
+        }
+        item.options.forEach((option, index) => {
+          if (isBlank(option.label)) {
+            issues.push({
+              itemId: item.id,
+              field: `options.${index}.label`,
+              message: `${where}: give option ${index + 1} a label`,
+            });
+          }
+        });
+      }
+      if (item.kind === "grid") {
+        if (item.rows.length === 0) {
+          issues.push({
+            itemId: item.id,
+            field: "rows",
+            message: `${where}: add at least one row`,
+          });
+        }
+        item.rows.forEach((row, index) => {
+          if (isBlank(row.label)) {
+            issues.push({
+              itemId: item.id,
+              field: `rows.${index}.label`,
+              message: `${where}: give row ${index + 1} a label`,
+            });
+          }
+        });
+      }
+    });
+  });
+  return issues;
 }
 
 /** Option codes and grid row keys are unique within their question; a number's range is in order. */

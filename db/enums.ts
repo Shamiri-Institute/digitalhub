@@ -205,6 +205,23 @@ export const SURVEY_VERSION_STATUS_LABELS: Record<SurveyVersionStatus, string> =
   RETIRED: "Retired",
 };
 
+/**
+ * Which per-copy details a published version prints in its header, chosen at publish: every copy
+ * carries its serial, and a version can also print the school, or the student's name and ID.
+ */
+export const SurveyVersionPrefill = {
+  NONE: "NONE",
+  SCHOOL: "SCHOOL",
+  STUDENT: "STUDENT",
+} as const;
+export type SurveyVersionPrefill = (typeof SurveyVersionPrefill)[keyof typeof SurveyVersionPrefill];
+
+export const SURVEY_VERSION_PREFILL_LABELS: Record<SurveyVersionPrefill, string> = {
+  NONE: "Blank copies",
+  SCHOOL: "School name",
+  STUDENT: "Student name and ID",
+};
+
 export const SurveyAuditActor = {
   USER: "USER",
   PIPELINE: "PIPELINE",

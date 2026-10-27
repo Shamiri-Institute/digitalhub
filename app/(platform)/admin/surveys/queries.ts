@@ -3,6 +3,7 @@ import type { SurveyScope } from "#/lib/auth/admin-access";
 import { SurveyVersionStatus } from "#/db/enums";
 import { lockedQuestions } from "#/lib/survey/check-form";
 import { summarizeForm } from "#/lib/survey/form";
+import type { Layout } from "#/lib/survey/layout";
 
 /** The surveys of an implementer in a project, newest first, with their latest version. */
 export async function fetchSurveys({ implementerId, projectId }: SurveyScope) {
@@ -70,8 +71,9 @@ export type SurveyWithVersions = NonNullable<Awaited<ReturnType<typeof fetchSurv
 export type SurveyVersionRow = SurveyWithVersions["versions"][number];
 
 /**
- * One version of a survey with its form, for the builder, and the questions its survey's published
- * and retired versions lock; undefined outside the caller's scope or for an unknown number.
+ * One version of a survey with its form (and, once published, its prefill and print layout), for
+ * the builder, and the questions its survey's published and retired versions lock; undefined
+ * outside the caller's scope or for an unknown number.
  */
 export async function fetchVersionForBuilder(
   surveyId: string,
@@ -85,7 +87,21 @@ export async function fetchVersionForBuilder(
     with: {
       // Only the forms needed: this version's, and the published ones that lock keys.
       versions: {
-        columns: { id: true, versionNumber: true, status: true, revision: true, form: true },
+        columns: {
+          id: true,
+          versionNumber: true,
+          status: true,
+          revision: true,
+          form: true,
+          prefill: true,
+        },
+        // Only the viewed version's print layout; the published ones are here for their forms.
+        extras: (v, { sql }) => ({
+          layout:
+            sql<Layout | null>`case when ${v.versionNumber} = ${versionNumber} then ${v.layout} end`.as(
+              "layout",
+            ),
+        }),
         where: (v, { eq, ne, or }) =>
           or(eq(v.versionNumber, versionNumber), ne(v.status, SurveyVersionStatus.DRAFT)),
         orderBy: (v, { desc }) => desc(v.versionNumber),
