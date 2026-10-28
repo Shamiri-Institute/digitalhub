@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.3.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.2.6...v2.3.0) (2026-10-28)
+
+### Features
+
+- **survey:** add the form builder for survey versions ([#975](https://github.com/Shamiri-Institute/digitalhub/issues/975)) ([a8f9460](https://github.com/Shamiri-Institute/digitalhub/commit/a8f9460a8b5a05eeec2044a7118d2d2be43a6979))
+- **survey:** print layout engine, sample PDF and publish for survey versions ([#981](https://github.com/Shamiri-Institute/digitalhub/issues/981)) ([8cae7b1](https://github.com/Shamiri-Institute/digitalhub/commit/8cae7b194ca48a08997ce9567acaea1f75f068c2))
+
+### Bug Fixes
+
+- **db:** backfill actual dates for the 2023-24 projects (ENG-2558) ([#988](https://github.com/Shamiri-Institute/digitalhub/issues/988)) ([f582591](https://github.com/Shamiri-Institute/digitalhub/commit/f5825916a1a24674cd181a281b20e0dcff5d576d))
+
 ## [2.2.6](https://github.com/Shamiri-Institute/digitalhub/compare/v2.2.5...v2.2.6) (2026-10-19)
 
 ### Bug Fixes
