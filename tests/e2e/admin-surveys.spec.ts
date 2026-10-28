@@ -7,9 +7,11 @@ import { db } from "#/db/client";
 import { survey, surveyVersion } from "#/db/schema";
 import { careAdminEmail, researchAdminEmail } from "#/db/seed/fixtures";
 import type { SurveyForm } from "#/lib/survey/form";
-import { checkPublish } from "#/lib/survey/publish";
-import { storePublished } from "#/lib/survey/store-published";
 import { signInWithEmail } from "#/tests/helpers";
+import {
+  createPublishedSurvey as createSurveyFixture,
+  TWO_QUESTIONS,
+} from "#/tests/survey-fixtures";
 import { getUrl } from "#/tests/pages/helpers";
 import { PRINT_FORM } from "#/tests/unit/fixtures/survey-print-form";
 
@@ -54,65 +56,12 @@ async function signInAsResearchAdmin(context: BrowserContext) {
   return { userId: user.id, scope: { implementerId: admin.implementerId, projectId: project.id } };
 }
 
-const TWO_QUESTIONS: SurveyForm = {
-  format: 1,
-  pages: [
-    {
-      items: [
-        {
-          id: "mood",
-          kind: "single_choice",
-          key: "mood",
-          prompt: "How do you feel today?",
-          required: true,
-          options: ["1", "2", "3", "4", "5"].map((code) => ({ code, label: code })),
-        },
-        {
-          id: "notes",
-          kind: "text",
-          key: "notes",
-          prompt: "Anything else?",
-          required: false,
-          lines: 1,
-        },
-      ],
-    },
-  ],
-};
-
-/**
- * A survey whose v1 is published with one page of two questions, written straight to the DB the
- * way the publish action writes it, so the survey is active and v1 has its print layout.
- */
-async function createPublishedSurvey(
+/** A survey in the admin's scope whose v1 is published with one page of two questions. */
+function createPublishedSurvey(
   scope: { implementerId: string; projectId: string },
   userId: string,
 ) {
-  const code = uniqueCode();
-  const created = only(
-    await db
-      .insert(survey)
-      .values({
-        ...scope,
-        code,
-        // The code is unique, so the title is too, even across tests running in parallel.
-        title: `Published ${code}`,
-        createdBy: userId,
-      })
-      .returning(),
-  );
-  const version = only(
-    await db
-      .insert(surveyVersion)
-      .values({ surveyId: created.id, versionNumber: 1, createdBy: userId, form: TWO_QUESTIONS })
-      .returning(),
-  );
-  const publishable = checkPublish(TWO_QUESTIONS, [], "NONE");
-  if (!publishable.ok) throw new Error("TWO_QUESTIONS can't be published");
-  await db.transaction((tx) =>
-    storePublished(tx, { version, form: publishable.form, layout: publishable.layout, userId }),
-  );
-  return created;
+  return createSurveyFixture({ ...scope, code: uniqueCode(), createdBy: userId });
 }
 
 function versionRow(page: Page, versionNumber: number) {
@@ -448,6 +397,62 @@ test("saving from a stale tab reports that the draft changed elsewhere", async (
 
   await other.reload();
   await expect(other.getByRole("button", { name: /Anything else to tell us/ })).toBeVisible();
+});
+
+test("a Research team admin prints copies of a published version for a hub they choose", async ({
+  page,
+  context,
+}) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const published = await createPublishedSurvey(scope, userId);
+  // The last hub by name, so the admin has to pick it rather than take the first.
+  const hubs = await db.query.hub.findMany({
+    where: (h, { and, eq, isNull }) =>
+      and(
+        eq(h.implementerId, scope.implementerId),
+        eq(h.projectId, scope.projectId),
+        isNull(h.archivedAt),
+      ),
+    columns: { hubName: true },
+    with: {
+      schools: {
+        where: (s, { isNull }) => isNull(s.archivedAt),
+        columns: { schoolName: true },
+        orderBy: (s, { asc }) => [asc(s.schoolName), asc(s.id)],
+        limit: 1,
+      },
+    },
+    orderBy: (h, { desc }) => [desc(h.hubName), desc(h.id)],
+  });
+  const printedHub = hubs.find((h) => h.schools.length > 0);
+  const printedSchool = printedHub?.schools[0];
+  if (!printedHub || !printedSchool || hubs.length < 2) {
+    throw new Error("The seed has no hubs with schools for the Research admin");
+  }
+
+  await page.goto(getUrl(`/admin/surveys/${published.id}`));
+  await page.getByLabel("Actions for v1").click();
+  await page.getByRole("menuitem", { name: "Print copies" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("combobox", { name: "Hub" }).click();
+  await page.getByRole("option", { name: printedHub.hubName, exact: true }).click();
+  await dialog.getByLabel(`${printedSchool.schoolName} copies`).fill("3");
+  await dialog.getByRole("button", { name: "Continue" }).click();
+  await expect(dialog.getByText(`for ${printedHub.hubName}`)).toBeVisible();
+  await dialog.getByRole("button", { name: "Create print run" }).click();
+
+  await expect(page).toHaveURL(new RegExp(`/admin/surveys/${published.id}/runs/surveyprintrun_`));
+  await page.reload();
+  await expect(
+    page.getByRole("cell", { name: new RegExp(`^${published.code}-\\d{6}$`) }),
+  ).toHaveText([
+    `${published.code}-000001`,
+    `${published.code}-000002`,
+    `${published.code}-000003`,
+  ]);
+
+  await page.getByRole("link", { name: published.title }).click();
+  await expect(page.getByRole("row").filter({ hasText: printedHub.hubName })).toContainText("3");
 });
 
 test("a published version opens read-only", async ({ page, context }) => {
