@@ -17,7 +17,10 @@ import { PREFILL_HEADER_SLOTS, type Prefill } from "#/lib/survey/layout";
 import { PRINT_FORM } from "./fixtures/survey-print-form";
 
 vi.mock("#/lib/auth/admin-access", () => ({ requireSurveyScope: vi.fn() }));
-vi.mock("#/lib/auth/require-auth-role", () => ({ ForbiddenRoleError: class extends Error {} }));
+vi.mock("#/lib/auth/require-auth-role", () => ({
+  ForbiddenRoleError: class extends Error {},
+  NotFoundError: class extends Error {},
+}));
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
 let scope: SurveyScope;
