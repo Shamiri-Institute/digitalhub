@@ -29,19 +29,13 @@ import type { HubSurveyScope, PrintRunViewer } from "#/lib/auth/survey-access";
 import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { objectId } from "#/lib/crypto";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
+import { type PrintRunRequest, printRunRequestKey } from "#/lib/survey/print-run-request";
 import { formatSerial, MAX_COPIES_PER_RUN, pageCode, serialRangeOf } from "#/lib/survey/serial";
 
 const MAX_BIND_PARAMS = 65_535;
 // Copies are written a block at a time, with their pages, so a run's million page rows are never
 // in memory at once.
 const COPIES_PER_BLOCK = 4_000;
-
-/** What to print, by the version's prefill: a number of copies per school, or one per student. */
-export type PrintRunRequest =
-  | { kind: "COUNTS"; schools: { schoolId: string; copies: number }[] }
-  // Every active student of the school but the excluded ones. Exclusions, not choices, keep the
-  // request small: a hub can have tens of thousands of students.
-  | { kind: "STUDENTS"; schools: { schoolId: string; excludedStudentIds: string[] }[] };
 
 type PrintRunInput = { printRunId: string; versionId: string; request: PrintRunRequest };
 
@@ -69,24 +63,11 @@ export function activeSchool(schools: Pick<typeof school, "archivedAt" | "droppe
   return sql`${schools.archivedAt} is null and ${schools.droppedOut} is not true`;
 }
 
-/**
- * Identifies a request, so a resubmitted print run id can be matched against what it first asked
- * for. Schools keep their order, which is the print order; a school's exclusions are a set.
- */
+/** Stored on the run, so a resubmitted print run id can be matched against what it first asked for. */
 export function printRunRequestDigest(request: PrintRunRequest) {
-  const schools =
-    request.kind === "COUNTS"
-      ? request.schools.map(({ schoolId, copies }) => [schoolId, copies])
-      : request.schools.map(({ schoolId, excludedStudentIds }) => [
-          schoolId,
-          excludedStudentIds.toSorted(),
-        ]);
-  return createHash("sha256")
-    .update(JSON.stringify([request.kind, schools]))
-    .digest("hex");
+  return createHash("sha256").update(printRunRequestKey(request)).digest("hex");
 }
 
-/** The order a school's copies print in, and the print form lists its students in. */
 export function studentPrintOrder() {
   return [asc(student.studentName), asc(student.id)];
 }

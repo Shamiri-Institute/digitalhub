@@ -28,12 +28,8 @@ import {
 } from "#/lib/survey/print-run-queries";
 import { submitPrintRun } from "#/lib/survey/submit-print-run";
 import { objectId } from "#/lib/crypto";
-import {
-  issuePrintRun,
-  PrintRunError,
-  type PrintRunRequest,
-  voidCopy,
-} from "#/lib/survey/print-run";
+import { issuePrintRun, PrintRunError, voidCopy } from "#/lib/survey/print-run";
+import type { PrintRunRequest } from "#/lib/survey/print-run-request";
 import { formatSerial, MAX_COPIES_PER_RUN, pageCode } from "#/lib/survey/serial";
 import { createPublishedSurvey, formWithPages } from "#/tests/survey-fixtures";
 
@@ -212,14 +208,15 @@ describe("serials and page codes", () => {
 
     expect(issued).toMatchObject({ firstSerial: expected[0], lastSerial: expected[3] });
     const viewer = { kind: "hub" as const, ...scope };
-    expect(await fetchPrintRun(viewer, issued.printRunId)).toMatchObject({
+    const run = await fetchPrintRun(viewer, issued.printRunId);
+    if (!run) throw new Error("No run");
+    expect(run).toMatchObject({
       firstSerial: `${published.code}-999998`,
       lastSerial: `${published.code}-1000001`,
     });
-    const run = { id: issued.printRunId, copyCount: issued.copyCount };
-    const { copies } = await fetchPrintRunCopies(viewer, run, 1);
+    const { copies } = await fetchPrintRunCopies(run, 1);
     expect(copies.map((c) => c.serial)).toEqual(expected);
-    const pastTheEnd = await fetchPrintRunCopies(viewer, run, 999);
+    const pastTheEnd = await fetchPrintRunCopies(run, 999);
     expect(pastTheEnd).toMatchObject({ page: 1, pageCount: 1 });
     expect(pastTheEnd.copies.map((c) => c.serial)).toEqual(expected);
   });

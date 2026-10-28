@@ -1,21 +1,18 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
 import { refresh } from "next/cache";
 import type { z } from "zod";
 
 import { db } from "#/db/client";
-import { student } from "#/db/schema";
 import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { printRunScope, requirePrintRunViewer } from "#/lib/auth/survey-access";
+import { type IssuedPrintRun, voidCopy } from "#/lib/survey/print-run";
 import {
-  activeSchool,
-  activeStudent,
-  type IssuedPrintRun,
-  studentPrintOrder,
-  voidCopy,
-} from "#/lib/survey/print-run";
-import { fetchPrintableHubs, type PrintableHubs } from "#/lib/survey/print-run-queries";
+  fetchPrintableHubs,
+  fetchPrintableStudents,
+  type PrintableHubs,
+  type PrintableStudents,
+} from "#/lib/survey/print-run-queries";
 import { copyCount } from "#/lib/survey/serial";
 import { submitPrintRun } from "#/lib/survey/submit-print-run";
 import type { ActionResponse } from "#/types/actions.types";
@@ -83,9 +80,7 @@ export async function listPrintableHubs(): Promise<ActionResponse<PrintableHubs>
 /** For the student print form: one school's active students, in the order their copies print. */
 export async function listPrintableStudents(
   data: z.infer<typeof ListPrintableStudentsSchema>,
-): Promise<
-  ActionResponse<{ id: string; studentName: string | null; admissionNumber: string | null }[]>
-> {
+): Promise<ActionResponse<PrintableStudents>> {
   try {
     const viewer = await requirePrintRunViewer();
     const input = ListPrintableStudentsSchema.safeParse(data);
@@ -93,23 +88,10 @@ export async function listPrintableStudents(
       return invalid(input.error);
     }
     const { hubId: printHubId } = await printRunScope(viewer, input.data.hubId);
-    const schoolInHub = await db.query.school.findFirst({
-      where: (s, { and, eq }) =>
-        and(eq(s.id, input.data.schoolId), eq(s.hubId, printHubId), activeSchool(s)),
-      columns: { id: true },
-    });
-    if (!schoolInHub) {
+    const students = await fetchPrintableStudents(printHubId, input.data.schoolId);
+    if (!students) {
       throw new NotFoundError("School");
     }
-    const students = await db
-      .select({
-        id: student.id,
-        studentName: student.studentName,
-        admissionNumber: student.admissionNumber,
-      })
-      .from(student)
-      .where(and(eq(student.schoolId, schoolInHub.id), activeStudent()))
-      .orderBy(...studentPrintOrder());
     return { success: true, message: "", data: students };
   } catch (error) {
     return failure(error, "Sorry, could not load the students.");

@@ -8,7 +8,7 @@ import { SurveyStatus, SurveyVersionStatus } from "#/db/enums";
 import { student, survey, surveyPrintRun, surveyVersion } from "#/db/schema";
 import { countOf } from "#/db/sql";
 import type { PrintRunViewer } from "#/lib/auth/survey-access";
-import { activeSchool, activeStudent } from "#/lib/survey/print-run";
+import { activeSchool, activeStudent, studentPrintOrder } from "#/lib/survey/print-run";
 import { serialRangeOf } from "#/lib/survey/serial";
 
 const COPIES_PER_PAGE = 200;
@@ -92,6 +92,28 @@ export async function fetchPrintableHubs(viewer: PrintRunViewer) {
 
 export type PrintableHubs = Awaited<ReturnType<typeof fetchPrintableHubs>>;
 
+/** A school's active students in the order their copies print, if it is an active school of the hub. */
+export async function fetchPrintableStudents(printHubId: string, schoolId: string) {
+  const schoolInHub = await db.query.school.findFirst({
+    where: (s, { and, eq }) => and(eq(s.id, schoolId), eq(s.hubId, printHubId), activeSchool(s)),
+    columns: { id: true },
+  });
+  if (!schoolInHub) {
+    return;
+  }
+  return db
+    .select({
+      id: student.id,
+      studentName: student.studentName,
+      admissionNumber: student.admissionNumber,
+    })
+    .from(student)
+    .where(and(eq(student.schoolId, schoolInHub.id), activeStudent()))
+    .orderBy(...studentPrintOrder());
+}
+
+export type PrintableStudents = NonNullable<Awaited<ReturnType<typeof fetchPrintableStudents>>>;
+
 export async function fetchPrintRuns(viewer: PrintRunViewer, surveyId?: string) {
   return db.query.surveyPrintRun.findMany({
     where: (r, { and, inArray }) =>
@@ -150,24 +172,13 @@ export type PrintRunDetail = NonNullable<Awaited<ReturnType<typeof fetchPrintRun
 
 /**
  * One page of a run's copies, in serial order, with their page codes. A page past the last shows
- * the last.
+ * the last. Takes the run fetchPrintRun returned, which has checked the viewer may see it.
  */
-export async function fetchPrintRunCopies(
-  viewer: PrintRunViewer,
-  run: Pick<PrintRunDetail, "id" | "copyCount">,
-  requestedPage: number,
-) {
+export async function fetchPrintRunCopies(run: PrintRunDetail, requestedPage: number) {
   const pageCount = Math.max(1, Math.ceil(run.copyCount / COPIES_PER_PAGE));
   const page = Math.min(requestedPage, pageCount);
   const copies = await db.query.surveyQuestionnaire.findMany({
-    where: (q, { inArray }) =>
-      inArray(
-        q.printRunId,
-        db
-          .select({ id: surveyPrintRun.id })
-          .from(surveyPrintRun)
-          .where(and(eq(surveyPrintRun.id, run.id), runVisibleTo(surveyPrintRun, viewer))),
-      ),
+    where: (q, { eq }) => eq(q.printRunId, run.id),
     columns: { id: true, serial: true, status: true },
     with: {
       school: { columns: { schoolName: true } },

@@ -17,7 +17,6 @@ export function pageCode(serial: string, pageNumber: number) {
 
 export const copyCount = (count: number) => `${count} ${count === 1 ? "copy" : "copies"}`;
 
-/** A run's serials are one block, numbered from its first serial number. */
 export function serialRangeOf(
   surveyCode: string,
   { firstSerialNumber, copyCount }: { firstSerialNumber: number; copyCount: number },

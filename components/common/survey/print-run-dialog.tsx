@@ -40,48 +40,62 @@ import {
   listPrintableStudents,
 } from "#/lib/actions/survey/print-runs";
 import { objectId } from "#/lib/crypto";
-import type { PrintRunRequest } from "#/lib/survey/print-run";
-import type { PrintableHubs } from "#/lib/survey/print-run-queries";
+import { type PrintRunRequest, printRunRequestKey } from "#/lib/survey/print-run-request";
+import type { PrintableHubs, PrintableStudents } from "#/lib/survey/print-run-queries";
 import { copyCount, MAX_COPIES_PER_RUN } from "#/lib/survey/serial";
 import type { ActionResponse } from "#/types/actions.types";
 import { zodResolver } from "#/lib/zod-resolver";
 
-type PrintedVersion = { id: string; label: string; prefill: SurveyVersionPrefill };
+export type PrintedVersion = { id: string; label: string; prefill: SurveyVersionPrefill };
 
-export type HubsRequest = Promise<ActionResponse<PrintableHubs>>;
+type HubsRequest = Promise<ActionResponse<PrintableHubs>>;
 
-// Never rejects: use() would throw a lost connection to the page's error boundary.
-export function requestPrintableHubs(): HubsRequest {
-  return listPrintableHubs().catch(() => ({
+/** The version a table's print dialog is open for, with the hubs it loads on opening. */
+export type PrintRequest = { version: PrintedVersion; hubsRequest: HubsRequest };
+
+export function requestPrinting(version: PrintedVersion): PrintRequest {
+  // Never rejects: use() would throw a lost connection to the page's error boundary.
+  const hubsRequest = listPrintableHubs().catch(() => ({
     success: false,
     message: "Sorry, could not load the hubs.",
   }));
+  return { version, hubsRequest };
 }
 
 interface PrintRunDialogProps {
-  version: PrintedVersion;
   /** Where a created run's page lives, as `${runsPath}/${printRunId}`. */
   runsPath: string;
-  /** From requestPrintableHubs when the dialog opens; null while it is closed. */
-  hubsRequest: HubsRequest | null;
   onClose: () => void;
 }
 
-export function PrintRunDialog({ hubsRequest, onClose, ...formProps }: PrintRunDialogProps) {
+/**
+ * One per table, outside its rows: a refresh can page the table or reorder its rows, and the
+ * dialog stays open on the version it was opened for.
+ */
+export function PrintRunDialog({
+  printing,
+  onClose,
+  runsPath,
+}: PrintRunDialogProps & { printing: PrintRequest | null }) {
   return (
-    <Dialog open={hubsRequest !== null} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={printing !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="flex max-h-[90vh] flex-col lg:w-[40rem] lg:max-w-[calc(100vw-2rem)]">
-        {hubsRequest && (
+        {printing && (
           <Suspense
             fallback={
               <PrintRunNotice
-                version={formProps.version}
+                version={printing.version}
                 message="Loading hubs…"
                 onClose={onClose}
               />
             }
           >
-            <PrintRunHubs {...formProps} hubsRequest={hubsRequest} onClose={onClose} />
+            <PrintRunHubs
+              version={printing.version}
+              hubsRequest={printing.hubsRequest}
+              runsPath={runsPath}
+              onClose={onClose}
+            />
           </Suspense>
         )}
       </DialogContent>
@@ -89,27 +103,7 @@ export function PrintRunDialog({ hubsRequest, onClose, ...formProps }: PrintRunD
   );
 }
 
-export function PrintCopiesButton(props: Omit<PrintRunDialogProps, "hubsRequest" | "onClose">) {
-  const [hubsRequest, setHubsRequest] = useState<HubsRequest | null>(null);
-  return (
-    <>
-      <Button
-        variant="outline"
-        aria-label={`Print copies of ${props.version.label}`}
-        onClick={() => setHubsRequest(requestPrintableHubs())}
-      >
-        Print copies
-      </Button>
-      <PrintRunDialog {...props} hubsRequest={hubsRequest} onClose={() => setHubsRequest(null)} />
-    </>
-  );
-}
-
-function PrintRunHubs({
-  hubsRequest,
-  onClose,
-  ...formProps
-}: Omit<PrintRunDialogProps, "hubsRequest"> & { hubsRequest: HubsRequest }) {
+function PrintRunHubs({ hubsRequest, onClose, ...formProps }: PrintRunDialogProps & PrintRequest) {
   const response = use(hubsRequest);
   if (!response.success || !response.data) {
     return (
@@ -184,9 +178,7 @@ function schoolRowsOf(printHub: PrintableHubs[number] | undefined): SchoolRow[] 
   }));
 }
 
-type PrintableStudent = NonNullable<
-  Awaited<ReturnType<typeof listPrintableStudents>>["data"]
->[number];
+type PrintableStudent = PrintableStudents[number];
 
 /** Each school's students, once "Choose students" has loaded them. */
 type LoadedStudents = Partial<Record<string, PrintableStudent[]>>;
@@ -216,13 +208,16 @@ function PrintRunForm({
   hubs,
   runsPath,
   onCancel,
-}: Pick<PrintRunDialogProps, "version" | "runsPath"> & {
+}: Pick<PrintRunDialogProps, "runsPath"> & {
+  version: PrintedVersion;
   hubs: PrintableHubs;
   onCancel: () => void;
 }) {
   const router = useRouter();
-  // Kept after Back, so confirming the same request again reuses its run id.
   const [pending, setPending] = useState<PendingRun | null>(null);
+  // Every request this form has confirmed, by hub and request key, with its run id. A create whose
+  // reply was lost may have made its run, so asking for that request again must reuse the id.
+  const [runIdsByRequest, setRunIdsByRequest] = useState<Partial<Record<string, string>>>({});
   const [isConfirming, setIsConfirming] = useState(false);
   // Here rather than in each school's row, which unmounts while the confirm step shows.
   const [loadedStudents, setLoadedStudents] = useState<LoadedStudents>({});
@@ -264,13 +259,11 @@ function PrintRunForm({
             copies: schoolRow.copies ?? 0,
           })),
         };
-    // A changed request is a new run: the id of one whose reply was lost must not stand for it.
-    const asksForPendingRun =
-      pending !== null &&
-      pending.hubId === values.hubId &&
-      JSON.stringify(pending.request) === JSON.stringify(request);
+    const requestKey = JSON.stringify([values.hubId, printRunRequestKey(request)]);
+    const printRunId = runIdsByRequest[requestKey] ?? objectId("surveyprintrun");
+    setRunIdsByRequest((runIds) => ({ ...runIds, [requestKey]: printRunId }));
     setPending({
-      printRunId: asksForPendingRun ? pending.printRunId : objectId("surveyprintrun"),
+      printRunId,
       hubId: values.hubId,
       hubName: hubs.find((h) => h.id === values.hubId)?.hubName ?? "",
       request,

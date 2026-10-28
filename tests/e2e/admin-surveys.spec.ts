@@ -464,14 +464,20 @@ test("a Research team admin prints copies of a published version for a hub they 
   await expect(runRow.getByRole("cell", { name: "3", exact: true })).toBeVisible();
 });
 
-test("a print dialog opened before the page knows the time zone keeps its input", async ({
+test("a print dialog opened on page 2 before the page knows the time zone keeps its input", async ({
   page,
   context,
   undo,
 }) => {
   const { userId, scope } = await signInAsResearchAdmin(context);
   const printedHub = await lastHubOf(scope);
-  const published = await createPublishedSurvey(scope, userId);
+  // Eleven versions, newest first, so v1 is on the table's second page.
+  const published = await createSurveyFixture({
+    ...scope,
+    code: uniqueCode(),
+    createdBy: userId,
+    versionCount: 11,
+  });
   const printedSchool = await createPrintSchool({
     hubId: printedHub.id,
     schoolName: `Print ${published.code}`,
@@ -498,6 +504,7 @@ test("a print dialog opened before the page knows the time zone keeps its input"
   );
 
   await page.goto(getUrl(surveyPath));
+  await page.getByRole("button", { name: "2", exact: true }).click();
   await expect(versionRow(page, 1)).toBeVisible();
   // By CSS, not role: the open dialog hides the page behind it from the accessibility tree.
   const headers = await page.getByRole("columnheader").allInnerTexts();
@@ -517,7 +524,9 @@ test("a print dialog opened before the page knows the time zone keeps its input"
 
   releaseRefresh();
   await expect(created).toHaveText(format(new Date(), "dd MMM yyyy"));
-  await expect(dialog).toBeVisible();
+  await expect(
+    dialog.getByRole("heading", { name: `Print copies of ${published.code} v1` }),
+  ).toBeVisible();
   await expect(copies).toHaveValue("7");
 });
 

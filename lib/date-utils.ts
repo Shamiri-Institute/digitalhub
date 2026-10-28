@@ -9,3 +9,8 @@ export function getCalendarDate(date: Date) {
 export function formatDateTimeIn(date: Date, timeZone: string) {
   return formatInTimeZone(date, timeZone, "dd MMM yyyy, HH:mm");
 }
+
+/** `28 Oct 2026` in `timeZone`, like formatDateTimeIn. */
+export function formatDateIn(date: Date, timeZone: string) {
+  return formatInTimeZone(date, timeZone, "dd MMM yyyy");
+}

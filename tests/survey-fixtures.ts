@@ -54,9 +54,10 @@ export function formWithPages(pageCount: number): SurveyForm {
 }
 
 /**
- * A survey whose v1 is published, written straight to the DB the way the publish action writes it,
- * so the survey is active and v1 has its print layout. The caller deletes the survey by its code
- * afterwards, which removes its versions, print runs, copies and pages with it.
+ * A survey whose v1 (and with `versionCount`, each version after it) is published, written straight
+ * to the DB the way the publish action writes it, so the survey is active and every version has its
+ * print layout. The caller deletes the survey by its code afterwards, which removes its versions,
+ * print runs, copies and pages with it.
  */
 export async function createPublishedSurvey({
   code,
@@ -65,6 +66,7 @@ export async function createPublishedSurvey({
   createdBy,
   prefill = "NONE",
   form = TWO_QUESTIONS,
+  versionCount = 1,
 }: {
   code: string;
   implementerId: string;
@@ -72,6 +74,7 @@ export async function createPublishedSurvey({
   createdBy: string;
   prefill?: SurveyVersionPrefill;
   form?: SurveyForm;
+  versionCount?: number;
 }) {
   const [created] = await db
     .insert(survey)
@@ -85,26 +88,34 @@ export async function createPublishedSurvey({
     })
     .returning();
   if (!created) throw new Error("The survey was not created");
-  const [version] = await db
-    .insert(surveyVersion)
-    .values({ surveyId: created.id, versionNumber: 1, createdBy, form })
-    .returning();
-  if (!version) throw new Error("The version was not created");
   const publishable = checkPublish(form, [], prefill);
   if (!publishable.ok) throw new Error(`The form can't be published with prefill ${prefill}`);
-  await db.transaction((tx) =>
-    storePublished(tx, {
-      version,
-      form: publishable.form,
-      layout: publishable.layout,
-      userId: createdBy,
-    }),
-  );
+  const versionIds: string[] = [];
+  /* oxlint-disable eslint/no-await-in-loop -- each version is published after the one before */
+  for (let versionNumber = 1; versionNumber <= versionCount; versionNumber++) {
+    const [version] = await db
+      .insert(surveyVersion)
+      .values({ surveyId: created.id, versionNumber, createdBy, form })
+      .returning();
+    if (!version) throw new Error("The version was not created");
+    await db.transaction((tx) =>
+      storePublished(tx, {
+        version,
+        form: publishable.form,
+        layout: publishable.layout,
+        userId: createdBy,
+      }),
+    );
+    versionIds.push(version.id);
+  }
+  /* oxlint-enable eslint/no-await-in-loop */
+  const [versionId] = versionIds;
+  if (!versionId) throw new Error("No version was published");
   return {
     id: created.id,
     code,
     title: created.title,
-    versionId: version.id,
+    versionId,
     pageCount: publishable.layout.pages.length,
   };
 }

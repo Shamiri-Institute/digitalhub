@@ -4,9 +4,9 @@ import {
   type IssuedPrintRun,
   issuePrintRun,
   PrintRunError,
-  type PrintRunRequest,
   printRunRequestDigest,
 } from "#/lib/survey/print-run";
+import type { PrintRunRequest } from "#/lib/survey/print-run-request";
 import { serialRangeOf } from "#/lib/survey/serial";
 
 export type PrintRunSubmission = {

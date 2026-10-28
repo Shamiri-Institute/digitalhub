@@ -26,11 +26,14 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
   }
   const viewer = { kind: "project", ...scope } as const;
 
-  const survey = await fetchSurveyWithVersions(surveyId, scope);
+  const [survey, runs, timeZone] = await Promise.all([
+    fetchSurveyWithVersions(surveyId, scope),
+    fetchPrintRuns(viewer, surveyId),
+    viewerTimeZone(),
+  ]);
   if (!survey) {
     notFound();
   }
-  const [runs, timeZone] = await Promise.all([fetchPrintRuns(viewer, survey.id), viewerTimeZone()]);
   const runsPath = `/admin/surveys/${survey.id}/runs`;
 
   return (

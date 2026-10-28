@@ -25,7 +25,7 @@ export default async function AdminPrintRunPage(props: {
   if (!run || run.version.survey.id !== surveyId) {
     notFound();
   }
-  const copies = await fetchPrintRunCopies(viewer, run, requestedPage);
+  const copies = await fetchPrintRunCopies(run, requestedPage);
 
   return (
     <div className="flex h-full flex-col bg-white">

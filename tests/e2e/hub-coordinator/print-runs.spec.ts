@@ -13,7 +13,8 @@ import {
   user,
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { expect, test } from "#/tests/fixtures";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signInAs, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 import { createPrintSchool, createPublishedSurvey, formWithPages } from "#/tests/survey-fixtures";
@@ -228,11 +229,8 @@ test("a coordinator whose hub is archived can't open the print page", async ({
   await expect(page.getByRole("heading", { name: "Ready to print" })).toHaveCount(0);
 });
 
-test("changing the copies after a lost reply makes a new run, not the lost one", async ({
-  page,
-  context,
-  undo,
-}) => {
+/** A school of the coordinator's hub, and a fresh published survey to print there. */
+async function printSetup(context: BrowserContext, undo: Undo) {
   const coordinator = await signInAs(context, "HUB_COORDINATOR");
   const profile = await db.query.hubCoordinator.findFirst({
     where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
@@ -252,14 +250,11 @@ test("changing the copies after a lost reply makes a new run, not the lost one",
     projectId: coordinatorHub.projectId,
     createdBy: coordinator.id,
   });
+  return { code, schoolName };
+}
 
-  await page.goto(getUrl("/hc/surveys"));
-  await page.getByRole("button", { name: `Print copies of ${code} v1` }).click();
-  const dialog = page.getByRole("dialog");
-  await dialog.getByLabel(`${schoolName} copies`).fill("10");
-  await dialog.getByRole("button", { name: "Continue" }).click();
-
-  // The server creates the 10-copy run, but its reply never reaches the browser.
+/** The next print run create reaches the server, which commits it, but its reply is dropped. */
+async function loseNextCreateReply(page: Page) {
   let replyLost = false;
   await page.route(
     (url) => url.pathname === "/hc/surveys",
@@ -274,8 +269,25 @@ test("changing the copies after a lost reply makes a new run, not the lost one",
       await route.fallback();
     },
   );
+  return () => replyLost;
+}
+
+test("changing the copies after a lost reply makes a new run, not the lost one", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const { code, schoolName } = await printSetup(context, undo);
+
+  await page.goto(getUrl("/hc/surveys"));
+  await page.getByRole("button", { name: `Print copies of ${code} v1` }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel(`${schoolName} copies`).fill("10");
+  await dialog.getByRole("button", { name: "Continue" }).click();
+
+  const replyLost = await loseNextCreateReply(page);
   await dialog.getByRole("button", { name: "Create print run" }).click();
-  await expect.poll(() => replyLost).toBe(true);
+  await expect.poll(replyLost).toBe(true);
   await expect(dialog.getByText(`Print 10 copies of ${code} v1`)).toBeVisible();
 
   await dialog.getByRole("button", { name: "Back" }).click();
@@ -288,4 +300,37 @@ test("changing the copies after a lost reply makes a new run, not the lost one",
   await page.reload();
   await expect(page.getByText(`${code}-000011 to ${code}-000030`)).toBeVisible();
   await expect(page.getByRole("cell", { name: new RegExp(`^${code}-\\d{6}$`) })).toHaveCount(20);
+});
+
+test("asking again for a request whose reply was lost opens its run, not a second one", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const { code, schoolName } = await printSetup(context, undo);
+
+  await page.goto(getUrl("/hc/surveys"));
+  await page.getByRole("button", { name: `Print copies of ${code} v1` }).click();
+  const dialog = page.getByRole("dialog");
+  const copies = dialog.getByLabel(`${schoolName} copies`);
+  await copies.fill("10");
+  await dialog.getByRole("button", { name: "Continue" }).click();
+
+  const replyLost = await loseNextCreateReply(page);
+  await dialog.getByRole("button", { name: "Create print run" }).click();
+  await expect.poll(replyLost).toBe(true);
+
+  // Another request in between, then the lost one again.
+  await dialog.getByRole("button", { name: "Back" }).click();
+  await copies.fill("20");
+  await dialog.getByRole("button", { name: "Continue" }).click();
+  await dialog.getByRole("button", { name: "Back" }).click();
+  await copies.fill("10");
+  await dialog.getByRole("button", { name: "Continue" }).click();
+  await dialog.getByRole("button", { name: "Create print run" }).click();
+
+  await expect(page).toHaveURL(/\/hc\/surveys\/runs\/surveyprintrun_/);
+  await expect(page.getByText(`${code}-000001 to ${code}-000010`)).toBeVisible();
+  await page.goto(getUrl("/hc/surveys"));
+  await expect(page.getByRole("row").filter({ hasText: `Published ${code}` })).toHaveCount(2);
 });
