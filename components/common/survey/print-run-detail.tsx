@@ -1,0 +1,60 @@
+import { format } from "date-fns";
+
+import { SURVEY_VERSION_PREFILL_LABELS } from "#/db/enums";
+import type { PrintRunCopies, PrintRunDetail } from "#/lib/survey/print-run-queries";
+import { PrintRunStatusBadge } from "./print-runs-table";
+import { QuestionnairesTable } from "./questionnaires-table";
+
+export function PrintRunDetailView({
+  run,
+  copies,
+  page,
+  runPath,
+}: {
+  run: PrintRunDetail;
+  copies: PrintRunCopies;
+  page: number;
+  runPath: string;
+}) {
+  const facts = [
+    [
+      "Survey",
+      `${run.version.survey.title} (${run.version.survey.code}) v${run.version.versionNumber}`,
+    ],
+    ["Hub", run.hub.hubName],
+    ["Copies", String(run.copyCount)],
+    ["Serials", run.firstSerial && run.lastSerial ? `${run.firstSerial} to ${run.lastSerial}` : ""],
+    ["Prints", run.version.prefill ? SURVEY_VERSION_PREFILL_LABELS[run.version.prefill] : ""],
+    [
+      "Created",
+      `${format(run.createdAt, "dd MMM yyyy, HH:mm")} by ${run.requestedByUser.name ?? run.requestedByUser.email}`,
+    ],
+  ];
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <h2 className="text-lg font-semibold">Print run</h2>
+        <PrintRunStatusBadge status={run.status} />
+      </div>
+      <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
+        {facts.map(([label, value]) => (
+          <div key={label} className="contents">
+            <dt className="text-shamiri-text-grey">{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <QuestionnairesTable
+        {...copies}
+        page={page}
+        prefill={run.version.prefill}
+        runPath={runPath}
+      />
+    </div>
+  );
+}
+
+export function copiesPageOf(searchParams: { page?: string | string[] }) {
+  const page = Number(searchParams.page);
+  return Number.isInteger(page) && page >= 1 ? page : 1;
+}

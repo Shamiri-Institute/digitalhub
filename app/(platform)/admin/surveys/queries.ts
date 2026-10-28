@@ -50,7 +50,14 @@ export async function fetchSurveyWithVersions(
     },
     with: {
       versions: {
-        columns: { id: true, versionNumber: true, status: true, createdAt: true, form: true },
+        columns: {
+          id: true,
+          versionNumber: true,
+          status: true,
+          createdAt: true,
+          form: true,
+          prefill: true,
+        },
         with: { basedOnVersion: { columns: { versionNumber: true } } },
         orderBy: (v, { desc }) => desc(v.versionNumber),
       },

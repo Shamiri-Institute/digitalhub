@@ -8,9 +8,14 @@ import DataTable from "#/components/data-table";
 import { SurveyVersionStatus } from "#/db/enums";
 import type { SurveyVersionRow } from "../../queries";
 import { SurveyVersionStatusBadge } from "../../components/status-badges";
-import VersionMenu from "./version-menu";
+import VersionMenu, { type VersionPrinting } from "./version-menu";
 
-function versionColumns(surveyId: string, hasDraft: boolean): ColumnDef<SurveyVersionRow>[] {
+function versionColumns(
+  surveyId: string,
+  surveyCode: string,
+  hasDraft: boolean,
+  printing: VersionPrinting | undefined,
+): ColumnDef<SurveyVersionRow>[] {
   return [
     {
       accessorKey: "versionNumber",
@@ -59,7 +64,13 @@ function versionColumns(surveyId: string, hasDraft: boolean): ColumnDef<SurveyVe
     {
       id: "button",
       cell: ({ row }) => (
-        <VersionMenu surveyId={surveyId} version={row.original} hasDraft={hasDraft} />
+        <VersionMenu
+          surveyId={surveyId}
+          surveyCode={surveyCode}
+          version={row.original}
+          hasDraft={hasDraft}
+          printing={printing}
+        />
       ),
       enableHiding: false,
     },
@@ -68,17 +79,22 @@ function versionColumns(surveyId: string, hasDraft: boolean): ColumnDef<SurveyVe
 
 export default function VersionsDataTable({
   surveyId,
+  surveyCode,
   versions,
+  printing,
 }: {
   surveyId: string;
+  surveyCode: string;
   versions: SurveyVersionRow[];
+  /** Set while the survey is active, when its published versions can be printed. */
+  printing?: VersionPrinting;
 }) {
   const hasDraft = versions.some((v) => v.status === SurveyVersionStatus.DRAFT);
 
   return (
     <DataTable
       data={versions}
-      columns={versionColumns(surveyId, hasDraft)}
+      columns={versionColumns(surveyId, surveyCode, hasDraft, printing)}
       className="data-table data-table-action bg-white lg:mt-4"
       emptyStateMessage="No versions"
       getRowCanExpand={() => false}
