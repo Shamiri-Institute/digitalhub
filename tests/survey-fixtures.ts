@@ -1,6 +1,9 @@
+import { eq } from "drizzle-orm";
+
 import { db } from "#/db/client";
 import type { SurveyVersionPrefill } from "#/db/enums";
-import { survey, surveyVersion } from "#/db/schema";
+import { school, student, survey, surveyVersion } from "#/db/schema";
+import { objectId } from "#/lib/crypto";
 import type { SurveyForm } from "#/lib/survey/form";
 import { checkPublish } from "#/lib/survey/publish";
 import { storePublished } from "#/lib/survey/store-published";
@@ -104,4 +107,34 @@ export async function createPublishedSurvey({
     versionId: version.id,
     pageCount: publishable.layout.pages.length,
   };
+}
+
+/**
+ * A school of `hubId` with the named students, for a test to print at, so no other test's run uses
+ * it. Copies keep their school and students from being deleted, so `remove` runs after the
+ * survey that printed there is deleted.
+ */
+export async function createPrintSchool({
+  hubId,
+  schoolName,
+  studentNames = [],
+}: {
+  hubId: string;
+  schoolName: string;
+  studentNames?: string[];
+}) {
+  const schoolId = objectId("school");
+  await db.insert(school).values({ id: schoolId, schoolName, visibleId: schoolId, hubId });
+  const studentRows = studentNames.map((studentName) => {
+    const id = objectId("student");
+    return { id, studentName, visibleId: id, schoolId };
+  });
+  if (studentRows.length > 0) {
+    await db.insert(student).values(studentRows);
+  }
+  const remove = async () => {
+    await db.delete(student).where(eq(student.schoolId, schoolId));
+    await db.delete(school).where(eq(school.id, schoolId));
+  };
+  return { schoolId, schoolName, remove };
 }

@@ -1,4 +1,4 @@
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import {
@@ -7,7 +7,6 @@ import {
   implementerMember,
   school,
   session,
-  student,
   survey,
   surveyAuditEvent,
   surveyQuestionnaire,
@@ -16,42 +15,37 @@ import {
 import { objectId } from "#/lib/crypto";
 import { expect, test } from "#/tests/fixtures";
 import { required, signInAs, signInWithEmail } from "#/tests/helpers";
-import { getUrl, setViewerTimeZone } from "#/tests/pages/helpers";
-import { createPublishedSurvey, formWithPages } from "#/tests/survey-fixtures";
+import { getUrl } from "#/tests/pages/helpers";
+import { createPrintSchool, createPublishedSurvey, formWithPages } from "#/tests/survey-fixtures";
 
-test("a hub coordinator prints 10 numbered copies for one school and voids one", async ({
+test("a hub coordinator prints 12 numbered copies for one school and voids the last", async ({
   page,
   context,
   undo,
 }) => {
   const coordinator = await signInAs(context, "HUB_COORDINATOR");
-  await setViewerTimeZone(context);
   const profile = await db.query.hubCoordinator.findFirst({
     where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
     with: { assignedHub: { columns: { id: true, implementerId: true, projectId: true } } },
   });
   required(profile?.assignedHub, "a hub coordinator with a hub");
   const coordinatorHub = profile.assignedHub;
-  const [hubSchool, otherHubSchool] = await Promise.all([
-    db.query.school.findFirst({
-      where: (s, { and, eq, isNull }) => and(eq(s.hubId, coordinatorHub.id), isNull(s.archivedAt)),
-      orderBy: (s, { asc }) => [asc(s.schoolName), asc(s.id)],
-      columns: { id: true, schoolName: true },
-    }),
-    db
-      .select({ schoolName: school.schoolName })
-      .from(school)
-      .where(ne(school.hubId, coordinatorHub.id))
-      .orderBy(school.schoolName)
-      .limit(1)
-      .then(([row]) => row),
-  ]);
-  required(hubSchool, "a school in the coordinator's hub");
+  const otherHubSchool = await db
+    .select({ schoolName: school.schoolName })
+    .from(school)
+    .where(ne(school.hubId, coordinatorHub.id))
+    .orderBy(school.schoolName)
+    .limit(1)
+    .then(([row]) => row);
   required(otherHubSchool, "a school in another hub");
 
   const code = `H${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-  // Deleting the survey removes its print runs, copies and pages with it.
-  undo(() => db.delete(survey).where(eq(survey.code, code)));
+  const hubSchool = await createPrintSchool({
+    hubId: coordinatorHub.id,
+    schoolName: `Print school ${code}`,
+  });
+  // Undo runs last-registered first: the survey, with its runs, copies and pages, then the school.
+  undo(hubSchool.remove, () => db.delete(survey).where(eq(survey.code, code)));
   const published = await createPublishedSurvey({
     code,
     implementerId: coordinatorHub.implementerId,
@@ -69,29 +63,34 @@ test("a hub coordinator prints 10 numbered copies for one school and voids one",
   const hubSchoolCopies = dialog.getByLabel(`${hubSchool.schoolName} copies`);
   await expect(hubSchoolCopies).toBeVisible();
   await expect(dialog.getByText(otherHubSchool.schoolName, { exact: true })).toHaveCount(0);
-  await hubSchoolCopies.fill("10");
-  await expect(dialog.getByText("10 copies, serials assigned on create")).toBeVisible();
+  await hubSchoolCopies.fill("12");
+  await expect(dialog.getByText("12 copies, serials assigned on create")).toBeVisible();
   await dialog.getByRole("button", { name: "Continue" }).click();
-  await expect(dialog.getByText(`Print 10 copies of ${code} v1`)).toBeVisible();
+  await expect(dialog.getByText(`Print 12 copies of ${code} v1`)).toBeVisible();
   await dialog.getByRole("button", { name: "Create print run" }).click();
+  await expect(page.getByText("Created 12 copies").first()).toBeVisible();
 
   await expect(page).toHaveURL(/\/hc\/surveys\/runs\/surveyprintrun_/);
   await page.reload();
-  const serialCells = page.getByRole("cell", { name: new RegExp(`^${code}-\\d{6}$`) });
-  await expect(serialCells).toHaveCount(10);
-  const serials = await serialCells.allTextContents();
-  expect(new Set(serials).size).toBe(10);
+  const serials = Array.from(
+    { length: 12 },
+    (_, index) => `${code}-${String(index + 1).padStart(6, "0")}`,
+  );
+  await expect(page.getByRole("cell", { name: new RegExp(`^${code}-\\d{6}$`) })).toHaveText(
+    serials,
+  );
+  await expect(page.getByText(`${serials[0]} to ${serials[11]}`)).toBeVisible();
 
   const pageCodes = await page
     .getByRole("listitem")
     .filter({ hasText: new RegExp(`^${code}-\\d{6}-P[12]$`) })
     .allTextContents();
-  expect(pageCodes).toHaveLength(10 * published.pageCount);
+  expect(pageCodes).toHaveLength(12 * published.pageCount);
   expect(new Set(pageCodes).size).toBe(pageCodes.length);
   expect(pageCodes.toSorted()).toEqual(serials.flatMap((s) => [`${s}-P1`, `${s}-P2`]).toSorted());
 
-  const [voidedSerial] = serials;
-  required(voidedSerial, "a printed copy");
+  const voidedSerial = serials[11];
+  required(voidedSerial, "a twelfth copy");
   await page.getByRole("button", { name: `Void ${voidedSerial}` }).click();
   await page.getByLabel("Reason").fill("Torn in transit");
   await page.getByRole("button", { name: "Void copy" }).click();
@@ -124,7 +123,6 @@ test("going back from the confirm step keeps the students a coordinator left out
   undo,
 }) => {
   const coordinator = await signInAs(context, "HUB_COORDINATOR");
-  await setViewerTimeZone(context);
   const profile = await db.query.hubCoordinator.findFirst({
     where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
     with: { assignedHub: { columns: { id: true, implementerId: true, projectId: true } } },
@@ -133,29 +131,14 @@ test("going back from the confirm step keeps the students a coordinator left out
   const coordinatorHub = profile.assignedHub;
 
   const code = `S${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-  // Its own school, sorted first, with three students, so no other spec's rows are printed.
-  const schoolId = objectId("school");
-  const schoolName = `0 Print ${code}`;
   const [amy, ben, cat] = [`Amy ${code}`, `Ben ${code}`, `Cat ${code}`];
-  const studentRows = [amy, ben, cat].map((studentName) => {
-    const id = objectId("student");
-    return { id, studentName, visibleId: id, schoolId };
+  const { schoolName, remove } = await createPrintSchool({
+    hubId: coordinatorHub.id,
+    schoolName: `Print school ${code}`,
+    studentNames: [amy, ben, cat],
   });
-  // Undo runs last-registered first: the survey (with its copies), then the students and school.
-  undo(async () => {
-    await db.delete(student).where(
-      inArray(
-        student.id,
-        studentRows.map((s) => s.id),
-      ),
-    );
-    await db.delete(school).where(eq(school.id, schoolId));
-  });
-  await db
-    .insert(school)
-    .values({ id: schoolId, schoolName, visibleId: schoolId, hubId: coordinatorHub.id });
-  await db.insert(student).values(studentRows);
-  undo(() => db.delete(survey).where(eq(survey.code, code)));
+  // Undo runs last-registered first: the survey, with its copies, then the school.
+  undo(remove, () => db.delete(survey).where(eq(survey.code, code)));
   await createPublishedSurvey({
     code,
     implementerId: coordinatorHub.implementerId,
@@ -243,4 +226,66 @@ test("a coordinator whose hub is archived can't open the print page", async ({
   await page.goto(getUrl("/hc/surveys"));
   await expect(page.getByText("Not a hub coordinator with an active hub")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ready to print" })).toHaveCount(0);
+});
+
+test("changing the copies after a lost reply makes a new run, not the lost one", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const coordinator = await signInAs(context, "HUB_COORDINATOR");
+  const profile = await db.query.hubCoordinator.findFirst({
+    where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
+    with: { assignedHub: { columns: { id: true, implementerId: true, projectId: true } } },
+  });
+  required(profile?.assignedHub, "a hub coordinator with a hub");
+  const coordinatorHub = profile.assignedHub;
+  const code = `L${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  const { schoolName, remove } = await createPrintSchool({
+    hubId: coordinatorHub.id,
+    schoolName: `Print school ${code}`,
+  });
+  undo(remove, () => db.delete(survey).where(eq(survey.code, code)));
+  await createPublishedSurvey({
+    code,
+    implementerId: coordinatorHub.implementerId,
+    projectId: coordinatorHub.projectId,
+    createdBy: coordinator.id,
+  });
+
+  await page.goto(getUrl("/hc/surveys"));
+  await page.getByRole("button", { name: `Print copies of ${code} v1` }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel(`${schoolName} copies`).fill("10");
+  await dialog.getByRole("button", { name: "Continue" }).click();
+
+  // The server creates the 10-copy run, but its reply never reaches the browser.
+  let replyLost = false;
+  await page.route(
+    (url) => url.pathname === "/hc/surveys",
+    async (route) => {
+      const request = route.request();
+      if (!replyLost && request.method() === "POST" && request.postData()?.includes("printRunId")) {
+        replyLost = true;
+        await route.fetch();
+        await route.abort();
+        return;
+      }
+      await route.fallback();
+    },
+  );
+  await dialog.getByRole("button", { name: "Create print run" }).click();
+  await expect.poll(() => replyLost).toBe(true);
+  await expect(dialog.getByText(`Print 10 copies of ${code} v1`)).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Back" }).click();
+  await dialog.getByLabel(`${schoolName} copies`).fill("20");
+  await dialog.getByRole("button", { name: "Continue" }).click();
+  await expect(dialog.getByText(`Print 20 copies of ${code} v1`)).toBeVisible();
+  await dialog.getByRole("button", { name: "Create print run" }).click();
+
+  await expect(page).toHaveURL(/\/hc\/surveys\/runs\/surveyprintrun_/);
+  await page.reload();
+  await expect(page.getByText(`${code}-000011 to ${code}-000030`)).toBeVisible();
+  await expect(page.getByRole("cell", { name: new RegExp(`^${code}-\\d{6}$`) })).toHaveCount(20);
 });

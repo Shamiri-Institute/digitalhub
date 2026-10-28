@@ -1,18 +1,22 @@
-import { type BrowserContext, expect, type Page, test } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { format } from "date-fns";
 import { eq, inArray } from "drizzle-orm";
 import { PDFDocument } from "pdf-lib";
 
 import { db } from "#/db/client";
-import { survey, surveyVersion } from "#/db/schema";
+import { adminUser, hub, project, survey, surveyVersion } from "#/db/schema";
 import { careAdminEmail, researchAdminEmail } from "#/db/seed/fixtures";
+import { objectId } from "#/lib/crypto";
 import type { SurveyForm } from "#/lib/survey/form";
-import { signInWithEmail } from "#/tests/helpers";
+import { expect, test } from "#/tests/fixtures";
+import { createAdminCopy, signInWithEmail } from "#/tests/helpers";
 import {
+  createPrintSchool,
   createPublishedSurvey as createSurveyFixture,
   TWO_QUESTIONS,
 } from "#/tests/survey-fixtures";
-import { getUrl, setViewerTimeZone } from "#/tests/pages/helpers";
+import { getUrl } from "#/tests/pages/helpers";
 import { PRINT_FORM } from "#/tests/unit/fixtures/survey-print-form";
 
 /**
@@ -47,7 +51,6 @@ function uniqueCode() {
 /** Signs in as the Research team admin; returns their user id and the scope they work in. */
 async function signInAsResearchAdmin(context: BrowserContext) {
   await signInWithEmail(context, researchAdminEmail);
-  await setViewerTimeZone(context);
   const [admin, user, project] = await Promise.all([
     db.query.adminUser.findFirst({ where: (a, { eq }) => eq(a.email, researchAdminEmail) }),
     db.query.user.findFirst({ where: (u, { eq }) => eq(u.email, researchAdminEmail) }),
@@ -400,13 +403,8 @@ test("saving from a stale tab reports that the draft changed elsewhere", async (
   await expect(other.getByRole("button", { name: /Anything else to tell us/ })).toBeVisible();
 });
 
-test("a Research team admin prints copies of a published version for a hub they choose", async ({
-  page,
-  context,
-}) => {
-  const { userId, scope } = await signInAsResearchAdmin(context);
-  const published = await createPublishedSurvey(scope, userId);
-  // The last hub by name, so the admin has to pick it rather than take the first.
+/** The last unarchived hub of the admin's project by name, so the admin has to pick it. */
+async function lastHubOf(scope: { implementerId: string; projectId: string }) {
   const hubs = await db.query.hub.findMany({
     where: (h, { and, eq, isNull }) =>
       and(
@@ -414,22 +412,30 @@ test("a Research team admin prints copies of a published version for a hub they 
         eq(h.projectId, scope.projectId),
         isNull(h.archivedAt),
       ),
-    columns: { hubName: true },
-    with: {
-      schools: {
-        where: (s, { isNull }) => isNull(s.archivedAt),
-        columns: { schoolName: true },
-        orderBy: (s, { asc }) => [asc(s.schoolName), asc(s.id)],
-        limit: 1,
-      },
-    },
+    columns: { id: true, hubName: true },
     orderBy: (h, { desc }) => [desc(h.hubName), desc(h.id)],
   });
-  const printedHub = hubs.find((h) => h.schools.length > 0);
-  const printedSchool = printedHub?.schools[0];
-  if (!printedHub || !printedSchool || hubs.length < 2) {
-    throw new Error("The seed has no hubs with schools for the Research admin");
+  const [printedHub] = hubs;
+  if (!printedHub || hubs.length < 2) {
+    throw new Error("The seed has fewer than two hubs for the Research admin");
   }
+  return printedHub;
+}
+
+test("a Research team admin prints copies of a published version for a hub they choose", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const printedHub = await lastHubOf(scope);
+  const published = await createPublishedSurvey(scope, userId);
+  const printedSchool = await createPrintSchool({
+    hubId: printedHub.id,
+    schoolName: `Print ${published.code}`,
+  });
+  // Undo runs last-registered first: the survey, with its runs and copies, then the school.
+  undo(printedSchool.remove, () => db.delete(survey).where(eq(survey.id, published.id)));
 
   await page.goto(getUrl(`/admin/surveys/${published.id}`));
   await page.getByLabel("Actions for v1").click();
@@ -456,6 +462,111 @@ test("a Research team admin prints copies of a published version for a hub they 
   const runRow = page.getByRole("row").filter({ hasText: printedHub.hubName });
   // Version shows as "v1", so the only cell that is exactly "3" is Copies.
   await expect(runRow.getByRole("cell", { name: "3", exact: true })).toBeVisible();
+});
+
+test("a print dialog opened before the page knows the time zone keeps its input", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const printedHub = await lastHubOf(scope);
+  const published = await createPublishedSurvey(scope, userId);
+  const printedSchool = await createPrintSchool({
+    hubId: printedHub.id,
+    schoolName: `Print ${published.code}`,
+  });
+  undo(printedSchool.remove, () => db.delete(survey).where(eq(survey.id, published.id)));
+
+  // A first visit has no time zone cookie, so the page sets it and refreshes. The refresh is held
+  // until the dialog is open and filled in.
+  const surveyPath = `/admin/surveys/${published.id}`;
+  let releaseRefresh = () => {};
+  const refreshReleased = new Promise<void>((resolve) => {
+    releaseRefresh = resolve;
+  });
+  const isRefresh = (headers: Record<string, string>) =>
+    headers.rsc === "1" && !headers["next-router-prefetch"] && !headers["next-action"];
+  await page.route(
+    (url) => url.pathname === surveyPath,
+    async (route) => {
+      if (isRefresh(route.request().headers())) {
+        await refreshReleased;
+      }
+      await route.fallback();
+    },
+  );
+
+  await page.goto(getUrl(surveyPath));
+  await expect(versionRow(page, 1)).toBeVisible();
+  // By CSS, not role: the open dialog hides the page behind it from the accessibility tree.
+  const headers = await page.getByRole("columnheader").allInnerTexts();
+  const created = page
+    .locator("tbody tr")
+    .first()
+    .locator("td")
+    .nth(headers.findIndex((text) => text.trim() === "Created"));
+  await expect(created).toHaveText("");
+  await page.getByLabel("Actions for v1").click();
+  await page.getByRole("menuitem", { name: "Print copies" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("combobox", { name: "Hub" }).click();
+  await page.getByRole("option", { name: printedHub.hubName, exact: true }).click();
+  const copies = dialog.getByLabel(`${printedSchool.schoolName} copies`);
+  await copies.fill("7");
+
+  releaseRefresh();
+  await expect(created).toHaveText(format(new Date(), "dd MMM yyyy"));
+  await expect(dialog).toBeVisible();
+  await expect(copies).toHaveValue("7");
+});
+
+test("an admin whose project has no active hubs is told so in the print dialog", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const researchAdmin = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.email, researchAdminEmail),
+    columns: { id: true },
+  });
+  const researchProfile = await db.query.adminUser.findFirst({
+    where: (a, { eq }) => eq(a.email, researchAdminEmail),
+    columns: { implementerId: true },
+  });
+  if (!researchAdmin || !researchProfile) throw new Error("Seed the database first");
+  const projectId = objectId("proj");
+  const hubId = objectId("hub");
+  undo(
+    () => db.delete(project).where(eq(project.id, projectId)),
+    () => db.delete(hub).where(eq(hub.id, hubId)),
+  );
+  await db
+    .insert(project)
+    .values({ id: projectId, visibleId: projectId, name: `E2E ${projectId}` });
+  // Archived, so the project counts as the admin's but has no hub to print for.
+  await db.insert(hub).values({
+    id: hubId,
+    hubName: `E2E archived ${hubId}`,
+    implementerId: researchProfile.implementerId,
+    projectId,
+    archivedAt: new Date(),
+  });
+  const copy = await createAdminCopy(researchAdmin.id, projectId);
+  undo(copy.remove);
+  await db.update(adminUser).set({ team: "RESEARCH" }).where(eq(adminUser.email, copy.email));
+  // Made by the seeded admin: its audit events outlive the copy, which is then deleted.
+  const published = await createPublishedSurvey(
+    { implementerId: researchProfile.implementerId, projectId },
+    researchAdmin.id,
+  );
+  undo(() => db.delete(survey).where(eq(survey.id, published.id)));
+  await signInWithEmail(context, copy.email);
+
+  await page.goto(getUrl(`/admin/surveys/${published.id}`));
+  await page.getByLabel("Actions for v1").click();
+  await page.getByRole("menuitem", { name: "Print copies" }).click();
+  await expect(page.getByRole("dialog")).toContainText("No active hubs to print for.");
 });
 
 test("a published version opens read-only", async ({ page, context }) => {
