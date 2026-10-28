@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createCalendar,
-  type DateValue,
-  getLocalTimeZone,
-  toCalendarDate,
-  today,
-} from "@internationalized/date";
+import { createCalendar, type DateValue, toCalendarDate, today } from "@internationalized/date";
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole } from "#/db/enums";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,7 +10,6 @@ import {
   type SetStateAction,
   Suspense,
   use,
-  useEffect,
   useOptimistic,
   useRef,
   useState,
@@ -60,8 +53,8 @@ import {
   sameRange,
   type ScheduleView,
   scheduleSearch,
-  TIME_ZONE_COOKIE,
 } from "#/lib/schedule-view";
+import { useViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import { cn } from "#/lib/utils";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
@@ -96,21 +89,13 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const { locale } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const browserTimeZone = getLocalTimeZone();
+  const browserTimeZone = useViewerTimeZoneCookie(serverTimeZone);
   const timeZone = serverTimeZone ?? browserTimeZone;
   const urlView = parseScheduleView((name) => searchParams.get(name), props.role, timeZone);
   const [view, setOptimisticView] = useOptimistic(urlView);
   const [navigating, startNavigation] = useTransition();
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
   const loading = navigating || sessions === null;
-
-  // effect: the server reads the browser's time zone from this cookie to work out the visible days
-  useEffect(() => {
-    if (browserTimeZone === serverTimeZone) return;
-    // oxlint-disable-next-line unicorn/no-document-cookie -- one cookie, no Cookie Store API in all browsers yet
-    document.cookie = `${TIME_ZONE_COOKIE}=${encodeURIComponent(browserTimeZone)}; path=/; max-age=31536000; samesite=lax`;
-    router.refresh();
-  }, [browserTimeZone, serverTimeZone, router]);
 
   function navigate(next: Partial<ScheduleView>, history: "push" | "replace") {
     const search = scheduleSearch({ ...view, ...next });

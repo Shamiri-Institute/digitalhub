@@ -1,7 +1,6 @@
 import "server-only";
 
 import { and, eq, gte, lt, sql } from "drizzle-orm";
-import { cookies } from "next/headers";
 import {
   currentAdminUser,
   currentFellow,
@@ -13,21 +12,10 @@ import { ImplementerRole } from "#/db/enums";
 import { hub, interventionSession } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
-import { parseScheduleView, scheduleRange, TIME_ZONE_COOKIE } from "#/lib/schedule-view";
+import { parseScheduleView, scheduleRange } from "#/lib/schedule-view";
+import { viewerTimeZone } from "#/lib/viewer-time-zone";
 
 export type ScheduleSearchParams = Promise<Record<string, string | string[] | undefined>>;
-
-/** The viewer's IANA time zone, which the schedule sets from the browser. Null until it has. */
-async function viewerTimeZone() {
-  const timeZone = (await cookies()).get(TIME_ZONE_COOKIE)?.value;
-  if (!timeZone) return null;
-  try {
-    new Intl.DateTimeFormat("en", { timeZone });
-    return timeZone;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * The hubs whose sessions the signed-in user may see, from the profile of their active role. Each
