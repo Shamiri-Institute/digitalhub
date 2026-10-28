@@ -274,6 +274,13 @@
       "when": 1793196905351,
       "tag": "0038_backfill_project_dates",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793198082064,
+      "tag": "0039_drop_fellow_attendances_year",
+      "breakpoints": true
     }
   ]
 }

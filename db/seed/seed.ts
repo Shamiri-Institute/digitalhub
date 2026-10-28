@@ -1382,7 +1382,6 @@ async function createAttendanceRecords(
           supervisorId: school.assignedSupervisorId ?? undefined,
           groupId: group.id,
           sessionDate: session.sessionDate,
-          yearOfImplementation: session.yearOfImplementation ?? undefined,
           attended: faker.datatype.boolean({ probability: 0.9 }),
           markedBy: seederUserId,
         });
@@ -1447,7 +1446,6 @@ async function createHubAttendance(
           supervisorId: school.assignedSupervisorId ?? undefined,
           groupId: group.id,
           sessionDate: session.sessionDate,
-          yearOfImplementation: session.yearOfImplementation ?? undefined,
           attended: faker.datatype.boolean({ probability: 0.9 }),
           markedBy: seederUserId,
         });

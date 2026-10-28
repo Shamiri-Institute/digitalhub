@@ -448,7 +448,6 @@ export const fellowAttendance = pgTable(
     fellowId: varchar("fellow_id", { length: 255 }).notNull(),
     sessionNumber: integer("session_number"),
     sessionDate: timestamp("session_date", { precision: 3, mode: "date" }),
-    yearOfImplementation: integer("year_of_implementation"),
     supervisorId: varchar("supervisor_id", { length: 255 }),
     attended: boolean(),
     absenceReason: text("absence_reason"),
