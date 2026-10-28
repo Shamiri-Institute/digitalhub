@@ -12,7 +12,7 @@ import {
   createPublishedSurvey as createSurveyFixture,
   TWO_QUESTIONS,
 } from "#/tests/survey-fixtures";
-import { getUrl } from "#/tests/pages/helpers";
+import { getUrl, setViewerTimeZone } from "#/tests/pages/helpers";
 import { PRINT_FORM } from "#/tests/unit/fixtures/survey-print-form";
 
 /**
@@ -47,6 +47,7 @@ function uniqueCode() {
 /** Signs in as the Research team admin; returns their user id and the scope they work in. */
 async function signInAsResearchAdmin(context: BrowserContext) {
   await signInWithEmail(context, researchAdminEmail);
+  await setViewerTimeZone(context);
   const [admin, user, project] = await Promise.all([
     db.query.adminUser.findFirst({ where: (a, { eq }) => eq(a.email, researchAdminEmail) }),
     db.query.user.findFirst({ where: (u, { eq }) => eq(u.email, researchAdminEmail) }),
@@ -452,7 +453,9 @@ test("a Research team admin prints copies of a published version for a hub they 
   ]);
 
   await page.getByRole("link", { name: published.title }).click();
-  await expect(page.getByRole("row").filter({ hasText: printedHub.hubName })).toContainText("3");
+  const runRow = page.getByRole("row").filter({ hasText: printedHub.hubName });
+  // Version shows as "v1", so the only cell that is exactly "3" is Copies.
+  await expect(runRow.getByRole("cell", { name: "3", exact: true })).toBeVisible();
 });
 
 test("a published version opens read-only", async ({ page, context }) => {

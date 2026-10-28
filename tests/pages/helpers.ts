@@ -69,14 +69,24 @@ export async function cellUnder(page: Page, row: Locator, header: string) {
 }
 
 /**
- * A schedule page (`path` with its query) showing the period around `date`. The server reads the
- * viewer's time zone from a cookie, so the test sets it to its own and names the date in it.
+ * Stores the time zone cookie a returning viewer already has, set to this process's zone, which the
+ * browser runs in. Without it a page that shows dates or times refreshes once on load to learn the
+ * zone, and the refresh remounts data table cells, closing a dialog the test has just opened.
  */
-export async function scheduleUrl(context: BrowserContext, path: string, date: Date) {
+export async function setViewerTimeZone(context: BrowserContext) {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   await context.addCookies([
     { name: TIME_ZONE_COOKIE, value: timeZone, domain: "localhost", path: "/" },
   ]);
+  return timeZone;
+}
+
+/**
+ * A schedule page (`path` with its query) showing the period around `date`. The server reads the
+ * viewer's time zone from a cookie, so the test sets it to its own and names the date in it.
+ */
+export async function scheduleUrl(context: BrowserContext, path: string, date: Date) {
+  const timeZone = await setViewerTimeZone(context);
   const localDate = new Intl.DateTimeFormat("en-CA", { timeZone }).format(date);
   return getUrl(`${path}${path.includes("?") ? "&" : "?"}date=${localDate}`);
 }
