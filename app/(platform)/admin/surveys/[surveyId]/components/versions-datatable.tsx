@@ -2,13 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { useState } from "react";
 
-import {
-  PrintRunDialog,
-  type PrintRequest,
-  requestPrinting,
-} from "#/components/common/survey/print-run-dialog";
+import { PrintCopiesProvider } from "#/components/common/survey/print-run-dialog";
 import DataTable from "#/components/data-table";
 import { SurveyVersionStatus } from "#/db/enums";
 import { formatDateIn } from "#/lib/date-utils";
@@ -16,12 +11,13 @@ import type { SurveyVersionRow } from "../../queries";
 import { SurveyVersionStatusBadge } from "../../components/status-badges";
 import VersionMenu from "./version-menu";
 
-// What the cells need goes in the row, not the columns, so the columns can be built once.
+// What the cells need goes in the row, not the columns, so the columns can be built once. Rows come
+// from props only: DataTable goes back to page 1 whenever they change.
 type VersionTableRow = SurveyVersionRow & {
   surveyId: string;
+  surveyCode: string;
   hasDraft: boolean;
   createdOn: string;
-  onPrint: (() => void) | undefined;
 };
 
 const VERSION_COLUMNS: ColumnDef<VersionTableRow>[] = [
@@ -74,9 +70,9 @@ const VERSION_COLUMNS: ColumnDef<VersionTableRow>[] = [
     cell: ({ row }) => (
       <VersionMenu
         surveyId={row.original.surveyId}
+        surveyCode={row.original.surveyCode}
         version={row.original}
         hasDraft={row.original.hasDraft}
-        onPrint={row.original.onPrint}
       />
     ),
     enableHiding: false,
@@ -98,43 +94,23 @@ export default function VersionsDataTable({
   /** The viewer's, from `viewerTimeZone()`; null until the browser has set it. */
   timeZone: string | null;
 }) {
-  const [printing, setPrinting] = useState<PrintRequest | null>(null);
   const hasDraft = versions.some((v) => v.status === SurveyVersionStatus.DRAFT);
-  const rows = versions.map((version) => {
-    // Versions published before layouts existed have no prefill and nothing to print with.
-    const { prefill } = version;
-    const printable = runsPath && version.status === SurveyVersionStatus.PUBLISHED && prefill;
-    return {
-      ...version,
-      surveyId,
-      hasDraft,
-      createdOn: timeZone ? formatDateIn(version.createdAt, timeZone) : "",
-      onPrint: printable
-        ? () =>
-            setPrinting(
-              requestPrinting({
-                id: version.id,
-                label: `${surveyCode} v${version.versionNumber}`,
-                prefill,
-              }),
-            )
-        : undefined,
-    };
-  });
-
-  return (
-    <>
-      <DataTable
-        data={rows}
-        columns={VERSION_COLUMNS}
-        className="data-table data-table-action bg-white lg:mt-4"
-        emptyStateMessage="No versions"
-        getRowCanExpand={() => false}
-        disableSearch
-      />
-      {runsPath && (
-        <PrintRunDialog printing={printing} runsPath={runsPath} onClose={() => setPrinting(null)} />
-      )}
-    </>
+  const rows = versions.map((version) => ({
+    ...version,
+    surveyId,
+    surveyCode,
+    hasDraft,
+    createdOn: timeZone ? formatDateIn(version.createdAt, timeZone) : "",
+  }));
+  const table = (
+    <DataTable
+      data={rows}
+      columns={VERSION_COLUMNS}
+      className="data-table data-table-action bg-white lg:mt-4"
+      emptyStateMessage="No versions"
+      getRowCanExpand={() => false}
+      disableSearch
+    />
   );
+  return runsPath ? <PrintCopiesProvider runsPath={runsPath}>{table}</PrintCopiesProvider> : table;
 }

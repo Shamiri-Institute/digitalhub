@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Suspense, use, useState } from "react";
+import { createContext, type ReactNode, Suspense, use, useRef, useState } from "react";
 import { useFieldArray, useForm, useFormContext } from "react-hook-form";
 import { z } from "zod";
 
@@ -50,60 +50,105 @@ export type PrintedVersion = { id: string; label: string; prefill: SurveyVersion
 
 type HubsRequest = Promise<ActionResponse<PrintableHubs>>;
 
-/** The version a table's print dialog is open for, with the hubs it loads on opening. */
-export type PrintRequest = { version: PrintedVersion; hubsRequest: HubsRequest };
+/** What the dialog shows: the version, the hubs it loads on opening, and which opening it is. */
+type PrintRequest = { version: PrintedVersion; hubsRequest: HubsRequest; opening: number };
 
-export function requestPrinting(version: PrintedVersion): PrintRequest {
-  // Never rejects: use() would throw a lost connection to the page's error boundary.
-  const hubsRequest = listPrintableHubs().catch(() => ({
-    success: false,
-    message: "Sorry, could not load the hubs.",
-  }));
-  return { version, hubsRequest };
-}
+const PrintCopiesContext = createContext<((version: PrintedVersion) => void) | null>(null);
 
-interface PrintRunDialogProps {
-  /** Where a created run's page lives, as `${runsPath}/${printRunId}`. */
-  runsPath: string;
-  onClose: () => void;
+/** Opens the print dialog of the PrintCopiesProvider around the caller; null outside one. */
+export function usePrintCopies() {
+  return use(PrintCopiesContext);
 }
 
 /**
- * One per table, outside its rows: a refresh can page the table or reorder its rows, and the
- * dialog stays open on the version it was opened for.
+ * Holds a table's print dialog beside the table, not in its rows. Opening it re-renders neither
+ * the table nor its rows, which would send DataTable back to page 1, and a refresh that pages or
+ * reorders the rows leaves it open on its version.
  */
-export function PrintRunDialog({
-  printing,
-  onClose,
+export function PrintCopiesProvider({
   runsPath,
-}: PrintRunDialogProps & { printing: PrintRequest | null }) {
+  children,
+}: {
+  /** Where a created run's page lives, as `${runsPath}/${printRunId}`. */
+  runsPath: string;
+  children: ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  // Kept after closing, so the content stays through the close animation.
+  const [printing, setPrinting] = useState<PrintRequest | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  // Every request confirmed on this page, by version, hub and request key, with its run id. A
+  // create whose reply was lost may have made its run, so asking for that request again, even
+  // after closing the dialog, must reuse the id.
+  const runIdsByRequest = useRef(new Map<string, string>());
+
+  const openFor = (version: PrintedVersion) => {
+    // Never rejects: use() would throw a lost connection to the page's error boundary.
+    const hubsRequest = listPrintableHubs().catch(() => ({
+      success: false,
+      message: "Sorry, could not load the hubs.",
+    }));
+    setPrinting((shown) => ({ version, hubsRequest, opening: (shown?.opening ?? 0) + 1 }));
+    setIsOpen(true);
+  };
+  // A create in flight would finish behind a closed dialog, and the next request could make a
+  // second run before its reply.
+  const close = () => !isCreating && setIsOpen(false);
+  const printRunIdFor = (requestKey: string) => {
+    const known = runIdsByRequest.current.get(requestKey);
+    if (known) return known;
+    const printRunId = objectId("surveyprintrun");
+    runIdsByRequest.current.set(requestKey, printRunId);
+    return printRunId;
+  };
+
   return (
-    <Dialog open={printing !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[90vh] flex-col lg:w-[40rem] lg:max-w-[calc(100vw-2rem)]">
-        {printing && (
-          <Suspense
-            fallback={
-              <PrintRunNotice
+    <PrintCopiesContext value={openFor}>
+      {children}
+      <Dialog open={isOpen} onOpenChange={(open) => !open && close()}>
+        <DialogContent className="flex max-h-[90vh] flex-col lg:w-[40rem] lg:max-w-[calc(100vw-2rem)]">
+          {printing && (
+            <Suspense
+              key={printing.opening}
+              fallback={
+                <PrintRunNotice
+                  version={printing.version}
+                  message="Loading hubs…"
+                  onClose={close}
+                />
+              }
+            >
+              <PrintRunHubs
                 version={printing.version}
-                message="Loading hubs…"
-                onClose={onClose}
+                hubsRequest={printing.hubsRequest}
+                runsPath={runsPath}
+                onClose={close}
+                printRunIdFor={printRunIdFor}
+                isCreating={isCreating}
+                onCreatingChange={setIsCreating}
               />
-            }
-          >
-            <PrintRunHubs
-              version={printing.version}
-              hubsRequest={printing.hubsRequest}
-              runsPath={runsPath}
-              onClose={onClose}
-            />
-          </Suspense>
-        )}
-      </DialogContent>
-    </Dialog>
+            </Suspense>
+          )}
+        </DialogContent>
+      </Dialog>
+    </PrintCopiesContext>
   );
 }
 
-function PrintRunHubs({ hubsRequest, onClose, ...formProps }: PrintRunDialogProps & PrintRequest) {
+type PrintRunFormProps = {
+  version: PrintedVersion;
+  runsPath: string;
+  /** The run id for a request key, the same each time the key is asked for. */
+  printRunIdFor: (requestKey: string) => string;
+  isCreating: boolean;
+  onCreatingChange: (isCreating: boolean) => void;
+};
+
+function PrintRunHubs({
+  hubsRequest,
+  onClose,
+  ...formProps
+}: PrintRunFormProps & { hubsRequest: HubsRequest; onClose: () => void }) {
   const response = use(hubsRequest);
   if (!response.success || !response.data) {
     return (
@@ -208,20 +253,15 @@ function PrintRunForm({
   hubs,
   runsPath,
   onCancel,
-}: Pick<PrintRunDialogProps, "runsPath"> & {
-  version: PrintedVersion;
-  hubs: PrintableHubs;
-  onCancel: () => void;
-}) {
+  printRunIdFor,
+  isCreating,
+  onCreatingChange,
+}: PrintRunFormProps & { hubs: PrintableHubs; onCancel: () => void }) {
   const router = useRouter();
   const [pending, setPending] = useState<PendingRun | null>(null);
-  // Every request this form has confirmed, by hub and request key, with its run id. A create whose
-  // reply was lost may have made its run, so asking for that request again must reuse the id.
-  const [runIdsByRequest, setRunIdsByRequest] = useState<Partial<Record<string, string>>>({});
   const [isConfirming, setIsConfirming] = useState(false);
   // Here rather than in each school's row, which unmounts while the confirm step shows.
   const [loadedStudents, setLoadedStudents] = useState<LoadedStudents>({});
-  const [isCreating, setIsCreating] = useState(false);
   const printsStudents = version.prefill === SurveyVersionPrefill.STUDENT;
 
   const [firstHub] = hubs;
@@ -259,11 +299,10 @@ function PrintRunForm({
             copies: schoolRow.copies ?? 0,
           })),
         };
-    const requestKey = JSON.stringify([values.hubId, printRunRequestKey(request)]);
-    const printRunId = runIdsByRequest[requestKey] ?? objectId("surveyprintrun");
-    setRunIdsByRequest((runIds) => ({ ...runIds, [requestKey]: printRunId }));
     setPending({
-      printRunId,
+      printRunId: printRunIdFor(
+        JSON.stringify([version.id, values.hubId, printRunRequestKey(request)]),
+      ),
       hubId: values.hubId,
       hubName: hubs.find((h) => h.id === values.hubId)?.hubName ?? "",
       request,
@@ -279,7 +318,7 @@ function PrintRunForm({
 
   const onCreate = toastOnError(async () => {
     if (!pending) return;
-    setIsCreating(true);
+    onCreatingChange(true);
     try {
       const response = await createPrintRun({
         printRunId: pending.printRunId,
@@ -294,7 +333,7 @@ function PrintRunForm({
       toast({ description: response.message });
       router.push(`${runsPath}/${pending.printRunId}`);
     } finally {
-      setIsCreating(false);
+      onCreatingChange(false);
     }
   });
 
@@ -321,7 +360,12 @@ function PrintRunForm({
           ))}
         </ul>
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="ghost" type="button" onClick={() => setIsConfirming(false)}>
+          <Button
+            variant="ghost"
+            type="button"
+            onClick={() => setIsConfirming(false)}
+            disabled={isCreating}
+          >
             Back
           </Button>
           <Button type="button" onClick={onCreate} disabled={isCreating} loading={isCreating}>
@@ -474,6 +518,8 @@ function SchoolStudentsRow({
     setIsLoading(true);
     try {
       const response = await listPrintableStudents({ schoolId, hubId: printHubId });
+      // The hub was switched while loading: this row index is now another hub's school.
+      if (form.getValues("hubId") !== printHubId) return;
       if (!response.success || !response.data) {
         toast({ variant: "destructive", description: response.message });
         return;

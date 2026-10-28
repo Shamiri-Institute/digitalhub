@@ -1,16 +1,28 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { useState } from "react";
 
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { SURVEY_VERSION_PREFILL_LABELS } from "#/db/enums";
 import type { PrintableVersions } from "#/lib/survey/print-run-queries";
-import { PrintRunDialog, type PrintRequest, requestPrinting } from "./print-run-dialog";
+import { PrintCopiesProvider, usePrintCopies } from "./print-run-dialog";
 
-// The print handler goes in the row, not the columns, so the columns can be built once.
-type PrintableVersionRow = PrintableVersions[number] & { label: string; onPrint: () => void };
+type PrintableVersionRow = PrintableVersions[number];
+
+function PrintCopiesButton({ version }: { version: PrintableVersionRow }) {
+  const printCopies = usePrintCopies();
+  const label = `${version.survey.code} v${version.versionNumber}`;
+  return (
+    <Button
+      variant="outline"
+      aria-label={`Print copies of ${label}`}
+      onClick={() => printCopies?.({ id: version.id, label, prefill: version.prefill })}
+    >
+      Print copies
+    </Button>
+  );
+}
 
 const PRINTABLE_VERSION_COLUMNS: ColumnDef<PrintableVersionRow>[] = [
   {
@@ -41,13 +53,7 @@ const PRINTABLE_VERSION_COLUMNS: ColumnDef<PrintableVersionRow>[] = [
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => (
       <div className="text-right">
-        <Button
-          variant="outline"
-          aria-label={`Print copies of ${row.original.label}`}
-          onClick={row.original.onPrint}
-        >
-          Print copies
-        </Button>
+        <PrintCopiesButton version={row.original} />
       </div>
     ),
     enableHiding: false,
@@ -61,20 +67,10 @@ export function PrintableVersionsTable({
   versions: PrintableVersions;
   runsPath: string;
 }) {
-  const [printing, setPrinting] = useState<PrintRequest | null>(null);
-  const rows = versions.map((version) => {
-    const label = `${version.survey.code} v${version.versionNumber}`;
-    return {
-      ...version,
-      label,
-      onPrint: () =>
-        setPrinting(requestPrinting({ id: version.id, label, prefill: version.prefill })),
-    };
-  });
   return (
-    <>
+    <PrintCopiesProvider runsPath={runsPath}>
       <DataTable
-        data={rows}
+        data={versions}
         columns={PRINTABLE_VERSION_COLUMNS}
         className="data-table bg-white"
         emptyStateMessage="No published surveys to print"
@@ -83,7 +79,6 @@ export function PrintableVersionsTable({
         // A project has a few published versions at a time; one list keeps every Print button in view.
         disablePagination
       />
-      <PrintRunDialog printing={printing} runsPath={runsPath} onClose={() => setPrinting(null)} />
-    </>
+    </PrintCopiesProvider>
   );
 }

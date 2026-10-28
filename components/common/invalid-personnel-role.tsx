@@ -2,7 +2,7 @@ export function InvalidPersonnelRole({ userRole }: { userRole: "supervisor" | "h
   const message =
     userRole === "supervisor"
       ? "Not a supervisor with an assigned school"
-      : "Not a hub coordinator with an active hub";
+      : "Not a hub coordinator";
   return (
     <section className="flex flex-col gap-5">
       <p>{message}</p>

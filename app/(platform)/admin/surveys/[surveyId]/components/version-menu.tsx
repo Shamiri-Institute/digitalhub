@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { usePrintCopies } from "#/components/common/survey/print-run-dialog";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -16,15 +17,18 @@ import type { SurveyVersionRow } from "../../queries";
 
 interface VersionMenuProps {
   surveyId: string;
+  surveyCode: string;
   version: SurveyVersionRow;
   /** A survey has at most one draft, so a new one waits until the current draft is published. */
   hasDraft: boolean;
-  /** Opens the table's print dialog; unset when the version can't be printed. */
-  onPrint: (() => void) | undefined;
 }
 
-export default function VersionMenu({ surveyId, version, hasDraft, onPrint }: VersionMenuProps) {
+export default function VersionMenu({ surveyId, surveyCode, version, hasDraft }: VersionMenuProps) {
   const isDraft = version.status === SurveyVersionStatus.DRAFT;
+  // Null unless the survey is active. Versions published before layouts existed have no prefill
+  // and nothing to print with.
+  const printCopies = usePrintCopies();
+  const printedPrefill = version.status === SurveyVersionStatus.PUBLISHED ? version.prefill : null;
 
   const handleCreateDraft = toastOnError(async () => {
     const response = await createDraftVersion({ surveyId, fromVersionId: version.id });
@@ -56,7 +60,19 @@ export default function VersionMenu({ surveyId, version, hasDraft, onPrint }: Ve
             New draft from v{version.versionNumber}
           </DropdownMenuItem>
         )}
-        {onPrint && <DropdownMenuItem onClick={onPrint}>Print copies</DropdownMenuItem>}
+        {printCopies && printedPrefill && (
+          <DropdownMenuItem
+            onClick={() =>
+              printCopies({
+                id: version.id,
+                label: `${surveyCode} v${version.versionNumber}`,
+                prefill: printedPrefill,
+              })
+            }
+          >
+            Print copies
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

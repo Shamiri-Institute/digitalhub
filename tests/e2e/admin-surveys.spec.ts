@@ -521,6 +521,10 @@ test("a print dialog opened on page 2 before the page knows the time zone keeps 
   await page.getByRole("option", { name: printedHub.hubName, exact: true }).click();
   const copies = dialog.getByLabel(`${printedSchool.schoolName} copies`);
   await copies.fill("7");
+  // Opening the dialog leaves the table on page 2, where v1 is.
+  await expect(
+    page.locator("tbody tr").filter({ has: page.locator("td", { hasText: /^v1$/ }) }),
+  ).toHaveCount(1);
 
   releaseRefresh();
   await expect(created).toHaveText(format(new Date(), "dd MMM yyyy"));

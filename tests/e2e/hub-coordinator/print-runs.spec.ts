@@ -225,7 +225,7 @@ test("a coordinator whose hub is archived can't open the print page", async ({
   await signInWithEmail(context, email);
 
   await page.goto(getUrl("/hc/surveys"));
-  await expect(page.getByText("Not a hub coordinator with an active hub")).toBeVisible();
+  await expect(page.getByText("Not a hub coordinator", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ready to print" })).toHaveCount(0);
 });
 
@@ -253,23 +253,31 @@ async function printSetup(context: BrowserContext, undo: Undo) {
   return { code, schoolName };
 }
 
-/** The next print run create reaches the server, which commits it, but its reply is dropped. */
+/**
+ * The next print run create reaches the server, which commits it, but its reply is held until
+ * `dropReply` and then dropped.
+ */
 async function loseNextCreateReply(page: Page) {
-  let replyLost = false;
+  let replyHeld = false;
+  let dropReply = () => {};
+  const dropped = new Promise<void>((resolve) => {
+    dropReply = resolve;
+  });
   await page.route(
     (url) => url.pathname === "/hc/surveys",
     async (route) => {
       const request = route.request();
-      if (!replyLost && request.method() === "POST" && request.postData()?.includes("printRunId")) {
-        replyLost = true;
+      if (!replyHeld && request.method() === "POST" && request.postData()?.includes("printRunId")) {
+        replyHeld = true;
         await route.fetch();
+        await dropped;
         await route.abort();
         return;
       }
       await route.fallback();
     },
   );
-  return () => replyLost;
+  return { replyHeld: () => replyHeld, dropReply };
 }
 
 test("changing the copies after a lost reply makes a new run, not the lost one", async ({
@@ -285,9 +293,10 @@ test("changing the copies after a lost reply makes a new run, not the lost one",
   await dialog.getByLabel(`${schoolName} copies`).fill("10");
   await dialog.getByRole("button", { name: "Continue" }).click();
 
-  const replyLost = await loseNextCreateReply(page);
+  const { replyHeld, dropReply } = await loseNextCreateReply(page);
   await dialog.getByRole("button", { name: "Create print run" }).click();
-  await expect.poll(replyLost).toBe(true);
+  await expect.poll(replyHeld).toBe(true);
+  dropReply();
   await expect(dialog.getByText(`Print 10 copies of ${code} v1`)).toBeVisible();
 
   await dialog.getByRole("button", { name: "Back" }).click();
@@ -316,15 +325,24 @@ test("asking again for a request whose reply was lost opens its run, not a secon
   await copies.fill("10");
   await dialog.getByRole("button", { name: "Continue" }).click();
 
-  const replyLost = await loseNextCreateReply(page);
+  const { replyHeld, dropReply } = await loseNextCreateReply(page);
   await dialog.getByRole("button", { name: "Create print run" }).click();
-  await expect.poll(replyLost).toBe(true);
+  await expect.poll(replyHeld).toBe(true);
+  // While the create is in flight, the request can't be changed or the dialog closed.
+  await expect(dialog.getByRole("button", { name: "Back" })).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+  dropReply();
+  await expect(dialog.getByRole("button", { name: "Back" })).toBeEnabled();
 
-  // Another request in between, then the lost one again.
+  // Another request in between, then the dialog closed and opened again, then the lost one.
   await dialog.getByRole("button", { name: "Back" }).click();
   await copies.fill("20");
   await dialog.getByRole("button", { name: "Continue" }).click();
   await dialog.getByRole("button", { name: "Back" }).click();
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: `Print copies of ${code} v1` }).click();
   await copies.fill("10");
   await dialog.getByRole("button", { name: "Continue" }).click();
   await dialog.getByRole("button", { name: "Create print run" }).click();
