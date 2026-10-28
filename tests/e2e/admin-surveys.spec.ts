@@ -508,12 +508,12 @@ test("a print dialog opened on page 2 before the page knows the time zone keeps 
   await expect(versionRow(page, 1)).toBeVisible();
   // By CSS, not role: the open dialog hides the page behind it from the accessibility tree.
   const headers = await page.getByRole("columnheader").allInnerTexts();
-  const created = page
-    .locator("tbody tr")
-    .first()
-    .locator("td")
-    .nth(headers.findIndex((text) => text.trim() === "Created"));
-  await expect(created).toHaveText("");
+  const createdIndex = headers.findIndex((text) => text.trim() === "Created");
+  const rowOf = (versionNumber: number) =>
+    page
+      .locator("tbody tr")
+      .filter({ has: page.locator("td", { hasText: new RegExp(`^v${versionNumber}$`) }) });
+  await expect(rowOf(1).locator("td").nth(createdIndex)).toHaveText("");
   await page.getByLabel("Actions for v1").click();
   await page.getByRole("menuitem", { name: "Print copies" }).click();
   const dialog = page.getByRole("dialog");
@@ -522,12 +522,15 @@ test("a print dialog opened on page 2 before the page knows the time zone keeps 
   const copies = dialog.getByLabel(`${printedSchool.schoolName} copies`);
   await copies.fill("7");
   // Opening the dialog leaves the table on page 2, where v1 is.
-  await expect(
-    page.locator("tbody tr").filter({ has: page.locator("td", { hasText: /^v1$/ }) }),
-  ).toHaveCount(1);
+  await expect(rowOf(1)).toHaveCount(1);
 
+  // The refresh brings the time zone. Its new rows send the table back to page 1, as DataTable
+  // does whenever its rows change, and the dialog stays open on v1.
   releaseRefresh();
-  await expect(created).toHaveText(format(new Date(), "dd MMM yyyy"));
+  await expect(rowOf(11).locator("td").nth(createdIndex)).toHaveText(
+    format(new Date(), "dd MMM yyyy"),
+  );
+  await expect(rowOf(1)).toHaveCount(0);
   await expect(
     dialog.getByRole("heading", { name: `Print copies of ${published.code} v1` }),
   ).toBeVisible();

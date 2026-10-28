@@ -1,7 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createContext, type ReactNode, Suspense, use, useRef, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  type RefObject,
+  Suspense,
+  use,
+  useRef,
+  useState,
+} from "react";
 import { useFieldArray, useForm, useFormContext } from "react-hook-form";
 import { z } from "zod";
 
@@ -55,7 +63,7 @@ type PrintRequest = { version: PrintedVersion; hubsRequest: HubsRequest; opening
 
 const PrintCopiesContext = createContext<((version: PrintedVersion) => void) | null>(null);
 
-/** Opens the print dialog of the PrintCopiesProvider around the caller; null outside one. */
+/** Opens the print dialog of the PrintCopiesProvider around the caller; null when it can't print. */
 export function usePrintCopies() {
   return use(PrintCopiesContext);
 }
@@ -63,14 +71,15 @@ export function usePrintCopies() {
 /**
  * Holds a table's print dialog beside the table, not in its rows. Opening it re-renders neither
  * the table nor its rows, which would send DataTable back to page 1, and a refresh that pages or
- * reorders the rows leaves it open on its version.
+ * reorders the rows leaves it open on its version. Rendered whether or not the table can print,
+ * so the table and the run ids survive the survey's status changing.
  */
 export function PrintCopiesProvider({
   runsPath,
   children,
 }: {
-  /** Where a created run's page lives, as `${runsPath}/${printRunId}`. */
-  runsPath: string;
+  /** Where a created run's page lives, as `${runsPath}/${printRunId}`; unset when nothing prints. */
+  runsPath: string | undefined;
   children: ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -92,7 +101,7 @@ export function PrintCopiesProvider({
     setIsOpen(true);
   };
   // A create in flight would finish behind a closed dialog, and the next request could make a
-  // second run before its reply.
+  // second run before its reply. The action's maxDuration bounds how long that lasts.
   const close = () => !isCreating && setIsOpen(false);
   const printRunIdFor = (requestKey: string) => {
     const known = runIdsByRequest.current.get(requestKey);
@@ -103,34 +112,39 @@ export function PrintCopiesProvider({
   };
 
   return (
-    <PrintCopiesContext value={openFor}>
+    <PrintCopiesContext value={runsPath ? openFor : null}>
       {children}
-      <Dialog open={isOpen} onOpenChange={(open) => !open && close()}>
-        <DialogContent className="flex max-h-[90vh] flex-col lg:w-[40rem] lg:max-w-[calc(100vw-2rem)]">
-          {printing && (
-            <Suspense
-              key={printing.opening}
-              fallback={
-                <PrintRunNotice
+      {runsPath && (
+        <Dialog open={isOpen} onOpenChange={(open) => !open && close()}>
+          <DialogContent
+            closeDisabled={isCreating}
+            className="flex max-h-[90vh] flex-col lg:w-[40rem] lg:max-w-[calc(100vw-2rem)]"
+          >
+            {printing && (
+              <Suspense
+                key={printing.opening}
+                fallback={
+                  <PrintRunNotice
+                    version={printing.version}
+                    message="Loading hubs…"
+                    onClose={close}
+                  />
+                }
+              >
+                <PrintRunHubs
                   version={printing.version}
-                  message="Loading hubs…"
+                  hubsRequest={printing.hubsRequest}
+                  runsPath={runsPath}
                   onClose={close}
+                  printRunIdFor={printRunIdFor}
+                  isCreating={isCreating}
+                  onCreatingChange={setIsCreating}
                 />
-              }
-            >
-              <PrintRunHubs
-                version={printing.version}
-                hubsRequest={printing.hubsRequest}
-                runsPath={runsPath}
-                onClose={close}
-                printRunIdFor={printRunIdFor}
-                isCreating={isCreating}
-                onCreatingChange={setIsCreating}
-              />
-            </Suspense>
-          )}
-        </DialogContent>
-      </Dialog>
+              </Suspense>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </PrintCopiesContext>
   );
 }
@@ -259,9 +273,11 @@ function PrintRunForm({
 }: PrintRunFormProps & { hubs: PrintableHubs; onCancel: () => void }) {
   const router = useRouter();
   const [pending, setPending] = useState<PendingRun | null>(null);
-  const [isConfirming, setIsConfirming] = useState(false);
   // Here rather than in each school's row, which unmounts while the confirm step shows.
   const [loadedStudents, setLoadedStudents] = useState<LoadedStudents>({});
+  // Counts hub switches, so a student list asked for before one is dropped, even after switching
+  // back to the same hub: the rows were replaced, and its row index may be another school's.
+  const hubSwitches = useRef(0);
   const printsStudents = version.prefill === SurveyVersionPrefill.STUDENT;
 
   const [firstHub] = hubs;
@@ -313,7 +329,6 @@ function PrintRunForm({
       })),
       total: chosenTotal,
     });
-    setIsConfirming(true);
   };
 
   const onCreate = toastOnError(async () => {
@@ -337,7 +352,7 @@ function PrintRunForm({
     }
   });
 
-  if (pending && isConfirming) {
+  if (pending) {
     return (
       <>
         <DialogHeader>
@@ -363,7 +378,7 @@ function PrintRunForm({
           <Button
             variant="ghost"
             type="button"
-            onClick={() => setIsConfirming(false)}
+            onClick={() => setPending(null)}
             disabled={isCreating}
           >
             Back
@@ -401,6 +416,7 @@ function PrintRunForm({
                   value={field.value}
                   onValueChange={(chosenHubId) => {
                     field.onChange(chosenHubId);
+                    hubSwitches.current += 1;
                     replace(schoolRowsOf(hubs.find((h) => h.id === chosenHubId)));
                     setLoadedStudents({});
                   }}
@@ -433,6 +449,7 @@ function PrintRunForm({
                 key={field.id}
                 index={index}
                 printHubId={form.getValues("hubId")}
+                hubSwitches={hubSwitches}
                 students={loadedStudents[field.schoolId]}
                 onStudentsLoaded={(students) =>
                   setLoadedStudents((loaded) => ({ ...loaded, [field.schoolId]: students }))
@@ -502,11 +519,13 @@ function SchoolCopiesRow({ index }: { index: number }) {
 function SchoolStudentsRow({
   index,
   printHubId,
+  hubSwitches,
   students,
   onStudentsLoaded,
 }: {
   index: number;
   printHubId: string;
+  hubSwitches: RefObject<number>;
   students: PrintableStudent[] | undefined;
   onStudentsLoaded: (students: PrintableStudent[]) => void;
 }) {
@@ -516,10 +535,10 @@ function SchoolStudentsRow({
 
   const chooseStudents = toastOnError(async () => {
     setIsLoading(true);
+    const switchesBefore = hubSwitches.current;
     try {
       const response = await listPrintableStudents({ schoolId, hubId: printHubId });
-      // The hub was switched while loading: this row index is now another hub's school.
-      if (form.getValues("hubId") !== printHubId) return;
+      if (hubSwitches.current !== switchesBefore) return;
       if (!response.success || !response.data) {
         toast({ variant: "destructive", description: response.message });
         return;

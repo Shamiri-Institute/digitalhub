@@ -1,4 +1,4 @@
--- Integrity rules for the print-run tables from 0038 that drizzle cannot express in db/schema.ts.
+-- Integrity rules for the print-run tables from 0041 that drizzle cannot express in db/schema.ts.
 --
 -- A print run, its copies and their pages are history once issued: only a status moves. What they
 -- point at is checked when they are issued, not kept, because schools move between hubs and

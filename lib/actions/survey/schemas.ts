@@ -42,7 +42,7 @@ export const PublishVersionSchema = z.object({
 });
 
 export const CreatePrintRunSchema = z.object({
-  /** Made when the print form opens, so a resubmitted form finds the run it created. */
+  /** Made by the print form once per request, so a request resent after a lost reply finds its run. */
   printRunId: z.string().regex(/^surveyprintrun_[0-7][0-9a-hjkmnp-tv-z]{25}$/, {
     error: "Please reopen the form and try again",
   }),

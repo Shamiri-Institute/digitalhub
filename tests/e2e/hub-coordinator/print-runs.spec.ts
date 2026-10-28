@@ -330,6 +330,7 @@ test("asking again for a request whose reply was lost opens its run, not a secon
   await expect.poll(replyHeld).toBe(true);
   // While the create is in flight, the request can't be changed or the dialog closed.
   await expect(dialog.getByRole("button", { name: "Back" })).toBeDisabled();
+  await expect(dialog.getByRole("button", { name: "Close" })).toBeDisabled();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeVisible();
   dropReply();

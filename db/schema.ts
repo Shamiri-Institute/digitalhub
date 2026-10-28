@@ -2734,7 +2734,8 @@ export const surveyVersion = pgTable(
 export const surveyPrintRun = pgTable(
   "survey_print_runs",
   {
-    // Made by the client when the print form opens, so a resubmitted form finds its run.
+    // Made by the client, one per request it confirms and kept while the page is open, so a request
+    // resent after a lost reply finds its run.
     id: text()
       .primaryKey()
       .notNull()

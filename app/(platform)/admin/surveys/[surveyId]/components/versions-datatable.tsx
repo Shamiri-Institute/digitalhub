@@ -102,15 +102,16 @@ export default function VersionsDataTable({
     hasDraft,
     createdOn: timeZone ? formatDateIn(version.createdAt, timeZone) : "",
   }));
-  const table = (
-    <DataTable
-      data={rows}
-      columns={VERSION_COLUMNS}
-      className="data-table data-table-action bg-white lg:mt-4"
-      emptyStateMessage="No versions"
-      getRowCanExpand={() => false}
-      disableSearch
-    />
+  return (
+    <PrintCopiesProvider runsPath={runsPath}>
+      <DataTable
+        data={rows}
+        columns={VERSION_COLUMNS}
+        className="data-table data-table-action bg-white lg:mt-4"
+        emptyStateMessage="No versions"
+        getRowCanExpand={() => false}
+        disableSearch
+      />
+    </PrintCopiesProvider>
   );
-  return runsPath ? <PrintCopiesProvider runsPath={runsPath}>{table}</PrintCopiesProvider> : table;
 }
