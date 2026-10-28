@@ -6,11 +6,7 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { hubCoordinatorViewer } from "#/lib/auth/survey-access";
-import {
-  fetchPrintableHubs,
-  fetchPrintableVersions,
-  fetchPrintRuns,
-} from "#/lib/survey/print-run-queries";
+import { fetchPrintableVersions, fetchPrintRuns } from "#/lib/survey/print-run-queries";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
 
 // Creating a print run inserts every copy and page in the action this page serves.
@@ -24,9 +20,8 @@ export default async function HubSurveysPage() {
     return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
 
-  const [versions, hubs, runs, timeZone] = await Promise.all([
+  const [versions, runs, timeZone] = await Promise.all([
     fetchPrintableVersions(viewer),
-    fetchPrintableHubs(viewer),
     fetchPrintRuns(viewer),
     viewerTimeZone(),
   ]);
@@ -38,7 +33,7 @@ export default async function HubSurveysPage() {
         <Separator />
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Ready to print</h2>
-          <PrintableVersionsTable versions={versions} hubs={hubs} runsPath={RUNS_PATH} />
+          <PrintableVersionsTable versions={versions} runsPath={RUNS_PATH} />
         </section>
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Print runs</h2>

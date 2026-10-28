@@ -9,7 +9,7 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { SurveyStatus } from "#/db/enums";
 import { surveyScope } from "#/lib/auth/admin-access";
-import { fetchPrintableHubs, fetchPrintRuns } from "#/lib/survey/print-run-queries";
+import { fetchPrintRuns } from "#/lib/survey/print-run-queries";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
 import { SurveyStatusBadge } from "../components/status-badges";
 import { fetchSurveyWithVersions } from "../queries";
@@ -30,11 +30,7 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
   if (!survey) {
     notFound();
   }
-  const [hubs, runs, timeZone] = await Promise.all([
-    survey.status === SurveyStatus.ACTIVE ? fetchPrintableHubs(viewer) : null,
-    fetchPrintRuns(viewer, survey.id),
-    viewerTimeZone(),
-  ]);
+  const [runs, timeZone] = await Promise.all([fetchPrintRuns(viewer, survey.id), viewerTimeZone()]);
   const runsPath = `/admin/surveys/${survey.id}/runs`;
 
   return (
@@ -61,7 +57,8 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
           surveyId={survey.id}
           surveyCode={survey.code}
           versions={survey.versions}
-          printing={hubs ? { hubs, runsPath } : undefined}
+          runsPath={survey.status === SurveyStatus.ACTIVE ? runsPath : undefined}
+          timeZone={timeZone}
         />
         <section className="space-y-3 pt-6">
           <h2 className="text-lg font-semibold">Print runs</h2>

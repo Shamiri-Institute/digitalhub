@@ -19,16 +19,13 @@ export default async function HubPrintRunPage(props: {
     return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
   const [{ runId }, searchParams] = await Promise.all([props.params, props.searchParams]);
-  const page = copiesPageOf(searchParams);
+  const requestedPage = copiesPageOf(searchParams);
 
-  const [run, copies, timeZone] = await Promise.all([
-    fetchPrintRun(viewer, runId),
-    fetchPrintRunCopies(viewer, runId, page),
-    viewerTimeZone(),
-  ]);
+  const [run, timeZone] = await Promise.all([fetchPrintRun(viewer, runId), viewerTimeZone()]);
   if (!run) {
     notFound();
   }
+  const copies = await fetchPrintRunCopies(viewer, run, requestedPage);
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -43,7 +40,6 @@ export default async function HubPrintRunPage(props: {
         <PrintRunDetailView
           run={run}
           copies={copies}
-          page={page}
           runPath={`/hc/surveys/runs/${run.id}`}
           timeZone={timeZone}
         />

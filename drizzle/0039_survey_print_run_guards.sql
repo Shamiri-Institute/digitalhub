@@ -39,9 +39,10 @@ $$ LANGUAGE plpgsql;--> statement-breakpoint
 CREATE TRIGGER survey_print_runs_guard BEFORE INSERT OR UPDATE ON survey_print_runs
 FOR EACH ROW EXECUTE FUNCTION survey_print_runs_guard();--> statement-breakpoint
 
--- A copy's school is in the copy's hub, and it has a student, at that school, exactly when its
--- version prints student details. The run's key already ties the copy to a published version and
--- the run's hub. One query per inserted statement, not per row: a run inserts up to 50,000 copies.
+-- A copy's school is in the copy's hub, its serial number is in its run's block, and it has a
+-- student, at that school, exactly when its version prints student details. The run's key already
+-- ties the copy to a published version and the run's hub. One query per inserted statement, not
+-- per row: a run inserts up to 50,000 copies.
 CREATE FUNCTION survey_questionnaires_issue_check() RETURNS trigger AS $$
 DECLARE
   bad record;
@@ -53,14 +54,17 @@ BEGIN
   SELECT c.id, c.serial INTO bad
   FROM new_copies c
   JOIN versions v ON v.id = c.version_id
+  JOIN survey_print_runs r ON r.id = c.print_run_id
   JOIN schools s ON s.id = c.school_id
   LEFT JOIN students st ON st.id = c.student_id
   WHERE s.hub_id IS DISTINCT FROM c.hub_id
+     OR c.serial_number NOT BETWEEN r.first_serial_number
+                                AND r.first_serial_number + r.copy_count - 1
      OR (c.student_id IS NOT NULL) IS DISTINCT FROM (v.prefill = 'STUDENT')
      OR (c.student_id IS NOT NULL AND st.school_id IS DISTINCT FROM c.school_id)
   LIMIT 1;
   IF FOUND THEN
-    RAISE EXCEPTION 'survey_questionnaires % (%) does not match its hub, school or student',
+    RAISE EXCEPTION 'survey_questionnaires % (%) does not match its hub, school, student or run',
       bad.serial, bad.id
       USING ERRCODE = 'check_violation', CONSTRAINT = 'survey_questionnaires_issue_check';
   END IF;

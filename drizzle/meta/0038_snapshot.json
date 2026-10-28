@@ -1,5 +1,5 @@
 {
-  "id": "29e31d54-bd29-4ae4-8b59-dbe5b4e5a5ae",
+  "id": "559926c1-3a01-4463-a003-d4b5a537a775",
   "prevId": "02f52387-08bd-45d8-aa5c-97cd1faa4e6d",
   "version": "7",
   "dialect": "postgresql",
@@ -8887,6 +8887,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "first_serial_number": {
+          "name": "first_serial_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_digest": {
+          "name": "request_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "status": {
           "name": "status",
           "type": "survey_print_run_status",
@@ -9012,6 +9024,10 @@
         "survey_print_runs_copy_count_check": {
           "name": "survey_print_runs_copy_count_check",
           "value": "\"survey_print_runs\".\"copy_count\" >= 1"
+        },
+        "survey_print_runs_first_serial_number_check": {
+          "name": "survey_print_runs_first_serial_number_check",
+          "value": "\"survey_print_runs\".\"first_serial_number\" >= 1"
         }
       },
       "isRLSEnabled": false

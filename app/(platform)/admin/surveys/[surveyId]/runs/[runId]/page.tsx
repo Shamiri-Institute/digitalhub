@@ -18,17 +18,14 @@ export default async function AdminPrintRunPage(props: {
     redirect("/admin/schedule");
   }
   const [{ surveyId, runId }, searchParams] = await Promise.all([props.params, props.searchParams]);
-  const page = copiesPageOf(searchParams);
+  const requestedPage = copiesPageOf(searchParams);
   const viewer = { kind: "project", ...scope } as const;
 
-  const [run, copies, timeZone] = await Promise.all([
-    fetchPrintRun(viewer, runId),
-    fetchPrintRunCopies(viewer, runId, page),
-    viewerTimeZone(),
-  ]);
+  const [run, timeZone] = await Promise.all([fetchPrintRun(viewer, runId), viewerTimeZone()]);
   if (!run || run.version.survey.id !== surveyId) {
     notFound();
   }
+  const copies = await fetchPrintRunCopies(viewer, run, requestedPage);
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -43,7 +40,6 @@ export default async function AdminPrintRunPage(props: {
         <PrintRunDetailView
           run={run}
           copies={copies}
-          page={page}
           runPath={`/admin/surveys/${surveyId}/runs/${run.id}`}
           timeZone={timeZone}
         />

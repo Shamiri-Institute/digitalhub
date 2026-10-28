@@ -9,11 +9,14 @@ import { student } from "#/db/schema";
 import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { printRunScope, requirePrintRunViewer } from "#/lib/auth/survey-access";
 import {
+  activeSchool,
   activeStudent,
   type IssuedPrintRun,
   studentPrintOrder,
   voidCopy,
 } from "#/lib/survey/print-run";
+import { fetchPrintableHubs, type PrintableHubs } from "#/lib/survey/print-run-queries";
+import { copyCount } from "#/lib/survey/serial";
 import { submitPrintRun } from "#/lib/survey/submit-print-run";
 import type { ActionResponse } from "#/types/actions.types";
 import { failure, invalid } from "./respond";
@@ -40,7 +43,7 @@ export async function createPrintRun(
     const issued = await submitPrintRun(viewer, input.data);
     // On a resubmit too: the first submit's refresh may never have reached this client.
     refresh();
-    return { success: true, message: `Created ${issued.copyCount} copies`, data: issued };
+    return { success: true, message: `Created ${copyCount(issued.copyCount)}`, data: issued };
   } catch (error) {
     return failure(error, "Sorry, could not create the print run.");
   }
@@ -67,6 +70,16 @@ export async function voidQuestionnaire(
   }
 }
 
+/** For the print form, when it opens: the hubs the caller may print for, from their session. */
+export async function listPrintableHubs(): Promise<ActionResponse<PrintableHubs>> {
+  try {
+    const viewer = await requirePrintRunViewer();
+    return { success: true, message: "", data: await fetchPrintableHubs(viewer) };
+  } catch (error) {
+    return failure(error, "Sorry, could not load the hubs.");
+  }
+}
+
 /** For the student print form: one school's active students, in the order their copies print. */
 export async function listPrintableStudents(
   data: z.infer<typeof ListPrintableStudentsSchema>,
@@ -81,8 +94,8 @@ export async function listPrintableStudents(
     }
     const { hubId: printHubId } = await printRunScope(viewer, input.data.hubId);
     const schoolInHub = await db.query.school.findFirst({
-      where: (s, { and, eq, isNull }) =>
-        and(eq(s.id, input.data.schoolId), eq(s.hubId, printHubId), isNull(s.archivedAt)),
+      where: (s, { and, eq }) =>
+        and(eq(s.id, input.data.schoolId), eq(s.hubId, printHubId), activeSchool(s)),
       columns: { id: true },
     });
     if (!schoolInHub) {

@@ -7,7 +7,6 @@ import { QuestionnairesTable } from "./questionnaires-table";
 export function PrintRunDetailView({
   run,
   copies,
-  page,
   runPath,
   timeZone,
 }: {
@@ -15,7 +14,6 @@ export function PrintRunDetailView({
   /** The viewer's, from `viewerTimeZone()`; null until the browser has set it. */
   timeZone: string | null;
   copies: PrintRunCopies;
-  page: number;
   runPath: string;
 }) {
   const facts = [
@@ -25,7 +23,7 @@ export function PrintRunDetailView({
     ],
     ["Hub", run.hub.hubName],
     ["Copies", String(run.copyCount)],
-    ["Serials", run.firstSerial && run.lastSerial ? `${run.firstSerial} to ${run.lastSerial}` : ""],
+    ["Serials", `${run.firstSerial} to ${run.lastSerial}`],
     ["Prints", run.version.prefill ? SURVEY_VERSION_PREFILL_LABELS[run.version.prefill] : ""],
     [
       "Created",
@@ -51,16 +49,12 @@ export function PrintRunDetailView({
           </div>
         ))}
       </dl>
-      <QuestionnairesTable
-        {...copies}
-        page={page}
-        prefill={run.version.prefill}
-        runPath={runPath}
-      />
+      <QuestionnairesTable {...copies} prefill={run.version.prefill} runPath={runPath} />
     </div>
   );
 }
 
+/** The page of copies the URL asks for; fetchPrintRunCopies clamps it to the run's last. */
 export function copiesPageOf(searchParams: { page?: string | string[] }) {
   const page = Number(searchParams.page);
   return Number.isInteger(page) && page >= 1 ? page : 1;

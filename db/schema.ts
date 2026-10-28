@@ -2753,6 +2753,11 @@ export const surveyPrintRun = pgTable(
     hubId: varchar("hub_id", { length: 255 }).notNull(),
     requestedBy: varchar("requested_by", { length: 255 }).notNull(),
     copyCount: integer("copy_count").notNull(),
+    // Its copies are numbered firstSerialNumber to firstSerialNumber + copyCount - 1.
+    firstSerialNumber: integer("first_serial_number").notNull(),
+    // What the form asked for, from printRunRequestDigest, so a resubmitted id that asks for
+    // something else is refused instead of answered with this run.
+    requestDigest: text("request_digest").notNull(),
     status: surveyPrintRunStatusEnum().default(SurveyPrintRunStatus.QUEUED).notNull(),
   },
   (table) => [
@@ -2766,6 +2771,7 @@ export const surveyPrintRun = pgTable(
     index("survey_print_runs_hub_id_created_at_idx").on(table.hubId, table.createdAt),
     index("survey_print_runs_requested_by_idx").on(table.requestedBy),
     check("survey_print_runs_copy_count_check", sql`${table.copyCount} >= 1`),
+    check("survey_print_runs_first_serial_number_check", sql`${table.firstSerialNumber} >= 1`),
     // Restrict on update, here and below: the guard triggers freeze these columns, so a cascaded
     // update could never apply.
     foreignKey({

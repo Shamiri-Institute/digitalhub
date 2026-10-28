@@ -23,7 +23,6 @@ export function useViewerTimeZoneCookie(serverTimeZone: string | null) {
   return browserTimeZone;
 }
 
-/** For server pages that show times: see useViewerTimeZoneCookie. */
 export function ViewerTimeZoneCookie({ serverTimeZone }: { serverTimeZone: string | null }) {
   useViewerTimeZoneCookie(serverTimeZone);
   return null;

@@ -2,7 +2,9 @@
 // can't drift apart. Every rule a request must meet is checked here; the triggers in
 // drizzle/0039_survey_print_run_guards.sql back up the ones about hubs, schools, students and pages.
 
-import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { createHash } from "node:crypto";
+
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { PgInsertValue, PgTable } from "drizzle-orm/pg-core";
 
 import type { Transaction } from "#/db/client";
@@ -27,9 +29,8 @@ import type { HubSurveyScope, PrintRunViewer } from "#/lib/auth/survey-access";
 import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { objectId } from "#/lib/crypto";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
-import { formatSerial, MAX_COPIES_PER_RUN, pageCode } from "#/lib/survey/serial";
+import { formatSerial, MAX_COPIES_PER_RUN, pageCode, serialRangeOf } from "#/lib/survey/serial";
 
-// Postgres takes at most this many bind parameters in one statement.
 const MAX_BIND_PARAMS = 65_535;
 // Copies are written a block at a time, with their pages, so a run's million page rows are never
 // in memory at once.
@@ -60,6 +61,31 @@ export function activeStudent() {
   return sql.raw(`"students"."archived_at" is null and "students"."dropped_out" is not true`);
 }
 
+/**
+ * The schools a run prints for: not archived, and not dropped out of the programme. Takes the
+ * table a relational `where` callback is given, so the print form and issuePrintRun share it.
+ */
+export function activeSchool(schools: Pick<typeof school, "archivedAt" | "droppedOut"> = school) {
+  return sql`${schools.archivedAt} is null and ${schools.droppedOut} is not true`;
+}
+
+/**
+ * Identifies a request, so a resubmitted print run id can be matched against what it first asked
+ * for. Schools keep their order, which is the print order; a school's exclusions are a set.
+ */
+export function printRunRequestDigest(request: PrintRunRequest) {
+  const schools =
+    request.kind === "COUNTS"
+      ? request.schools.map(({ schoolId, copies }) => [schoolId, copies])
+      : request.schools.map(({ schoolId, excludedStudentIds }) => [
+          schoolId,
+          excludedStudentIds.toSorted(),
+        ]);
+  return createHash("sha256")
+    .update(JSON.stringify([request.kind, schools]))
+    .digest("hex");
+}
+
 /** The order a school's copies print in, and the print form lists its students in. */
 export function studentPrintOrder() {
   return [asc(student.studentName), asc(student.id)];
@@ -76,7 +102,7 @@ type PlannedCopy = { schoolId: string; studentId: string | null };
  * request kind must match its prefill, the schools must be active schools of the scope's hub, and
  * the total 1 to MAX_COPIES_PER_RUN. A refused request throws PrintRunError or NotFoundError
  * before anything is written. A second call with the same `printRunId` fails on
- * `survey_print_runs_pkey` before it reserves any serials.
+ * `survey_print_runs_pkey`, and its rollback returns the serials it reserved.
  */
 export async function issuePrintRun(
   tx: Transaction,
@@ -136,9 +162,7 @@ export async function issuePrintRun(
   const schoolsInHub = await tx
     .select({ id: school.id })
     .from(school)
-    .where(
-      and(inArray(school.id, schoolIds), eq(school.hubId, scope.hubId), isNull(school.archivedAt)),
-    );
+    .where(and(inArray(school.id, schoolIds), eq(school.hubId, scope.hubId), activeSchool()));
   if (schoolsInHub.length !== schoolIds.length) {
     throw new NotFoundError("School");
   }
@@ -179,16 +203,6 @@ export async function issuePrintRun(
     throw new PrintRunError(`A print run has at most ${MAX_COPIES_PER_RUN} copies`);
   }
 
-  // The run goes in before the serials are reserved, so a resubmitted form fails here on the
-  // primary key without taking the survey's lock or any serials.
-  await tx.insert(surveyPrintRun).values({
-    id: input.printRunId,
-    versionId: version.id,
-    hubId: scope.hubId,
-    requestedBy: scope.userId,
-    copyCount: copies.length,
-  });
-
   // Locks the survey row until commit, so a concurrent run of the same survey waits here and then
   // takes the next block.
   const [reserved] = await tx
@@ -201,6 +215,15 @@ export async function issuePrintRun(
   }
   const firstNumber = reserved.nextSerial - copies.length;
   const serialAt = (index: number) => formatSerial(version.surveyCode, firstNumber + index);
+  await tx.insert(surveyPrintRun).values({
+    id: input.printRunId,
+    versionId: version.id,
+    hubId: scope.hubId,
+    requestedBy: scope.userId,
+    copyCount: copies.length,
+    firstSerialNumber: firstNumber,
+    requestDigest: printRunRequestDigest(input.request),
+  });
 
   /* oxlint-disable eslint/no-await-in-loop -- one transaction runs one statement at a time */
   for (let start = 0; start < copies.length; start += COPIES_PER_BLOCK) {
@@ -234,8 +257,10 @@ export async function issuePrintRun(
   const issued = {
     printRunId: input.printRunId,
     copyCount: copies.length,
-    firstSerial: serialAt(0),
-    lastSerial: serialAt(copies.length - 1),
+    ...serialRangeOf(version.surveyCode, {
+      firstSerialNumber: firstNumber,
+      copyCount: copies.length,
+    }),
   };
   const copiesPerSchool = new Map<string, number>();
   for (const { schoolId } of copies) {

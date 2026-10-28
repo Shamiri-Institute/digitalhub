@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Icons } from "#/components/icons";
-import { NO_HUBS_REASON, PrintRunDialog } from "#/components/common/survey/print-run-dialog";
+import {
+  type HubsRequest,
+  PrintRunDialog,
+  requestPrintableHubs,
+} from "#/components/common/survey/print-run-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,11 +18,9 @@ import {
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { SurveyVersionStatus } from "#/db/enums";
 import { createDraftVersion } from "#/lib/actions/survey";
-import type { PrintableHubs } from "#/lib/survey/print-run-queries";
 import type { SurveyVersionRow } from "../../queries";
 
-/** What printing a version needs: the hubs the admin may print for, and where runs live. */
-export type VersionPrinting = { hubs: PrintableHubs; runsPath: string };
+export type VersionPrinting = { runsPath: string };
 
 interface VersionMenuProps {
   surveyId: string;
@@ -36,7 +38,7 @@ export default function VersionMenu({
   hasDraft,
   printing,
 }: VersionMenuProps) {
-  const [isPrinting, setIsPrinting] = useState(false);
+  const [hubsRequest, setHubsRequest] = useState<HubsRequest | null>(null);
   const isDraft = version.status === SurveyVersionStatus.DRAFT;
   // Versions published before layouts existed have no prefill and nothing to print with.
   const printedPrefill =
@@ -74,15 +76,8 @@ export default function VersionMenu({
             </DropdownMenuItem>
           )}
           {printing && printedPrefill && (
-            <DropdownMenuItem
-              disabled={printing.hubs.length === 0}
-              onClick={() => setIsPrinting(true)}
-              className="flex-col items-start"
-            >
+            <DropdownMenuItem onClick={() => setHubsRequest(requestPrintableHubs())}>
               Print copies
-              {printing.hubs.length === 0 && (
-                <span className="text-xs text-shamiri-text-grey">{NO_HUBS_REASON}</span>
-              )}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -94,10 +89,9 @@ export default function VersionMenu({
             label: `${surveyCode} v${version.versionNumber}`,
             prefill: printedPrefill,
           }}
-          hubs={printing.hubs}
           runsPath={printing.runsPath}
-          open={isPrinting}
-          onOpenChange={setIsPrinting}
+          hubsRequest={hubsRequest}
+          onClose={() => setHubsRequest(null)}
         />
       )}
     </>

@@ -1,18 +1,16 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { useMemo } from "react";
 
 import DataTable from "#/components/data-table";
 import { SURVEY_VERSION_PREFILL_LABELS } from "#/db/enums";
-import type { PrintableHubs, PrintableVersions } from "#/lib/survey/print-run-queries";
+import type { PrintableVersions } from "#/lib/survey/print-run-queries";
 import { PrintCopiesButton } from "./print-run-dialog";
 
 type PrintableVersionRow = PrintableVersions[number];
 
-function printableVersionColumns(
-  hubs: PrintableHubs,
-  runsPath: string,
-): ColumnDef<PrintableVersionRow>[] {
+function printableVersionColumns(runsPath: string): ColumnDef<PrintableVersionRow>[] {
   return [
     {
       accessorFn: (version) => version.survey.title,
@@ -50,7 +48,6 @@ function printableVersionColumns(
                 label: `${version.survey.code} v${version.versionNumber}`,
                 prefill: version.prefill,
               }}
-              hubs={hubs}
               runsPath={runsPath}
             />
           </div>
@@ -63,17 +60,17 @@ function printableVersionColumns(
 
 export function PrintableVersionsTable({
   versions,
-  hubs,
   runsPath,
 }: {
   versions: PrintableVersions;
-  hubs: PrintableHubs;
   runsPath: string;
 }) {
+  // memo: flexRender remounts a new cell function, closing a print button's open dialog
+  const columns = useMemo(() => printableVersionColumns(runsPath), [runsPath]);
   return (
     <DataTable
       data={versions}
-      columns={printableVersionColumns(hubs, runsPath)}
+      columns={columns}
       className="data-table bg-white"
       emptyStateMessage="No published surveys to print"
       getRowCanExpand={() => false}

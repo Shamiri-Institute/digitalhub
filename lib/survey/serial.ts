@@ -14,3 +14,16 @@ export function formatSerial(surveyCode: string, serialNumber: number) {
 export function pageCode(serial: string, pageNumber: number) {
   return `${serial}-P${pageNumber}`;
 }
+
+export const copyCount = (count: number) => `${count} ${count === 1 ? "copy" : "copies"}`;
+
+/** A run's serials are one block, numbered from its first serial number. */
+export function serialRangeOf(
+  surveyCode: string,
+  { firstSerialNumber, copyCount }: { firstSerialNumber: number; copyCount: number },
+) {
+  return {
+    firstSerial: formatSerial(surveyCode, firstSerialNumber),
+    lastSerial: formatSerial(surveyCode, firstSerialNumber + copyCount - 1),
+  };
+}

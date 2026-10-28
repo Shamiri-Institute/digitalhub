@@ -24,13 +24,11 @@ export function PrintRunStatusBadge({ status }: { status: SurveyPrintRunStatus }
   );
 }
 
-type PrintRunRow = PrintRunRows[number];
+// The link and date go in the row, not the columns, so the columns can be built once: a cell
+// function made on each render is a new component type to React and remounts every cell.
+type PrintRunRow = PrintRunRows[number] & { href: string; created: string };
 
-function printRunColumns(
-  runsPath: string,
-  showHub: boolean,
-  timeZone: string | null,
-): ColumnDef<PrintRunRow>[] {
+function printRunColumns(showHub: boolean): ColumnDef<PrintRunRow>[] {
   return [
     {
       accessorKey: "createdAt",
@@ -38,10 +36,10 @@ function printRunColumns(
       id: "Created",
       cell: ({ row }) => (
         <Link
-          href={`${runsPath}/${row.original.id}`}
+          href={row.original.href}
           className="font-medium text-shamiri-new-blue hover:underline"
         >
-          {timeZone ? formatDateTimeIn(row.original.createdAt, timeZone) : "Open"}
+          {row.original.created}
         </Link>
       ),
     },
@@ -86,6 +84,9 @@ function printRunColumns(
   ];
 }
 
+const PRINT_RUN_COLUMNS = printRunColumns(false);
+const PRINT_RUN_COLUMNS_WITH_HUB = printRunColumns(true);
+
 export function PrintRunsTable({
   runs,
   runsPath,
@@ -98,10 +99,15 @@ export function PrintRunsTable({
   /** The viewer's, from `viewerTimeZone()`; null until the browser has set it. */
   timeZone: string | null;
 }) {
+  const rows = runs.map((run) => ({
+    ...run,
+    href: `${runsPath}/${run.id}`,
+    created: timeZone ? formatDateTimeIn(run.createdAt, timeZone) : "Open",
+  }));
   return (
     <DataTable
-      data={runs}
-      columns={printRunColumns(runsPath, showHub, timeZone)}
+      data={rows}
+      columns={showHub ? PRINT_RUN_COLUMNS_WITH_HUB : PRINT_RUN_COLUMNS}
       className="data-table bg-white"
       emptyStateMessage="No print runs yet"
       getRowCanExpand={() => false}

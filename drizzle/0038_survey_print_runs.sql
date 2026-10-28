@@ -8,8 +8,11 @@ CREATE TABLE "survey_print_runs" (
 	"hub_id" varchar(255) NOT NULL,
 	"requested_by" varchar(255) NOT NULL,
 	"copy_count" integer NOT NULL,
+	"first_serial_number" integer NOT NULL,
+	"request_digest" text NOT NULL,
 	"status" "survey_print_run_status" DEFAULT 'QUEUED' NOT NULL,
-	CONSTRAINT "survey_print_runs_copy_count_check" CHECK ("survey_print_runs"."copy_count" >= 1)
+	CONSTRAINT "survey_print_runs_copy_count_check" CHECK ("survey_print_runs"."copy_count" >= 1),
+	CONSTRAINT "survey_print_runs_first_serial_number_check" CHECK ("survey_print_runs"."first_serial_number" >= 1)
 );
 --> statement-breakpoint
 CREATE TABLE "survey_questionnaires" (

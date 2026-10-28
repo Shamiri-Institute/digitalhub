@@ -1,8 +1,7 @@
 // @vitest-environment node
-// Issuing print runs against the database: serials, pages, scope and the 0039 triggers. The print
-// form is tested through the UI in tests/e2e/hub-coordinator/print-runs.spec.ts; these cover what
-// a screen can't reach (concurrent runs, a resubmitted run, a run past the limit) and the writes
-// the triggers must refuse, which no screen can attempt.
+// The print form is tested through the UI in tests/e2e/hub-coordinator/print-runs.spec.ts; these
+// cover what a screen can't reach (concurrent runs, a resubmitted run, a run past the limit) and
+// the writes the 0039 triggers must refuse, which no screen can attempt.
 import { and, asc, eq, inArray, isNull, sql, TransactionRollbackError } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -22,7 +21,11 @@ import {
 } from "#/db/schema";
 import { ForbiddenRoleError, NotFoundError } from "#/lib/auth/require-auth-role";
 import { type HubSurveyScope, printRunScope } from "#/lib/auth/survey-access";
-import { fetchPrintRun, fetchPrintRunCopies } from "#/lib/survey/print-run-queries";
+import {
+  fetchPrintableHubs,
+  fetchPrintRun,
+  fetchPrintRunCopies,
+} from "#/lib/survey/print-run-queries";
 import { submitPrintRun } from "#/lib/survey/submit-print-run";
 import { objectId } from "#/lib/crypto";
 import {
@@ -213,8 +216,12 @@ describe("serials and page codes", () => {
       firstSerial: `${published.code}-999998`,
       lastSerial: `${published.code}-1000001`,
     });
-    const { copies } = await fetchPrintRunCopies(viewer, issued.printRunId, 1);
+    const run = { id: issued.printRunId, copyCount: issued.copyCount };
+    const { copies } = await fetchPrintRunCopies(viewer, run, 1);
     expect(copies.map((c) => c.serial)).toEqual(expected);
+    const pastTheEnd = await fetchPrintRunCopies(viewer, run, 999);
+    expect(pastTheEnd).toMatchObject({ page: 1, pageCount: 1 });
+    expect(pastTheEnd.copies.map((c) => c.serial)).toEqual(expected);
   });
 
   it("concurrent runs get disjoint serials", async () => {
@@ -269,6 +276,27 @@ describe("serials and page codes", () => {
     expect(isUniqueViolation(retry, "survey_print_runs_pkey")).toBe(true);
     expect(await copiesOf(printRunId)).toHaveLength(5);
     expect(await nextSerialOf(published.id)).toBe(6);
+  });
+});
+
+describe("resubmitted forms", () => {
+  it("answers the same request with its run and refuses a changed one", async () => {
+    const published = await publish();
+    const viewer = { kind: "hub" as const, ...scope };
+    const submission = {
+      printRunId: objectId("surveyprintrun"),
+      versionId: published.versionId,
+      hubId: scope.hubId,
+      request: counts(10),
+    };
+
+    const first = await submitPrintRun(viewer, submission);
+    expect(await submitPrintRun(viewer, submission)).toEqual(first);
+    await expect(submitPrintRun(viewer, { ...submission, request: counts(20) })).rejects.toThrow(
+      "This form already created a different print run",
+    );
+    expect(await copiesOf(first.printRunId)).toHaveLength(10);
+    expect(await nextSerialOf(published.id)).toBe(11);
   });
 });
 
@@ -374,6 +402,28 @@ describe("hub scope", () => {
     await expect(printRunScope({ kind: "hub", ...scope }, scope.hubId)).resolves.toEqual(scope);
   });
 
+  it("leaves out a school that dropped out, from the form and from a run", async () => {
+    const published = await publish();
+    const droppedSchoolId = objectId("school");
+    createdSchoolIds.push(droppedSchoolId);
+    await db.insert(school).values({
+      id: droppedSchoolId,
+      schoolName: `Print run dropped school ${droppedSchoolId}`,
+      visibleId: droppedSchoolId,
+      hubId: scope.hubId,
+      droppedOut: true,
+      droppedOutAt: new Date(),
+    });
+
+    const [printHub] = await fetchPrintableHubs({ kind: "hub", ...scope });
+    const listedSchoolIds = printHub?.schools.map((s) => s.id);
+    expect(listedSchoolIds).toContain(testSchoolId);
+    expect(listedSchoolIds).not.toContain(droppedSchoolId);
+    await expect(issue(published.versionId, counts(1, droppedSchoolId))).rejects.toThrow(
+      NotFoundError,
+    );
+  });
+
   it("refuses a school of another hub and reserves nothing", async () => {
     const published = await publish();
     const printRunId = objectId("surveyprintrun");
@@ -450,23 +500,25 @@ describe("print-run triggers", () => {
     );
   });
 
-  it("rejects a copy whose school is in another hub, or a student on a blank version", async () => {
+  it("rejects a copy whose school is in another hub, whose serial is outside its run, or with a student on a blank version", async () => {
     const published = await publish();
-    const copyError = (values: { schoolId: string; studentId?: string; serialNumber?: number }) =>
+    // Reissues the run's one copy with `values` changed.
+    const copyError = (values: Partial<typeof surveyQuestionnaire.$inferInsert>) =>
       errorOf(async (tx) => {
         const copy = await oneCopy(tx, published.versionId);
-        await tx.insert(surveyQuestionnaire).values({
-          ...copy,
-          id: objectId("surveyquestionnaire"),
-          serial: `${published.code}-999999`,
-          serialNumber: 999_999,
-          ...values,
-        });
+        await tx.delete(surveyQuestionnaire).where(eq(surveyQuestionnaire.id, copy.id));
+        await tx
+          .insert(surveyQuestionnaire)
+          .values({ ...copy, id: objectId("surveyquestionnaire"), ...values });
       });
 
+    expect(await copyError({ schoolId: testSchoolId })).toBeNull();
     expect((await copyError({ schoolId: otherHubSchoolId }))?.constraint).toBe(
       "survey_questionnaires_issue_check",
     );
+    expect(
+      (await copyError({ serial: `${published.code}-999999`, serialNumber: 999_999 }))?.constraint,
+    ).toBe("survey_questionnaires_issue_check");
     expect((await copyError({ schoolId: testSchoolId, serialNumber: 99_999 }))?.constraint).toBe(
       "survey_questionnaires_serial_matches_number_check",
     );
@@ -494,9 +546,14 @@ describe("print-run triggers", () => {
     if (!draft) throw new Error("No draft");
     const runError = (versionId: string, hubId: string) =>
       errorOf((tx) =>
-        tx
-          .insert(surveyPrintRun)
-          .values({ versionId, hubId, requestedBy: scope.userId, copyCount: 1 }),
+        tx.insert(surveyPrintRun).values({
+          versionId,
+          hubId,
+          requestedBy: scope.userId,
+          copyCount: 1,
+          firstSerialNumber: 1,
+          requestDigest: "test",
+        }),
       );
 
     expect((await runError(published.versionId, foreignHub.id))?.constraint).toBe(

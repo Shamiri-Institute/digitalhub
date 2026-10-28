@@ -42,7 +42,6 @@ export async function hubCoordinatorViewer(): Promise<PrintRunViewer | null> {
   };
 }
 
-/** The caller as a print-run viewer, whichever of the two roles their active membership has. */
 export async function requirePrintRunViewer(): Promise<PrintRunViewer> {
   const { role } = await requireAuthRole(ImplementerRole.ADMIN, ImplementerRole.HUB_COORDINATOR);
   if (role === ImplementerRole.HUB_COORDINATOR) {

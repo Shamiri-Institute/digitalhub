@@ -82,6 +82,11 @@ function copyColumns(showsStudent: boolean): ColumnDef<PrintRunCopy>[] {
   ];
 }
 
+// Built once: a cell function made on each render is a new component type to React, so a refresh
+// would remount every row and close a void dialog the viewer has open.
+const COPY_COLUMNS = copyColumns(false);
+const STUDENT_COPY_COLUMNS = copyColumns(true);
+
 /**
  * One page of a run's copies, with links to the pages before and after it. A run can hold
  * 50,000 copies, so the server pages them and the table shows one page whole.
@@ -92,12 +97,12 @@ export function QuestionnairesTable({
   page,
   prefill,
   runPath,
-}: PrintRunCopies & { page: number; prefill: SurveyVersionPrefill | null; runPath: string }) {
+}: PrintRunCopies & { prefill: SurveyVersionPrefill | null; runPath: string }) {
   return (
     <div className="space-y-3">
       <DataTable
         data={copies}
-        columns={copyColumns(prefill === SurveyVersionPrefill.STUDENT)}
+        columns={prefill === SurveyVersionPrefill.STUDENT ? STUDENT_COPY_COLUMNS : COPY_COLUMNS}
         className="data-table data-table-action bg-white"
         emptyStateMessage="No copies"
         getRowCanExpand={() => false}
