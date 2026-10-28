@@ -3,12 +3,14 @@
 // form is tested through the UI in tests/e2e/hub-coordinator/print-runs.spec.ts; these cover what
 // a screen can't reach (concurrent runs, a resubmitted run, a run past the limit) and the writes
 // the triggers must refuse, which no screen can attempt.
-import { and, asc, eq, inArray, sql, TransactionRollbackError } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql, TransactionRollbackError } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db, isUniqueViolation, pool, type Transaction } from "#/db/client";
 import {
+  hub,
+  project,
   school,
   student,
   survey,
@@ -20,6 +22,8 @@ import {
 } from "#/db/schema";
 import { ForbiddenRoleError, NotFoundError } from "#/lib/auth/require-auth-role";
 import { type HubSurveyScope, printRunScope } from "#/lib/auth/survey-access";
+import { fetchPrintRun, fetchPrintRunCopies } from "#/lib/survey/print-run-queries";
+import { submitPrintRun } from "#/lib/survey/submit-print-run";
 import { objectId } from "#/lib/crypto";
 import {
   issuePrintRun,
@@ -33,6 +37,8 @@ import { createPublishedSurvey, formWithPages } from "#/tests/survey-fixtures";
 let scope: HubSurveyScope;
 /** A school of the scope's hub made for these tests, with the students below. */
 let testSchoolId: string;
+/** Schools a test made for itself; afterAll removes them and their students. */
+const createdSchoolIds: string[] = [];
 let students: Record<"amy" | "ben" | "cat" | "dan", string>;
 /** A seeded school of another hub, only read. */
 let otherHubSchoolId: string;
@@ -41,13 +47,12 @@ const createdCodes: string[] = [];
 
 beforeAll(async () => {
   const [found] = await db
-    .execute<{ hubId: string; implementerId: string; projectId: string }>(
-      sql`select h.id as "hubId", h.implementer_id as "implementerId", h.project_id as "projectId"
-      from hubs h join projects p on p.id = h.project_id
-      where p.is_default and h.archived_at is null
-      order by h.id limit 1`,
-    )
-    .then((result) => result.rows);
+    .select({ hubId: hub.id, implementerId: hub.implementerId, projectId: hub.projectId })
+    .from(hub)
+    .innerJoin(project, eq(project.id, hub.projectId))
+    .where(and(eq(project.isDefault, true), isNull(hub.archivedAt)))
+    .orderBy(asc(hub.id))
+    .limit(1);
   const member = found
     ? await db.query.implementerMember.findFirst({
         where: (m, { and, eq }) =>
@@ -67,6 +72,7 @@ beforeAll(async () => {
   otherHubId = other.hubId;
 
   testSchoolId = objectId("school");
+  createdSchoolIds.push(testSchoolId);
   await db.insert(school).values({
     id: testSchoolId,
     schoolName: `Print run test school ${testSchoolId}`,
@@ -92,8 +98,8 @@ afterAll(async () => {
   if (createdCodes.length > 0) {
     await db.delete(survey).where(inArray(survey.code, createdCodes));
   }
-  await db.delete(student).where(eq(student.schoolId, testSchoolId));
-  await db.delete(school).where(eq(school.id, testSchoolId));
+  await db.delete(student).where(inArray(student.schoolId, createdSchoolIds));
+  await db.delete(school).where(inArray(school.id, createdSchoolIds));
   await pool.end();
 });
 
@@ -143,7 +149,7 @@ async function copiesOf(printRunId: string) {
     })
     .from(surveyQuestionnaire)
     .where(eq(surveyQuestionnaire.printRunId, printRunId))
-    .orderBy(asc(surveyQuestionnaire.serial));
+    .orderBy(asc(surveyQuestionnaire.serialNumber));
 }
 
 /** Runs the write in a transaction that is always rolled back; the Postgres error it raised, or null. */
@@ -191,6 +197,24 @@ describe("serials and page codes", () => {
       [1, 2, 3].flatMap((n) => [1, 2].map((p) => `${published.code}-00000${n}-P${p}`)),
     );
     expect(await nextSerialOf(published.id)).toBe(4);
+  });
+
+  it("orders copies by number past 999,999, where the serials get wider", async () => {
+    const published = await publish();
+    await db.update(survey).set({ nextSerial: 999_998 }).where(eq(survey.id, published.id));
+    const issued = await issue(published.versionId, counts(4));
+    const expected = [999_998, 999_999, 1_000_000, 1_000_001].map((n) =>
+      formatSerial(published.code, n),
+    );
+
+    expect(issued).toMatchObject({ firstSerial: expected[0], lastSerial: expected[3] });
+    const viewer = { kind: "hub" as const, ...scope };
+    expect(await fetchPrintRun(viewer, issued.printRunId)).toMatchObject({
+      firstSerial: `${published.code}-999998`,
+      lastSerial: `${published.code}-1000001`,
+    });
+    const { copies } = await fetchPrintRunCopies(viewer, issued.printRunId, 1);
+    expect(copies.map((c) => c.serial)).toEqual(expected);
   });
 
   it("concurrent runs get disjoint serials", async () => {
@@ -253,7 +277,7 @@ describe("one copy per student", () => {
     const published = await publish({ prefill: "STUDENT" });
     const issued = await issue(published.versionId, {
       kind: "STUDENTS",
-      schools: [{ schoolId: testSchoolId, studentIds: null }],
+      schools: [{ schoolId: testSchoolId, excludedStudentIds: [] }],
     });
     expect((await copiesOf(issued.printRunId)).map((c) => c.studentId)).toEqual([
       students.amy,
@@ -261,16 +285,16 @@ describe("one copy per student", () => {
     ]);
   });
 
-  it("prints only the chosen students", async () => {
+  it("leaves out the excluded students", async () => {
     const published = await publish({ prefill: "STUDENT" });
     const issued = await issue(published.versionId, {
       kind: "STUDENTS",
-      schools: [{ schoolId: testSchoolId, studentIds: [students.ben] }],
+      schools: [{ schoolId: testSchoolId, excludedStudentIds: [students.amy] }],
     });
     expect((await copiesOf(issued.printRunId)).map((c) => c.studentId)).toEqual([students.ben]);
   });
 
-  it("refuses archived, dropped-out and other schools' students", async () => {
+  it("has nothing to exclude for archived, dropped-out or other schools' students", async () => {
     const published = await publish({ prefill: "STUDENT" });
     const seededStudent = await db.query.student.findFirst({
       where: (s, { and, isNotNull, ne }) =>
@@ -278,14 +302,53 @@ describe("one copy per student", () => {
       columns: { id: true },
     });
     if (!seededStudent) throw new Error("Seed the database first");
-    for (const studentId of [students.cat, students.dan, seededStudent.id]) {
-      await expect(
-        issue(published.versionId, {
-          kind: "STUDENTS",
-          schools: [{ schoolId: testSchoolId, studentIds: [studentId] }],
-        }),
-      ).rejects.toThrow(NotFoundError);
-    }
+    const issued = await issue(published.versionId, {
+      kind: "STUDENTS",
+      schools: [
+        {
+          schoolId: testSchoolId,
+          excludedStudentIds: [students.cat, students.dan, seededStudent.id],
+        },
+      ],
+    });
+    expect((await copiesOf(issued.printRunId)).map((c) => c.studentId)).toEqual([
+      students.amy,
+      students.ben,
+    ]);
+  });
+
+  it("answers a resubmitted form with its run, though its only student was archived since", async () => {
+    const published = await publish({ prefill: "STUDENT" });
+    const retrySchoolId = objectId("school");
+    createdSchoolIds.push(retrySchoolId);
+    await db.insert(school).values({
+      id: retrySchoolId,
+      schoolName: `Print run retry school ${retrySchoolId}`,
+      visibleId: retrySchoolId,
+      hubId: scope.hubId,
+    });
+    const eveId = objectId("student");
+    await db
+      .insert(student)
+      .values({ id: eveId, studentName: "Eve Print", visibleId: eveId, schoolId: retrySchoolId });
+    const viewer = { kind: "hub" as const, ...scope };
+    const submission = {
+      printRunId: objectId("surveyprintrun"),
+      versionId: published.versionId,
+      request: {
+        kind: "STUDENTS" as const,
+        schools: [{ schoolId: retrySchoolId, excludedStudentIds: [] }],
+      },
+    };
+
+    const first = await submitPrintRun(viewer, submission);
+    await db.update(student).set({ archivedAt: new Date() }).where(eq(student.id, eveId));
+    expect(await submitPrintRun(viewer, submission)).toEqual(first);
+    expect(first.copyCount).toBe(1);
+    expect(await nextSerialOf(published.id)).toBe(2);
+    await expect(
+      submitPrintRun(viewer, { ...submission, printRunId: objectId("surveyprintrun") }),
+    ).rejects.toThrow("Nothing to print");
   });
 
   it("refuses a request kind that doesn't match the version's prefill", async () => {
@@ -297,7 +360,7 @@ describe("one copy per student", () => {
     await expect(
       issue(blankVersion.versionId, {
         kind: "STUDENTS",
-        schools: [{ schoolId: testSchoolId, studentIds: null }],
+        schools: [{ schoolId: testSchoolId, excludedStudentIds: [] }],
       }),
     ).rejects.toThrow(PrintRunError);
   });
@@ -389,19 +452,23 @@ describe("print-run triggers", () => {
 
   it("rejects a copy whose school is in another hub, or a student on a blank version", async () => {
     const published = await publish();
-    const copyError = (values: { schoolId: string; studentId?: string }) =>
+    const copyError = (values: { schoolId: string; studentId?: string; serialNumber?: number }) =>
       errorOf(async (tx) => {
         const copy = await oneCopy(tx, published.versionId);
         await tx.insert(surveyQuestionnaire).values({
           ...copy,
           id: objectId("surveyquestionnaire"),
           serial: `${published.code}-999999`,
+          serialNumber: 999_999,
           ...values,
         });
       });
 
     expect((await copyError({ schoolId: otherHubSchoolId }))?.constraint).toBe(
       "survey_questionnaires_issue_check",
+    );
+    expect((await copyError({ schoolId: testSchoolId, serialNumber: 99_999 }))?.constraint).toBe(
+      "survey_questionnaires_serial_matches_number_check",
     );
     expect((await copyError({ schoolId: testSchoolId, studentId: students.amy }))?.constraint).toBe(
       "survey_questionnaires_issue_check",

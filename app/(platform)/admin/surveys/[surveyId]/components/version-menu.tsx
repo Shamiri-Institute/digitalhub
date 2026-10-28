@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Icons } from "#/components/icons";
-import { PrintRunDialog } from "#/components/common/survey/print-run-dialog";
+import { NO_HUBS_REASON, PrintRunDialog } from "#/components/common/survey/print-run-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,8 +73,17 @@ export default function VersionMenu({
               New draft from v{version.versionNumber}
             </DropdownMenuItem>
           )}
-          {printedPrefill && (
-            <DropdownMenuItem onClick={() => setIsPrinting(true)}>Print copies</DropdownMenuItem>
+          {printing && printedPrefill && (
+            <DropdownMenuItem
+              disabled={printing.hubs.length === 0}
+              onClick={() => setIsPrinting(true)}
+              className="flex-col items-start"
+            >
+              Print copies
+              {printing.hubs.length === 0 && (
+                <span className="text-xs text-shamiri-text-grey">{NO_HUBS_REASON}</span>
+              )}
+            </DropdownMenuItem>
           )}
         </DropdownMenuContent>
       </DropdownMenu>

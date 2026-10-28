@@ -3,12 +3,14 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { PrintRunsTable } from "#/components/common/survey/print-runs-table";
+import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { SurveyStatus } from "#/db/enums";
 import { surveyScope } from "#/lib/auth/admin-access";
 import { fetchPrintableHubs, fetchPrintRuns } from "#/lib/survey/print-run-queries";
+import { viewerTimeZone } from "#/lib/viewer-time-zone";
 import { SurveyStatusBadge } from "../components/status-badges";
 import { fetchSurveyWithVersions } from "../queries";
 import VersionsDataTable from "./components/versions-datatable";
@@ -24,14 +26,15 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
   }
   const viewer = { kind: "project", ...scope } as const;
 
-  const [survey, hubs, runs] = await Promise.all([
-    fetchSurveyWithVersions(surveyId, scope),
-    fetchPrintableHubs(viewer),
-    fetchPrintRuns(viewer, surveyId),
-  ]);
+  const survey = await fetchSurveyWithVersions(surveyId, scope);
   if (!survey) {
     notFound();
   }
+  const [hubs, runs, timeZone] = await Promise.all([
+    survey.status === SurveyStatus.ACTIVE ? fetchPrintableHubs(viewer) : null,
+    fetchPrintRuns(viewer, survey.id),
+    viewerTimeZone(),
+  ]);
   const runsPath = `/admin/surveys/${survey.id}/runs`;
 
   return (
@@ -58,12 +61,13 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
           surveyId={survey.id}
           surveyCode={survey.code}
           versions={survey.versions}
-          printing={survey.status === SurveyStatus.ACTIVE ? { hubs, runsPath } : undefined}
+          printing={hubs ? { hubs, runsPath } : undefined}
         />
         <section className="space-y-3 pt-6">
           <h2 className="text-lg font-semibold">Print runs</h2>
-          <PrintRunsTable runs={runs} runsPath={runsPath} showHub />
+          <PrintRunsTable runs={runs} runsPath={runsPath} showHub timeZone={timeZone} />
         </section>
+        <ViewerTimeZoneCookie serverTimeZone={timeZone} />
       </div>
       <PageFooter />
     </div>

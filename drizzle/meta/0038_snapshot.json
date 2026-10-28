@@ -1,5 +1,5 @@
 {
-  "id": "a2fcbc35-34ec-47ec-81ea-9abdda47eb27",
+  "id": "29e31d54-bd29-4ae4-8b59-dbe5b4e5a5ae",
   "prevId": "02f52387-08bd-45d8-aa5c-97cd1faa4e6d",
   "version": "7",
   "dialect": "postgresql",
@@ -9063,6 +9063,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "serial_number": {
+          "name": "serial_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "hub_id": {
           "name": "hub_id",
           "type": "varchar(255)",
@@ -9108,6 +9114,48 @@
             }
           ],
           "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "survey_questionnaires_survey_id_serial_number_key": {
+          "name": "survey_questionnaires_survey_id_serial_number_key",
+          "columns": [
+            {
+              "expression": "survey_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "serial_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "survey_questionnaires_print_run_id_serial_number_idx": {
+          "name": "survey_questionnaires_print_run_id_serial_number_idx",
+          "columns": [
+            {
+              "expression": "print_run_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "serial_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -9279,6 +9327,14 @@
         "survey_questionnaires_serial_check": {
           "name": "survey_questionnaires_serial_check",
           "value": "\"survey_questionnaires\".\"serial\" ~ '^[A-Z][A-Z0-9]{1,9}-[0-9]{6,}$'"
+        },
+        "survey_questionnaires_serial_number_check": {
+          "name": "survey_questionnaires_serial_number_check",
+          "value": "\"survey_questionnaires\".\"serial_number\" >= 1"
+        },
+        "survey_questionnaires_serial_matches_number_check": {
+          "name": "survey_questionnaires_serial_matches_number_check",
+          "value": "\"survey_questionnaires\".\"serial\" ~ ('-0*' || \"survey_questionnaires\".\"serial_number\" || '$')"
         }
       },
       "isRLSEnabled": false

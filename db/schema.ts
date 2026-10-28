@@ -2813,6 +2813,9 @@ export const surveyQuestionnaire = pgTable(
     printRunId: text("print_run_id").notNull(),
     // Printed on every page, as `BASE26-000017`.
     serial: varchar({ length: 32 }).notNull(),
+    // The number in `serial`, which copies sort by: as text, `BASE26-1000000` sorts before
+    // `BASE26-999999`.
+    serialNumber: integer("serial_number").notNull(),
     hubId: varchar("hub_id", { length: 255 }).notNull(),
     schoolId: varchar("school_id", { length: 255 }).notNull(),
     // Set exactly when the version prints student details (issue trigger).
@@ -2821,6 +2824,14 @@ export const surveyQuestionnaire = pgTable(
   },
   (table) => [
     uniqueIndex("survey_questionnaires_survey_id_serial_key").on(table.surveyId, table.serial),
+    uniqueIndex("survey_questionnaires_survey_id_serial_number_key").on(
+      table.surveyId,
+      table.serialNumber,
+    ),
+    index("survey_questionnaires_print_run_id_serial_number_idx").on(
+      table.printRunId,
+      table.serialNumber,
+    ),
     uniqueIndex("survey_questionnaires_id_version_id_key").on(table.id, table.versionId),
     uniqueIndex("survey_questionnaires_print_run_id_student_id_key")
       .on(table.printRunId, table.studentId)
@@ -2836,6 +2847,11 @@ export const surveyQuestionnaire = pgTable(
     check(
       "survey_questionnaires_serial_check",
       sql`${table.serial} ~ '^[A-Z][A-Z0-9]{1,9}-[0-9]{6,}$'`,
+    ),
+    check("survey_questionnaires_serial_number_check", sql`${table.serialNumber} >= 1`),
+    check(
+      "survey_questionnaires_serial_matches_number_check",
+      sql`${table.serial} ~ ('-0*' || ${table.serialNumber} || '$')`,
     ),
     foreignKey({
       columns: [table.printRunId, table.versionId, table.hubId],

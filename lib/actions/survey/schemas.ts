@@ -72,12 +72,8 @@ export const CreatePrintRunSchema = z.object({
         .array(
           z.object({
             schoolId: stringValidation("Missing school"),
-            /** Null prints every active student of the school. */
-            studentIds: z
-              .array(z.string().min(1))
-              .min(1, { error: "Choose at least one student" })
-              .max(MAX_COPIES_PER_RUN)
-              .nullable(),
+            /** Every active student of the school prints but these. */
+            excludedStudentIds: z.array(z.string().min(1)).max(MAX_COPIES_PER_RUN),
           }),
         )
         .min(1, { error: "Choose at least one school" }),

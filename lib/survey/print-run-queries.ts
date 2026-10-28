@@ -1,13 +1,14 @@
 // What the print-run pages read, for a hub coordinator or a Research admin. Every query takes a
 // PrintRunViewer, which has no unscoped kind, so each one is filtered to what its viewer may see.
 
-import { and, eq, inArray, max, min, type SQL, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, type SQL } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { SurveyStatus, SurveyVersionStatus } from "#/db/enums";
 import { student, survey, surveyPrintRun, surveyQuestionnaire, surveyVersion } from "#/db/schema";
 import { countOf } from "#/db/sql";
 import type { PrintRunViewer } from "#/lib/auth/survey-access";
+import { activeStudent } from "#/lib/survey/print-run";
 
 const COPIES_PER_PAGE = 200;
 
@@ -80,11 +81,7 @@ export async function fetchPrintableHubs(viewer: PrintRunViewer) {
         where: (s, { isNull }) => isNull(s.archivedAt),
         columns: { id: true, schoolName: true },
         extras: (s) => ({
-          activeStudents: countOf(
-            student.schoolId,
-            s.id,
-            sql`"students"."archived_at" is null and "students"."dropped_out" is not true`,
-          ).as("active_students"),
+          activeStudents: countOf(student.schoolId, s.id, activeStudent()).as("active_students"),
         }),
         orderBy: (s, { asc }) => [asc(s.schoolName), asc(s.id)],
       },
@@ -142,14 +139,24 @@ export async function fetchPrintRun(viewer: PrintRunViewer, printRunId: string) 
   if (!run) {
     return;
   }
-  const [serials] = await db
-    .select({
-      first: min(surveyQuestionnaire.serial),
-      last: max(surveyQuestionnaire.serial),
-    })
-    .from(surveyQuestionnaire)
-    .where(eq(surveyQuestionnaire.printRunId, run.id));
-  return { ...run, firstSerial: serials?.first ?? null, lastSerial: serials?.last ?? null };
+  return { ...run, ...(await serialRangeOf(run.id)) };
+}
+
+/** A run's first and last serials, by number. Null for a run without copies. */
+export async function serialRangeOf(printRunId: string) {
+  const serialAt = (order: SQL) =>
+    db
+      .select({ serial: surveyQuestionnaire.serial })
+      .from(surveyQuestionnaire)
+      .where(eq(surveyQuestionnaire.printRunId, printRunId))
+      .orderBy(order)
+      .limit(1)
+      .then(([copy]) => copy?.serial ?? null);
+  const [firstSerial, lastSerial] = await Promise.all([
+    serialAt(asc(surveyQuestionnaire.serialNumber)),
+    serialAt(desc(surveyQuestionnaire.serialNumber)),
+  ]);
+  return { firstSerial, lastSerial };
 }
 
 export type PrintRunDetail = NonNullable<Awaited<ReturnType<typeof fetchPrintRun>>>;
@@ -173,7 +180,7 @@ export async function fetchPrintRunCopies(
         student: { columns: { studentName: true, admissionNumber: true } },
         pages: { columns: { code: true }, orderBy: (p, { asc }) => asc(p.pageNumber) },
       },
-      orderBy: (q, { asc }) => asc(q.serial),
+      orderBy: (q, { asc }) => asc(q.serialNumber),
       limit: COPIES_PER_PAGE,
       offset: (page - 1) * COPIES_PER_PAGE,
     }),

@@ -65,6 +65,16 @@ export function PrintRunDialog({ open, onOpenChange, ...formProps }: PrintRunDia
 
 export function PrintCopiesButton(props: Omit<PrintRunDialogProps, "open" | "onOpenChange">) {
   const [open, setOpen] = useState(false);
+  if (props.hubs.length === 0) {
+    return (
+      <div className="flex items-center justify-end gap-3">
+        <span className="text-sm text-shamiri-text-grey">{NO_HUBS_REASON}</span>
+        <Button variant="outline" aria-label={`Print copies of ${props.version.label}`} disabled>
+          Print copies
+        </Button>
+      </div>
+    );
+  }
   return (
     <>
       <Button
@@ -79,6 +89,9 @@ export function PrintCopiesButton(props: Omit<PrintRunDialogProps, "open" | "onO
   );
 }
 
+/** Why printing is off when the caller has no hub to print for. */
+export const NO_HUBS_REASON = "No active hubs to print for";
+
 const PrintRunFormSchema = z.object({
   hubId: z.string().min(1, { error: "Choose a hub" }),
   schools: z.array(
@@ -92,7 +105,7 @@ const PrintRunFormSchema = z.object({
         .max(MAX_COPIES_PER_RUN, { error: `At most ${MAX_COPIES_PER_RUN} copies` })
         .nullable(),
       included: z.boolean(),
-      studentIds: z.array(z.string()).nullable(),
+      excludedStudentIds: z.array(z.string()),
     }),
   ),
 });
@@ -107,14 +120,26 @@ function schoolRowsOf(hub: PrintableHubs[number] | undefined): SchoolRow[] {
     activeStudents: s.activeStudents,
     copies: null,
     included: false,
-    studentIds: null,
+    excludedStudentIds: [],
   }));
 }
 
-function copiesOf(row: SchoolRow, printsStudents: boolean) {
+type PrintableStudent = NonNullable<
+  Awaited<ReturnType<typeof listPrintableStudents>>["data"]
+>[number];
+
+/** Each school's students, once "Choose students" has loaded them. */
+type LoadedStudents = Partial<Record<string, PrintableStudent[]>>;
+
+/**
+ * A school's copies as the form knows them. A student count can be stale by the time the run is
+ * created, so the confirm step words it as approximate.
+ */
+function copiesOf(row: SchoolRow, printsStudents: boolean, loadedStudents: LoadedStudents) {
   if (!printsStudents) return row.copies ?? 0;
   if (!row.included) return 0;
-  return row.studentIds ? row.studentIds.length : row.activeStudents;
+  const activeStudents = loadedStudents[row.schoolId]?.length ?? row.activeStudents;
+  return activeStudents - row.excludedStudentIds.length;
 }
 
 const copyCount = (count: number) => `${count} ${count === 1 ? "copy" : "copies"}`;
@@ -137,6 +162,8 @@ function PrintRunForm({
   // Made once per open of the dialog: a double click or a retry lands on the same run.
   const [printRunId] = useState(() => objectId("surveyprintrun"));
   const [pending, setPending] = useState<PendingRun | null>(null);
+  // Here rather than in each school's row, which unmounts while the confirm step shows.
+  const [loadedStudents, setLoadedStudents] = useState<LoadedStudents>({});
   const [isCreating, setIsCreating] = useState(false);
   const printsStudents = version.prefill === SurveyVersionPrefill.STUDENT;
 
@@ -146,11 +173,12 @@ function PrintRunForm({
     defaultValues: { hubId: firstHub?.id ?? "", schools: schoolRowsOf(firstHub) },
   });
   const { fields, replace } = useFieldArray({ control: form.control, name: "schools" });
-  const total = form.watch("schools").reduce((sum, row) => sum + copiesOf(row, printsStudents), 0);
+  const copiesOfRow = (row: SchoolRow) => copiesOf(row, printsStudents, loadedStudents);
+  const total = form.watch("schools").reduce((sum, row) => sum + copiesOfRow(row), 0);
 
   const onContinue = (values: PrintRunFormValues) => {
-    const chosen = values.schools.filter((row) => copiesOf(row, printsStudents) > 0);
-    const chosenTotal = chosen.reduce((sum, row) => sum + copiesOf(row, printsStudents), 0);
+    const chosen = values.schools.filter((row) => copiesOfRow(row) > 0);
+    const chosenTotal = chosen.reduce((sum, row) => sum + copiesOfRow(row), 0);
     if (chosen.length === 0) {
       form.setError("root", { message: "Choose at least one copy to print" });
       return;
@@ -165,7 +193,10 @@ function PrintRunForm({
       request: printsStudents
         ? {
             kind: "STUDENTS",
-            schools: chosen.map((row) => ({ schoolId: row.schoolId, studentIds: row.studentIds })),
+            schools: chosen.map((row) => ({
+              schoolId: row.schoolId,
+              excludedStudentIds: row.excludedStudentIds,
+            })),
           }
         : {
             kind: "COUNTS",
@@ -174,7 +205,7 @@ function PrintRunForm({
       lines: chosen.map((row) => ({
         schoolId: row.schoolId,
         schoolName: row.schoolName,
-        copies: copiesOf(row, printsStudents),
+        copies: copiesOfRow(row),
       })),
       total: chosenTotal,
     });
@@ -207,15 +238,19 @@ function PrintRunForm({
         <DialogHeader>
           <DialogTitle>Create the print run?</DialogTitle>
           <DialogDescription>
-            Print {copyCount(pending.total)} of {version.label} for {pending.hubName}. Serials are
-            assigned when the run is created.
+            {printsStudents
+              ? `Print about ${copyCount(pending.total)} of ${version.label} for ${pending.hubName}, one for each chosen student still active when the run is created. Serials are assigned then.`
+              : `Print ${copyCount(pending.total)} of ${version.label} for ${pending.hubName}. Serials are assigned when the run is created.`}
           </DialogDescription>
         </DialogHeader>
         <ul className="divide-y overflow-y-auto rounded-md border text-sm">
           {pending.lines.map((line) => (
             <li key={line.schoolId} className="flex justify-between gap-4 px-3 py-2">
               <span>{line.schoolName}</span>
-              <span className="tabular-nums">{copyCount(line.copies)}</span>
+              <span className="tabular-nums">
+                {printsStudents && "about "}
+                {copyCount(line.copies)}
+              </span>
             </li>
           ))}
         </ul>
@@ -257,6 +292,7 @@ function PrintRunForm({
                   onValueChange={(hubId) => {
                     field.onChange(hubId);
                     replace(schoolRowsOf(hubs.find((h) => h.id === hubId)));
+                    setLoadedStudents({});
                   }}
                 >
                   <FormControl>
@@ -283,7 +319,15 @@ function PrintRunForm({
           )}
           {fields.map((field, index) =>
             printsStudents ? (
-              <SchoolStudentsRow key={field.id} index={index} hubId={form.getValues("hubId")} />
+              <SchoolStudentsRow
+                key={field.id}
+                index={index}
+                hubId={form.getValues("hubId")}
+                students={loadedStudents[field.schoolId]}
+                onStudentsLoaded={(students) =>
+                  setLoadedStudents((loaded) => ({ ...loaded, [field.schoolId]: students }))
+                }
+              />
             ) : (
               <SchoolCopiesRow key={field.id} index={index} />
             ),
@@ -345,14 +389,19 @@ function SchoolCopiesRow({ index }: { index: number }) {
   );
 }
 
-type PrintableStudent = NonNullable<
-  Awaited<ReturnType<typeof listPrintableStudents>>["data"]
->[number];
-
-function SchoolStudentsRow({ index, hubId }: { index: number; hubId: string }) {
+function SchoolStudentsRow({
+  index,
+  hubId,
+  students,
+  onStudentsLoaded,
+}: {
+  index: number;
+  hubId: string;
+  students: PrintableStudent[] | undefined;
+  onStudentsLoaded: (students: PrintableStudent[]) => void;
+}) {
   const form = useFormContext<PrintRunFormValues>();
   const { schoolId, schoolName, activeStudents } = form.getValues(`schools.${index}`);
-  const [students, setStudents] = useState<PrintableStudent[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const chooseStudents = toastOnError(async () => {
@@ -363,12 +412,8 @@ function SchoolStudentsRow({ index, hubId }: { index: number; hubId: string }) {
         toast({ variant: "destructive", description: response.message });
         return;
       }
-      setStudents(response.data);
+      onStudentsLoaded(response.data);
       form.setValue(`schools.${index}.included`, true);
-      form.setValue(
-        `schools.${index}.studentIds`,
-        response.data.map((s) => s.id),
-      );
     } finally {
       setIsLoading(false);
     }
@@ -396,11 +441,12 @@ function SchoolStudentsRow({ index, hubId }: { index: number; hubId: string }) {
             </FormItem>
           )}
         />
-        {students === null && activeStudents > 0 && (
+        {students === undefined && activeStudents > 0 && (
           <Button
             type="button"
             variant="link"
             className="h-auto p-0"
+            aria-label={`Choose students at ${schoolName}`}
             onClick={chooseStudents}
             disabled={isLoading}
           >
@@ -411,7 +457,7 @@ function SchoolStudentsRow({ index, hubId }: { index: number; hubId: string }) {
       {students && (
         <FormField
           control={form.control}
-          name={`schools.${index}.studentIds`}
+          name={`schools.${index}.excludedStudentIds`}
           render={({ field }) => (
             <ul className="ml-7 max-h-48 space-y-1 overflow-y-auto">
               {students.map((s) => (
@@ -419,15 +465,14 @@ function SchoolStudentsRow({ index, hubId }: { index: number; hubId: string }) {
                   <FormItem className="flex items-center gap-3 space-y-0">
                     <FormControl>
                       <Checkbox
-                        checked={field.value?.includes(s.id) ?? true}
-                        onCheckedChange={(checked) => {
-                          const chosen = field.value ?? students.map((st) => st.id);
+                        checked={!field.value.includes(s.id)}
+                        onCheckedChange={(checked) =>
                           field.onChange(
                             checked === true
-                              ? [...chosen, s.id]
-                              : chosen.filter((id) => id !== s.id),
-                          );
-                        }}
+                              ? field.value.filter((id) => id !== s.id)
+                              : [...field.value, s.id],
+                          )
+                        }
                       />
                     </FormControl>
                     <FormLabel className="text-sm font-normal">

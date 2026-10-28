@@ -3,7 +3,6 @@ import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { requireSurveyScope } from "#/lib/auth/admin-access";
 import { ForbiddenRoleError, NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
-import { requireHubRole } from "#/lib/auth/require-hub-role";
 import { PrintRunError } from "#/lib/survey/print-run";
 
 /** Where a print run's copies may go: one hub, inside the caller's implementer and project. */
@@ -23,27 +22,15 @@ export type PrintRunViewer =
   | { kind: "project"; userId: string; implementerId: string; projectId: string };
 
 /**
- * For hub coordinators: their hub, taken from the session, and that hub's implementer and project,
- * whose surveys they may print.
+ * The signed-in hub coordinator as a print-run viewer: their hub, taken from the session, and that
+ * hub's implementer and project, whose surveys they may print. Null for anyone else, and for a
+ * coordinator without a hub or whose hub is archived. Pages and actions both use it.
  */
-async function requireHubSurvey(): Promise<HubSurveyScope> {
-  const { userId, hubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
-  const coordinatorHub = await db.query.hub.findFirst({
-    where: (h, { eq }) => eq(h.id, hubId),
-    columns: { implementerId: true, projectId: true },
-  });
-  if (!coordinatorHub) {
-    throw new ForbiddenRoleError("You have no assigned hub");
-  }
-  return { userId, hubId, ...coordinatorHub };
-}
-
-/** For hub coordinator pages: the signed-in coordinator as a print-run viewer, or null. */
 export async function hubCoordinatorViewer(): Promise<PrintRunViewer | null> {
   const coordinator = await currentHubCoordinator();
   const userId = coordinator?.session.user.id;
   const coordinatorHub = coordinator?.profile.assignedHub;
-  if (!userId || !coordinatorHub) {
+  if (!userId || !coordinatorHub || coordinatorHub.archivedAt) {
     return null;
   }
   return {
@@ -59,7 +46,11 @@ export async function hubCoordinatorViewer(): Promise<PrintRunViewer | null> {
 export async function requirePrintRunViewer(): Promise<PrintRunViewer> {
   const { role } = await requireAuthRole(ImplementerRole.ADMIN, ImplementerRole.HUB_COORDINATOR);
   if (role === ImplementerRole.HUB_COORDINATOR) {
-    return { kind: "hub", ...(await requireHubSurvey()) };
+    const viewer = await hubCoordinatorViewer();
+    if (!viewer) {
+      throw new ForbiddenRoleError("You have no active hub");
+    }
+    return viewer;
   }
   return { kind: "project", ...(await requireSurveyScope()) };
 }

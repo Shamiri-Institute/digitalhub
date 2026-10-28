@@ -3,9 +3,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { copiesPageOf, PrintRunDetailView } from "#/components/common/survey/print-run-detail";
+import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import PageFooter from "#/components/ui/page-footer";
 import { surveyScope } from "#/lib/auth/admin-access";
 import { fetchPrintRun, fetchPrintRunCopies } from "#/lib/survey/print-run-queries";
+import { viewerTimeZone } from "#/lib/viewer-time-zone";
 
 export default async function AdminPrintRunPage(props: {
   params: Promise<{ surveyId: string; runId: string }>;
@@ -19,9 +21,10 @@ export default async function AdminPrintRunPage(props: {
   const page = copiesPageOf(searchParams);
   const viewer = { kind: "project", ...scope } as const;
 
-  const [run, copies] = await Promise.all([
+  const [run, copies, timeZone] = await Promise.all([
     fetchPrintRun(viewer, runId),
     fetchPrintRunCopies(viewer, runId, page),
+    viewerTimeZone(),
   ]);
   if (!run || run.version.survey.id !== surveyId) {
     notFound();
@@ -42,7 +45,9 @@ export default async function AdminPrintRunPage(props: {
           copies={copies}
           page={page}
           runPath={`/admin/surveys/${surveyId}/runs/${run.id}`}
+          timeZone={timeZone}
         />
+        <ViewerTimeZoneCookie serverTimeZone={timeZone} />
       </div>
       <PageFooter />
     </div>

@@ -20,11 +20,14 @@ CREATE TABLE "survey_questionnaires" (
 	"version_id" text NOT NULL,
 	"print_run_id" text NOT NULL,
 	"serial" varchar(32) NOT NULL,
+	"serial_number" integer NOT NULL,
 	"hub_id" varchar(255) NOT NULL,
 	"school_id" varchar(255) NOT NULL,
 	"student_id" varchar(255),
 	"status" "survey_questionnaire_status" DEFAULT 'ISSUED' NOT NULL,
-	CONSTRAINT "survey_questionnaires_serial_check" CHECK ("survey_questionnaires"."serial" ~ '^[A-Z][A-Z0-9]{1,9}-[0-9]{6,}$')
+	CONSTRAINT "survey_questionnaires_serial_check" CHECK ("survey_questionnaires"."serial" ~ '^[A-Z][A-Z0-9]{1,9}-[0-9]{6,}$'),
+	CONSTRAINT "survey_questionnaires_serial_number_check" CHECK ("survey_questionnaires"."serial_number" >= 1),
+	CONSTRAINT "survey_questionnaires_serial_matches_number_check" CHECK ("survey_questionnaires"."serial" ~ ('-0*' || "survey_questionnaires"."serial_number" || '$'))
 );
 --> statement-breakpoint
 CREATE TABLE "survey_questionnaire_pages" (
@@ -52,6 +55,8 @@ CREATE INDEX "survey_print_runs_version_id_idx" ON "survey_print_runs" USING btr
 CREATE INDEX "survey_print_runs_hub_id_created_at_idx" ON "survey_print_runs" USING btree ("hub_id","created_at");--> statement-breakpoint
 CREATE INDEX "survey_print_runs_requested_by_idx" ON "survey_print_runs" USING btree ("requested_by");--> statement-breakpoint
 CREATE UNIQUE INDEX "survey_questionnaires_survey_id_serial_key" ON "survey_questionnaires" USING btree ("survey_id","serial");--> statement-breakpoint
+CREATE UNIQUE INDEX "survey_questionnaires_survey_id_serial_number_key" ON "survey_questionnaires" USING btree ("survey_id","serial_number");--> statement-breakpoint
+CREATE INDEX "survey_questionnaires_print_run_id_serial_number_idx" ON "survey_questionnaires" USING btree ("print_run_id","serial_number");--> statement-breakpoint
 CREATE UNIQUE INDEX "survey_questionnaires_id_version_id_key" ON "survey_questionnaires" USING btree ("id","version_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "survey_questionnaires_print_run_id_student_id_key" ON "survey_questionnaires" USING btree ("print_run_id","student_id") WHERE "survey_questionnaires"."student_id" IS NOT NULL;--> statement-breakpoint
 CREATE INDEX "survey_questionnaires_print_run_id_version_id_hub_id_idx" ON "survey_questionnaires" USING btree ("print_run_id","version_id","hub_id");--> statement-breakpoint

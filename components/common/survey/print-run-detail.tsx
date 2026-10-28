@@ -1,6 +1,5 @@
-import { format } from "date-fns";
-
 import { SURVEY_VERSION_PREFILL_LABELS } from "#/db/enums";
+import { formatDateTimeIn } from "#/lib/date-utils";
 import type { PrintRunCopies, PrintRunDetail } from "#/lib/survey/print-run-queries";
 import { PrintRunStatusBadge } from "./print-runs-table";
 import { QuestionnairesTable } from "./questionnaires-table";
@@ -10,8 +9,11 @@ export function PrintRunDetailView({
   copies,
   page,
   runPath,
+  timeZone,
 }: {
   run: PrintRunDetail;
+  /** The viewer's, from `viewerTimeZone()`; null until the browser has set it. */
+  timeZone: string | null;
   copies: PrintRunCopies;
   page: number;
   runPath: string;
@@ -27,7 +29,12 @@ export function PrintRunDetailView({
     ["Prints", run.version.prefill ? SURVEY_VERSION_PREFILL_LABELS[run.version.prefill] : ""],
     [
       "Created",
-      `${format(run.createdAt, "dd MMM yyyy, HH:mm")} by ${run.requestedByUser.name ?? run.requestedByUser.email}`,
+      [
+        timeZone && formatDateTimeIn(run.createdAt, timeZone),
+        `by ${run.requestedByUser.name ?? run.requestedByUser.email}`,
+      ]
+        .filter(Boolean)
+        .join(" "),
     ],
   ];
   return (

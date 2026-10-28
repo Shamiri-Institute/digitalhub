@@ -2,7 +2,7 @@
 // can't drift apart. Every rule a request must meet is checked here; the triggers in
 // drizzle/0039_survey_print_run_guards.sql back up the ones about hubs, schools, students and pages.
 
-import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { PgInsertValue, PgTable } from "drizzle-orm/pg-core";
 
 import type { Transaction } from "#/db/client";
@@ -38,8 +38,9 @@ const COPIES_PER_BLOCK = 4_000;
 /** What to print, by the version's prefill: a number of copies per school, or one per student. */
 export type PrintRunRequest =
   | { kind: "COUNTS"; schools: { schoolId: string; copies: number }[] }
-  // `studentIds: null` prints every active student of the school.
-  | { kind: "STUDENTS"; schools: { schoolId: string; studentIds: string[] | null }[] };
+  // Every active student of the school but the excluded ones. Exclusions, not choices, keep the
+  // request small: a hub can have tens of thousands of students.
+  | { kind: "STUDENTS"; schools: { schoolId: string; excludedStudentIds: string[] }[] };
 
 type PrintRunInput = { printRunId: string; versionId: string; request: PrintRunRequest };
 
@@ -50,12 +51,18 @@ export type IssuedPrintRun = {
   lastSerial: string;
 };
 
-/** The students a run prints for: not archived, and not dropped out. */
-export function isActiveStudent() {
-  return and(
-    isNull(student.archivedAt),
-    or(eq(student.droppedOut, false), isNull(student.droppedOut)),
-  );
+/**
+ * The students a run prints for: not archived, and not dropped out. Raw SQL over "students"
+ * because the print form counts them inside relational `extras`, where drizzle rewrites column
+ * references to the parent's alias.
+ */
+export function activeStudent() {
+  return sql.raw(`"students"."archived_at" is null and "students"."dropped_out" is not true`);
+}
+
+/** The order a school's copies print in, and the print form lists its students in. */
+export function studentPrintOrder() {
+  return [asc(student.studentName), asc(student.id)];
 }
 
 /** A refused request whose message is safe to show; the action reports it as is. */
@@ -66,10 +73,10 @@ type PlannedCopy = { schoolId: string; studentId: string | null };
 /**
  * Issues a print run in `tx`: the run (QUEUED), its copies with fresh serials, their pages, and one
  * audit event. The version must be a published version of an active survey in the scope, the
- * request kind must match its prefill, the schools must be active schools of the scope's hub, the
- * students active students of their school, and the total 1 to MAX_COPIES_PER_RUN. A refused
- * request throws PrintRunError or NotFoundError before anything is written. A second call with the
- * same `printRunId` fails on `survey_print_runs_pkey` before it reserves any serials.
+ * request kind must match its prefill, the schools must be active schools of the scope's hub, and
+ * the total 1 to MAX_COPIES_PER_RUN. A refused request throws PrintRunError or NotFoundError
+ * before anything is written. A second call with the same `printRunId` fails on
+ * `survey_print_runs_pkey` before it reserves any serials.
  */
 export async function issuePrintRun(
   tx: Transaction,
@@ -151,8 +158,8 @@ export async function issuePrintRun(
     const activeStudents = await tx
       .select({ id: student.id, schoolId: student.schoolId })
       .from(student)
-      .where(and(inArray(student.schoolId, schoolIds), isActiveStudent()))
-      .orderBy(asc(student.schoolId), asc(student.studentName), asc(student.id));
+      .where(and(inArray(student.schoolId, schoolIds), activeStudent()))
+      .orderBy(asc(student.schoolId), ...studentPrintOrder());
     const activeStudentsBySchool = new Map<string, string[]>();
     for (const { id, schoolId } of activeStudents) {
       if (!schoolId) continue;
@@ -161,12 +168,6 @@ export async function issuePrintRun(
         atSchool.push(id);
       } else {
         activeStudentsBySchool.set(schoolId, [id]);
-      }
-    }
-    for (const { schoolId, studentIds } of input.request.schools) {
-      const activeAtSchool = new Set(activeStudentsBySchool.get(schoolId));
-      if (studentIds?.some((id) => !activeAtSchool.has(id))) {
-        throw new NotFoundError("Student");
       }
     }
     copies = planCopies(input.request, activeStudentsBySchool);
@@ -209,6 +210,7 @@ export async function issuePrintRun(
       versionId: version.id,
       printRunId: input.printRunId,
       serial: serialAt(start + offset),
+      serialNumber: firstNumber + start + offset,
       hubId: scope.hubId,
       schoolId: copy.schoolId,
       studentId: copy.studentId,
@@ -259,8 +261,8 @@ export async function issuePrintRun(
 
 /**
  * The copies a request asks for, in print order: schools in the order given, and each school's
- * students in the order of `activeStudentsBySchool`. The caller has checked every school and
- * student is in scope.
+ * students in the order of `activeStudentsBySchool`. The caller has checked every school is in
+ * scope. An excluded id that is no longer an active student of the school has nothing to exclude.
  */
 function planCopies(
   request: PrintRunRequest,
@@ -271,12 +273,10 @@ function planCopies(
       Array.from({ length: copies }, () => ({ schoolId, studentId: null })),
     );
   }
-  return request.schools.flatMap(({ schoolId, studentIds }) => {
-    const activeAtSchool = activeStudentsBySchool.get(schoolId) ?? [];
-    // Filtering the ordered list keeps the print order and drops repeated ids.
-    const chosen = studentIds ? new Set(studentIds) : undefined;
-    return activeAtSchool
-      .filter((studentId) => !chosen || chosen.has(studentId))
+  return request.schools.flatMap(({ schoolId, excludedStudentIds }) => {
+    const excluded = new Set(excludedStudentIds);
+    return (activeStudentsBySchool.get(schoolId) ?? [])
+      .filter((studentId) => !excluded.has(studentId))
       .map((studentId) => ({ schoolId, studentId }));
   });
 }

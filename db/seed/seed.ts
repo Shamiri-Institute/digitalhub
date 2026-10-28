@@ -2312,7 +2312,7 @@ async function createResearchPrintRun(arsenal: Hub) {
       {
         printRunId: objectId("surveyprintrun"),
         versionId: version.id,
-        request: { kind: "STUDENTS", schools: [{ schoolId: emirates.id, studentIds: null }] },
+        request: { kind: "STUDENTS", schools: [{ schoolId: emirates.id, excludedStudentIds: [] }] },
       },
     ),
   );
