@@ -281,6 +281,13 @@
       "when": 1793198082064,
       "tag": "0039_drop_fellow_attendances_year",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793202265654,
+      "tag": "0040_drop_fellows_students_year",
+      "breakpoints": true
     }
   ]
 }
