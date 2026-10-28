@@ -222,6 +222,46 @@ export const SURVEY_VERSION_PREFILL_LABELS: Record<SurveyVersionPrefill, string>
   STUDENT: "Student name and ID",
 };
 
+/** A print run's progress from issued copies to printable files; the files come with the renderer. */
+export const SurveyPrintRunStatus = {
+  QUEUED: "QUEUED",
+  RENDERING: "RENDERING",
+  READY: "READY",
+  FAILED: "FAILED",
+} as const;
+export type SurveyPrintRunStatus = (typeof SurveyPrintRunStatus)[keyof typeof SurveyPrintRunStatus];
+
+export const SURVEY_PRINT_RUN_STATUS_LABELS: Record<SurveyPrintRunStatus, string> = {
+  QUEUED: "Queued",
+  RENDERING: "Rendering",
+  READY: "Ready",
+  FAILED: "Failed",
+};
+
+/**
+ * A printed copy's whole lifecycle, so later phases add no enum values: ISSUED, then PARTIAL,
+ * NEEDS_REVIEW or READY as its pages come back, then VERIFIED; VOID from any state, and final.
+ */
+export const SurveyQuestionnaireStatus = {
+  ISSUED: "ISSUED",
+  PARTIAL: "PARTIAL",
+  NEEDS_REVIEW: "NEEDS_REVIEW",
+  READY: "READY",
+  VERIFIED: "VERIFIED",
+  VOID: "VOID",
+} as const;
+export type SurveyQuestionnaireStatus =
+  (typeof SurveyQuestionnaireStatus)[keyof typeof SurveyQuestionnaireStatus];
+
+export const SURVEY_QUESTIONNAIRE_STATUS_LABELS: Record<SurveyQuestionnaireStatus, string> = {
+  ISSUED: "Issued",
+  PARTIAL: "Partial",
+  NEEDS_REVIEW: "Needs review",
+  READY: "Ready",
+  VERIFIED: "Verified",
+  VOID: "Void",
+};
+
 export const SurveyAuditActor = {
   USER: "USER",
   PIPELINE: "PIPELINE",
