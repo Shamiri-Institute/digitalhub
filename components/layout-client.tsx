@@ -406,6 +406,10 @@ function getCurrentUserNavigationLinks(
         <Icons.ticket />
         <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
       </div>,
+      <div className={`tab-link ${cn(surveysActive && "active")}`} key="hc-surveys">
+        <ClipboardList className="h-5 w-5" />
+        <Link href={`/${mainRoute}/surveys`}>Surveys</Link>
+      </div>,
     );
   }
 
