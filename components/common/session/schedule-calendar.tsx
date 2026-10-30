@@ -40,6 +40,7 @@ import { ScheduleNewSession } from "#/components/common/session/schedule-new-ses
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import StudentAttendance from "#/components/common/student/student-attendance";
+import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -373,6 +374,7 @@ function CalendarView({
   const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
+  const [attendanceDocumentDialog, setAttendanceDocumentDialog] = useState<boolean>(false);
   const [selectedSession, setSession] = React.useState<Session | null>(null);
   const [sessionSupervisors, setSessionSupervisors] = useState<{
     sessionId: string;
@@ -382,6 +384,9 @@ function CalendarView({
   const session = selectedSession
     ? (sessions.find((s) => s.id === selectedSession.id) ?? selectedSession)
     : null;
+  const fellowGroupId = session?.school?.interventionGroups.find(
+    (g) => g.leaderId === fellowId,
+  )?.id;
 
   const openSession: Dispatch<SetStateAction<Session | null>> = (next) => {
     const value = typeof next === "function" ? next(selectedSession) : next;
@@ -481,6 +486,7 @@ function CalendarView({
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
               setCancelSessionDialog,
+              setAttendanceDocumentDialog,
             }}
             fellowId={fellowId}
             sessions={sessions}
@@ -501,6 +507,7 @@ function CalendarView({
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
               setCancelSessionDialog,
+              setAttendanceDocumentDialog,
             }}
             fellowId={fellowId}
             sessions={sessions}
@@ -522,6 +529,7 @@ function CalendarView({
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
               setCancelSessionDialog,
+              setAttendanceDocumentDialog,
             }}
             supervisorId={supervisorId}
             fellowId={fellowId}
@@ -545,6 +553,7 @@ function CalendarView({
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
               setCancelSessionDialog,
+              setAttendanceDocumentDialog,
             }}
             fellowId={fellowId}
             sessions={sessions}
@@ -597,6 +606,13 @@ function CalendarView({
               role={role}
             />
           </CancelSession>
+          <AttendanceDocumentDialog
+            session={session}
+            groupId={fellowGroupId}
+            role={role}
+            open={attendanceDocumentDialog}
+            onOpenChange={setAttendanceDocumentDialog}
+          />
         </>
       ) : null}
       {role === ImplementerRole.ADMIN

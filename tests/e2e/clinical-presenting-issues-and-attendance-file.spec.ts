@@ -5,8 +5,20 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { attendanceDocuments, clinicalSessionAttendance } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { createClinicalCase, signInWithEmail, signableMember, required } from "#/tests/helpers";
-import { getUrl, chooseRowAction, rowWithCell, searchRows } from "#/tests/pages/helpers";
+import {
+  createClinicalCase,
+  onlySessionAtSchoolThatWeek,
+  signInWithEmail,
+  signableMember,
+  required,
+} from "#/tests/helpers";
+import {
+  getUrl,
+  chooseRowAction,
+  rowWithCell,
+  scheduleUrl,
+  searchRows,
+} from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -51,6 +63,48 @@ async function pickOccurredSessionWithTwoMarkedStudents() {
     );
   }
   return attendanceRow;
+}
+
+type ScheduledAttendanceFixture = {
+  email: string;
+  userId: string;
+  groupId: string;
+  sessionId: string;
+  sessionDate: string;
+  schoolName: string;
+};
+
+// The fellow schedule lists sessions with a status at the fellow's hub, and its list view row is
+// found by school name. The dialog takes the fellow's group at the school, so they lead only one.
+async function pickScheduledSessionWithTwoMarkedStudents() {
+  const {
+    rows: [scheduledRow],
+  } = await db.execute<ScheduledAttendanceFixture>(sql`
+    select u.email, u.id as "userId", g.id as "groupId", i.id as "sessionId",
+      i.session_date as "sessionDate", s.school_name as "schoolName"
+    from intervention_groups g
+    join fellows f on f.id = g.leader_id
+    join implementer_members m on m.identifier = f.id and m.role = 'FELLOW'
+    join users u on u.id = m.user_id
+    join schools s on s.id = g.school_id
+    join intervention_sessions i on i.school_id = s.id and i.hub_id = f.hub_id and i.occurred
+      and i.status is not null and i.status::text <> 'Cancelled'
+    where ${signableMember()}
+      and ${onlySessionAtSchoolThatWeek()}
+      and (select count(*) from schools o where o.school_name = s.school_name) = 1
+      and (select count(*) from intervention_groups o
+        where o.school_id = g.school_id and o.leader_id = g.leader_id) = 1
+      and (select count(*) from student_attendances a
+        where a.session_id = i.id and a.fellow_id = g.leader_id) >= 2
+      and not exists (select 1 from attendance_documents d
+        where d.group_id = g.id and d.session_id = i.id and d.archived_at is null)
+    order by u.email, i.session_date, g.id
+    limit 1`);
+  required(
+    scheduledRow,
+    "no fellow with 2 students marked at an occurred session on their schedule",
+  );
+  return scheduledRow;
 }
 
 test.beforeAll(async () => {
@@ -207,4 +261,42 @@ test("a fellow deletes their group's attendance document even when the file stor
   await openAttendanceDocument();
   await expect(dialog.getByText("Upload is not available.", { exact: false })).toBeVisible();
   await expect(dialog.getByText(fileName)).toBeHidden();
+});
+
+test("a fellow opens their group's attendance document from the schedule list", async ({
+  page,
+  context,
+  undo,
+}) => {
+  test.skip(
+    !process.env.S3_STUDENT_ATTENDANCE_BUCKET || !process.env.S3_STUDENT_ATTENDANCE_REGION,
+    "set S3_STUDENT_ATTENDANCE_BUCKET and S3_STUDENT_ATTENDANCE_REGION (mock values will do)",
+  );
+  const scheduled = await pickScheduledSessionWithTwoMarkedStudents();
+  // The dialog lists the document stored for its session and group, so its file name shows both.
+  const fileName = `e2e-schedule-attendance-${Date.now()}.pdf`;
+  const [document] = await db
+    .insert(attendanceDocuments)
+    .values({
+      fileName,
+      groupId: scheduled.groupId,
+      sessionId: scheduled.sessionId,
+      uploadedBy: scheduled.userId,
+      link: `e2e/${fileName}`,
+    })
+    .returning({ id: attendanceDocuments.id });
+  if (!document) throw new Error("could not insert the attendance document fixture");
+  undo(() => db.delete(attendanceDocuments).where(eq(attendanceDocuments.id, document.id)));
+
+  await signInWithEmail(context, scheduled.email);
+  await page.goto(
+    await scheduleUrl(context, "/fel/schedule?mode=list", new Date(scheduled.sessionDate)),
+  );
+  const sessionRow = page.getByRole("row").filter({ hasText: scheduled.schoolName });
+  await chooseRowAction(page, sessionRow, "Upload attendance");
+
+  const dialog = page.getByRole("dialog", { name: "Attendance Document" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(fileName)).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Upload", exact: true })).toBeVisible();
 });
