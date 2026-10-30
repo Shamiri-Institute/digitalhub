@@ -39,6 +39,7 @@ export async function loadOpsHubsPayoutHistory() {
   const [payoutDates, details] = await Promise.all([
     db
       .select({
+        id: sql<string>`${payoutStatements.executedAt}::text`,
         // Filtered to non-null below; `mapWith` keeps the column's timestamp decoding.
         dateAdded: sql<Date>`${payoutStatements.executedAt}`.mapWith(payoutStatements.executedAt),
         duration: sql<string>`concat(to_char(${payoutStatements.executedAt}, 'DD/MM/YYYY'), ' - ', coalesce(to_char(${nextPayoutDate}, 'DD/MM/YYYY'), 'N/A'))`,

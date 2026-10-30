@@ -178,7 +178,7 @@ export async function loadSessionReport() {
     });
 
     return {
-      schoolId: school.id,
+      id: school.id,
       schoolName: school.schoolName,
       avgStudentBehaviour: Math.round(avgStudentBehaviour * 10) / 10,
       avgAdminSupport: Math.round(avgAdminSupport * 10) / 10,

@@ -9,7 +9,6 @@ export default function ExpandableReportTable<TData, TSub>({
   columns,
   subColumns,
   getSubRows,
-  getRowId,
   emptyStateMessage,
   subEmptyStateMessage,
   container = true,
@@ -20,7 +19,6 @@ export default function ExpandableReportTable<TData, TSub>({
   columns: ColumnDef<TData>[];
   subColumns: ColumnDef<TSub>[];
   getSubRows: (row: TData) => TSub[] | undefined;
-  getRowId: (row: TData) => string;
   emptyStateMessage: string;
   subEmptyStateMessage: string;
   container?: boolean;
@@ -32,7 +30,6 @@ export default function ExpandableReportTable<TData, TSub>({
       <DataTable
         data={data}
         columns={columns}
-        getRowId={getRowId}
         className="data-table data-table-action bg-white lg:mt-4"
         emptyStateMessage={emptyStateMessage}
         renderSubComponent={({ row }) => (

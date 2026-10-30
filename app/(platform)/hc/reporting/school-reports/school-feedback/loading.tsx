@@ -18,7 +18,7 @@ export default function SchoolFeedbackTableSkeleton() {
   });
 
   const emptyData: SchoolFeedbackType[] = Array.from(Array(10).keys()).map(() => ({
-    schoolId: "",
+    id: "",
     schoolName: "",
     studentTeacherSatisfaction: 0,
     supervisorRatings: [],

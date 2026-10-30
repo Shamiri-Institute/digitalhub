@@ -84,7 +84,7 @@ export async function loadHubFellowAttendance() {
   const payoutsByFellow = Map.groupBy(payouts, (row) => row.fellowId);
 
   return fellows.map((hubFellow) => ({
-    fellowId: hubFellow.id,
+    id: hubFellow.id,
     fellowName: hubFellow.fellowName,
     hub: hubCoordinator.profile.assignedHub?.hubName,
     supervisorName: hubFellow.supervisorName,

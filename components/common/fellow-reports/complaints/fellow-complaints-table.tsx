@@ -15,7 +15,6 @@ export default function FellowComplaintsTable({
       columns={columns}
       subColumns={subColumns}
       getSubRows={(row) => row.complaints}
-      getRowId={(row) => row.id}
       emptyStateMessage="No complaints found"
       subEmptyStateMessage="No complaints found for this fellow"
     />

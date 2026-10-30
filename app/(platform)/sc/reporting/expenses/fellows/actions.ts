@@ -56,7 +56,7 @@ export async function loadSupervisorFellowAttendance() {
       })),
     );
     return {
-      fellowId: fellow.id,
+      id: fellow.id,
       fellowName: fellow.fellowName,
       hub: fellow?.hub?.hubName,
       supervisorName: fellow.supervisor?.supervisorName,

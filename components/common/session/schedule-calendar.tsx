@@ -591,7 +591,7 @@ function CalendarView({
           </MarkSessionOccurrence>
           <AttendanceDocumentDialog
             session={session}
-            groupId={session.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id}
+            fellowId={fellowId}
             role={role}
             open={dialog?.kind === "attendanceDocument"}
             onOpenChange={onDialogOpenChange}

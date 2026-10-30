@@ -25,7 +25,7 @@ async function pickFellowSessionWithTwoMarkedStudents() {
     join schools s on s.id = g.school_id and s.archived_at is null
       and (select count(*) from schools o where o.school_name = s.school_name) = 1
     join intervention_sessions i on i.school_id = s.id and i.hub_id = f.hub_id and i.occurred
-      and coalesce(i.status::text, '') <> 'Cancelled'
+      and i.status is not null and i.status <> 'Cancelled'
     where ${signableMember()}
       and (select count(*) from intervention_groups o
         where o.school_id = s.id and o.leader_id = f.id) = 1

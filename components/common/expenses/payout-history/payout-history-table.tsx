@@ -21,7 +21,6 @@ export default function FellowPayoutHistoryDataTable({
       columns={(customColumns || columns) as ColumnDef<PayoutHistoryType>[]}
       subColumns={subColumns}
       getSubRows={(row) => row.fellowDetails}
-      getRowId={(row) => row.dateAdded.toISOString()}
       emptyStateMessage="No payouts made yet"
       subEmptyStateMessage="No expenses found for this fellow"
       subDisableSearch={false}

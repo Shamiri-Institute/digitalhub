@@ -18,7 +18,7 @@ export default function FellowsTableSkeleton() {
   });
 
   const emptyData: HubFellowsAttendancesType[] = Array.from(Array(10).keys()).map(() => ({
-    fellowId: "",
+    id: "",
     fellowName: "",
     hub: "",
     supervisorName: "",

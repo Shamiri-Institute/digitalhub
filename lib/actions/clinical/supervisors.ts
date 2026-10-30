@@ -3,6 +3,7 @@ import { db } from "#/db/client";
 import { type ClinicalScope, hubScope } from "./scope";
 
 export type SupervisorClinicalCasesData = {
+  id: string;
   supervisorName: string;
   activeStatus: string;
   noOfClinicalCases: number;
@@ -39,6 +40,7 @@ export function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
         s.id, s."supervisor_name"
     )
     SELECT
+      supervisor_id AS "id",
       COALESCE(supervisor_name, 'Unknown') AS "supervisorName",
       'Active' AS "activeStatus",
       clinical_cases_count::int AS "noOfClinicalCases",
@@ -47,7 +49,7 @@ export function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
     FROM
       supervisor_stats
     ORDER BY
-      supervisor_name
+      supervisor_name, supervisor_id
   `)
     .then((r) => r.rows);
 }

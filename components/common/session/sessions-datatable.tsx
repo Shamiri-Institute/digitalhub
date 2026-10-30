@@ -59,8 +59,6 @@ export default function SessionsDatatable({
     if (!open) setDialog(null);
   };
 
-  const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
-
   const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
   const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
   const fellowsForStudentAttendance =
@@ -168,7 +166,7 @@ export default function SessionsDatatable({
           ) : null}
           <AttendanceDocumentDialog
             session={session}
-            groupId={groupId}
+            fellowId={fellowId}
             role={role}
             open={dialog?.kind === "attendanceDocument"}
             onOpenChange={onDialogOpenChange}

@@ -15,7 +15,6 @@ export default function FellowsReportingDataTable({
       columns={columns}
       subColumns={subColumns}
       getSubRows={(row) => row.attendances}
-      getRowId={(row) => row.fellowId}
       emptyStateMessage="No fellow expenses found"
       subEmptyStateMessage="No expenses found for this fellow"
       container={false}
