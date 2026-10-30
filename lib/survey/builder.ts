@@ -60,17 +60,19 @@ export function initBuilder({
   form,
   revision,
   publishedKeys,
+  pageNumber,
 }: {
   form: SurveyForm;
   revision: number;
   publishedKeys: Iterable<string>;
+  pageNumber?: string | null;
 }): BuilderState {
   return {
     form,
     savedForm: form,
     revision,
-    // The first page with every item closed, so the page reads as a whole before any is opened.
-    selection: form.pages.length > 0 ? { page: 0 } : null,
+    // A page with every item closed, so the page reads as a whole before any is opened.
+    selection: form.pages.length > 0 ? { page: pageIndexFromPageNumber(pageNumber, form) } : null,
     keyFollowsPrompt: new Set<string>(),
     showIssues: false,
     publishedKeys: new Set(publishedKeys),
@@ -200,6 +202,12 @@ export function currentPage(form: SurveyForm, selection: Selection) {
   }
   const page = selection && "page" in selection ? selection.page : 0;
   return Math.min(page, form.pages.length - 1);
+}
+
+/** Falls back to the first page when `pageNumber` names none of the form's pages. */
+export function pageIndexFromPageNumber(pageNumber: string | null | undefined, form: SurveyForm) {
+  const pageIndex = pageNumber && /^\d+$/.test(pageNumber) ? Number(pageNumber) - 1 : -1;
+  return pageIndex >= 0 && pageIndex < form.pages.length ? pageIndex : 0;
 }
 
 /** The position of the page holding an item, or -1. */

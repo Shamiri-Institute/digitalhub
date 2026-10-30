@@ -262,7 +262,7 @@ test("the builder saves a form of several pages and every item kind", async ({ p
   });
   await page.getByRole("link", { name: draft.title }).click();
   expect(prompt).toContain("unsaved changes");
-  await expect(page).toHaveURL(/\/versions\/1$/);
+  await expect(page).toHaveURL(/\/versions\/1(\?page=\d+)?$/);
 
   // So does the browser's Back button. Dismissed, the navigation is cancelled and never loads.
   prompt = "";
@@ -272,7 +272,7 @@ test("the builder saves a form of several pages and every item kind", async ({ p
   });
   await page.goBack({ timeout: 3000 }).catch(() => null);
   expect(prompt).toContain("unsaved changes");
-  await expect(page).toHaveURL(/\/versions\/1$/);
+  await expect(page).toHaveURL(/\/versions\/1(\?page=\d+)?$/);
   await expect(page.getByLabel("Required")).toBeChecked();
 
   await save(page);
