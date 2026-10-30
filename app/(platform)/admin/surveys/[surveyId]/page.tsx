@@ -2,13 +2,21 @@ import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { PrintRunsTable } from "#/components/common/survey/print-runs-table";
+import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { SurveyStatus } from "#/db/enums";
 import { surveyScope } from "#/lib/auth/admin-access";
+import { fetchPrintRuns } from "#/lib/survey/print-run-queries";
+import { viewerTimeZone } from "#/lib/viewer-time-zone";
 import { SurveyStatusBadge } from "../components/status-badges";
 import { fetchSurveyWithVersions } from "../queries";
 import VersionsDataTable from "./components/versions-datatable";
+
+// Creating a print run inserts every copy and page in the action this page serves.
+export const maxDuration = 300;
 
 export default async function AdminSurveyPage(props: { params: Promise<{ surveyId: string }> }) {
   const { surveyId } = await props.params;
@@ -16,11 +24,17 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
   if (!scope) {
     redirect("/admin/schedule");
   }
+  const viewer = { kind: "project", ...scope } as const;
 
-  const survey = await fetchSurveyWithVersions(surveyId, scope);
+  const [survey, runs, timeZone] = await Promise.all([
+    fetchSurveyWithVersions(surveyId, scope),
+    fetchPrintRuns(viewer, surveyId),
+    viewerTimeZone(),
+  ]);
   if (!survey) {
     notFound();
   }
+  const runsPath = `/admin/surveys/${survey.id}/runs`;
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -42,7 +56,18 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
           <p className="text-sm text-shamiri-text-grey">{survey.description}</p>
         )}
         <Separator />
-        <VersionsDataTable surveyId={survey.id} versions={survey.versions} />
+        <VersionsDataTable
+          surveyId={survey.id}
+          surveyCode={survey.code}
+          versions={survey.versions}
+          runsPath={survey.status === SurveyStatus.ACTIVE ? runsPath : undefined}
+          timeZone={timeZone}
+        />
+        <section className="space-y-3 pt-6">
+          <h2 className="text-lg font-semibold">Print runs</h2>
+          <PrintRunsTable runs={runs} runsPath={runsPath} showHub timeZone={timeZone} />
+        </section>
+        <ViewerTimeZoneCookie serverTimeZone={timeZone} />
       </div>
       <PageFooter />
     </div>

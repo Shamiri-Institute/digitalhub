@@ -4,12 +4,13 @@ import { ChevronsUpDown } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import RescheduleSession from "#/components/common/session/reschedule-session";
+import { RescheduleSessionForm } from "#/components/common/session/reschedule-session";
 import { ScheduleNewSessionSchema } from "#/components/common/session/schema";
 import { SessionDetail } from "#/components/common/session/session-list";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
+import { DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -53,8 +54,8 @@ export function ScheduleNewSession({
   const [minutes, setMinutes] = useState("00");
   const [time, setTime] = useState("AM");
   const [timePicker, setTimePicker] = useState(false);
-  const [rescheduleDialog, setRescheduleDialog] = useState(false);
-  const [existingSession, setExistingSession] = useState<Session>();
+  // The session the new one clashes with, once the user picks "Reschedule" on the clash toast.
+  const [clashingSession, setClashingSession] = useState<Session | null>(null);
 
   const defaultSession = hubSessionTypes.find(
     (sessionType) => sessionType.sessionType !== "INTERVENTION",
@@ -98,7 +99,7 @@ export function ScheduleNewSession({
         toggleDialog(false);
       } else {
         if (response.data) {
-          setExistingSession(response.data as Session);
+          const clash = response.data as Session;
           toast({
             variant: "destructive",
             description: response.message,
@@ -106,9 +107,7 @@ export function ScheduleNewSession({
               <ToastAction
                 altText="Reschedule"
                 onClick={() => {
-                  form.reset();
-                  toggleDialog(false);
-                  setRescheduleDialog(true);
+                  setClashingSession(clash);
                 }}
               >
                 Reschedule
@@ -135,8 +134,32 @@ export function ScheduleNewSession({
     }
   };
 
+  if (clashingSession) {
+    return (
+      <>
+        <DialogHeader className="border-b">
+          <DialogTitle className="pb-4 text-xl font-bold">Reschedule session</DialogTitle>
+        </DialogHeader>
+        <SessionDetail
+          state={{ session: clashingSession }}
+          layout={"compact"}
+          withDropdown={false}
+          role={role}
+        />
+        <RescheduleSessionForm
+          key={clashingSession.id}
+          session={clashingSession}
+          onOpenChange={toggleDialog}
+        />
+      </>
+    );
+  }
+
   return (
     <>
+      <DialogHeader className="border-b">
+        <DialogTitle className="pb-4 text-xl font-bold">Schedule a session</DialogTitle>
+      </DialogHeader>
       <Form {...form}>
         <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
           <FormField
@@ -399,20 +422,6 @@ export function ScheduleNewSession({
           </div>
         </form>
       </Form>
-      {existingSession ? (
-        <RescheduleSession
-          session={existingSession}
-          open={rescheduleDialog}
-          onOpenChange={setRescheduleDialog}
-        >
-          <SessionDetail
-            state={{ session: existingSession }}
-            layout={"compact"}
-            withDropdown={false}
-            role={role}
-          />
-        </RescheduleSession>
-      ) : null}
     </>
   );
 }

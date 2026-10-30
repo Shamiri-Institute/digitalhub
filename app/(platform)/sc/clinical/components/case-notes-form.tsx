@@ -85,8 +85,6 @@ export default function CaseNotesForm({
   role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
-  const [showOtherInput, setShowOtherInput] = useState(false);
-  const [hasExistingNotes, setHasExistingNotes] = useState(false);
   // null until the case's notes load; the session select waits for them, so choosing a session
   // prefills from loaded notes instead of wiping what the user typed when they arrive.
   const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>> | null>(null);
@@ -126,8 +124,6 @@ export default function CaseNotesForm({
   const selectSession = (sessionId: string) => {
     const existingNote = notes?.find((note) => note.sessionId === sessionId);
 
-    setHasExistingNotes(!!existingNote);
-
     if (existingNote) {
       form.reset({
         sessionId,
@@ -144,8 +140,6 @@ export default function CaseNotesForm({
           explanation: existingNote.followUpPlanExplanation,
         },
       });
-
-      setShowOtherInput((existingNote.treatmentInterventions ?? []).includes("Other"));
     } else {
       form.reset({
         sessionId,
@@ -162,7 +156,6 @@ export default function CaseNotesForm({
           explanation: "",
         },
       });
-      setShowOtherInput(false);
     }
   };
 
@@ -187,14 +180,14 @@ export default function CaseNotesForm({
         toast({
           title: "Case report updated successfully",
         });
+        setDialogOpen(false);
+        form.reset();
       } else {
         toast({
           title: "Something went wrong, please try again",
           variant: "destructive",
         });
       }
-      setDialogOpen(false);
-      form.reset();
     } catch {
       toast({
         title: "Something went wrong, please try again",
@@ -204,6 +197,10 @@ export default function CaseNotesForm({
   };
 
   const showNecessaryConditions = form.watch("riskLevel") !== "no";
+  const showOtherInput = form.watch("treatmentInterventions").includes("Other");
+  const selectedSessionId = form.watch("sessionId");
+  const hasExistingNotes =
+    !!selectedSessionId && !!notes?.some((note) => note.sessionId === selectedSessionId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -397,9 +394,6 @@ export default function CaseNotesForm({
                                 disabled={hasExistingNotes}
                                 onCheckedChange={(checked) => {
                                   const value = intervention;
-                                  if (value === "Other") {
-                                    setShowOtherInput(checked === true);
-                                  }
                                   return checked === true
                                     ? field.onChange([...field.value, value])
                                     : field.onChange(field.value?.filter((val) => val !== value));

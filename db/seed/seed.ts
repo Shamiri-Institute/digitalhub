@@ -44,6 +44,7 @@ import {
   superAdminEmail,
 } from "#/db/seed/fixtures";
 import type { SurveyForm } from "#/lib/survey/form";
+import { issuePrintRun } from "#/lib/survey/print-run";
 import { checkPublish } from "#/lib/survey/publish";
 import { storePublished } from "#/lib/survey/store-published";
 import { seedHubSessionTypes } from "#/db/seed/hub-session-types";
@@ -1382,7 +1383,6 @@ async function createAttendanceRecords(
           supervisorId: school.assignedSupervisorId ?? undefined,
           groupId: group.id,
           sessionDate: session.sessionDate,
-          yearOfImplementation: session.yearOfImplementation ?? undefined,
           attended: faker.datatype.boolean({ probability: 0.9 }),
           markedBy: seederUserId,
         });
@@ -1447,7 +1447,6 @@ async function createHubAttendance(
           supervisorId: school.assignedSupervisorId ?? undefined,
           groupId: group.id,
           sessionDate: session.sessionDate,
-          yearOfImplementation: session.yearOfImplementation ?? undefined,
           attended: faker.datatype.boolean({ probability: 0.9 }),
           markedBy: seederUserId,
         });
@@ -2275,6 +2274,46 @@ async function main() {
   await createSessionRatings(schoolsWithGroupsAndFellows, interventionSessions);
 
   await createDemoRecords(schoolsWithGroupsAndFellows, students, interventionSessions);
+  await createResearchPrintRun(arsenal);
+}
+
+/** The baseline survey printed for Emirates Academy, one copy per student, as a hub coordinator does. */
+async function createResearchPrintRun(arsenal: Hub) {
+  console.log("creating research print run");
+  const [baseline, emirates, coordinatorUser] = await Promise.all([
+    db.query.survey.findFirst({
+      where: (s, { eq }) => eq(s.code, "BASE26"),
+      with: { versions: { columns: { id: true }, orderBy: (v, { asc }) => asc(v.versionNumber) } },
+    }),
+    db.query.school.findFirst({
+      where: (s, { eq }) => eq(s.schoolName, emiratesAcademy.schoolName),
+      columns: { id: true },
+    }),
+    db.query.user.findFirst({
+      where: (u, { eq }) => eq(u.email, arsenalCoordinators[0]?.coordinatorEmail ?? ""),
+      columns: { id: true },
+    }),
+  ]);
+  const version = baseline?.versions[0];
+  if (!version || !emirates || !coordinatorUser) {
+    throw new Error("No baseline survey, Emirates Academy or Arsenal coordinator to print with");
+  }
+  await db.transaction((tx) =>
+    issuePrintRun(
+      tx,
+      {
+        userId: coordinatorUser.id,
+        implementerId: arsenal.implementerId,
+        projectId: arsenal.projectId,
+        hubId: arsenal.id,
+      },
+      {
+        printRunId: objectId("surveyprintrun"),
+        versionId: version.id,
+        request: { kind: "STUDENTS", schools: [{ schoolId: emirates.id, excludedStudentIds: [] }] },
+      },
+    ),
+  );
 }
 
 main()

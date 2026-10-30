@@ -5,6 +5,8 @@ import { type JsonValue, surveyAuditEvent } from "#/db/schema";
 export const SurveyAuditEntity = {
   SURVEY: "SURVEY",
   SURVEY_VERSION: "SURVEY_VERSION",
+  PRINT_RUN: "PRINT_RUN",
+  QUESTIONNAIRE: "QUESTIONNAIRE",
 } as const;
 export type SurveyAuditEntity = (typeof SurveyAuditEntity)[keyof typeof SurveyAuditEntity];
 
@@ -14,6 +16,8 @@ export const SurveyAuditAction = {
   FORM_SAVED: "FORM_SAVED",
   VERSION_PUBLISHED: "VERSION_PUBLISHED",
   SURVEY_ACTIVATED: "SURVEY_ACTIVATED",
+  PRINT_RUN_CREATED: "PRINT_RUN_CREATED",
+  QUESTIONNAIRE_VOIDED: "QUESTIONNAIRE_VOIDED",
 } as const;
 export type SurveyAuditAction = (typeof SurveyAuditAction)[keyof typeof SurveyAuditAction];
 

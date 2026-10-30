@@ -258,6 +258,10 @@ export default function StudentAttendance({
           setSessionAttendances([]);
           setHistory(null);
           setTriage(null);
+          setSelectedGroup(undefined);
+          form.reset();
+          setSelectedRows([]);
+          setBulkMode(false);
         }
       }}
       modal={true}

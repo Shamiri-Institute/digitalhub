@@ -40,6 +40,8 @@ import {
   SupervisorHandoffStatus,
   SupportType,
   SurveyAuditActor,
+  SurveyPrintRunStatus,
+  SurveyQuestionnaireStatus,
   SurveyStatus,
   SurveyVersionPrefill,
   SurveyVersionStatus,
@@ -110,6 +112,14 @@ export const surveyVersionPrefillEnum = pgEnum(
   enumValues(SurveyVersionPrefill),
 );
 export const surveyAuditActorEnum = pgEnum("survey_audit_actor", enumValues(SurveyAuditActor));
+export const surveyPrintRunStatusEnum = pgEnum(
+  "survey_print_run_status",
+  enumValues(SurveyPrintRunStatus),
+);
+export const surveyQuestionnaireStatusEnum = pgEnum(
+  "survey_questionnaire_status",
+  enumValues(SurveyQuestionnaireStatus),
+);
 
 export const verification = pgTable(
   "verifications",
@@ -303,7 +313,6 @@ export const student = pgTable(
     studentName: varchar("student_name", { length: 255 }),
     visibleId: varchar("visible_id", { length: 100 }).notNull(),
     schoolId: varchar("school_id", { length: 255 }),
-    yearOfImplementation: integer("year_of_implementation"),
     admissionNumber: varchar("admission_number", { length: 255 }),
     age: integer(),
     gender: varchar({ length: 10 }),
@@ -448,7 +457,6 @@ export const fellowAttendance = pgTable(
     fellowId: varchar("fellow_id", { length: 255 }).notNull(),
     sessionNumber: integer("session_number"),
     sessionDate: timestamp("session_date", { precision: 3, mode: "date" }),
-    yearOfImplementation: integer("year_of_implementation"),
     supervisorId: varchar("supervisor_id", { length: 255 }),
     attended: boolean(),
     absenceReason: text("absence_reason"),
@@ -520,7 +528,6 @@ export const fellow = pgTable(
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
     fellowName: varchar("fellow_name", { length: 255 }),
     fellowEmail: varchar("fellow_email", { length: 255 }),
-    yearOfImplementation: integer("year_of_implementation"),
     mpesaName: varchar("mpesa_name", { length: 255 }),
     mpesaNumber: varchar("mpesa_number", { length: 255 }),
     idNumber: varchar("id_number", { length: 255 }),
@@ -2596,9 +2603,13 @@ export const survey = pgTable(
     description: text(),
     status: surveyStatusEnum().default(SurveyStatus.DRAFT).notNull(),
     createdBy: varchar("created_by", { length: 255 }).notNull(),
+    // The next serial number to issue. A print run takes a block of numbers by incrementing it,
+    // which locks the row, so concurrent runs get disjoint serials.
+    nextSerial: integer("next_serial").default(1).notNull(),
   },
   (table) => [
     uniqueIndex("surveys_code_key").on(table.code),
+    check("surveys_next_serial_check", sql`${table.nextSerial} >= 1`),
     index("surveys_implementer_id_project_id_idx").on(table.implementerId, table.projectId),
     index("surveys_project_id_idx").on(table.projectId),
     index("surveys_created_by_idx").on(table.createdBy),
@@ -2668,6 +2679,8 @@ export const surveyVersion = pgTable(
     uniqueIndex("survey_versions_one_draft_per_survey_key")
       .on(table.surveyId)
       .where(sql`${table.status} = 'DRAFT'`),
+    // The target of the questionnaires' (version_id, survey_id) key.
+    uniqueIndex("survey_versions_id_survey_id_key").on(table.id, table.surveyId),
     index("survey_versions_based_on_version_id_idx").on(table.basedOnVersionId),
     index("survey_versions_created_by_idx").on(table.createdBy),
     index("survey_versions_published_by_idx").on(table.publishedBy),
@@ -2713,6 +2726,206 @@ export const surveyVersion = pgTable(
       // could never apply.
       .onUpdate("restrict")
       .onDelete("restrict"),
+  ],
+);
+
+// A request to print copies of a published version for one hub. Its copies, serials and pages are
+// issued with it in one transaction; the files come later. Only its status changes (guard trigger).
+export const surveyPrintRun = pgTable(
+  "survey_print_runs",
+  {
+    // Made by the client, one per request it confirms and kept while the page is open, so a request
+    // resent after a lost reply finds its run.
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyprintrun")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    versionId: text("version_id").notNull(),
+    hubId: varchar("hub_id", { length: 255 }).notNull(),
+    requestedBy: varchar("requested_by", { length: 255 }).notNull(),
+    copyCount: integer("copy_count").notNull(),
+    // Its copies are numbered firstSerialNumber to firstSerialNumber + copyCount - 1.
+    firstSerialNumber: integer("first_serial_number").notNull(),
+    // What the form asked for, from printRunRequestDigest, so a resubmitted id that asks for
+    // something else is refused instead of answered with this run.
+    requestDigest: text("request_digest").notNull(),
+    status: surveyPrintRunStatusEnum().default(SurveyPrintRunStatus.QUEUED).notNull(),
+  },
+  (table) => [
+    // The target of the questionnaires' (print_run_id, version_id, hub_id) key.
+    uniqueIndex("survey_print_runs_id_version_id_hub_id_key").on(
+      table.id,
+      table.versionId,
+      table.hubId,
+    ),
+    index("survey_print_runs_version_id_idx").on(table.versionId),
+    index("survey_print_runs_hub_id_created_at_idx").on(table.hubId, table.createdAt),
+    index("survey_print_runs_requested_by_idx").on(table.requestedBy),
+    check("survey_print_runs_copy_count_check", sql`${table.copyCount} >= 1`),
+    check("survey_print_runs_first_serial_number_check", sql`${table.firstSerialNumber} >= 1`),
+    // Restrict on update, here and below: the guard triggers freeze these columns, so a cascaded
+    // update could never apply.
+    foreignKey({
+      columns: [table.versionId],
+      foreignColumns: [surveyVersion.id],
+      name: "survey_print_runs_version_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.hubId],
+      foreignColumns: [hub.id],
+      name: "survey_print_runs_hub_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.requestedBy],
+      foreignColumns: [user.id],
+      name: "survey_print_runs_requested_by_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+  ],
+);
+
+// One printed copy. Everything but its status is fixed when it is issued (guard trigger), and the
+// issue trigger checks that its school was in its hub, and its student at its school, at that time.
+export const surveyQuestionnaire = pgTable(
+  "survey_questionnaires",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyquestionnaire")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    surveyId: text("survey_id").notNull(),
+    versionId: text("version_id").notNull(),
+    printRunId: text("print_run_id").notNull(),
+    // Printed on every page, as `BASE26-000017`.
+    serial: varchar({ length: 32 }).notNull(),
+    // The number in `serial`, which copies sort by: as text, `BASE26-1000000` sorts before
+    // `BASE26-999999`.
+    serialNumber: integer("serial_number").notNull(),
+    hubId: varchar("hub_id", { length: 255 }).notNull(),
+    schoolId: varchar("school_id", { length: 255 }).notNull(),
+    // Set exactly when the version prints student details (issue trigger).
+    studentId: varchar("student_id", { length: 255 }),
+    status: surveyQuestionnaireStatusEnum().default(SurveyQuestionnaireStatus.ISSUED).notNull(),
+  },
+  (table) => [
+    uniqueIndex("survey_questionnaires_survey_id_serial_key").on(table.surveyId, table.serial),
+    uniqueIndex("survey_questionnaires_survey_id_serial_number_key").on(
+      table.surveyId,
+      table.serialNumber,
+    ),
+    index("survey_questionnaires_print_run_id_serial_number_idx").on(
+      table.printRunId,
+      table.serialNumber,
+    ),
+    uniqueIndex("survey_questionnaires_id_version_id_key").on(table.id, table.versionId),
+    uniqueIndex("survey_questionnaires_print_run_id_student_id_key")
+      .on(table.printRunId, table.studentId)
+      .where(sql`${table.studentId} IS NOT NULL`),
+    index("survey_questionnaires_print_run_id_version_id_hub_id_idx").on(
+      table.printRunId,
+      table.versionId,
+      table.hubId,
+    ),
+    index("survey_questionnaires_version_id_survey_id_idx").on(table.versionId, table.surveyId),
+    index("survey_questionnaires_school_id_idx").on(table.schoolId),
+    index("survey_questionnaires_student_id_idx").on(table.studentId),
+    check(
+      "survey_questionnaires_serial_check",
+      sql`${table.serial} ~ '^[A-Z][A-Z0-9]{1,9}-[0-9]{6,}$'`,
+    ),
+    check("survey_questionnaires_serial_number_check", sql`${table.serialNumber} >= 1`),
+    check(
+      "survey_questionnaires_serial_matches_number_check",
+      sql`${table.serial} ~ ('-0*' || ${table.serialNumber} || '$')`,
+    ),
+    foreignKey({
+      columns: [table.printRunId, table.versionId, table.hubId],
+      foreignColumns: [surveyPrintRun.id, surveyPrintRun.versionId, surveyPrintRun.hubId],
+      name: "survey_questionnaires_print_run_id_version_id_hub_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.versionId, table.surveyId],
+      foreignColumns: [surveyVersion.id, surveyVersion.surveyId],
+      name: "survey_questionnaires_version_id_survey_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("cascade"),
+    // Restrict both ways: a printed copy is history, so its school and student can be neither
+    // renamed under it nor deleted.
+    foreignKey({
+      columns: [table.schoolId],
+      foreignColumns: [school.id],
+      name: "survey_questionnaires_school_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.studentId],
+      foreignColumns: [student.id],
+      name: "survey_questionnaires_student_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+  ],
+);
+
+// One printed page of a copy: only a page its version's layout prints (insert trigger). Pages
+// never change.
+export const surveyQuestionnairePage = pgTable(
+  "survey_questionnaire_pages",
+  {
+    // Printed in the page's QR code.
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyquestionnairepage")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    questionnaireId: text("questionnaire_id").notNull(),
+    pageNumber: integer("page_number").notNull(),
+    // `BASE26-000017-P3`: typed in when a QR code cannot be read.
+    code: varchar({ length: 40 }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("survey_questionnaire_pages_questionnaire_id_page_number_key").on(
+      table.questionnaireId,
+      table.pageNumber,
+    ),
+    uniqueIndex("survey_questionnaire_pages_code_key").on(table.code),
+    check("survey_questionnaire_pages_page_number_check", sql`${table.pageNumber} >= 1`),
+    check(
+      "survey_questionnaire_pages_code_check",
+      sql`${table.code} ~ ('-P' || ${table.pageNumber} || '$')`,
+    ),
+    foreignKey({
+      columns: [table.questionnaireId],
+      foreignColumns: [surveyQuestionnaire.id],
+      name: "survey_questionnaire_pages_questionnaire_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("cascade"),
   ],
 );
 

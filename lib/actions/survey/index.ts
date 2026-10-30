@@ -2,7 +2,6 @@
 
 import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { refresh } from "next/cache";
-import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 
 import { db, isUniqueViolation } from "#/db/client";
@@ -14,7 +13,6 @@ import {
 } from "#/db/enums";
 import { survey, surveyVersion } from "#/db/schema";
 import { requireSurveyScope } from "#/lib/auth/admin-access";
-import { ForbiddenRoleError } from "#/lib/auth/require-auth-role";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
 import { checkForm, type FormIssue, lockedQuestions } from "#/lib/survey/check-form";
 import { EMPTY_FORM, summarizeForm } from "#/lib/survey/form";
@@ -22,30 +20,13 @@ import { describeProblem, type LayoutProblem } from "#/lib/survey/layout";
 import { checkPublish } from "#/lib/survey/publish";
 import { storePublished } from "#/lib/survey/store-published";
 import type { ActionResponse } from "#/types/actions.types";
+import { failure, invalid, SurveyError } from "./respond";
 import {
   CreateDraftVersionSchema,
   CreateSurveySchema,
   PublishVersionSchema,
   SaveDraftFormSchema,
 } from "./schemas";
-
-/** An expected failure whose message is safe to show the research user. */
-class SurveyError extends Error {}
-
-/** The first problem with the input, worded for the form that sent it. */
-function invalid<T>(error: z.ZodError): ActionResponse<T> {
-  return { success: false, message: error.issues[0]?.message ?? "Please check the form" };
-}
-
-function failure<T>(error: unknown, fallback: string): ActionResponse<T> {
-  // A user in another role is redirected to their home; let Next carry that out.
-  unstable_rethrow(error);
-  if (error instanceof SurveyError || error instanceof ForbiddenRoleError) {
-    return { success: false, message: error.message };
-  }
-  console.error(error);
-  return { success: false, message: fallback };
-}
 
 /** Creates a survey in the caller's implementer and active project, with an empty draft v1. */
 export async function createSurvey(
