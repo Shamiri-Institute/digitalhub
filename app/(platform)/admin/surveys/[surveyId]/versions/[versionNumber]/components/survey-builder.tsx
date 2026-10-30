@@ -1,14 +1,21 @@
 "use client";
 
 import { Check, Plus, RefreshCw } from "lucide-react";
-import { useReducer, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { type Dispatch, useReducer, useState } from "react";
 
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { SURVEY_VERSION_STATUS_LABELS } from "#/db/enums";
 import { toast } from "#/components/ui/use-toast";
 import { saveDraftForm } from "#/lib/actions/survey";
-import { builderReducer, currentPage, hasUnsavedChanges, initBuilder } from "#/lib/survey/builder";
+import {
+  type BuilderAction,
+  builderReducer,
+  currentPage,
+  hasUnsavedChanges,
+  initBuilder,
+} from "#/lib/survey/builder";
 import { checkForm, indexIssues } from "#/lib/survey/check-form";
 import { describeProblem, layOutForm, sampleCopy } from "#/lib/survey/layout";
 import type { BuilderData } from "../../../../queries";
@@ -36,13 +43,34 @@ export default function SurveyBuilder({
   locked,
   editable,
 }: SurveyBuilderProps) {
+  const searchParams = useSearchParams();
   const [state, dispatch] = useReducer(
     builderReducer,
-    { ...version, publishedKeys: locked.map((q) => q.key) },
+    {
+      ...version,
+      publishedKeys: locked.map((q) => q.key),
+      pageNumber: searchParams.get("page"),
+    },
     initBuilder,
   );
   const [saving, setSaving] = useState(false);
   const [stale, setStale] = useState(false);
+
+  const pageIndex = currentPage(state.form, state.selection);
+  // Any change that moves to another page, not only picking a tab, also writes that page to the
+  // URL, so a reload or a shared link opens the page on screen.
+  const dispatchAndShowPage: Dispatch<BuilderAction> = (action) => {
+    const next = builderReducer(state, action);
+    dispatch(action);
+    const nextPageIndex = currentPage(next.form, next.selection);
+    if (nextPageIndex !== pageIndex) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("page", String(nextPageIndex + 1));
+      window.history.replaceState(null, "", url);
+    }
+  };
+  const showPage = (pickedPageIndex: number) =>
+    dispatchAndShowPage({ type: "select", selection: { page: pickedPageIndex } });
 
   const unsaved = editable && hasUnsavedChanges(state);
   const allowLeave = useLeaveGuard(unsaved);
@@ -56,7 +84,10 @@ export default function SurveyBuilder({
   const handleSave = async () => {
     const check = checkForm(state.form, locked);
     if (!check.success) {
-      dispatch({ type: "showIssues", itemId: check.issues.find((i) => i.itemId)?.itemId });
+      dispatchAndShowPage({
+        type: "showIssues",
+        itemId: check.issues.find((i) => i.itemId)?.itemId,
+      });
       toast({
         variant: "destructive",
         description: check.issues.find((i) => !i.itemId)?.message ?? "Fix the marked fields first",
@@ -74,7 +105,7 @@ export default function SurveyBuilder({
       });
       const result = response.data;
       if (response.success && result?.outcome === "saved") {
-        dispatch({ type: "saved", revision: result.revision, form: sent });
+        dispatchAndShowPage({ type: "saved", revision: result.revision, form: sent });
         toast({ description: "Saved" });
         return;
       }
@@ -84,14 +115,13 @@ export default function SurveyBuilder({
       toast({ variant: "destructive", description: response.message });
     } catch {
       // The reply was lost, so the save may have been stored all the same.
-      dispatch({ type: "saveUnconfirmed", form: sent });
+      dispatchAndShowPage({ type: "saveUnconfirmed", form: sent });
       toast({ variant: "destructive", description: "Sorry, could not save the draft." });
     } finally {
       setSaving(false);
     }
   };
 
-  const pageIndex = currentPage(state.form, state.selection);
   const page = state.form.pages[pageIndex];
   // A published version shows the layout it froze. A draft is laid out again on every change, as
   // blank copies: the prefill only fills the header, so the fit is the same as when published.
@@ -112,7 +142,8 @@ export default function SurveyBuilder({
         <PageTabs
           form={state.form}
           current={pageIndex}
-          dispatch={dispatch}
+          showPage={showPage}
+          dispatch={dispatchAndShowPage}
           editable={editable}
           itemsWithIssues={itemsWithIssues}
           unprintablePages={unprintablePages}
@@ -188,7 +219,8 @@ export default function SurveyBuilder({
               form={state.form}
               pageIndex={pageIndex}
               openItemId={openItemId}
-              dispatch={dispatch}
+              showPage={showPage}
+              dispatch={dispatchAndShowPage}
               editable={editable}
               messages={messages}
               locked={locked}
@@ -221,7 +253,7 @@ export default function SurveyBuilder({
               type="button"
               variant="brand"
               className="mt-6 gap-2"
-              onClick={() => dispatch({ type: "addPage" })}
+              onClick={() => dispatchAndShowPage({ type: "addPage" })}
             >
               <Plus className="h-4 w-4" />
               Add page
