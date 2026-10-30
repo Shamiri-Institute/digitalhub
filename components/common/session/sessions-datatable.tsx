@@ -2,20 +2,24 @@
 
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole } from "#/db/enums";
-import * as React from "react";
-import { useState } from "react";
+import { type SetStateAction, useState } from "react";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
-import { columns, type SessionData } from "#/components/common/session/columns";
+import {
+  columns,
+  type SessionData,
+  type SessionDialogKind,
+} from "#/components/common/session/columns";
 import RescheduleSession from "#/components/common/session/reschedule-session";
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
-import type { Session } from "#/lib/actions/fetch-sessions";
 import StudentAttendance from "#/components/common/student/student-attendance";
 import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import DataTable from "#/components/data-table";
+
+type OpenSessionDialog = { kind: SessionDialogKind; sessionId: string };
 
 export default function SessionsDatatable({
   sessions,
@@ -35,35 +39,12 @@ export default function SessionsDatatable({
   fellowId?: string;
   supervisorId?: string;
 }) {
-  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
-  const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
-  const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
-  const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
-  const [selectedSession, setSelectedSession] = React.useState<Session | null>(null);
-  const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
-  const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
-  const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
-  const [attendanceDocumentDialog, setAttendanceDocumentDialog] = React.useState(false);
+  const [dialog, setDialog] = useState<OpenSessionDialog | null>(null);
+  const session = dialog && sessions.find((s) => s.id === dialog.sessionId);
 
-  const session = (() => {
-    if (!selectedSession) return null;
-    return sessions.find((s) => s.id === selectedSession.id) ?? null;
-  })();
-
-  const memoizedColumns = columns({
-    setSession: setSelectedSession,
-    setRatingsDialog,
-    setFellowAttendanceDialog,
-    setSupervisorAttendanceDialog,
-    setStudentAttendanceDialog,
-    setSessionOccurrenceDialog,
-    setRescheduleSessionDialog,
-    setCancelSessionDialog,
-    setAttendanceDocumentDialog,
-    role,
-    fellowId,
-    supervisorId,
-  });
+  const onDialogOpenChange = (open: SetStateAction<boolean>) => {
+    if (!open) setDialog(null);
+  };
 
   const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
 
@@ -78,17 +59,22 @@ export default function SessionsDatatable({
     <>
       <DataTable
         data={sessions}
-        columns={memoizedColumns}
+        columns={columns({
+          openDialog: (kind, { id: sessionId }) => setDialog({ kind, sessionId }),
+          role,
+          fellowId,
+          supervisorId,
+        })}
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No sessions found for this school"
       />
       {session && (
         <>
           <MarkSessionOccurrence
-            id={session?.id}
-            defaultOccurrence={session?.occurred}
-            isOpen={sessionOccurrenceDialog}
-            setIsOpen={setSessionOccurrenceDialog}
+            id={session.id}
+            defaultOccurrence={session.occurred}
+            isOpen={dialog?.kind === "sessionOccurrence"}
+            setIsOpen={onDialogOpenChange}
             sessions={sessions}
           >
             <SessionDetail
@@ -99,8 +85,8 @@ export default function SessionsDatatable({
             />
           </MarkSessionOccurrence>
           <StudentAttendance
-            isOpen={studentAttendanceDialog}
-            setIsOpen={setStudentAttendanceDialog}
+            isOpen={dialog?.kind === "studentAttendance"}
+            setIsOpen={onDialogOpenChange}
             role={role}
             session={session}
             fellows={fellowsForStudentAttendance}
@@ -108,8 +94,8 @@ export default function SessionsDatatable({
           />
           {session.schoolId !== null && session.school && (
             <SessionRatings
-              open={ratingsDialog}
-              onOpenChange={setRatingsDialog}
+              open={dialog?.kind === "ratings"}
+              onOpenChange={onDialogOpenChange}
               mode={
                 role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
                   ? "view"
@@ -132,8 +118,8 @@ export default function SessionsDatatable({
           )}
           <RescheduleSession
             session={session}
-            open={rescheduleSessionDialog}
-            onOpenChange={setRescheduleSessionDialog}
+            open={dialog?.kind === "reschedule"}
+            onOpenChange={onDialogOpenChange}
           >
             <SessionDetail
               state={{ session }}
@@ -144,8 +130,8 @@ export default function SessionsDatatable({
           </RescheduleSession>
           <CancelSession
             sessionId={session.id}
-            open={cancelSessionDialog}
-            onOpenChange={setCancelSessionDialog}
+            open={dialog?.kind === "cancel"}
+            onOpenChange={onDialogOpenChange}
           >
             <SessionDetail
               state={{ session }}
@@ -154,33 +140,33 @@ export default function SessionsDatatable({
               role={role}
             />
           </CancelSession>
+          {fellowRatings ? (
+            <FellowAttendance
+              supervisors={supervisors}
+              fellowRatings={fellowRatings}
+              role={role}
+              session={session}
+              isOpen={dialog?.kind === "fellowAttendance"}
+              setIsOpen={onDialogOpenChange}
+              supervisorId={supervisorId}
+            />
+          ) : null}
+          <AttendanceDocumentDialog
+            session={session}
+            groupId={groupId}
+            role={role}
+            open={dialog?.kind === "attendanceDocument"}
+            onOpenChange={onDialogOpenChange}
+          />
+          <SupervisorAttendance
+            supervisors={supervisors}
+            role={role}
+            isOpen={dialog?.kind === "supervisorAttendance"}
+            setIsOpen={onDialogOpenChange}
+            session={session}
+          />
         </>
       )}
-      {fellowRatings ? (
-        <FellowAttendance
-          supervisors={supervisors}
-          fellowRatings={fellowRatings}
-          role={role}
-          session={session}
-          isOpen={fellowAttendanceDialog}
-          setIsOpen={setFellowAttendanceDialog}
-          supervisorId={supervisorId}
-        />
-      ) : null}
-      <AttendanceDocumentDialog
-        session={session}
-        groupId={groupId}
-        role={role}
-        open={attendanceDocumentDialog}
-        onOpenChange={setAttendanceDocumentDialog}
-      />
-      <SupervisorAttendance
-        supervisors={supervisors}
-        role={role}
-        isOpen={supervisorAttendanceDialog}
-        setIsOpen={setSupervisorAttendanceDialog}
-        session={session}
-      />
     </>
   );
 }

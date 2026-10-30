@@ -9,8 +9,12 @@ import {
 import { ImplementerRole } from "#/db/enums";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { Plus } from "lucide-react";
-import { useState } from "react";
-import { columns, type MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import { type SetStateAction, useState } from "react";
+import {
+  columns,
+  type MainFellowDialogKind,
+  type MainFellowTableData,
+} from "#/app/(platform)/hc/fellows/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import FellowDropoutForm from "#/components/common/fellow/fellow-dropout-form";
@@ -20,6 +24,16 @@ import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { toastOnError } from "#/components/ui/use-toast";
+
+type OpenMainFellowDialog =
+  | { kind: "add" }
+  | { kind: "edit"; fellowId: string; personalDetails: FellowPersonalDetails }
+  | {
+      kind: "weeklyEvaluations";
+      fellowId: string;
+      evaluations: (typeof weeklyFellowRatings.$inferSelect)[];
+    }
+  | { kind: MainFellowDialogKind; fellowId: string };
 
 export default function MainFellowsDatatable({
   fellows,
@@ -32,38 +46,34 @@ export default function MainFellowsDatatable({
   })[];
   role: ImplementerRole;
 }) {
-  const [selectedFellow, setFellow] = useState<MainFellowTableData | null>(null);
-  // Read the selected fellow from the latest server data so dialogs show fresh values after a revalidate.
-  const fellow = fellows.find((f) => f.id === selectedFellow?.id) ?? selectedFellow;
-  const [editDialog, setEditDialog] = useState<boolean>(false);
-  const [addDialog, setAddDialog] = useState<boolean>(false);
-  const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
-  const [viewComplaintsDialog, setViewComplaintsDialog] = useState(false);
-  const [dropOutDialog, setDropOutDialog] = useState(false);
-  const [fellowToEdit, setFellowToEdit] = useState<
-    (MainFellowTableData & FellowPersonalDetails) | null
-  >(null);
-  const [weeklyEvaluations, setWeeklyEvaluations] = useState<
-    (typeof weeklyFellowRatings.$inferSelect)[]
-  >([]);
+  const [dialog, setDialog] = useState<OpenMainFellowDialog | null>(null);
+  const fellow =
+    dialog && dialog.kind !== "add" ? fellows.find((f) => f.id === dialog.fellowId) : undefined;
+  const fellowPersonalDetails = dialog?.kind === "edit" ? dialog.personalDetails : undefined;
+  const fellowWeeklyEvaluations = dialog?.kind === "weeklyEvaluations" ? dialog.evaluations : [];
 
-  const openEditDialog = toastOnError(async (fellowRow: MainFellowTableData) => {
-    const personalDetails = await loadFellowPersonalDetails(fellowRow.id);
-    setFellowToEdit({ ...fellowRow, ...personalDetails });
-    setEditDialog(true);
+  const onDialogOpenChange = (open: SetStateAction<boolean>) => {
+    if (!open) setDialog(null);
+  };
+
+  const openEditDialog = toastOnError(async ({ id: fellowId }: MainFellowTableData) => {
+    const personalDetails = await loadFellowPersonalDetails(fellowId);
+    setDialog({ kind: "edit", fellowId, personalDetails });
   });
 
-  const openWeeklyEvaluationDialog = toastOnError(async (fellowRow: MainFellowTableData) => {
-    const evaluations = await loadFellowWeeklyEvaluations(fellowRow.id);
-    setFellow(fellowRow);
-    setWeeklyEvaluations(evaluations);
-    setWeeklyEvaluationDialog(true);
+  const openWeeklyEvaluationDialog = toastOnError(async ({ id: fellowId }: MainFellowTableData) => {
+    const evaluations = await loadFellowWeeklyEvaluations(fellowId);
+    setDialog({ kind: "weeklyEvaluations", fellowId, evaluations });
   });
 
   const renderTableActions = () => {
     return (
       <div className="flex items-center gap-3">
-        <FellowDetailsForm open={addDialog} onOpenChange={setAddDialog} mode={"add"}>
+        <FellowDetailsForm
+          open={dialog?.kind === "add"}
+          onOpenChange={(open) => setDialog(open ? { kind: "add" } : null)}
+          mode={"add"}
+        >
           <DialogTrigger asChild={true}>
             <Button variant="outline" className="bg-white">
               <Plus className="h-4 w-4" />
@@ -80,11 +90,9 @@ export default function MainFellowsDatatable({
       <DataTable
         columns={columns(
           supervisors,
-          setFellow,
+          (kind, { id: fellowId }) => setDialog({ kind, fellowId }),
           openEditDialog,
           openWeeklyEvaluationDialog,
-          setViewComplaintsDialog,
-          setDropOutDialog,
           role,
         )}
         data={fellows}
@@ -102,9 +110,9 @@ export default function MainFellowsDatatable({
         <>
           <WeeklyFellowEvaluation
             fellowId={fellow.id}
-            open={weeklyEvaluationDialog}
-            onOpenChange={setWeeklyEvaluationDialog}
-            evaluations={weeklyEvaluations}
+            open={dialog?.kind === "weeklyEvaluations"}
+            onOpenChange={onDialogOpenChange}
+            evaluations={fellowWeeklyEvaluations}
             mode={"view"}
           >
             <DialogAlertWidget>
@@ -120,8 +128,8 @@ export default function MainFellowsDatatable({
           </WeeklyFellowEvaluation>
           <SubmitComplaint
             id={fellow.id}
-            open={viewComplaintsDialog}
-            onOpenChange={setViewComplaintsDialog}
+            open={dialog?.kind === "complaints"}
+            onOpenChange={onDialogOpenChange}
             complaints={fellow.complaints?.map((complaint) => {
               return {
                 id: complaint.id,
@@ -140,19 +148,19 @@ export default function MainFellowsDatatable({
           </SubmitComplaint>
           <FellowDropoutForm
             fellow={fellow}
-            isOpen={dropOutDialog}
-            setIsOpen={setDropOutDialog}
+            isOpen={dialog?.kind === "dropout"}
+            setIsOpen={onDialogOpenChange}
             supervisors={supervisors}
           />
+          {fellowPersonalDetails && (
+            <FellowDetailsForm
+              fellow={{ ...fellow, ...fellowPersonalDetails }}
+              open={dialog?.kind === "edit"}
+              onOpenChange={onDialogOpenChange}
+              mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
+            />
+          )}
         </>
-      )}
-      {fellowToEdit && (
-        <FellowDetailsForm
-          fellow={fellowToEdit}
-          open={editDialog}
-          onOpenChange={setEditDialog}
-          mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
-        />
       )}
     </>
   );

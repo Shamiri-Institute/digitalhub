@@ -3,7 +3,6 @@ import type { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
 import Image from "next/image";
-import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
 import FellowSchoolDatatableDropdownMenu, {
@@ -17,15 +16,16 @@ import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import FellowsTableDropdown from "./fellow-schools-datatable-dropdown-menu";
 
+export type FellowDialogKind = "weeklyEvaluation" | "attendanceHistory" | "complaints";
+
+export type FellowGroupDialogKind = "markAttendance" | "students" | "groupEvaluation";
+
 export const fellowSchoolsColumns = ({
   state,
 }: {
   state: {
-    setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    openDialog: (kind: FellowDialogKind, fellow: FellowsData) => void;
     openEditDialog: (fellow: FellowsData) => void;
-    setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-    setComplaintsDialog: Dispatch<SetStateAction<boolean>>;
-    setFellow: Dispatch<SetStateAction<FellowsData | null>>;
     role: ImplementerRole;
   };
 }): ColumnDef<FellowsData>[] => [
@@ -141,10 +141,7 @@ export const subColumns = ({
   state,
 }: {
   state: {
-    setFellowGroup: Dispatch<SetStateAction<FellowGroupData | undefined>>;
-    setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
-    setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    openDialog: (kind: FellowGroupDialogKind, group: FellowGroupData) => void;
     role: ImplementerRole;
   };
 }): ColumnDef<FellowGroupData>[] => [

@@ -4,7 +4,6 @@ import type { fellowComplaints, interventionGroup, supervisor } from "#/db/schem
 import { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import AssignFellowSupervisorSelect from "#/app/(platform)/hc/fellows/components/assign-fellow-supervisor-select";
 import MainFellowsDatatableMenu from "#/app/(platform)/hc/fellows/components/main-fellows-datatable-menu";
@@ -37,13 +36,13 @@ export type MainFellowTableData = {
   })[];
 };
 
+export type MainFellowDialogKind = "complaints" | "dropout";
+
 export const columns = (
   supervisors: Supervisor[],
-  setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>,
+  openDialog: (kind: MainFellowDialogKind, fellow: MainFellowTableData) => void,
   openEditDialog: (fellow: MainFellowTableData) => void,
   openWeeklyEvaluationDialog: (fellow: MainFellowTableData) => void,
-  setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>,
-  setDropOutDialog: Dispatch<SetStateAction<boolean>>,
   role: ImplementerRole,
 ): ColumnDef<MainFellowTableData>[] => {
   return [
@@ -177,11 +176,9 @@ export const columns = (
       cell: ({ row }) => (
         <MainFellowsDatatableMenu
           fellow={row.original}
-          setFellow={setFellow}
+          openDialog={openDialog}
           openEditDialog={openEditDialog}
           openWeeklyEvaluationDialog={openWeeklyEvaluationDialog}
-          setViewComplaintsDialog={setViewComplaintsDialog}
-          setDropOutDialog={setDropOutDialog}
           role={role}
         />
       ),

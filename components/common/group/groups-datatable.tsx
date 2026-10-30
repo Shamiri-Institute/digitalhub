@@ -8,16 +8,22 @@ import type {
   supervisor,
 } from "#/db/schema";
 import { ImplementerRole } from "#/db/enums";
-import { useState } from "react";
+import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import ArchiveGroup from "#/components/common/group/archive-group";
-import { columns, type SchoolGroupDataTableData } from "#/components/common/group/columns";
+import {
+  columns,
+  type GroupDialogKind,
+  type SchoolGroupDataTableData,
+} from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
 import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
 import UnarchiveGroup from "#/components/common/group/unarchive-group";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
+
+type OpenGroupDialog = { kind: GroupDialogKind; groupId: string };
 
 export default function GroupsDataTable({
   data,
@@ -36,29 +42,12 @@ export default function GroupsDataTable({
   })[];
   role: ImplementerRole;
 }) {
-  const [selectedGroup, setSelectedGroup] = useState<SchoolGroupDataTableData>();
-  const [studentsDialog, setStudentsDialog] = useState(false);
-  const [evaluationDialog, setEvaluationDialog] = useState(false);
-  const [leaderDialog, setLeaderDialog] = useState(false);
-  const [archiveDialog, setArchiveDialog] = useState(false);
-  const [unarchiveDialog, setUnarchiveDialog] = useState(false);
+  const [dialog, setDialog] = useState<OpenGroupDialog | null>(null);
+  const group = dialog && data.find((g) => g.id === dialog.groupId);
 
-  const group = (() => {
-    if (selectedGroup) {
-      return data.find((g) => g.id === selectedGroup.id);
-    }
-    return selectedGroup;
-  })();
-
-  const memoizedColumns = columns({
-    setGroup: setSelectedGroup,
-    setStudentsDialog,
-    setEvaluationDialog,
-    setLeaderDialog,
-    setArchiveDialog,
-    setUnarchiveDialog,
-    role,
-  });
+  const onDialogOpenChange = (open: SetStateAction<boolean>) => {
+    if (!open) setDialog(null);
+  };
 
   const renderTableActions = () => {
     return (
@@ -72,7 +61,10 @@ export default function GroupsDataTable({
   return (
     <>
       <DataTable
-        columns={memoizedColumns}
+        columns={columns({
+          openDialog: (kind, { id: groupId }) => setDialog({ kind, groupId }),
+          role,
+        })}
         data={data}
         className="data-table data-table-action lg:mt-4"
         columnVisibilityState={{ "Group Type": false }}
@@ -86,8 +78,8 @@ export default function GroupsDataTable({
             groupId={group.id}
             groupName={group.groupName}
             schoolId={school.id}
-            open={studentsDialog}
-            onOpenChange={setStudentsDialog}
+            open={dialog?.kind === "students"}
+            onOpenChange={onDialogOpenChange}
             role={role}
           >
             <DialogAlertWidget>
@@ -97,8 +89,8 @@ export default function GroupsDataTable({
             </DialogAlertWidget>
           </StudentsInGroup>
           <StudentGroupEvaluation
-            open={evaluationDialog}
-            onOpenChange={setEvaluationDialog}
+            open={dialog?.kind === "evaluation"}
+            onOpenChange={onDialogOpenChange}
             mode={role === "FELLOW" ? "add" : "view"}
             groupId={group.id}
             evaluations={group.reports}
@@ -112,8 +104,8 @@ export default function GroupsDataTable({
           </StudentGroupEvaluation>
           {role !== "FELLOW" && supervisors && (
             <ReplaceFellow
-              open={leaderDialog}
-              onOpenChange={setLeaderDialog}
+              open={dialog?.kind === "replaceLeader"}
+              onOpenChange={onDialogOpenChange}
               fellowId={group.leaderId}
               groupId={group.id}
               supervisors={supervisors}
@@ -127,7 +119,11 @@ export default function GroupsDataTable({
               </DialogAlertWidget>
             </ReplaceFellow>
           )}
-          <ArchiveGroup groupId={group.id} open={archiveDialog} onOpenChange={setArchiveDialog}>
+          <ArchiveGroup
+            groupId={group.id}
+            open={dialog?.kind === "archive"}
+            onOpenChange={onDialogOpenChange}
+          >
             <DialogAlertWidget>
               <div className="flex items-center gap-2">
                 <span>{group.groupName}</span>
@@ -136,8 +132,8 @@ export default function GroupsDataTable({
           </ArchiveGroup>
           <UnarchiveGroup
             groupId={group.id}
-            open={unarchiveDialog}
-            onOpenChange={setUnarchiveDialog}
+            open={dialog?.kind === "unarchive"}
+            onOpenChange={onDialogOpenChange}
           >
             <DialogAlertWidget>
               <div className="flex items-center gap-2">

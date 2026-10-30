@@ -3,7 +3,6 @@
 import type { interventionGroupReport, interventionSession } from "#/db/schema";
 import type { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { GroupsDatatableMenu } from "#/components/common/group/groups-datatable-menu";
 import type { GroupStudent } from "#/components/common/student/students-in-group";
@@ -27,15 +26,14 @@ export type SchoolGroupDataTableData = {
   })[];
 };
 
-export const columns = (state: {
-  setGroup: Dispatch<SetStateAction<SchoolGroupDataTableData | undefined>>;
-  setStudentsDialog: Dispatch<SetStateAction<boolean>>;
-  setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
-  setLeaderDialog: Dispatch<SetStateAction<boolean>>;
-  setArchiveDialog: Dispatch<SetStateAction<boolean>>;
-  setUnarchiveDialog: Dispatch<SetStateAction<boolean>>;
+export type GroupDialogKind = "students" | "evaluation" | "replaceLeader" | "archive" | "unarchive";
+
+export type GroupTableState = {
+  openDialog: (kind: GroupDialogKind, group: SchoolGroupDataTableData) => void;
   role: ImplementerRole;
-}): ColumnDef<SchoolGroupDataTableData>[] => {
+};
+
+export const columns = (state: GroupTableState): ColumnDef<SchoolGroupDataTableData>[] => {
   return [
     {
       accessorKey: "groupName",

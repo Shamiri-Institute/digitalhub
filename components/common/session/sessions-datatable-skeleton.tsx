@@ -9,15 +9,7 @@ export default function SessionsDatatableSkeleton({ role }: { role: ImplementerR
     <DatatableSkeleton
       rows={5}
       columns={columns({
-        setSession: () => {},
-        setRatingsDialog: () => {},
-        setFellowAttendanceDialog: () => {},
-        setSupervisorAttendanceDialog: () => {},
-        setStudentAttendanceDialog: () => {},
-        setSessionOccurrenceDialog: () => {},
-        setRescheduleSessionDialog: () => {},
-        setCancelSessionDialog: () => {},
-        setAttendanceDocumentDialog: () => {},
+        openDialog: () => {},
         role,
       })}
     />

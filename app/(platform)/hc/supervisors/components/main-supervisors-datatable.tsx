@@ -3,9 +3,13 @@
 import { ImplementerRole } from "#/db/enums";
 import type { project as projectTable } from "#/db/schema";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import { useState } from "react";
+import { type SetStateAction, useState } from "react";
 import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
-import { columns, type SupervisorsData } from "#/app/(platform)/hc/supervisors/components/columns";
+import {
+  columns,
+  type SupervisorDialogKind,
+  type SupervisorsData,
+} from "#/app/(platform)/hc/supervisors/components/columns";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import MonthlySupervisorEvaluation from "#/app/(platform)/hc/supervisors/components/monthly-supervisor-evaluation";
 import SubmitComplaint from "#/app/(platform)/hc/supervisors/components/submit-complaint";
@@ -13,6 +17,8 @@ import SupervisorDetailsForm from "#/app/(platform)/hc/supervisors/components/su
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
+
+type OpenSupervisorDialog = { kind: SupervisorDialogKind; supervisorId: string };
 
 export default function MainSupervisorsDataTable({
   supervisors,
@@ -23,12 +29,12 @@ export default function MainSupervisorsDataTable({
   project: Pick<typeof projectTable.$inferSelect, "actualStartDate" | "actualEndDate"> | null;
   role: ImplementerRole;
 }) {
-  const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);
-  const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
-  const [undropDialog, setUndropDialog] = useState<boolean>(false);
-  const [complaintDialog, setComplaintDialog] = useState<boolean>(false);
-  const [evaluationDialog, setEvaluationDialog] = useState<boolean>(false);
-  const [editDialog, setEditDialog] = useState<boolean>(false);
+  const [dialog, setDialog] = useState<OpenSupervisorDialog | null>(null);
+  const supervisor = dialog && supervisors.find((s) => s.id === dialog.supervisorId);
+
+  const onDialogOpenChange = (open: SetStateAction<boolean>) => {
+    if (!open) setDialog(null);
+  };
 
   const renderDialogAlert = () => {
     return (
@@ -58,12 +64,7 @@ export default function MainSupervisorsDataTable({
       <DataTable
         data={supervisors}
         columns={columns({
-          onSupervisorSelect: setSupervisor,
-          onEditDialogOpen: () => setEditDialog(true),
-          onEvaluationDialogOpen: () => setEvaluationDialog(true),
-          onComplaintDialogOpen: () => setComplaintDialog(true),
-          onDropoutDialogOpen: () => setDropoutDialog(true),
-          onUndropDialogOpen: () => setUndropDialog(true),
+          openDialog: (kind, { id: supervisorId }) => setDialog({ kind, supervisorId }),
           role,
         })}
         className={"data-table data-table-action bg-white lg:mt-4"}
@@ -77,43 +78,47 @@ export default function MainSupervisorsDataTable({
         }}
         renderTableActions={renderTableActions()}
       />
-      <SupervisorDetailsForm
-        supervisor={supervisor}
-        open={editDialog}
-        onOpenChange={setEditDialog}
-        mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
-      />
-      <DropoutSupervisor
-        supervisorId={supervisor !== null ? supervisor.id : undefined}
-        setDropoutDialog={setDropoutDialog}
-        dropoutDialog={dropoutDialog}
-      >
-        {renderDialogAlert()}
-      </DropoutSupervisor>
-      <UndropSupervisor
-        supervisorId={supervisor !== null ? supervisor.id : undefined}
-        setUndropDialog={setUndropDialog}
-        undropDialog={undropDialog}
-      >
-        {renderDialogAlert()}
-      </UndropSupervisor>
-      <SubmitComplaint
-        supervisorId={supervisor !== null ? supervisor.id : undefined}
-        setIsOpen={setComplaintDialog}
-        isOpen={complaintDialog}
-      >
-        {renderDialogAlert()}
-      </SubmitComplaint>
-      <MonthlySupervisorEvaluation
-        supervisorId={supervisor !== null ? supervisor.id : undefined}
-        setIsOpen={setEvaluationDialog}
-        isOpen={evaluationDialog}
-        project={project}
-        evaluations={supervisor?.monthlySupervisorEvaluation ?? []}
-        mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
-      >
-        {renderDialogAlert()}
-      </MonthlySupervisorEvaluation>
+      {supervisor && (
+        <>
+          <SupervisorDetailsForm
+            supervisor={supervisor}
+            open={dialog?.kind === "edit"}
+            onOpenChange={onDialogOpenChange}
+            mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
+          />
+          <DropoutSupervisor
+            supervisorId={supervisor.id}
+            setDropoutDialog={onDialogOpenChange}
+            dropoutDialog={dialog?.kind === "dropout"}
+          >
+            {renderDialogAlert()}
+          </DropoutSupervisor>
+          <UndropSupervisor
+            supervisorId={supervisor.id}
+            setUndropDialog={onDialogOpenChange}
+            undropDialog={dialog?.kind === "undrop"}
+          >
+            {renderDialogAlert()}
+          </UndropSupervisor>
+          <SubmitComplaint
+            supervisorId={supervisor.id}
+            setIsOpen={onDialogOpenChange}
+            isOpen={dialog?.kind === "complaint"}
+          >
+            {renderDialogAlert()}
+          </SubmitComplaint>
+          <MonthlySupervisorEvaluation
+            supervisorId={supervisor.id}
+            setIsOpen={onDialogOpenChange}
+            isOpen={dialog?.kind === "evaluation"}
+            project={project}
+            evaluations={supervisor.monthlySupervisorEvaluation}
+            mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
+          >
+            {renderDialogAlert()}
+          </MonthlySupervisorEvaluation>
+        </>
+      )}
     </div>
   );
 }

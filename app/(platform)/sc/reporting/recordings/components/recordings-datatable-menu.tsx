@@ -23,16 +23,6 @@ export default function RecordingsDataTableMenu({
 }: RecordingsDataTableMenuProps) {
   const [isRetrying, setIsRetrying] = useState(false);
 
-  const handleEdit = () => {
-    state.setSelectedRecording(recording);
-    state.setEditDialog(true);
-  };
-
-  const handleViewFeedback = () => {
-    state.setSelectedRecording(recording);
-    state.setViewFeedbackDialog(true);
-  };
-
   const handleRetry = async () => {
     setIsRetrying(true);
     try {
@@ -74,9 +64,13 @@ export default function RecordingsDataTableMenu({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => state.openDialog("edit", recording)}>
+          Edit
+        </DropdownMenuItem>
         {recording.fidelityFeedback != null ? (
-          <DropdownMenuItem onClick={handleViewFeedback}>View Feedback</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => state.openDialog("viewFeedback", recording)}>
+            View Feedback
+          </DropdownMenuItem>
         ) : null}
         {canRetry && (
           <DropdownMenuItem onClick={toastOnError(handleRetry)} disabled={isRetrying}>

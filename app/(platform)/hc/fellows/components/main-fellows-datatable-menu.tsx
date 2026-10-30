@@ -1,6 +1,8 @@
 import { ImplementerRole } from "#/db/enums";
-import type { Dispatch, SetStateAction } from "react";
-import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import type {
+  MainFellowDialogKind,
+  MainFellowTableData,
+} from "#/app/(platform)/hc/fellows/components/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -13,19 +15,15 @@ import {
 
 export default function MainFellowsDatatableMenu({
   fellow,
-  setFellow,
+  openDialog,
   openEditDialog,
   openWeeklyEvaluationDialog,
-  setViewComplaintsDialog,
-  setDropOutDialog,
   role,
 }: {
   fellow: MainFellowTableData;
-  setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>;
+  openDialog: (kind: MainFellowDialogKind, fellow: MainFellowTableData) => void;
   openEditDialog: (fellow: MainFellowTableData) => void;
   openWeeklyEvaluationDialog: (fellow: MainFellowTableData) => void;
-  setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>;
-  setDropOutDialog: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
 }) {
   return (
@@ -50,13 +48,7 @@ export default function MainFellowsDatatableMenu({
             <DropdownMenuItem onSelect={() => openWeeklyEvaluationDialog(fellow)}>
               View weekly fellow evaluation
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setViewComplaintsDialog(true);
-              }}
-              disabled={true}
-            >
+            <DropdownMenuItem onSelect={() => openDialog("complaints", fellow)} disabled={true}>
               View complaints
             </DropdownMenuItem>
           </>
@@ -65,23 +57,13 @@ export default function MainFellowsDatatableMenu({
             <DropdownMenuItem onSelect={() => openEditDialog(fellow)}>
               Edit fellow information
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setFellow(fellow);
-                setViewComplaintsDialog(true);
-              }}
-            >
+            <DropdownMenuItem onSelect={() => openDialog("complaints", fellow)}>
               Submit complaint
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => openWeeklyEvaluationDialog(fellow)}>
               View weekly fellow evaluation
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                setFellow(fellow);
-                setDropOutDialog(true);
-              }}
-            >
+            <DropdownMenuItem onClick={() => openDialog("dropout", fellow)}>
               {fellow.droppedOut ? (
                 <div className="text-shamiri-red">Undo drop out</div>
               ) : (

@@ -6,18 +6,26 @@ import {
   loadFellowPersonalDetails,
 } from "#/app/(platform)/hc/fellows/actions";
 import { ImplementerRole } from "#/db/enums";
-import { useState } from "react";
+import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory, {
   type FellowAttendanceHistoryRow,
 } from "#/components/common/fellow/attendance-history";
-import { columns, type SchoolFellowTableData } from "#/components/common/fellow/columns";
+import {
+  columns,
+  type SchoolFellowDialogKind,
+  type SchoolFellowTableData,
+} from "#/components/common/fellow/columns";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
 import { toastOnError } from "#/components/ui/use-toast";
+
+type OpenSchoolFellowDialog =
+  | { kind: "details"; fellowId: string; personalDetails: FellowPersonalDetails }
+  | { kind: SchoolFellowDialogKind; fellowId: string };
 
 export default function FellowsDatatable({
   fellows,
@@ -35,48 +43,29 @@ export default function FellowsDatatable({
   hideActions?: boolean;
   attendances: FellowAttendanceHistoryRow[];
 }) {
-  const [selectedFellow, setSelectedFellow] = useState<SchoolFellowTableData | undefined>();
-  const [detailsDialog, setDetailsDialog] = useState(false);
-  const [replaceDialog, setReplaceDialog] = useState(false);
-  const [studentsDialog, setStudentsDialog] = useState(false);
-  const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
-  const [assignSupervisorDialog, setAssignSupervisorDialog] = useState(false);
-  const [fellowToShow, setFellowToShow] = useState<
-    (SchoolFellowTableData & FellowPersonalDetails) | null
-  >(null);
+  const [dialog, setDialog] = useState<OpenSchoolFellowDialog | null>(null);
+  const fellow = dialog && fellows.find((f) => f.id === dialog.fellowId);
+  const fellowPersonalDetails = dialog?.kind === "details" ? dialog.personalDetails : undefined;
 
-  const openDetailsDialog = toastOnError(async (fellowRow: SchoolFellowTableData) => {
-    const personalDetails = await loadFellowPersonalDetails(fellowRow.id);
-    setFellowToShow({ ...fellowRow, ...personalDetails });
-    setDetailsDialog(true);
-  });
+  const onDialogOpenChange = (open: SetStateAction<boolean>) => {
+    if (!open) setDialog(null);
+  };
 
-  const fellow = (() => {
-    if (selectedFellow) {
-      const updatedFellow = fellows.find((f) => {
-        return f.id === selectedFellow.id;
-      });
-      return updatedFellow;
-    }
-    return selectedFellow;
-  })();
-
-  const memoizedColumns = columns({
-    state: {
-      setFellow: setSelectedFellow,
-      openDetailsDialog,
-      setReplaceDialog,
-      setStudentsDialog,
-      setAttendanceHistoryDialog,
-      setAssignSupervisorDialog,
-    },
-    role,
+  const openDetailsDialog = toastOnError(async ({ id: fellowId }: SchoolFellowTableData) => {
+    const personalDetails = await loadFellowPersonalDetails(fellowId);
+    setDialog({ kind: "details", fellowId, personalDetails });
   });
 
   return (
     <>
       <DataTable
-        columns={memoizedColumns}
+        columns={columns({
+          state: {
+            openDialog: (kind, { id: fellowId }) => setDialog({ kind, fellowId }),
+            openDetailsDialog,
+          },
+          role,
+        })}
         data={fellows}
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No fellows associated with this school"
@@ -88,8 +77,8 @@ export default function FellowsDatatable({
       {fellow && (
         <>
           <AttendanceHistory
-            open={attendanceHistoryDialog}
-            onOpenChange={setAttendanceHistoryDialog}
+            open={dialog?.kind === "attendanceHistory"}
+            onOpenChange={onDialogOpenChange}
             attendances={attendances}
             fellow={fellow}
           >
@@ -101,8 +90,8 @@ export default function FellowsDatatable({
           </AttendanceHistory>
           <AssignFellowSupervisorDialog
             supervisors={supervisors}
-            open={assignSupervisorDialog}
-            onOpenChange={setAssignSupervisorDialog}
+            open={dialog?.kind === "assignSupervisor"}
+            onOpenChange={onDialogOpenChange}
             fellow={fellow}
           >
             <DialogAlertWidget label={fellow.fellowName} />
@@ -110,8 +99,8 @@ export default function FellowsDatatable({
           {fellow.groupId !== null ? (
             <>
               <ReplaceFellow
-                open={replaceDialog}
-                onOpenChange={setReplaceDialog}
+                open={dialog?.kind === "replace"}
+                onOpenChange={onDialogOpenChange}
                 fellowId={fellow.id}
                 groupId={fellow.groupId}
                 supervisors={supervisors}
@@ -129,8 +118,8 @@ export default function FellowsDatatable({
                 groupId={fellow.groupId}
                 groupName={fellow.groupName}
                 schoolId={schoolId}
-                open={studentsDialog}
-                onOpenChange={setStudentsDialog}
+                open={dialog?.kind === "students"}
+                onOpenChange={onDialogOpenChange}
                 role={role}
               >
                 <DialogAlertWidget separator={false}>
@@ -143,21 +132,21 @@ export default function FellowsDatatable({
               </StudentsInGroup>
             </>
           ) : null}
+          {fellowPersonalDetails && (
+            <FellowDetailsForm
+              open={dialog?.kind === "details"}
+              onOpenChange={onDialogOpenChange}
+              mode={
+                role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
+                  ? "view"
+                  : role === ImplementerRole.SUPERVISOR
+                    ? "edit"
+                    : null
+              }
+              fellow={{ ...fellow, ...fellowPersonalDetails }}
+            />
+          )}
         </>
-      )}
-      {fellowToShow && (
-        <FellowDetailsForm
-          open={detailsDialog}
-          onOpenChange={setDetailsDialog}
-          mode={
-            role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
-              ? "view"
-              : role === ImplementerRole.SUPERVISOR
-                ? "edit"
-                : null
-          }
-          fellow={fellowToShow}
-        />
       )}
     </>
   );

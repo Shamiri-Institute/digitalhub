@@ -5,10 +5,12 @@ import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import type { SupervisorFellow } from "../page";
-import { type RecordingTableData, recordingColumns } from "./columns";
+import { type RecordingDialogKind, type RecordingTableData, recordingColumns } from "./columns";
 import EditRecordingDialog from "./edit-recording-dialog";
 import UploadRecordingDialog from "./upload-recording-dialog";
 import ViewFeedbackDialog from "./view-feedback-dialog";
+
+type OpenRecordingDialog = { kind: "upload" } | { kind: RecordingDialogKind; recordingId: string };
 
 interface RecordingsDatatableProps {
   data: RecordingTableData[];
@@ -16,14 +18,17 @@ interface RecordingsDatatableProps {
 }
 
 export default function RecordingsDatatable({ data, fellows }: RecordingsDatatableProps) {
-  const [uploadDialog, setUploadDialog] = useState(false);
-  const [viewFeedbackDialog, setViewFeedbackDialog] = useState(false);
-  const [editDialog, setEditDialog] = useState(false);
-  const [selectedRecording, setSelectedRecording] = useState<RecordingTableData | null>(null);
+  const [dialog, setDialog] = useState<OpenRecordingDialog | null>(null);
+  const recording =
+    dialog && dialog.kind !== "upload" ? data.find((r) => r.id === dialog.recordingId) : undefined;
+
+  const onDialogOpenChange = (open: boolean) => {
+    if (!open) setDialog(null);
+  };
 
   const renderTableActions = () => {
     return (
-      <Button onClick={() => setUploadDialog(true)} className="gap-1">
+      <Button onClick={() => setDialog({ kind: "upload" })} className="gap-1">
         <Icons.plusCircle className="h-4 w-4" />
         <span>Upload recording</span>
       </Button>
@@ -35,9 +40,7 @@ export default function RecordingsDatatable({ data, fellows }: RecordingsDatatab
       <DataTable
         data={data}
         columns={recordingColumns({
-          setViewFeedbackDialog,
-          setSelectedRecording,
-          setEditDialog,
+          openDialog: (kind, { id: recordingId }) => setDialog({ kind, recordingId }),
         })}
         emptyStateMessage="No recordings found. Upload your first recording to get started."
         className="data-table data-table-action lg:mt-4"
@@ -46,22 +49,26 @@ export default function RecordingsDatatable({ data, fellows }: RecordingsDatatab
         rowSelectionDescription="recordings"
       />
 
-      <UploadRecordingDialog open={uploadDialog} onOpenChange={setUploadDialog} fellows={fellows} />
+      <UploadRecordingDialog
+        open={dialog?.kind === "upload"}
+        onOpenChange={onDialogOpenChange}
+        fellows={fellows}
+      />
 
-      {selectedRecording && (
-        <ViewFeedbackDialog
-          recording={selectedRecording}
-          open={viewFeedbackDialog}
-          onOpenChange={setViewFeedbackDialog}
-        />
-      )}
-      {selectedRecording && (
-        <EditRecordingDialog
-          recording={selectedRecording}
-          fellows={fellows}
-          open={editDialog}
-          onOpenChange={setEditDialog}
-        />
+      {recording && (
+        <>
+          <ViewFeedbackDialog
+            recording={recording}
+            open={dialog?.kind === "viewFeedback"}
+            onOpenChange={onDialogOpenChange}
+          />
+          <EditRecordingDialog
+            recording={recording}
+            fellows={fellows}
+            open={dialog?.kind === "edit"}
+            onOpenChange={onDialogOpenChange}
+          />
+        </>
       )}
     </div>
   );

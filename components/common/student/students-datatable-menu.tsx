@@ -1,6 +1,8 @@
 import { ImplementerRole } from "#/db/enums";
-import type { Dispatch, SetStateAction } from "react";
-import type { SchoolStudentTableData } from "#/components/common/student/columns";
+import type {
+  SchoolStudentTableData,
+  StudentDialogKind,
+} from "#/components/common/student/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -16,15 +18,7 @@ export default function StudentsDataTableMenu({
   student,
 }: {
   state: {
-    setEditDialog: Dispatch<SetStateAction<boolean>>;
-    setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-    setDropoutDialog: Dispatch<SetStateAction<boolean>>;
-    setArchiveDialog: Dispatch<SetStateAction<boolean>>;
-    setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
-    setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
-    setMoveSchoolDialog: Dispatch<SetStateAction<boolean>>;
-    setSelectedStudentId: Dispatch<SetStateAction<string | null>>;
+    openDialog: (kind: StudentDialogKind, student: SchoolStudentTableData) => void;
     role: ImplementerRole;
   };
   student: SchoolStudentTableData;
@@ -43,76 +37,36 @@ export default function StudentsDataTableMenu({
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            state.setSelectedStudentId(student.id);
-            state.setEditDialog(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDialog("edit", student)}>
           {state.role === ImplementerRole.ADMIN ? "View information" : "Edit information"}
         </DropdownMenuItem>
         {state.role !== ImplementerRole.ADMIN && (
-          <DropdownMenuItem
-            onClick={() => {
-              state.setSelectedStudentId(student.id);
-              state.setMarkAttendanceDialog(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => state.openDialog("markAttendance", student)}>
             Mark student attendance
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem
-          onClick={() => {
-            state.setSelectedStudentId(student.id);
-            state.setGroupTransferHistory(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDialog("groupTransferHistory", student)}>
           View group transfer history
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            state.setSelectedStudentId(student.id);
-            state.setAttendanceHistoryDialog(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDialog("attendanceHistory", student)}>
           View attendance history
         </DropdownMenuItem>
         {state.role !== ImplementerRole.ADMIN && (
           <>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSelectedStudentId(student.id);
-                state.setReportingNotesDialog(true);
-              }}
-            >
+            <DropdownMenuItem onClick={() => state.openDialog("reportingNotes", student)}>
               Reporting notes
             </DropdownMenuItem>
             {state.role === ImplementerRole.HUB_COORDINATOR && (
               <>
-                <DropdownMenuItem
-                  onClick={() => {
-                    state.setSelectedStudentId(student.id);
-                    state.setMoveSchoolDialog(true);
-                  }}
-                >
+                <DropdownMenuItem onClick={() => state.openDialog("moveSchool", student)}>
                   <div className="text-shamiri-red">Move to another school</div>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    state.setSelectedStudentId(student.id);
-                    state.setArchiveDialog(true);
-                  }}
-                >
+                <DropdownMenuItem onClick={() => state.openDialog("archive", student)}>
                   <div className="text-shamiri-red">Archive student</div>
                 </DropdownMenuItem>
               </>
             )}
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSelectedStudentId(student.id);
-                state.setDropoutDialog(true);
-              }}
-            >
+            <DropdownMenuItem onClick={() => state.openDialog("dropout", student)}>
               {student.droppedOut ? (
                 <div className="text-shamiri-red">Undo drop out</div>
               ) : (
