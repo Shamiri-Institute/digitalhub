@@ -1,11 +1,11 @@
 // What the print-run pages read, for a hub coordinator or a Research admin. Every query takes a
 // PrintRunViewer, which has no unscoped kind, so each one is filtered to what its viewer may see.
 
-import { and, eq, inArray, type SQL } from "drizzle-orm";
+import { and, eq, inArray, type SQL, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { SurveyStatus, SurveyVersionStatus } from "#/db/enums";
-import { student, survey, surveyPrintRun, surveyVersion } from "#/db/schema";
+import { SurveyPrintStatus, SurveyStatus, SurveyVersionStatus } from "#/db/enums";
+import { student, survey, surveyPrintFile, surveyPrintRun, surveyVersion } from "#/db/schema";
 import { countOf } from "#/db/sql";
 import type { PrintRunViewer } from "#/lib/auth/survey-access";
 import { activeSchool, activeStudent, studentPrintOrder } from "#/lib/survey/print-run";
@@ -114,8 +114,46 @@ export async function fetchPrintableStudents(printHubId: string, schoolId: strin
 
 export type PrintableStudents = NonNullable<Awaited<ReturnType<typeof fetchPrintableStudents>>>;
 
+/** How many of a run's files are at each status, counted in a query's `extras`. */
+function fileCountsOf(runId: typeof surveyPrintRun.id) {
+  const withStatus = (status: SurveyPrintStatus) =>
+    countOf(
+      surveyPrintFile.printRunId,
+      runId,
+      sql.raw(`"survey_print_files"."status" = '${status}'`),
+    );
+  return {
+    files: countOf(surveyPrintFile.printRunId, runId).as("files"),
+    queuedFiles: withStatus(SurveyPrintStatus.QUEUED).as("queued_files"),
+    readyFiles: withStatus(SurveyPrintStatus.READY).as("ready_files"),
+    failedFiles: withStatus(SurveyPrintStatus.FAILED).as("failed_files"),
+  };
+}
+
+/**
+ * A run's status, from its files': ready when all are, queued until one starts, failed when the
+ * rest are ready but some failed, and rendering in between.
+ */
+export function printRunStatusOf(counts: {
+  files: number;
+  queuedFiles: number;
+  readyFiles: number;
+  failedFiles: number;
+}): SurveyPrintStatus {
+  if (counts.readyFiles === counts.files) {
+    return SurveyPrintStatus.READY;
+  }
+  if (counts.queuedFiles === counts.files) {
+    return SurveyPrintStatus.QUEUED;
+  }
+  if (counts.failedFiles > 0 && counts.failedFiles + counts.readyFiles === counts.files) {
+    return SurveyPrintStatus.FAILED;
+  }
+  return SurveyPrintStatus.RENDERING;
+}
+
 export async function fetchPrintRuns(viewer: PrintRunViewer, surveyId?: string) {
-  return db.query.surveyPrintRun.findMany({
+  const runs = await db.query.surveyPrintRun.findMany({
     where: (r, { and, inArray }) =>
       and(
         runVisibleTo(r, viewer),
@@ -129,7 +167,8 @@ export async function fetchPrintRuns(viewer: PrintRunViewer, surveyId?: string) 
                 .where(eq(surveyVersion.surveyId, surveyId)),
             ),
       ),
-    columns: { id: true, createdAt: true, copyCount: true, status: true },
+    columns: { id: true, createdAt: true, copyCount: true },
+    extras: (r) => fileCountsOf(r.id),
     with: {
       version: {
         columns: { versionNumber: true },
@@ -139,6 +178,7 @@ export async function fetchPrintRuns(viewer: PrintRunViewer, surveyId?: string) 
     },
     orderBy: (r, { desc }) => [desc(r.createdAt), desc(r.id)],
   });
+  return runs.map((run) => ({ ...run, status: printRunStatusOf(run) }));
 }
 
 export type PrintRunRows = Awaited<ReturnType<typeof fetchPrintRuns>>;
@@ -151,7 +191,6 @@ export async function fetchPrintRun(viewer: PrintRunViewer, printRunId: string) 
       createdAt: true,
       copyCount: true,
       firstSerialNumber: true,
-      status: true,
     },
     with: {
       version: {
@@ -160,15 +199,39 @@ export async function fetchPrintRun(viewer: PrintRunViewer, printRunId: string) 
       },
       hub: { columns: { hubName: true } },
       requestedByUser: { columns: { name: true, email: true } },
+      files: {
+        columns: {
+          id: true,
+          schoolId: true,
+          partNumber: true,
+          firstSerialNumber: true,
+          copyCount: true,
+          status: true,
+          byteSize: true,
+        },
+        with: { school: { columns: { schoolName: true } } },
+        orderBy: (f, { asc }) => asc(f.firstSerialNumber),
+      },
     },
   });
   if (!run) {
     return;
   }
-  return { ...run, ...serialRangeOf(run.version.survey.code, run) };
+  const count = (status: SurveyPrintStatus) =>
+    run.files.filter((file) => file.status === status).length;
+  const status = printRunStatusOf({
+    files: run.files.length,
+    queuedFiles: count(SurveyPrintStatus.QUEUED),
+    readyFiles: count(SurveyPrintStatus.READY),
+    failedFiles: count(SurveyPrintStatus.FAILED),
+  });
+  const { code } = run.version.survey;
+  const files = run.files.map((file) => ({ ...file, ...serialRangeOf(code, file) }));
+  return { ...run, ...serialRangeOf(code, run), status, files };
 }
 
 export type PrintRunDetail = NonNullable<Awaited<ReturnType<typeof fetchPrintRun>>>;
+export type PrintRunFile = PrintRunDetail["files"][number];
 
 /**
  * One page of a run's copies, in serial order, with their page codes. A page past the last shows

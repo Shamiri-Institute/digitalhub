@@ -1,6 +1,7 @@
-// Issuing and voiding printed copies, shared by the print-run actions, the seed and tests so they
-// can't drift apart. Every rule a request must meet is checked here; the triggers in
-// drizzle/0042_survey_print_run_guards.sql back up the ones about hubs, schools, students and pages.
+// Recording print runs, issuing their copies and voiding them, shared by the print-run actions, the
+// print job, the seed and tests so they can't drift apart. Every rule a request must meet is checked
+// here; the triggers in drizzle/0042_survey_print_run_guards.sql and
+// drizzle/0044_survey_print_file_guards.sql back up the ones about hubs, schools, students and pages.
 
 import { createHash } from "node:crypto";
 
@@ -20,6 +21,7 @@ import {
   school,
   student,
   survey,
+  surveyPrintFile,
   surveyPrintRun,
   surveyQuestionnaire,
   surveyQuestionnairePage,
@@ -30,16 +32,20 @@ import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { objectId } from "#/lib/crypto";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
 import { type PrintRunRequest, printRunRequestKey } from "#/lib/survey/print-run-request";
-import { formatSerial, MAX_COPIES_PER_RUN, pageCode, serialRangeOf } from "#/lib/survey/serial";
+import {
+  formatSerial,
+  MAX_COPIES_PER_FILE,
+  MAX_COPIES_PER_RUN,
+  MAX_PAGES_PER_FILE,
+  pageCode,
+  serialRangeOf,
+} from "#/lib/survey/serial";
 
 const MAX_BIND_PARAMS = 65_535;
-// Copies are written a block at a time, with their pages, so a run's million page rows are never
-// in memory at once.
-const COPIES_PER_BLOCK = 4_000;
 
 type PrintRunInput = { printRunId: string; versionId: string; request: PrintRunRequest };
 
-export type IssuedPrintRun = {
+export type RecordedPrintRun = {
   printRunId: string;
   copyCount: number;
   firstSerial: string;
@@ -57,7 +63,7 @@ export function activeStudent() {
 
 /**
  * The schools a run prints for: not archived, and not dropped out of the programme. Takes the
- * table a relational `where` callback is given, so the print form and issuePrintRun share it.
+ * table a relational `where` callback is given, so the print form and recordPrintRun share it.
  */
 export function activeSchool(schools: Pick<typeof school, "archivedAt" | "droppedOut"> = school) {
   return sql`${schools.archivedAt} is null and ${schools.droppedOut} is not true`;
@@ -78,18 +84,20 @@ export class PrintRunError extends Error {}
 type PlannedCopy = { schoolId: string; studentId: string | null };
 
 /**
- * Issues a print run in `tx`: the run (QUEUED), its copies with fresh serials, their pages, and one
- * audit event. The version must be a published version of an active survey in the scope, the
- * request kind must match its prefill, the schools must be active schools of the scope's hub, and
- * the total 1 to MAX_COPIES_PER_RUN. A refused request throws PrintRunError or NotFoundError
- * before anything is written. A second call with the same `printRunId` fails on
- * `survey_print_runs_pkey`, and its rollback returns the serials it reserved.
+ * Records a print run in `tx`: the run, its serials reserved, its file plan and one audit event.
+ * The version must be a published version of an active survey in the scope, the request kind must
+ * match its prefill, the schools must be active schools of the scope's hub, and the total 1 to
+ * MAX_COPIES_PER_RUN. A refused request throws PrintRunError or NotFoundError before anything is
+ * written. It inserts no copies: the print job issues them a file at a time (`issuePrintFile`), so
+ * the survey row it locks to reserve serials is held only for this short transaction. A second call
+ * with the same `printRunId` fails on `survey_print_runs_pkey`, and its rollback returns the
+ * serials it reserved.
  */
-export async function issuePrintRun(
+export async function recordPrintRun(
   tx: Transaction,
   scope: HubSurveyScope,
   input: PrintRunInput,
-): Promise<IssuedPrintRun> {
+): Promise<RecordedPrintRun> {
   // Share-locked so the version can't be retired before this run commits.
   const [version] = await tx
     .select({
@@ -192,10 +200,9 @@ export async function issuePrintRun(
     .where(eq(survey.id, version.surveyId))
     .returning({ nextSerial: survey.nextSerial });
   if (!reserved) {
-    throw new Error(`Survey ${version.surveyId} disappeared while issuing a print run`);
+    throw new Error(`Survey ${version.surveyId} disappeared while recording a print run`);
   }
   const firstNumber = reserved.nextSerial - copies.length;
-  const serialAt = (index: number) => formatSerial(version.surveyCode, firstNumber + index);
   await tx.insert(surveyPrintRun).values({
     id: input.printRunId,
     versionId: version.id,
@@ -205,37 +212,13 @@ export async function issuePrintRun(
     firstSerialNumber: firstNumber,
     requestDigest: printRunRequestDigest(input.request),
   });
+  // One statement: the plan trigger checks that a run's files number its copies exactly once.
+  const files = planPrintFiles(copies, firstNumber, pageCount);
+  await tx
+    .insert(surveyPrintFile)
+    .values(files.map((file) => ({ ...file, printRunId: input.printRunId })));
 
-  /* oxlint-disable eslint/no-await-in-loop -- one transaction runs one statement at a time */
-  for (let start = 0; start < copies.length; start += COPIES_PER_BLOCK) {
-    const block = copies.slice(start, start + COPIES_PER_BLOCK).map((copy, offset) => ({
-      id: objectId("surveyquestionnaire"),
-      surveyId: version.surveyId,
-      versionId: version.id,
-      printRunId: input.printRunId,
-      serial: serialAt(start + offset),
-      serialNumber: firstNumber + start + offset,
-      hubId: scope.hubId,
-      schoolId: copy.schoolId,
-      studentId: copy.studentId,
-    }));
-    await insertInChunks(tx, surveyQuestionnaire, block);
-    await insertInChunks(
-      tx,
-      surveyQuestionnairePage,
-      block.flatMap((questionnaire) =>
-        Array.from({ length: pageCount }, (_, index) => ({
-          id: objectId("surveyquestionnairepage"),
-          questionnaireId: questionnaire.id,
-          pageNumber: index + 1,
-          code: pageCode(questionnaire.serial, index + 1),
-        })),
-      ),
-    );
-  }
-  /* oxlint-enable eslint/no-await-in-loop */
-
-  const issued = {
+  const recorded = {
     printRunId: input.printRunId,
     copyCount: copies.length,
     ...serialRangeOf(version.surveyCode, {
@@ -256,13 +239,146 @@ export async function issuePrintRun(
     after: {
       versionNumber: version.versionNumber,
       hubId: scope.hubId,
-      copyCount: issued.copyCount,
-      firstSerial: issued.firstSerial,
-      lastSerial: issued.lastSerial,
+      copyCount: recorded.copyCount,
+      firstSerial: recorded.firstSerial,
+      lastSerial: recorded.lastSerial,
+      fileCount: files.length,
       schools: [...copiesPerSchool].map(([schoolId, copyCount]) => ({ schoolId, copyCount })),
     },
   });
-  return issued;
+  return recorded;
+}
+
+export type PrintFilePlan = {
+  schoolId: string;
+  partNumber: number;
+  firstSerialNumber: number;
+  copyCount: number;
+  studentIds: string[] | null;
+};
+
+/**
+ * The files a run prints as: each school's copies, in order, split into as few near-equal parts as
+ * MAX_COPIES_PER_FILE and MAX_PAGES_PER_FILE allow, numbered on from `firstSerialNumber`. A
+ * school's copies are next to each other in `copies`, as `planCopies` makes them.
+ */
+export function planPrintFiles(
+  copies: readonly PlannedCopy[],
+  firstSerialNumber: number,
+  pageCount: number,
+): PrintFilePlan[] {
+  const perFile = Math.max(
+    1,
+    Math.min(MAX_COPIES_PER_FILE, Math.floor(MAX_PAGES_PER_FILE / pageCount)),
+  );
+  const schools: { schoolId: string; copies: PlannedCopy[] }[] = [];
+  for (const copy of copies) {
+    const current = schools.at(-1);
+    if (current?.schoolId === copy.schoolId) {
+      current.copies.push(copy);
+    } else {
+      schools.push({ schoolId: copy.schoolId, copies: [copy] });
+    }
+  }
+  const files: PrintFilePlan[] = [];
+  let nextSerialNumber = firstSerialNumber;
+  for (const { schoolId, copies: atSchool } of schools) {
+    const parts = Math.ceil(atSchool.length / perFile);
+    let start = 0;
+    for (let part = 0; part < parts; part++) {
+      const size = Math.floor(atSchool.length / parts) + (part < atSchool.length % parts ? 1 : 0);
+      const studentIds = atSchool
+        .slice(start, start + size)
+        .flatMap(({ studentId }) => (studentId === null ? [] : [studentId]));
+      files.push({
+        schoolId,
+        partNumber: part + 1,
+        firstSerialNumber: nextSerialNumber,
+        copyCount: size,
+        studentIds: studentIds.length > 0 ? studentIds : null,
+      });
+      start += size;
+      nextSerialNumber += size;
+    }
+  }
+  return files;
+}
+
+/**
+ * Inserts one print file's copies and their pages, as its plan lists them, once: a file whose
+ * copies are already issued is left as it is. Locks only the file's row, so it never waits on the
+ * survey or on other files.
+ */
+export async function issuePrintFile(
+  tx: Transaction,
+  fileId: string,
+): Promise<"issued" | "already-issued"> {
+  const [file] = await tx
+    .select({
+      id: surveyPrintFile.id,
+      printRunId: surveyPrintFile.printRunId,
+      schoolId: surveyPrintFile.schoolId,
+      firstSerialNumber: surveyPrintFile.firstSerialNumber,
+      copyCount: surveyPrintFile.copyCount,
+      studentIds: surveyPrintFile.studentIds,
+      issuedAt: surveyPrintFile.issuedAt,
+      versionId: surveyPrintRun.versionId,
+      hubId: surveyPrintRun.hubId,
+      surveyId: surveyVersion.surveyId,
+      surveyCode: survey.code,
+      pageCount: sql<number>`jsonb_array_length(${surveyVersion.layout} -> 'pages')`.mapWith(
+        Number,
+      ),
+    })
+    .from(surveyPrintFile)
+    .innerJoin(surveyPrintRun, eq(surveyPrintRun.id, surveyPrintFile.printRunId))
+    .innerJoin(surveyVersion, eq(surveyVersion.id, surveyPrintRun.versionId))
+    .innerJoin(survey, eq(survey.id, surveyVersion.surveyId))
+    .where(eq(surveyPrintFile.id, fileId))
+    .for("update", { of: surveyPrintFile });
+  if (!file) {
+    throw new NotFoundError("Print file");
+  }
+  if (file.issuedAt) {
+    return "already-issued";
+  }
+
+  const copies = Array.from({ length: file.copyCount }, (_, index) => {
+    const serialNumber = file.firstSerialNumber + index;
+    return {
+      id: objectId("surveyquestionnaire"),
+      surveyId: file.surveyId,
+      versionId: file.versionId,
+      printRunId: file.printRunId,
+      serial: formatSerial(file.surveyCode, serialNumber),
+      serialNumber,
+      hubId: file.hubId,
+      schoolId: file.schoolId,
+      studentId: file.studentIds?.[index] ?? null,
+    };
+  });
+  await insertInChunks(tx, surveyQuestionnaire, copies);
+  await insertInChunks(
+    tx,
+    surveyQuestionnairePage,
+    copies.flatMap((questionnaire) =>
+      Array.from({ length: file.pageCount }, (_, index) => ({
+        id: objectId("surveyquestionnairepage"),
+        questionnaireId: questionnaire.id,
+        pageNumber: index + 1,
+        code: pageCode(questionnaire.serial, index + 1),
+      })),
+    ),
+  );
+  const [issued] = await tx
+    .update(surveyPrintFile)
+    .set({ issuedAt: new Date() })
+    .where(eq(surveyPrintFile.id, file.id))
+    .returning({ id: surveyPrintFile.id });
+  if (!issued) {
+    throw new Error(`Print file ${file.id} disappeared while locked`);
+  }
+  return "issued";
 }
 
 /**

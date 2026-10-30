@@ -1,7 +1,8 @@
 // @vitest-environment node
 // The print form is tested through the UI in tests/e2e/hub-coordinator/print-runs.spec.ts; these
-// cover what a screen can't reach (concurrent runs, a resubmitted run, a run past the limit) and
-// the writes the 0042 triggers must refuse, which no screen can attempt.
+// cover what a screen can't reach (concurrent runs, a resubmitted run, a run past the limit, a
+// file issued twice, the survey lock while copies are issued) and the writes the 0042 and 0044
+// triggers must refuse, which no screen can attempt.
 import { and, asc, eq, inArray, isNull, sql, TransactionRollbackError } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -14,6 +15,7 @@ import {
   student,
   survey,
   surveyAuditEvent,
+  surveyPrintFile,
   surveyPrintRun,
   surveyQuestionnaire,
   surveyQuestionnairePage,
@@ -25,10 +27,17 @@ import {
   fetchPrintableHubs,
   fetchPrintRun,
   fetchPrintRunCopies,
+  printRunStatusOf,
 } from "#/lib/survey/print-run-queries";
 import { submitPrintRun } from "#/lib/survey/submit-print-run";
 import { objectId } from "#/lib/crypto";
-import { issuePrintRun, PrintRunError, voidCopy } from "#/lib/survey/print-run";
+import {
+  issuePrintFile,
+  planPrintFiles,
+  PrintRunError,
+  recordPrintRun,
+  voidCopy,
+} from "#/lib/survey/print-run";
 import type { PrintRunRequest } from "#/lib/survey/print-run-request";
 import { formatSerial, MAX_COPIES_PER_RUN, pageCode } from "#/lib/survey/serial";
 import { createPublishedSurvey, formWithPages } from "#/tests/survey-fixtures";
@@ -119,12 +128,40 @@ function publish(options: { pages?: number; prefill?: "NONE" | "STUDENT" } = {})
   });
 }
 
-function issue(
+function record(
   versionId: string,
   request: PrintRunRequest,
   printRunId = objectId("surveyprintrun"),
 ) {
-  return db.transaction((tx) => issuePrintRun(tx, scope, { printRunId, versionId, request }));
+  return db.transaction((tx) => recordPrintRun(tx, scope, { printRunId, versionId, request }));
+}
+
+/** Records a run and issues its files' copies, as the print job does before it renders them. */
+async function issue(
+  versionId: string,
+  request: PrintRunRequest,
+  printRunId = objectId("surveyprintrun"),
+) {
+  const recorded = await record(versionId, request, printRunId);
+  for (const file of await filesOf(recorded.printRunId)) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- as the job does, a file at a time
+    await db.transaction((tx) => issuePrintFile(tx, file.id));
+  }
+  return recorded;
+}
+
+function filesOf(printRunId: string, tx: Transaction | typeof db = db) {
+  return tx
+    .select({
+      id: surveyPrintFile.id,
+      schoolId: surveyPrintFile.schoolId,
+      partNumber: surveyPrintFile.partNumber,
+      firstSerialNumber: surveyPrintFile.firstSerialNumber,
+      copyCount: surveyPrintFile.copyCount,
+    })
+    .from(surveyPrintFile)
+    .where(eq(surveyPrintFile.printRunId, printRunId))
+    .orderBy(asc(surveyPrintFile.firstSerialNumber));
 }
 
 function counts(copies: number, schoolId = testSchoolId): PrintRunRequest {
@@ -238,10 +275,19 @@ describe("serials and page codes", () => {
     expect(await nextSerialOf(published.id)).toBe(71);
   });
 
-  it("splits a run too large for one statement into several", async () => {
+  it("splits a school's copies into near-equal files of at most 1,000", async () => {
     const published = await publish({ pages: 6 });
     const issued = await issue(published.versionId, counts(4500));
 
+    expect(await filesOf(issued.printRunId)).toEqual(
+      [1, 2, 3, 4, 5].map((part) => ({
+        id: expect.any(String),
+        schoolId: testSchoolId,
+        partNumber: part,
+        firstSerialNumber: 1 + (part - 1) * 900,
+        copyCount: 900,
+      })),
+    );
     const [pageCount] = await db
       .select({ value: sql<number>`count(*)::int` })
       .from(surveyQuestionnairePage)
@@ -276,6 +322,106 @@ describe("serials and page codes", () => {
   });
 });
 
+describe("print files", () => {
+  it("plans each school's copies in parts of at most 1,000 copies and 20,000 pages", () => {
+    const copiesAt = (schoolId: string, count: number) =>
+      Array.from({ length: count }, (_, i) => ({ schoolId, studentId: `${schoolId}-${i}` }));
+    const plan = planPrintFiles([...copiesAt("a", 2), ...copiesAt("b", 1001)], 10, 2);
+    expect(plan).toEqual([
+      {
+        schoolId: "a",
+        partNumber: 1,
+        firstSerialNumber: 10,
+        copyCount: 2,
+        studentIds: ["a-0", "a-1"],
+      },
+      {
+        schoolId: "b",
+        partNumber: 1,
+        firstSerialNumber: 12,
+        copyCount: 501,
+        studentIds: copiesAt("b", 501).map((c) => c.studentId),
+      },
+      {
+        schoolId: "b",
+        partNumber: 2,
+        firstSerialNumber: 513,
+        copyCount: 500,
+        studentIds: copiesAt("b", 1001)
+          .slice(501)
+          .map((c) => c.studentId),
+      },
+    ]);
+    // A 50-page version prints 400 copies a file: 20,000 pages.
+    expect(
+      planPrintFiles([{ schoolId: "c", studentId: null }], 1, 50).map((f) => f.copyCount),
+    ).toEqual([1]);
+    expect(
+      planPrintFiles(
+        Array.from({ length: 401 }, () => ({ schoolId: "c", studentId: null })),
+        1,
+        50,
+      ).map((f) => [f.copyCount, f.studentIds]),
+    ).toEqual([
+      [201, null],
+      [200, null],
+    ]);
+  });
+
+  it("records a run without its copies, and a file issues them once", async () => {
+    const published = await publish({ pages: 2 });
+    const recorded = await record(published.versionId, counts(3));
+    expect(await copiesOf(recorded.printRunId)).toEqual([]);
+    const [file] = await filesOf(recorded.printRunId);
+    if (!file) throw new Error("No file");
+
+    expect(await db.transaction((tx) => issuePrintFile(tx, file.id))).toBe("issued");
+    expect(await db.transaction((tx) => issuePrintFile(tx, file.id))).toBe("already-issued");
+    expect((await copiesOf(recorded.printRunId)).map((c) => c.serial)).toEqual(
+      [1, 2, 3].map((n) => formatSerial(published.code, n)),
+    );
+  });
+
+  it("issues a file's copies without locking the survey, so a new draft isn't kept waiting", async () => {
+    const published = await publish({ pages: 2 });
+    const recorded = await record(published.versionId, counts(1000));
+    const [file] = await filesOf(recorded.printRunId);
+    if (!file) throw new Error("No file");
+
+    const { promise: issuedUncommitted, resolve: markIssued } = Promise.withResolvers<void>();
+    const { promise: finished, resolve: finishIssuing } = Promise.withResolvers<void>();
+    const issuing = db.transaction(async (tx) => {
+      await issuePrintFile(tx, file.id);
+      markIssued();
+      await finished;
+    });
+    await issuedUncommitted;
+    expect(await copiesOf(recorded.printRunId)).toEqual([]);
+    // What "New draft" takes, from another connection while the copies are uncommitted.
+    const lockedSurvey = await db.transaction((tx) =>
+      tx
+        .select({ id: survey.id })
+        .from(survey)
+        .where(eq(survey.id, published.id))
+        .for("update", { noWait: true }),
+    );
+    finishIssuing();
+    await issuing;
+    expect(lockedSurvey).toEqual([{ id: published.id }]);
+    expect(await copiesOf(recorded.printRunId)).toHaveLength(1000);
+  });
+
+  it("reads a run's status from its files", () => {
+    const status = (queuedFiles: number, readyFiles: number, failedFiles: number) =>
+      printRunStatusOf({ files: 3, queuedFiles, readyFiles, failedFiles });
+    expect(status(3, 0, 0)).toBe("QUEUED");
+    expect(status(2, 0, 0)).toBe("RENDERING");
+    expect(status(1, 1, 1)).toBe("RENDERING");
+    expect(status(0, 2, 1)).toBe("FAILED");
+    expect(status(0, 3, 0)).toBe("READY");
+  });
+});
+
 describe("resubmitted forms", () => {
   it("answers the same request with its run and refuses a changed one", async () => {
     const published = await publish();
@@ -292,7 +438,8 @@ describe("resubmitted forms", () => {
     await expect(submitPrintRun(viewer, { ...submission, request: counts(20) })).rejects.toThrow(
       "This form already created a different print run",
     );
-    expect(await copiesOf(first.printRunId)).toHaveLength(10);
+    // Recorded once: one file of ten copies, which the print job issues.
+    expect((await filesOf(first.printRunId)).map((f) => f.copyCount)).toEqual([10]);
     expect(await nextSerialOf(published.id)).toBe(11);
   });
 });
@@ -465,11 +612,14 @@ describe("hub scope", () => {
 describe("print-run triggers", () => {
   /** A one-copy run of a published two-page version, issued inside `tx`. */
   async function oneCopy(tx: Transaction, versionId: string) {
-    const issued = await issuePrintRun(tx, scope, {
+    const issued = await recordPrintRun(tx, scope, {
       printRunId: objectId("surveyprintrun"),
       versionId,
       request: counts(1),
     });
+    const [file] = await filesOf(issued.printRunId, tx);
+    if (!file) throw new Error("No file");
+    await issuePrintFile(tx, file.id);
     const [copy] = await tx
       .select()
       .from(surveyQuestionnaire)
@@ -497,7 +647,7 @@ describe("print-run triggers", () => {
     );
   });
 
-  it("rejects a copy whose school is in another hub, whose serial is outside its run, or with a student on a blank version", async () => {
+  it("rejects a copy its file did not plan: another school, a serial outside it, or a student on a blank version", async () => {
     const published = await publish();
     // Reissues the run's one copy with `values` changed.
     const copyError = (values: Partial<typeof surveyQuestionnaire.$inferInsert>) =>
@@ -522,6 +672,114 @@ describe("print-run triggers", () => {
     expect((await copyError({ schoolId: testSchoolId, studentId: students.amy }))?.constraint).toBe(
       "survey_questionnaires_issue_check",
     );
+  });
+
+  it("rejects files that don't number their run's copies once each, or aren't its hub's", async () => {
+    const blank = await publish();
+    const perStudent = await publish({ prefill: "STUDENT" });
+    const otherSchoolStudent = await db.query.student.findFirst({
+      where: (s, { and, isNotNull, ne }) =>
+        and(isNotNull(s.schoolId), ne(s.schoolId, testSchoolId)),
+      columns: { id: true },
+    });
+    if (!otherSchoolStudent) throw new Error("Seed the database first");
+    type Part = Omit<typeof surveyPrintFile.$inferInsert, "printRunId">;
+    const part = (firstSerialNumber: number, copyCount: number, plan: Partial<Part> = {}) => ({
+      schoolId: testSchoolId,
+      partNumber: firstSerialNumber,
+      firstSerialNumber,
+      copyCount,
+      ...plan,
+    });
+    // A run of copies 1 to 4, planned as `parts`.
+    const planError = (versionId: string, parts: Part[]) =>
+      errorOf(async (tx) => {
+        const [run] = await tx
+          .insert(surveyPrintRun)
+          .values({
+            versionId,
+            hubId: scope.hubId,
+            requestedBy: scope.userId,
+            copyCount: 4,
+            firstSerialNumber: 1,
+            requestDigest: "test",
+          })
+          .returning({ id: surveyPrintRun.id });
+        if (!run) throw new Error("No run");
+        await tx.insert(surveyPrintFile).values(parts.map((p) => ({ ...p, printRunId: run.id })));
+      });
+    const refused = async (versionId: string, parts: Part[]) =>
+      (await planError(versionId, parts))?.constraint;
+
+    expect(await planError(blank.versionId, [part(1, 2), part(3, 2)])).toBeNull();
+    expect(await refused(blank.versionId, [part(1, 2), part(4, 1)])).toBe(
+      "survey_print_files_plan_check",
+    );
+    expect(await refused(blank.versionId, [part(1, 2), part(2, 2)])).toBe(
+      "survey_print_files_plan_check",
+    );
+    expect(await refused(blank.versionId, [part(1, 4, { schoolId: otherHubSchoolId })])).toBe(
+      "survey_print_files_plan_check",
+    );
+    const fourStudents = [students.amy, students.ben, students.cat, students.dan];
+    expect(await refused(blank.versionId, [part(1, 4, { studentIds: fourStudents })])).toBe(
+      "survey_print_files_plan_check",
+    );
+    expect(
+      await planError(perStudent.versionId, [part(1, 4, { studentIds: fourStudents })]),
+    ).toBeNull();
+    expect(
+      await refused(perStudent.versionId, [
+        part(1, 4, { studentIds: [students.amy, students.ben, students.cat, students.amy] }),
+      ]),
+    ).toBe("survey_print_files_plan_check");
+    expect(
+      await refused(perStudent.versionId, [
+        part(1, 4, {
+          studentIds: [students.amy, students.ben, students.cat, otherSchoolStudent.id],
+        }),
+      ]),
+    ).toBe("survey_print_files_plan_check");
+  });
+
+  it("freezes a file's plan, issues it once, and keeps a ready file ready", async () => {
+    const published = await publish();
+    const recorded = await record(published.versionId, counts(2));
+    const [file] = await filesOf(recorded.printRunId);
+    if (!file) throw new Error("No file");
+    const update = (tx: Transaction, values: Partial<typeof surveyPrintFile.$inferInsert>) =>
+      tx.update(surveyPrintFile).set(values).where(eq(surveyPrintFile.id, file.id));
+    const rendering = {
+      status: "RENDERING",
+      leaseToken: "lease",
+      leasedUntil: new Date(),
+    } as const;
+    const ready = {
+      status: "READY",
+      leaseToken: null,
+      leasedUntil: null,
+      issuedAt: new Date(),
+      byteSize: 1,
+      renderedAt: new Date(),
+    } as const;
+    const message = async (write: (tx: Transaction) => Promise<unknown>) =>
+      (await errorOf(write))?.message;
+
+    expect(await message((tx) => update(tx, { copyCount: 1 }))).toMatch(/its plan does not change/);
+    expect(await message((tx) => update(tx, { ...ready }))).toMatch(/QUEUED cannot become READY/);
+    expect(
+      await message(async (tx) => {
+        await update(tx, { issuedAt: new Date() });
+        await update(tx, { issuedAt: new Date(Date.now() + 1000) });
+      }),
+    ).toMatch(/its copies are issued once/);
+    expect(
+      await message(async (tx) => {
+        await update(tx, rendering);
+        await update(tx, ready);
+        await update(tx, { status: "QUEUED", byteSize: null, renderedAt: null });
+      }),
+    ).toMatch(/READY cannot become QUEUED/);
   });
 
   it("rejects a run for another implementer's hub or of a version that isn't published", async () => {
@@ -602,7 +860,7 @@ describe("print-run triggers", () => {
       expect.stringMatching(/only its status can change/),
       expect.stringMatching(/is void, and stays void/),
       expect.stringMatching(/does not change/),
-      expect.stringMatching(/only its status can change/),
+      expect.stringMatching(/does not change/),
     ]);
 
     expect(

@@ -44,7 +44,7 @@ import {
   superAdminEmail,
 } from "#/db/seed/fixtures";
 import type { SurveyForm } from "#/lib/survey/form";
-import { issuePrintRun } from "#/lib/survey/print-run";
+import { issuePrintFile, recordPrintRun } from "#/lib/survey/print-run";
 import { checkPublish } from "#/lib/survey/publish";
 import { storePublished } from "#/lib/survey/store-published";
 import { seedHubSessionTypes } from "#/db/seed/hub-session-types";
@@ -2277,7 +2277,10 @@ async function main() {
   await createResearchPrintRun(arsenal);
 }
 
-/** The baseline survey printed for Emirates Academy, one copy per student, as a hub coordinator does. */
+/**
+ * The baseline survey printed for Emirates Academy, one copy per student, as a hub coordinator
+ * does, with its copies issued. Its file renders once the print job runs, when its page is viewed.
+ */
 async function createResearchPrintRun(arsenal: Hub) {
   console.log("creating research print run");
   const [baseline, emirates, coordinatorUser] = await Promise.all([
@@ -2298,8 +2301,9 @@ async function createResearchPrintRun(arsenal: Hub) {
   if (!version || !emirates || !coordinatorUser) {
     throw new Error("No baseline survey, Emirates Academy or Arsenal coordinator to print with");
   }
+  const printRunId = objectId("surveyprintrun");
   await db.transaction((tx) =>
-    issuePrintRun(
+    recordPrintRun(
       tx,
       {
         userId: coordinatorUser.id,
@@ -2308,12 +2312,20 @@ async function createResearchPrintRun(arsenal: Hub) {
         hubId: arsenal.id,
       },
       {
-        printRunId: objectId("surveyprintrun"),
+        printRunId,
         versionId: version.id,
         request: { kind: "STUDENTS", schools: [{ schoolId: emirates.id, excludedStudentIds: [] }] },
       },
     ),
   );
+  const files = await db.query.surveyPrintFile.findMany({
+    where: (f, { eq }) => eq(f.printRunId, printRunId),
+    columns: { id: true },
+  });
+  for (const file of files) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- one file's copies at a time, as the job does
+    await db.transaction((tx) => issuePrintFile(tx, file.id));
+  }
 }
 
 main()

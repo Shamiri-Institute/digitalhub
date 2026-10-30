@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { objectId } from "#/lib/crypto";
 import type { SurveyForm } from "#/lib/survey/form";
 import type { Layout } from "#/lib/survey/layout";
+import { MAX_COPIES_PER_FILE } from "#/lib/survey/serial";
 import {
   bigserial,
   boolean,
@@ -40,7 +41,7 @@ import {
   SupervisorHandoffStatus,
   SupportType,
   SurveyAuditActor,
-  SurveyPrintRunStatus,
+  SurveyPrintStatus,
   SurveyQuestionnaireStatus,
   SurveyStatus,
   SurveyVersionPrefill,
@@ -112,10 +113,7 @@ export const surveyVersionPrefillEnum = pgEnum(
   enumValues(SurveyVersionPrefill),
 );
 export const surveyAuditActorEnum = pgEnum("survey_audit_actor", enumValues(SurveyAuditActor));
-export const surveyPrintRunStatusEnum = pgEnum(
-  "survey_print_run_status",
-  enumValues(SurveyPrintRunStatus),
-);
+export const surveyPrintStatusEnum = pgEnum("survey_print_status", enumValues(SurveyPrintStatus));
 export const surveyQuestionnaireStatusEnum = pgEnum(
   "survey_questionnaire_status",
   enumValues(SurveyQuestionnaireStatus),
@@ -2729,8 +2727,9 @@ export const surveyVersion = pgTable(
   ],
 );
 
-// A request to print copies of a published version for one hub. Its copies, serials and pages are
-// issued with it in one transaction; the files come later. Only its status changes (guard trigger).
+// A request to print copies of a published version for one hub. It reserves its serials and plans
+// its files when it is made, and never changes afterwards (guard trigger); its files issue the
+// copies and render them.
 export const surveyPrintRun = pgTable(
   "survey_print_runs",
   {
@@ -2756,7 +2755,6 @@ export const surveyPrintRun = pgTable(
     // What the form asked for, from printRunRequestDigest, so a resubmitted id that asks for
     // something else is refused instead of answered with this run.
     requestDigest: text("request_digest").notNull(),
-    status: surveyPrintRunStatusEnum().default(SurveyPrintRunStatus.QUEUED).notNull(),
   },
   (table) => [
     // The target of the questionnaires' (print_run_id, version_id, hub_id) key.
@@ -2790,6 +2788,100 @@ export const surveyPrintRun = pgTable(
       columns: [table.requestedBy],
       foreignColumns: [user.id],
       name: "survey_print_runs_requested_by_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+  ],
+);
+
+// One PDF of a run: a school's copies, or a part of them, at most MAX_COPIES_PER_FILE. Its plan
+// (school, serials, students) is fixed when the run is made and checked against the run then
+// (plan trigger); the job that issues its copies and renders it moves the rest (lib/survey/print-files.ts).
+export const surveyPrintFile = pgTable(
+  "survey_print_files",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyprintfile")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    printRunId: text("print_run_id").notNull(),
+    schoolId: varchar("school_id", { length: 255 }).notNull(),
+    // 1, 2, ... among the run's files for the school.
+    partNumber: integer("part_number").notNull(),
+    // Its copies are numbered firstSerialNumber to firstSerialNumber + copyCount - 1.
+    firstSerialNumber: integer("first_serial_number").notNull(),
+    copyCount: integer("copy_count").notNull(),
+    // Set exactly when the version prints student details: copy i is for studentIds[i], kept from
+    // when the run was made, so a student who moves school afterwards still gets their copy.
+    studentIds: varchar("student_ids", { length: 255 }).array(),
+    status: surveyPrintStatusEnum().default(SurveyPrintStatus.QUEUED).notNull(),
+    attempts: integer().default(0).notNull(),
+    // Held by the worker rendering the file, until leasedUntil; a later worker may take it over.
+    leaseToken: text("lease_token"),
+    leasedUntil: timestamp("leased_until", { withTimezone: true, mode: "date" }),
+    // When its copies and pages were inserted; they are inserted once.
+    issuedAt: timestamp("issued_at", { withTimezone: true, mode: "date" }),
+    byteSize: integer("byte_size"),
+    renderedAt: timestamp("rendered_at", { withTimezone: true, mode: "date" }),
+    // Why the last attempt failed, as shown on the run page.
+    error: text(),
+  },
+  (table) => [
+    uniqueIndex("survey_print_files_print_run_id_first_serial_number_key").on(
+      table.printRunId,
+      table.firstSerialNumber,
+    ),
+    uniqueIndex("survey_print_files_print_run_id_school_id_part_number_key").on(
+      table.printRunId,
+      table.schoolId,
+      table.partNumber,
+    ),
+    index("survey_print_files_school_id_idx").on(table.schoolId),
+    // What a worker claims from: unfinished files, in the order they are claimed.
+    index("survey_print_files_unfinished_idx")
+      .on(table.attempts, table.createdAt, table.firstSerialNumber)
+      .where(sql`${table.status} in ('QUEUED', 'RENDERING')`),
+    check(
+      "survey_print_files_copy_count_check",
+      sql`${table.copyCount} between 1 and ${sql.raw(String(MAX_COPIES_PER_FILE))}`,
+    ),
+    check("survey_print_files_part_number_check", sql`${table.partNumber} >= 1`),
+    check("survey_print_files_first_serial_number_check", sql`${table.firstSerialNumber} >= 1`),
+    check(
+      "survey_print_files_student_ids_check",
+      sql`${table.studentIds} is null or cardinality(${table.studentIds}) = ${table.copyCount}`,
+    ),
+    check("survey_print_files_attempts_check", sql`${table.attempts} >= 0`),
+    check(
+      "survey_print_files_lease_check",
+      sql`(${table.status} = 'RENDERING') = (${table.leaseToken} is not null and ${table.leasedUntil} is not null)`,
+    ),
+    check(
+      "survey_print_files_ready_check",
+      sql`(${table.status} = 'READY') = (${table.byteSize} is not null and ${table.renderedAt} is not null)`,
+    ),
+    check(
+      "survey_print_files_issued_check",
+      sql`${table.status} <> 'READY' or ${table.issuedAt} is not null`,
+    ),
+    foreignKey({
+      columns: [table.printRunId],
+      foreignColumns: [surveyPrintRun.id],
+      name: "survey_print_files_print_run_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.schoolId],
+      foreignColumns: [school.id],
+      name: "survey_print_files_school_id_fkey",
     })
       .onUpdate("restrict")
       .onDelete("restrict"),

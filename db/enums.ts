@@ -222,16 +222,19 @@ export const SURVEY_VERSION_PREFILL_LABELS: Record<SurveyVersionPrefill, string>
   STUDENT: "Student name and ID",
 };
 
-/** A print run's progress from issued copies to printable files; the files come with the renderer. */
-export const SurveyPrintRunStatus = {
+/**
+ * A print file's progress from its plan to a PDF in S3. A run has no status of its own: it is
+ * read from its files (`printRunStatusOf`).
+ */
+export const SurveyPrintStatus = {
   QUEUED: "QUEUED",
   RENDERING: "RENDERING",
   READY: "READY",
   FAILED: "FAILED",
 } as const;
-export type SurveyPrintRunStatus = (typeof SurveyPrintRunStatus)[keyof typeof SurveyPrintRunStatus];
+export type SurveyPrintStatus = (typeof SurveyPrintStatus)[keyof typeof SurveyPrintStatus];
 
-export const SURVEY_PRINT_RUN_STATUS_LABELS: Record<SurveyPrintRunStatus, string> = {
+export const SURVEY_PRINT_STATUS_LABELS: Record<SurveyPrintStatus, string> = {
   QUEUED: "Queued",
   RENDERING: "Rendering",
   READY: "Ready",

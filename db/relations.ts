@@ -15,6 +15,7 @@ import {
   clinicalSessionAttendance,
   clinicalTeam,
   survey,
+  surveyPrintFile,
   surveyPrintRun,
   surveyQuestionnaire,
   surveyQuestionnairePage,
@@ -304,6 +305,20 @@ export const surveyPrintRunRelations = relations(surveyPrintRun, ({ one, many })
     relationName: "SurveyPrintRun_requestedByUser",
   }),
   questionnaires: many(surveyQuestionnaire, { relationName: "SurveyQuestionnaire_printRun" }),
+  files: many(surveyPrintFile, { relationName: "SurveyPrintFile_printRun" }),
+}));
+
+export const surveyPrintFileRelations = relations(surveyPrintFile, ({ one }) => ({
+  printRun: one(surveyPrintRun, {
+    fields: [surveyPrintFile.printRunId],
+    references: [surveyPrintRun.id],
+    relationName: "SurveyPrintFile_printRun",
+  }),
+  school: one(school, {
+    fields: [surveyPrintFile.schoolId],
+    references: [school.id],
+    relationName: "SurveyPrintFile_school",
+  }),
 }));
 
 export const surveyQuestionnaireRelations = relations(surveyQuestionnaire, ({ one, many }) => ({

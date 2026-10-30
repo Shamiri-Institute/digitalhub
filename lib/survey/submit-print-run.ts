@@ -1,8 +1,8 @@
 import { db, isUniqueViolation } from "#/db/client";
 import { type PrintRunViewer, printRunScope } from "#/lib/auth/survey-access";
 import {
-  type IssuedPrintRun,
-  issuePrintRun,
+  type RecordedPrintRun,
+  recordPrintRun,
   PrintRunError,
   printRunRequestDigest,
 } from "#/lib/survey/print-run";
@@ -18,27 +18,27 @@ export type PrintRunSubmission = {
 };
 
 /**
- * Issues the run a print form submits, or returns it if this viewer already issued it for the same
- * request. A form resubmitted after its first reply was lost finds its run before any check, so a
+ * Records the run a print form submits, or returns it if this viewer already recorded it for the
+ * same request. A form resubmitted after its first reply was lost finds its run before any check, so a
  * student or school archived in between can't refuse the retry, and it never makes a second run.
  */
 export async function submitPrintRun(
   viewer: PrintRunViewer,
   submission: PrintRunSubmission,
-): Promise<IssuedPrintRun> {
-  const earlier = await issuedRunOf(submission, viewer.userId);
+): Promise<RecordedPrintRun> {
+  const earlier = await recordedRunOf(submission, viewer.userId);
   if (earlier) {
     return earlier;
   }
   const scope = await printRunScope(viewer, submission.hubId);
   try {
-    return await db.transaction((tx) => issuePrintRun(tx, scope, submission));
+    return await db.transaction((tx) => recordPrintRun(tx, scope, submission));
   } catch (error) {
     if (!isUniqueViolation(error, "survey_print_runs_pkey")) {
       throw error;
     }
     // A concurrent submit of the same form committed first.
-    const committed = await issuedRunOf(submission, viewer.userId);
+    const committed = await recordedRunOf(submission, viewer.userId);
     if (!committed) {
       throw new PrintRunError("Please reopen the form and try again");
     }
@@ -46,10 +46,10 @@ export async function submitPrintRun(
   }
 }
 
-async function issuedRunOf(
+async function recordedRunOf(
   submission: PrintRunSubmission,
   userId: string,
-): Promise<IssuedPrintRun | null> {
+): Promise<RecordedPrintRun | null> {
   const run = await db.query.surveyPrintRun.findFirst({
     where: (r, { and, eq }) => and(eq(r.id, submission.printRunId), eq(r.requestedBy, userId)),
     columns: {
