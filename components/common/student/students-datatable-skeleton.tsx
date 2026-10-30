@@ -9,7 +9,7 @@ export default function StudentsDatatableSkeleton({ role }: { role: ImplementerR
     <DatatableSkeleton
       columns={columns({
         setEditDialog: () => {},
-        setStudent: () => {},
+        setSelectedStudentId: () => {},
         setAttendanceHistoryDialog: () => {},
         setMarkAttendanceDialog: () => {},
         setReportingNotesDialog: () => {},
