@@ -39,15 +39,8 @@ export default function AttendanceHistory({
   setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>;
   children: React.ReactNode;
 }) {
-  // The parent's mark-attendance dialog opens on the selected session, so a session picked here
-  // must not carry over to one opened later from the student's row menu.
-  function close() {
-    setSelectedSessionId(undefined);
-    onOpenChange(false);
-  }
-
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? onOpenChange(true) : close())}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="lg:w-3/5 lg:max-w-none">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
@@ -63,7 +56,11 @@ export default function AttendanceHistory({
           className="data-table lg:mt-4"
         />
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="brand" onClick={close} className="flex items-center gap-2">
+          <Button
+            variant="brand"
+            onClick={() => onOpenChange(false)}
+            className="flex items-center gap-2"
+          >
             Done
           </Button>
         </DialogFooter>
