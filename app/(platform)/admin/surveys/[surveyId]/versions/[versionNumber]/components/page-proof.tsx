@@ -1,5 +1,4 @@
-import localFont from "next/font/local";
-
+import { printFont } from "#/app/fonts/print-font";
 import {
   type CopyValues,
   type Drawable,
@@ -12,15 +11,6 @@ import {
   type TextRun,
 } from "#/lib/survey/layout";
 import { cn } from "#/lib/utils";
-
-/** The print font files the PDF embeds, so the sheet sets text as the paper does. */
-const printFont = localFont({
-  src: [
-    { path: "../../../../../../../../public/fonts/figtree/Figtree-Regular.ttf", weight: "400" },
-    { path: "../../../../../../../../public/fonts/figtree/Figtree-SemiBold.ttf", weight: "600" },
-    { path: "../../../../../../../../public/fonts/figtree/Figtree-Bold.ttf", weight: "700" },
-  ],
-});
 
 interface PageProofProps {
   paper: Layout["paper"];

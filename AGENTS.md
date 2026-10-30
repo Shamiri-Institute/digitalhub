@@ -21,6 +21,7 @@ and the tests that cover the change pass. Use npm only.
 - Build from `components/ui` (shadcn on Radix, variants through `cva`) and `components/common` (feature components, `data-table.tsx`). Extend an existing component through props or composition before writing a new one.
 - Style with Tailwind classes merged through `cn()`. The design tokens (`shamiri-new-blue`, `red-bg`, `blue-border`, ...) are the `@theme` colors in `app/globals.css`; use them in place of the default palette (`bg-red-500`) or arbitrary values. No inline `style`, no new CSS files.
 - Forms use React Hook Form with Zod.
+- The web fonts in `app/fonts/` are cut to what the UI renders by `npm run fonts:subset` (`scripts/fonts/subset-fonts.py`, needs uv). Rerun it and commit the output when the UI starts to use a character, weight or OpenType feature (such as `diagonal-fractions`) the subsets leave out; `fonts()` in the script lists what each font keeps.
 
 ## React hooks
 

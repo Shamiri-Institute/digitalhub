@@ -3,6 +3,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* The fallback next/font/google generated for Figtree, which app/fonts/figtree.ts names. */
+@font-face {
+  font-family: "Figtree Fallback";
+  src: local("Arial");
+  ascent-override: 94.32%;
+  descent-override: 24.82%;
+  line-gap-override: 0%;
+  size-adjust: 100.72%;
+}
+
 @utility container {
   margin-inline: auto;
   padding-inline: 1.5rem;

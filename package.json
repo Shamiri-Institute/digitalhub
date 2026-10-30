@@ -29,7 +29,8 @@
     "db:generate": "dotenv -c development -- drizzle-kit generate",
     "release": "commit-and-tag-version",
     "db:check": "dotenv -c development -- tsx scripts/db/check-schema.ts",
-    "survey:metrics": "tsx scripts/survey/generate-figtree-metrics.ts && oxfmt lib/survey/figtree-metrics.generated.ts"
+    "survey:metrics": "tsx scripts/survey/generate-figtree-metrics.ts && oxfmt lib/survey/figtree-metrics.generated.ts",
+    "fonts:subset": "uv run scripts/fonts/subset-fonts.py && oxfmt app/fonts"
   },
   "commit-and-tag-version": {
     "scripts": {
