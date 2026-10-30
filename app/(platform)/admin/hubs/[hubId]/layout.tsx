@@ -7,8 +7,9 @@ import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import EditHubButton from "../components/edit-hub-button";
 import HubBreadcrumb from "../components/hub-breadcrumb";
+import HubStats from "../components/hub-stats";
 import HubTabs from "../components/hub-tabs";
-import { fetchAdminHub, fetchSiblingHubs } from "../queries";
+import { fetchAdminHub, fetchHubStats, fetchSiblingHubs } from "../queries";
 
 export async function generateMetadata(props: {
   params: Promise<{ hubId: string }>;
@@ -31,6 +32,7 @@ export default async function HubLayout(props: {
   if (!hub) {
     notFound();
   }
+  const stats = await fetchHubStats(hub.id);
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -49,6 +51,7 @@ export default async function HubLayout(props: {
             </div>
           )}
         </div>
+        <HubStats stats={stats} />
         <HubTabs hub={hub} />
         <Separator />
         {props.children}
