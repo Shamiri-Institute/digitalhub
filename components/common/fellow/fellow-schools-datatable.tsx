@@ -120,12 +120,7 @@ export default function FellowSchoolsDatatable({
     );
   }
 
-  const fellow = (() => {
-    if (selectedFellowGroup) {
-      return fellows.find((f) => f.id === selectedFellowGroup.leaderId) ?? null;
-    }
-    return selectedFellow;
-  })();
+  const fellow = selectedFellow ? (fellows.find((f) => f.id === selectedFellow.id) ?? null) : null;
 
   const fellowGroup = (() => {
     if (!selectedFellowGroup) {
@@ -215,7 +210,7 @@ export default function FellowSchoolsDatatable({
           fellow={fellowToEdit}
         />
       )}
-      {fellowGroup && fellow && (
+      {fellowGroup && (
         <>
           <MarkAttendance
             title={"Mark fellow attendance"}
