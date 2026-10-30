@@ -49,6 +49,7 @@ import { fetchSessionSupervisors } from "#/lib/actions/session/session";
 import {
   type Mode,
   parseScheduleView,
+  type AttendanceRole,
   sameRange,
   type ScheduleView,
   scheduleSearch,
@@ -194,6 +195,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       state: tableState,
       selectedDay: view.date,
       onSelectedDayChange: (date: CalendarDate) => navigate({ date }, "replace"),
+      attendanceRole: view.attendanceRole,
+      onAttendanceRoleChange: (attendanceRole: AttendanceRole) =>
+        navigate({ attendanceRole }, "replace"),
     },
     supervisors: props.supervisors,
     fellowRatings: props.fellowRatings,
