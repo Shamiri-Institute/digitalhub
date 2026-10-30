@@ -90,3 +90,24 @@ test("the project switcher lists only the projects of the admin's implementers",
   }
   await expect(page.getByRole("option", { name: foreign.name, exact: true })).toHaveCount(0);
 });
+
+test("switching project on a hub page goes back to the hubs list", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const { admin, otherProjects } = await loadFixture(undo);
+  const target = otherProjects.find((p) => p.implementerName);
+  if (!target) throw new Error("No other project with one of the admin's hubs");
+  await signInWithEmail(context, admin.email);
+
+  await page.goto(getUrl("/admin/hubs"));
+  await page
+    .getByRole("link", { name: /^Open / })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/admin\/hubs\/[^/]+\/schools$/);
+  await switchProject(page, admin.activeProjectName, target.name);
+  await expect(page).toHaveURL(/\/admin\/hubs$/);
+  await expect(page.getByRole("heading", { name: "Hubs" })).toBeVisible();
+});

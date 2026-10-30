@@ -1,18 +1,18 @@
 import { expect, type Page, test } from "@playwright/test";
-import { inArray, like } from "drizzle-orm";
+import { inArray, like, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { careAdminEmail, plainAdminEmail, superAdminEmail } from "#/db/seed/fixtures";
 import { hub, interventionSession, sessionName } from "#/db/schema";
 import { hubSessionTypes } from "#/lib/app-constants/hub-session-types";
 import { objectId } from "#/lib/crypto";
-import { signInWithEmail } from "#/tests/helpers";
-import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { dataRows, getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * Super admins create and edit the hubs of their implementer, in the active project: the name and
  * the label and amount of each session type. Other admins, with or without a team, see the hubs
- * but get no way to add or edit one.
+ * and open each hub's page, but get no way to add or edit one.
  */
 // Each worker loads this file, and its afterAll deletes every hub with its prefix, so two
 // workers that start in the same millisecond must still get different prefixes.
@@ -100,8 +100,14 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await expect(duplicateDialog).toBeHidden();
   expect(await db.$count(hub, like(hub.hubName, `${HUB_PREFIX}%`))).toBe(1);
 
-  await row.locator('[aria-haspopup="menu"]').click();
-  await page.getByRole("menuitem", { name: "Edit hub details", exact: true }).click();
+  await row.getByRole("link", { name: HUB_NAME, exact: true }).click();
+  await expect(page.getByRole("heading", { name: HUB_NAME })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Schools\s*0/ })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(page.getByText("No schools found for this hub")).toBeVisible();
+  await page.getByRole("button", { name: "Edit hub" }).click();
   const editDialog = page.getByRole("dialog");
   await expect(editDialog.getByLabel("Hub name")).toHaveValue(HUB_NAME);
   await expect(editDialog).toContainText("the amount paid to fellows per lesson");
@@ -126,6 +132,9 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await expect(saveConfirm).toBeHidden();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
+  await page.reload();
+  await expect(page.getByRole("heading", { name: RENAMED_HUB_NAME })).toBeVisible();
+  await page.goto(getUrl("/admin/hubs"));
   row = (await searchRows(page, RENAMED_HUB_NAME)).first();
   await expect(row).toBeVisible();
   await expect(await searchRows(page, HUB_NAME)).toHaveCount(0);
@@ -233,11 +242,7 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
       sessionDate: new Date(),
     });
 
-    await page.reload();
-    const row = (await searchRows(page, hubName)).first();
-    await row.locator('[aria-haspopup="menu"]').click();
-    await page.getByRole("menuitem", { name: "Edit hub details", exact: true }).click();
-    const editDialog = page.getByRole("dialog");
+    const editDialog = await openEditDialog(page, hubName);
     await editDialog.getByRole("button", { name: /Supervision sessions/ }).click();
     await expect(editDialog.getByRole("button", { name: "Remove sv6" })).toHaveCount(0);
     await expect(
@@ -326,11 +331,16 @@ const SESSION_GROUPS = [
   /Data follow-up sessions/,
 ];
 
-async function openEditDialog(page: Page, hubName: string) {
+async function openHubPage(page: Page, hubName: string) {
   await page.goto(getUrl("/admin/hubs"));
   const row = (await searchRows(page, hubName)).first();
-  await row.locator('[aria-haspopup="menu"]').click();
-  await page.getByRole("menuitem", { name: "Edit hub details", exact: true }).click();
+  await row.getByRole("link", { name: `Open ${hubName}` }).click();
+  await expect(page.getByRole("heading", { name: hubName })).toBeVisible();
+}
+
+async function openEditDialog(page: Page, hubName: string) {
+  await openHubPage(page, hubName);
+  await page.getByRole("button", { name: "Edit hub" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByLabel("Hub name")).toHaveValue(hubName);
   return dialog;
@@ -411,12 +421,68 @@ for (const email of [careAdminEmail, plainAdminEmail]) {
     await expect(page.getByRole("heading", { name: "Hubs" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add hub" })).toHaveCount(0);
 
-    await page.locator('tbody [aria-haspopup="menu"]').first().click();
-    await expect(page.getByRole("menuitem", { name: "Edit hub details", exact: true })).toHaveCount(
-      0,
-    );
-    await expect(
-      page.getByRole("menuitem", { name: "View hub coordinator profile" }),
-    ).toBeVisible();
+    await page
+      .getByRole("link", { name: /^Open / })
+      .first()
+      .click();
+    await expect(page.getByRole("link", { name: /^Schools/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit hub" })).toHaveCount(0);
   });
 }
+
+test("a hub page lists its schools and steps to the hubs beside it by name", async ({
+  page,
+  context,
+}) => {
+  await signInWithEmail(context, plainAdminEmail);
+  await page.goto(getUrl("/admin/hubs"));
+  const hubLinks = page.getByRole("link", { name: /^Open / });
+  await expect(hubLinks.first()).toBeVisible();
+  const hubNames = (
+    await hubLinks.evaluateAll((links) =>
+      links.map((link) => link.getAttribute("aria-label") ?? ""),
+    )
+  ).map((label) => label.replace(/^Open /, ""));
+  test.skip(hubNames.length < 2, "the admin sees a single hub");
+  const [firstHub = "", secondHub = ""] = hubNames;
+
+  await page.getByRole("link", { name: firstHub, exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/hubs\/[^/]+\/schools$/);
+  await expect(page.getByRole("heading", { name: firstHub })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Hubs");
+  await expect(page.getByRole("button", { name: "Previous hub", exact: true })).toBeDisabled();
+
+  const schoolsTab = page.getByRole("link", { name: /^Schools/ });
+  const schoolsCount = Number((await schoolsTab.innerText()).replace(/\D/g, ""));
+  // The table shows 10 rows a page.
+  await expect(dataRows(page)).toHaveCount(Math.min(schoolsCount, 10));
+
+  await page.getByRole("link", { name: `Next hub: ${secondHub}` }).click();
+  await expect(page.getByRole("heading", { name: secondHub })).toBeVisible();
+  await page.getByRole("link", { name: `Previous hub: ${firstHub}` }).click();
+  await expect(page.getByRole("heading", { name: firstHub })).toBeVisible();
+});
+
+test("a hub of another implementer is not found", async ({ page, context }) => {
+  const {
+    rows: [fixture],
+  } = await db.execute<{ email: string; ownHub: string; foreignHub: string | null }>(sql`
+    select u.email,
+      (select h.id from hubs h join projects p on p.id = h.project_id and p.is_default
+        where h.implementer_id = m.implementer_id order by h.id limit 1) as "ownHub",
+      (select h.id from hubs h where h.implementer_id <> m.implementer_id
+        order by h.id limit 1) as "foreignHub"
+    from implementer_members m
+    join users u on u.id = m.user_id
+    where m.role = 'ADMIN' and ${signableMember()}
+    order by u.email
+    limit 1`);
+  required(fixture?.foreignHub, "a hub of an implementer the admin is not a member of");
+  await signInWithEmail(context, fixture.email);
+
+  const own = await page.goto(getUrl(`/admin/hubs/${fixture.ownHub}/schools`));
+  expect(own?.status()).toBe(200);
+  const foreign = await page.goto(getUrl(`/admin/hubs/${fixture.foreignHub}/schools`));
+  expect(foreign?.status()).toBe(404);
+  await expect(page.getByText("This page could not be found.")).toBeVisible();
+});
