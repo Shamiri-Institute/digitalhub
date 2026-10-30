@@ -452,6 +452,59 @@ test("a hub page lists its schools and steps to the hubs beside it by name", asy
   await expect(page.getByRole("heading", { name: firstHub })).toBeVisible();
 });
 
+test("a hub page counts its sessions as marked attended, unmarked, upcoming and cancelled", async ({
+  page,
+  context,
+}) => {
+  const {
+    rows: [seededHub],
+  } = await db.execute<{ implementerId: string; projectId: string }>(sql`
+    select h.implementer_id as "implementerId", h.project_id as "projectId"
+    from hubs h
+    join projects p on p.id = h.project_id and p.is_default
+    join implementer_members m on m.implementer_id = h.implementer_id
+    join users u on u.id = m.user_id and u.email = ${superAdminEmail}
+    order by h.id
+    limit 1`);
+  required(seededHub, "a hub of the super admin's implementer in the default project");
+  // Sessions are not scheduled from the admin pages, so the spec inserts the hub and its sessions.
+  const [statsHub] = await db
+    .insert(hub)
+    .values({ id: objectId("hub"), hubName: `${HUB_PREFIX} Stats`, ...seededHub })
+    .returning({ id: hub.id });
+  required(statsHub, "the inserted hub");
+  const day = 24 * 60 * 60 * 1000;
+  const session = (occurred: boolean, daysFromNow: number, status?: "Cancelled") => ({
+    id: objectId("session"),
+    hubId: statsHub.id,
+    projectId: seededHub.projectId,
+    occurred,
+    status,
+    yearOfImplementation: new Date().getFullYear(),
+    sessionDate: new Date(Date.now() + daysFromNow * day),
+  });
+  await db
+    .insert(interventionSession)
+    .values([
+      session(true, -7),
+      session(true, -6),
+      session(false, -5),
+      session(false, 5),
+      session(false, -4, "Cancelled"),
+    ]);
+
+  await signInWithEmail(context, superAdminEmail);
+  await page.goto(getUrl(`/admin/hubs/${statsHub.id}/schools`));
+  const stats = page.getByRole("region", { name: "Hub stats" });
+  await expect(stats).toContainText("marked attended of 4 scheduled");
+  for (const segment of ["2 attended", "1 unmarked", "1 upcoming", "1 cancelled"]) {
+    await expect(stats).toContainText(segment);
+  }
+  await expect(stats).toContainText("1 past session needs marking");
+  // None of the sessions is at a school with groups, so no attendance is expected.
+  await expect(stats).toContainText("Shown once sessions with groups are marked attended");
+});
+
 test("a hub of another implementer is not found", async ({ page, context }) => {
   const {
     rows: [fixture],

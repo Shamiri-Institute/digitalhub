@@ -94,7 +94,7 @@ export async function fetchSiblingHubs() {
 
 export type SiblingHub = Awaited<ReturnType<typeof fetchSiblingHubs>>[number];
 
-// Caller passes a hub id already checked by `fetchAdminHub`.
+// Callers render the result only for a hub `fetchAdminHub` returned.
 export async function fetchHubStats(hubId: string) {
   const hubSchoolIds = db.select({ id: school.id }).from(school).where(eq(school.hubId, hubId));
   const hubGroupIds = db
@@ -104,6 +104,7 @@ export async function fetchHubStats(hubId: string) {
       and(inArray(interventionGroup.schoolId, hubSchoolIds), isNull(interventionGroup.archivedAt)),
     );
   const groupsAtSessionSchool = sql`select 1 from ${interventionGroup} where ${interventionGroup.schoolId} = ${interventionSession.schoolId} and ${interventionGroup.archivedAt} is null`;
+  const notHeld = sql`not ${interventionSession.occurred} and ${interventionSession.status} is distinct from 'Cancelled'`;
   const leaderAttendanceMarked = sql`select 1 from ${fellowAttendance} where ${fellowAttendance.sessionId} = ${interventionSession.id} and ${fellowAttendance.fellowId} = ${interventionGroup.leaderId} and ${fellowAttendance.attended} is not null`;
 
   const [[sessions], [ratings], groups, studentsInGroups, droppedOutStudents, droppedOutFellows] =
@@ -111,8 +112,10 @@ export async function fetchHubStats(hubId: string) {
       db
         .select({
           held: sql<number>`count(*) filter (where ${interventionSession.occurred})::int`,
-          upcoming: sql<number>`count(*) filter (where not ${interventionSession.occurred} and ${interventionSession.status} is distinct from 'Cancelled' and ${interventionSession.sessionDate} > now())::int`,
+          unmarked: sql<number>`count(*) filter (where ${notHeld} and ${interventionSession.sessionDate} <= now())::int`,
+          upcoming: sql<number>`count(*) filter (where ${notHeld} and ${interventionSession.sessionDate} > now())::int`,
           cancelled: sql<number>`count(*) filter (where not ${interventionSession.occurred} and ${interventionSession.status} = 'Cancelled')::int`,
+          attendanceExpected: sql<number>`count(*) filter (where ${interventionSession.occurred} and exists (${groupsAtSessionSchool}))::int`,
           attendanceRecorded: sql<number>`count(*) filter (where ${interventionSession.occurred} and exists (${groupsAtSessionSchool}) and not exists (${groupsAtSessionSchool} and not exists (${leaderAttendanceMarked})))::int`,
         })
         .from(interventionSession)
@@ -140,7 +143,10 @@ export async function fetchHubStats(hubId: string) {
           isNull(student.archivedAt),
         ),
       ),
-      db.$count(fellow, and(eq(fellow.hubId, hubId), eq(fellow.droppedOut, true))),
+      db.$count(
+        fellow,
+        and(eq(fellow.hubId, hubId), eq(fellow.droppedOut, true), isNull(fellow.archivedAt)),
+      ),
     ]);
 
   if (!sessions || !ratings) {
@@ -148,7 +154,7 @@ export async function fetchHubStats(hubId: string) {
   }
 
   return {
-    sessions: { ...sessions, scheduled: sessions.held + sessions.upcoming },
+    sessions: { ...sessions, scheduled: sessions.held + sessions.unmarked + sessions.upcoming },
     ratings,
     groups,
     studentsInGroups,
