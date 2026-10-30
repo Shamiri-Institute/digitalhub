@@ -37,14 +37,7 @@ import StudentAttendance from "#/components/common/student/student-attendance";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogPortal,
-  DialogTitle,
-  DialogTrigger,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogPortal, DialogTrigger } from "#/components/ui/dialog";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { fetchSessionSupervisors } from "#/lib/actions/session/session";
 import {
@@ -271,9 +264,6 @@ function CreateSessionButton({
       </DialogTrigger>
       <DialogPortal>
         <DialogContent>
-          <DialogHeader className="border-b">
-            <DialogTitle className="pb-4 text-xl font-bold">Schedule a session</DialogTitle>
-          </DialogHeader>
           <ScheduleNewSession
             toggleDialog={setDialogOpen}
             role={role}
