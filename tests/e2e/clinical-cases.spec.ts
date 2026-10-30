@@ -350,6 +350,29 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   );
 });
 
+test("case notes typed and then cancelled are gone the next time the dialog opens", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const sessionLabel = `e2e-cancelled-notes-${Date.now()}`;
+  await addClinicalSession(sessionLabel, undo);
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+
+  const dialog = page.getByRole("dialog", { name: "Case Notes" });
+  await openCaseAction(page, pseudonym, "Case notes");
+  await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
+  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await dialog.getByRole("textbox", { name: /Situation/ }).fill("Typed, then cancelled");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
+
+  // The case's actions menu stays open behind the dialog, so "Case notes" is clicked again there.
+  await page.getByRole("menu").getByText("Case notes", { exact: true }).click();
+  await expect(dialog.getByRole("combobox").filter({ hasText: "Select session" })).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue("");
+});
 test("a supervisor terminates their case", async ({ page, context, undo }) => {
   const sessionLabel = `e2e-termination-${Date.now()}`;
   const terminationReasonExplanation = `${sessionLabel} explanation`;

@@ -1,6 +1,7 @@
 "use client";
 import { rankItem } from "@tanstack/match-sorter-utils";
 import {
+  type Column,
   type ColumnDef,
   type FilterFn,
   flexRender,
@@ -13,10 +14,12 @@ import {
   type PaginationState,
   type Row,
   type RowSelectionState,
+  type SortDirection,
   type SortingState,
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Fragment, type ReactNode, useState } from "react";
 import { Icons } from "#/components/icons";
@@ -44,9 +47,12 @@ import {
   TableRow,
 } from "#/components/ui/table";
 import {
+  compareCellValues,
   DEFAULT_PAGE_SIZE,
   PAGE_SIZES,
   parseTableView,
+  rowIdsFromOwnIds,
+  type TableView,
   type TableViewParams,
   tableViewParams,
   tableViewSearch,
@@ -59,6 +65,41 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   addMeta({ itemRank });
   return itemRank.passed;
 };
+
+// TanStack's "auto" sorting picks a comparison from the rows after the tenth, so in a short table
+// it compares text by character code and leaves empty cells anywhere.
+const defaultColumn = {
+  sortingFn: <TData,>(rowA: Row<TData>, rowB: Row<TData>, columnId: string) =>
+    compareCellValues(rowA.getValue(columnId), rowB.getValue(columnId)),
+};
+
+/** The columns that hold a row's controls: expand, select and its actions menu. */
+const isActionColumn = (columnId: string) => ["button", "checkbox", "expand"].includes(columnId);
+
+// An action column never sorts, even when its cell reads a value.
+const canSortBy = <TData,>(column: Column<TData>) =>
+  column.getCanSort() && !isActionColumn(column.id);
+
+const ariaSort = (sortDirection: SortDirection | false) =>
+  sortDirection === "asc" ? "ascending" : sortDirection === "desc" ? "descending" : "none";
+
+function SortToggle<TData>({ column, children }: { column: Column<TData>; children: ReactNode }) {
+  const sortDirection = column.getIsSorted();
+  const SortIcon =
+    sortDirection === "asc" ? ArrowUp : sortDirection === "desc" ? ArrowDown : ArrowUpDown;
+  return (
+    <Button
+      type="button"
+      variant="base"
+      size="base"
+      onClick={() => column.toggleSorting()}
+      className="max-w-full gap-1 font-semibold hover:text-shamiri-text-dark-grey"
+    >
+      <span className="truncate">{children}</span>
+      <SortIcon className={cn("h-4 w-4 shrink-0", !sortDirection && "opacity-40")} />
+    </Button>
+  );
+}
 
 type RowSelectionProps<TData> =
   | {
@@ -87,9 +128,9 @@ type DataTableProps<TData, TValue> = RowSelectionProps<TData> & {
   getRowCanExpand?: (row: Row<TData>) => boolean;
   renderSubComponent?: (props: { row: Row<TData> }) => ReactNode;
   /**
-   * Keeps the page and page size in the URL, so a reload, back/forward or a shared link opens the
-   * same page. Only for a page's main list table, with a prefix when the page has two. Search text
-   * never goes in the URL: it matches students' names and clinical data.
+   * Keeps the page, page size and sort in the URL, so a reload, back/forward or a shared link opens
+   * the same view. Only for a page's main list table, with a prefix when the page has two. Search
+   * text never goes in the URL: it matches students' names and clinical data.
    */
   urlState?: boolean | { prefix: string };
 };
@@ -162,20 +203,34 @@ function DataTableContent<TData, TValue>({
 
   // The data is already here, so a URL-bound table replaces the URL without asking the server for
   // the page again. The router hands the new params back through useSearchParams.
-  const replaceUrlPagination = (params: TableViewParams, nextPagination: PaginationState) => {
-    const search = tableViewSearch(window.location.search, params, nextPagination);
+  const replaceUrlView = (params: TableViewParams, nextView: TableView) => {
+    const search = tableViewSearch(window.location.search, params, nextView);
     if (search !== window.location.search) {
       window.history.replaceState(null, "", `${window.location.pathname}${search}`);
+    }
+  };
+
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    if (urlView) {
+      replaceUrlView(urlView.params, {
+        sorting: functionalUpdate(updater, table.getState().sorting),
+        pagination: { ...table.getState().pagination, pageIndex: 0 },
+      });
+    } else {
+      setSorting(updater);
+      setPagination((current) => ({ ...current, pageIndex: 0 }));
     }
   };
 
   const table = useReactTable({
     data,
     columns,
-    getRowId,
+    defaultColumn,
+    getRowId: getRowId ?? rowIdsFromOwnIds(data),
     getRowCanExpand,
     getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
+    sortDescFirst: false,
+    onSortingChange: handleSortingChange,
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: disablePagination ? undefined : getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -184,10 +239,10 @@ function DataTableContent<TData, TValue>({
     // URL gets the page and size it returns.
     onPaginationChange: urlView
       ? (updater) =>
-          replaceUrlPagination(
-            urlView.params,
-            functionalUpdate(updater, table.getState().pagination),
-          )
+          replaceUrlView(urlView.params, {
+            pagination: functionalUpdate(updater, table.getState().pagination),
+            sorting: table.getState().sorting,
+          })
       : setPagination,
     enableRowSelection,
     state: { sorting, columnVisibility, rowSelection, pagination },
@@ -197,14 +252,23 @@ function DataTableContent<TData, TValue>({
   });
 
   if (urlView) {
-    // The page is clamped to the rows the data and search leave, which only the built table
-    // knows, so the URL's page and size are applied to it here. Nothing is written back: a page
-    // past the end shows the last page and stays in the URL until the next page change, so the
-    // clamp cannot loop with the URL.
-    const urlPagination = parseTableView(urlView.get, urlView.params, table.getRowCount());
+    // The page is clamped to the rows the data and search leave, and the sort to the columns that
+    // sort, which only the built table knows, so the URL's view is applied to it here. Nothing is
+    // written back: a page past the end shows the last page and stays in the URL until the next
+    // page change, so the clamp cannot loop with the URL.
+    const sortableColumnIds = table
+      .getAllLeafColumns()
+      .filter(canSortBy)
+      .map((column) => column.id);
+    const urlTableView = parseTableView(
+      urlView.get,
+      urlView.params,
+      table.getRowCount(),
+      sortableColumnIds,
+    );
     table.setOptions((options) => ({
       ...options,
-      state: { ...options.state, pagination: urlPagination },
+      state: { ...options.state, ...urlTableView },
     }));
   } else {
     // A refresh can leave fewer pages than the current one. Setting state during render makes React
@@ -310,26 +374,31 @@ function DataTableContent<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} id={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    id={header.id}
-                    className={cn(
-                      "min-w-[80px] bg-background-secondary/50 px-4! text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
-                      header.column.columnDef.id !== "checkbox" && "truncate",
-                      "py-2",
-                      header.column.columnDef.id === "button" ||
-                        header.column.columnDef.id === "checkbox" ||
-                        header.column.columnDef.id === "expand"
-                        ? "action-cell"
-                        : null,
-                    )}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const headerContent = header.isPlaceholder
+                    ? null
+                    : flexRender(header.column.columnDef.header, header.getContext());
+                  const columnSorts = canSortBy(header.column) && !header.isPlaceholder;
+                  return (
+                    <TableHead
+                      key={header.id}
+                      id={header.id}
+                      aria-sort={columnSorts ? ariaSort(header.column.getIsSorted()) : undefined}
+                      className={cn(
+                        "min-w-[80px] bg-background-secondary/50 px-4! text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
+                        header.column.columnDef.id !== "checkbox" && "truncate",
+                        "py-2",
+                        isActionColumn(header.column.id) ? "action-cell" : null,
+                      )}
+                    >
+                      {columnSorts ? (
+                        <SortToggle column={header.column}>{headerContent}</SortToggle>
+                      ) : (
+                        headerContent
+                      )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -351,9 +420,7 @@ function DataTableContent<TData, TValue>({
                         id={cell.id}
                         className={cn(
                           "truncate border-y border-l first:border-l-0",
-                          cell.column.columnDef.id === "button" ||
-                            cell.column.columnDef.id === "checkbox" ||
-                            cell.column.columnDef.id === "expand"
+                          isActionColumn(cell.column.id)
                             ? "relative cursor-pointer border-l-0 p-0!"
                             : "px-4! py-2",
                         )}

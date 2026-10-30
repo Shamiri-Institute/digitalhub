@@ -15,7 +15,7 @@ export async function loadSessionReport() {
   const hubId = hubCoordinator.profile.assignedHubId;
   const schools = await db.query.school.findMany({
     where: (s, { eq }) => eq(s.hubId, hubId),
-    columns: { schoolName: true },
+    columns: { id: true, schoolName: true },
     with: {
       interventionSessions: {
         where: (session, { eq }) => eq(session.occurred, true),
@@ -178,6 +178,7 @@ export async function loadSessionReport() {
     });
 
     return {
+      id: school.id,
       schoolName: school.schoolName,
       avgStudentBehaviour: Math.round(avgStudentBehaviour * 10) / 10,
       avgAdminSupport: Math.round(avgAdminSupport * 10) / 10,

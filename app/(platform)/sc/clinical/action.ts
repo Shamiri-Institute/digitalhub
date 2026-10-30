@@ -1,7 +1,7 @@
 "use server";
 
 import { and, count, desc, eq } from "drizzle-orm";
-import { refresh, revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentUserSession } from "#/app/auth";
 import { NotFoundError } from "#/lib/auth/require-auth-role";
@@ -95,9 +95,6 @@ async function requireCaseAccess(caseId: string) {
   }
   return { actor, clinicalCase };
 }
-
-const clinicalHome = (role: ImplementerRole) =>
-  role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical";
 
 export async function getClinicalCases() {
   const supervisor = await currentSupervisor();
@@ -231,7 +228,7 @@ export async function supSubmitConsultClinicalexpert(data: {
       comment: data.comment,
       name: data.name,
     });
-    revalidatePath("/sc/clinical");
+    refresh();
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -250,7 +247,7 @@ export async function updateClinicalSessionAttendance(
   if (!attendance) {
     throw new Error("Clinical session attendance not found");
   }
-  const { actor } = await requireCaseAccess(attendance.caseId);
+  await requireCaseAccess(attendance.caseId);
 
   try {
     requireUpdated(
@@ -262,7 +259,7 @@ export async function updateClinicalSessionAttendance(
       "Clinical session attendance",
     );
 
-    revalidatePath(clinicalHome(actor.role));
+    refresh();
 
     return {
       success: true,
@@ -321,7 +318,7 @@ export async function referClinicalCaseToSupervisor(data: {
       });
     });
 
-    revalidatePath("/screenings");
+    refresh();
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -474,7 +471,7 @@ export async function createStudentClinicalCase(data: {
       });
     });
 
-    revalidatePath(clinicalHome(actor.role));
+    refresh();
     return { success: true, message: "Clinical case created successfully" };
   } catch (error) {
     console.error(error);
@@ -526,7 +523,7 @@ export async function createTreatmentPlan(
       });
     });
 
-    revalidatePath(clinicalHome(actor.role));
+    refresh();
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -617,7 +614,7 @@ export async function updateClinicalCasePresentingIssues(data: {
       "Clinical case",
     );
 
-    revalidatePath("/sc/clinical");
+    refresh();
     return { success: true, message: null };
   } catch (error) {
     console.error(error);
@@ -654,7 +651,7 @@ export async function terminateClinicalCase(data: {
       });
     });
 
-    revalidatePath("/sc/clinical");
+    refresh();
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -684,7 +681,7 @@ export async function unterminateClinicalCase(data: { caseId: string }) {
       );
     });
 
-    revalidatePath("/cl/clinical");
+    refresh();
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -735,7 +732,7 @@ export async function createClinicalCaseNotes(data: {
       followUpPlanExplanation: data.followUpPlanExplanation,
     });
 
-    revalidatePath(clinicalHome(actor.role));
+    refresh();
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -753,7 +750,7 @@ export async function updateClinicalCaseAttendance(data: {
   clinicalLeadId: string | null;
 }) {
   try {
-    const { actor } = await requireCaseAccess(data.caseId);
+    await requireCaseAccess(data.caseId);
 
     await db.insert(clinicalSessionAttendance).values({
       caseId: data.caseId,
@@ -764,7 +761,7 @@ export async function updateClinicalCaseAttendance(data: {
       attendanceStatus: data.attendanceStatus,
     });
 
-    revalidatePath(clinicalHome(actor.role));
+    refresh();
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -811,7 +808,7 @@ export async function referClinicalCaseToClinicalLead(data: {
       });
     });
 
-    revalidatePath("/screenings");
+    refresh();
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -889,7 +886,7 @@ async function answerReferral(caseId: string, decision: "Approved" | "Declined")
       .set({ referralStatus: decision })
       .where(eq(clinicalCaseTransferTrail.id, trail.id));
   });
-  revalidatePath("/sc/clinical");
+  refresh();
 }
 
 export async function acceptReferredClinicalCase(caseId: string) {
@@ -914,7 +911,7 @@ export async function rejectReferredClinicalCase(caseId: string) {
 
 export async function flagClinicalCaseForFollowUp(data: { caseId: string; reason: string }) {
   try {
-    const { actor } = await requireCaseAccess(data.caseId);
+    await requireCaseAccess(data.caseId);
     requireUpdated(
       await db
         .update(clinicalScreeningInfo)
@@ -924,7 +921,7 @@ export async function flagClinicalCaseForFollowUp(data: { caseId: string; reason
       "Clinical case",
     );
 
-    revalidatePath(clinicalHome(actor.role));
+    refresh();
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -944,7 +941,7 @@ export async function triggerCaseStatusToFollowup(data: { caseId: string }) {
       "Clinical case",
     );
 
-    revalidatePath("/sc/clinical");
+    refresh();
     return { success: true };
   } catch (error) {
     console.error(error);

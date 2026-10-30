@@ -114,7 +114,6 @@ const supervisorAttendanceColumns = (state: {
     },
     id: "button",
     header: undefined,
-    accessorKey: "attendance",
   },
 ];
 

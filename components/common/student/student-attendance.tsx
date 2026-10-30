@@ -60,6 +60,7 @@ export default function StudentAttendance({
   setIsOpen,
   role,
   session,
+  opening,
   fellows,
   fellowId,
 }: {
@@ -67,23 +68,11 @@ export default function StudentAttendance({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
   session: Session | null;
+  /** Started by the handler that opened the dialog, with `startStudentAttendanceOpening`. */
+  opening: StudentAttendanceOpening | null;
   fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName">[];
   fellowId?: string;
 }) {
-  // The session the dialog was open on at the last render; null while it is closed.
-  const [shownSessionId, setShownSessionId] = useState<string | null>(null);
-  // Kept after closing, so the content stays through the close animation.
-  const [opening, setOpening] = useState<Opening | null>(null);
-  // The caller opens the dialog through isOpen, so no handler here runs on opening. The render
-  // that first sees it open, or open on another session, starts that opening's loads.
-  const openSessionId = isOpen ? (session?.id ?? null) : null;
-  if (openSessionId !== shownSessionId) {
-    setShownSessionId(openSessionId);
-    if (openSessionId) {
-      setOpening(startOpening(openSessionId, role, (opening?.number ?? 0) + 1));
-    }
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
       <DialogContent className="lg:w-3/4 lg:max-w-none">
@@ -132,7 +121,7 @@ type TriageEventsLoad =
   | { status: "failed" };
 
 /** One opening of the dialog on a session, with the loads it started. */
-type Opening = {
+export type StudentAttendanceOpening = {
   /** Counts openings, so each one mounts fresh content, even on the session shown before. */
   number: number;
   sessionId: string;
@@ -141,15 +130,19 @@ type Opening = {
   triageEvents: Promise<TriageEventsLoad> | null;
 };
 
+let openingsStarted = 0;
+
 /**
- * Starts an opening's loads while the dialog renders. Each load calls its server action a
- * microtask late, because calling one updates the router's state, which React forbids while
- * another component renders. The loads never reject: use() would throw a failure to the page's
- * error boundary.
+ * Starts the loads of an opening of the dialog on a session, for the handler that opens it. The
+ * loads never reject: use() would throw a failure to the page's error boundary.
  */
-function startOpening(sessionId: string, role: ImplementerRole, number: number): Opening {
+export function startStudentAttendanceOpening(
+  sessionId: string,
+  role: ImplementerRole,
+): StudentAttendanceOpening {
+  openingsStarted += 1;
   return {
-    number,
+    number: openingsStarted,
     sessionId,
     students: loadStudents(sessionId),
     triageEvents: role === ImplementerRole.FELLOW ? loadTriageEvents(sessionId) : null,
@@ -157,8 +150,7 @@ function startOpening(sessionId: string, role: ImplementerRole, number: number):
 }
 
 function loadStudents(sessionId: string): Promise<StudentsLoad> {
-  return Promise.resolve()
-    .then(() => fetchSessionStudentAttendance(sessionId))
+  return fetchSessionStudentAttendance(sessionId)
     .then(({ students, attendances }): StudentsLoad => ({
       status: "loaded",
       studentsByGroup: studentsByAssignedGroup(students),
@@ -168,8 +160,7 @@ function loadStudents(sessionId: string): Promise<StudentsLoad> {
 }
 
 function loadTriageEvents(sessionId: string): Promise<TriageEventsLoad> {
-  return Promise.resolve()
-    .then(() => getTriageEventsForSession(sessionId))
+  return getTriageEventsForSession(sessionId)
     .then((events): TriageEventsLoad => ({
       status: "loaded",
       byStudent: Object.fromEntries(events.map((event) => [event.studentId, event])),
@@ -193,7 +184,10 @@ type ContentProps = {
   fellowId?: string;
 };
 
-function StudentAttendanceContent({ opening, ...props }: ContentProps & { opening: Opening }) {
+function StudentAttendanceContent({
+  opening,
+  ...props
+}: ContentProps & { opening: StudentAttendanceOpening }) {
   const students = use(opening.students);
   if (students.status === "failed") {
     return (

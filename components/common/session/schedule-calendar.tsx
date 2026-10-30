@@ -37,9 +37,17 @@ import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
 import RescheduleSession from "#/components/common/session/reschedule-session";
 import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
-import { SessionDetail } from "#/components/common/session/session-list";
+import {
+  SessionDetail,
+  type SessionDialogKind,
+  type SessionDialogOpener,
+} from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
-import StudentAttendance from "#/components/common/student/student-attendance";
+import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
+import StudentAttendance, {
+  startStudentAttendanceOpening,
+  type StudentAttendanceOpening,
+} from "#/components/common/student/student-attendance";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -66,6 +74,10 @@ import type { school, sessionName } from "#/db/schema";
 
 type School = Pick<typeof school.$inferSelect, "id" | "schoolName">;
 type SessionName = Pick<typeof sessionName.$inferSelect, "id" | "sessionType" | "sessionLabel">;
+
+type OpenSessionDialog =
+  | { kind: Exclude<SessionDialogKind, "studentAttendance">; sessionId: string }
+  | { kind: "studentAttendance"; sessionId: string; opening: StudentAttendanceOpening };
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
   /** Sessions in the range the URL names; null until the server knows the viewer's time zone. */
@@ -366,30 +378,23 @@ function CalendarView({
   loading: boolean;
   sessions: Session[];
 }) {
-  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
-  const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
-  const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
-  const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
-  const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
-  const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
-  const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
-  const [selectedSession, setSession] = React.useState<Session | null>(null);
+  const [dialog, setDialog] = useState<OpenSessionDialog | null>(null);
   const [sessionSupervisors, setSessionSupervisors] = useState<{
     sessionId: string;
     supervisors: ScheduleSupervisor[];
   } | null>(null);
   const requestedSessionId = useRef<string | null>(null);
-  const session = selectedSession
-    ? (sessions.find((s) => s.id === selectedSession.id) ?? selectedSession)
-    : null;
+  const session = (dialog && sessions.find((s) => s.id === dialog.sessionId)) ?? null;
 
-  const openSession: Dispatch<SetStateAction<Session | null>> = (next) => {
-    const value = typeof next === "function" ? next(selectedSession) : next;
-    setSession(value);
-    if (role !== ImplementerRole.ADMIN || !value || requestedSessionId.current === value.id) {
+  const openDialog: SessionDialogOpener = (kind, { id: sessionId }) => {
+    setDialog(
+      kind === "studentAttendance"
+        ? { kind, sessionId, opening: startStudentAttendanceOpening(sessionId, role) }
+        : { kind, sessionId },
+    );
+    if (role !== ImplementerRole.ADMIN || requestedSessionId.current === sessionId) {
       return;
     }
-    const sessionId = value.id;
     requestedSessionId.current = sessionId;
     const keep = (supervisors: ScheduleSupervisor[]) => {
       if (requestedSessionId.current === sessionId) {
@@ -399,6 +404,10 @@ function CalendarView({
     fetchSessionSupervisors(sessionId)
       .then(keep)
       .catch(() => keep([]));
+  };
+
+  const onDialogOpenChange = (open: SetStateAction<boolean>) => {
+    if (!open) setDialog(null);
   };
 
   const supervisorDialogs = (supervisors?: ScheduleSupervisor[]) => {
@@ -416,21 +425,22 @@ function CalendarView({
           fellowRatings={fellowRatings ?? []}
           role={role}
           session={session}
-          isOpen={fellowAttendanceDialog}
-          setIsOpen={setFellowAttendanceDialog}
+          isOpen={dialog?.kind === "fellowAttendance"}
+          setIsOpen={onDialogOpenChange}
         />
         <SupervisorAttendance
-          isOpen={supervisorAttendanceDialog}
-          setIsOpen={setSupervisorAttendanceDialog}
+          isOpen={dialog?.kind === "supervisorAttendance"}
+          setIsOpen={onDialogOpenChange}
           supervisors={supervisors?.filter((supervisor) => supervisor.hubId === session?.hubId)}
           role={role}
           session={session}
         />
         <StudentAttendance
-          isOpen={studentAttendanceDialog}
-          setIsOpen={setStudentAttendanceDialog}
+          isOpen={dialog?.kind === "studentAttendance"}
+          setIsOpen={onDialogOpenChange}
           role={role}
           session={session}
+          opening={dialog?.kind === "studentAttendance" ? dialog.opening : null}
           fellows={fellowsForStudentAttendance}
           fellowId={fellowId}
         />
@@ -439,8 +449,8 @@ function CalendarView({
             selectedSession={session}
             supervisorId={supervisorId}
             supervisors={supervisors}
-            open={ratingsDialog}
-            onOpenChange={setRatingsDialog}
+            open={dialog?.kind === "ratings"}
+            onOpenChange={onDialogOpenChange}
             mode={
               role === "HUB_COORDINATOR" || role === "ADMIN"
                 ? "view"
@@ -472,16 +482,7 @@ function CalendarView({
             {...monthProps}
             role={role}
             supervisorId={supervisorId}
-            dialogState={{
-              setSession: openSession,
-              setFellowAttendanceDialog,
-              setSupervisorAttendanceDialog,
-              setStudentAttendanceDialog,
-              setRatingsDialog,
-              setSessionOccurrenceDialog,
-              setRescheduleSessionDialog,
-              setCancelSessionDialog,
-            }}
+            openDialog={openDialog}
             fellowId={fellowId}
             sessions={sessions}
           />
@@ -492,16 +493,7 @@ function CalendarView({
             {...weekProps}
             role={role}
             supervisorId={supervisorId}
-            dialogState={{
-              setSession: openSession,
-              setFellowAttendanceDialog,
-              setSupervisorAttendanceDialog,
-              setStudentAttendanceDialog,
-              setRatingsDialog,
-              setSessionOccurrenceDialog,
-              setRescheduleSessionDialog,
-              setCancelSessionDialog,
-            }}
+            openDialog={openDialog}
             fellowId={fellowId}
             sessions={sessions}
           />
@@ -513,16 +505,7 @@ function CalendarView({
           <DayView
             {...dayProps}
             role={role}
-            dialogState={{
-              setSession: openSession,
-              setFellowAttendanceDialog,
-              setSupervisorAttendanceDialog,
-              setStudentAttendanceDialog,
-              setRatingsDialog,
-              setSessionOccurrenceDialog,
-              setRescheduleSessionDialog,
-              setCancelSessionDialog,
-            }}
+            openDialog={openDialog}
             supervisorId={supervisorId}
             fellowId={fellowId}
             sessions={sessions}
@@ -536,16 +519,7 @@ function CalendarView({
             {...listProps}
             role={role}
             supervisorId={supervisorId}
-            dialogState={{
-              setSession: openSession,
-              setFellowAttendanceDialog,
-              setSupervisorAttendanceDialog,
-              setStudentAttendanceDialog,
-              setRatingsDialog,
-              setSessionOccurrenceDialog,
-              setRescheduleSessionDialog,
-              setCancelSessionDialog,
-            }}
+            openDialog={openDialog}
             fellowId={fellowId}
             sessions={sessions}
           />
@@ -571,12 +545,12 @@ function CalendarView({
   return (
     <div className={cn(loading && "pointer-events-none opacity-50 grayscale")}>
       {activeMode()}
-      {session ? (
+      {session && (
         <>
           <RescheduleSession
             session={session}
-            open={rescheduleSessionDialog}
-            onOpenChange={setRescheduleSessionDialog}
+            open={dialog?.kind === "reschedule"}
+            onOpenChange={onDialogOpenChange}
           >
             <SessionDetail
               state={{ session }}
@@ -587,8 +561,8 @@ function CalendarView({
           </RescheduleSession>
           <CancelSession
             sessionId={session.id}
-            open={cancelSessionDialog}
-            onOpenChange={setCancelSessionDialog}
+            open={dialog?.kind === "cancel"}
+            onOpenChange={onDialogOpenChange}
           >
             <SessionDetail
               state={{ session }}
@@ -597,23 +571,33 @@ function CalendarView({
               role={role}
             />
           </CancelSession>
+          {role === ImplementerRole.ADMIN
+            ? sessionSupervisors?.sessionId === session.id &&
+              supervisorDialogs(sessionSupervisors.supervisors)
+            : supervisorDialogs(supervisors)}
+          <MarkSessionOccurrence
+            id={session.id}
+            defaultOccurrence={session.occurred}
+            isOpen={dialog?.kind === "sessionOccurrence"}
+            setIsOpen={onDialogOpenChange}
+            sessions={sessions}
+          >
+            <SessionDetail
+              state={{ session }}
+              layout={"compact"}
+              withDropdown={false}
+              role={role}
+            />
+          </MarkSessionOccurrence>
+          <AttendanceDocumentDialog
+            session={session}
+            fellowId={fellowId}
+            role={role}
+            open={dialog?.kind === "attendanceDocument"}
+            onOpenChange={onDialogOpenChange}
+          />
         </>
-      ) : null}
-      {role === ImplementerRole.ADMIN
-        ? sessionSupervisors?.sessionId === session?.id &&
-          supervisorDialogs(sessionSupervisors?.supervisors)
-        : supervisorDialogs(supervisors)}
-      <MarkSessionOccurrence
-        id={session?.id}
-        defaultOccurrence={session?.occurred}
-        isOpen={sessionOccurrenceDialog}
-        setIsOpen={setSessionOccurrenceDialog}
-        sessions={sessions}
-      >
-        {session && (
-          <SessionDetail state={{ session }} layout={"compact"} withDropdown={false} role={role} />
-        )}
-      </MarkSessionOccurrence>
+      )}
     </div>
   );
 }

@@ -34,6 +34,7 @@ export async function loadHubsFellowAttendance() {
         },
       },
     },
+    orderBy: (f, { asc }) => [asc(f.fellowName), asc(f.id)],
   });
 
   return fellows.map((fellow) => {
@@ -62,6 +63,7 @@ export async function loadHubsFellowAttendance() {
     );
 
     return {
+      id: fellow.id,
       fellowName: fellow.fellowName,
       hub: fellow?.hub?.hubName,
       supervisorName: fellow.supervisor?.supervisorName,

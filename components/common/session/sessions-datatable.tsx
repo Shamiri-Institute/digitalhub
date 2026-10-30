@@ -6,20 +6,25 @@ import { type SetStateAction, useState } from "react";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
-import {
-  columns,
-  type SessionData,
-  type SessionDialogKind,
-} from "#/components/common/session/columns";
+import { columns, type SessionData } from "#/components/common/session/columns";
 import RescheduleSession from "#/components/common/session/reschedule-session";
-import { SessionDetail } from "#/components/common/session/session-list";
+import {
+  SessionDetail,
+  type SessionDialogKind,
+  type SessionDialogOpener,
+} from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
-import StudentAttendance from "#/components/common/student/student-attendance";
+import StudentAttendance, {
+  startStudentAttendanceOpening,
+  type StudentAttendanceOpening,
+} from "#/components/common/student/student-attendance";
 import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import DataTable from "#/components/data-table";
 
-type OpenSessionDialog = { kind: SessionDialogKind; sessionId: string };
+type OpenSessionDialog =
+  | { kind: Exclude<SessionDialogKind, "studentAttendance">; sessionId: string }
+  | { kind: "studentAttendance"; sessionId: string; opening: StudentAttendanceOpening };
 
 export default function SessionsDatatable({
   sessions,
@@ -42,11 +47,17 @@ export default function SessionsDatatable({
   const [dialog, setDialog] = useState<OpenSessionDialog | null>(null);
   const session = dialog && sessions.find((s) => s.id === dialog.sessionId);
 
+  const openDialog: SessionDialogOpener = (kind, { id: sessionId }) => {
+    setDialog(
+      kind === "studentAttendance"
+        ? { kind, sessionId, opening: startStudentAttendanceOpening(sessionId, role) }
+        : { kind, sessionId },
+    );
+  };
+
   const onDialogOpenChange = (open: SetStateAction<boolean>) => {
     if (!open) setDialog(null);
   };
-
-  const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
 
   const leaderIds = new Set(session?.school?.interventionGroups?.map((g) => g.leaderId) ?? []);
   const allFellows = supervisors?.flatMap((s) => s.fellows) ?? [];
@@ -61,7 +72,7 @@ export default function SessionsDatatable({
         urlState
         data={sessions}
         columns={columns({
-          openDialog: (kind, { id: sessionId }) => setDialog({ kind, sessionId }),
+          openDialog,
           role,
           fellowId,
           supervisorId,
@@ -90,6 +101,7 @@ export default function SessionsDatatable({
             setIsOpen={onDialogOpenChange}
             role={role}
             session={session}
+            opening={dialog?.kind === "studentAttendance" ? dialog.opening : null}
             fellows={fellowsForStudentAttendance}
             fellowId={fellowId}
           />
@@ -154,7 +166,7 @@ export default function SessionsDatatable({
           ) : null}
           <AttendanceDocumentDialog
             session={session}
-            groupId={groupId}
+            fellowId={fellowId}
             role={role}
             open={dialog?.kind === "attendanceDocument"}
             onOpenChange={onDialogOpenChange}

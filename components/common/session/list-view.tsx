@@ -2,9 +2,11 @@
 
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
-import type { Dispatch, SetStateAction } from "react";
 import type { CalendarState } from "react-stately";
-import { SessionDropDown } from "#/components/common/session/session-list";
+import {
+  SessionDropDown,
+  type SessionDialogOpener,
+} from "#/components/common/session/session-list";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -13,23 +15,14 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 export function ListView({
   state,
   role,
-  dialogState,
+  openDialog,
   supervisorId,
   fellowId,
   sessions,
 }: {
   state: CalendarState;
   role: ImplementerRole;
-  dialogState: {
-    setSession: Dispatch<SetStateAction<Session | null>>;
-    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
-    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
-    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  openDialog: SessionDialogOpener;
   supervisorId?: string;
   fellowId?: string;
   sessions: Session[];
@@ -198,10 +191,7 @@ export function ListView({
                         </td>
                         <td className="action-cell relative h-auto! cursor-pointer">
                           <SessionDropDown
-                            state={{
-                              session,
-                              ...dialogState,
-                            }}
+                            state={{ session, openDialog }}
                             role={role}
                             fellowId={fellowId}
                             supervisorId={supervisorId}

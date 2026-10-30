@@ -3,7 +3,6 @@ import { addHours, addMinutes, format } from "date-fns";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type * as React from "react";
-import { type Dispatch, type SetStateAction } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -18,24 +17,28 @@ import { countSessionGroupAttendance } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import type { Session } from "#/lib/actions/fetch-sessions";
 
+export type SessionDialogKind =
+  | "ratings"
+  | "fellowAttendance"
+  | "supervisorAttendance"
+  | "studentAttendance"
+  | "sessionOccurrence"
+  | "reschedule"
+  | "cancel"
+  | "attendanceDocument";
+
+export type SessionDialogOpener = (kind: SessionDialogKind, session: Session) => void;
+
 export function SessionList({
   sessions,
   role,
-  dialogState,
+  openDialog,
   supervisorId,
   fellowId,
 }: {
   sessions: Session[];
   role: ImplementerRole;
-  dialogState: {
-    setSession: Dispatch<SetStateAction<Session | null>>;
-    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
-    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
-    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  openDialog: SessionDialogOpener;
   supervisorId?: string;
   fellowId?: string;
 }) {
@@ -48,10 +51,7 @@ export function SessionList({
     return (
       session && (
         <SessionDetail
-          state={{
-            session,
-            ...dialogState,
-          }}
+          state={{ session, openDialog }}
           role={role}
           layout="expanded"
           fellowId={fellowId}
@@ -68,10 +68,7 @@ export function SessionList({
       {firstSession && (
         <SessionDetail
           layout="compact"
-          state={{
-            session: firstSession,
-            ...dialogState,
-          }}
+          state={{ session: firstSession, openDialog }}
           role={role}
           fellowId={fellowId}
           supervisorId={supervisorId}
@@ -81,10 +78,7 @@ export function SessionList({
       {secondSession && (
         <SessionDetail
           layout="compact"
-          state={{
-            session: secondSession,
-            ...dialogState,
-          }}
+          state={{ session: secondSession, openDialog }}
           role={role}
           fellowId={fellowId}
           supervisorId={supervisorId}
@@ -106,10 +100,7 @@ export function SessionList({
                     <SessionDetail
                       key={session.id}
                       layout="compact"
-                      state={{
-                        session,
-                        ...dialogState,
-                      }}
+                      state={{ session, openDialog }}
                       role={role}
                       fellowId={fellowId}
                       supervisorId={supervisorId}
@@ -136,13 +127,7 @@ export function SessionDetail({
 }: {
   state: {
     session: Session;
-    setSession?: Dispatch<SetStateAction<Session | null>>;
-    setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
-    setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
-    setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
-    setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
-    setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
-    setCancelSessionDialog?: Dispatch<SetStateAction<boolean>>;
+    openDialog?: SessionDialogOpener;
   };
   layout: "compact" | "expanded";
   withDropdown?: boolean;
@@ -267,21 +252,14 @@ export function SessionDropDown({
   children: React.ReactNode;
   state: {
     session: Session;
-    setSession?: Dispatch<SetStateAction<Session | null>>;
-    setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
-    setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
-    setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
-    setSupervisorAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
-    setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
-    setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
-    setCancelSessionDialog?: Dispatch<SetStateAction<boolean>>;
-    setAttendanceDocumentDialog?: Dispatch<SetStateAction<boolean>>;
+    openDialog?: SessionDialogOpener;
   };
   role: ImplementerRole;
   fellowId?: string;
   supervisorId?: string;
 }) {
   const { session } = state;
+  const opens = (kind: SessionDialogKind) => () => state.openDialog?.(kind, session);
   const pathname = usePathname();
   const isSchedulePage = pathname.includes("/schedule");
   const fellowGroup = session.school?.interventionGroups.find(
@@ -310,28 +288,19 @@ export function SessionDropDown({
               </Link>
             )}
             <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setSupervisorAttendanceDialog?.(true);
-              }}
+              onClick={opens("supervisorAttendance")}
               disabled={session.status === "Cancelled" || !session.occurred}
             >
               View supervisor attendance
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setFellowAttendanceDialog?.(true);
-              }}
+              onClick={opens("fellowAttendance")}
               disabled={session.status === "Cancelled" || !session.occurred}
             >
               View fellow attendance
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setStudentAttendanceDialog?.(true);
-              }}
+              onClick={opens("studentAttendance")}
               disabled={session.status === "Cancelled" || !session.occurred}
             >
               View student attendance
@@ -342,10 +311,7 @@ export function SessionDropDown({
                 !session.occurred ||
                 session.sessionRatings.length === 0
               }
-              onClick={() => {
-                state.setSession?.(session);
-                state.setRatingsDialog?.(true);
-              }}
+              onClick={opens("ratings")}
             >
               Weekly session report
             </DropdownMenuItem>
@@ -353,10 +319,7 @@ export function SessionDropDown({
         )}
         {role === ImplementerRole.HUB_COORDINATOR && (
           <DropdownMenuItem
-            onClick={() => {
-              state.setSession?.(session);
-              state.setSupervisorAttendanceDialog?.(true);
-            }}
+            onClick={opens("supervisorAttendance")}
             disabled={session.status === "Cancelled" || !session.occurred}
           >
             Mark supervisor attendance
@@ -365,10 +328,7 @@ export function SessionDropDown({
         {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
           <>
             <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setFellowAttendanceDialog?.(true);
-              }}
+              onClick={opens("fellowAttendance")}
               disabled={
                 session.status === "Cancelled" ||
                 session.session?.sessionType === "CLINICAL" ||
@@ -382,10 +342,7 @@ export function SessionDropDown({
             {session.session?.sessionType === "INTERVENTION" && (
               <>
                 <DropdownMenuItem
-                  onClick={() => {
-                    state.setSession?.(session);
-                    state.setStudentAttendanceDialog?.(true);
-                  }}
+                  onClick={opens("studentAttendance")}
                   disabled={session.status === "Cancelled" || !session.occurred}
                 >
                   View student attendance
@@ -399,20 +356,14 @@ export function SessionDropDown({
                     (role === ImplementerRole.SUPERVISOR &&
                       session.school?.assignedSupervisorId !== supervisorId)
                   }
-                  onClick={() => {
-                    state.setSession?.(session);
-                    state.setRatingsDialog?.(true);
-                  }}
+                  onClick={opens("ratings")}
                 >
                   Weekly session report
                 </DropdownMenuItem>
               </>
             )}
             <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setSessionOccurrenceDialog?.(true);
-              }}
+              onClick={opens("sessionOccurrence")}
               disabled={
                 session.status === "Cancelled" ||
                 session.occurred ||
@@ -423,10 +374,7 @@ export function SessionDropDown({
               Mark session occurrence
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setRescheduleSessionDialog?.(true);
-              }}
+              onClick={opens("reschedule")}
               disabled={
                 session.occurred ||
                 (role === "SUPERVISOR" && session.school?.assignedSupervisorId !== supervisorId)
@@ -436,10 +384,7 @@ export function SessionDropDown({
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-shamiri-light-red"
-              onClick={() => {
-                state.setSession?.(session);
-                state.setCancelSessionDialog?.(true);
-              }}
+              onClick={opens("cancel")}
               disabled={
                 session.status === "Cancelled" ||
                 session.occurred ||
@@ -453,13 +398,7 @@ export function SessionDropDown({
 
         {role === ImplementerRole.FELLOW ? (
           <>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession?.(session);
-                state.setStudentAttendanceDialog?.(true);
-              }}
-              disabled={!canMarkAttendance}
-            >
+            <DropdownMenuItem onClick={opens("studentAttendance")} disabled={!canMarkAttendance}>
               Mark student attendance
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -474,8 +413,7 @@ export function SessionDropDown({
                       });
                       return;
                     }
-                    state.setSession?.(session);
-                    state.setAttendanceDocumentDialog?.(true);
+                    state.openDialog?.("attendanceDocument", session);
                   })
                   .catch(() => {
                     toast({

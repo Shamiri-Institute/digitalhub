@@ -6,6 +6,7 @@ import Image from "next/image";
 import type { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import PayoutActionsDropdown from "#/components/common/expenses/payout-history/payout-actions-dropdown";
 import type { PayoutHistoryEntry } from "#/lib/actions/expenses/payout-history";
+import { sortBy } from "#/lib/table-view";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 
@@ -54,6 +55,8 @@ export const columns: ColumnDef<PayoutHistoryEntry>[] = [
   {
     accessorKey: "duration",
     header: "Duration",
+    // A payout period starts on the day it was added.
+    sortingFn: sortBy((payout) => payout.dateAdded),
   },
   {
     accessorKey: "totalPayoutAmount",
