@@ -34,6 +34,7 @@ import {
   requireSchoolInHub,
 } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
+import { requireEvaluationEditable } from "#/lib/evaluation-edit-window";
 
 const attendedFlag = (attended: string | undefined) =>
   attended === "attended" ? true : attended === "missed" ? false : null;
@@ -328,6 +329,7 @@ export async function submitWeeklyFellowEvaluation(
             message: "Successfully submitted weekly evaluation",
           };
         }
+        requireEvaluationEditable(previousEvaluation, new Date());
         await db
           .update(weeklyFellowRatings)
           .set({

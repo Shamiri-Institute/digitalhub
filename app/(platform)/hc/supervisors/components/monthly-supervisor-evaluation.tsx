@@ -1,4 +1,4 @@
-import { addDays, eachMonthOfInterval, format, isEqual } from "date-fns";
+import { eachMonthOfInterval, format, isEqual } from "date-fns";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -35,7 +35,8 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { cn, updateWindowFor } from "#/lib/utils";
+import { evaluationEditDeadline, mayEditEvaluation } from "#/lib/evaluation-edit-window";
+import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { monthlySupervisorEvaluation, project as projectTable } from "#/db/schema";
 
@@ -81,9 +82,9 @@ function MonthlySupervisorEvaluationForm({
   const isViewMode = mode === "view";
   const firstEvaluation = isViewMode ? evaluations[0] : undefined;
   const [existingEvaluation, setExistingEvaluation] = useState(firstEvaluation);
-  const [updateWindowDuration, setUpdateWindowDuration] = useState(() =>
-    updateWindowFor(firstEvaluation),
-  );
+  const [now, setNow] = useState(() => new Date());
+  const editWindowClosed =
+    existingEvaluation !== undefined && !mayEditEvaluation(existingEvaluation.createdAt, now);
 
   const defaultValues = {
     supervisorId,
@@ -251,9 +252,9 @@ function MonthlySupervisorEvaluationForm({
       isEqual(new Date(evaluation.month), new Date(value)),
     );
 
+    setNow(new Date());
     if (match) {
       setExistingEvaluation(match);
-      setUpdateWindowDuration(updateWindowFor(match));
       form.reset(evaluationValues(match));
     } else {
       form.reset({ month: new Date(value), ...defaultValues });
@@ -351,13 +352,17 @@ function MonthlySupervisorEvaluationForm({
             </FormItem>
           )}
         />
-        {existingEvaluation && updateWindowDuration >= 0 ? (
+        {existingEvaluation && !editWindowClosed ? (
           <DialogAlertWidget separator={false}>
             <div className="flex items-center gap-2">
               <span>
-                Update ratings by {format(addDays(existingEvaluation.createdAt, 14), "dd-MM-yyyy")}{" "}
-                (
-                <CountdownTimer duration={updateWindowDuration} />)
+                Update ratings by{" "}
+                {format(evaluationEditDeadline(existingEvaluation.createdAt), "dd-MM-yyyy")} (
+                <CountdownTimer
+                  deadline={evaluationEditDeadline(existingEvaluation.createdAt)}
+                  onExpire={setNow}
+                />
+                )
               </span>
             </div>
           </DialogAlertWidget>
@@ -402,9 +407,7 @@ function MonthlySupervisorEvaluationForm({
                           <RatingStarsInput
                             value={field.value}
                             onChange={field.onChange}
-                            disabled={
-                              isViewMode || (existingEvaluation && updateWindowDuration === 0)
-                            }
+                            disabled={isViewMode || editWindowClosed}
                           />
                         </FormItem>
                       )}
@@ -413,23 +416,17 @@ function MonthlySupervisorEvaluationForm({
                   <FormField
                     control={form.control}
                     name={input.commentsInputName as keyof typeof form.formState.defaultValues}
-                    disabled={isViewMode || (existingEvaluation && updateWindowDuration <= 0)}
+                    disabled={isViewMode || editWindowClosed}
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <Textarea
                             className="resize-none"
                             {...field}
-                            disabled={
-                              isViewMode || (existingEvaluation && updateWindowDuration <= 0)
-                            }
+                            disabled={isViewMode || editWindowClosed}
                             readOnly={isViewMode}
                             placeholder={
-                              isViewMode
-                                ? ""
-                                : existingEvaluation && updateWindowDuration <= 0
-                                  ? ""
-                                  : "Type additional comments"
+                              isViewMode || editWindowClosed ? "" : "Type additional comments"
                             }
                           />
                         </FormControl>
@@ -442,35 +439,31 @@ function MonthlySupervisorEvaluationForm({
             );
           })}
         </div>
-        {!isViewMode &&
-          (existingEvaluation === undefined ||
-            (existingEvaluation && updateWindowDuration >= 0)) && (
-            <div className="space-y-5">
-              <Separator />
-              <DialogFooter className="flex justify-end">
-                <Button
-                  className=""
-                  variant="ghost"
-                  type="button"
-                  onClick={() => {
-                    setIsOpen(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="brand"
-                  type="submit"
-                  disabled={
-                    form.formState.isSubmitting || (existingEvaluation && updateWindowDuration < 0)
-                  }
-                  loading={form.formState.isSubmitting}
-                >
-                  {existingEvaluation ? "Update & save" : "Submit"}
-                </Button>
-              </DialogFooter>
-            </div>
-          )}
+        {!isViewMode && (
+          <div className="space-y-5">
+            <Separator />
+            <DialogFooter className="flex justify-end">
+              <Button
+                className=""
+                variant="ghost"
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="brand"
+                type="submit"
+                disabled={form.formState.isSubmitting || editWindowClosed}
+                loading={form.formState.isSubmitting}
+              >
+                {existingEvaluation ? "Update & save" : "Submit"}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
         {isViewMode && (
           <div className="space-y-5">
             <Separator />

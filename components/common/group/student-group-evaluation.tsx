@@ -1,7 +1,7 @@
 "use client";
 
 import type { interventionGroupReport, interventionSession, sessionName } from "#/db/schema";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -37,7 +37,8 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitGroupEvaluation } from "#/lib/actions/group";
-import { cn, sessionDisplayName, updateWindowFor } from "#/lib/utils";
+import { evaluationEditDeadline, mayEditEvaluation } from "#/lib/evaluation-edit-window";
+import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type FormInput = {
@@ -151,9 +152,9 @@ function StudentGroupEvaluationForm({
       })
     | undefined
   >(_evaluation);
-  const [updateWindowDuration, setUpdateWindowDuration] = useState(() =>
-    updateWindowFor(_evaluation),
-  );
+  const [now, setNow] = useState(() => new Date());
+  const editWindowClosed =
+    existingEvaluation !== undefined && !mayEditEvaluation(existingEvaluation.createdAt, now);
   const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(
     _evaluation?.sessionId ?? undefined,
   );
@@ -188,7 +189,7 @@ function StudentGroupEvaluationForm({
     const match = evaluations.find((evaluation) => evaluation.sessionId === sessionId);
     setSelectedSessionId(sessionId);
     setExistingEvaluation(match);
-    setUpdateWindowDuration(updateWindowFor(match));
+    setNow(new Date());
     form.reset(getDefaultValues(match, sessionId));
   }
 
@@ -276,13 +277,17 @@ function StudentGroupEvaluationForm({
               </FormItem>
             )}
           />
-          {mode !== "view" && existingEvaluation && updateWindowDuration > 0 ? (
+          {mode !== "view" && existingEvaluation && !editWindowClosed ? (
             <DialogAlertWidget separator={false}>
               <div className="flex items-center gap-2">
                 <span>
                   Update ratings by{" "}
-                  {format(addDays(existingEvaluation.createdAt, 14), "dd-MM-yyyy")} (
-                  <CountdownTimer duration={updateWindowDuration} />)
+                  {format(evaluationEditDeadline(existingEvaluation.createdAt), "dd-MM-yyyy")} (
+                  <CountdownTimer
+                    deadline={evaluationEditDeadline(existingEvaluation.createdAt)}
+                    onExpire={setNow}
+                  />
+                  )
                 </span>
               </div>
             </DialogAlertWidget>
@@ -316,10 +321,7 @@ function StudentGroupEvaluationForm({
                             <RatingStarsInput
                               value={field.value}
                               onChange={field.onChange}
-                              disabled={
-                                mode === "view" ||
-                                (existingEvaluation && updateWindowDuration === 0)
-                              }
+                              disabled={mode === "view" || editWindowClosed}
                             />
                           </FormItem>
                         )}
@@ -333,10 +335,7 @@ function StudentGroupEvaluationForm({
                           <FormControl>
                             <Textarea
                               rows={mode === "view" ? 5 : 3}
-                              disabled={
-                                mode === "view" ||
-                                (existingEvaluation && updateWindowDuration === 0)
-                              }
+                              disabled={mode === "view" || editWindowClosed}
                               className="resize-none"
                               {...field}
                             />
@@ -351,8 +350,7 @@ function StudentGroupEvaluationForm({
             })}
           </div>
           <Separator />
-          {mode !== "view" &&
-          (existingEvaluation === undefined || (existingEvaluation && updateWindowDuration > 0)) ? (
+          {mode !== "view" ? (
             <div className="space-y-5">
               <DialogFooter className="flex justify-end">
                 <Button
@@ -368,9 +366,7 @@ function StudentGroupEvaluationForm({
                 <Button
                   variant="brand"
                   type="submit"
-                  disabled={
-                    form.formState.isSubmitting || (existingEvaluation && updateWindowDuration < 0)
-                  }
+                  disabled={form.formState.isSubmitting || editWindowClosed}
                   loading={form.formState.isSubmitting}
                 >
                   {existingEvaluation ? "Update & save" : "Submit"}

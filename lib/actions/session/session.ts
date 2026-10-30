@@ -25,6 +25,7 @@ import { clinicalCasesCountExtras, fetchScheduleSupervisors } from "#/lib/action
 import { NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
+import { requireEvaluationEditable } from "#/lib/evaluation-edit-window";
 
 function requireHubCoordinatorOrSupervisor() {
   return requireHubRole(ImplementerRole.HUB_COORDINATOR, ImplementerRole.SUPERVISOR);
@@ -249,6 +250,11 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
     if (session.school?.assignedSupervisorId !== supervisorId) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
+    const savedRating = await db.query.interventionSessionRating.findFirst({
+      where: (r, { and, eq }) => and(eq(r.sessionId, sessionId), eq(r.supervisorId, supervisorId)),
+      columns: { createdAt: true },
+    });
+    requireEvaluationEditable(savedRating, new Date());
 
     const rating = {
       sessionId,
