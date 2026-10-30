@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -51,6 +51,29 @@ import {
   validateAudioMagicBytes,
 } from "../schemas";
 
+type AudioFileState =
+  | { status: "empty" }
+  | { status: "validating"; file: File }
+  | { status: "invalid"; error: string }
+  | { status: "ready"; file: File };
+
+async function validateAudio(file: File): Promise<AudioFileState> {
+  try {
+    const basicValidation = validateAudioFile(file);
+    if (!basicValidation.valid) {
+      return { status: "invalid", error: basicValidation.error ?? "Invalid file" };
+    }
+    const magicValidation = await validateAudioMagicBytes(file);
+    if (!magicValidation.valid) {
+      return { status: "invalid", error: magicValidation.error ?? "Invalid file content" };
+    }
+    return { status: "ready", file };
+  } catch (error) {
+    console.error("Error validating file:", error);
+    return { status: "invalid", error: "Failed to validate file" };
+  }
+}
+
 interface UploadRecordingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -84,23 +107,15 @@ export default function UploadRecordingDialog({
     null,
   );
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
-  const [validatingFile, setValidatingFile] = useState(false);
-
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const { uploadToS3, files } = useS3Upload();
+  const [audioFile, setAudioFile] = useState<AudioFileState>({ status: "empty" });
+  const { uploadToS3, files: s3Uploads } = useS3Upload();
   const { isSubmitting } = form.formState;
+  const fileInputDisabled = isSubmitting || audioFile.status === "validating";
 
-  // effect: mirrors the S3 hook's upload progress into the dialog's progress bar
-  useEffect(() => {
-    if (files.length > 0 && isSubmitting) {
-      const lastFile = files[files.length - 1];
-      if (lastFile) {
-        setUploadProgress(Math.min(Math.round(lastFile.progress * 0.8), 80));
-      }
-    }
-  }, [files, isSubmitting]);
+  const readyFile = audioFile.status === "ready" ? audioFile.file : null;
+  const readyFileUpload = s3Uploads.findLast((upload) => upload.file === readyFile);
+  const uploadProgress =
+    isSubmitting && readyFileUpload ? Math.min(Math.round(readyFileUpload.progress * 0.8), 80) : 0;
 
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
@@ -115,8 +130,7 @@ export default function UploadRecordingDialog({
   const duplicateExists = duplicateCheck?.key === duplicateKey && duplicateCheck.exists;
 
   const clearFile = () => {
-    setSelectedFile(null);
-    setFileError(null);
+    setAudioFile({ status: "empty" });
   };
 
   function selectFellow(selectedFellowId: string) {
@@ -198,36 +212,17 @@ export default function UploadRecordingDialog({
   }
 
   const handleFileSelect = async (file: File) => {
-    setFileError(null);
-    setValidatingFile(true);
-
-    try {
-      const basicValidation = validateAudioFile(file);
-      if (!basicValidation.valid) {
-        setFileError(basicValidation.error ?? "Invalid file");
-        setSelectedFile(null);
-        return;
-      }
-
-      const magicValidation = await validateAudioMagicBytes(file);
-      if (!magicValidation.valid) {
-        setFileError(magicValidation.error ?? "Invalid file content");
-        setSelectedFile(null);
-        return;
-      }
-
-      setSelectedFile(file);
-    } catch (error) {
-      console.error("Error validating file:", error);
-      setFileError("Failed to validate file");
-      setSelectedFile(null);
-    } finally {
-      setValidatingFile(false);
-    }
+    setAudioFile({ status: "validating", file });
+    const validated = await validateAudio(file);
+    // A reset (new fellow or group, closing the dialog) can replace the file while it validates.
+    setAudioFile((current) =>
+      current.status === "validating" && current.file === file ? validated : current,
+    );
   };
 
   const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
+    if (fileInputDisabled) return;
 
     let files: File[] = [];
     if (e.dataTransfer.items) {
@@ -251,10 +246,11 @@ export default function UploadRecordingDialog({
   };
 
   const onSubmit = async (data: RecordingUploadFormData) => {
-    if (!selectedFile) {
-      setFileError("Please select a file");
+    if (audioFile.status !== "ready") {
+      setAudioFile({ status: "invalid", error: "Please select a file" });
       return;
     }
+    const { file } = audioFile;
 
     if (duplicateExists) {
       toast({
@@ -265,10 +261,8 @@ export default function UploadRecordingDialog({
       return;
     }
 
-    setUploadProgress(0);
-
     try {
-      const { key, token } = await uploadToS3(selectedFile, {
+      const { key, token } = await uploadToS3(file, {
         bucket: "recordings",
         groupId: data.groupId,
         sessionId: data.sessionId,
@@ -283,12 +277,10 @@ export default function UploadRecordingDialog({
         schoolId: data.schoolId,
         groupId: data.groupId,
         sessionId: data.sessionId,
-        originalFileName: selectedFile.name,
+        originalFileName: file.name,
         s3Key: key,
         token,
       });
-
-      setUploadProgress(100);
 
       if (result.success) {
         toast({
@@ -306,15 +298,12 @@ export default function UploadRecordingDialog({
         description: error instanceof Error ? error.message : "Failed to upload recording",
         variant: "destructive",
       });
-    } finally {
-      setUploadProgress(0);
     }
   };
 
   const handleClose = () => {
     form.reset();
     clearFile();
-    setUploadProgress(0);
     onOpenChange(false);
   };
 
@@ -471,17 +460,17 @@ export default function UploadRecordingDialog({
                     onDragOver={(e) => e.preventDefault()}
                     className={cn(
                       "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
-                      isSubmitting || validatingFile
+                      fileInputDisabled
                         ? "cursor-not-allowed border-gray-200 bg-gray-50"
                         : "border-gray-300 hover:border-shamiri-new-blue",
-                      fileError && "border-red-border",
+                      audioFile.status === "invalid" && "border-red-border",
                     )}
                   >
-                    {selectedFile ? (
+                    {audioFile.status === "ready" ? (
                       <div className="flex items-center gap-2 text-sm">
                         <Icons.check className="h-4 w-4 text-shamiri-green" />
-                        <span>{selectedFile.name}</span>
-                        <span className="text-gray-500">({formatBytes(selectedFile.size)})</span>
+                        <span>{audioFile.file.name}</span>
+                        <span className="text-gray-500">({formatBytes(audioFile.file.size)})</span>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-2 text-center">
@@ -500,12 +489,16 @@ export default function UploadRecordingDialog({
                       type="file"
                       accept={ALLOWED_EXTENSIONS.join(",")}
                       onChange={handleFileInputChange}
-                      disabled={isSubmitting || validatingFile}
+                      disabled={fileInputDisabled}
                       className="hidden"
                     />
                   </label>
-                  {fileError && <p className="text-sm text-red-base">{fileError}</p>}
-                  {validatingFile && <p className="text-sm text-gray-500">Validating file...</p>}
+                  {audioFile.status === "invalid" && (
+                    <p className="text-sm text-red-base">{audioFile.error}</p>
+                  )}
+                  {audioFile.status === "validating" && (
+                    <p className="text-sm text-gray-500">Validating file...</p>
+                  )}
                 </div>
               </>
             )}
@@ -532,7 +525,7 @@ export default function UploadRecordingDialog({
               <Button
                 type="submit"
                 variant="brand"
-                disabled={!selectedFile || isSubmitting || duplicateExists || validatingFile}
+                disabled={audioFile.status !== "ready" || isSubmitting || duplicateExists}
                 loading={isSubmitting}
               >
                 {isSubmitting ? "Uploading..." : "Upload"}
