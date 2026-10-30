@@ -60,7 +60,7 @@ export default function RescheduleSession({
   );
 }
 
-function RescheduleSessionForm({
+export function RescheduleSessionForm({
   session,
   onOpenChange,
 }: {
