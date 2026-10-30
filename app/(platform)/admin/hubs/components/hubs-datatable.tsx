@@ -24,6 +24,7 @@ export default function HubsDataTable({
   return (
     <div className="space-y-3">
       <DataTable
+        urlState
         data={hubs}
         columns={getColumns(canManageHubs)}
         className="data-table data-table-action bg-white lg:mt-4"

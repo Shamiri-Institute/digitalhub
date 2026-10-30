@@ -38,6 +38,7 @@ export default function RecordingsDatatable({ data, fellows }: RecordingsDatatab
   return (
     <div>
       <DataTable
+        urlState
         data={data}
         columns={recordingColumns({
           openDialog: (kind, { id: recordingId }) => setDialog({ kind, recordingId }),

@@ -21,6 +21,7 @@ export default function AllHubClinicalCasesTable({
         {title} ({cases.length})
       </h2>
       <DataTable
+        urlState
         data={cases}
         columns={columns}
         className="data-table data-table-action bg-white lg:mt-4"

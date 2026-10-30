@@ -69,6 +69,7 @@ export default function StudentsDatatable({
   return (
     <div>
       <DataTable
+        urlState
         data={students}
         columns={columns({
           openDialog: (kind, { id: studentId }) => setDialog({ kind, studentId }),

@@ -125,6 +125,7 @@ export default function FellowSchoolsDatatable({
   return (
     <>
       <DataTable
+        urlState
         data={fellows}
         columns={mainColumns}
         className={"data-table data-table-action bg-white lg:mt-4"}

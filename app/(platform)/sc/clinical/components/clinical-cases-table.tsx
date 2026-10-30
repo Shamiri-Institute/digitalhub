@@ -51,6 +51,7 @@ export default function ClinicalCasesTable({
 
   return (
     <DataTable
+      urlState
       data={cases}
       columns={clinicalCaseColumns(referralOptions)}
       className="data-table data-table-action bg-white lg:mt-4"

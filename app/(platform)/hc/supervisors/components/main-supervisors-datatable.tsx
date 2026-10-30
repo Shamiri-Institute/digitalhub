@@ -62,6 +62,7 @@ export default function MainSupervisorsDataTable({
   return (
     <div>
       <DataTable
+        urlState
         data={supervisors}
         columns={columns({
           openDialog: (kind, { id: supervisorId }) => setDialog({ kind, supervisorId }),

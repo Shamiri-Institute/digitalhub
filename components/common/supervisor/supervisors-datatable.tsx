@@ -69,6 +69,7 @@ export default function SupervisorsDataTable({
   return (
     <div>
       <DataTable
+        urlState
         data={supervisors}
         columns={columns({
           openMarkAttendance: ({ id: supervisorId }) =>
