@@ -18,6 +18,7 @@ import StudentsDataTableMenu from "#/components/common/student/students-datatabl
 import SessionHistoryWidget from "#/components/common/supervisor/sessions-history-widget";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
+import { sortBy } from "#/lib/table-view";
 import { wrapColumnHeader } from "#/lib/utils";
 
 type GroupSummary = Pick<typeof interventionGroup.$inferSelect, "id" | "groupName"> & {
@@ -191,6 +192,7 @@ export const columns = (state: {
     header: () => wrapColumnHeader("Date added"),
     id: "Date added",
     accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
+    sortingFn: sortBy((student) => student.createdAt),
   },
   {
     id: "button",

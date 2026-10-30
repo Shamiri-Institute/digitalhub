@@ -11,6 +11,7 @@ import FellowSchoolDatatableDropdownMenu, {
 import { Badge } from "#/components/ui/badge";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Checkbox } from "#/components/ui/checkbox";
+import { sortBy } from "#/lib/table-view";
 import { sessionDisplayName } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
@@ -19,6 +20,12 @@ import FellowsTableDropdown from "./fellow-schools-datatable-dropdown-menu";
 export type FellowDialogKind = "weeklyEvaluation" | "attendanceHistory" | "complaints";
 
 export type FellowGroupDialogKind = "markAttendance" | "students" | "groupEvaluation";
+
+function nextUpcomingSession({ school }: FellowGroupData) {
+  return school.interventionSessions
+    .filter((session) => isAfter(session.sessionDate, new Date()))
+    .toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime())[0];
+}
 
 export const fellowSchoolsColumns = ({
   state,
@@ -185,16 +192,8 @@ export const subColumns = ({
   {
     header: "Upcoming session",
     id: "Upcoming session",
-    accessorFn: ({ school }) => {
-      const upcomingSessions = school.interventionSessions
-        .filter((session) => {
-          return isAfter(session.sessionDate, new Date());
-        })
-        .toSorted((a, b) => {
-          return a.sessionDate.getTime() - b.sessionDate.getTime();
-        });
-
-      const firstUpcoming = upcomingSessions[0];
+    accessorFn: (group) => {
+      const firstUpcoming = nextUpcomingSession(group);
       if (firstUpcoming) {
         return `${sessionDisplayName(firstUpcoming.session?.sessionName)} - ${format(
           firstUpcoming.sessionDate,
@@ -203,6 +202,7 @@ export const subColumns = ({
       }
       return null;
     },
+    sortingFn: sortBy((group) => nextUpcomingSession(group)?.sessionDate),
   },
   {
     accessorKey: "groupName",
