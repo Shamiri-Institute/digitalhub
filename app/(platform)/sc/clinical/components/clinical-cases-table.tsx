@@ -2,7 +2,10 @@
 import { Plus } from "lucide-react";
 import type { ClinicalCases, SchoolsInHubData } from "#/app/(platform)/sc/clinical/action";
 import { clinicalCaseColumns } from "#/app/(platform)/sc/clinical/columns";
-import { ClinicalDiagnosingBoard } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
+import {
+  ClinicalDiagnosingBoard,
+  presentingIssuesPhase,
+} from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
 import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
 import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-clinical-case-form";
 import DataTable from "#/components/data-table";
@@ -53,12 +56,16 @@ export default function ClinicalCasesTable({
     <DataTable
       urlState
       data={cases}
+      getRowId={(clinicalCase) => clinicalCase.id}
       columns={clinicalCaseColumns(referralOptions)}
       className="data-table data-table-action bg-white lg:mt-4"
       renderTableActions={renderTableActions}
       renderSubComponent={({ row }) => (
         <div className="space-y-6 p-4">
-          <ClinicalDiagnosingBoard currentcase={row.original} />
+          <ClinicalDiagnosingBoard
+            key={`${row.original.id}-${presentingIssuesPhase(row.original)}`}
+            currentcase={row.original}
+          />
           <ViewMarkClinicalSessions currentcase={row.original} userRole="SUPERVISOR" />
         </div>
       )}

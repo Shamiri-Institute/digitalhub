@@ -1,6 +1,12 @@
 "use client";
 
-import { createCalendar, type DateValue, toCalendarDate, today } from "@internationalized/date";
+import {
+  type CalendarDate,
+  createCalendar,
+  type DateValue,
+  toCalendarDate,
+  today,
+} from "@internationalized/date";
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole } from "#/db/enums";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -43,6 +49,7 @@ import { fetchSessionSupervisors } from "#/lib/actions/session/session";
 import {
   type Mode,
   parseScheduleView,
+  type AttendanceRole,
   sameRange,
   type ScheduleView,
   scheduleSearch,
@@ -184,7 +191,14 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     weekProps: { state: weekState },
     dayProps: { state: dayState },
     listProps: { state: listState },
-    tableProps: { state: tableState },
+    tableProps: {
+      state: tableState,
+      selectedDay: view.date,
+      onSelectedDayChange: (date: CalendarDate) => navigate({ date }, "replace"),
+      attendanceRole: view.attendanceRole,
+      onAttendanceRoleChange: (attendanceRole: AttendanceRole) =>
+        navigate({ attendanceRole }, "replace"),
+    },
     supervisors: props.supervisors,
     fellowRatings: props.fellowRatings,
     role: props.role,
@@ -336,9 +350,10 @@ function CalendarView({
   listProps: {
     state: CalendarState;
   };
-  tableProps: {
-    state: CalendarState;
-  };
+  tableProps: Omit<
+    React.ComponentProps<typeof TableView>,
+    "supervisors" | "role" | "supervisorId" | "sessions"
+  >;
   supervisors?: ScheduleSupervisor[];
   fellowRatings?: {
     id: string;

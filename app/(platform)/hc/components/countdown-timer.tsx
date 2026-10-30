@@ -1,33 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { differenceInSeconds } from "date-fns";
+import { useEffect, useEffectEvent, useState } from "react";
 
-export default function CountdownTimer({ duration }: { duration: number }) {
-  // countdown duration in seconds
-  const [timeRemaining, setTimeRemaining] = useState(duration);
-  // Reset the countdown when the parent passes a new duration. Adjusting state during
-  // render is the documented replacement for a prop-sync effect.
-  const [lastDuration, setLastDuration] = useState(duration);
-  if (lastDuration !== duration) {
-    setLastDuration(duration);
-    setTimeRemaining(duration);
-  }
+export default function CountdownTimer({
+  deadline,
+  onExpire,
+}: {
+  deadline: Date;
+  onExpire: (expiredAt: Date) => void;
+}) {
+  const [now, setNow] = useState(() => new Date());
+  const notifyExpired = useEffectEvent(onExpire);
+  const deadlineMs = deadline.getTime();
 
-  // effect: setInterval is an external subscription; cleared on unmount or when duration changes
+  // Each tick reads the clock, so a tab that throttles the interval still expires on its next tick.
+  // effect: setInterval is an external subscription; cleared on unmount or a new deadline
   useEffect(() => {
     const timerInterval = setInterval(() => {
-      setTimeRemaining((prevTime) => {
-        if (prevTime === 0) {
-          clearInterval(timerInterval);
-          return 0;
-        }
-        return prevTime - 1;
-      });
+      const tickedAt = new Date();
+      setNow(tickedAt);
+      if (tickedAt.getTime() >= deadlineMs) {
+        clearInterval(timerInterval);
+        notifyExpired(tickedAt);
+      }
     }, 1000);
 
     return () => clearInterval(timerInterval);
-  }, [duration]);
+  }, [deadlineMs]);
 
+  const timeRemaining = Math.max(0, differenceInSeconds(deadlineMs, now));
   const days = Math.floor(timeRemaining / (3600 * 24));
   const hours = Math.floor((timeRemaining % (3600 * 24)) / 3600);
   const minutes = Math.floor((timeRemaining % 3600) / 60);

@@ -10,6 +10,7 @@ import {
   getClinicalCaseNotes,
 } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import { Alert, AlertDescription, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -75,6 +76,11 @@ const CaseReportSchema = z.object({
 
 type CaseReportFormValues = z.infer<typeof CaseReportSchema>;
 
+type NotesLoad =
+  | { status: "loading" }
+  | { status: "failed" }
+  | { status: "loaded"; notes: Awaited<ReturnType<typeof getClinicalCaseNotes>> };
+
 export default function CaseNotesForm({
   children,
   clinicalCase,
@@ -85,22 +91,20 @@ export default function CaseNotesForm({
   role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
-  // null until the case's notes load; the session select waits for them, so choosing a session
-  // prefills from loaded notes instead of wiping what the user typed when they arrive.
-  const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>> | null>(null);
+  // The session select waits for the notes, so choosing a session prefills from loaded notes
+  // instead of wiping what the user typed when they arrive.
+  const [notesLoad, setNotesLoad] = useState<NotesLoad>({ status: "loading" });
 
   const onOpenChange = (nextOpen: boolean) => {
     setDialogOpen(nextOpen);
     if (nextOpen) {
-      setNotes(null);
+      setNotesLoad({ status: "loading" });
       getClinicalCaseNotes(clinicalCase.id)
-        .then(setNotes)
-        .catch(() => {
-          setNotes([]);
-          toast({ title: "Failed to load case notes", variant: "destructive" });
-        });
+        .then((notes) => setNotesLoad({ status: "loaded", notes }))
+        .catch(() => setNotesLoad({ status: "failed" }));
     }
   };
+  const notes = notesLoad.status === "loaded" ? notesLoad.notes : null;
 
   const form = useForm<CaseReportFormValues>({
     resolver: zodResolver(CaseReportSchema),
@@ -201,6 +205,8 @@ export default function CaseNotesForm({
   const selectedSessionId = form.watch("sessionId");
   const hasExistingNotes =
     !!selectedSessionId && !!notes?.some((note) => note.sessionId === selectedSessionId);
+  // Until the notes load, whether the session already has notes is unknown.
+  const fieldsLocked = notes === null || hasExistingNotes;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -214,6 +220,15 @@ export default function CaseNotesForm({
             </p>
           )}
         </DialogHeader>
+        {notesLoad.status === "failed" && (
+          <Alert variant="destructive">
+            <AlertTitle>Could not load this case&apos;s notes</AlertTitle>
+            <AlertDescription>
+              Sessions stay locked until the notes load. Close the dialog and try again, or reload
+              the page.
+            </AlertDescription>
+          </Alert>
+        )}
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <Form {...form}>
           <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
@@ -283,8 +298,8 @@ export default function CaseNotesForm({
                     <Textarea
                       {...field}
                       rows={4}
-                      disabled={hasExistingNotes}
-                      className={hasExistingNotes ? "bg-muted" : ""}
+                      disabled={fieldsLocked}
+                      className={fieldsLocked ? "bg-muted" : ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -302,8 +317,8 @@ export default function CaseNotesForm({
                     <Input
                       type="number"
                       {...field}
-                      disabled={hasExistingNotes}
-                      className={hasExistingNotes ? "bg-muted" : ""}
+                      disabled={fieldsLocked}
+                      className={fieldsLocked ? "bg-muted" : ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -331,7 +346,7 @@ export default function CaseNotesForm({
                             <FormControl>
                               <Checkbox
                                 checked={field.value === level}
-                                disabled={hasExistingNotes}
+                                disabled={fieldsLocked}
                                 onCheckedChange={(checked) => {
                                   if (checked) {
                                     field.onChange(level);
@@ -361,8 +376,8 @@ export default function CaseNotesForm({
                       <Textarea
                         {...field}
                         rows={3}
-                        disabled={hasExistingNotes}
-                        className={hasExistingNotes ? "bg-muted" : ""}
+                        disabled={fieldsLocked}
+                        className={fieldsLocked ? "bg-muted" : ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -391,7 +406,7 @@ export default function CaseNotesForm({
                             <FormControl>
                               <Checkbox
                                 checked={field.value?.includes(intervention)}
-                                disabled={hasExistingNotes}
+                                disabled={fieldsLocked}
                                 onCheckedChange={(checked) => {
                                   const value = intervention;
                                   return checked === true
@@ -424,8 +439,8 @@ export default function CaseNotesForm({
                     <FormControl>
                       <Input
                         {...field}
-                        disabled={hasExistingNotes}
-                        className={hasExistingNotes ? "bg-muted" : ""}
+                        disabled={fieldsLocked}
+                        className={fieldsLocked ? "bg-muted" : ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -447,8 +462,8 @@ export default function CaseNotesForm({
                     <Textarea
                       {...field}
                       rows={4}
-                      disabled={hasExistingNotes}
-                      className={hasExistingNotes ? "bg-muted" : ""}
+                      disabled={fieldsLocked}
+                      className={fieldsLocked ? "bg-muted" : ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -470,8 +485,8 @@ export default function CaseNotesForm({
                       {...field}
                       rows={4}
                       placeholder="Explain the student's response to the session..."
-                      disabled={hasExistingNotes}
-                      className={hasExistingNotes ? "bg-muted" : ""}
+                      disabled={fieldsLocked}
+                      className={fieldsLocked ? "bg-muted" : ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -491,7 +506,7 @@ export default function CaseNotesForm({
                         <FormControl>
                           <Checkbox
                             checked={!field.value}
-                            disabled={hasExistingNotes}
+                            disabled={fieldsLocked}
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 field.onChange(false);
@@ -506,7 +521,7 @@ export default function CaseNotesForm({
                         <FormControl>
                           <Checkbox
                             checked={field.value}
-                            disabled={hasExistingNotes}
+                            disabled={fieldsLocked}
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 field.onChange(true);
@@ -535,8 +550,8 @@ export default function CaseNotesForm({
                         {...field}
                         rows={4}
                         placeholder="Enter explanation for follow-up plan..."
-                        disabled={hasExistingNotes}
-                        className={hasExistingNotes ? "bg-muted" : ""}
+                        disabled={fieldsLocked}
+                        className={fieldsLocked ? "bg-muted" : ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -547,9 +562,9 @@ export default function CaseNotesForm({
 
             <div className="flex justify-end space-x-4">
               <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
-                {hasExistingNotes ? "Close" : "Cancel"}
+                {fieldsLocked ? "Close" : "Cancel"}
               </Button>
-              {!hasExistingNotes && (
+              {!fieldsLocked && (
                 <Button
                   variant="brand"
                   type="submit"

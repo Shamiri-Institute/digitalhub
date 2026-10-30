@@ -20,7 +20,6 @@ import WeeklyHubReportButtonAndForm from "./components/weekly-hub-report-button-
 export default async function SchoolsPage(props: {
   searchParams?: Promise<{
     query?: string;
-    page?: string;
   }>;
 }) {
   const searchParams = await props.searchParams;

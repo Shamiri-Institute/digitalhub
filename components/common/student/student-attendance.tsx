@@ -1,7 +1,14 @@
 import { ImplementerRole } from "#/db/enums";
 import type { fellow } from "#/db/schema";
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  startTransition,
+  Suspense,
+  use,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -9,11 +16,14 @@ import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import ViewAttendanceDocument from "#/components/common/student/student-attendance-files/view-attendance-document";
-import StudentAttendanceMenu from "#/components/common/student/student-attendance-menu";
+import StudentAttendanceMenu, {
+  type StudentTriage,
+} from "#/components/common/student/student-attendance-menu";
 import StudentTriageHistoryModal from "#/components/common/student/student-triage-history-modal";
 import TriageEventModal from "#/components/common/student/triage-event-modal";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
+import { Alert, AlertDescription, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
@@ -33,11 +43,8 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
-import { toast, toastOnError } from "#/components/ui/use-toast";
-import {
-  type fetchSessionAttendances,
-  fetchSessionStudentAttendance,
-} from "#/lib/actions/session/session";
+import { toast } from "#/components/ui/use-toast";
+import { fetchSessionStudentAttendance } from "#/lib/actions/session/session";
 import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
 import {
@@ -63,95 +70,189 @@ export default function StudentAttendance({
   fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName">[];
   fellowId?: string;
 }) {
-  const isFellow = role === ImplementerRole.FELLOW;
+  // The session the dialog was open on at the last render; null while it is closed.
+  const [shownSessionId, setShownSessionId] = useState<string | null>(null);
+  // Kept after closing, so the content stays through the close animation.
+  const [opening, setOpening] = useState<Opening | null>(null);
+  // The caller opens the dialog through isOpen, so no handler here runs on opening. The render
+  // that first sees it open, or open on another session, starts that opening's loads.
+  const openSessionId = isOpen ? (session?.id ?? null) : null;
+  if (openSessionId !== shownSessionId) {
+    setShownSessionId(openSessionId);
+    if (openSessionId) {
+      setOpening(startOpening(openSessionId, role, (opening?.number ?? 0) + 1));
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
+      <DialogContent className="lg:w-3/4 lg:max-w-none">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">
+            {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
+              ? "View student attendance"
+              : role === ImplementerRole.SUPERVISOR || role === ImplementerRole.FELLOW
+                ? "Mark student attendance"
+                : null}
+          </DialogTitle>
+        </DialogHeader>
+        {session && (
+          <SessionDetail state={{ session }} layout={"compact"} withDropdown={false} role={role} />
+        )}
+        {session && opening?.sessionId === session.id && (
+          <Suspense key={opening.number} fallback={<StudentsLoading />}>
+            <StudentAttendanceContent
+              opening={opening}
+              session={session}
+              role={role}
+              fellows={fellows}
+              fellowId={fellowId}
+            />
+          </Suspense>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type SessionAttendance = Awaited<
+  ReturnType<typeof fetchSessionStudentAttendance>
+>["attendances"][number];
+
+type StudentsLoad =
+  | {
+      status: "loaded";
+      studentsByGroup: Map<string, StudentAttendanceData[]>;
+      attendances: SessionAttendance[];
+    }
+  | { status: "failed" };
+
+type TriageEventsLoad =
+  | { status: "loaded"; byStudent: Record<string, TriageEventWithRelations> }
+  | { status: "failed" };
+
+/** One opening of the dialog on a session, with the loads it started. */
+type Opening = {
+  /** Counts openings, so each one mounts fresh content, even on the session shown before. */
+  number: number;
+  sessionId: string;
+  students: Promise<StudentsLoad>;
+  /** Null for roles that don't triage. */
+  triageEvents: Promise<TriageEventsLoad> | null;
+};
+
+/**
+ * Starts an opening's loads while the dialog renders. Each load calls its server action a
+ * microtask late, because calling one updates the router's state, which React forbids while
+ * another component renders. The loads never reject: use() would throw a failure to the page's
+ * error boundary.
+ */
+function startOpening(sessionId: string, role: ImplementerRole, number: number): Opening {
+  return {
+    number,
+    sessionId,
+    students: loadStudents(sessionId),
+    triageEvents: role === ImplementerRole.FELLOW ? loadTriageEvents(sessionId) : null,
+  };
+}
+
+function loadStudents(sessionId: string): Promise<StudentsLoad> {
+  return Promise.resolve()
+    .then(() => fetchSessionStudentAttendance(sessionId))
+    .then(({ students, attendances }): StudentsLoad => ({
+      status: "loaded",
+      studentsByGroup: studentsByAssignedGroup(students),
+      attendances,
+    }))
+    .catch((): StudentsLoad => ({ status: "failed" }));
+}
+
+function loadTriageEvents(sessionId: string): Promise<TriageEventsLoad> {
+  return Promise.resolve()
+    .then(() => getTriageEventsForSession(sessionId))
+    .then((events): TriageEventsLoad => ({
+      status: "loaded",
+      byStudent: Object.fromEntries(events.map((event) => [event.studentId, event])),
+    }))
+    .catch((): TriageEventsLoad => ({ status: "failed" }));
+}
+
+function studentsByAssignedGroup(students: StudentAttendanceData[]) {
+  const byGroup = new Map<string, StudentAttendanceData[]>();
+  for (const student of students) {
+    const groupId = student.assignedGroupId ?? "";
+    byGroup.set(groupId, [...(byGroup.get(groupId) ?? []), student]);
+  }
+  return byGroup;
+}
+
+type ContentProps = {
+  session: Session;
+  role: ImplementerRole;
+  fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName">[];
+  fellowId?: string;
+};
+
+function StudentAttendanceContent({ opening, ...props }: ContentProps & { opening: Opening }) {
+  const students = use(opening.students);
+  if (students.status === "failed") {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Could not load the students and their attendance</AlertTitle>
+        <AlertDescription>Close the dialog and try again, or reload the page.</AlertDescription>
+      </Alert>
+    );
+  }
+  return (
+    <SessionStudents
+      {...props}
+      studentsByGroup={students.studentsByGroup}
+      loadedAttendances={students.attendances}
+      openingTriageEvents={opening.triageEvents}
+    />
+  );
+}
+
+function SessionStudents({
+  session,
+  role,
+  fellows,
+  fellowId,
+  studentsByGroup,
+  loadedAttendances,
+  openingTriageEvents,
+}: ContentProps & {
+  studentsByGroup: Map<string, StudentAttendanceData[]>;
+  loadedAttendances: SessionAttendance[];
+  openingTriageEvents: Promise<TriageEventsLoad> | null;
+}) {
   const [selectedGroup, setSelectedGroup] = useState<string>();
   const [attendance, setAttendance] = useState<StudentAttendanceData>();
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState(false);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [selectedStudentIds, setSelectedStudentIds] = useState<RowSelectionState>({});
   const [triage, setTriage] = useState<TriageDialog | null>(null);
-  const [loadedTriageEvents, setLoadedTriageEvents] = useState<{
-    sessionId: string;
-    byStudent: Record<string, TriageEventWithRelations>;
-  } | null>(null);
   const [history, setHistory] = useState<{
     student: StudentAttendanceData;
     events: ReturnType<typeof getStudentTriageHistory>;
   } | null>(null);
+  // Marking attendance replies with the session's attendances, which replace the loaded ones.
+  const [sessionAttendances, setSessionAttendances] = useState(loadedAttendances);
+  // Saving a triage replaces the request with a reload.
+  const [triageEventsRequest, setTriageEventsRequest] = useState(openingTriageEvents);
+  const triageEvents = triageEventsRequest && use(triageEventsRequest);
+  // Null while the caller can't triage: their role doesn't, or the records failed to load, so
+  // whether a student has a saved triage is unknown.
+  const triageEventsByStudent = triageEvents?.status === "loaded" ? triageEvents.byStudent : null;
 
-  const [sessionAttendances, setSessionAttendances] = useState<
-    Awaited<ReturnType<typeof fetchSessionAttendances>>
-  >([]);
-  const [studentsByGroup, setStudentsByGroup] = useState<Map<string, StudentAttendanceData[]>>(
-    new Map(),
-  );
-  const [attendanceFetchId, setAttendanceFetchId] = useState<string | null>(null);
-
-  const loadingAttendances = isOpen && !!session?.id && attendanceFetchId !== session.id;
-
-  const attendanceByStudentId =
-    attendanceFetchId === session?.id
-      ? Object.fromEntries(sessionAttendances.map((a) => [a.studentId, a]))
-      : {};
-
-  // effect: a menu several components up opens the dialog; loads the attendances and a fellow's triage events
-  useEffect(() => {
-    if (!isOpen || !session?.id) return;
-    const targetSessionId = session.id;
-    let cancelled = false;
-    void fetchSessionStudentAttendance(targetSessionId)
-      .then(({ students, attendances }) => {
-        if (!cancelled) {
-          const byGroup = new Map<string, StudentAttendanceData[]>();
-          for (const student of students) {
-            const groupId = student.assignedGroupId ?? "";
-            byGroup.set(groupId, [...(byGroup.get(groupId) ?? []), student]);
-          }
-          setStudentsByGroup(byGroup);
-          setSessionAttendances(attendances);
-          setAttendanceFetchId(targetSessionId);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setStudentsByGroup(new Map());
-          setSessionAttendances([]);
-          setAttendanceFetchId(targetSessionId);
-          toast({
-            variant: "destructive",
-            description: "Failed to load attendance data. Please close and reopen.",
-          });
-        }
-      });
-    if (isFellow) {
-      getTriageEventsForSession(targetSessionId)
-        .then((events) => {
-          if (!cancelled) {
-            setLoadedTriageEvents({
-              sessionId: targetSessionId,
-              byStudent: triageEventsByStudentId(events),
-            });
-          }
-        })
-        .catch(() => {
-          if (!cancelled) {
-            toast({ variant: "destructive", description: "Could not load the triage records." });
-          }
-        });
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen, session?.id, isFellow]);
+  const attendanceByStudentId = Object.fromEntries(sessionAttendances.map((a) => [a.studentId, a]));
 
   function openTriageModal(student: StudentAttendanceData, readOnly: boolean) {
-    if (!session) return;
-    const sessionId = session.id;
     const isThisTriage = (current: TriageDialog | null): current is TriageDialog =>
-      current?.student.id === student.id && current.sessionId === sessionId;
+      current?.student.id === student.id;
 
-    setTriage({ sessionId, student, readOnly, supervisors: [] });
-    getTriageEventByStudentAndSession(student.id, sessionId)
+    setTriage({ student, readOnly, supervisors: [] });
+    getTriageEventByStudentAndSession(student.id, session.id)
       .then((event) =>
         setTriage((current) => (isThisTriage(current) ? { ...current, event } : current)),
       )
@@ -162,7 +263,7 @@ export default function StudentAttendance({
           description: "Could not load the triage record. Please try again.",
         });
       });
-    getSupervisorsInFellowHub(sessionId)
+    getSupervisorsInFellowHub(session.id)
       .then((supervisors) =>
         setTriage((current) => (isThisTriage(current) ? { ...current, supervisors } : current)),
       )
@@ -174,6 +275,11 @@ export default function StudentAttendance({
       });
   }
 
+  const reloadTriageEvents = () => {
+    // A transition keeps the table on screen while the records reload, instead of the fallback.
+    startTransition(() => setTriageEventsRequest(loadTriageEvents(session.id)));
+  };
+
   const form = useForm<{ fellow: string }>({
     defaultValues: {
       fellow: undefined,
@@ -181,24 +287,17 @@ export default function StudentAttendance({
   });
 
   const groups = fellows.map((fellow) => {
-    const group = session?.school?.interventionGroups.find((group) => group.leaderId === fellow.id);
+    const group = session.school?.interventionGroups.find((group) => group.leaderId === fellow.id);
     return { fellow, group };
   });
 
   const groupStudents =
-    (attendanceFetchId === session?.id &&
-      studentsByGroup.get(
-        selectedGroup ??
-          session?.school?.interventionGroups.find((group) => group.leaderId === fellowId)?.id ??
-          "",
-      )) ||
-    NO_STUDENTS;
+    studentsByGroup.get(
+      selectedGroup ??
+        session.school?.interventionGroups.find((group) => group.leaderId === fellowId)?.id ??
+        "",
+    ) ?? NO_STUDENTS;
   const selectedStudents = groupStudents.filter((student) => selectedStudentIds[student.id]);
-
-  const triageEventsByStudent =
-    loadedTriageEvents && loadedTriageEvents.sessionId === session?.id
-      ? loadedTriageEvents.byStudent
-      : {};
 
   const memoizedColumns = columns({
     setAttendance,
@@ -208,25 +307,8 @@ export default function StudentAttendance({
       setHistory({ student, events: getStudentTriageHistory(student.id) }),
     triageEventsByStudent,
     attendanceByStudentId,
-    loadingAttendances,
-    session,
     role,
   });
-
-  const reloadTriageEventsAfterSave = async () => {
-    if (!isFellow || !session?.id) return;
-    const sessionId = session.id;
-    try {
-      const events = await getTriageEventsForSession(sessionId);
-      setLoadedTriageEvents({ sessionId, byStudent: triageEventsByStudentId(events) });
-    } catch {
-      toast({
-        variant: "destructive",
-        description:
-          "The triage was saved, but the triage records could not be reloaded. Reload the page.",
-      });
-    }
-  };
 
   const saveAttendance = async (
     pending: ReturnType<typeof markStudentAttendance | typeof markManyStudentsAttendance>,
@@ -258,191 +340,180 @@ export default function StudentAttendance({
   };
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        setIsOpen(open);
-        if (!open) {
-          setAttendanceFetchId(null);
-          setSessionAttendances([]);
-          setHistory(null);
-          setTriage(null);
-          setSelectedGroup(undefined);
-          form.reset();
+    <>
+      {role !== "FELLOW" ? (
+        <div className="my-4">
+          <Form {...form}>
+            <FormField
+              control={form.control}
+              name="fellow"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="pt-2">Select group leader</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setSelectedGroup(value);
+                      setSelectedStudentIds({});
+                    }}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select a fellow" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[200px]">
+                      {groups.map((group, index) => (
+                        <SelectItem
+                          key={group.group?.id ?? index.toString()}
+                          value={group.group?.id ?? index.toString()}
+                          disabled={!group.group}
+                        >
+                          {group.fellow.fellowName}{" "}
+                          {group.group ? `(${group.group.groupName})` : "- No group assigned"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </Form>
+        </div>
+      ) : null}
+
+      {selectedGroup && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-1 rounded-full bg-shamiri-new-blue" />
+            <h3 className="text-sm font-semibold text-shamiri-text-dark-grey">
+              Attendance Uploads
+            </h3>
+          </div>
+          <ViewAttendanceDocument sessionId={session.id} groupId={selectedGroup} role={role} />
+        </div>
+      )}
+
+      {triageEvents?.status === "failed" && (
+        <Alert variant="destructive">
+          <AlertTitle>Could not load the triage records</AlertTitle>
+          <AlertDescription>
+            Triage is unavailable until they load. Close the dialog and try again, or reload the
+            page.
+          </AlertDescription>
+        </Alert>
+      )}
+      {triageEventsByStudent && (
+        <TriageSessionSummary triageEventsByStudent={triageEventsByStudent} />
+      )}
+      <DataTable
+        columns={memoizedColumns}
+        editColumns={true}
+        data={groupStudents}
+        columnVisibilityState={{
+          "Clinical cases": false,
+          "Shamiri ID": false,
+          Age: false,
+          checkbox: role !== ImplementerRole.ADMIN,
+          button: role !== ImplementerRole.ADMIN,
+        }}
+        emptyStateMessage={"No students associated to this group"}
+        className="data-table data-table-action lg:mt-4"
+        renderTableActions={renderTableActions()}
+        getRowId={(student) => student.id}
+        rowSelection={selectedStudentIds}
+        onRowSelectionChange={setSelectedStudentIds}
+      />
+      <MarkAttendance
+        title={"Mark student attendance"}
+        attendances={(() => {
+          const a = attendance?.id ? attendanceByStudentId[attendance.id] : undefined;
+          if (!a) return [];
+          return [
+            {
+              attendanceId: a.id.toString(),
+              id: a.studentId,
+              attended: a.attended,
+              absenceReason: a.absenceReason,
+              sessionId: a.sessionId,
+              comments: a.comments,
+            },
+          ];
+        })()}
+        id={attendance?.id}
+        selectedSessionId={session.id}
+        selectedIds={selectedStudents.map((student) => student.id)}
+        sessionMode="single"
+        isOpen={markAttendanceDialog}
+        setIsOpen={setMarkAttendanceDialog}
+        markAttendanceAction={(data) => saveAttendance(markStudentAttendance(data))}
+        markBulkAttendanceAction={(ids, data) =>
+          saveAttendance(markManyStudentsAttendance(ids, data))
+        }
+        bulkMode={bulkMode}
+        setBulkMode={setBulkMode}
+        onSuccess={() => {
           setSelectedStudentIds({});
           setBulkMode(false);
-        }
-      }}
-      modal={true}
-    >
-      <DialogContent className="lg:w-3/4 lg:max-w-none">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
-              ? "View student attendance"
-              : role === ImplementerRole.SUPERVISOR || role === ImplementerRole.FELLOW
-                ? "Mark student attendance"
-                : null}
-          </DialogTitle>
-        </DialogHeader>
-        {session && (
-          <SessionDetail state={{ session }} layout={"compact"} withDropdown={false} role={role} />
-        )}
-
-        {role !== "FELLOW" ? (
-          <div className="my-4">
-            <Form {...form}>
-              <FormField
-                control={form.control}
-                name="fellow"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="pt-2">Select group leader</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setSelectedGroup(value);
-                        setSelectedStudentIds({});
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select a fellow" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-[200px]">
-                        {groups.map((group, index) => (
-                          <SelectItem
-                            key={group.group?.id ?? index.toString()}
-                            value={group.group?.id ?? index.toString()}
-                            disabled={!group.group}
-                          >
-                            {group.fellow.fellowName}{" "}
-                            {group.group ? `(${group.group.groupName})` : "- No group assigned"}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </Form>
-          </div>
-        ) : null}
-
-        {selectedGroup && session && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-1 rounded-full bg-shamiri-new-blue" />
-              <h3 className="text-sm font-semibold text-shamiri-text-dark-grey">
-                Attendance Uploads
-              </h3>
-            </div>
-            <ViewAttendanceDocument sessionId={session.id} groupId={selectedGroup} role={role} />
-          </div>
-        )}
-
-        {Object.keys(triageEventsByStudent).length > 0 && (
-          <TriageSessionSummary triageEventsByStudent={triageEventsByStudent} />
-        )}
-        <DataTable
-          columns={memoizedColumns}
-          editColumns={true}
-          data={groupStudents}
-          columnVisibilityState={{
-            "Clinical cases": false,
-            "Shamiri ID": false,
-            Age: false,
-            checkbox: role !== ImplementerRole.ADMIN,
-            button: role !== ImplementerRole.ADMIN,
-          }}
-          emptyStateMessage={"No students associated to this group"}
-          className="data-table data-table-action lg:mt-4"
-          renderTableActions={renderTableActions()}
-          getRowId={(student) => student.id}
-          rowSelection={selectedStudentIds}
-          onRowSelectionChange={setSelectedStudentIds}
+        }}
+      >
+        <DialogAlertWidget>
+          <p className="flex flex-wrap items-center gap-2">
+            <span>
+              {bulkMode ? (
+                <span>{selectedStudents.length} students</span>
+              ) : (
+                <span>{attendance?.studentName}</span>
+              )}
+            </span>
+            <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
+            <span>{sessionDisplayName(session.session?.sessionName ?? "")}</span>
+            <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
+            <span>{session.school?.schoolName ?? session.venue}</span>
+          </p>
+        </DialogAlertWidget>
+      </MarkAttendance>
+      {triage && (
+        <TriageEventModal
+          onClose={() => setTriage(null)}
+          studentId={triage.student.id}
+          studentName={triage.student.studentName}
+          sessionId={session.id}
+          sessionName={sessionDisplayName(session.session?.sessionName ?? "")}
+          existingEvent={triage.event ?? undefined}
+          loadingExistingEvent={triage.event === undefined}
+          supervisors={triage.supervisors}
+          readOnly={triage.readOnly}
+          onSuccess={reloadTriageEvents}
         />
-        <MarkAttendance
-          title={"Mark student attendance"}
-          attendances={(() => {
-            const a = attendance?.id ? attendanceByStudentId[attendance.id] : undefined;
-            if (!a) return [];
-            return [
-              {
-                attendanceId: a.id.toString(),
-                id: a.studentId,
-                attended: a.attended,
-                absenceReason: a.absenceReason,
-                sessionId: a.sessionId,
-                comments: a.comments,
-              },
-            ];
-          })()}
-          id={attendance?.id}
-          selectedSessionId={session?.id}
-          selectedIds={selectedStudents.map((student) => student.id)}
-          sessionMode="single"
-          isOpen={markAttendanceDialog}
-          setIsOpen={setMarkAttendanceDialog}
-          markAttendanceAction={(data) => saveAttendance(markStudentAttendance(data))}
-          markBulkAttendanceAction={(ids, data) =>
-            saveAttendance(markManyStudentsAttendance(ids, data))
-          }
-          bulkMode={bulkMode}
-          setBulkMode={setBulkMode}
-          onSuccess={() => {
-            setSelectedStudentIds({});
-            setBulkMode(false);
-          }}
-        >
-          <DialogAlertWidget>
-            <p className="flex flex-wrap items-center gap-2">
-              <span>
-                {bulkMode ? (
-                  <span>{selectedStudents.length} students</span>
-                ) : (
-                  <span>{attendance?.studentName}</span>
-                )}
-              </span>
-              <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
-              <span>{sessionDisplayName(session?.session?.sessionName ?? "")}</span>
-              <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
-              <span>{session?.school?.schoolName ?? session?.venue}</span>
-            </p>
-          </DialogAlertWidget>
-        </MarkAttendance>
-        {session && triage && (
-          <TriageEventModal
-            onClose={() => setTriage(null)}
-            studentId={triage.student.id}
-            studentName={triage.student.studentName}
-            sessionId={session.id}
-            sessionName={sessionDisplayName(session.session?.sessionName ?? "")}
-            existingEvent={triage.event ?? undefined}
-            loadingExistingEvent={triage.event === undefined}
-            supervisors={triage.supervisors}
-            readOnly={triage.readOnly}
-            onSuccess={toastOnError(reloadTriageEventsAfterSave)}
-          />
-        )}
-        {history && (
-          <StudentTriageHistoryModal
-            onClose={() => setHistory(null)}
-            studentName={history.student.studentName}
-            events={history.events}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+      )}
+      {history && (
+        <StudentTriageHistoryModal
+          onClose={() => setHistory(null)}
+          studentName={history.student.studentName}
+          events={history.events}
+        />
+      )}
+    </>
+  );
+}
+
+const LOADING_ROWS = ["first", "second", "third", "fourth"];
+
+function StudentsLoading() {
+  return (
+    <div className="space-y-2 lg:mt-4">
+      {LOADING_ROWS.map((row) => (
+        <Skeleton key={row} className="h-10 w-full" />
+      ))}
+    </div>
   );
 }
 
 /** The open triage modal. `event` is undefined until its read resolves, and null when none exists. */
 type TriageDialog = {
-  sessionId: string;
   student: StudentAttendanceData;
   readOnly: boolean;
   event?: Awaited<ReturnType<typeof getTriageEventByStudentAndSession>>;
@@ -530,18 +601,21 @@ function TriageSessionSummary({
   );
 }
 
+function triageOf(
+  triageEventsByStudent: Record<string, TriageEventWithRelations> | null,
+  studentId: string,
+): StudentTriage {
+  if (!triageEventsByStudent) return "unavailable";
+  return triageEventsByStudent[studentId] ? "documented" : "none";
+}
+
 const columns = (state: {
   setAttendance: Dispatch<SetStateAction<StudentAttendanceData | undefined>>;
   setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   openTriageModal: (triageTarget: StudentAttendanceData, readOnly: boolean) => void;
   openHistory: (student: StudentAttendanceData) => void;
-  triageEventsByStudent: Record<string, TriageEventWithRelations>;
-  attendanceByStudentId: Record<
-    string,
-    Awaited<ReturnType<typeof fetchSessionAttendances>>[number]
-  >;
-  loadingAttendances: boolean;
-  session: Session | null;
+  triageEventsByStudent: Record<string, TriageEventWithRelations> | null;
+  attendanceByStudentId: Record<string, SessionAttendance>;
   role: ImplementerRole;
 }): ColumnDef<StudentAttendanceData>[] => [
   {
@@ -609,14 +683,10 @@ const columns = (state: {
   {
     cell: ({ row }) => {
       const attended = state.attendanceByStudentId[row.original.id]?.attended ?? null;
-      const triageEvent = state.triageEventsByStudent[row.original.id];
+      const triageEvent = state.triageEventsByStudent?.[row.original.id];
       return (
         <div className="flex flex-row flex-wrap items-center gap-1">
-          {state.loadingAttendances ? (
-            <Skeleton className="h-5 w-20 rounded" />
-          ) : (
-            <AttendanceStatusWidget attended={attended} />
-          )}
+          <AttendanceStatusWidget attended={attended} />
           {triageEvent && <TriageBadge event={triageEvent} />}
         </div>
       );
@@ -631,15 +701,10 @@ const columns = (state: {
       <StudentAttendanceMenu
         state={state}
         attendance={row.original}
-        disabled={!row.getCanSelect() || state.loadingAttendances}
-        isFellow={state.role === ImplementerRole.FELLOW}
-        hasExistingTriageEvent={!!state.triageEventsByStudent[row.original.id]}
+        disabled={!row.getCanSelect()}
+        triage={triageOf(state.triageEventsByStudent, row.original.id)}
       />
     ),
     enableHiding: false,
   },
 ];
-
-function triageEventsByStudentId(events: TriageEventWithRelations[]) {
-  return Object.fromEntries(events.map((event) => [event.studentId, event]));
-}
