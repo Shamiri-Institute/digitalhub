@@ -105,3 +105,21 @@ test("picking a page with unsaved changes asks nothing, and Back still asks", as
   await expect(page).toHaveURL(/\/versions\/1\?page=2$/);
   await expect(page.getByText("Unsaved changes")).toBeVisible();
 });
+
+test("adding or deleting a page moves the URL to the page on screen", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const draft = await signInWithDraft(context, undo);
+  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
+  await expect(pageItems(page, 1)).toBeVisible();
+
+  await page.getByRole("button", { name: "Add page" }).click();
+  await expect(pageItems(page, 4)).toBeVisible();
+  await expect(page).toHaveURL(/\/versions\/1\?page=4$/);
+
+  await page.getByRole("button", { name: "Delete page 4", exact: true }).click();
+  await expect(pageItems(page, 3)).toBeVisible();
+  await expect(page).toHaveURL(/\/versions\/1\?page=3$/);
+});
