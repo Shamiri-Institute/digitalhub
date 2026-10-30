@@ -23,6 +23,7 @@ function pager(page: Page) {
   return {
     status: main.getByText(/^\d+ of [\d,]+$/),
     pageNumber: main.getByLabel("Page number"),
+    pageSize: main.getByRole("combobox").filter({ hasText: /^Show \d+$/ }),
   };
 }
 
@@ -40,13 +41,6 @@ function studentNames(page: Page) {
   return dataRows(page).evaluateAll((rows) =>
     rows.map((row) => row.querySelector("td")?.textContent?.trim() ?? ""),
   );
-}
-
-// The table sorts text lower-cased by code point, as TanStack's text sort does.
-function expectNamesDescending(names: string[]) {
-  expect(names.length).toBeGreaterThan(1);
-  const lowerCased = names.map((name) => name.toLowerCase());
-  expect(lowerCased).toEqual(lowerCased.toSorted((a, b) => (a < b ? 1 : a > b ? -1 : 0)));
 }
 
 test.beforeEach(async ({ context }) => {
@@ -73,44 +67,39 @@ test("a list keeps its page across a reload and back/forward", async ({ page }) 
   await expect(status).toHaveText(/^2 of /);
 });
 
-test("a sort in the URL survives a reload and paging", async ({ page }) => {
-  const studentsUrl = await openFirstSchoolStudents(page);
-  const { status } = pager(page);
+test("a list keeps its page size with its page across a reload", async ({ page }) => {
+  await openFirstSchoolStudents(page);
+  const { status, pageNumber, pageSize } = pager(page);
 
-  // The table has no sort control, so the sort arrives the way a shared link brings it.
-  await page.goto(`${studentsUrl}?sort=Student+Name.desc&page=2`);
+  await goToPage(page, 3);
+  await pageSize.click();
+  await page.getByRole("option", { name: "Show 20", exact: true }).click();
+  // The new size keeps the top row in view, so row 21 now opens page 2.
   await expect(status).toHaveText(/^2 of /);
-  const pageTwoNames = await studentNames(page);
-  expectNamesDescending(pageTwoNames);
+  await expect(page).toHaveURL(/\/students\?page=2&size=20$/);
+  await expect(dataRows(page)).toHaveCount(20);
 
   await page.reload();
   await expect(status).toHaveText(/^2 of /);
-  expect(await studentNames(page)).toEqual(pageTwoNames);
-
-  await goToPage(page, 3);
-  await expect(page).toHaveURL(/\?sort=Student\+Name\.desc&page=3$/);
-  const pageThreeNames = await studentNames(page);
-  expectNamesDescending([...pageTwoNames, ...pageThreeNames]);
+  await expect(pageNumber).toHaveValue("2");
+  await expect(pageSize).toHaveText("Show 20");
+  await expect(dataRows(page)).toHaveCount(20);
 });
 
-test("a page or sort the list does not have falls back without errors", async ({ page }) => {
+test("a page or size the list does not offer falls back without errors", async ({ page }) => {
   const studentsUrl = await openFirstSchoolStudents(page);
-  const { status } = pager(page);
+  const { status, pageSize } = pager(page);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  page.on("console", (message) => {
-    // TanStack logs an unknown sort column as "[Table] Column with id '...' does not exist."
-    if (message.type() === "error" && message.text().includes("[Table]")) {
-      errors.push(message.text());
-    }
-  });
 
-  await page.goto(`${studentsUrl}?page=999`);
+  await page.goto(`${studentsUrl}?page=999&size=50`);
   await expect(status).toHaveText(/^([\d,]+) of \1$/);
+  await expect(pageSize).toHaveText("Show 50");
   await expect(dataRows(page).first()).toBeVisible();
 
-  await page.goto(`${studentsUrl}?page=two&sort=Nickname.desc`);
+  await page.goto(`${studentsUrl}?page=two&size=7`);
   await expect(status).toHaveText(/^1 of /);
+  await expect(pageSize).toHaveText("Show 10");
   await expect(dataRows(page)).toHaveCount(10);
 
   await expect(page.getByText(errorBoundary)).toHaveCount(0);

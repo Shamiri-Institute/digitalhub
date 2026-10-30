@@ -18,7 +18,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { useSearchParams } from "next/navigation";
-import { Fragment, type ReactNode, startTransition, useState } from "react";
+import { Fragment, type ReactNode, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -44,8 +44,9 @@ import {
   TableRow,
 } from "#/components/ui/table";
 import {
+  DEFAULT_PAGE_SIZE,
+  PAGE_SIZES,
   parseTableView,
-  type TableView,
   type TableViewParams,
   tableViewParams,
   tableViewSearch,
@@ -86,9 +87,9 @@ type DataTableProps<TData, TValue> = RowSelectionProps<TData> & {
   getRowCanExpand?: (row: Row<TData>) => boolean;
   renderSubComponent?: (props: { row: Row<TData> }) => ReactNode;
   /**
-   * Keeps the page and sort in the URL, so a reload, back/forward or a shared link opens the same
-   * page. Only for a page's main list table, with a prefix when the page has two. Search text never
-   * goes in the URL: it matches students' names and clinical data.
+   * Keeps the page and page size in the URL, so a reload, back/forward or a shared link opens the
+   * same page. Only for a page's main list table, with a prefix when the page has two. Search text
+   * never goes in the URL: it matches students' names and clinical data.
    */
   urlState?: boolean | { prefix: string };
 };
@@ -146,7 +147,7 @@ function DataTableContent<TData, TValue>({
   const rowSelection = controlledRowSelection ?? uncontrolledRowSelection;
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: DEFAULT_PAGE_SIZE,
   });
   const [typedPageNumber, setTypedPageNumber] = useState<string | null>(null);
 
@@ -161,13 +162,8 @@ function DataTableContent<TData, TValue>({
 
   // The data is already here, so a URL-bound table replaces the URL without asking the server for
   // the page again. The router hands the new params back through useSearchParams.
-  const replaceUrlView = (params: TableViewParams, change: Partial<TableView>) => {
-    const { sorting: shownSorting, pagination: shownPagination } = table.getState();
-    const search = tableViewSearch(window.location.search, params, {
-      pageIndex: shownPagination.pageIndex,
-      sorting: shownSorting,
-      ...change,
-    });
+  const replaceUrlPagination = (params: TableViewParams, nextPagination: PaginationState) => {
+    const search = tableViewSearch(window.location.search, params, nextPagination);
     if (search !== window.location.search) {
       window.history.replaceState(null, "", `${window.location.pathname}${search}`);
     }
@@ -179,24 +175,19 @@ function DataTableContent<TData, TValue>({
     getRowId,
     getRowCanExpand,
     getCoreRowModel: getCoreRowModel(),
-    onSortingChange: urlView
-      ? (updater) =>
-          replaceUrlView(urlView.params, {
-            sorting: functionalUpdate(updater, table.getState().sorting),
-          })
-      : setSorting,
+    onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: disablePagination ? undefined : getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: handleRowSelectionChange,
+    // A page size change arrives as TanStack's own updater, which keeps the top row in view; the
+    // URL gets the page and size it returns.
     onPaginationChange: urlView
-      ? (updater) => {
-          const nextPagination = functionalUpdate(updater, table.getState().pagination);
-          // The page size stays component state. The router applies the URL's page in a
-          // transition, so the size goes in one too and both show in the same render.
-          startTransition(() => setPagination(nextPagination));
-          replaceUrlView(urlView.params, { pageIndex: nextPagination.pageIndex });
-        }
+      ? (updater) =>
+          replaceUrlPagination(
+            urlView.params,
+            functionalUpdate(updater, table.getState().pagination),
+          )
       : setPagination,
     enableRowSelection,
     state: { sorting, columnVisibility, rowSelection, pagination },
@@ -205,34 +196,23 @@ function DataTableContent<TData, TValue>({
     globalFilterFn: fuzzyFilter,
   });
 
-  // Read from the filtered rows: sorting doesn't change the count, and a URL-bound table's sort is
-  // not applied yet.
-  const pageCount = Math.ceil(table.getFilteredRowModel().rows.length / pagination.pageSize);
-  const lastPageIndex = Math.max(pageCount - 1, 0);
   if (urlView) {
-    // Only the built table knows which columns can sort and how many pages the data and search
-    // fill, so the URL's view is checked against them and applied to the table here. Nothing is
-    // written back: a page past the end shows the last page and stays in the URL until the next
-    // page change, so the clamp cannot loop with the URL.
-    const urlTableView = parseTableView(urlView.get, urlView.params, {
-      lastPageIndex,
-      sortableColumnIds: table
-        .getAllLeafColumns()
-        .filter((column) => column.getCanSort())
-        .map((column) => column.id),
-    });
+    // The page is clamped to the rows the data and search leave, which only the built table
+    // knows, so the URL's page and size are applied to it here. Nothing is written back: a page
+    // past the end shows the last page and stays in the URL until the next page change, so the
+    // clamp cannot loop with the URL.
+    const urlPagination = parseTableView(urlView.get, urlView.params, table.getRowCount());
     table.setOptions((options) => ({
       ...options,
-      state: {
-        ...options.state,
-        sorting: urlTableView.sorting,
-        pagination: { ...pagination, pageIndex: urlTableView.pageIndex },
-      },
+      state: { ...options.state, pagination: urlPagination },
     }));
-  } else if (pagination.pageIndex > lastPageIndex) {
+  } else {
     // A refresh can leave fewer pages than the current one. Setting state during render makes React
     // render again with the last page before it paints an empty one.
-    setPagination({ ...pagination, pageIndex: lastPageIndex });
+    const lastPageIndex = Math.max(table.getPageCount() - 1, 0);
+    if (pagination.pageIndex > lastPageIndex) {
+      setPagination({ ...pagination, pageIndex: lastPageIndex });
+    }
   }
 
   return (
@@ -498,7 +478,7 @@ function DataTableContent<TData, TValue>({
                   <SelectValue placeholder="Pick rows" />
                 </SelectTrigger>
                 <SelectContent>
-                  {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                  {PAGE_SIZES.map((pageSize) => (
                     <SelectItem key={pageSize} value={pageSize.toString()}>
                       Show {pageSize}
                     </SelectItem>

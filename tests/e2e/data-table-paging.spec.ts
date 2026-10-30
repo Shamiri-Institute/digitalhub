@@ -76,8 +76,9 @@ test("saving a row on page 2 keeps the table on page 2", async ({ page, context,
   await dialog.getByRole("button", { name: "Update & save" }).click();
   await expect(dialog).toBeHidden();
 
-  // No reload: the page is the table's client state, which a reload starts again at page 1. The
-  // saved name on the current page shows the save's refresh has reached the table.
+  // No reload: a reload reads page 2 back from the URL, so only staying on it without one shows
+  // the save's refresh kept the table's page. The saved name on the current page shows the
+  // refresh has reached the table.
   await expect(dataRows(page).filter({ hasText: savedName })).toBeVisible();
   await expect(pageStatus).toHaveText(/^2 of /);
   await expect(pageNumber).toHaveValue("2");

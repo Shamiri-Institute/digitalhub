@@ -1,59 +1,53 @@
-import type { SortingState } from "@tanstack/react-table";
+import type { PaginationState } from "@tanstack/react-table";
 
-/** A list table's page and sort as the URL holds them: `?page=2&sort=Student+Name.desc`. */
-export type TableView = { pageIndex: number; sorting: SortingState };
+/** The page sizes a table offers; a size in the URL must be one of them. */
+export const PAGE_SIZES = [5, 10, 20, 30, 40, 50];
+export const DEFAULT_PAGE_SIZE = 10;
 
-export type TableViewParams = { page: string; sort: string };
+export type TableViewParams = { page: string; size: string };
 
 const PAGE_NUMBER = /^[1-9]\d*$/;
 
 /** A page with two URL-bound tables gives each a prefix: `?myCases.page=2`. */
 export function tableViewParams(prefix?: string): TableViewParams {
   return prefix
-    ? { page: `${prefix}.page`, sort: `${prefix}.sort` }
-    : { page: "page", sort: "sort" };
+    ? { page: `${prefix}.page`, size: `${prefix}.size` }
+    : { page: "page", size: "size" };
 }
 
+/** A list table's page and page size as the URL holds them: `?page=2&size=20`. */
 export function parseTableView(
   get: (name: string) => string | null,
   params: TableViewParams,
-  table: { lastPageIndex: number; sortableColumnIds: readonly string[] },
-): TableView {
+  rowCount: number,
+): PaginationState {
+  const sizeParam = get(params.size);
+  const pageSize = PAGE_SIZES.find((size) => String(size) === sizeParam) ?? DEFAULT_PAGE_SIZE;
+  const lastPageIndex = Math.max(Math.ceil(rowCount / pageSize) - 1, 0);
   const pageNumber = get(params.page);
   const pageIndex =
     pageNumber && PAGE_NUMBER.test(pageNumber)
-      ? Math.min(Number(pageNumber) - 1, table.lastPageIndex)
+      ? Math.min(Number(pageNumber) - 1, lastPageIndex)
       : 0;
-  return { pageIndex, sorting: parseSorting(get(params.sort), table.sortableColumnIds) };
+  return { pageIndex, pageSize };
 }
 
-function parseSorting(sort: string | null, sortableColumnIds: readonly string[]): SortingState {
-  return (sort ?? "").split(",").flatMap((columnSort) => {
-    // Column ids can contain dots ("Contact no."), so the direction is what follows the last one.
-    const separator = columnSort.lastIndexOf(".");
-    const columnId = columnSort.slice(0, separator);
-    const direction = columnSort.slice(separator + 1);
-    return separator > 0 &&
-      sortableColumnIds.includes(columnId) &&
-      (direction === "asc" || direction === "desc")
-      ? [{ id: columnId, desc: direction === "desc" }]
-      : [];
-  });
-}
-
-/** `search` with the table's view written in, leaving the page's other params as they are. */
-export function tableViewSearch(search: string, params: TableViewParams, view: TableView) {
+/** `search` with the table's page and size written in, leaving the page's other params alone. */
+export function tableViewSearch(
+  search: string,
+  params: TableViewParams,
+  { pageIndex, pageSize }: PaginationState,
+) {
   const searchParams = new URLSearchParams(search);
-  if (view.pageIndex > 0) {
-    searchParams.set(params.page, String(view.pageIndex + 1));
+  if (pageIndex > 0) {
+    searchParams.set(params.page, String(pageIndex + 1));
   } else {
     searchParams.delete(params.page);
   }
-  const sort = view.sorting.map(({ id, desc }) => `${id}.${desc ? "desc" : "asc"}`).join(",");
-  if (sort) {
-    searchParams.set(params.sort, sort);
+  if (pageSize !== DEFAULT_PAGE_SIZE) {
+    searchParams.set(params.size, String(pageSize));
   } else {
-    searchParams.delete(params.sort);
+    searchParams.delete(params.size);
   }
   const query = searchParams.toString();
   return query ? `?${query}` : "";
