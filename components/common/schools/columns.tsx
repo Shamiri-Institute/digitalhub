@@ -7,6 +7,7 @@ import type { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
+import { sortBy } from "#/lib/table-view";
 import { sessionDisplayName } from "#/lib/utils";
 
 export type SchoolsTableData = Awaited<ReturnType<typeof fetchSchoolData>>[number];
@@ -16,6 +17,12 @@ export type SchoolDialogKind = "edit" | "pointSupervisor" | "dropout" | "undoDro
 export type SchoolTableState = {
   openDialog: (kind: SchoolDialogKind, school: SchoolsTableData) => void;
 };
+
+function nextUpcomingSession(school: SchoolsTableData) {
+  return school.interventionSessions
+    .filter((session) => isAfter(session.sessionDate, new Date()))
+    .toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime())[0];
+}
 
 export const columns = ({
   role,
@@ -55,6 +62,8 @@ export const columns = ({
       id: "Point teacher phone no.",
       accessorKey: "pointPersonPhone",
       accessorFn: (row) => RenderParsedPhoneNumber(row.pointPersonPhone ?? undefined),
+      // An invalid number renders as a warning element, not text.
+      enableSorting: false,
     },
     {
       accessorKey: "numbersExpected",
@@ -70,6 +79,8 @@ export const columns = ({
       header: "Point supervisor phone no.",
       id: "Point supervisor phone no.",
       accessorFn: (row) => RenderParsedPhoneNumber(row.assignedSupervisor?.cellNumber ?? undefined),
+      // An invalid number renders as a warning element, not text.
+      enableSorting: false,
     },
     {
       header: "Point supervisor email",
@@ -80,15 +91,7 @@ export const columns = ({
       header: "Upcoming session",
       id: "Upcoming session",
       accessorFn: (row) => {
-        const upcomingSessions = row.interventionSessions
-          .filter((session) => {
-            return isAfter(session.sessionDate, new Date());
-          })
-          .toSorted((a, b) => {
-            return a.sessionDate.getTime() - b.sessionDate.getTime();
-          });
-
-        const firstUpcoming = upcomingSessions[0];
+        const firstUpcoming = nextUpcomingSession(row);
         if (firstUpcoming) {
           return `${sessionDisplayName(firstUpcoming.session?.sessionName)} - ${format(
             firstUpcoming.sessionDate,
@@ -97,6 +100,7 @@ export const columns = ({
         }
         return null;
       },
+      sortingFn: sortBy((school) => nextUpcomingSession(school)?.sessionDate),
     },
     {
       header: "Report submission",
@@ -132,6 +136,7 @@ export const columns = ({
       header: "Date added",
       id: "Date added",
       accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
+      sortingFn: sortBy((school) => school.createdAt),
     },
     {
       header: "Type",

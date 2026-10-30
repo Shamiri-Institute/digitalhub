@@ -22,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { sortBy } from "#/lib/table-view";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
 export default function AttendanceHistory({
@@ -82,6 +83,7 @@ const columns = (
     accessorFn: (row) => {
       return row.session && format(row.session.sessionDate, "dd MMM yyyy");
     },
+    sortingFn: sortBy((attendance) => attendance.session?.sessionDate),
   },
   {
     header: "Session",

@@ -1,13 +1,20 @@
 "use client";
 
-import type { ImplementerRole } from "#/db/enums";
+import { type ImplementerRole, TicketPriorityLevel } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { TicketDropdown } from "#/components/common/ticket/ticket-dropdown";
 import type { FullTicket } from "#/lib/actions/ticket/types";
+import { sortBy } from "#/lib/table-view";
 import { cn } from "#/lib/utils";
 
 export type TicketData = FullTicket;
+
+const prioritiesLowToHigh: TicketPriorityLevel[] = [
+  TicketPriorityLevel.LOW,
+  TicketPriorityLevel.MEDIUM,
+  TicketPriorityLevel.HIGH,
+];
 
 export type TicketDialogKind =
   | "view"
@@ -56,6 +63,7 @@ export const columns = (state: TicketTableState): ColumnDef<TicketData>[] => {
       accessorKey: "priority",
       id: "Priority",
       header: "Priority",
+      sortingFn: sortBy((ticket) => prioritiesLowToHigh.indexOf(ticket.priority)),
       cell: ({ row }) => {
         return <span className="text-sm">{row.original.priority.toLowerCase()}</span>;
       },

@@ -5,6 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import RecordingStatusBadge from "./recording-status-badge";
 import RecordingsDataTableMenu from "./recordings-datatable-menu";
 import type { JsonValue } from "#/db/schema";
+import { sortBy } from "#/lib/table-view";
 
 export interface RecordingTableData {
   id: string;
@@ -95,6 +96,7 @@ export const recordingColumns = (state: ColumnState): ColumnDef<RecordingTableDa
     header: "Score",
     id: "score",
     cell: ({ row }) => row.original.overallScore ?? "-",
+    sortingFn: sortBy((recording) => Number.parseFloat(recording.overallScore ?? "")),
   },
   {
     id: "button",
