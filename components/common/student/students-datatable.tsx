@@ -2,12 +2,16 @@
 
 import type { TransferSchool } from "#/components/common/schools/school-students-page";
 import { ImplementerRole } from "#/db/enums";
-import { useState } from "react";
+import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { AddReportingNote } from "#/components/common/student/add-reporting-note";
 import AttendanceHistory from "#/components/common/student/attendance-history";
-import { columns, type SchoolStudentTableData } from "#/components/common/student/columns";
+import {
+  columns,
+  type SchoolStudentTableData,
+  type StudentDialogKind,
+} from "#/components/common/student/columns";
 import GroupTransferHistory from "#/components/common/student/group-transfer-history";
 import StudentArchiveForm from "#/components/common/student/student-archive-form";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
@@ -15,6 +19,12 @@ import StudentDropoutForm from "#/components/common/student/student-dropout-form
 import StudentMoveSchoolForm from "#/components/common/student/student-move-school-form";
 import DataTable from "#/components/data-table";
 import { markStudentAttendance } from "#/lib/actions/student";
+
+// Marking attendance from the attendance history keeps the history open underneath.
+type OpenStudentDialog = {
+  kind: StudentDialogKind | "markAttendanceFromHistory";
+  studentId: string;
+};
 
 export default function StudentsDatatable({
   students,
@@ -25,17 +35,22 @@ export default function StudentsDatatable({
   role: ImplementerRole;
   transferSchools?: TransferSchool[];
 }) {
-  const [editDialog, setEditDialog] = useState<boolean>(false);
-  const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
-  const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState<boolean>(false);
-  const [reportingNotesDialog, setReportingNotesDialog] = useState<boolean>(false);
-  const [groupTransferHistory, setGroupTransferHistory] = useState<boolean>(false);
-  const [moveSchoolDialog, setMoveSchoolDialog] = useState<boolean>(false);
-  const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
-  const [archiveDialog, setArchiveDialog] = useState<boolean>(false);
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  const student = students.find((s) => s.id === selectedStudentId);
-  const [selectedSession, setSelectedSession] = useState<string>();
+  const [dialog, setDialog] = useState<OpenStudentDialog | null>(null);
+  const [historySessionId, setHistorySessionId] = useState<string>();
+  const student = dialog && students.find((s) => s.id === dialog.studentId);
+
+  const onDialogOpenChange = (open: SetStateAction<boolean>) => {
+    if (!open) setDialog(null);
+  };
+
+  const onMarkAttendanceOpenChange = (open: SetStateAction<boolean>) => {
+    if (open) return;
+    setDialog((current) =>
+      current?.kind === "markAttendanceFromHistory"
+        ? { kind: "attendanceHistory", studentId: current.studentId }
+        : null,
+    );
+  };
 
   const renderDialogAlert = () => {
     return (
@@ -56,15 +71,7 @@ export default function StudentsDatatable({
       <DataTable
         data={students}
         columns={columns({
-          setEditDialog,
-          setSelectedStudentId,
-          setAttendanceHistoryDialog,
-          setMarkAttendanceDialog,
-          setReportingNotesDialog,
-          setGroupTransferHistory,
-          setMoveSchoolDialog,
-          setDropoutDialog,
-          setArchiveDialog,
+          openDialog: (kind, { id: studentId }) => setDialog({ kind, studentId }),
           role,
           sessions: students[0]?.school?.interventionSessions ?? [],
         })}
@@ -87,8 +94,8 @@ export default function StudentsDatatable({
       {student && (
         <div>
           <StudentDetailsForm
-            open={editDialog}
-            onOpenChange={setEditDialog}
+            open={dialog?.kind === "edit"}
+            onOpenChange={onDialogOpenChange}
             student={student}
             schoolId={student.school?.id ?? null}
             assignedGroupId={student.assignedGroupId ?? undefined}
@@ -101,7 +108,9 @@ export default function StudentsDatatable({
           <MarkAttendance
             title={"Mark student attendance"}
             sessions={student.school ? student.school.interventionSessions : []}
-            selectedSessionId={selectedSession}
+            selectedSessionId={
+              dialog?.kind === "markAttendanceFromHistory" ? historySessionId : undefined
+            }
             attendances={student.studentAttendances.map((attendance) => {
               const { id, studentId, attended, absenceReason, sessionId, comments } = attendance;
               return {
@@ -115,46 +124,60 @@ export default function StudentsDatatable({
               };
             })}
             id={student.id}
-            isOpen={markAttendanceDialog}
-            setIsOpen={setMarkAttendanceDialog}
+            isOpen={
+              dialog?.kind === "markAttendance" || dialog?.kind === "markAttendanceFromHistory"
+            }
+            setIsOpen={onMarkAttendanceOpenChange}
             markAttendanceAction={markStudentAttendance}
           >
             {renderDialogAlert()}
           </MarkAttendance>
           <AttendanceHistory
             student={student}
-            open={attendanceHistoryDialog}
-            onOpenChange={setAttendanceHistoryDialog}
-            markAttendance={setMarkAttendanceDialog}
-            setSelectedSessionId={setSelectedSession}
+            open={
+              dialog?.kind === "attendanceHistory" || dialog?.kind === "markAttendanceFromHistory"
+            }
+            onOpenChange={onDialogOpenChange}
+            markAttendance={() =>
+              setDialog({ kind: "markAttendanceFromHistory", studentId: student.id })
+            }
+            setSelectedSessionId={setHistorySessionId}
           >
             {renderDialogAlert()}
           </AttendanceHistory>
           <AddReportingNote
             student={student}
-            isOpen={reportingNotesDialog}
-            setIsOpen={setReportingNotesDialog}
+            isOpen={dialog?.kind === "reportingNotes"}
+            setIsOpen={onDialogOpenChange}
           >
             {renderDialogAlert()}
           </AddReportingNote>
           <GroupTransferHistory
             student={student}
-            open={groupTransferHistory}
-            onOpenChange={setGroupTransferHistory}
+            open={dialog?.kind === "groupTransferHistory"}
+            onOpenChange={onDialogOpenChange}
           >
             {renderDialogAlert()}
           </GroupTransferHistory>
-          <StudentDropoutForm student={student} isOpen={dropoutDialog} setIsOpen={setDropoutDialog}>
+          <StudentDropoutForm
+            student={student}
+            isOpen={dialog?.kind === "dropout"}
+            setIsOpen={onDialogOpenChange}
+          >
             {renderDialogAlert()}
           </StudentDropoutForm>
-          <StudentArchiveForm student={student} isOpen={archiveDialog} setIsOpen={setArchiveDialog}>
+          <StudentArchiveForm
+            student={student}
+            isOpen={dialog?.kind === "archive"}
+            setIsOpen={onDialogOpenChange}
+          >
             {renderDialogAlert()}
           </StudentArchiveForm>
           <StudentMoveSchoolForm
             student={student}
             schools={transferSchools.filter((school) => school.id !== student.schoolId)}
-            isOpen={moveSchoolDialog}
-            setIsOpen={setMoveSchoolDialog}
+            isOpen={dialog?.kind === "moveSchool"}
+            setIsOpen={onDialogOpenChange}
           >
             {renderDialogAlert()}
           </StudentMoveSchoolForm>
