@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.6.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.5.0...v2.6.0) (2026-10-30)
+
+### Features
+
+- **data-table:** keep list tables' page and page size in the URL ([#1004](https://github.com/Shamiri-Institute/digitalhub/issues/1004)) ([36fff9e](https://github.com/Shamiri-Institute/digitalhub/commit/36fff9ef58e3ed39ba41cd3184bb44388918bebe))
+- **survey:** keep the builder's current page in the URL ([#997](https://github.com/Shamiri-Institute/digitalhub/issues/997)) ([9d2afe3](https://github.com/Shamiri-Institute/digitalhub/commit/9d2afe3a2c4fb465bc3684346f8e56ac3e3b524f))
+
+### Bug Fixes
+
+- **attendance:** show failed loads as failures in student attendance and case notes ([#1002](https://github.com/Shamiri-Institute/digitalhub/issues/1002)) ([8ba1ed5](https://github.com/Shamiri-Institute/digitalhub/commit/8ba1ed54ac2ccc8a537aac8993cce9b2547c225f))
+- **clinical:** keep each expanded case row and board with its own case ([#1005](https://github.com/Shamiri-Institute/digitalhub/issues/1005)) ([39121fd](https://github.com/Shamiri-Institute/digitalhub/commit/39121fdbb217b993a9cdfc686e7cbbdea0998968))
+- **data-table:** keep the selection and page when the table's data changes ([#999](https://github.com/Shamiri-Institute/digitalhub/issues/999)) ([af25502](https://github.com/Shamiri-Institute/digitalhub/commit/af255022ee27b5afc45a13422706d83a0f44c7a4))
+- **evaluations:** enforce the 14-day edit window on the server ([#998](https://github.com/Shamiri-Institute/digitalhub/issues/998)) ([d42f788](https://github.com/Shamiri-Institute/digitalhub/commit/d42f7883c168e2297fb56492151a747419200619))
+- **schedule:** keep the table view's selected day and role in the URL ([#995](https://github.com/Shamiri-Institute/digitalhub/issues/995)) ([c0db52b](https://github.com/Shamiri-Institute/digitalhub/commit/c0db52b0e3a870102ef39233e846c35daf6f6a75))
+- **schools:** show the selected school from the URL on the hub coordinator page ([#994](https://github.com/Shamiri-Institute/digitalhub/issues/994)) ([d599ec2](https://github.com/Shamiri-Institute/digitalhub/commit/d599ec2a5e9568e35e1a764ac96f078fb72f50ad))
+- **students:** pre-fill mark attendance from the student's current row ([#1001](https://github.com/Shamiri-Institute/digitalhub/issues/1001)) ([8739615](https://github.com/Shamiri-Institute/digitalhub/commit/87396150a4ec3b2c39511879f7d87d6a9a2eb469))
+
 ## [2.5.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.3.0...v2.5.0) (2026-10-30)
 
 ### Features
