@@ -6,13 +6,17 @@ vi.mock("server-only", () => ({}));
 
 import { db, pool } from "#/db/client";
 import { sessionRecording, transcription } from "#/db/schema";
-import { claimTranscriptions, finishTranscription } from "#/lib/transcription/worker";
+import {
+  claimTranscriptions,
+  finishTranscription,
+  runQueuedTranscriptions,
+} from "#/lib/transcription/worker";
 
-// Runs against the local database: two seeded recordings get transcription runs, and the fields
+// Runs against the local database: three seeded recordings get transcription runs, and the fields
 // the worker mirrors onto them are put back afterwards.
 let recordings: Pick<
   typeof sessionRecording.$inferSelect,
-  "id" | "status" | "errorMessage" | "processedAt"
+  "id" | "status" | "errorMessage" | "processedAt" | "archivedAt"
 >[] = [];
 
 beforeAll(async () => {
@@ -25,11 +29,12 @@ beforeAll(async () => {
       status: sessionRecording.status,
       errorMessage: sessionRecording.errorMessage,
       processedAt: sessionRecording.processedAt,
+      archivedAt: sessionRecording.archivedAt,
     })
     .from(sessionRecording)
     .orderBy(sessionRecording.id)
-    .limit(2);
-  if (recordings.length < 2) throw new Error("seed the database first: two session recordings");
+    .limit(3);
+  if (recordings.length < 3) throw new Error("seed the database first: three session recordings");
 });
 
 afterAll(async () => {
@@ -46,7 +51,9 @@ afterAll(async () => {
 
 describe("transcription worker", () => {
   it("gives concurrent claims different runs, and reclaims a run whose lease expired", async () => {
-    await db.insert(transcription).values(recordings.map((r) => ({ recordingId: r.id })));
+    await db
+      .insert(transcription)
+      .values(recordings.slice(0, 2).map((r) => ({ recordingId: r.id })));
 
     const [first, second] = await Promise.all([claimTranscriptions(1), claimTranscriptions(1)]);
     expect(first).toHaveLength(1);
@@ -60,7 +67,7 @@ describe("transcription worker", () => {
       .where(
         inArray(
           sessionRecording.id,
-          recordings.map((r) => r.id),
+          recordings.slice(0, 2).map((r) => r.id),
         ),
       );
     expect(recordingStatuses.map((r) => r.status)).toEqual(["PROCESSING", "PROCESSING"]);
@@ -99,6 +106,31 @@ describe("transcription worker", () => {
       .from(transcription)
       .where(sql`${transcription.id} = ${staleRun.id}`);
     expect(stored).toEqual({ status: "COMPLETED", errorMessage: null });
+  });
+
+  it("fails a run whose recording was archived, without fetching its audio", async () => {
+    const recordingId = recordings[2]?.id;
+    if (!recordingId) throw new Error("no recording");
+    await db
+      .update(sessionRecording)
+      .set({ archivedAt: new Date() })
+      .where(sql`${sessionRecording.id} = ${recordingId}`);
+    const [queued] = await db
+      .insert(transcription)
+      .values({ recordingId })
+      .returning({ id: transcription.id });
+    if (!queued) throw new Error("no run");
+
+    expect(await runQueuedTranscriptions()).toBe(1);
+
+    const [stored] = await db
+      .select({ status: transcription.status, errorMessage: transcription.errorMessage })
+      .from(transcription)
+      .where(sql`${transcription.id} = ${queued.id}`);
+    expect(stored).toEqual({
+      status: "FAILED",
+      errorMessage: "The recording was archived before it was transcribed",
+    });
   });
 
   it("allows only one run in flight per recording", async () => {

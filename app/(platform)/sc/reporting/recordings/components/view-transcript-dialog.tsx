@@ -13,7 +13,7 @@ import type { RecordingTableData } from "./columns";
 
 interface ViewTranscriptDialogProps {
   recording: RecordingTableData;
-  transcript: Promise<RecordingTranscript | null>;
+  transcript: Promise<RecordingTranscript | null | "failed">;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -25,8 +25,15 @@ function clockTime(seconds: number): string {
   return whole >= 3600 ? `${Math.floor(whole / 3600)}:${minutes}:${rest}` : `${minutes}:${rest}`;
 }
 
-function TranscriptLines({ transcript }: { transcript: Promise<RecordingTranscript | null> }) {
+function TranscriptLines({
+  transcript,
+}: {
+  transcript: Promise<RecordingTranscript | null | "failed">;
+}) {
   const loaded = use(transcript);
+  if (loaded === "failed") {
+    return <p className="text-sm text-shamiri-light-red">The transcript could not be loaded.</p>;
+  }
   if (!loaded?.segments || !loaded.gaps) {
     return <p className="text-sm text-shamiri-text-grey">No transcript is available.</p>;
   }

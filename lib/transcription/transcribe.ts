@@ -184,8 +184,19 @@ async function generate(ai: GoogleGenAI, audio: Buffer, signal: AbortSignal): Pr
   if (finish === FinishReason.MAX_TOKENS) return { gap: "max_tokens" };
   if (!response.candidates?.length || (finish && finish !== FinishReason.STOP))
     return { gap: "blocked" };
-  const segments = ChunkSegments.parse(JSON.parse(response.text || "[]"));
+  const parsed = ChunkSegments.safeParse(parseJson(response.text || "[]"));
+  // The parse error would quote the model's output, which is speech from a session with minors.
+  if (!parsed.success) throw new Error("Gemini returned a transcript that is not a segment list");
+  const segments = parsed.data.filter((s) => s.start >= 0 && s.end >= s.start && s.text.trim());
   return segments.length ? { segments } : { gap: "empty" };
+}
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -221,14 +232,21 @@ export async function transcribeAudio(url: string, signal: AbortSignal): Promise
     httpOptions: { timeout: 300_000, retryOptions: { attempts: 5 } },
   });
 
-  const results = await inParallel(chunks, CHUNKS_IN_FLIGHT, async ({ start, seconds }) => ({
-    start,
-    end: start + seconds,
-    result: await transcribeChunk(ai, await cutChunk(mp3, start, seconds, signal), signal),
-  }));
+  // One failed chunk fails the run, so the chunks still in flight stop instead of being paid for.
+  const failed = new AbortController();
+  const chunkSignal = AbortSignal.any([signal, failed.signal]);
+  const results = await inParallel(chunks, CHUNKS_IN_FLIGHT, async ({ start, seconds }) => {
+    try {
+      const audio = await cutChunk(mp3, start, seconds, chunkSignal);
+      return { start, end: start + seconds, result: await transcribeChunk(ai, audio, chunkSignal) };
+    } catch (error) {
+      failed.abort();
+      throw error;
+    }
+  });
 
   const round = (s: number) => Math.round(s * 1000) / 1000;
-  return {
+  const transcript = {
     segments: results.flatMap(({ start, result }) =>
       "segments" in result
         ? result.segments.map((s) => ({
@@ -244,4 +262,7 @@ export async function transcribeAudio(url: string, signal: AbortSignal): Promise
     audioSeconds: round(audioSeconds),
     chunkCount: chunks.length,
   };
+  // Gaps are kept when part of a session is missing; a run with no speech at all is a failure.
+  if (transcript.segments.length === 0) throw new Error("Gemini transcribed none of the recording");
+  return transcript;
 }

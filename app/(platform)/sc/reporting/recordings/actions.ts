@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 
 import { currentSupervisor } from "#/app/auth";
@@ -298,8 +298,12 @@ export async function loadSupervisorRecordings() {
   return mappedRecordings;
 }
 
-/** Re-queues a failed transcription, or queues the first one for a recording uploaded earlier. */
-export async function queueTranscription(recordingId: string) {
+/**
+ * Queues a new transcription run for a recording whose latest run failed. Only uploads queue a first
+ * run, so recordings from the retired Fidelity pipeline are never transcribed here. A new row keeps
+ * the failed run's history and its attempt count, which fences writes from a stale worker.
+ */
+export async function retryTranscription(recordingId: string) {
   const supervisor = await currentSupervisor();
   if (!supervisor?.profile?.id) {
     return { success: false, message: "Unauthorized user" };
@@ -315,7 +319,7 @@ export async function queueTranscription(recordingId: string) {
     columns: { id: true },
     with: {
       transcriptions: {
-        columns: { id: true, status: true },
+        columns: { status: true },
         orderBy: (t, { desc }) => desc(t.createdAt),
         limit: 1,
       },
@@ -324,41 +328,22 @@ export async function queueTranscription(recordingId: string) {
   if (!ownedRecording) {
     return { success: false, message: "Recording not found" };
   }
-  const latestRun = ownedRecording.transcriptions[0];
-  if (latestRun && latestRun.status !== TranscriptionStatus.FAILED) {
-    return { success: false, message: "This recording is already transcribed or in progress" };
+  if (ownedRecording.transcriptions[0]?.status !== TranscriptionStatus.FAILED) {
+    return { success: false, message: "Only a failed transcription can be retried" };
   }
 
   try {
-    const queued = await db.transaction(async (tx) => {
-      const runs = latestRun
-        ? await tx
-            .update(transcription)
-            .set({ status: TranscriptionStatus.QUEUED, attempts: 0, errorMessage: null })
-            .where(
-              and(
-                eq(transcription.id, latestRun.id),
-                eq(transcription.status, TranscriptionStatus.FAILED),
-              ),
-            )
-            .returning({ id: transcription.id })
-        : await tx
-            .insert(transcription)
-            .values({ recordingId: ownedRecording.id })
-            .returning({ id: transcription.id });
-      if (runs.length === 0) return false;
+    await db.transaction(async (tx) => {
+      await tx.insert(transcription).values({ recordingId: ownedRecording.id });
       await tx
         .update(sessionRecording)
         .set({ status: RecordingProcessingStatus.PENDING, errorMessage: null, processedAt: null })
         .where(eq(sessionRecording.id, ownedRecording.id));
-      return true;
     });
-    if (!queued) {
-      return { success: false, message: "This recording is already transcribed or in progress" };
-    }
   } catch (error) {
+    // The partial unique index allows one queued or running run per recording.
     if (isUniqueViolation(error)) {
-      return { success: false, message: "This recording is already transcribed or in progress" };
+      return { success: false, message: "This recording is already being transcribed" };
     }
     throw error;
   }

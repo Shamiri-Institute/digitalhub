@@ -18,7 +18,7 @@ type OpenRecordingDialog =
   | {
       kind: "viewTranscript";
       recordingId: string;
-      transcript: Promise<RecordingTranscript | null>;
+      transcript: Promise<RecordingTranscript | null | "failed">;
     };
 
 interface RecordingsDatatableProps {
@@ -58,7 +58,11 @@ export default function RecordingsDatatable({
           openDialog: (kind, { id: recordingId }) =>
             setDialog(
               kind === "viewTranscript"
-                ? { kind, recordingId, transcript: loadRecordingTranscript(recordingId) }
+                ? {
+                    kind,
+                    recordingId,
+                    transcript: loadRecordingTranscript(recordingId).catch(() => "failed" as const),
+                  }
                 : { kind, recordingId },
             ),
           transcriptionEnabled,

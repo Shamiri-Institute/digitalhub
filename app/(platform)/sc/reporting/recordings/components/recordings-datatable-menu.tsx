@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { queueTranscription } from "../actions";
+import { retryTranscription } from "../actions";
 import type { ColumnState, RecordingTableData } from "./columns";
 
 interface RecordingsDataTableMenuProps {
@@ -21,26 +21,24 @@ export default function RecordingsDataTableMenu({
   recording,
   state,
 }: RecordingsDataTableMenuProps) {
-  const [isQueueing, setIsQueueing] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
-  const handleQueueTranscription = async () => {
-    setIsQueueing(true);
+  const handleRetryTranscription = async () => {
+    setIsRetrying(true);
     try {
-      const result = await queueTranscription(recording.id);
+      const result = await retryTranscription(recording.id);
       toast({
         title: result.success ? "Success" : "Error",
         description: result.message,
         variant: result.success ? "default" : "destructive",
       });
     } finally {
-      setIsQueueing(false);
+      setIsRetrying(false);
     }
   };
 
   const { transcriptionStatus } = recording;
-  const canQueueTranscription =
-    state.transcriptionEnabled &&
-    (transcriptionStatus === null || transcriptionStatus === "FAILED");
+  const canRetryTranscription = state.transcriptionEnabled && transcriptionStatus === "FAILED";
 
   return (
     <DropdownMenu>
@@ -67,9 +65,9 @@ export default function RecordingsDataTableMenu({
             View transcript
           </DropdownMenuItem>
         ) : null}
-        {canQueueTranscription && (
-          <DropdownMenuItem onClick={toastOnError(handleQueueTranscription)} disabled={isQueueing}>
-            {transcriptionStatus === "FAILED" ? "Retry transcription" : "Transcribe"}
+        {canRetryTranscription && (
+          <DropdownMenuItem onClick={toastOnError(handleRetryTranscription)} disabled={isRetrying}>
+            Retry transcription
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

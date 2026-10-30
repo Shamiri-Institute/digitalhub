@@ -92,6 +92,9 @@ jobs:
       # ideally we might want to create a different seed script for these tests so that we have deterministic data
       - name: Seed test database
         run: npm run db:seed
+      # Some unit tests read and write this database, so they run here, after the seed.
+      - name: Unit tests
+        run: npx vitest run
 
       - name: Cache Next.js build
         uses: actions/cache@v5

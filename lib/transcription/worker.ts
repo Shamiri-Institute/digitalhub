@@ -37,7 +37,9 @@ export type ClaimedTranscription = Awaited<ReturnType<typeof claimTranscriptions
 export async function claimTranscriptions(limit = RUNS_PER_TICK) {
   const staleBefore = new Date(Date.now() - LEASE_MINUTES * 60_000);
   return db.transaction(async (tx) => {
-    const claimable = tx
+    // Locked first, then updated by id: inside `IN (subquery)` Postgres may run the subquery more
+    // than once and claim past the limit.
+    const claimable = await tx
       .select({ id: transcription.id })
       .from(transcription)
       .where(
@@ -52,6 +54,7 @@ export async function claimTranscriptions(limit = RUNS_PER_TICK) {
       .orderBy(asc(transcription.createdAt))
       .limit(limit)
       .for("update", { skipLocked: true });
+    if (claimable.length === 0) return [];
     const claimed = await tx
       .update(transcription)
       .set({
@@ -59,23 +62,26 @@ export async function claimTranscriptions(limit = RUNS_PER_TICK) {
         startedAt: new Date(),
         attempts: sql`${transcription.attempts} + 1`,
       })
-      .where(inArray(transcription.id, claimable))
+      .where(
+        inArray(
+          transcription.id,
+          claimable.map((run) => run.id),
+        ),
+      )
       .returning({
         id: transcription.id,
         recordingId: transcription.recordingId,
         attempts: transcription.attempts,
       });
-    if (claimed.length > 0) {
-      await tx
-        .update(sessionRecording)
-        .set({ status: recordingStatusFor.PROCESSING, errorMessage: null })
-        .where(
-          inArray(
-            sessionRecording.id,
-            claimed.map((run) => run.recordingId),
-          ),
-        );
-    }
+    await tx
+      .update(sessionRecording)
+      .set({ status: recordingStatusFor.PROCESSING, errorMessage: null })
+      .where(
+        inArray(
+          sessionRecording.id,
+          claimed.map((run) => run.recordingId),
+        ),
+      );
     return claimed;
   });
 }
@@ -130,9 +136,17 @@ async function runTranscription(run: ClaimedTranscription) {
   try {
     const recording = await db.query.sessionRecording.findFirst({
       where: (r, { eq }) => eq(r.id, run.recordingId),
-      columns: { s3Key: true },
+      columns: { s3Key: true, archivedAt: true },
     });
     if (!recording) throw new Error(`Recording ${run.recordingId} not found`);
+    // Archiving withdraws the recording, so its audio must not reach Gemini.
+    if (recording.archivedAt) {
+      await finishTranscription(run, {
+        status: TranscriptionStatus.FAILED,
+        errorMessage: "The recording was archived before it was transcribed",
+      });
+      return;
+    }
     const url = await getPresignedUrl(recording.s3Key, "recordings", 3600);
     const transcript = await transcribeAudio(url, AbortSignal.timeout(RUN_DEADLINE_MS));
     const recorded = await finishTranscription(run, {
