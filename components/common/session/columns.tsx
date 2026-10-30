@@ -10,6 +10,7 @@ import {
 } from "#/components/common/session/session-list";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { Icons } from "#/components/icons";
+import { sortBy } from "#/lib/table-view";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
 // The school sessions pages load a school's sessions with the whole school subtree attached.
@@ -31,16 +32,14 @@ export const columns = (state: {
   {
     header: "Date of attendance",
     id: "Date of attendance",
-    cell: ({ row }) => {
-      return format(row.original.sessionDate, "dd MMM yyyy");
-    },
+    accessorFn: (row) => format(row.sessionDate, "dd MMM yyyy"),
+    sortingFn: sortBy((session) => session.sessionDate),
   },
   {
     header: "Last updated",
     id: "Last updated",
-    cell: ({ row }) => {
-      return format(row.original.updatedAt, "dd MMM yyyy");
-    },
+    accessorFn: (row) => format(row.updatedAt, "dd MMM yyyy"),
+    sortingFn: sortBy((session) => session.updatedAt),
   },
   {
     header: "Session type",
