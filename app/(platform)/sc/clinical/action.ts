@@ -247,7 +247,7 @@ export async function updateClinicalSessionAttendance(
   if (!attendance) {
     throw new Error("Clinical session attendance not found");
   }
-  const { actor } = await requireCaseAccess(attendance.caseId);
+  await requireCaseAccess(attendance.caseId);
 
   try {
     requireUpdated(
@@ -750,7 +750,7 @@ export async function updateClinicalCaseAttendance(data: {
   clinicalLeadId: string | null;
 }) {
   try {
-    const { actor } = await requireCaseAccess(data.caseId);
+    await requireCaseAccess(data.caseId);
 
     await db.insert(clinicalSessionAttendance).values({
       caseId: data.caseId,
@@ -911,7 +911,7 @@ export async function rejectReferredClinicalCase(caseId: string) {
 
 export async function flagClinicalCaseForFollowUp(data: { caseId: string; reason: string }) {
   try {
-    const { actor } = await requireCaseAccess(data.caseId);
+    await requireCaseAccess(data.caseId);
     requireUpdated(
       await db
         .update(clinicalScreeningInfo)
