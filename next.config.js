@@ -12,8 +12,29 @@ const sentryIngestOrigin = (() => {
   }
 })();
 
+// In development the browser uploads to a local S3 server (scripts/local-s3.sh), which serves
+// each bucket on its own subdomain.
+const localS3Origins = (() => {
+  if (process.env.NODE_ENV === "production" || !process.env.AWS_ENDPOINT_URL_S3) return "";
+  try {
+    const { protocol, host } = new URL(process.env.AWS_ENDPOINT_URL_S3);
+    return `${protocol}//${host} ${protocol}//*.${host}`;
+  } catch {
+    return "";
+  }
+})();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ffmpeg-static locates its binary beside its own files, so it is loaded at runtime, and the
+  // binary and the transcription prompts are traced into the route that runs them.
+  serverExternalPackages: ["ffmpeg-static"],
+  outputFileTracingIncludes: {
+    "/api/cron/transcriptions": [
+      "./node_modules/ffmpeg-static/ffmpeg",
+      "./lib/transcription/prompts/*.txt",
+    ],
+  },
   images: {
     remotePatterns: [
       {
@@ -39,7 +60,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'; " +
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.s3.amazonaws.com; " +
               "font-src 'self'; " +
-              `connect-src 'self' ${sentryIngestOrigin} https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; ` +
+              `connect-src 'self' ${sentryIngestOrigin} ${localS3Origins} https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; ` +
               "frame-src https://dash.shamiri.institute; " +
               "frame-ancestors 'none'; " +
               "base-uri 'self'; " +

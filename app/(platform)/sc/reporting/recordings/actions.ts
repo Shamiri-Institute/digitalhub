@@ -1,14 +1,13 @@
 "use server";
 
-import { and, eq, isNull, notInArray } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
-import { after } from "next/server";
+import { and, eq } from "drizzle-orm";
+import { refresh, revalidatePath } from "next/cache";
 
 import { currentSupervisor } from "#/app/auth";
 import { db, isUniqueViolation } from "#/db/client";
-import { fellow, sessionRecording } from "#/db/schema";
+import { RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
+import { fellow, sessionRecording, transcription } from "#/db/schema";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
-import { createJob } from "#/lib/fidelity-ratings-api";
 import {
   discardOrphanedUpload,
   verifyUploadClaim,
@@ -18,6 +17,7 @@ import {
 export type FellowGroup = Awaited<ReturnType<typeof loadFellowGroups>>[number];
 export type GroupSession = Awaited<ReturnType<typeof loadGroupSessions>>[number];
 export type SupervisorRecording = Awaited<ReturnType<typeof loadSupervisorRecordings>>[number];
+export type RecordingTranscript = NonNullable<Awaited<ReturnType<typeof loadRecordingTranscript>>>;
 
 export async function loadFellowGroups(fellowId: string) {
   const supervisor = await currentSupervisor();
@@ -115,90 +115,6 @@ export async function checkRecordingExists(params: {
   return recording ?? null;
 }
 
-function getAppBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
-  }
-
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  const port = process.env.PORT || "3000";
-  return `http://localhost:${port}`;
-}
-
-async function submitToFidelityAPI(recordingId: string, s3Key: string): Promise<void> {
-  try {
-    const appUrl = getAppBaseUrl();
-
-    const completionWebhookUrl = `${appUrl}/api/recordings/batch/status`;
-    const progressWebhookUrl = undefined;
-
-    console.log(`Submitting recording ${recordingId} to Fidelity API`, {
-      s3Key,
-      completionWebhookUrl,
-    });
-
-    const jobResponse = await createJob({
-      recordings: [
-        {
-          id: recordingId,
-          s3_key: s3Key,
-        },
-      ],
-      completion_webhook_url: completionWebhookUrl,
-      progress_webhook_url: progressWebhookUrl,
-    });
-
-    const updateResult = await db
-      .update(sessionRecording)
-      .set({
-        fidelityJobId: jobResponse.job_id,
-        fidelityJobSubmittedAt: new Date(),
-        status: "PROCESSING",
-      })
-      .where(
-        and(
-          eq(sessionRecording.id, recordingId),
-          isNull(sessionRecording.fidelityJobId),
-          notInArray(sessionRecording.status, ["COMPLETED", "FAILED"]),
-        ),
-      )
-      .returning({ id: sessionRecording.id });
-
-    if (updateResult.length === 0) {
-      const current = await db.query.sessionRecording.findFirst({
-        where: (r, { eq }) => eq(r.id, recordingId),
-        columns: { status: true },
-      });
-      console.warn(
-        `Recording ${recordingId} already in final state (${current?.status}), skipping PROCESSING update`,
-      );
-    }
-
-    console.log(`Submitted recording ${recordingId} to Fidelity API as job ${jobResponse.job_id}`);
-  } catch (error) {
-    console.error(`✗ Failed to submit recording ${recordingId} to Fidelity API:`, error);
-
-    try {
-      const marked = await db
-        .update(sessionRecording)
-        .set({
-          status: "FAILED",
-          errorMessage: error instanceof Error ? error.message : "Failed to submit to Fidelity API",
-        })
-        .where(eq(sessionRecording.id, recordingId))
-        .returning({ id: sessionRecording.id });
-      if (marked.length === 0) {
-        console.error(`Recording ${recordingId} not found while marking it FAILED`);
-      }
-    } catch (dbError) {
-      console.error(`Failed to mark recording ${recordingId} as FAILED:`, dbError);
-    }
-  }
-}
-
 export async function createSessionRecording(input: {
   fellowId: string;
   schoolId: string;
@@ -252,29 +168,33 @@ export async function createSessionRecording(input: {
   const supervisorId = supervisor.profile.id;
 
   let recording: typeof sessionRecording.$inferSelect;
+  const transcribed = isSupervisorInFidelityAbTest(supervisorId);
   try {
-    const [created] = await db
-      .insert(sessionRecording)
-      .values({
-        id: ctx.recordingId,
-        fileName: ctx.fileName,
-        originalFileName: input.originalFileName,
-        s3Key: input.s3Key,
-        contentType: verified.contentType ?? claim.contentType,
-        fileSize: verified.contentLength,
-        fellowId: input.fellowId,
-        schoolId: input.schoolId,
-        groupId: input.groupId,
-        sessionId: input.sessionId,
-        uploadedBy,
-        supervisorId,
-        status: "PENDING",
-      })
-      .returning();
-    if (!created) {
-      throw new Error("Insert returned no row");
-    }
-    recording = created;
+    recording = await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(sessionRecording)
+        .values({
+          id: ctx.recordingId,
+          fileName: ctx.fileName,
+          originalFileName: input.originalFileName,
+          s3Key: input.s3Key,
+          contentType: verified.contentType ?? claim.contentType,
+          fileSize: verified.contentLength,
+          fellowId: input.fellowId,
+          schoolId: input.schoolId,
+          groupId: input.groupId,
+          sessionId: input.sessionId,
+          uploadedBy,
+          supervisorId,
+          status: "PENDING",
+        })
+        .returning();
+      if (!created) {
+        throw new Error("Insert returned no row");
+      }
+      if (transcribed) await tx.insert(transcription).values({ recordingId: created.id });
+      return created;
+    });
   } catch (error) {
     if (isUniqueViolation(error)) {
       const conflicting = await db.query.sessionRecording.findFirst({
@@ -304,18 +224,7 @@ export async function createSessionRecording(input: {
     };
   }
 
-  if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
-    revalidatePath("/sc/reporting/recordings");
-    return {
-      success: true,
-      message: "Recording uploaded successfully",
-      data: recording,
-    };
-  }
-
-  after(() => submitToFidelityAPI(recording.id, recording.s3Key));
-
-  revalidatePath("/sc/reporting/recordings");
+  refresh();
 
   return {
     success: true,
@@ -341,6 +250,11 @@ export async function loadSupervisorRecordings() {
       session: {
         columns: { sessionType: true, sessionDate: true },
         with: { session: { columns: { sessionName: true } } },
+      },
+      transcriptions: {
+        columns: { status: true, gaps: true },
+        orderBy: (t, { desc }) => desc(t.createdAt),
+        limit: 1,
       },
     },
     orderBy: (r, { desc }) => desc(r.createdAt),
@@ -369,6 +283,8 @@ export async function loadSupervisorRecordings() {
     sessionType: r.session.sessionType ?? "Unknown",
     sessionDate: r.session.sessionDate,
     sessionName: r.session.session?.sessionName ?? r.session.sessionType ?? "Unknown Session",
+    transcriptionStatus: r.transcriptions[0]?.status ?? null,
+    transcriptionGapCount: r.transcriptions[0]?.gaps?.length ?? 0,
   }));
 
   if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
@@ -382,74 +298,96 @@ export async function loadSupervisorRecordings() {
   return mappedRecordings;
 }
 
-export async function retryRecordingProcessing(recordingId: string) {
+/** Re-queues a failed transcription, or queues the first one for a recording uploaded earlier. */
+export async function queueTranscription(recordingId: string) {
   const supervisor = await currentSupervisor();
-
   if (!supervisor?.profile?.id) {
-    return {
-      success: false,
-      message: "Unauthorized user",
-    };
+    return { success: false, message: "Unauthorized user" };
+  }
+  const supervisorId = supervisor.profile.id;
+  if (!isSupervisorInFidelityAbTest(supervisorId)) {
+    return { success: false, message: "Transcription is not enabled for your account." };
   }
 
-  if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
-    return {
-      success: false,
-      message: "Fidelity processing is not enabled for your account.",
-    };
+  const ownedRecording = await db.query.sessionRecording.findFirst({
+    where: (r, { and, eq, isNull }) =>
+      and(eq(r.id, recordingId), eq(r.supervisorId, supervisorId), isNull(r.archivedAt)),
+    columns: { id: true },
+    with: {
+      transcriptions: {
+        columns: { id: true, status: true },
+        orderBy: (t, { desc }) => desc(t.createdAt),
+        limit: 1,
+      },
+    },
+  });
+  if (!ownedRecording) {
+    return { success: false, message: "Recording not found" };
+  }
+  const latestRun = ownedRecording.transcriptions[0];
+  if (latestRun && latestRun.status !== TranscriptionStatus.FAILED) {
+    return { success: false, message: "This recording is already transcribed or in progress" };
   }
 
   try {
-    const supervisorId = supervisor.profile.id;
-    const recording = await db.query.sessionRecording.findFirst({
-      where: (r, { and, eq }) =>
-        and(eq(r.id, recordingId), eq(r.supervisorId, supervisorId), eq(r.status, "FAILED")),
+    const queued = await db.transaction(async (tx) => {
+      const runs = latestRun
+        ? await tx
+            .update(transcription)
+            .set({ status: TranscriptionStatus.QUEUED, attempts: 0, errorMessage: null })
+            .where(
+              and(
+                eq(transcription.id, latestRun.id),
+                eq(transcription.status, TranscriptionStatus.FAILED),
+              ),
+            )
+            .returning({ id: transcription.id })
+        : await tx
+            .insert(transcription)
+            .values({ recordingId: ownedRecording.id })
+            .returning({ id: transcription.id });
+      if (runs.length === 0) return false;
+      await tx
+        .update(sessionRecording)
+        .set({ status: RecordingProcessingStatus.PENDING, errorMessage: null, processedAt: null })
+        .where(eq(sessionRecording.id, ownedRecording.id));
+      return true;
     });
-
-    if (!recording) {
-      return {
-        success: false,
-        message: "Recording not found or cannot be retried",
-      };
+    if (!queued) {
+      return { success: false, message: "This recording is already transcribed or in progress" };
     }
-
-    if (recording.status === "PENDING" || recording.status === "PROCESSING") {
-      return {
-        success: false,
-        message: `Recording is currently ${recording.status.toLowerCase()}. Please wait for it to complete before retrying.`,
-      };
-    }
-
-    const reset = await db
-      .update(sessionRecording)
-      .set({
-        status: "PENDING",
-        errorMessage: null,
-        processedAt: null,
-        fidelityJobId: null,
-        fidelityJobSubmittedAt: null,
-      })
-      .where(eq(sessionRecording.id, recordingId))
-      .returning({ id: sessionRecording.id });
-    if (reset.length === 0) {
-      throw new Error(`Recording ${recordingId} not found`);
-    }
-
-    after(() => submitToFidelityAPI(recording.id, recording.s3Key));
-
-    revalidatePath("/sc/reporting/recordings");
-
-    return {
-      success: true,
-      message: "Recording queued for reprocessing",
-    };
   } catch (error) {
-    console.error("Error retrying recording processing:", error);
-    return {
-      success: false,
-      message: "Failed to retry processing",
-    };
+    if (isUniqueViolation(error)) {
+      return { success: false, message: "This recording is already transcribed or in progress" };
+    }
+    throw error;
   }
+
+  refresh();
+  return { success: true, message: "Transcription queued" };
+}
+
+export async function loadRecordingTranscript(recordingId: string) {
+  const supervisor = await currentSupervisor();
+  if (!supervisor?.profile?.id) {
+    throw new Error("Unauthorized user");
+  }
+  const supervisorId = supervisor.profile.id;
+  if (!isSupervisorInFidelityAbTest(supervisorId)) return null;
+
+  const ownedRecording = await db.query.sessionRecording.findFirst({
+    where: (r, { and, eq }) => and(eq(r.id, recordingId), eq(r.supervisorId, supervisorId)),
+    columns: { id: true },
+    with: {
+      transcriptions: {
+        where: (t, { eq }) => eq(t.status, TranscriptionStatus.COMPLETED),
+        columns: { segments: true, gaps: true, completedAt: true },
+        orderBy: (t, { desc }) => desc(t.createdAt),
+        limit: 1,
+      },
+    },
+  });
+  return ownedRecording?.transcriptions[0] ?? null;
 }
 
 export async function updateSessionRecording(input: {

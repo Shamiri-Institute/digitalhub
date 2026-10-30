@@ -2033,7 +2033,7 @@ async function createSessionRecordings(
           overallScore,
           promptVersion,
           fidelityFeedback,
-          transcript,
+          legacyTranscript: transcript,
         });
       }
     }
