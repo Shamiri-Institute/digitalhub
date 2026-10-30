@@ -2,8 +2,17 @@ import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import type { SurveyVersionPrefill } from "#/db/enums";
-import { school, student, survey, surveyVersion } from "#/db/schema";
+import {
+  school,
+  student,
+  survey,
+  surveyPrintFile,
+  surveyPrintRun,
+  surveyVersion,
+} from "#/db/schema";
 import { objectId } from "#/lib/crypto";
+import { deleteObject } from "#/lib/s3/s3.service";
+import { printFileKey } from "#/lib/survey/print-files";
 import type { SurveyForm } from "#/lib/survey/form";
 import { checkPublish } from "#/lib/survey/publish";
 import { storePublished } from "#/lib/survey/store-published";
@@ -148,4 +157,23 @@ export async function createPrintSchool({
     await db.delete(school).where(eq(school.id, schoolId));
   };
   return { schoolId, schoolName, remove };
+}
+
+/**
+ * Deletes a survey made for a test, with its versions, runs, copies and pages, and its print
+ * files' PDFs from S3, which the database can't delete with it.
+ */
+export async function removeSurvey(match: { code: string } | { id: string }) {
+  const surveyMatch = "code" in match ? eq(survey.code, match.code) : eq(survey.id, match.id);
+  const files = await db
+    .select({ id: surveyPrintFile.id, printRunId: surveyPrintFile.printRunId })
+    .from(surveyPrintFile)
+    .innerJoin(surveyPrintRun, eq(surveyPrintRun.id, surveyPrintFile.printRunId))
+    .innerJoin(surveyVersion, eq(surveyVersion.id, surveyPrintRun.versionId))
+    .innerJoin(survey, eq(survey.id, surveyVersion.surveyId))
+    .where(surveyMatch);
+  await Promise.all(
+    files.map((file) => deleteObject({ Key: printFileKey(file) }, "survey-print-files")),
+  );
+  await db.delete(survey).where(surveyMatch);
 }

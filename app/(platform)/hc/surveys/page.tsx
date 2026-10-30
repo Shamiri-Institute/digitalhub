@@ -9,9 +9,6 @@ import { hubCoordinatorViewer } from "#/lib/auth/survey-access";
 import { fetchPrintableVersions, fetchPrintRuns } from "#/lib/survey/print-run-queries";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
 
-// Creating a print run inserts every copy and page in the action this page serves.
-export const maxDuration = 300;
-
 const RUNS_PATH = "/hc/surveys/runs";
 
 export default async function HubSurveysPage() {

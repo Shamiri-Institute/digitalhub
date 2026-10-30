@@ -90,6 +90,10 @@ export const VoidQuestionnaireSchema = z.object({
     .max(500, { error: "Keep the reason under 500 characters" }),
 });
 
+export const RetryPrintRunSchema = z.object({
+  printRunId: stringValidation("Missing print run"),
+});
+
 export const ListPrintableStudentsSchema = z.object({
   schoolId: stringValidation("Missing school"),
   /** Admins only, as in CreatePrintRunSchema. */

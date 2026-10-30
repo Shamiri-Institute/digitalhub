@@ -5,23 +5,20 @@ import Link from "next/link";
 
 import DataTable from "#/components/data-table";
 import { Badge, type BadgeProps } from "#/components/ui/badge";
-import { SURVEY_PRINT_RUN_STATUS_LABELS, type SurveyPrintRunStatus } from "#/db/enums";
+import { SURVEY_PRINT_STATUS_LABELS, type SurveyPrintStatus } from "#/db/enums";
 import { formatDateTimeIn } from "#/lib/date-utils";
 import type { PrintRunRows } from "#/lib/survey/print-run-queries";
 
-const PRINT_RUN_STATUS_VARIANT: Record<SurveyPrintRunStatus, BadgeProps["variant"]> = {
+const PRINT_STATUS_VARIANT: Record<SurveyPrintStatus, BadgeProps["variant"]> = {
   QUEUED: "outline-solid",
   RENDERING: "warning",
   READY: "shamiri-green",
   FAILED: "destructive",
 };
 
-export function PrintRunStatusBadge({ status }: { status: SurveyPrintRunStatus }) {
-  return (
-    <Badge variant={PRINT_RUN_STATUS_VARIANT[status]}>
-      {SURVEY_PRINT_RUN_STATUS_LABELS[status]}
-    </Badge>
-  );
+/** A print run's or print file's status. */
+export function PrintStatusBadge({ status }: { status: SurveyPrintStatus }) {
+  return <Badge variant={PRINT_STATUS_VARIANT[status]}>{SURVEY_PRINT_STATUS_LABELS[status]}</Badge>;
 }
 
 // The link and date go in the row, not the columns, so the columns can be built once: a cell
@@ -79,7 +76,7 @@ function printRunColumns(showHub: boolean): ColumnDef<PrintRunRow>[] {
       accessorKey: "status",
       header: "Status",
       id: "Status",
-      cell: ({ row }) => <PrintRunStatusBadge status={row.original.status} />,
+      cell: ({ row }) => <PrintStatusBadge status={row.original.status} />,
     },
   ];
 }

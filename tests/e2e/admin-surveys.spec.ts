@@ -14,6 +14,7 @@ import { createAdminCopy, signInWithEmail } from "#/tests/helpers";
 import {
   createPrintSchool,
   createPublishedSurvey as createSurveyFixture,
+  removeSurvey,
   TWO_QUESTIONS,
 } from "#/tests/survey-fixtures";
 import { getUrl } from "#/tests/pages/helpers";
@@ -435,7 +436,7 @@ test("a Research team admin prints copies of a published version for a hub they 
     schoolName: `Print ${published.code}`,
   });
   // Undo runs last-registered first: the survey, with its runs and copies, then the school.
-  undo(printedSchool.remove, () => db.delete(survey).where(eq(survey.id, published.id)));
+  undo(printedSchool.remove, () => removeSurvey({ id: published.id }));
 
   await page.goto(getUrl(`/admin/surveys/${published.id}`));
   await page.getByLabel("Actions for v1").click();
@@ -482,7 +483,7 @@ test("a print dialog opened on page 2 before the page knows the time zone keeps 
     hubId: printedHub.id,
     schoolName: `Print ${published.code}`,
   });
-  undo(printedSchool.remove, () => db.delete(survey).where(eq(survey.id, published.id)));
+  undo(printedSchool.remove, () => removeSurvey({ id: published.id }));
 
   // A first visit has no time zone cookie, so the page sets it and refreshes. The refresh is held
   // until the dialog is open and filled in.

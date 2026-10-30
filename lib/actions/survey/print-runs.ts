@@ -6,10 +6,12 @@ import type { z } from "zod";
 import { db } from "#/db/client";
 import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { printRunScope, requirePrintRunViewer } from "#/lib/auth/survey-access";
-import { type IssuedPrintRun, voidCopy } from "#/lib/survey/print-run";
+import { kickPrintQueue, retryFailedPrintFiles } from "#/lib/survey/print-files";
+import { type RecordedPrintRun, voidCopy } from "#/lib/survey/print-run";
 import {
   fetchPrintableHubs,
   fetchPrintableStudents,
+  fetchPrintRun,
   type PrintableHubs,
   type PrintableStudents,
 } from "#/lib/survey/print-run-queries";
@@ -20,29 +22,61 @@ import { failure, invalid } from "./respond";
 import {
   CreatePrintRunSchema,
   ListPrintableStudentsSchema,
+  RetryPrintRunSchema,
   VoidQuestionnaireSchema,
 } from "./schemas";
 
 /**
- * Issues a print run: numbered copies of a published version for one hub's schools. A hub
- * coordinator prints for their own hub; a Research admin names any hub of their project. A
- * resubmitted form, whose first reply was lost, answers with the run it already created.
+ * Makes a print run: numbered copies of a published version for one hub's schools, which the print
+ * job then issues and renders a file at a time. A hub coordinator prints for their own hub; a
+ * Research admin names any hub of their project. A resubmitted form, whose first reply was lost,
+ * answers with the run it already created.
  */
 export async function createPrintRun(
   data: z.infer<typeof CreatePrintRunSchema>,
-): Promise<ActionResponse<IssuedPrintRun>> {
+): Promise<ActionResponse<RecordedPrintRun>> {
   try {
     const viewer = await requirePrintRunViewer();
     const input = CreatePrintRunSchema.safeParse(data);
     if (!input.success) {
       return invalid(input.error);
     }
-    const issued = await submitPrintRun(viewer, input.data);
+    const recorded = await submitPrintRun(viewer, input.data);
     // On a resubmit too: the first submit's refresh may never have reached this client.
     refresh();
-    return { success: true, message: `Created ${copyCount(issued.copyCount)}`, data: issued };
+    kickPrintQueue();
+    return { success: true, message: `Created ${copyCount(recorded.copyCount)}`, data: recorded };
   } catch (error) {
     return failure(error, "Sorry, could not create the print run.");
+  }
+}
+
+/** Queues a run's failed files to render again. */
+export async function retryPrintRun(
+  data: z.infer<typeof RetryPrintRunSchema>,
+): Promise<ActionResponse> {
+  try {
+    const viewer = await requirePrintRunViewer();
+    const input = RetryPrintRunSchema.safeParse(data);
+    if (!input.success) {
+      return invalid(input.error);
+    }
+    const run = await fetchPrintRun(viewer, input.data.printRunId);
+    if (!run) {
+      throw new NotFoundError("Print run");
+    }
+    const queued = await db.transaction((tx) => retryFailedPrintFiles(tx, run.id));
+    refresh();
+    kickPrintQueue();
+    return {
+      success: true,
+      message:
+        queued === 0
+          ? "No files had failed"
+          : `Trying ${queued === 1 ? "1 file" : `${queued} files`} again`,
+    };
+  } catch (error) {
+    return failure(error, "Sorry, could not try the print run again.");
   }
 }
 

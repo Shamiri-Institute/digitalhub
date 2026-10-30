@@ -22,6 +22,10 @@ env:
   S3_RECORDINGS_REGION: af-south-1
   S3_STUDENT_ATTENDANCE_BUCKET: mock-s3-attendance-bucket
   S3_STUDENT_ATTENDANCE_REGION: af-south-1
+  # Print files go to the SeaweedFS server started below.
+  S3_ENDPOINT: http://localhost:8333
+  S3_SURVEY_PRINT_FILES_BUCKET: survey-print-files
+  S3_SURVEY_PRINT_FILES_REGION: af-south-1
   RECORDINGS_API_KEY: e2e-recordings-api-key
   BETTER_AUTH_URL: http://localhost:3000
   BETTER_AUTH_SECRET: e2e-better-auth-secret-at-least-32-chars
@@ -84,6 +88,19 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
       - run: npx playwright install-deps chromium
         if: steps.playwright-cache.outputs.cache-hit == 'true'
+
+      # An S3-compatible server for print files. A job service can't be given SeaweedFS's
+      # `server -s3` command, so it runs as a step. With no identities configured it accepts any
+      # signed request, so the S3 key and secret above are only placeholders.
+      - name: Start SeaweedFS
+        run: |
+          docker run -d --name seaweedfs -p 8333:8333 chrislusf/seaweedfs:4.50 server -s3
+          for attempt in $(seq 1 60); do
+            curl -s -o /dev/null http://localhost:8333 && break
+            sleep 1
+          done
+          AWS_ACCESS_KEY_ID=$S3_UPLOAD_KEY AWS_SECRET_ACCESS_KEY=$S3_UPLOAD_SECRET \
+            aws --endpoint-url "$S3_ENDPOINT" s3 mb s3://survey-print-files
 
       - name: Migrate database
         run: npm run db:migrate

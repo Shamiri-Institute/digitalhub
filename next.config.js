@@ -12,8 +12,16 @@ const sentryIngestOrigin = (() => {
   }
 })();
 
+const PRINT_FONTS = ["./public/fonts/figtree/*.ttf"];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Read from disk by the print job (lib/survey/print-files.ts), in every function that runs it.
+  outputFileTracingIncludes: {
+    "/api/cron/survey-print-files": PRINT_FONTS,
+    "/hc/surveys/**": PRINT_FONTS,
+    "/admin/surveys/**": PRINT_FONTS,
+  },
   images: {
     remotePatterns: [
       {

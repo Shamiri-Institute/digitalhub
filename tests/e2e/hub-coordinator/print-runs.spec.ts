@@ -1,4 +1,7 @@
+import { readFile } from "node:fs/promises";
+
 import { and, eq, ne } from "drizzle-orm";
+import { PDFDocument } from "pdf-lib";
 
 import { db } from "#/db/client";
 import {
@@ -7,7 +10,6 @@ import {
   implementerMember,
   school,
   session,
-  survey,
   surveyAuditEvent,
   surveyQuestionnaire,
   user,
@@ -17,9 +19,14 @@ import type { BrowserContext, Page } from "@playwright/test";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signInAs, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
-import { createPrintSchool, createPublishedSurvey, formWithPages } from "#/tests/survey-fixtures";
+import {
+  createPrintSchool,
+  createPublishedSurvey,
+  formWithPages,
+  removeSurvey,
+} from "#/tests/survey-fixtures";
 
-test("a hub coordinator prints 12 numbered copies for one school and voids the last", async ({
+test("a hub coordinator prints 12 numbered copies for one school, downloads them, and voids the last", async ({
   page,
   context,
   undo,
@@ -45,8 +52,8 @@ test("a hub coordinator prints 12 numbered copies for one school and voids the l
     hubId: coordinatorHub.id,
     schoolName: `Print school ${code}`,
   });
-  // Undo runs last-registered first: the survey, with its runs, copies and pages, then the school.
-  undo(hubSchool.remove, () => db.delete(survey).where(eq(survey.code, code)));
+  // Undo runs last-registered first: the survey, with its runs, copies, pages and PDFs, then the school.
+  undo(hubSchool.remove, () => removeSurvey({ code }));
   const published = await createPublishedSurvey({
     code,
     implementerId: coordinatorHub.implementerId,
@@ -72,15 +79,30 @@ test("a hub coordinator prints 12 numbered copies for one school and voids the l
   await expect(page.getByText("Created 12 copies").first()).toBeVisible();
 
   await expect(page).toHaveURL(/\/hc\/surveys\/runs\/surveyprintrun_/);
-  await page.reload();
   const serials = Array.from(
     { length: 12 },
     (_, index) => `${code}-${String(index + 1).padStart(6, "0")}`,
   );
+  // The page refreshes itself until the print job has made the school's file.
+  const schoolFile = page.getByRole("row").filter({ hasText: "Whole school" });
+  await expect(schoolFile).toContainText("Ready", { timeout: 60_000 });
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    schoolFile.getByRole("link", { name: `Download ${hubSchool.schoolName} Whole school` }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe(
+    `${code} v1 ${hubSchool.schoolName} ${serials[0]} to ${serials[11]}.pdf`,
+  );
+  const printed = await PDFDocument.load(await readFile(await download.path()));
+  expect(printed.getPageCount()).toBe(12 * published.pageCount);
+
+  await page.reload();
   await expect(page.getByRole("cell", { name: new RegExp(`^${code}-\\d{6}$`) })).toHaveText(
     serials,
   );
-  await expect(page.getByText(`${serials[0]} to ${serials[11]}`)).toBeVisible();
+  await expect(
+    page.getByRole("definition").filter({ hasText: `${serials[0]} to ${serials[11]}` }),
+  ).toBeVisible();
 
   const pageCodes = await page
     .getByRole("listitem")
@@ -139,7 +161,7 @@ test("going back from the confirm step keeps the students a coordinator left out
     studentNames: [amy, ben, cat],
   });
   // Undo runs last-registered first: the survey, with its copies, then the school.
-  undo(remove, () => db.delete(survey).where(eq(survey.code, code)));
+  undo(remove, () => removeSurvey({ code }));
   await createPublishedSurvey({
     code,
     implementerId: coordinatorHub.implementerId,
@@ -243,7 +265,7 @@ async function printSetup(context: BrowserContext, undo: Undo) {
     hubId: coordinatorHub.id,
     schoolName: `Print school ${code}`,
   });
-  undo(remove, () => db.delete(survey).where(eq(survey.code, code)));
+  undo(remove, () => removeSurvey({ code }));
   await createPublishedSurvey({
     code,
     implementerId: coordinatorHub.implementerId,
@@ -307,7 +329,9 @@ test("changing the copies after a lost reply makes a new run, not the lost one",
 
   await expect(page).toHaveURL(/\/hc\/surveys\/runs\/surveyprintrun_/);
   await page.reload();
-  await expect(page.getByText(`${code}-000011 to ${code}-000030`)).toBeVisible();
+  await expect(
+    page.getByRole("definition").filter({ hasText: `${code}-000011 to ${code}-000030` }),
+  ).toBeVisible();
   await expect(page.getByRole("cell", { name: new RegExp(`^${code}-\\d{6}$`) })).toHaveCount(20);
 });
 
@@ -349,7 +373,9 @@ test("asking again for a request whose reply was lost opens its run, not a secon
   await dialog.getByRole("button", { name: "Create print run" }).click();
 
   await expect(page).toHaveURL(/\/hc\/surveys\/runs\/surveyprintrun_/);
-  await expect(page.getByText(`${code}-000001 to ${code}-000010`)).toBeVisible();
+  await expect(
+    page.getByRole("definition").filter({ hasText: `${code}-000001 to ${code}-000010` }),
+  ).toBeVisible();
   await page.goto(getUrl("/hc/surveys"));
   await expect(page.getByRole("row").filter({ hasText: `Published ${code}` })).toHaveCount(2);
 });

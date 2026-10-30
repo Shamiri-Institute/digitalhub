@@ -7,6 +7,8 @@ import { copiesPageOf, PrintRunDetailView } from "#/components/common/survey/pri
 import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import PageFooter from "#/components/ui/page-footer";
 import { hubCoordinatorViewer } from "#/lib/auth/survey-access";
+import { SurveyPrintStatus } from "#/db/enums";
+import { kickPrintQueue } from "#/lib/survey/print-files";
 import { fetchPrintRun, fetchPrintRunCopies } from "#/lib/survey/print-run-queries";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
 
@@ -24,6 +26,10 @@ export default async function HubPrintRunPage(props: {
   const [run, timeZone] = await Promise.all([fetchPrintRun(viewer, runId), viewerTimeZone()]);
   if (!run) {
     notFound();
+  }
+  // Where no cron runs (previews, local), viewing an unfinished run keeps its files moving.
+  if (run.status === SurveyPrintStatus.QUEUED || run.status === SurveyPrintStatus.RENDERING) {
+    kickPrintQueue();
   }
   const copies = await fetchPrintRunCopies(run, requestedPage);
 

@@ -104,7 +104,7 @@ export function QuestionnairesTable({
         data={copies}
         columns={prefill === SurveyVersionPrefill.STUDENT ? STUDENT_COPY_COLUMNS : COPY_COLUMNS}
         className="data-table data-table-action bg-white"
-        emptyStateMessage="No copies"
+        emptyStateMessage="Copies appear here as their files are made"
         getRowCanExpand={() => false}
         disableSearch
         disablePagination
