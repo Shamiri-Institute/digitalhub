@@ -43,6 +43,7 @@ import {
   type SessionDialogOpener,
 } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
+import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
 import StudentAttendance, {
   startStudentAttendanceOpening,
   type StudentAttendanceOpening,
@@ -588,6 +589,13 @@ function CalendarView({
               role={role}
             />
           </MarkSessionOccurrence>
+          <AttendanceDocumentDialog
+            session={session}
+            groupId={session.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id}
+            role={role}
+            open={dialog?.kind === "attendanceDocument"}
+            onOpenChange={onDialogOpenChange}
+          />
         </>
       )}
     </div>
