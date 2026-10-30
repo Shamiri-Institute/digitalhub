@@ -3,7 +3,7 @@ import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { addDays, isWithinInterval } from "date-fns";
-import type { Dispatch, SetStateAction } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
@@ -21,8 +21,9 @@ import {
 } from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
-import type { People } from "#/lib/schedule-view";
 import { cn, sessionDisplayName } from "#/lib/utils";
+
+type People = "supervisors" | "fellows";
 
 const supervisorAttendanceColumns = (state: {
   setAttendance: Dispatch<SetStateAction<SupervisorAttendanceTableData | undefined>>;
@@ -262,8 +263,6 @@ export function TableView({
   state,
   selectedDay,
   onSelectedDayChange,
-  people,
-  onPeopleChange,
   supervisors,
   role,
   supervisorId,
@@ -272,8 +271,6 @@ export function TableView({
   state: CalendarState;
   selectedDay: CalendarDate;
   onSelectedDayChange: (day: CalendarDate) => void;
-  people: People;
-  onPeopleChange: (people: People) => void;
   supervisors?: ScheduleSupervisor[];
   role: ImplementerRole;
   supervisorId?: string;
@@ -283,6 +280,7 @@ export function TableView({
   const dayFormatter = useDateFormatter({
     weekday: "long",
   });
+  const [people, setPeople] = useState<People>("supervisors");
 
   const { supervisorAttendances, fellowAttendances } = (() => {
     const start = selectedDay.toDate(state.timeZone);
@@ -396,8 +394,8 @@ export function TableView({
           type="single"
           className="form-toggle"
           value={people}
-          onValueChange={(value) => {
-            if (value) onPeopleChange(value as People);
+          onValueChange={(value: People) => {
+            if (value) setPeople(value);
           }}
         >
           <ToggleGroupItem

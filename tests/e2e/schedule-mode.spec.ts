@@ -104,34 +104,4 @@ test.describe("hub coordinator schedule mode from the URL", () => {
     await page.reload();
     await expect(dayToggle).toBeChecked();
   });
-
-  test("the table view's people choice is in the URL, so reload and back/forward keep it", async ({
-    context,
-    page,
-  }) => {
-    await page.goto(await scheduleUrl(context, "/hc/schedule?mode=week", new Date()));
-    // A click before hydration does nothing, so click until the URL changes.
-    await expect(async () => {
-      await page.getByLabel("Select table view").click();
-      await expect(page).toHaveURL(/mode=table/, { timeout: 2000 });
-    }).toPass();
-    await expect(page.getByRole("radio", { name: "Select Supervisors" })).toBeChecked();
-
-    const fellows = page.getByRole("radio", { name: "Select Fellows" });
-    const requests = serverRenderRequests(page);
-    await fellows.click();
-    await expect(page).toHaveURL(/people=fellows/);
-    await expect(fellows).toBeChecked();
-    await expect(page.getByRole("columnheader", { name: "Group", exact: true })).toBeVisible();
-    expect(requests).toEqual([]);
-
-    await page.goBack();
-    await expect(page).toHaveURL(/mode=week/);
-    await page.goForward();
-    await expect(page).toHaveURL(/people=fellows/);
-    await expect(fellows).toBeChecked();
-
-    await page.reload();
-    await expect(fellows).toBeChecked();
-  });
 });
