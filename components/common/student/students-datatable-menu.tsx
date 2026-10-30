@@ -24,7 +24,7 @@ export default function StudentsDataTableMenu({
     setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
     setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
     setMoveSchoolDialog: Dispatch<SetStateAction<boolean>>;
-    setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
+    setSelectedStudentId: Dispatch<SetStateAction<string | null>>;
     role: ImplementerRole;
   };
   student: SchoolStudentTableData;
@@ -45,7 +45,7 @@ export default function StudentsDataTableMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {
-            state.setStudent(student);
+            state.setSelectedStudentId(student.id);
             state.setEditDialog(true);
           }}
         >
@@ -54,7 +54,7 @@ export default function StudentsDataTableMenu({
         {state.role !== ImplementerRole.ADMIN && (
           <DropdownMenuItem
             onClick={() => {
-              state.setStudent(student);
+              state.setSelectedStudentId(student.id);
               state.setMarkAttendanceDialog(true);
             }}
           >
@@ -63,7 +63,7 @@ export default function StudentsDataTableMenu({
         )}
         <DropdownMenuItem
           onClick={() => {
-            state.setStudent(student);
+            state.setSelectedStudentId(student.id);
             state.setGroupTransferHistory(true);
           }}
         >
@@ -71,7 +71,7 @@ export default function StudentsDataTableMenu({
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
-            state.setStudent(student);
+            state.setSelectedStudentId(student.id);
             state.setAttendanceHistoryDialog(true);
           }}
         >
@@ -81,7 +81,7 @@ export default function StudentsDataTableMenu({
           <>
             <DropdownMenuItem
               onClick={() => {
-                state.setStudent(student);
+                state.setSelectedStudentId(student.id);
                 state.setReportingNotesDialog(true);
               }}
             >
@@ -91,7 +91,7 @@ export default function StudentsDataTableMenu({
               <>
                 <DropdownMenuItem
                   onClick={() => {
-                    state.setStudent(student);
+                    state.setSelectedStudentId(student.id);
                     state.setMoveSchoolDialog(true);
                   }}
                 >
@@ -99,7 +99,7 @@ export default function StudentsDataTableMenu({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
-                    state.setStudent(student);
+                    state.setSelectedStudentId(student.id);
                     state.setArchiveDialog(true);
                   }}
                 >
@@ -109,7 +109,7 @@ export default function StudentsDataTableMenu({
             )}
             <DropdownMenuItem
               onClick={() => {
-                state.setStudent(student);
+                state.setSelectedStudentId(student.id);
                 state.setDropoutDialog(true);
               }}
             >
