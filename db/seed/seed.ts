@@ -1991,8 +1991,13 @@ async function createSessionRecordings(
 
     const sessions = sessionsBySchool.get(school.id) ?? [];
     const groups = school.interventionGroups.slice(0, DEMO_GROUPS_PER_SCHOOL);
+    // The school's latest occurred session has no recording, so its supervisor can upload one.
+    const [latestOccurred] = sessions
+      .filter((session) => session.occurred)
+      .toSorted((a, b) => b.sessionDate.getTime() - a.sessionDate.getTime());
 
     for (const session of sessions) {
+      if (session === latestOccurred) continue;
       for (const group of groups) {
         const recordingId = objectId("rec");
         const sessionType = session.sessionType ?? "session";
