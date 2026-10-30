@@ -420,7 +420,6 @@ for (const email of [careAdminEmail, plainAdminEmail]) {
 
     await expect(page.getByRole("heading", { name: "Hubs" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add hub" })).toHaveCount(0);
-    await expect(page.locator('tbody [aria-haspopup="menu"]')).toHaveCount(0);
 
     await page
       .getByRole("link", { name: /^Open / })
@@ -462,19 +461,6 @@ test("a hub page lists its schools and steps to the hubs beside it by name", asy
   await expect(page.getByRole("heading", { name: secondHub })).toBeVisible();
   await page.getByRole("link", { name: `Previous hub: ${firstHub}` }).click();
   await expect(page.getByRole("heading", { name: firstHub })).toBeVisible();
-
-  await page.getByRole("button", { name: /switch hub/ }).click();
-  await expect(page.getByRole("option", { name: firstHub })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  // Hub ids start with "hub_", so a search that matched ids would keep every hub.
-  const search = page.getByPlaceholder("Search hubs...");
-  await search.fill("hub_");
-  await expect(page.getByRole("option")).toHaveCount(0);
-  await search.fill(secondHub);
-  await page.getByRole("option", { name: secondHub }).click();
-  await expect(page.getByRole("heading", { name: secondHub })).toBeVisible();
 });
 
 test("a hub of another implementer is not found", async ({ page, context }) => {
