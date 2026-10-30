@@ -1,63 +1,78 @@
-import type { BrowserContext } from "@playwright/test";
-import { expect, test, type Undo } from "#/tests/fixtures";
+import { expect, test } from "#/tests/fixtures";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { session as authSession, clinicalSessionAttendance } from "#/db/schema";
+import { clinicalScreeningInfo, clinicalSessionAttendance, user } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { createClinicalCase, required, sessionCookieFor, signableMember } from "#/tests/helpers";
+import {
+  createAdminCopy,
+  createClinicalCase,
+  required,
+  signableMember,
+  signInWithEmail,
+} from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell, searchRows } from "#/tests/pages/helpers";
 
-/**
- * Signs in as `email` and returns what revokes that sign-in. Revoking it after a page renders
- * makes the page's next server action fail, as it does when a session expires with the page open.
- */
-async function revocableSignIn(context: BrowserContext, email: string, undo: Undo) {
-  const cookie = await sessionCookieFor(email);
-  await context.addCookies([cookie]);
-  const [token = ""] = decodeURIComponent(cookie.value).split(".");
-  const revoke = () => db.delete(authSession).where(eq(authSession.token, token));
-  undo(revoke);
-  return revoke;
-}
+// Each test renders a page, then takes away the caller's access to a row the spec owns, so the
+// dialog's load passes its sign-in check and throws "not found". Revoking the sign-in instead
+// sends the page to the login screen: the action clears the session cookie, and Next re-renders
+// the page for an action that changes cookies.
 
-test("a fellow's student attendance shows a failed load as a failure, not as no students", async ({
+test("student attendance shows a failed load as a failure, not as no students", async ({
   page,
   context,
   undo,
 }) => {
   const {
     rows: [fixture],
-  } = await db.execute<{ email: string; visibleId: string; sessionLabel: string }>(sql`
-    select u.email, s.visible_id as "visibleId", sn.session_name as "sessionLabel"
-    from intervention_groups g
-    join implementer_members m on m.identifier = g.leader_id and m.role = 'FELLOW'
-    join users u on u.id = m.user_id
-    join schools s on s.id = g.school_id and s.archived_at is null
+  } = await db.execute<{
+    userId: string;
+    visibleId: string;
+    sessionName: string;
+    projectId: string;
+    otherProjectId: string;
+  }>(sql`
+    select u.id as "userId", s.visible_id as "visibleId", sn.session_name as "sessionName",
+      h.project_id as "projectId", other_hub.project_id as "otherProjectId"
+    from users u
+    join implementer_members m on m.user_id = u.id and m.role = 'ADMIN'
+    join hubs h on h.implementer_id = m.implementer_id
+    join schools s on s.hub_id = h.id and s.archived_at is null
     join intervention_sessions i on i.school_id = s.id and i.occurred
       and coalesce(i.status::text, '') <> 'Cancelled'
-    join session_names sn on sn.id = i.session_id and sn.session_type <> 'DATA_COLLECTION'
-    where ${signableMember()} and g.archived_at is null
-      and exists (select 1 from students st
-        where st.assigned_group_id = g.id and st.archived_at is null)
-      and not exists (select 1 from intervention_sessions o
-        where o.school_id = i.school_id and o.session_id = i.session_id and o.id <> i.id)
-    order by u.email, i.session_date
+    join session_names sn on sn.id = i.session_id
+    join implementer_members other_m on other_m.user_id = u.id and other_m.role = 'ADMIN'
+    join hubs other_hub on other_hub.implementer_id = other_m.implementer_id
+      and other_hub.project_id <> h.project_id
+    where u.archived_at is null
+      and (select count(distinct o.implementer_id) from implementer_members o
+        join hubs oh on oh.implementer_id = o.implementer_id
+        where o.user_id = u.id and o.role = 'ADMIN' and oh.project_id = h.project_id) = 1
+      and (select count(*) from intervention_sessions o
+        where o.school_id = s.id and o.session_id = i.session_id) = 1
+    order by u.email, s.visible_id, i.session_date, i.id, other_hub.project_id
     limit 1`);
-  required(fixture, "no fellow leading a group with students at a school with an occurred session");
-  const revoke = await revocableSignIn(context, fixture.email, undo);
+  required(fixture, "no admin of hubs in two projects with an occurred session");
+  const admin = await createAdminCopy(fixture.userId, fixture.projectId);
+  undo(admin.remove);
+  await signInWithEmail(context, admin.email);
 
-  await page.goto(getUrl(`/fel/schools/${fixture.visibleId}/sessions`));
+  await page.goto(getUrl(`/admin/schools/${fixture.visibleId}/sessions`));
   const sessionRow = await rowWithCell(
     page,
     page.getByRole("main"),
-    sessionDisplayName(fixture.sessionLabel) ?? fixture.sessionLabel,
+    sessionDisplayName(fixture.sessionName) ?? fixture.sessionName,
   );
   await expect(sessionRow).toBeVisible();
-  await revoke();
-  await chooseRowAction(page, sessionRow, "Mark student attendance");
+  // As the project switcher does from another tab: this page still lists the old project's
+  // session, which the server now hides from the admin.
+  await db
+    .update(user)
+    .set({ activeProjectId: fixture.otherProjectId })
+    .where(eq(user.id, admin.id));
+  await chooseRowAction(page, sessionRow, "View student attendance");
 
-  const attendance = page.getByRole("dialog", { name: "Mark student attendance" });
+  const attendance = page.getByRole("dialog", { name: "View student attendance" });
   await expect(
     attendance
       .getByRole("alert")
@@ -98,12 +113,17 @@ test("case notes show a failed load as a failure and keep the sessions locked", 
     supervisorId: fixture.supervisorId,
     attendanceStatus: true,
   });
-  const revoke = await revocableSignIn(context, fixture.email, undo);
+  await signInWithEmail(context, fixture.email);
 
   await page.goto(getUrl("/sc/clinical"));
   const caseRow = await searchRows(page, ownCase.pseudonym);
   await expect(caseRow).toBeVisible();
-  await revoke();
+  // As a transfer would: this page still lists the case, which the server no longer lets the
+  // supervisor read.
+  await db
+    .update(clinicalScreeningInfo)
+    .set({ currentSupervisorId: null })
+    .where(eq(clinicalScreeningInfo.id, ownCase.caseId));
   await chooseRowAction(page, caseRow, "Case notes");
 
   const dialog = page.getByRole("dialog", { name: "Case Notes" });
