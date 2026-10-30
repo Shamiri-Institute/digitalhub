@@ -55,6 +55,7 @@ export default function ClinicalCasesTable({
   return (
     <DataTable
       data={cases}
+      getRowId={(clinicalCase) => clinicalCase.id}
       columns={clinicalCaseColumns(referralOptions)}
       className="data-table data-table-action bg-white lg:mt-4"
       renderTableActions={renderTableActions}

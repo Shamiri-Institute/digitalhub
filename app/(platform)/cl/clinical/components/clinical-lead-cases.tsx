@@ -19,6 +19,7 @@ export default function ClinicalLeadCases({
       <h2 className="text-lg font-medium">My Cases ({clinicalLeadCases.length})</h2>
       <DataTable
         data={clinicalLeadCases}
+        getRowId={(clinicalCase) => clinicalCase.id}
         columns={clinicalCaseColumns()}
         className="data-table data-table-action bg-white lg:mt-4"
         renderSubComponent={({ row }) => (
