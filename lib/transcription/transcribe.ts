@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { setTimeout } from "node:timers/promises";
 
 import { FinishReason, GoogleGenAI, Type } from "@google/genai";
 import ffmpegPath from "ffmpeg-static";
@@ -149,18 +150,36 @@ async function cutChunk(mp3: Buffer, start: number, seconds: number, signal: Abo
 
 type ChunkResult = { segments: TranscriptSegment[] } | { gap: TranscriptGap["reason"] };
 
+// The SDK retries HTTP errors and timeouts but not a failed connection, which fetch reports as a
+// TypeError ("fetch failed"). The eval lost 136 of 170 sessions to connect timeouts.
+async function request(ai: GoogleGenAI, audio: Buffer, signal: AbortSignal) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      // oxlint-disable-next-line eslint/no-await-in-loop -- each retry waits for the one before
+      return await ai.models.generateContent({
+        model: TRANSCRIPTION_MODEL,
+        contents: [
+          { inlineData: { mimeType: "audio/mpeg", data: audio.toString("base64") } },
+          PROMPT,
+        ],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: RESPONSE_SCHEMA,
+          maxOutputTokens: 65536,
+          thinkingConfig: { thinkingBudget: 1024 },
+          abortSignal: signal,
+        },
+      });
+    } catch (error) {
+      if (!(error instanceof TypeError) || signal.aborted || attempt === 3) throw error;
+      // oxlint-disable-next-line eslint/no-await-in-loop -- backoff before the next attempt
+      await setTimeout(2000 * 2 ** attempt, undefined, { signal });
+    }
+  }
+}
+
 async function generate(ai: GoogleGenAI, audio: Buffer, signal: AbortSignal): Promise<ChunkResult> {
-  const response = await ai.models.generateContent({
-    model: TRANSCRIPTION_MODEL,
-    contents: [{ inlineData: { mimeType: "audio/mpeg", data: audio.toString("base64") } }, PROMPT],
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: RESPONSE_SCHEMA,
-      maxOutputTokens: 65536,
-      thinkingConfig: { thinkingBudget: 1024 },
-      abortSignal: signal,
-    },
-  });
+  const response = await request(ai, audio, signal);
   const finish = response.candidates?.[0]?.finishReason;
   if (finish === FinishReason.MAX_TOKENS) return { gap: "max_tokens" };
   if (!response.candidates?.length || (finish && finish !== FinishReason.STOP))
