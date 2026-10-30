@@ -1,9 +1,10 @@
 import { expect, test } from "#/tests/fixtures";
 import { format } from "date-fns";
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { sessionRecording } from "#/db/schema";
+import { interventionSession, sessionRecording } from "#/db/schema";
+import { objectId } from "#/lib/crypto";
 import { deleteObject } from "#/lib/s3/s3.service";
 import { sessionDisplayName } from "#/lib/utils";
 import { required, signInWithEmail } from "#/tests/helpers";
@@ -23,26 +24,31 @@ test.skip(
   "needs FIDELITY_AB_TEST_SUPERVISOR_IDS, Gemini credentials, local S3 and CRON_SECRET",
 );
 
-type UnrecordedSession = {
+type SupervisedGroup = {
   email: string;
   fellowName: string;
   groupName: string;
   schoolName: string;
-  groupId: string;
-  sessionId: string;
+  schoolId: string;
+  hubId: string;
+  projectId: string | null;
+  sessionNameId: string;
   sessionName: string;
-  sessionDate: Date;
+  sessionType: string | null;
 };
 
-let target: UnrecordedSession;
+let target: SupervisedGroup & { sessionId: string; sessionDate: Date };
 
+// Seeded supervisors have a recording for every occurred session, so the spec adds its own
+// occurred session at the group's school, copied from one the school already has.
 test.beforeAll(async () => {
   const {
-    rows: [unrecorded],
-  } = await db.execute<UnrecordedSession>(sql`
+    rows: [group],
+  } = await db.execute<SupervisedGroup>(sql`
     select u.email, f.fellow_name as "fellowName", g.group_name as "groupName",
-      sc.school_name as "schoolName", g.id as "groupId", i.id as "sessionId",
-      sn.session_name as "sessionName", i.session_date as "sessionDate"
+      sc.school_name as "schoolName", sc.id as "schoolId", i.hub_id as "hubId",
+      i.project_id as "projectId", sn.id as "sessionNameId", sn.session_name as "sessionName",
+      i.session_type as "sessionType"
     from fellows f
     join implementer_members m on m.identifier = f.supervisor_id and m.role = 'SUPERVISOR'
     join users u on u.id = m.user_id
@@ -51,26 +57,37 @@ test.beforeAll(async () => {
     join intervention_sessions i on i.school_id = g.school_id and i.occurred
     join session_names sn on sn.id = i.session_id
     where f.supervisor_id = ${transcribingSupervisorId} and coalesce(f.dropped_out, false) = false
-      and not exists (select 1 from session_recordings r
-        where r.fellow_id = f.id and r.group_id = g.id and r.intervention_session_id = i.id)
-    order by i.session_date desc, i.id
+    order by g.id, i.session_date desc
     limit 1`);
-  required(unrecorded, "an occurred session of the A/B supervisor with no recording");
-  target = unrecorded;
+  required(group, "an occurred session at a school of the A/B supervisor's fellows");
+
+  const sessionDate = new Date(Date.UTC(2020, 0, 6, 9));
+  const [created] = await db
+    .insert(interventionSession)
+    .values({
+      id: objectId("session"),
+      schoolId: group.schoolId,
+      hubId: group.hubId,
+      projectId: group.projectId,
+      sessionId: group.sessionNameId,
+      sessionType: group.sessionType,
+      occurred: true,
+      yearOfImplementation: sessionDate.getFullYear(),
+      sessionDate,
+    })
+    .returning({ id: interventionSession.id });
+  required(created, "the inserted session");
+  target = { ...group, sessionId: created.id, sessionDate };
 });
 
 test.afterAll(async () => {
-  if (!target) return; // beforeAll found no session to record
+  if (!target) return; // beforeAll failed before inserting the session
   const removed = await db
     .delete(sessionRecording)
-    .where(
-      and(
-        eq(sessionRecording.groupId, target.groupId),
-        eq(sessionRecording.sessionId, target.sessionId),
-      ),
-    )
+    .where(eq(sessionRecording.sessionId, target.sessionId))
     .returning({ s3Key: sessionRecording.s3Key });
   await Promise.all(removed.map(({ s3Key }) => deleteObject({ Key: s3Key }, "recordings")));
+  await db.delete(interventionSession).where(eq(interventionSession.id, target.sessionId));
 });
 
 test("an uploaded recording is transcribed and its transcript can be read", async ({
@@ -110,9 +127,12 @@ test("an uploaded recording is transcribed and its transcript can be read", asyn
 
   await page.reload();
   const main = page.getByRole("main");
-  const row = (await rowWithCell(page, main, target.groupName)).filter({
-    has: page.getByRole("cell", { name: target.sessionName, exact: true }),
-  });
+  // The group also has a seeded recording of a session with this name; only the upload is 67.0 KB.
+  const uploadedRow = async () =>
+    (await rowWithCell(page, main, target.groupName))
+      .filter({ has: page.getByRole("cell", { name: target.sessionName, exact: true }) })
+      .filter({ has: page.getByRole("cell", { name: "67.0 KB", exact: true }) });
+  const row = await uploadedRow();
   await expect(await cellUnder(page, row, "Status")).toHaveText("Pending");
 
   const worker = await request.get(getUrl("/api/cron/transcriptions"), {
@@ -122,9 +142,7 @@ test("an uploaded recording is transcribed and its transcript can be read", asyn
   expect(worker.status()).toBe(200);
 
   await page.reload();
-  const transcribedRow = (await rowWithCell(page, main, target.groupName)).filter({
-    has: page.getByRole("cell", { name: target.sessionName, exact: true }),
-  });
+  const transcribedRow = await uploadedRow();
   await expect(await cellUnder(page, transcribedRow, "Status")).toHaveText("Completed");
 
   await chooseRowAction(page, transcribedRow, "View transcript");
