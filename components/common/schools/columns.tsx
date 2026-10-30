@@ -3,13 +3,13 @@
 import type { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
-import type { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
+import type { fetchSchoolsTableRows } from "#/components/common/schools/queries";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { sessionDisplayName } from "#/lib/utils";
 
-export type SchoolsTableData = Awaited<ReturnType<typeof fetchSchoolData>>[number];
+export type SchoolsTableData = Awaited<ReturnType<typeof fetchSchoolsTableRows>>[number];
 
 export type SchoolDialogKind = "edit" | "pointSupervisor" | "dropout" | "undoDropout";
 

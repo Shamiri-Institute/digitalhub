@@ -3,20 +3,17 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
-import type { ImplementerRole } from "#/db/enums";
-import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
-import { getColumns, type HubsWithSchools } from "./columns";
+import type { AdminHub } from "../queries";
+import { columns } from "./columns";
 import HubDialog from "./hub-dialog";
 
 export default function HubsDataTable({
   hubs,
-  role,
   canManageHubs,
 }: {
-  hubs: HubsWithSchools[];
-  role: ImplementerRole;
+  hubs: AdminHub[];
   canManageHubs: boolean;
 }) {
   const [showAdd, setShowAdd] = useState(false);
@@ -25,7 +22,7 @@ export default function HubsDataTable({
     <div className="space-y-3">
       <DataTable
         data={hubs}
-        columns={getColumns(canManageHubs)}
+        columns={columns}
         className="data-table data-table-action bg-white lg:mt-4"
         emptyStateMessage="No hubs found"
         renderTableActions={
@@ -36,23 +33,6 @@ export default function HubsDataTable({
             </Button>
           ) : undefined
         }
-        renderSubComponent={({ row }) => {
-          return (
-            <SchoolsDatatable
-              schools={row.original.schools}
-              role={role}
-              disablePagination={true}
-              isSubComponent={true}
-              className="lg:mt-0"
-              columnVisibilityState={{
-                County: false,
-                "Date added": false,
-                "Expected number of students": false,
-                Type: false,
-              }}
-            />
-          );
-        }}
       />
       {canManageHubs && <HubDialog open={showAdd} onOpenChange={setShowAdd} />}
     </div>

@@ -9,16 +9,15 @@ import type { z } from "zod";
 
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/db/client";
-import { countOf } from "#/db/sql";
 import { ImplementerRole, sessionTypes } from "#/db/enums";
 import {
   interventionGroup,
   interventionSession,
-  interventionSessionRating,
   school,
   schoolDropoutHistory,
   weeklyHubReport,
 } from "#/db/schema";
+import { fetchSchoolsTableRows } from "#/components/common/schools/queries";
 import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { getSchoolInitials } from "#/lib/utils";
@@ -36,46 +35,7 @@ export async function fetchSchoolData() {
     ImplementerRole.SUPERVISOR,
     ImplementerRole.HUB_COORDINATOR,
   );
-  return db.query.school.findMany({
-    where: (s, { eq }) => eq(s.hubId, callerHubId),
-    columns: {
-      id: true,
-      visibleId: true,
-      createdAt: true,
-      archivedAt: true,
-      schoolName: true,
-      schoolType: true,
-      schoolEmail: true,
-      schoolCounty: true,
-      schoolSubCounty: true,
-      schoolDemographics: true,
-      boardingDay: true,
-      numbersExpected: true,
-      pointPersonName: true,
-      pointPersonPhone: true,
-      pointPersonEmail: true,
-      principalName: true,
-      principalPhone: true,
-      assignedSupervisorId: true,
-      droppedOut: true,
-      droppedOutAt: true,
-    },
-    with: {
-      assignedSupervisor: {
-        columns: { supervisorName: true, cellNumber: true, supervisorEmail: true },
-      },
-      interventionSessions: {
-        columns: { sessionDate: true, occurred: true, sessionType: true },
-        with: { session: { columns: { sessionName: true } } },
-        extras: (session) => ({
-          sessionRatingsCount: countOf(interventionSessionRating.sessionId, session.id).as(
-            "session_ratings_count",
-          ),
-        }),
-      },
-    },
-    orderBy: (s, { asc }) => asc(s.schoolName),
-  });
+  return fetchSchoolsTableRows(callerHubId);
 }
 
 export async function fetchSchoolDataCompletenessData(schoolId?: string) {
