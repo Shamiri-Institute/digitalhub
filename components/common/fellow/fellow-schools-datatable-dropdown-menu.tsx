@@ -1,6 +1,6 @@
 import type { ImplementerRole } from "#/db/enums";
-import type { Dispatch, SetStateAction } from "react";
 import { memo } from "react";
+import type { FellowDialogKind } from "#/components/common/fellow/fellow-schools-columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -18,18 +18,11 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
 }: {
   fellowRow: FellowsData;
   state: {
-    setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    openDialog: (kind: FellowDialogKind, fellow: FellowsData) => void;
     openEditDialog: (fellow: FellowsData) => void;
-    setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-    setComplaintsDialog: Dispatch<SetStateAction<boolean>>;
-    setFellow: Dispatch<SetStateAction<FellowsData | null>>;
     role: ImplementerRole;
   };
 }) {
-  function handleSetFellow() {
-    state.setFellow(fellowRow);
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -49,37 +42,16 @@ const FellowSchoolsDatatableDropdownMenu = memo(function FellowSchoolsDatatableD
             Edit fellow information
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuItem
-          onClick={() => {
-            handleSetFellow();
-            state.setAttendanceHistoryDialog(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDialog("attendanceHistory", fellowRow)}>
           Session attendance history
         </DropdownMenuItem>
         {state.role === "SUPERVISOR" ? (
           <>
-            <DropdownMenuItem
-              onClick={() => {
-                handleSetFellow();
-                state.setWeeklyEvaluationDialog(true);
-              }}
-            >
+            <DropdownMenuItem onClick={() => state.openDialog("weeklyEvaluation", fellowRow)}>
               Submit weekly fellow evaluation
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                handleSetFellow();
-              }}
-            >
-              Request repayment
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                handleSetFellow();
-                state.setComplaintsDialog(true);
-              }}
-            >
+            <DropdownMenuItem>Request repayment</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => state.openDialog("complaints", fellowRow)}>
               Submit Complaint
             </DropdownMenuItem>
           </>
