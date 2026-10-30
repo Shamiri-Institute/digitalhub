@@ -13,9 +13,14 @@ import { getCalendarDate } from "#/lib/date-utils";
 
 export type Mode = "day" | "week" | "month" | "list" | "table";
 export type Span = "day" | "week" | "month";
+/** Whose attendance the table view lists. */
+export type People = "supervisors" | "fellows";
 
-/** What the schedule shows, as stored in the URL: `?mode=week&date=2026-10-08&span=week`. */
-export type ScheduleView = { mode: Mode; date: CalendarDate; span: Span };
+/**
+ * What the schedule shows, as stored in the URL: `?mode=list&date=2026-10-08&span=week`, or
+ * `?mode=table&date=2026-10-08&people=fellows`. The table view lists the sessions on `date`.
+ */
+export type ScheduleView = { mode: Mode; date: CalendarDate; span: Span; people: People };
 
 export const TIME_ZONE_COOKIE = "tz";
 
@@ -44,7 +49,9 @@ export function parseScheduleView(
       : mode === "table"
         ? "week"
         : mode;
-  return { mode, date: parseDateOr(get("date"), today(timeZone)), span };
+  const people: People =
+    mode === "table" && get("people") === "fellows" ? "fellows" : "supervisors";
+  return { mode, date: parseDateOr(get("date"), today(timeZone)), span, people };
 }
 
 function parseDateOr(value: string | null, fallback: CalendarDate) {
@@ -58,6 +65,7 @@ function parseDateOr(value: string | null, fallback: CalendarDate) {
 export function scheduleSearch(view: ScheduleView) {
   const params = new URLSearchParams({ mode: view.mode, date: view.date.toString() });
   if (view.mode === "list") params.set("span", view.span);
+  if (view.mode === "table") params.set("people", view.people);
   return `?${params.toString()}`;
 }
 

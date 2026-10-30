@@ -1,9 +1,9 @@
-import type { CalendarDate } from "@internationalized/date";
+import { type CalendarDate, parseDate } from "@internationalized/date";
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import type { ColumnDef, Row } from "@tanstack/react-table";
-import { addDays, format, isBefore, isWithinInterval } from "date-fns";
-import { type Dispatch, type SetStateAction, useState } from "react";
+import { addDays, isWithinInterval } from "date-fns";
+import type { Dispatch, SetStateAction } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
@@ -21,10 +21,8 @@ import {
 } from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
-import { getCalendarDate } from "#/lib/date-utils";
+import type { People } from "#/lib/schedule-view";
 import { cn, sessionDisplayName } from "#/lib/utils";
-
-type Role = "supervisors" | "fellows";
 
 const supervisorAttendanceColumns = (state: {
   setAttendance: Dispatch<SetStateAction<SupervisorAttendanceTableData | undefined>>;
@@ -262,48 +260,31 @@ const renderSessionTypeAndStatus = (
 
 export function TableView({
   state,
+  selectedDay,
+  onSelectedDayChange,
+  people,
+  onPeopleChange,
   supervisors,
   role,
   supervisorId,
   sessions,
 }: {
   state: CalendarState;
+  selectedDay: CalendarDate;
+  onSelectedDayChange: (day: CalendarDate) => void;
+  people: People;
+  onPeopleChange: (people: People) => void;
   supervisors?: ScheduleSupervisor[];
   role: ImplementerRole;
   supervisorId?: string;
   sessions: Session[];
 }) {
-  const [userSelectedDay, setUserSelectedDay] = useState<CalendarDate | null>(null);
   const weekDays = state.getDatesInWeek(0);
   const dayFormatter = useDateFormatter({
     weekday: "long",
   });
-  const [roleToggle, setRoleToggle] = useState<Role>("supervisors");
-
-  const selectedDay = (() => {
-    const today = getCalendarDate(new Date());
-    const rangeStart = state.visibleRange.start.toDate(state.timeZone);
-    const rangeEnd = addDays(rangeStart, 7);
-    const todayDate = today.toDate(state.timeZone);
-
-    if (userSelectedDay) {
-      const userDate = userSelectedDay.toDate(state.timeZone);
-      if (isWithinInterval(userDate, { start: rangeStart, end: rangeEnd })) {
-        return userSelectedDay;
-      }
-    }
-
-    if (isBefore(todayDate, rangeStart)) {
-      return state.visibleRange.start;
-    }
-    return today;
-  })();
 
   const { supervisorAttendances, fellowAttendances } = (() => {
-    if (!selectedDay) {
-      return { supervisorAttendances: [], fellowAttendances: [] };
-    }
-
     const start = selectedDay.toDate(state.timeZone);
     const end = addDays(selectedDay.toDate(state.timeZone), 1);
     const activeSessions = sessions.filter((session) => {
@@ -387,12 +368,9 @@ export function TableView({
         <ToggleGroup
           type="single"
           className="form-toggle"
-          defaultValue={
-            selectedDay ? format(selectedDay.toDate(state.timeZone), "yyyy-MM-dd") : undefined
-          }
-          value={selectedDay ? format(selectedDay.toDate(state.timeZone), "yyyy-MM-dd") : undefined}
+          value={selectedDay.toString()}
           onValueChange={(value) => {
-            if (value) setUserSelectedDay(getCalendarDate(new Date(value)));
+            if (value) onSelectedDayChange(parseDate(value));
           }}
         >
           {weekDays.map((date) => {
@@ -401,7 +379,7 @@ export function TableView({
               return (
                 <ToggleGroupItem
                   key={day}
-                  value={format(date.toDate(state.timeZone), "yyyy-MM-dd")}
+                  value={date.toString()}
                   aria-label={`Select ${day}`}
                   className="form-toggle-button"
                 >
@@ -417,9 +395,9 @@ export function TableView({
         <ToggleGroup
           type="single"
           className="form-toggle"
-          defaultValue={roleToggle}
-          onValueChange={(value: Role) => {
-            if (value) setRoleToggle(value);
+          value={people}
+          onValueChange={(value) => {
+            if (value) onPeopleChange(value as People);
           }}
         >
           <ToggleGroupItem
@@ -438,7 +416,7 @@ export function TableView({
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
-      {roleToggle === "supervisors" && (
+      {people === "supervisors" && (
         <SupervisorAttendanceDataTable
           overrideColumns={supervisorAttendanceColumns}
           data={supervisorAttendances}
@@ -446,7 +424,7 @@ export function TableView({
           role={role}
         />
       )}
-      {roleToggle === "fellows" && (
+      {people === "fellows" && (
         <FellowAttendanceDataTable
           overrideColumns={fellowAttendanceColumns}
           data={fellowAttendances}
