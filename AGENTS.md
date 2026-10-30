@@ -64,7 +64,7 @@ Schema changes:
 
 better-auth. Pages get the signed-in user from the role helpers in `app/auth.ts` (`currentSupervisor()`, `currentHubCoordinator()`, ...); server actions authorize with `requireAuthRole` and `requireHubRole` from `lib/auth/`.
 
-`proxy.ts` only checks that the session cookie exists, and imports nothing that queries the database. The RDS security group admits only the static egress IPs of Vercel Functions, and Routing Middleware runs on other IPs, so a query there fails every request in production while passing locally. Role checks go in the `app/auth.ts` helpers, not in `proxy.ts` or a `layout.tsx`.
+`proxy.ts` only checks that the session cookie exists, and imports nothing that queries the database. Role checks go in the `app/auth.ts` helpers, not in `proxy.ts` or a `layout.tsx`.
 
 Every export of a `"use server"` file is a public POST endpoint, even when only server components call it. Take the scope (hub, fellow, implementer) from the session, never from the arguments.
 
