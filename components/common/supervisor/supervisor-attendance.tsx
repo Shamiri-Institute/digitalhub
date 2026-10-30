@@ -1,6 +1,6 @@
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole, SessionStatus } from "#/db/enums";
-import type { ColumnDef, Row } from "@tanstack/react-table";
+import type { ColumnDef, Row, RowSelectionState } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -117,7 +117,10 @@ export function SupervisorAttendanceDataTable({
   session?: Session | null;
   role: ImplementerRole;
 }) {
-  const [selectedRows, setSelectedRows] = useState<Row<SupervisorAttendanceTableData>[]>([]);
+  const [selectedRowIds, setSelectedRowIds] = useState<RowSelectionState>({});
+  const selectedSupervisorAttendances = data.filter(
+    (supervisorAttendance) => selectedRowIds[supervisorAttendanceRowId(supervisorAttendance)],
+  );
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [attendance, setAttendance] = useState<SupervisorAttendanceTableData | undefined>();
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
@@ -130,7 +133,7 @@ export function SupervisorAttendanceDataTable({
           <Button
             variant="outline"
             className="flex gap-1"
-            disabled={selectedRows.length === 0}
+            disabled={selectedSupervisorAttendances.length === 0}
             onClick={() => {
               setBulkMode(true);
               setMarkAttendanceDialog(true);
@@ -162,7 +165,9 @@ export function SupervisorAttendanceDataTable({
         editColumns={false}
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage={emptyStateMessage}
-        onRowSelectionChange={setSelectedRows}
+        getRowId={supervisorAttendanceRowId}
+        rowSelection={selectedRowIds}
+        onRowSelectionChange={setSelectedRowIds}
         enableRowSelection={(row: Row<SupervisorAttendanceTableData>) =>
           row.original.sessionStatus !== SessionStatus.Cancelled
         }
@@ -197,12 +202,15 @@ export function SupervisorAttendanceDataTable({
         bulkMode={bulkMode}
         setBulkMode={setBulkMode}
         markBulkAttendanceAction={markManySupervisorAttendance}
-        selectedIds={selectedRows.map((x): string => x.original.supervisorId)}
+        selectedIds={selectedSupervisorAttendances.map(
+          (supervisorAttendance) => supervisorAttendance.supervisorId,
+        )}
+        onSuccess={() => setSelectedRowIds({})}
       >
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
             {bulkMode ? (
-              <span>{selectedRows.length} supervisors</span>
+              <span>{selectedSupervisorAttendances.length} supervisors</span>
             ) : (
               <span>{attendance?.supervisorName}</span>
             )}
@@ -217,6 +225,11 @@ export function SupervisorAttendanceDataTable({
       </MarkAttendance>
     </div>
   );
+}
+
+// The schedule's table view lists a supervisor once for each of the day's sessions.
+function supervisorAttendanceRowId(supervisorAttendance: SupervisorAttendanceTableData) {
+  return `${supervisorAttendance.sessionId ?? ""}:${supervisorAttendance.supervisorId}`;
 }
 
 export type SupervisorAttendanceTableData = {

@@ -2,7 +2,7 @@
 
 import { ImplementerRole } from "#/db/enums";
 import type { interventionSession, school as schoolTable, sessionName } from "#/db/schema";
-import type { Row } from "@tanstack/react-table";
+import type { Row, RowSelectionState } from "@tanstack/react-table";
 import { useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
@@ -28,7 +28,8 @@ export default function SupervisorsDataTable({
     | null;
 }) {
   const [batchMode, setBatchMode] = useState<boolean>(false);
-  const [selectedRows, setSelectedRows] = useState<Row<SupervisorsData>[]>([]);
+  const [selectedSupervisorIds, setSelectedSupervisorIds] = useState<RowSelectionState>({});
+  const selectedSupervisors = supervisors.filter((s) => selectedSupervisorIds[s.id]);
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
   const [selectedSession] = useState<string>();
   const [selectedSupervisor, setSelectedSupervisor] = useState<SupervisorsData | null>(null);
@@ -54,7 +55,8 @@ export default function SupervisorsDataTable({
             variant="outline"
             className="flex gap-1"
             disabled={
-              (school?.droppedOut !== null && school?.droppedOut) || selectedRows.length === 0
+              (school?.droppedOut !== null && school?.droppedOut) ||
+              selectedSupervisors.length === 0
             }
             onClick={() => {
               setBatchMode(true);
@@ -88,7 +90,9 @@ export default function SupervisorsDataTable({
           row.original.droppedOut === null || !row.original.droppedOut
         }
         rowSelectionDescription={"supervisors"}
-        onRowSelectionChange={setSelectedRows}
+        getRowId={(s) => s.id}
+        rowSelection={selectedSupervisorIds}
+        onRowSelectionChange={setSelectedSupervisorIds}
       />
       <MarkAttendance
         title={"Mark supervisor attendance"}
@@ -123,12 +127,13 @@ export default function SupervisorsDataTable({
         bulkMode={batchMode}
         setBulkMode={setBatchMode}
         markBulkAttendanceAction={markManySupervisorAttendance}
-        selectedIds={selectedRows.map((x): string => x.original.id)}
+        selectedIds={selectedSupervisors.map((s) => s.id)}
+        onSuccess={() => setSelectedSupervisorIds({})}
       >
         <DialogAlertWidget>
           <div className="flex flex-wrap items-center gap-2">
             {batchMode ? (
-              <span>{selectedRows.length} supervisors</span>
+              <span>{selectedSupervisors.length} supervisors</span>
             ) : (
               <span>{supervisor?.supervisorName}</span>
             )}
