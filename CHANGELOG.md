@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.5.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.3.0...v2.5.0) (2026-10-30)
+
+### Features
+
+- **survey:** print runs with serials, questionnaires and page codes ([#987](https://github.com/Shamiri-Institute/digitalhub/issues/987)) ([091ff84](https://github.com/Shamiri-Institute/digitalhub/commit/091ff846aca448c7d3f8fd299d57053bf9ba67bf))
+
+### Bug Fixes
+
+- dialog state bugs from stale selections, copied props and missed resets ([#991](https://github.com/Shamiri-Institute/digitalhub/issues/991)) ([deff455](https://github.com/Shamiri-Institute/digitalhub/commit/deff455b54f20cfe449a531d43278fd7c78812e2))
+
 ## [2.4.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.3.0...v2.4.0) (2026-10-30)
 
 ### Features
