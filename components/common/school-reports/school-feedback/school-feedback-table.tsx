@@ -11,6 +11,7 @@ export default function SchoolFeedbackDataTable({ feedback }: { feedback: School
       columns={columns}
       subColumns={subColumns}
       getSubRows={(row) => row.supervisorRatings}
+      getRowId={(row) => row.schoolId}
       emptyStateMessage="No feedback data found"
       subEmptyStateMessage="No feedback found for this school"
     />

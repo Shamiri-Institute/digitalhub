@@ -14,6 +14,7 @@ export default function WeeklyFellowEvaluationTable({
       columns={columns}
       subColumns={subColumns}
       getSubRows={(row) => row.week}
+      getRowId={(row) => row.id}
       emptyStateMessage="No fellow evaluation data found"
       subEmptyStateMessage="No weekly evaluation found for this fellow"
     />

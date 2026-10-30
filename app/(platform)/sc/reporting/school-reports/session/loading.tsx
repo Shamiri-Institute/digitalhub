@@ -18,7 +18,7 @@ export default function SessionReportTableSkeleton() {
   });
 
   const emptyData: SessionReportType[] = Array.from(Array(10).keys()).map(() => ({
-    id: "",
+    schoolId: "",
     schoolName: "",
     avgStudentBehaviour: 0,
     avgAdminSupport: 0,

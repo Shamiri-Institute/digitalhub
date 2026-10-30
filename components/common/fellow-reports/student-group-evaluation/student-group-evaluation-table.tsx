@@ -15,6 +15,7 @@ export default function StudentGroupEvaluationTable({
       columns={columns}
       subColumns={subColumns}
       getSubRows={(row) => row.session}
+      getRowId={(row) => row.id}
       emptyStateMessage="No feedback data found"
       subEmptyStateMessage="No expenses found for this fellow"
     />

@@ -17,6 +17,7 @@ export default function SessionReportDataTable({
       columns={columns}
       subColumns={subColumns(canAddNotes)}
       getSubRows={(row) => row.session}
+      getRowId={(row) => row.schoolId}
       emptyStateMessage="No feedback data found"
       subEmptyStateMessage="No expenses found for this fellow"
       container={false}

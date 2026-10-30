@@ -34,6 +34,7 @@ export async function loadHubSchoolFeedback() {
         0,
       ) / school.schoolFeedbacks.length;
     return {
+      schoolId: school.id,
       schoolName: school.schoolName,
       studentTeacherSatisfaction,
       supervisorRatings: school.schoolFeedbacks.map((feedback) => ({

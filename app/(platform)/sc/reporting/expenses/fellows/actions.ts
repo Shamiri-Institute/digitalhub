@@ -28,6 +28,7 @@ export async function loadSupervisorFellowAttendance() {
         },
       },
     },
+    orderBy: (f, { asc }) => [asc(f.fellowName), asc(f.id)],
   });
 
   return fellows.map((fellow) => {
@@ -55,6 +56,7 @@ export async function loadSupervisorFellowAttendance() {
       })),
     );
     return {
+      fellowId: fellow.id,
       fellowName: fellow.fellowName,
       hub: fellow?.hub?.hubName,
       supervisorName: fellow.supervisor?.supervisorName,

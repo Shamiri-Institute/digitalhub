@@ -6,6 +6,7 @@ import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
 
 type SchoolGroup = {
+  schoolId: string;
   schoolName: string;
   avgStudentBehaviour: number;
   avgAdminSupport: number;
@@ -61,12 +62,14 @@ export async function loadSessionReport() {
   });
 
   const groupedBySchool = sessions.reduce<SchoolGroup[]>((acc, session) => {
+    const schoolId = session?.session?.schoolId ?? "N/A";
     const schoolName = session?.session?.school?.schoolName || "N/A";
 
-    let schoolGroup = acc.find((group) => group.schoolName === schoolName);
+    let schoolGroup = acc.find((group) => group.schoolId === schoolId);
 
     if (!schoolGroup) {
       schoolGroup = {
+        schoolId,
         schoolName,
         avgStudentBehaviour: 0,
         avgAdminSupport: 0,
