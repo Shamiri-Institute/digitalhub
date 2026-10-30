@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
@@ -25,34 +25,38 @@ export default function UploadStudentAttendanceDocument({
   onClose: (val: boolean) => void;
   onUploadSuccess?: () => void;
 }) {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<{ file: File; previewUrl: string }[]>([]);
+  const unrevokedPreviewUrls = useRef(new Set<string>());
   const [uploading, setUploading] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { toast } = useToast();
   const { uploadToS3 } = useS3Upload();
 
-  // effect: revokes preview object URLs on unmount
+  // effect: revokes the preview object URLs still in use on unmount
   useEffect(() => {
+    const previewUrls = unrevokedPreviewUrls.current;
     return () => {
       previewUrls.forEach((url) => {
         URL.revokeObjectURL(url);
       });
     };
-  }, [previewUrls]);
+  }, []);
+
+  const revokePreview = (previewUrl: string) => {
+    URL.revokeObjectURL(previewUrl);
+    unrevokedPreviewUrls.current.delete(previewUrl);
+  };
 
   const addFiles = (files: File[]) => {
-    setSelectedFiles((prev) => [...prev, ...files]);
-    const newUrls = files.map((file) => URL.createObjectURL(file));
-    setPreviewUrls((prev) => [...prev, ...newUrls]);
+    const added = files.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }));
+    added.forEach(({ previewUrl }) => unrevokedPreviewUrls.current.add(previewUrl));
+    setPhotos((prev) => [...prev, ...added]);
   };
 
   const removeFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviewUrls((prev) => {
-      if (prev[index]) URL.revokeObjectURL(prev[index]);
-      return prev.filter((_, i) => i !== index);
-    });
+    const removed = photos[index];
+    if (removed) revokePreview(removed.previewUrl);
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,7 +68,7 @@ export default function UploadStudentAttendanceDocument({
   };
 
   const handleUpload = async () => {
-    if (selectedFiles.length === 0) {
+    if (photos.length === 0) {
       toast({ title: "No files selected", variant: "destructive" });
       return;
     }
@@ -103,7 +107,10 @@ export default function UploadStudentAttendanceDocument({
         );
       }
 
-      const pdfFile = await createAttendancePdf(existingPdfUrl, selectedFiles);
+      const pdfFile = await createAttendancePdf(
+        existingPdfUrl,
+        photos.map(({ file }) => file),
+      );
       const { key, token } = await uploadToS3(pdfFile, {
         bucket: "student-attendance",
         groupId,
@@ -124,8 +131,8 @@ export default function UploadStudentAttendanceDocument({
 
       if (result.success) {
         onUploadSuccess?.();
-        setSelectedFiles([]);
-        setPreviewUrls([]);
+        photos.forEach(({ previewUrl }) => revokePreview(previewUrl));
+        setPhotos([]);
         toast({ title: "File uploaded successfully" });
       } else {
         toast({
@@ -170,9 +177,9 @@ export default function UploadStudentAttendanceDocument({
         </div>
       </div>
 
-      {selectedFiles.length > 0 && (
+      {photos.length > 0 && (
         <div className="grid max-h-40 grid-cols-4 gap-2 overflow-y-auto">
-          {selectedFiles.map((file, i) => (
+          {photos.map(({ file, previewUrl }, i) => (
             <div key={`${file.name}_${file.size}_${file.lastModified}`} className="relative group">
               <button
                 type="button"
@@ -180,7 +187,7 @@ export default function UploadStudentAttendanceDocument({
                 onClick={() => setLightboxIndex(i)}
               >
                 {/* oxlint-disable-next-line nextjs/no-img-element -- blob URL previews cannot use next/image */}
-                <img src={previewUrls[i]} alt={file.name} className="h-20 w-full object-cover" />
+                <img src={previewUrl} alt={file.name} className="h-20 w-full object-cover" />
               </button>
               <span className="absolute bottom-0 left-0 right-0 truncate bg-black/50 px-1 text-xs text-white pointer-events-none">
                 {file.name}
@@ -202,7 +209,7 @@ export default function UploadStudentAttendanceDocument({
         </div>
       )}
 
-      {lightboxIndex !== null && previewUrls[lightboxIndex] && (
+      {lightboxIndex !== null && photos[lightboxIndex] && (
         // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- click-away backdrop
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
@@ -217,8 +224,8 @@ export default function UploadStudentAttendanceDocument({
           <div className="relative">
             {/* oxlint-disable-next-line nextjs/no-img-element -- blob URL previews cannot use next/image */}
             <img
-              src={previewUrls[lightboxIndex]}
-              alt={selectedFiles[lightboxIndex]?.name}
+              src={photos[lightboxIndex].previewUrl}
+              alt={photos[lightboxIndex].file.name}
               className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
             />
             <button
@@ -231,7 +238,7 @@ export default function UploadStudentAttendanceDocument({
             </button>
           </div>
           <span className="absolute bottom-4 left-1/2 -translate-x-1/2 truncate rounded bg-black/50 px-3 py-1 text-xs text-white">
-            {selectedFiles[lightboxIndex]?.name}
+            {photos[lightboxIndex].file.name}
           </span>
         </div>
       )}
@@ -243,7 +250,7 @@ export default function UploadStudentAttendanceDocument({
         </Button>
         <Button
           type="button"
-          disabled={selectedFiles.length === 0 || uploading}
+          disabled={photos.length === 0 || uploading}
           variant="brand"
           onClick={toastOnError(handleUpload)}
           className="bg-shamiri-new-blue"
