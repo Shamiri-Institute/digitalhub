@@ -88,6 +88,7 @@ export default function MainFellowsDatatable({
   return (
     <>
       <DataTable
+        urlState
         columns={columns(
           supervisors,
           (kind, { id: fellowId }) => setDialog({ kind, fellowId }),

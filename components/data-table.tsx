@@ -17,6 +17,7 @@ import {
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
+import { useSearchParams } from "next/navigation";
 import { Fragment, type ReactNode, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -42,6 +43,14 @@ import {
   TableHeader,
   TableRow,
 } from "#/components/ui/table";
+import {
+  DEFAULT_PAGE_SIZE,
+  PAGE_SIZES,
+  parseTableView,
+  type TableViewParams,
+  tableViewParams,
+  tableViewSearch,
+} from "#/lib/table-view";
 import { cn } from "#/lib/utils";
 
 // oxlint-disable-next-line typescript/no-explicit-any -- FilterFn generic requires any for universal compatibility with all table data types
@@ -77,9 +86,42 @@ type DataTableProps<TData, TValue> = RowSelectionProps<TData> & {
   renderTableActions?: ReactNode;
   getRowCanExpand?: (row: Row<TData>) => boolean;
   renderSubComponent?: (props: { row: Row<TData> }) => ReactNode;
+  /**
+   * Keeps the page and page size in the URL, so a reload, back/forward or a shared link opens the
+   * same page. Only for a page's main list table, with a prefix when the page has two. Search text
+   * never goes in the URL: it matches students' names and clinical data.
+   */
+  urlState?: boolean | { prefix: string };
 };
 
-export default function DataTable<TData, TValue>({
+type UrlView = { params: TableViewParams; get: (name: string) => string | null };
+
+export default function DataTable<TData, TValue>(
+  props: DataTableProps<TData, TValue> & { emptyStateMessage: string },
+) {
+  return props.urlState ? (
+    <UrlStateDataTable {...props} />
+  ) : (
+    <DataTableContent {...props} urlView={null} />
+  );
+}
+
+// Only URL-bound tables read the search params, so the tables in dialogs don't re-render when the
+// URL changes.
+function UrlStateDataTable<TData, TValue>(
+  props: DataTableProps<TData, TValue> & { emptyStateMessage: string },
+) {
+  const searchParams = useSearchParams();
+  const prefix = typeof props.urlState === "object" ? props.urlState.prefix : undefined;
+  return (
+    <DataTableContent
+      {...props}
+      urlView={{ params: tableViewParams(prefix), get: (name) => searchParams.get(name) }}
+    />
+  );
+}
+
+function DataTableContent<TData, TValue>({
   columns,
   data,
   editColumns = true,
@@ -97,14 +139,15 @@ export default function DataTable<TData, TValue>({
   rowSelectionDescription = "rows",
   getRowCanExpand = () => true,
   renderSubComponent,
-}: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
+  urlView,
+}: DataTableProps<TData, TValue> & { emptyStateMessage: string; urlView: UrlView | null }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(columnVisibilityState);
   const [uncontrolledRowSelection, setUncontrolledRowSelection] = useState<RowSelectionState>({});
   const rowSelection = controlledRowSelection ?? uncontrolledRowSelection;
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: DEFAULT_PAGE_SIZE,
   });
   const [typedPageNumber, setTypedPageNumber] = useState<string | null>(null);
 
@@ -114,6 +157,15 @@ export default function DataTable<TData, TValue>({
       onRowSelectionChange(nextRowSelection);
     } else {
       setUncontrolledRowSelection(nextRowSelection);
+    }
+  };
+
+  // The data is already here, so a URL-bound table replaces the URL without asking the server for
+  // the page again. The router hands the new params back through useSearchParams.
+  const replaceUrlPagination = (params: TableViewParams, nextPagination: PaginationState) => {
+    const search = tableViewSearch(window.location.search, params, nextPagination);
+    if (search !== window.location.search) {
+      window.history.replaceState(null, "", `${window.location.pathname}${search}`);
     }
   };
 
@@ -128,7 +180,15 @@ export default function DataTable<TData, TValue>({
     getPaginationRowModel: disablePagination ? undefined : getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: handleRowSelectionChange,
-    onPaginationChange: setPagination,
+    // A page size change arrives as TanStack's own updater, which keeps the top row in view; the
+    // URL gets the page and size it returns.
+    onPaginationChange: urlView
+      ? (updater) =>
+          replaceUrlPagination(
+            urlView.params,
+            functionalUpdate(updater, table.getState().pagination),
+          )
+      : setPagination,
     enableRowSelection,
     state: { sorting, columnVisibility, rowSelection, pagination },
     autoResetPageIndex: false,
@@ -136,11 +196,23 @@ export default function DataTable<TData, TValue>({
     globalFilterFn: fuzzyFilter,
   });
 
-  // A refresh can leave fewer pages than the current one. Setting state during render makes React
-  // render again with the last page before it paints an empty one.
-  const lastPageIndex = Math.max(table.getPageCount() - 1, 0);
-  if (pagination.pageIndex > lastPageIndex) {
-    setPagination({ ...pagination, pageIndex: lastPageIndex });
+  if (urlView) {
+    // The page is clamped to the rows the data and search leave, which only the built table
+    // knows, so the URL's page and size are applied to it here. Nothing is written back: a page
+    // past the end shows the last page and stays in the URL until the next page change, so the
+    // clamp cannot loop with the URL.
+    const urlPagination = parseTableView(urlView.get, urlView.params, table.getRowCount());
+    table.setOptions((options) => ({
+      ...options,
+      state: { ...options.state, pagination: urlPagination },
+    }));
+  } else {
+    // A refresh can leave fewer pages than the current one. Setting state during render makes React
+    // render again with the last page before it paints an empty one.
+    const lastPageIndex = Math.max(table.getPageCount() - 1, 0);
+    if (pagination.pageIndex > lastPageIndex) {
+      setPagination({ ...pagination, pageIndex: lastPageIndex });
+    }
   }
 
   return (
@@ -406,7 +478,7 @@ export default function DataTable<TData, TValue>({
                   <SelectValue placeholder="Pick rows" />
                 </SelectTrigger>
                 <SelectContent>
-                  {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                  {PAGE_SIZES.map((pageSize) => (
                     <SelectItem key={pageSize} value={pageSize.toString()}>
                       Show {pageSize}
                     </SelectItem>

@@ -58,6 +58,7 @@ export default function SessionsDatatable({
   return (
     <>
       <DataTable
+        urlState
         data={sessions}
         columns={columns({
           openDialog: (kind, { id: sessionId }) => setDialog({ kind, sessionId }),

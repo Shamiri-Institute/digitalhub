@@ -88,6 +88,7 @@ export default function SchoolsDatatable({
   return (
     <>
       <SchoolsDataTable
+        urlState={!isSubComponent}
         data={schools}
         columns={columns({
           role,

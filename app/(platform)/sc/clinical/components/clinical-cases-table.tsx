@@ -54,6 +54,7 @@ export default function ClinicalCasesTable({
 
   return (
     <DataTable
+      urlState
       data={cases}
       getRowId={(clinicalCase) => clinicalCase.id}
       columns={clinicalCaseColumns(referralOptions)}

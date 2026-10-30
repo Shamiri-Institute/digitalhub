@@ -69,6 +69,7 @@ export default function TicketsDatatable({
   return (
     <>
       <DataTable
+        urlState
         columns={columns({ openDialog, role })}
         data={tickets}
         className="data-table data-table-action lg:mt-4"

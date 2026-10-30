@@ -61,6 +61,7 @@ export default function GroupsDataTable({
   return (
     <>
       <DataTable
+        urlState
         columns={columns({
           openDialog: (kind, { id: groupId }) => setDialog({ kind, groupId }),
           role,

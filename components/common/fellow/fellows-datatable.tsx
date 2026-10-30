@@ -59,6 +59,7 @@ export default function FellowsDatatable({
   return (
     <>
       <DataTable
+        urlState
         columns={columns({
           state: {
             openDialog: (kind, { id: fellowId }) => setDialog({ kind, fellowId }),
