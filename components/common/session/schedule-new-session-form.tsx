@@ -379,10 +379,8 @@ export function ScheduleNewSession({
                           </Button>
                           <Button
                             className="flex items-center gap-2 bg-shamiri-new-blue text-sm font-semibold leading-6 text-white"
-                            type="submit"
+                            type="button"
                             size="sm"
-                            disabled={form.formState.isSubmitting}
-                            loading={form.formState.isSubmitting}
                             onClick={() => {
                               const timeString = `${hour}:${minutes} ${time}`;
                               field.onChange(timeString);
