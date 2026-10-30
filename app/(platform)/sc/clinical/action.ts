@@ -414,6 +414,13 @@ export async function createStudentClinicalCase(data: {
     if (!school) {
       throw new Error("School not found in your hub");
     }
+    const flaggedSession = await db.query.interventionSession.findFirst({
+      where: (s, { and, eq }) => and(eq(s.id, data.sessionId), eq(s.schoolId, school.id)),
+      columns: { id: true },
+    });
+    if (!flaggedSession) {
+      throw new Error("Session not found in the selected school");
+    }
     if (data.studentId) {
       const { studentId } = data;
       const existing = await db.query.student.findFirst({
