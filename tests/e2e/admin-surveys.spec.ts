@@ -262,7 +262,7 @@ test("the builder saves a form of several pages and every item kind", async ({ p
   });
   await page.getByRole("link", { name: draft.title }).click();
   expect(prompt).toContain("unsaved changes");
-  await expect(page).toHaveURL(/\/versions\/1$/);
+  await expect(page).toHaveURL(/\/versions\/1(\?page=\d+)?$/);
 
   // So does the browser's Back button. Dismissed, the navigation is cancelled and never loads.
   prompt = "";
@@ -272,7 +272,7 @@ test("the builder saves a form of several pages and every item kind", async ({ p
   });
   await page.goBack({ timeout: 3000 }).catch(() => null);
   expect(prompt).toContain("unsaved changes");
-  await expect(page).toHaveURL(/\/versions\/1$/);
+  await expect(page).toHaveURL(/\/versions\/1(\?page=\d+)?$/);
   await expect(page.getByLabel("Required")).toBeChecked();
 
   await save(page);
@@ -524,13 +524,13 @@ test("a print dialog opened on page 2 before the page knows the time zone keeps 
   // Opening the dialog leaves the table on page 2, where v1 is.
   await expect(rowOf(1)).toHaveCount(1);
 
-  // The refresh brings the time zone. Its new rows send the table back to page 1, as DataTable
-  // does whenever its rows change, and the dialog stays open on v1.
+  // The refresh brings the time zone. The table keeps its page through the new rows, so v1 stays
+  // on screen with its date, and the dialog stays open on it.
   releaseRefresh();
-  await expect(rowOf(11).locator("td").nth(createdIndex)).toHaveText(
+  await expect(rowOf(1).locator("td").nth(createdIndex)).toHaveText(
     format(new Date(), "dd MMM yyyy"),
   );
-  await expect(rowOf(1)).toHaveCount(0);
+  await expect(rowOf(11)).toHaveCount(0);
   await expect(
     dialog.getByRole("heading", { name: `Print copies of ${published.code} v1` }),
   ).toBeVisible();

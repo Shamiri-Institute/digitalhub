@@ -33,7 +33,8 @@ export default function StudentsDatatable({
   const [moveSchoolDialog, setMoveSchoolDialog] = useState<boolean>(false);
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
   const [archiveDialog, setArchiveDialog] = useState<boolean>(false);
-  const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const student = students.find((s) => s.id === selectedStudentId);
   const [selectedSession, setSelectedSession] = useState<string>();
 
   const renderDialogAlert = () => {
@@ -56,7 +57,7 @@ export default function StudentsDatatable({
         data={students}
         columns={columns({
           setEditDialog,
-          setStudent,
+          setSelectedStudentId,
           setAttendanceHistoryDialog,
           setMarkAttendanceDialog,
           setReportingNotesDialog,
@@ -120,17 +121,15 @@ export default function StudentsDatatable({
           >
             {renderDialogAlert()}
           </MarkAttendance>
-          {student && (
-            <AttendanceHistory
-              student={students.find((x) => x.id === student.id) ?? student}
-              open={attendanceHistoryDialog}
-              onOpenChange={setAttendanceHistoryDialog}
-              markAttendance={setMarkAttendanceDialog}
-              setSelectedSessionId={setSelectedSession}
-            >
-              {renderDialogAlert()}
-            </AttendanceHistory>
-          )}
+          <AttendanceHistory
+            student={student}
+            open={attendanceHistoryDialog}
+            onOpenChange={setAttendanceHistoryDialog}
+            markAttendance={setMarkAttendanceDialog}
+            setSelectedSessionId={setSelectedSession}
+          >
+            {renderDialogAlert()}
+          </AttendanceHistory>
           <AddReportingNote
             student={student}
             isOpen={reportingNotesDialog}
