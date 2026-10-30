@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { type Dispatch, type SetStateAction, useEffect } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -39,15 +39,15 @@ export default function AttendanceHistory({
   setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>;
   children: React.ReactNode;
 }) {
-  // effect: clears the parent's selected session when the dialog closes
-  useEffect(() => {
-    if (!open) {
-      setSelectedSessionId(undefined);
-    }
-  }, [open, setSelectedSessionId]);
+  // The parent's mark-attendance dialog opens on the selected session, so a session picked here
+  // must not carry over to one opened later from the student's row menu.
+  function close() {
+    setSelectedSessionId(undefined);
+    onOpenChange(false);
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? onOpenChange(true) : close())}>
       <DialogContent className="lg:w-3/5 lg:max-w-none">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
@@ -63,13 +63,7 @@ export default function AttendanceHistory({
           className="data-table lg:mt-4"
         />
         <DialogFooter className="flex justify-end gap-2">
-          <Button
-            variant="brand"
-            onClick={() => {
-              onOpenChange(false);
-            }}
-            className="flex items-center gap-2"
-          >
+          <Button variant="brand" onClick={close} className="flex items-center gap-2">
             Done
           </Button>
         </DialogFooter>
