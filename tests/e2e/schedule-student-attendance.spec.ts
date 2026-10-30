@@ -7,7 +7,8 @@ import { chooseRowAction, scheduleUrl } from "#/tests/pages/helpers";
 
 // Two occurred sessions in one list week at different schools. At each, a fellow of the session's
 // hub leads exactly one group there, since the dialog offers each leader with the first group it
-// finds, and the student is the group's first, so the table shows it on its first page.
+// finds, and the student is the group's first, so the table shows it on its first page. One row per
+// session keeps the pairing below small; pairing every group of every session took over a minute.
 async function pickSessionsWithStudentsInOneWeek(adminUserId: string, timeZone: string) {
   const {
     rows: [fixture],
@@ -21,7 +22,7 @@ async function pickSessionsWithStudentsInOneWeek(adminUserId: string, timeZone: 
     otherStudentName: string;
   }>(sql`
     with visible as (
-      select i.id, i.session_date, s.id as school_id, s.school_name,
+      select distinct on (i.id) i.id, i.session_date, s.id as school_id, s.school_name,
         f.fellow_name || ' (' || g.group_name || ')' as leader_option, st.student_name
       from implementer_members m
       join hubs h on h.implementer_id = m.implementer_id
@@ -43,6 +44,7 @@ async function pickSessionsWithStudentsInOneWeek(adminUserId: string, timeZone: 
       ) st on st.student_name is not null
       where m.user_id = ${adminUserId} and m.role = 'ADMIN'
         and ${onlySessionAtSchoolThatWeek()}
+      order by i.id, g.id
     )
     select a.session_date as "sessionDate", a.school_name as "schoolName",
       a.leader_option as "leaderOption", a.student_name as "studentName",
@@ -54,8 +56,8 @@ async function pickSessionsWithStudentsInOneWeek(adminUserId: string, timeZone: 
       and date_trunc('week', (b.session_date at time zone ${timeZone}) + interval '1 day')
         = date_trunc('week', (a.session_date at time zone ${timeZone}) + interval '1 day')
       and not exists (select 1 from students o
-        join intervention_groups og on og.id = o.assigned_group_id
-        where og.school_id = b.school_id and o.student_name ilike '%' || a.student_name || '%')
+        where o.school_id = b.school_id
+          and strpos(lower(o.student_name), lower(a.student_name)) > 0)
     order by a.session_date desc, a.id, b.id
     limit 1`);
   required(fixture, "no two occurred sessions in one week at schools with a led group's students");
