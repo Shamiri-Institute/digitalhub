@@ -4,7 +4,10 @@ import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import type { interventionGroup, school, supervisor } from "#/db/schema";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { SessionDropDown } from "#/components/common/session/session-list";
+import {
+  SessionDropDown,
+  type SessionDialogOpener,
+} from "#/components/common/session/session-list";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
@@ -19,19 +22,9 @@ export type SessionData = Omit<Session, "school"> & {
     | null;
 };
 
-export type SessionDialogKind =
-  | "ratings"
-  | "fellowAttendance"
-  | "supervisorAttendance"
-  | "studentAttendance"
-  | "sessionOccurrence"
-  | "reschedule"
-  | "cancel"
-  | "attendanceDocument";
-
 export const columns = (state: {
   role: ImplementerRole;
-  openDialog: (kind: SessionDialogKind, session: SessionData) => void;
+  openDialog: SessionDialogOpener;
   fellowId?: string;
   supervisorId?: string;
 }): ColumnDef<SessionData>[] => [
@@ -116,34 +109,20 @@ export const columns = (state: {
   },
   {
     id: "button",
-    cell: ({ row }) => {
-      // SessionDropDown, shared with the schedule views, opens a dialog by calling its setter.
-      const opens = (kind: SessionDialogKind) => () => state.openDialog(kind, row.original);
-      return (
-        <SessionDropDown
-          state={{
-            session: row.original,
-            setRatingsDialog: opens("ratings"),
-            setFellowAttendanceDialog: opens("fellowAttendance"),
-            setStudentAttendanceDialog: opens("studentAttendance"),
-            setSupervisorAttendanceDialog: opens("supervisorAttendance"),
-            setSessionOccurrenceDialog: opens("sessionOccurrence"),
-            setRescheduleSessionDialog: opens("reschedule"),
-            setCancelSessionDialog: opens("cancel"),
-            setAttendanceDocumentDialog: opens("attendanceDocument"),
-          }}
-          role={state.role}
-          fellowId={state.fellowId}
-          supervisorId={state.supervisorId}
-        >
-          <div className="absolute inset-0 border-l bg-white">
-            <div className="flex h-full w-full items-center justify-center">
-              <Icons.moreHorizontal className="h-5 w-5" />
-            </div>
+    cell: ({ row }) => (
+      <SessionDropDown
+        state={{ session: row.original, openDialog: state.openDialog }}
+        role={state.role}
+        fellowId={state.fellowId}
+        supervisorId={state.supervisorId}
+      >
+        <div className="absolute inset-0 border-l bg-white">
+          <div className="flex h-full w-full items-center justify-center">
+            <Icons.moreHorizontal className="h-5 w-5" />
           </div>
-        </SessionDropDown>
-      );
-    },
+        </div>
+      </SessionDropDown>
+    ),
     enableHiding: false,
   },
 ];
