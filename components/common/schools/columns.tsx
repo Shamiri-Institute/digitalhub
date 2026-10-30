@@ -3,7 +3,6 @@
 import type { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
-import type { Dispatch, SetStateAction } from "react";
 import type { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
@@ -12,23 +11,18 @@ import { sessionDisplayName } from "#/lib/utils";
 
 export type SchoolsTableData = Awaited<ReturnType<typeof fetchSchoolData>>[number];
 
+export type SchoolDialogKind = "edit" | "pointSupervisor" | "dropout" | "undoDropout";
+
+export type SchoolTableState = {
+  openDialog: (kind: SchoolDialogKind, school: SchoolsTableData) => void;
+};
+
 export const columns = ({
   role,
   state,
 }: {
   role: ImplementerRole;
-  state: {
-    editDialog: boolean;
-    setEditDialog: Dispatch<SetStateAction<boolean>>;
-    pointSupervisorDialog: boolean;
-    setPointSupervisorDialog: Dispatch<SetStateAction<boolean>>;
-    schoolDropOutDialog: boolean;
-    setSchoolDropOutDialog: Dispatch<SetStateAction<boolean>>;
-    undoDropOutDialog: boolean;
-    setUndoDropOutDialog: Dispatch<SetStateAction<boolean>>;
-    school: SchoolsTableData | null;
-    setSchool: Dispatch<SetStateAction<SchoolsTableData | null>>;
-  };
+  state: SchoolTableState;
 }): ColumnDef<SchoolsTableData>[] => {
   const defaultColumns: ColumnDef<SchoolsTableData>[] = [
     {

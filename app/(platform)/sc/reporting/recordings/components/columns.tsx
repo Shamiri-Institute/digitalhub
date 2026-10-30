@@ -2,7 +2,6 @@
 
 import type { RecordingProcessingStatus } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Dispatch, SetStateAction } from "react";
 import RecordingStatusBadge from "./recording-status-badge";
 import RecordingsDataTableMenu from "./recordings-datatable-menu";
 import type { JsonValue } from "#/db/schema";
@@ -32,10 +31,10 @@ export interface RecordingTableData {
   sessionName: string;
 }
 
+export type RecordingDialogKind = "edit" | "viewFeedback";
+
 export interface ColumnState {
-  setViewFeedbackDialog: Dispatch<SetStateAction<boolean>>;
-  setSelectedRecording: Dispatch<SetStateAction<RecordingTableData | null>>;
-  setEditDialog: Dispatch<SetStateAction<boolean>>;
+  openDialog: (kind: RecordingDialogKind, recording: RecordingTableData) => void;
 }
 
 function formatDate(date: Date): string {

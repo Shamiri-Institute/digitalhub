@@ -1,7 +1,6 @@
 "use client";
 
-import type { Dispatch, SetStateAction } from "react";
-import type { SupervisorsData } from "#/components/common/supervisor/columns";
+import type { SupervisorsData, SupervisorTableState } from "#/components/common/supervisor/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -17,10 +16,7 @@ export function SupervisorsDataTableMenu({
   state,
 }: {
   supervisor: SupervisorsData;
-  state: {
-    setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setSupervisor: Dispatch<SetStateAction<SupervisorsData | null>>;
-  };
+  state: SupervisorTableState;
 }) {
   return (
     <DropdownMenu>
@@ -38,10 +34,7 @@ export function SupervisorsDataTableMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-          onClick={() => {
-            state.setSupervisor(supervisor);
-            state.setMarkAttendanceDialog(true);
-          }}
+          onClick={() => state.openMarkAttendance(supervisor)}
         >
           Mark attendance
         </DropdownMenuItem>

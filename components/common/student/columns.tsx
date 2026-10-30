@@ -14,7 +14,6 @@ import type {
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
-import type { Dispatch, SetStateAction } from "react";
 import StudentsDataTableMenu from "#/components/common/student/students-datatable-menu";
 import SessionHistoryWidget from "#/components/common/supervisor/sessions-history-widget";
 import { Badge } from "#/components/ui/badge";
@@ -51,16 +50,18 @@ export type SchoolStudentTableData = typeof student.$inferSelect & {
   > & { fromGroup: GroupSummary | null })[];
 };
 
+export type StudentDialogKind =
+  | "edit"
+  | "markAttendance"
+  | "attendanceHistory"
+  | "reportingNotes"
+  | "groupTransferHistory"
+  | "moveSchool"
+  | "dropout"
+  | "archive";
+
 export const columns = (state: {
-  setEditDialog: Dispatch<SetStateAction<boolean>>;
-  setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-  setDropoutDialog: Dispatch<SetStateAction<boolean>>;
-  setArchiveDialog: Dispatch<SetStateAction<boolean>>;
-  setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
-  setSelectedStudentId: Dispatch<SetStateAction<string | null>>;
-  setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
-  setMoveSchoolDialog: Dispatch<SetStateAction<boolean>>;
+  openDialog: (kind: StudentDialogKind, student: SchoolStudentTableData) => void;
   role: ImplementerRole;
   sessions: (typeof interventionSession.$inferSelect)[];
 }): ColumnDef<SchoolStudentTableData>[] => [

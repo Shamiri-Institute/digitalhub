@@ -22,21 +22,13 @@ export type SupervisorsData = typeof supervisor.$inferSelect & {
   monthlySupervisorEvaluation: (typeof monthlySupervisorEvaluation.$inferSelect)[];
 };
 
+export type SupervisorDialogKind = "edit" | "evaluation" | "complaint" | "dropout" | "undrop";
+
 export const columns = ({
-  onSupervisorSelect,
-  onEditDialogOpen,
-  onEvaluationDialogOpen,
-  onComplaintDialogOpen,
-  onDropoutDialogOpen,
-  onUndropDialogOpen,
+  openDialog,
   role,
 }: {
-  onSupervisorSelect: (supervisor: SupervisorsData) => void;
-  onEditDialogOpen: () => void;
-  onEvaluationDialogOpen: () => void;
-  onComplaintDialogOpen: () => void;
-  onDropoutDialogOpen: () => void;
-  onUndropDialogOpen: () => void;
+  openDialog: (kind: SupervisorDialogKind, supervisor: SupervisorsData) => void;
   role: ImplementerRole;
 }): ColumnDef<SupervisorsData>[] => [
   {
@@ -207,16 +199,7 @@ export const columns = ({
   {
     id: "button",
     cell: ({ row }) => (
-      <AllSupervisorsDataTableMenu
-        supervisor={row.original}
-        onSupervisorSelect={onSupervisorSelect}
-        onEditDialogOpen={onEditDialogOpen}
-        onEvaluationDialogOpen={onEvaluationDialogOpen}
-        onComplaintDialogOpen={onComplaintDialogOpen}
-        onDropoutDialogOpen={onDropoutDialogOpen}
-        onUndropDialogOpen={onUndropDialogOpen}
-        role={role}
-      />
+      <AllSupervisorsDataTableMenu supervisor={row.original} openDialog={openDialog} role={role} />
     ),
     enableHiding: false,
   },

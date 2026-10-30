@@ -6,7 +6,7 @@ import {
 import type { ImplementerRole } from "#/db/enums";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
-import { useState } from "react";
+import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
@@ -24,8 +24,19 @@ import { Separator } from "#/components/ui/separator";
 import { toastOnError } from "#/components/ui/use-toast";
 import { markFellowAttendance } from "#/lib/actions/fellow";
 import type { FellowsData } from "../../../app/(platform)/sc/actions";
-import { fellowSchoolsColumns, subColumns } from "./fellow-schools-columns";
+import {
+  type FellowDialogKind,
+  type FellowGroupDialogKind,
+  fellowSchoolsColumns,
+  subColumns,
+} from "./fellow-schools-columns";
 import type { project as projectTable } from "#/db/schema";
+
+type OpenFellowDialog =
+  | { kind: "add" }
+  | { kind: "edit"; fellowId: string; personalDetails: FellowPersonalDetails }
+  | { kind: FellowDialogKind; fellowId: string }
+  | { kind: FellowGroupDialogKind; fellowId: string; groupId: string };
 
 export default function FellowSchoolsDatatable({
   fellows,
@@ -36,55 +47,46 @@ export default function FellowSchoolsDatatable({
   project?: typeof projectTable.$inferSelect;
   role: ImplementerRole;
 }) {
-  const [selectedFellow, setSelectedFellow] = useState<FellowsData | null>(null);
-  const [selectedFellowGroup, setSelectedFellowGroup] = useState<FellowGroupData | undefined>();
-  const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
-  const [addFellowDialog, setAddFellowDialog] = useState(false);
-  const [editFellowDialog, setEditFellowDialog] = useState(false);
-  const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
-  const [complaintsDialog, setComplaintsDialog] = useState(false);
-  const [attendanceDialog, setAttendanceDialog] = useState(false);
-  const [studentsDialog, setStudentsDialog] = useState(false);
-  const [evaluationDialog, setEvaluationDialog] = useState(false);
-  const [fellowToEdit, setFellowToEdit] = useState<(FellowsData & FellowPersonalDetails) | null>(
-    null,
-  );
+  const [dialog, setDialog] = useState<OpenFellowDialog | null>(null);
+  const fellow =
+    dialog && dialog.kind !== "add" ? fellows.find((f) => f.id === dialog.fellowId) : undefined;
+  const fellowGroup =
+    dialog && "groupId" in dialog ? fellow?.groups.find((g) => g.id === dialog.groupId) : undefined;
+  const fellowPersonalDetails = dialog?.kind === "edit" ? dialog.personalDetails : undefined;
 
-  const openEditDialog = toastOnError(async (fellowRow: FellowsData) => {
-    const personalDetails = await loadFellowPersonalDetails(fellowRow.id);
-    setFellowToEdit({ ...fellowRow, ...personalDetails });
-    setEditFellowDialog(true);
+  const onDialogOpenChange = (open: SetStateAction<boolean>) => {
+    if (!open) setDialog(null);
+  };
+
+  const openEditDialog = toastOnError(async ({ id: fellowId }: FellowsData) => {
+    const personalDetails = await loadFellowPersonalDetails(fellowId);
+    setDialog({ kind: "edit", fellowId, personalDetails });
   });
 
-  const mainColumns = (() => {
-    const columns = {
-      setFellow: setSelectedFellow,
-      setWeeklyEvaluationDialog,
+  const mainColumns = fellowSchoolsColumns({
+    state: {
+      openDialog: (kind, { id: fellowId }) => setDialog({ kind, fellowId }),
       openEditDialog,
-      setAttendanceHistoryDialog,
-      setComplaintsDialog,
       role,
-    };
+    },
+  });
 
-    return fellowSchoolsColumns({ state: columns });
-  })();
-
-  const subColumnsMemo = (() => {
-    const columns = {
-      setFellowGroup: setSelectedFellowGroup,
-      setAttendanceDialog,
-      setStudentsDialog,
-      setEvaluationDialog,
+  const groupColumns = subColumns({
+    state: {
+      openDialog: (kind, { id: groupId, leaderId: fellowId }) =>
+        setDialog({ kind, fellowId, groupId }),
       role,
-    };
-
-    return subColumns({ state: columns });
-  })();
+    },
+  });
 
   function renderTableActions() {
     return role !== "FELLOW" ? (
       <div>
-        <FellowDetailsForm open={addFellowDialog} onOpenChange={setAddFellowDialog} mode={"add"}>
+        <FellowDetailsForm
+          open={dialog?.kind === "add"}
+          onOpenChange={(open) => setDialog(open ? { kind: "add" } : null)}
+          mode={"add"}
+        >
           <DialogTrigger asChild={true}>
             <Button variant="brand">Add new fellow</Button>
           </DialogTrigger>
@@ -120,17 +122,6 @@ export default function FellowSchoolsDatatable({
     );
   }
 
-  const fellow = selectedFellow ? (fellows.find((f) => f.id === selectedFellow.id) ?? null) : null;
-
-  const fellowGroup = (() => {
-    if (!selectedFellowGroup) {
-      return;
-    }
-    return fellows
-      .find((f) => f.id === selectedFellowGroup.leaderId)
-      ?.groups.find((g) => g.id === selectedFellowGroup.id);
-  })();
-
   return (
     <>
       <DataTable
@@ -152,7 +143,7 @@ export default function FellowSchoolsDatatable({
           <DataTable
             data={row.original.groups}
             editColumns={false}
-            columns={subColumnsMemo}
+            columns={groupColumns}
             disableSearch={true}
             disablePagination={true}
             className={"data-table data-table-action mt-0 border-0 bg-white"}
@@ -165,8 +156,8 @@ export default function FellowSchoolsDatatable({
         <>
           <WeeklyFellowEvaluation
             fellowId={fellow.id}
-            open={weeklyEvaluationDialog}
-            onOpenChange={setWeeklyEvaluationDialog}
+            open={dialog?.kind === "weeklyEvaluation"}
+            onOpenChange={onDialogOpenChange}
             evaluations={fellow.weeklyFellowRatings}
             project={project}
             mode={"add"}
@@ -174,8 +165,8 @@ export default function FellowSchoolsDatatable({
             {renderFellowDialogAlert(fellow)}
           </WeeklyFellowEvaluation>
           <AttendanceHistory
-            open={attendanceHistoryDialog}
-            onOpenChange={setAttendanceHistoryDialog}
+            open={dialog?.kind === "attendanceHistory"}
+            onOpenChange={onDialogOpenChange}
             attendances={fellow.attendances}
             fellow={fellow}
             columnVisibilityState={{
@@ -186,8 +177,8 @@ export default function FellowSchoolsDatatable({
           </AttendanceHistory>
           <SubmitComplaint
             id={fellow.id}
-            open={complaintsDialog}
-            onOpenChange={setComplaintsDialog}
+            open={dialog?.kind === "complaints"}
+            onOpenChange={onDialogOpenChange}
             complaints={fellow.complaints.map((complaint) => {
               return {
                 id: complaint.id,
@@ -202,12 +193,12 @@ export default function FellowSchoolsDatatable({
           </SubmitComplaint>
         </>
       )}
-      {fellowToEdit && (
+      {fellow && fellowPersonalDetails && (
         <FellowDetailsForm
-          open={editFellowDialog}
-          onOpenChange={setEditFellowDialog}
+          open={dialog?.kind === "edit"}
+          onOpenChange={onDialogOpenChange}
           mode={role === "HUB_COORDINATOR" ? "view" : role === "SUPERVISOR" ? "edit" : null}
-          fellow={fellowToEdit}
+          fellow={{ ...fellow, ...fellowPersonalDetails }}
         />
       )}
       {fellowGroup && (
@@ -224,10 +215,10 @@ export default function FellowSchoolsDatatable({
                 comments: attendance.absenceComments,
               };
             })}
-            sessions={fellowGroup?.school.interventionSessions}
+            sessions={fellowGroup.school.interventionSessions}
             id={fellowGroup.leaderId}
-            isOpen={attendanceDialog}
-            setIsOpen={setAttendanceDialog}
+            isOpen={dialog?.kind === "markAttendance"}
+            setIsOpen={onDialogOpenChange}
             markAttendanceAction={markFellowAttendance}
             sessionMode="many"
             bulkMode={false}
@@ -260,15 +251,15 @@ export default function FellowSchoolsDatatable({
             groupId={fellowGroup.id}
             groupName={fellowGroup.groupName}
             schoolId={fellowGroup.schoolId}
-            open={studentsDialog}
-            onOpenChange={setStudentsDialog}
+            open={dialog?.kind === "students"}
+            onOpenChange={onDialogOpenChange}
             role={role}
           >
             {renderFellowGroupDialogAlert(fellowGroup)}
           </StudentsInGroup>
           <StudentGroupEvaluation
-            open={evaluationDialog}
-            onOpenChange={setEvaluationDialog}
+            open={dialog?.kind === "groupEvaluation"}
+            onOpenChange={onDialogOpenChange}
             mode="add"
             groupId={fellowGroup.id}
             evaluations={fellowGroup.interventionGroupReports}
