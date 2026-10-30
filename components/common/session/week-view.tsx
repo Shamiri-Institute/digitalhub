@@ -1,11 +1,11 @@
 import { type CalendarDate, isToday } from "@internationalized/date";
 import type { ImplementerRole } from "#/db/enums";
-import { type Dispatch, type SetStateAction, useRef } from "react";
+import { useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
-import { SessionList } from "./session-list";
+import { SessionList, type SessionDialogOpener } from "./session-list";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { sessionsAt } from "#/lib/schedule-view";
 import { syncScrollLeft } from "./sync-scroll";
@@ -13,23 +13,14 @@ import { syncScrollLeft } from "./sync-scroll";
 export function WeekView({
   state,
   role,
-  dialogState,
+  openDialog,
   supervisorId,
   fellowId,
   sessions,
 }: {
   state: CalendarState;
   role: ImplementerRole;
-  dialogState: {
-    setSession: Dispatch<SetStateAction<Session | null>>;
-    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
-    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
-    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  openDialog: SessionDialogOpener;
   supervisorId?: string;
   fellowId?: string;
   sessions: Session[];
@@ -110,7 +101,7 @@ export function WeekView({
                         date={date}
                         state={state}
                         role={role}
-                        dialogState={dialogState}
+                        openDialog={openDialog}
                         fellowId={fellowId}
                         supervisorId={supervisorId}
                         sessions={sessionsAt(sessions, date, hour)}
@@ -171,7 +162,7 @@ function WeekCalendarCell({
   date,
   state,
   role,
-  dialogState,
+  openDialog,
   fellowId,
   supervisorId,
   sessions,
@@ -180,16 +171,7 @@ function WeekCalendarCell({
   date: CalendarDate;
   state: CalendarState;
   role: ImplementerRole;
-  dialogState: {
-    setSession: Dispatch<SetStateAction<Session | null>>;
-    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
-    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
-    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  openDialog: SessionDialogOpener;
   fellowId?: string;
   supervisorId?: string;
   sessions: Session[];
@@ -226,7 +208,7 @@ function WeekCalendarCell({
           <SessionList
             sessions={sessions}
             role={role}
-            dialogState={dialogState}
+            openDialog={openDialog}
             fellowId={fellowId}
             supervisorId={supervisorId}
           />
