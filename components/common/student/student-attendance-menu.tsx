@@ -18,18 +18,22 @@ export type StudentAttendanceMenuState = {
   openHistory: (student: StudentAttendanceData) => void;
 };
 
+/**
+ * The student's triage at the session. "unavailable" when the caller doesn't triage, or when the
+ * session's triage records failed to load, so whether the student has one is unknown.
+ */
+export type StudentTriage = "unavailable" | "none" | "documented";
+
 export default function StudentAttendanceMenu({
   state,
   attendance,
   disabled,
-  isFellow,
-  hasExistingTriageEvent,
+  triage,
 }: {
   state: StudentAttendanceMenuState;
   attendance: StudentAttendanceData;
   disabled: boolean;
-  isFellow: boolean;
-  hasExistingTriageEvent: boolean;
+  triage: StudentTriage;
 }) {
   return (
     <DropdownMenu>
@@ -54,12 +58,12 @@ export default function StudentAttendanceMenu({
         >
           Mark attendance
         </DropdownMenuItem>
-        {isFellow && !hasExistingTriageEvent && (
+        {triage === "none" && (
           <DropdownMenuItem onClick={() => state.openTriageModal(attendance, false)}>
             Triage occurred
           </DropdownMenuItem>
         )}
-        {isFellow && hasExistingTriageEvent && (
+        {triage === "documented" && (
           <>
             <DropdownMenuItem onClick={() => state.openTriageModal(attendance, false)}>
               Edit triage
