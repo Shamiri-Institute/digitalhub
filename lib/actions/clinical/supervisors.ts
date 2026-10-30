@@ -8,7 +8,6 @@ export type SupervisorClinicalCasesData = {
   noOfClinicalCases: number;
   noOfTreatmentPlans: number;
   noOfCaseNotes: number;
-  sessionsHad: number;
 };
 
 export function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
@@ -23,8 +22,7 @@ export function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
         COUNT(DISTINCT csi.id) AS clinical_cases_count,
         COUNT(DISTINCT CASE WHEN csi."case_status" = 'Active' THEN csi.id END) AS active_cases_count,
         COUNT(DISTINCT cfutp.id) AS treatment_plans_count,
-        COUNT(DISTINCT ccn.id) AS case_notes_count,
-        COUNT(DISTINCT csa.id) AS sessions_count
+        COUNT(DISTINCT ccn.id) AS case_notes_count
       FROM
         supervisors s
       LEFT JOIN
@@ -33,8 +31,6 @@ export function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
         "clinical_follow_up_treatment_plan" cfutp ON csi.id = cfutp."case_id"
       LEFT JOIN
         "clinical_case_notes" ccn ON csi.id = ccn."case_id"
-      LEFT JOIN
-        "clinical_session_attendance" csa ON csi.id = csa."case_id" AND csa."supervisor_id" = s.id
       ${s.join}
       WHERE
         ${s.where}
@@ -47,8 +43,7 @@ export function fetchSupervisorClinicalCasesData(scope: ClinicalScope) {
       'Active' AS "activeStatus",
       clinical_cases_count::int AS "noOfClinicalCases",
       treatment_plans_count::int AS "noOfTreatmentPlans",
-      case_notes_count::int AS "noOfCaseNotes",
-      sessions_count::int AS "sessionsHad"
+      case_notes_count::int AS "noOfCaseNotes"
     FROM
       supervisor_stats
     ORDER BY

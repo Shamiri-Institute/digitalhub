@@ -27,15 +27,6 @@ export const columns: ColumnDef<SupervisorClinicalCasesData>[] = [
   {
     accessorKey: "noOfTreatmentPlans",
     header: "No. of Treatment Plans",
-    // The cell shows cases over sessions, not the treatment plans the column would sort by.
-    enableSorting: false,
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center gap-2 text-shamiri-black">
-          {String(row.original.noOfClinicalCases || 0)}/{String(row.original.sessionsHad || 0)}
-        </div>
-      );
-    },
   },
   {
     accessorKey: "noOfCaseNotes",
