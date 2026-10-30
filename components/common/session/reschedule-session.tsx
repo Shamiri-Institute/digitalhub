@@ -43,6 +43,30 @@ export default function RescheduleSession({
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
 }) {
+  return (
+    <div>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogPortal>
+          <DialogContent className="flex w-1/3 max-w-none flex-col gap-4">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Reschedule session</DialogTitle>
+            </DialogHeader>
+            {children}
+            <RescheduleSessionForm key={session.id} session={session} onOpenChange={onOpenChange} />
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+    </div>
+  );
+}
+
+function RescheduleSessionForm({
+  session,
+  onOpenChange,
+}: {
+  session: Session;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
+}) {
   const [hour, setHour] = useState(format(session.sessionDate, "h"));
   const [minutes, setMinutes] = useState(format(session.sessionDate, "mm"));
   const [time, setTime] = useState(format(session.sessionDate, "aa"));
@@ -80,194 +104,178 @@ export default function RescheduleSession({
   };
 
   return (
-    <div>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogPortal>
-          <DialogContent className="flex w-1/3 max-w-none flex-col gap-4">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">Reschedule session</DialogTitle>
-            </DialogHeader>
-            {children}
-            <Form {...form}>
-              <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="sessionDate"
-                    render={({ field }) => (
-                      <div>
-                        <FormLabel>
-                          Date <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              captionLayout="dropdown"
-                              onSelect={field.onChange}
-                              autoFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
+    <Form {...form}>
+      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="sessionDate"
+            render={({ field }) => (
+              <div>
+                <FormLabel>
+                  Date <span className="text-shamiri-light-red">*</span>
+                </FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                        !field.value && "text-muted-foreground",
+                      )}
+                    >
+                      <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {field.value ? format(field.value, "dd/MM/yyyy") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      captionLayout="dropdown"
+                      onSelect={field.onChange}
+                      autoFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="sessionStartTime"
+            render={({ field }) => (
+              <div>
+                <FormLabel>Start time</FormLabel>
+                <Popover open={timePicker} onOpenChange={setTimePicker}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "mt-1.5 w-full justify-start px-3 text-left font-normal active:scale-100",
+                        !field.value && "text-muted-foreground",
+                      )}
+                    >
+                      <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {field.value ? field.value : <span>Pick a time</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto px-4 py-3" align="start">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-sm">Pick a start time</span>
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="relative w-16">
+                          <Input
+                            type="number"
+                            onChange={(e) => {
+                              setHour(e.target.value);
+                            }}
+                            value={hour}
+                            min={1}
+                            max={12}
+                            className="transparent-number-arrows"
+                          />
+                          <div className="pointer-events-none absolute right-1 top-1/2 flex -translate-y-1/2 flex-col items-center justify-center space-y-0.5 text-muted-foreground">
+                            <ChevronsUpDown className="mr-2 h-4 w-4" />
+                          </div>
+                        </div>
+                        <span>:</span>
+                        <div className="relative w-16">
+                          <Input
+                            type="number"
+                            onChange={(e) => {
+                              setMinutes(handleMinutesChange(e.target.value));
+                            }}
+                            value={minutes}
+                            min={0}
+                            max={59}
+                            className="transparent-number-arrows"
+                          />
+                          <div className="pointer-events-none absolute right-1 top-1/2 flex -translate-y-1/2 flex-col items-center justify-center space-y-0.5 text-muted-foreground">
+                            <ChevronsUpDown className="mr-2 h-4 w-4" />
+                          </div>
+                        </div>
+                        <Select
+                          onValueChange={(value) => {
+                            setTime(value);
+                          }}
+                          defaultValue={time}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-16">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="min-w-16">
+                            {["AM", "PM"].map((time) => {
+                              return (
+                                <SelectItem key={time} value={time}>
+                                  <span>{time}</span>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
                       </div>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="sessionStartTime"
-                    render={({ field }) => (
-                      <div>
-                        <FormLabel>Start time</FormLabel>
-                        <Popover open={timePicker} onOpenChange={setTimePicker}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "mt-1.5 w-full justify-start px-3 text-left font-normal active:scale-100",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {field.value ? field.value : <span>Pick a time</span>}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto px-4 py-3" align="start">
-                            <div className="flex flex-col gap-2">
-                              <span className="text-sm">Pick a start time</span>
-                              <div className="flex items-center gap-2 py-2">
-                                <div className="relative w-16">
-                                  <Input
-                                    type="number"
-                                    onChange={(e) => {
-                                      setHour(e.target.value);
-                                    }}
-                                    value={hour}
-                                    min={1}
-                                    max={12}
-                                    className="transparent-number-arrows"
-                                  />
-                                  <div className="pointer-events-none absolute right-1 top-1/2 flex -translate-y-1/2 flex-col items-center justify-center space-y-0.5 text-muted-foreground">
-                                    <ChevronsUpDown className="mr-2 h-4 w-4" />
-                                  </div>
-                                </div>
-                                <span>:</span>
-                                <div className="relative w-16">
-                                  <Input
-                                    type="number"
-                                    onChange={(e) => {
-                                      setMinutes(handleMinutesChange(e.target.value));
-                                    }}
-                                    value={minutes}
-                                    min={0}
-                                    max={59}
-                                    className="transparent-number-arrows"
-                                  />
-                                  <div className="pointer-events-none absolute right-1 top-1/2 flex -translate-y-1/2 flex-col items-center justify-center space-y-0.5 text-muted-foreground">
-                                    <ChevronsUpDown className="mr-2 h-4 w-4" />
-                                  </div>
-                                </div>
-                                <Select
-                                  onValueChange={(value) => {
-                                    setTime(value);
-                                  }}
-                                  defaultValue={time}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger className="w-16">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent className="min-w-16">
-                                    {["AM", "PM"].map((time) => {
-                                      return (
-                                        <SelectItem key={time} value={time}>
-                                          <span>{time}</span>
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <Separator />
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="ghost"
-                                  type="button"
-                                  size="sm"
-                                  className="text-sm font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-                                  onClick={() => {
-                                    setTimePicker(false);
-                                  }}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  className="flex items-center gap-2 bg-shamiri-new-blue text-sm font-semibold leading-6 text-white"
-                                  type="submit"
-                                  size="sm"
-                                  disabled={form.formState.isSubmitting}
-                                  loading={form.formState.isSubmitting}
-                                  onClick={() => {
-                                    const timeString = `${hour}:${minutes} ${time}`;
-                                    field.onChange(timeString);
-                                    setTimePicker(false);
-                                  }}
-                                >
-                                  Save
-                                </Button>
-                              </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage className="pt-1" />
+                      <Separator />
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          type="button"
+                          size="sm"
+                          className="text-sm font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                          onClick={() => {
+                            setTimePicker(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          className="flex items-center gap-2 bg-shamiri-new-blue text-sm font-semibold leading-6 text-white"
+                          type="submit"
+                          size="sm"
+                          disabled={form.formState.isSubmitting}
+                          loading={form.formState.isSubmitting}
+                          onClick={() => {
+                            const timeString = `${hour}:${minutes} ${time}`;
+                            field.onChange(timeString);
+                            setTimePicker(false);
+                          }}
+                        >
+                          Save
+                        </Button>
                       </div>
-                    )}
-                  />
-                </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage className="pt-1" />
+              </div>
+            )}
+          />
+        </div>
 
-                <Separator />
+        <Separator />
 
-                <div className="flex justify-end gap-6">
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    className="text-shamiri-new-blue hover:text-shamiri-blue"
-                    onClick={() => {
-                      onOpenChange(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="brand"
-                    loading={form.formState.isSubmitting}
-                    disabled={form.formState.isSubmitting}
-                  >
-                    Save Changes
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-    </div>
+        <div className="flex justify-end gap-6">
+          <Button
+            variant="ghost"
+            type="button"
+            className="text-shamiri-new-blue hover:text-shamiri-blue"
+            onClick={() => {
+              onOpenChange(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="brand"
+            loading={form.formState.isSubmitting}
+            disabled={form.formState.isSubmitting}
+          >
+            Save Changes
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }
