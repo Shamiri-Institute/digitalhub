@@ -52,3 +52,34 @@ export function tableViewSearch(
   const query = searchParams.toString();
   return query ? `?${query}` : "";
 }
+
+function ownRowId(row: unknown) {
+  if (typeof row !== "object" || row === null || !("id" in row)) return null;
+  const { id } = row;
+  if (typeof id === "string" && id !== "") return id;
+  if (typeof id === "number" && Number.isFinite(id)) return String(id);
+  return null;
+}
+
+/**
+ * Row ids for a table that names none. Each row is keyed by its own `id`, so selection, expansion
+ * and React keys stay with the row when a refresh reorders the data. A row whose `id` is missing,
+ * or shared with another row, is keyed by its index as `index:<n>`, which no database id looks like.
+ */
+export function rowIdsFromOwnIds<TData>(data: readonly TData[]) {
+  // TanStack asks for the ids only when the data changes, so the rows are counted then.
+  let rowCountByOwnId: Map<string, number> | undefined;
+  const countRowsByOwnId = () => {
+    const counts = new Map<string, number>();
+    for (const dataRow of data) {
+      const dataRowId = ownRowId(dataRow);
+      if (dataRowId !== null) counts.set(dataRowId, (counts.get(dataRowId) ?? 0) + 1);
+    }
+    return counts;
+  };
+  return (row: TData, index: number) => {
+    rowCountByOwnId ??= countRowsByOwnId();
+    const rowId = ownRowId(row);
+    return rowId !== null && rowCountByOwnId.get(rowId) === 1 ? rowId : `index:${index}`;
+  };
+}

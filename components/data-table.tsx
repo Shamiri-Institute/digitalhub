@@ -47,6 +47,7 @@ import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZES,
   parseTableView,
+  rowIdsFromOwnIds,
   type TableViewParams,
   tableViewParams,
   tableViewSearch,
@@ -172,7 +173,7 @@ function DataTableContent<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
-    getRowId,
+    getRowId: getRowId ?? rowIdsFromOwnIds(data),
     getRowCanExpand,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,

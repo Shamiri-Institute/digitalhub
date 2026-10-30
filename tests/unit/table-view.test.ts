@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { parseTableView, tableViewParams, tableViewSearch } from "#/lib/table-view";
+import {
+  parseTableView,
+  rowIdsFromOwnIds,
+  tableViewParams,
+  tableViewSearch,
+} from "#/lib/table-view";
 
 const params = tableViewParams();
 const query = (search: string) => {
@@ -79,5 +84,27 @@ describe("tableViewSearch", () => {
       pageIndex: 1,
       pageSize: 10,
     });
+  });
+});
+
+describe("rowIdsFromOwnIds", () => {
+  const rowIds = <TData>(data: TData[]) => data.map(rowIdsFromOwnIds(data));
+
+  it("keys rows by their own ids, so a reorder keeps each row's key", () => {
+    const students = [{ id: "stu_b" }, { id: "stu_a" }, { id: 7 }];
+    expect(rowIds(students)).toEqual(["stu_b", "stu_a", "7"]);
+    expect(rowIds(students.toReversed())).toEqual(["7", "stu_a", "stu_b"]);
+  });
+
+  it("keys a row with no usable id by its index", () => {
+    // Unmarked attendance rows carry `id: undefined`; skeleton rows `id: ""` or no id at all.
+    const rows = [{ id: "att_1" }, { id: undefined }, { id: "" }, {}, { id: Number.NaN }, null];
+    expect(rowIds(rows)).toEqual(["att_1", "index:1", "index:2", "index:3", "index:4", "index:5"]);
+  });
+
+  it("keys rows that share an id by their index", () => {
+    // A school's fellows list has one row per group a fellow leads.
+    const fellows = [{ id: "fel_1" }, { id: "fel_2" }, { id: "fel_1" }, { id: 3 }, { id: "3" }];
+    expect(rowIds(fellows)).toEqual(["index:0", "fel_2", "index:2", "index:3", "index:4"]);
   });
 });
