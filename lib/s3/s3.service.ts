@@ -8,6 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+import { env } from "#/env";
 import { getS3Credentials } from "#/lib/s3/s3.config";
 import type { PresignedUploadOptions, S3Bucket } from "#/lib/s3/s3.types";
 import { requireBucket } from "#/lib/s3/utils/require-bucket";
@@ -24,10 +25,12 @@ function createClient(bucket: S3Bucket): S3Client {
     region: requireBucket(bucket).region,
     credentials: getS3Credentials(),
     requestChecksumCalculation: "WHEN_REQUIRED",
-    // Uploads go from the browser straight to S3, so the server only makes small calls.
+    ...(env.S3_ENDPOINT && { endpoint: env.S3_ENDPOINT, forcePathStyle: true }),
     requestHandler: {
       connectionTimeout: 3_000,
-      requestTimeout: 10_000,
+      // Uploads go from the browser straight to S3, so the server only makes small calls, except
+      // to put print files, which are tens of megabytes.
+      requestTimeout: bucket === "survey-print-files" ? 120_000 : 10_000,
       throwOnRequestTimeout: true,
     },
   });
@@ -68,13 +71,33 @@ export async function getPresignedUrl(
   key: string,
   bucket: S3Bucket,
   expiresIn = 3600,
+  { downloadName }: { downloadName?: string } = {},
 ): Promise<string> {
   const s3Client = getS3Client(bucket);
   const command = new GetObjectCommand({
     Bucket: requireBucket(bucket).bucket,
     Key: key,
+    ...(downloadName && {
+      ResponseContentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`,
+    }),
   });
   return getSignedUrl(s3Client, command, { expiresIn });
+}
+
+export async function putObject(
+  key: string,
+  bucket: S3Bucket,
+  body: Uint8Array,
+  contentType: string,
+) {
+  await getS3Client(bucket).send(
+    new PutObjectCommand({
+      Bucket: requireBucket(bucket).bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  );
 }
 
 export async function getPresignedUploadUrl(

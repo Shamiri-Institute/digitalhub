@@ -28,6 +28,12 @@ const BUCKET_ENV: Record<
     regionVar: "S3_STUDENT_ATTENDANCE_REGION",
     regionValue: env.S3_STUDENT_ATTENDANCE_REGION,
   },
+  "survey-print-files": {
+    bucketVar: "S3_SURVEY_PRINT_FILES_BUCKET",
+    bucketValue: env.S3_SURVEY_PRINT_FILES_BUCKET,
+    regionVar: "S3_SURVEY_PRINT_FILES_REGION",
+    regionValue: env.S3_SURVEY_PRINT_FILES_REGION,
+  },
 };
 
 export const getS3Credentials = (): S3Credentials => {

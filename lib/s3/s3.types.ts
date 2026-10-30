@@ -1,11 +1,15 @@
 import { z } from "zod";
 
-export const S3_BUCKETS = ["recordings", "student-attendance"] as const;
+/** The buckets the browser uploads to, through a presigned URL from /api/s3/presigned. */
+export const S3_UPLOAD_BUCKETS = ["recordings", "student-attendance"] as const;
+
+/** Every bucket the app uses; only the server writes to the others. */
+export const S3_BUCKETS = [...S3_UPLOAD_BUCKETS, "survey-print-files"] as const;
 
 export type S3Bucket = (typeof S3_BUCKETS)[number];
 
 export const S3ApiRequestSchema = z.object({
-  bucket: z.enum(S3_BUCKETS),
+  bucket: z.enum(S3_UPLOAD_BUCKETS),
   contentType: z.string().min(1).max(255),
   size: z.number().int().positive(),
   groupId: z.string().min(1),

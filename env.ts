@@ -18,6 +18,16 @@ const schema = z.object({
   S3_STUDENT_ATTENDANCE_BUCKET: z.string().default(""),
   S3_STUDENT_ATTENDANCE_REGION: z.string().default("af-south-1"),
 
+  // Print run PDFs, written by the server and downloaded through presigned links.
+  S3_SURVEY_PRINT_FILES_BUCKET: z.string().default(""),
+  S3_SURVEY_PRINT_FILES_REGION: z.string().default("af-south-1"),
+
+  // An S3-compatible server to use instead of AWS, such as SeaweedFS for local runs and CI.
+  S3_ENDPOINT: z.url().optional(),
+
+  // Vercel sends it with each cron request.
+  CRON_SECRET: z.string().optional(),
+
   FIDELITY_API_URL: z.url().optional(),
   RECORDINGS_API_KEY: z.string().optional(),
 
