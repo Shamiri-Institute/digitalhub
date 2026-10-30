@@ -5,7 +5,11 @@ import type { VisibilityState } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
-import { columns, type SchoolsTableData } from "#/components/common/schools/columns";
+import {
+  columns,
+  type SchoolDialogKind,
+  type SchoolsTableData,
+} from "#/components/common/schools/columns";
 import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
 import SchoolDetailsForm from "#/components/common/schools/school-details-form";
 import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
@@ -43,6 +47,8 @@ export const handleSchoolsCSVTemplateDownload = () => {
   link.click();
 };
 
+type OpenSchoolDialog = { kind: "add" } | { kind: SchoolDialogKind; schoolId: string };
+
 export default function SchoolsDatatable({
   role,
   schools,
@@ -60,22 +66,18 @@ export default function SchoolsDatatable({
   className?: string;
   columnVisibilityState?: VisibilityState;
 }) {
-  const [editDialog, setEditDialog] = useState(false);
-  const [school, setSchool] = useState<SchoolsTableData | null>(null);
-  const [pointSupervisorDialog, setPointSupervisorDialog] = useState(false);
-  const [schoolDropOutDialog, setSchoolDropOutDialog] = useState(false);
-  const [undoDropOutDialog, setUndoDropOutDialog] = useState(false);
+  const [dialog, setDialog] = useState<OpenSchoolDialog | null>(null);
+  const school =
+    dialog && dialog.kind !== "add" ? schools.find((s) => s.id === dialog.schoolId) : undefined;
+
+  const onDialogOpenChange = (open: boolean) => {
+    if (!open) setDialog(null);
+  };
 
   const renderTableActions = () => {
     return (
       role === ImplementerRole.HUB_COORDINATOR && (
-        <Button
-          className="flex gap-1"
-          onClick={() => {
-            setSchool(null);
-            setEditDialog(true);
-          }}
-        >
+        <Button className="flex gap-1" onClick={() => setDialog({ kind: "add" })}>
           <Plus className="h-4 w-4" />
           <span>Add school</span>
         </Button>
@@ -90,16 +92,7 @@ export default function SchoolsDatatable({
         columns={columns({
           role,
           state: {
-            editDialog,
-            setEditDialog,
-            pointSupervisorDialog,
-            setPointSupervisorDialog,
-            schoolDropOutDialog,
-            setSchoolDropOutDialog,
-            undoDropOutDialog,
-            setUndoDropOutDialog,
-            school,
-            setSchool,
+            openDialog: (kind, { id: schoolId }) => setDialog({ kind, schoolId }),
           },
         })}
         emptyStateMessage="No schools found for this hub"
@@ -120,23 +113,36 @@ export default function SchoolsDatatable({
       />
       {role === "HUB_COORDINATOR" && (
         <>
-          <SchoolDetailsForm school={school} open={editDialog} setOpen={setEditDialog} />
-          <AssignPointSupervisor
-            supervisors={supervisors ?? []}
-            open={pointSupervisorDialog}
-            setOpen={setPointSupervisorDialog}
-            school={school}
+          <SchoolDetailsForm
+            school={null}
+            open={dialog?.kind === "add"}
+            setOpen={onDialogOpenChange}
           />
-          <DropoutSchool
-            school={school}
-            open={schoolDropOutDialog}
-            setOpen={setSchoolDropOutDialog}
-          />
-          <UndoDropoutSchool
-            school={school}
-            open={undoDropOutDialog}
-            setOpen={setUndoDropOutDialog}
-          />
+          {school && (
+            <>
+              <SchoolDetailsForm
+                school={school}
+                open={dialog?.kind === "edit"}
+                setOpen={onDialogOpenChange}
+              />
+              <AssignPointSupervisor
+                supervisors={supervisors ?? []}
+                open={dialog?.kind === "pointSupervisor"}
+                setOpen={onDialogOpenChange}
+                school={school}
+              />
+              <DropoutSchool
+                school={school}
+                open={dialog?.kind === "dropout"}
+                setOpen={onDialogOpenChange}
+              />
+              <UndoDropoutSchool
+                school={school}
+                open={dialog?.kind === "undoDropout"}
+                setOpen={onDialogOpenChange}
+              />
+            </>
+          )}
         </>
       )}
     </>
