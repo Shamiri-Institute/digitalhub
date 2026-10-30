@@ -7,6 +7,7 @@ import {
   findItem,
   initBuilder,
   newItemId,
+  pageIndexFromPageNumber,
   pageOf,
   suggestKey,
 } from "#/lib/survey/builder";
@@ -163,6 +164,34 @@ describe("builderReducer", () => {
     const lost = builderReducer(start(), { type: "saveUnconfirmed", form: FORM });
     expect(lost.unconfirmed).toBe(FORM);
     expect(builderReducer(lost, { type: "saved", revision: 5, form: FORM }).unconfirmed).toBeNull();
+  });
+});
+
+describe("pageIndexFromPageNumber", () => {
+  it("reads a page by the number its tab shows", () => {
+    expect(pageIndexFromPageNumber("1", FORM)).toBe(0);
+    expect(pageIndexFromPageNumber("2", FORM)).toBe(1);
+  });
+
+  it("falls back to the first page for a missing, malformed or out of range number", () => {
+    for (const pageNumber of [null, undefined, "", "0", "3", "-1", "1.5", "2abc", " 2"]) {
+      expect(pageIndexFromPageNumber(pageNumber, FORM)).toBe(0);
+    }
+  });
+});
+
+describe("initBuilder", () => {
+  it("opens the page the URL names, with every item closed", () => {
+    const opened = initBuilder({ form: FORM, revision: 3, publishedKeys: [], pageNumber: "2" });
+    expect(opened.selection).toEqual({ page: 1 });
+    expect(start().selection).toEqual({ page: 0 });
+  });
+
+  it("selects nothing in a form with no pages", () => {
+    const empty: SurveyForm = { format: 1, pages: [] };
+    expect(
+      initBuilder({ form: empty, revision: 1, publishedKeys: [], pageNumber: "1" }).selection,
+    ).toBeNull();
   });
 });
 

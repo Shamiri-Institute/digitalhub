@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Plus, RefreshCw } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useReducer, useState } from "react";
 
 import { Alert, AlertDescription } from "#/components/ui/alert";
@@ -36,9 +37,14 @@ export default function SurveyBuilder({
   locked,
   editable,
 }: SurveyBuilderProps) {
+  const searchParams = useSearchParams();
   const [state, dispatch] = useReducer(
     builderReducer,
-    { ...version, publishedKeys: locked.map((q) => q.key) },
+    {
+      ...version,
+      publishedKeys: locked.map((q) => q.key),
+      pageNumber: searchParams.get("page"),
+    },
     initBuilder,
   );
   const [saving, setSaving] = useState(false);
@@ -92,6 +98,13 @@ export default function SurveyBuilder({
   };
 
   const pageIndex = currentPage(state.form, state.selection);
+  // The picked page goes in the URL too, so a reload or a shared link opens it.
+  const showPage = (pickedPageIndex: number) => {
+    dispatch({ type: "select", selection: { page: pickedPageIndex } });
+    const url = new URL(window.location.href);
+    url.searchParams.set("page", String(pickedPageIndex + 1));
+    window.history.replaceState(null, "", url);
+  };
   const page = state.form.pages[pageIndex];
   // A published version shows the layout it froze. A draft is laid out again on every change, as
   // blank copies: the prefill only fills the header, so the fit is the same as when published.
@@ -112,6 +125,7 @@ export default function SurveyBuilder({
         <PageTabs
           form={state.form}
           current={pageIndex}
+          showPage={showPage}
           dispatch={dispatch}
           editable={editable}
           itemsWithIssues={itemsWithIssues}
@@ -188,6 +202,7 @@ export default function SurveyBuilder({
               form={state.form}
               pageIndex={pageIndex}
               openItemId={openItemId}
+              showPage={showPage}
               dispatch={dispatch}
               editable={editable}
               messages={messages}

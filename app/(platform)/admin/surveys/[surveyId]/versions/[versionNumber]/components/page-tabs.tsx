@@ -8,6 +8,7 @@ import { cn } from "#/lib/utils";
 interface PageTabsProps {
   form: SurveyForm;
   current: number;
+  showPage: (pageIndex: number) => void;
   dispatch: Dispatch<BuilderAction>;
   editable: boolean;
   itemsWithIssues: Set<string>;
@@ -19,6 +20,7 @@ interface PageTabsProps {
 export default function PageTabs({
   form,
   current,
+  showPage,
   dispatch,
   editable,
   itemsWithIssues,
@@ -35,7 +37,7 @@ export default function PageTabs({
             key={index}
             type="button"
             aria-current={selected ? "page" : undefined}
-            onClick={() => dispatch({ type: "select", selection: { page: index } })}
+            onClick={() => showPage(index)}
             className={cn(
               "flex max-w-56 shrink-0 items-baseline gap-2 border-b-2 border-transparent px-4 pb-3 pt-2 text-left text-sm transition-colors hover:text-shamiri-black focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-shamiri-new-blue/60",
               selected ? "border-shamiri-new-blue text-shamiri-black" : "text-shamiri-text-grey",
