@@ -377,6 +377,21 @@ export function qrPlaceholderRun(qr: Rect): TextRun {
   };
 }
 
+/**
+ * A printed page's code, centred under its QR code for matching a page by hand. Placed from the
+ * QR box at print time, so layouts published before page codes printed need no change.
+ */
+export function pageCodeRun(qr: Rect, code: string): TextRun {
+  const size = 6;
+  const fitted = fitText(code, { size, weight: 400, maxWidth: qr.w }, 4);
+  return {
+    x: roundPt(qr.x + (qr.w - fitted.width) / 2),
+    baseline: roundPt(qr.y + qr.h + 3 + CAP_HEIGHT * size),
+    weight: 400,
+    ...fitted,
+  };
+}
+
 /** A single choice question whose options are all short numbers prints as a row of boxes. */
 export function isRatingScale(item: Extract<SurveyItem, { kind: "single_choice" }>) {
   return (

@@ -10,50 +10,90 @@ import {
   type FontWeight,
   headerValueRun,
   type Layout,
-  qrPlaceholderRun,
-  type Rect,
+  pageCodeRun,
   type TextRun,
 } from "#/lib/survey/layout";
 import type { PrintFonts } from "#/lib/survey/print-fonts";
+import { qrOperators } from "#/lib/survey/print-qr";
 import { CAP_HEIGHT, measure } from "#/lib/survey/text-metrics";
 
 const BLACK = rgb(0, 0, 0);
-const GREY = rgb(0.59, 0.59, 0.59);
 const WATERMARK_RED = rgb(0.86, 0.15, 0.15);
+
+/** One printed copy: its header values, and for each page of the layout what identifies it. */
+export type PrintedCopy<L extends Layout> = {
+  values: CopyValues<L["prefill"]>;
+  /** In page order. The QR code holds `id`; `code` prints under it. */
+  pages: { id: string; code: string }[];
+};
 
 /**
  * One A4 page per layout page for each copy, copies in order. A `watermark` is printed across
  * every page, over the form, so a preview can't pass for a copy to hand out and scan.
+ *
+ * Everything every copy shares (the form, the markers, the header labels, the watermark) is
+ * drawn once per layout page and placed on each copy's page as a template. Drawn again on every
+ * page, it took about 140 KB of memory per page, too much for a 1,000-copy file.
  */
 export async function renderCopiesPdf<L extends Layout>(
   layout: L,
-  copies: CopyValues<L["prefill"]>[],
+  copies: PrintedCopy<L>[],
   fonts: PrintFonts,
   { watermark }: { watermark?: string } = {},
 ): Promise<Uint8Array> {
+  const { width, height } = layout.paper;
   const doc = await PDFDocument.create();
-  doc.registerFontkit(fontkit);
-  // Kerning and ligatures off, so each run is exactly as wide as the layout measured it.
-  // Subsetting is off because pdf-lib's subsetter drops glyphs from some fonts.
-  const embed = (weight: FontWeight) =>
-    doc.embedFont(fonts[weight], {
-      subset: false,
-      features: { kern: false, liga: false, clig: false, calt: false },
-    });
-  const [regular, semibold, bold] = await Promise.all([embed(400), embed(600), embed(700)]);
-  const font: Record<FontWeight, PDFFont> = { 400: regular, 600: semibold, 700: bold };
+  const font = await embedPrintFonts(doc, fonts);
+  const templates = await doc.embedPdf(
+    await renderTemplates(layout, fonts, watermark),
+    layout.pages.map((_, index) => index),
+  );
 
+  const text = (page: PDFPage, run: TextRun) =>
+    page.drawText(run.text, {
+      x: run.x,
+      y: height - run.baseline,
+      size: run.size,
+      font: font[run.weight],
+      color: BLACK,
+    });
+
+  for (const copy of copies) {
+    layout.pages.forEach((laid, index) => {
+      const printedPage = copy.pages[index];
+      const template = templates[index];
+      if (!printedPage || !template) {
+        throw new Error(`Copy ${copy.values.serial} has no page ${index + 1}`);
+      }
+      const page = doc.addPage([width, height]);
+      page.drawPage(template);
+      for (const slot of laid.header) {
+        text(page, headerValueRun(slot, copy.values));
+      }
+      text(page, pageCodeRun(laid.qr, printedPage.code));
+      page.node.addContentStream(
+        doc.context.register(doc.context.flateStream(qrOperators(printedPage.id, laid.qr, height))),
+      );
+    });
+  }
+  return doc.save();
+}
+
+/** Each layout page's shared ink as one page of its own PDF, for `renderCopiesPdf` to place. */
+async function renderTemplates(layout: Layout, fonts: PrintFonts, watermark: string | undefined) {
+  const doc = await PDFDocument.create();
+  const font = await embedPrintFonts(doc, fonts);
   const { width, height } = layout.paper;
   // PDF pages measure up from the bottom; the layout measures down from the top.
   const flip = (y: number) => height - y;
 
-  const text = (page: PDFPage, run: TextRun, color = BLACK) =>
+  const text = (page: PDFPage, run: TextRun) =>
     page.drawText(run.text, {
       x: run.x,
       y: flip(run.baseline),
       size: run.size,
       font: font[run.weight],
-      color,
+      color: BLACK,
     });
 
   const draw = (page: PDFPage, drawable: Drawable) => {
@@ -94,20 +134,6 @@ export async function renderCopiesPdf<L extends Layout>(
     }
   };
 
-  // A placeholder until print runs give each page a code to encode.
-  const qrPlaceholder = (page: PDFPage, qr: Rect) => {
-    page.drawRectangle({
-      x: qr.x,
-      y: flip(qr.y + qr.h),
-      width: qr.w,
-      height: qr.h,
-      borderWidth: 1,
-      borderColor: GREY,
-      borderDashArray: [3, 2],
-    });
-    text(page, qrPlaceholderRun(qr), GREY);
-  };
-
   const watermarkOver = (page: PDFPage, mark: string) => {
     // Along the page's diagonal, centred, at 60% of its length.
     const angle = Math.atan2(height, width);
@@ -125,30 +151,42 @@ export async function renderCopiesPdf<L extends Layout>(
     });
   };
 
-  for (const copy of copies) {
-    for (const laid of layout.pages) {
-      const page = doc.addPage([width, height]);
-      for (const marker of Object.values(laid.markers)) {
-        page.drawRectangle({
-          x: marker.x,
-          y: flip(marker.y + marker.h),
-          width: marker.w,
-          height: marker.h,
-          color: BLACK,
-        });
-      }
-      qrPlaceholder(page, laid.qr);
-      for (const slot of laid.header) {
-        text(page, slot.label);
-        text(page, headerValueRun(slot, copy));
-      }
-      for (const drawable of laid.content) {
-        draw(page, drawable);
-      }
-      if (watermark) {
-        watermarkOver(page, watermark);
-      }
+  for (const laid of layout.pages) {
+    const page = doc.addPage([width, height]);
+    for (const marker of Object.values(laid.markers)) {
+      page.drawRectangle({
+        x: marker.x,
+        y: flip(marker.y + marker.h),
+        width: marker.w,
+        height: marker.h,
+        color: BLACK,
+      });
+    }
+    for (const slot of laid.header) {
+      text(page, slot.label);
+    }
+    for (const drawable of laid.content) {
+      draw(page, drawable);
+    }
+    if (watermark) {
+      watermarkOver(page, watermark);
     }
   }
   return doc.save();
+}
+
+async function embedPrintFonts(
+  doc: PDFDocument,
+  fonts: PrintFonts,
+): Promise<Record<FontWeight, PDFFont>> {
+  doc.registerFontkit(fontkit);
+  // Kerning and ligatures off, so each run is exactly as wide as the layout measured it.
+  // Subsetting is off because pdf-lib's subsetter drops glyphs from some fonts.
+  const embed = (weight: FontWeight) =>
+    doc.embedFont(fonts[weight], {
+      subset: false,
+      features: { kern: false, liga: false, clig: false, calt: false },
+    });
+  const [regular, semibold, bold] = await Promise.all([embed(400), embed(600), embed(700)]);
+  return { 400: regular, 600: semibold, 700: bold };
 }
