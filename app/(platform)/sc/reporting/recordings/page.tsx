@@ -1,8 +1,13 @@
 import { redirect } from "next/navigation";
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
+import { env } from "#/env";
+import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import { loadSupervisorRecordings } from "./actions";
 import RecordingsDatatable from "./components/recordings-datatable";
+
+// The upload action transcribes the recording in after(), which runs within this page's limit.
+export const maxDuration = 800;
 
 async function loadSupervisorFellows(supervisorId: string) {
   return db.query.fellow.findMany({
@@ -30,9 +35,18 @@ export default async function RecordingsPage() {
     loadSupervisorFellows(supervisor.profile.id),
   ]);
 
+  const transcriptionEnabled = isSupervisorInFidelityAbTest(supervisor.profile.id);
+  // A/B uploads skip the Fidelity service while it is not set up, so their Status stays PENDING.
+  const fidelityStatusShown = !transcriptionEnabled || !!env.FIDELITY_API_URL;
+
   return (
     <div className="px-6 py-5">
-      <RecordingsDatatable data={recordings} fellows={fellows} />
+      <RecordingsDatatable
+        data={recordings}
+        fellows={fellows}
+        transcriptionEnabled={transcriptionEnabled}
+        fidelityStatusShown={fidelityStatusShown}
+      />
     </div>
   );
 }

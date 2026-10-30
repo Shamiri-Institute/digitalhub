@@ -160,7 +160,6 @@ NEXT_PUBLIC_ENABLE_PERF_PROFILER="0"  # Set to 1 to enable the performance profi
 # RECORDINGS / FIDELITY SERVICE
 # ====================================
 FIDELITY_API_URL="https://fidelity-service.example.com"  # External fidelity-analysis API
-FIDELITY_API_KEY="your-fidelity-api-key"
 RECORDINGS_API_KEY="your-recordings-api-key"  # Shared secret for the recordings worker
 
 # ====================================

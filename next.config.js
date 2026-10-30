@@ -12,8 +12,25 @@ const sentryIngestOrigin = (() => {
   }
 })();
 
+// A local S3 server (AWS_ENDPOINT_URL_S3, e.g. tinys3) receives the browser's presigned uploads,
+// so its origin is allowed in development. Production never gets it.
+const devS3Origin = (() => {
+  if (process.env.NODE_ENV === "production" || !process.env.AWS_ENDPOINT_URL_S3) return "";
+  try {
+    return new URL(process.env.AWS_ENDPOINT_URL_S3).origin;
+  } catch {
+    return "";
+  }
+})();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ffmpeg-static finds its binary next to its own index.js, so it is required at runtime rather
+  // than bundled, and the binary is traced into the recordings page, whose upload action runs it.
+  serverExternalPackages: ["ffmpeg-static"],
+  outputFileTracingIncludes: {
+    "/sc/reporting/recordings": ["./node_modules/ffmpeg-static/ffmpeg"],
+  },
   images: {
     remotePatterns: [
       {
@@ -39,7 +56,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'; " +
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.s3.amazonaws.com; " +
               "font-src 'self'; " +
-              `connect-src 'self' ${sentryIngestOrigin} https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; ` +
+              `connect-src 'self' ${sentryIngestOrigin} ${devS3Origin} https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; ` +
               "frame-src https://dash.shamiri.institute; " +
               "frame-ancestors 'none'; " +
               "base-uri 'self'; " +

@@ -1,9 +1,10 @@
 "use client";
 
-import type { RecordingProcessingStatus } from "#/db/enums";
+import type { RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import RecordingStatusBadge from "./recording-status-badge";
 import RecordingsDataTableMenu from "./recordings-datatable-menu";
+import TranscriptionStatusBadge from "./transcription-status-badge";
 import type { JsonValue } from "#/db/schema";
 
 export interface RecordingTableData {
@@ -29,12 +30,16 @@ export interface RecordingTableData {
   sessionType: string;
   sessionDate: Date;
   sessionName: string;
+  transcriptionStatus: TranscriptionStatus | null;
+  transcriptionError: string | null;
 }
 
 export type RecordingDialogKind = "edit" | "viewFeedback";
 
 export interface ColumnState {
   openDialog: (kind: RecordingDialogKind, recording: RecordingTableData) => void;
+  openTranscript: (recording: RecordingTableData) => void;
+  transcriptionEnabled: boolean;
 }
 
 function formatDate(date: Date): string {
@@ -89,6 +94,17 @@ export const recordingColumns = (state: ColumnState): ColumnDef<RecordingTableDa
     header: "Status",
     id: "status",
     cell: ({ row }) => <RecordingStatusBadge status={row.original.status} />,
+  },
+  {
+    accessorKey: "transcriptionStatus",
+    header: "Transcript",
+    id: "transcript",
+    cell: ({ row }) => (
+      <TranscriptionStatusBadge
+        status={row.original.transcriptionStatus}
+        errorMessage={row.original.transcriptionError}
+      />
+    ),
   },
   {
     accessorKey: "overallScore",

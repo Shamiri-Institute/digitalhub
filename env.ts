@@ -21,6 +21,13 @@ const schema = z.object({
   FIDELITY_API_URL: z.url().optional(),
   RECORDINGS_API_KEY: z.string().optional(),
 
+  // Transcribes uploaded session recordings. Unset, a transcription fails with that reason.
+  GEMINI_API_KEY: z.string().optional(),
+  // Defaults to DEFAULT_MODEL in lib/transcription/gemini.ts.
+  GEMINI_MODEL: z.string().optional(),
+  // Vercel Cron sends it as a bearer token; unset, the cron routes refuse every request.
+  CRON_SECRET: z.string().optional(),
+
   METABASE_SECRET_KEY: z.string().optional(),
   METABASE_MONITORING_DASHBOARD_ID: z.coerce.number().int().positive().optional(),
 });

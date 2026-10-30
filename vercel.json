@@ -1,3 +1,4 @@
 {
-  "regions": ["cpt1"]
+  "regions": ["cpt1"],
+  "crons": [{ "path": "/api/cron/transcriptions/sweep", "schedule": "*/10 * * * *" }]
 }

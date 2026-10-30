@@ -32,6 +32,11 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { useS3Upload } from "#/lib/hooks/use-s3-upload";
+import {
+  MAX_CONCURRENT_UPLOADS,
+  releaseUploadSlot,
+  tryAcquireUploadSlot,
+} from "#/lib/upload-slots";
 import { cn, formatBytes, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import {
@@ -261,6 +266,15 @@ export default function UploadRecordingDialog({
       return;
     }
 
+    if (!tryAcquireUploadSlot()) {
+      toast({
+        title: "Too many uploads",
+        description: `${MAX_CONCURRENT_UPLOADS} uploads are already running in this tab. Wait for one to finish.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { key, token } = await uploadToS3(file, {
         bucket: "recordings",
@@ -298,6 +312,8 @@ export default function UploadRecordingDialog({
         description: error instanceof Error ? error.message : "Failed to upload recording",
         variant: "destructive",
       });
+    } finally {
+      releaseUploadSlot();
     }
   };
 

@@ -1,12 +1,14 @@
 "use server";
 
 import { and, eq, isNull, notInArray } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { refresh, revalidatePath } from "next/cache";
 import { after } from "next/server";
 
 import { currentSupervisor } from "#/app/auth";
 import { db, isUniqueViolation } from "#/db/client";
-import { fellow, sessionRecording } from "#/db/schema";
+import { TranscriptionStatus } from "#/db/enums";
+import { fellow, sessionRecording, sessionRecordingTranscript } from "#/db/schema";
+import { env } from "#/env";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import { createJob } from "#/lib/fidelity-ratings-api";
 import {
@@ -14,10 +16,12 @@ import {
   verifyUploadClaim,
   verifyUploadedObject,
 } from "#/lib/s3/utils/verify-upload";
+import { transcribeRecording } from "#/lib/transcription/transcribe-recording";
 
 export type FellowGroup = Awaited<ReturnType<typeof loadFellowGroups>>[number];
 export type GroupSession = Awaited<ReturnType<typeof loadGroupSessions>>[number];
 export type SupervisorRecording = Awaited<ReturnType<typeof loadSupervisorRecordings>>[number];
+export type RecordingTranscript = NonNullable<Awaited<ReturnType<typeof loadRecordingTranscript>>>;
 
 export async function loadFellowGroups(fellowId: string) {
   const supervisor = await currentSupervisor();
@@ -313,7 +317,12 @@ export async function createSessionRecording(input: {
     };
   }
 
-  after(() => submitToFidelityAPI(recording.id, recording.s3Key));
+  after(() => transcribeRecording(recording.id));
+  // The Fidelity service is not running for now; without its URL a submission only marks the
+  // recording FAILED.
+  if (env.FIDELITY_API_URL) {
+    after(() => submitToFidelityAPI(recording.id, recording.s3Key));
+  }
 
   revalidatePath("/sc/reporting/recordings");
 
@@ -342,6 +351,7 @@ export async function loadSupervisorRecordings() {
         columns: { sessionType: true, sessionDate: true },
         with: { session: { columns: { sessionName: true } } },
       },
+      transcription: { columns: { status: true, errorMessage: true } },
     },
     orderBy: (r, { desc }) => desc(r.createdAt),
   });
@@ -369,6 +379,8 @@ export async function loadSupervisorRecordings() {
     sessionType: r.session.sessionType ?? "Unknown",
     sessionDate: r.session.sessionDate,
     sessionName: r.session.session?.sessionName ?? r.session.sessionType ?? "Unknown Session",
+    transcriptionStatus: r.transcription?.status ?? null,
+    transcriptionError: r.transcription?.errorMessage ?? null,
   }));
 
   if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
@@ -600,4 +612,82 @@ export async function archiveRecording(recordingId: string) {
       message: "Failed to archive recording",
     };
   }
+}
+
+export async function loadRecordingTranscript(recordingId: string) {
+  const supervisor = await currentSupervisor();
+
+  if (!supervisor?.profile?.id) {
+    throw new Error("Unauthorized user");
+  }
+
+  const supervisorId = supervisor.profile.id;
+  if (!isSupervisorInFidelityAbTest(supervisorId)) {
+    return null;
+  }
+
+  const recording = await db.query.sessionRecording.findFirst({
+    where: (r, { and, eq }) => and(eq(r.id, recordingId), eq(r.supervisorId, supervisorId)),
+    columns: { id: true },
+    with: {
+      transcription: {
+        columns: { status: true, segments: true, completedAt: true },
+      },
+    },
+  });
+  const transcription = recording?.transcription;
+  if (transcription?.status !== TranscriptionStatus.COMPLETED) {
+    return null;
+  }
+  return { segments: transcription.segments ?? [], completedAt: transcription.completedAt };
+}
+
+export async function queueTranscription(recordingId: string) {
+  const supervisor = await currentSupervisor();
+
+  if (!supervisor?.profile?.id) {
+    return { success: false, message: "Unauthorized user" };
+  }
+
+  const supervisorId = supervisor.profile.id;
+  if (!isSupervisorInFidelityAbTest(supervisorId)) {
+    return { success: false, message: "Transcription is not enabled for your account." };
+  }
+
+  const recording = await db.query.sessionRecording.findFirst({
+    where: (r, { and, eq, isNull }) =>
+      and(eq(r.id, recordingId), eq(r.supervisorId, supervisorId), isNull(r.archivedAt)),
+    columns: { id: true },
+  });
+  if (!recording) {
+    return { success: false, message: "Recording not found" };
+  }
+
+  // A recording uploaded before transcription existed has no row; a failed one goes back to QUEUED.
+  // Either way it shows as queued until transcribeRecording claims it after the response.
+  const created = await db
+    .insert(sessionRecordingTranscript)
+    .values({ recordingId: recording.id })
+    .onConflictDoNothing({ target: sessionRecordingTranscript.recordingId })
+    .returning({ id: sessionRecordingTranscript.id });
+  if (created.length === 0) {
+    const requeued = await db
+      .update(sessionRecordingTranscript)
+      .set({ status: TranscriptionStatus.QUEUED, errorMessage: null })
+      .where(
+        and(
+          eq(sessionRecordingTranscript.recordingId, recording.id),
+          eq(sessionRecordingTranscript.status, TranscriptionStatus.FAILED),
+        ),
+      )
+      .returning({ id: sessionRecordingTranscript.id });
+    if (requeued.length === 0) {
+      return { success: false, message: "This recording is already transcribed or in progress" };
+    }
+  }
+
+  after(() => transcribeRecording(recording.id));
+  refresh();
+
+  return { success: true, message: "Transcription queued" };
 }

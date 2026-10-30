@@ -45,6 +45,7 @@ import {
   sessionComment,
   sessionName,
   sessionRecording,
+  sessionRecordingTranscript,
   student,
   studentAttendance,
   studentGroupTransferTrail,
@@ -785,6 +786,7 @@ export const sessionNameRelations = relations(sessionName, ({ one, many }) => ({
 }));
 
 export const sessionRecordingRelations = relations(sessionRecording, ({ one }) => ({
+  transcription: one(sessionRecordingTranscript),
   fellow: one(fellow, {
     fields: [sessionRecording.fellowId],
     references: [fellow.id],
@@ -816,6 +818,16 @@ export const sessionRecordingRelations = relations(sessionRecording, ({ one }) =
     relationName: "SessionRecording_supervisor",
   }),
 }));
+
+export const sessionRecordingTranscriptRelations = relations(
+  sessionRecordingTranscript,
+  ({ one }) => ({
+    recording: one(sessionRecording, {
+      fields: [sessionRecordingTranscript.recordingId],
+      references: [sessionRecording.id],
+    }),
+  }),
+);
 
 export const studentRelations = relations(student, ({ one, many }) => ({
   school: one(school, {

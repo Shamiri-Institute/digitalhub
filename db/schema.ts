@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { objectId } from "#/lib/crypto";
 import type { SurveyForm } from "#/lib/survey/form";
 import type { Layout } from "#/lib/survey/layout";
+import type { TranscriptSegment } from "#/lib/transcription/segment";
 import {
   bigserial,
   boolean,
@@ -48,6 +49,7 @@ import {
   TicketCategory,
   TicketPriorityLevel,
   TicketStatus,
+  TranscriptionStatus,
   TriageActionTaken,
   caseStatusOptions,
   referralStatusOptions,
@@ -78,6 +80,10 @@ export const questionnaireTypeEnum = pgEnum("questionnaire_types", enumValues(Qu
 export const recordingProcessingStatusEnum = pgEnum(
   "recording_processing_status",
   enumValues(RecordingProcessingStatus),
+);
+export const transcriptionStatusEnum = pgEnum(
+  "transcription_status",
+  enumValues(TranscriptionStatus),
 );
 export const referralStatusOptionsEnum = pgEnum(
   "referralStatusOptions",
@@ -3277,6 +3283,48 @@ export const sessionRecording = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+  ],
+);
+
+// One per recording: transcribeRecording claims this row, so a second run on the same recording
+// finds it and skips.
+export const sessionRecordingTranscript = pgTable(
+  "session_recording_transcripts",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("transcript")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    recordingId: varchar("recording_id", { length: 255 }).notNull(),
+    status: transcriptionStatusEnum().default(TranscriptionStatus.QUEUED).notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true, mode: "date" }),
+    completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
+    errorMessage: text("error_message"),
+    attempts: integer().default(0).notNull(),
+    model: varchar({ length: 100 }),
+    variant: varchar({ length: 50 }),
+    chunkSeconds: integer("chunk_seconds"),
+    segments: jsonb().$type<TranscriptSegment[]>(),
+    warnings: jsonb().$type<string[]>(),
+  },
+  (table) => [
+    uniqueIndex("session_recording_transcripts_recording_id_key").on(table.recordingId),
+    // The sweep looks for PROCESSING rows started before a cutoff.
+    index("session_recording_transcripts_status_started_at_idx").on(table.status, table.startedAt),
+    foreignKey({
+      columns: [table.recordingId],
+      foreignColumns: [sessionRecording.id],
+      name: "session_recording_transcripts_recording_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
   ],
 );
 

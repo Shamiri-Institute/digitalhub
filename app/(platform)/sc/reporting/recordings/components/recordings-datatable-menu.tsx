@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { retryRecordingProcessing } from "../actions";
+import { queueTranscription, retryRecordingProcessing } from "../actions";
 import type { ColumnState, RecordingTableData } from "./columns";
 
 interface RecordingsDataTableMenuProps {
@@ -22,6 +22,7 @@ export default function RecordingsDataTableMenu({
   state,
 }: RecordingsDataTableMenuProps) {
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isQueueingTranscription, setIsQueueingTranscription] = useState(false);
 
   const handleRetry = async () => {
     setIsRetrying(true);
@@ -50,7 +51,25 @@ export default function RecordingsDataTableMenu({
     }
   };
 
+  const handleQueueTranscription = async () => {
+    setIsQueueingTranscription(true);
+    try {
+      const result = await queueTranscription(recording.id);
+      toast({
+        title: result.success ? "Success" : "Error",
+        description: result.message,
+        variant: result.success ? "default" : "destructive",
+      });
+    } finally {
+      setIsQueueingTranscription(false);
+    }
+  };
+
   const canRetry = recording.status === "FAILED";
+  const transcriptionStatus = recording.transcriptionStatus;
+  const canQueueTranscription =
+    state.transcriptionEnabled &&
+    (transcriptionStatus === null || transcriptionStatus === "FAILED");
 
   return (
     <DropdownMenu>
@@ -72,6 +91,19 @@ export default function RecordingsDataTableMenu({
             View Feedback
           </DropdownMenuItem>
         ) : null}
+        {transcriptionStatus === "COMPLETED" && (
+          <DropdownMenuItem onClick={() => state.openTranscript(recording)}>
+            View transcript
+          </DropdownMenuItem>
+        )}
+        {canQueueTranscription && (
+          <DropdownMenuItem
+            onClick={toastOnError(handleQueueTranscription)}
+            disabled={isQueueingTranscription}
+          >
+            {transcriptionStatus === "FAILED" ? "Retry transcription" : "Transcribe"}
+          </DropdownMenuItem>
+        )}
         {canRetry && (
           <DropdownMenuItem onClick={toastOnError(handleRetry)} disabled={isRetrying}>
             {isRetrying ? "Retrying..." : "Retry Processing"}

@@ -302,6 +302,13 @@
       "when": 1793216131132,
       "tag": "0042_survey_print_run_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1793349870890,
+      "tag": "0043_session_recording_transcripts",
+      "breakpoints": true
     }
   ]
 }
