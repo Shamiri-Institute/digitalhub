@@ -1,6 +1,6 @@
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole, type SessionStatus } from "#/db/enums";
-import type { ColumnDef, Row } from "@tanstack/react-table";
+import type { ColumnDef, Row, RowSelectionState } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { CheckCheck, InfoIcon } from "lucide-react";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
@@ -234,7 +234,10 @@ export function FellowAttendanceDataTable({
   }) => ColumnDef<FellowAttendancesTableData>[];
   role: ImplementerRole;
 }) {
-  const [selectedRows, setSelectedRows] = useState<Row<FellowAttendancesTableData>[]>([]);
+  const [selectedRowIds, setSelectedRowIds] = useState<RowSelectionState>({});
+  const selectedFellowAttendances = data.filter(
+    (fellowAttendance) => selectedRowIds[fellowAttendanceRowId(fellowAttendance)],
+  );
   const [attendance, setAttendance] = useState<FellowAttendancesTableData | undefined>();
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [attendanceDialog, setAttendanceDialog] = useState<boolean>(false);
@@ -245,7 +248,7 @@ export function FellowAttendanceDataTable({
         <Button
           variant="outline"
           className="flex gap-1"
-          disabled={selectedRows.length === 0}
+          disabled={selectedFellowAttendances.length === 0}
           onClick={() => {
             setBulkMode(true);
             setAttendanceDialog(true);
@@ -278,7 +281,9 @@ export function FellowAttendanceDataTable({
         emptyStateMessage={emptyStateMessage}
         rowSelectionDescription="fellows"
         enableRowSelection={enableRowSelection}
-        onRowSelectionChange={setSelectedRows}
+        getRowId={fellowAttendanceRowId}
+        rowSelection={selectedRowIds}
+        onRowSelectionChange={setSelectedRowIds}
         renderTableActions={
           !overrideColumns &&
           (role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR) &&
@@ -315,13 +320,14 @@ export function FellowAttendanceDataTable({
         bulkMode={bulkMode}
         setBulkMode={setBulkMode}
         markBulkAttendanceAction={markManyFellowAttendance}
-        selectedIds={selectedRows.map((x): string => x.original.fellowId)}
+        selectedIds={selectedFellowAttendances.map((fellowAttendance) => fellowAttendance.fellowId)}
+        onSuccess={() => setSelectedRowIds({})}
       >
         <div className="flex flex-col gap-y-3">
           <DialogAlertWidget>
             <div className="flex items-center gap-2">
               {bulkMode ? (
-                <span>{selectedRows.length} fellows</span>
+                <span>{selectedFellowAttendances.length} fellows</span>
               ) : (
                 <span>{attendance?.fellowName}</span>
               )}
@@ -368,6 +374,11 @@ export function FellowAttendanceDataTable({
       )}
     </div>
   );
+}
+
+// The schedule's table view lists a fellow once for each of the day's sessions.
+function fellowAttendanceRowId(fellowAttendance: FellowAttendancesTableData) {
+  return `${fellowAttendance.sessionId ?? ""}:${fellowAttendance.fellowId}`;
 }
 
 export type FellowAttendancesTableData = {

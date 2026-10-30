@@ -4,18 +4,20 @@ import {
   type ColumnDef,
   type FilterFn,
   flexRender,
+  functionalUpdate,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   type OnChangeFn,
+  type PaginationState,
   type Row,
   type RowSelectionState,
   type SortingState,
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { Fragment, type ReactNode, useEffect, useState } from "react";
+import { Fragment, type ReactNode, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -49,7 +51,19 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed;
 };
 
-interface DataTableProps<TData, TValue> {
+type RowSelectionProps<TData> =
+  | {
+      getRowId: (row: TData) => string;
+      rowSelection: RowSelectionState;
+      onRowSelectionChange: (rowSelection: RowSelectionState) => void;
+    }
+  | {
+      getRowId?: (row: TData) => string;
+      rowSelection?: undefined;
+      onRowSelectionChange?: undefined;
+    };
+
+type DataTableProps<TData, TValue> = RowSelectionProps<TData> & {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   editColumns?: boolean;
@@ -57,14 +71,13 @@ interface DataTableProps<TData, TValue> {
   disablePagination?: boolean;
   isSubComponent?: boolean;
   className?: string;
-  onRowSelectionChange?: (rows: Row<TData>[]) => void;
   rowSelectionDescription?: string;
   columnVisibilityState?: VisibilityState;
   enableRowSelection?: boolean | ((row: Row<TData>) => boolean) | undefined;
   renderTableActions?: ReactNode;
   getRowCanExpand?: (row: Row<TData>) => boolean;
   renderSubComponent?: (props: { row: Row<TData> }) => ReactNode;
-}
+};
 
 export default function DataTable<TData, TValue>({
   columns,
@@ -75,6 +88,8 @@ export default function DataTable<TData, TValue>({
   isSubComponent = false,
   className,
   emptyStateMessage,
+  getRowId,
+  rowSelection: controlledRowSelection,
   onRowSelectionChange,
   columnVisibilityState = {},
   enableRowSelection,
@@ -85,20 +100,27 @@ export default function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(columnVisibilityState);
-  const [rowSelection, setRowSelection] = useState({});
-
-  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (state) => {
-    setRowSelection(state);
-  };
-
-  const [pagination, setPagination] = useState({
+  const [uncontrolledRowSelection, setUncontrolledRowSelection] = useState<RowSelectionState>({});
+  const rowSelection = controlledRowSelection ?? uncontrolledRowSelection;
+  const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
+  const [typedPageNumber, setTypedPageNumber] = useState<string | null>(null);
+
+  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (updater) => {
+    const nextRowSelection = functionalUpdate(updater, rowSelection);
+    if (onRowSelectionChange) {
+      onRowSelectionChange(nextRowSelection);
+    } else {
+      setUncontrolledRowSelection(nextRowSelection);
+    }
+  };
 
   const table = useReactTable({
     data,
     columns,
+    getRowId,
     getRowCanExpand,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -109,23 +131,17 @@ export default function DataTable<TData, TValue>({
     onPaginationChange: setPagination,
     enableRowSelection,
     state: { sorting, columnVisibility, rowSelection, pagination },
-    autoResetPageIndex: true,
+    autoResetPageIndex: false,
     getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: fuzzyFilter,
   });
 
-  // effect: notifies the parent when the table's row selection changes
-  useEffect(() => {
-    const rows = table.getSelectedRowModel().rows;
-    if (onRowSelectionChange) {
-      onRowSelectionChange(rows);
-    }
-  }, [onRowSelectionChange, rowSelection, table]);
-
-  // effect: clears the row selection when the data prop changes
-  useEffect(() => {
-    table.resetRowSelection();
-  }, [data, table]);
+  // A refresh can leave fewer pages than the current one. Setting state during render makes React
+  // render again with the last page before it paints an empty one.
+  const lastPageIndex = Math.max(table.getPageCount() - 1, 0);
+  if (pagination.pageIndex > lastPageIndex) {
+    setPagination({ ...pagination, pageIndex: lastPageIndex });
+  }
 
   return (
     <div className="no-scrollbar overflow-hidden">
@@ -160,7 +176,10 @@ export default function DataTable<TData, TValue>({
                 strokeWidth={1.75}
               />
               <Input
-                onChange={(e) => table.setGlobalFilter(String(e.target.value))}
+                onChange={(e) => {
+                  table.setGlobalFilter(String(e.target.value));
+                  table.firstPage();
+                }}
                 placeholder="Search..."
                 className="w-64 bg-white pl-10"
               />
@@ -357,11 +376,19 @@ export default function DataTable<TData, TValue>({
                   type="number"
                   min="1"
                   max={table.getPageCount()}
-                  defaultValue={table.getState().pagination.pageIndex + 1}
+                  value={typedPageNumber ?? table.getState().pagination.pageIndex + 1}
                   onChange={(e) => {
-                    const page = e.target.value ? Number(e.target.value) - 1 : 0;
-                    table.setPageIndex(page);
+                    setTypedPageNumber(e.target.value);
+                    const pageNumber = Number(e.target.value);
+                    if (
+                      Number.isInteger(pageNumber) &&
+                      pageNumber >= 1 &&
+                      pageNumber <= table.getPageCount()
+                    ) {
+                      table.setPageIndex(pageNumber - 1);
+                    }
                   }}
+                  onBlur={() => setTypedPageNumber(null)}
                   className="w-16 rounded border p-1"
                 />
               </span>

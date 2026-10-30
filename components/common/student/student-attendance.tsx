@@ -1,6 +1,6 @@
 import { ImplementerRole } from "#/db/enums";
 import type { fellow } from "#/db/schema";
-import type { ColumnDef, Row } from "@tanstack/react-table";
+import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
@@ -68,8 +68,7 @@ export default function StudentAttendance({
   const [attendance, setAttendance] = useState<StudentAttendanceData>();
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState(false);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
-  const [selectedRows, setSelectedRows] = useState<Row<StudentAttendanceData>[]>([]);
-  const [resetSelectionTrigger, setResetSelectionTrigger] = useState<number>(0);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<RowSelectionState>({});
   const [triage, setTriage] = useState<TriageDialog | null>(null);
   const [loadedTriageEvents, setLoadedTriageEvents] = useState<{
     sessionId: string;
@@ -186,6 +185,16 @@ export default function StudentAttendance({
     return { fellow, group };
   });
 
+  const groupStudents =
+    (attendanceFetchId === session?.id &&
+      studentsByGroup.get(
+        selectedGroup ??
+          session?.school?.interventionGroups.find((group) => group.leaderId === fellowId)?.id ??
+          "",
+      )) ||
+    NO_STUDENTS;
+  const selectedStudents = groupStudents.filter((student) => selectedStudentIds[student.id]);
+
   const triageEventsByStudent =
     loadedTriageEvents && loadedTriageEvents.sessionId === session?.id
       ? loadedTriageEvents.byStudent
@@ -235,7 +244,7 @@ export default function StudentAttendance({
         <Button
           variant="outline"
           className="flex gap-1"
-          disabled={selectedRows.length === 0}
+          disabled={selectedStudents.length === 0}
           onClick={() => {
             setBulkMode(true);
             setMarkAttendanceDialog(true);
@@ -260,7 +269,7 @@ export default function StudentAttendance({
           setTriage(null);
           setSelectedGroup(undefined);
           form.reset();
-          setSelectedRows([]);
+          setSelectedStudentIds({});
           setBulkMode(false);
         }
       }}
@@ -293,6 +302,7 @@ export default function StudentAttendance({
                       onValueChange={(value) => {
                         field.onChange(value);
                         setSelectedGroup(value);
+                        setSelectedStudentIds({});
                       }}
                       defaultValue={field.value}
                     >
@@ -338,20 +348,9 @@ export default function StudentAttendance({
           <TriageSessionSummary triageEventsByStudent={triageEventsByStudent} />
         )}
         <DataTable
-          key={`student-attendance-table-${resetSelectionTrigger}`}
           columns={memoizedColumns}
           editColumns={true}
-          // DataTable clears the row selection when `data` changes identity, so pass the stored array.
-          data={
-            (attendanceFetchId === session?.id &&
-              studentsByGroup.get(
-                selectedGroup ??
-                  session?.school?.interventionGroups.find((group) => group.leaderId === fellowId)
-                    ?.id ??
-                  "",
-              )) ||
-            NO_STUDENTS
-          }
+          data={groupStudents}
           columnVisibilityState={{
             "Clinical cases": false,
             "Shamiri ID": false,
@@ -362,7 +361,9 @@ export default function StudentAttendance({
           emptyStateMessage={"No students associated to this group"}
           className="data-table data-table-action lg:mt-4"
           renderTableActions={renderTableActions()}
-          onRowSelectionChange={setSelectedRows}
+          getRowId={(student) => student.id}
+          rowSelection={selectedStudentIds}
+          onRowSelectionChange={setSelectedStudentIds}
         />
         <MarkAttendance
           title={"Mark student attendance"}
@@ -382,7 +383,7 @@ export default function StudentAttendance({
           })()}
           id={attendance?.id}
           selectedSessionId={session?.id}
-          selectedIds={selectedRows.map((student) => student.original.id)}
+          selectedIds={selectedStudents.map((student) => student.id)}
           sessionMode="single"
           isOpen={markAttendanceDialog}
           setIsOpen={setMarkAttendanceDialog}
@@ -393,16 +394,15 @@ export default function StudentAttendance({
           bulkMode={bulkMode}
           setBulkMode={setBulkMode}
           onSuccess={() => {
-            setSelectedRows([]);
+            setSelectedStudentIds({});
             setBulkMode(false);
-            setResetSelectionTrigger((prev) => prev + 1);
           }}
         >
           <DialogAlertWidget>
             <p className="flex flex-wrap items-center gap-2">
               <span>
                 {bulkMode ? (
-                  <span>{selectedRows.length} students</span>
+                  <span>{selectedStudents.length} students</span>
                 ) : (
                   <span>{attendance?.studentName}</span>
                 )}
