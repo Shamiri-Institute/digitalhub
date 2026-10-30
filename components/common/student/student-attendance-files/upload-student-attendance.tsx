@@ -26,15 +26,15 @@ export default function UploadStudentAttendanceDocument({
   onUploadSuccess?: () => void;
 }) {
   const [photos, setPhotos] = useState<{ file: File; previewUrl: string }[]>([]);
-  const unrevokedPreviewUrls = useRef(new Set<string>());
+  const createdPreviewUrls = useRef<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { toast } = useToast();
   const { uploadToS3 } = useS3Upload();
 
-  // effect: revokes the preview object URLs still in use on unmount
+  // effect: revokes the preview object URLs on unmount; revoking one already revoked is a no-op
   useEffect(() => {
-    const previewUrls = unrevokedPreviewUrls.current;
+    const previewUrls = createdPreviewUrls.current;
     return () => {
       previewUrls.forEach((url) => {
         URL.revokeObjectURL(url);
@@ -42,20 +42,15 @@ export default function UploadStudentAttendanceDocument({
     };
   }, []);
 
-  const revokePreview = (previewUrl: string) => {
-    URL.revokeObjectURL(previewUrl);
-    unrevokedPreviewUrls.current.delete(previewUrl);
-  };
-
   const addFiles = (files: File[]) => {
     const added = files.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }));
-    added.forEach(({ previewUrl }) => unrevokedPreviewUrls.current.add(previewUrl));
+    createdPreviewUrls.current.push(...added.map(({ previewUrl }) => previewUrl));
     setPhotos((prev) => [...prev, ...added]);
   };
 
   const removeFile = (index: number) => {
     const removed = photos[index];
-    if (removed) revokePreview(removed.previewUrl);
+    if (removed) URL.revokeObjectURL(removed.previewUrl);
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -131,7 +126,7 @@ export default function UploadStudentAttendanceDocument({
 
       if (result.success) {
         onUploadSuccess?.();
-        photos.forEach(({ previewUrl }) => revokePreview(previewUrl));
+        photos.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
         setPhotos([]);
         toast({ title: "File uploaded successfully" });
       } else {
