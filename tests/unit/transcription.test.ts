@@ -67,6 +67,20 @@ describe("placeSegments", () => {
       { start: 2148.261, end: 2160, text: "b" },
     ]);
   });
+
+  it("moves a line stamped out of order to the midpoint of its neighbours", () => {
+    // Chunk-local times from the 45-minute preview run: "Take a moment" came back as 27:41.
+    const outOfOrder = [
+      { start: 396, end: 400, text: "Part 89." },
+      { start: 41, end: 403, text: "Take a moment" },
+      { start: 404, end: 407, text: "Turn to the person" },
+    ];
+    expect(placeSegments(outOfOrder, 1620, 540).map((s) => [s.start, s.end])).toEqual([
+      [2016, 2020],
+      [2020, 2023],
+      [2024, 2027],
+    ]);
+  });
 });
 
 describe("readDurations", () => {

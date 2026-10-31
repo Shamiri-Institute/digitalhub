@@ -223,15 +223,42 @@ async function inParallel<T, R>(items: T[], limit: number, run: (item: T) => Pro
 
 const round = (s: number) => Math.round(s * 1000) / 1000;
 
+// The longest non-decreasing subsequence. ponytail: O(n²), fine for a chunk's ~200 lines.
+function inOrderIndexes(times: number[]) {
+  const length = times.map(() => 1);
+  const previous = times.map(() => -1);
+  times.forEach((time, i) => {
+    for (let j = 0; j < i; j++) {
+      if ((times[j] ?? 0) <= time && (length[j] ?? 0) + 1 > (length[i] ?? 0)) {
+        length[i] = (length[j] ?? 0) + 1;
+        previous[i] = j;
+      }
+    }
+  });
+  const kept = new Set<number>();
+  for (let i = length.indexOf(Math.max(...length)); i !== -1; i = previous[i] ?? -1) kept.add(i);
+  return kept;
+}
+
 /**
- * Moves a chunk's segments to recording time. Gemini's times run late through a chunk (12 s past
- * the end of a 9-minute chunk on preview), so a chunk that overruns is scaled back to its length;
- * otherwise its last lines would sort after the next chunk's first.
+ * Moves a chunk's segments to recording time. Gemini writes the times rather than measuring them:
+ * they run late through a chunk (12 s past the end of a 9-minute chunk on preview), so a chunk that
+ * overruns is scaled back to its length, and a line stamped out of order with lines that are in
+ * order around it (27:41 between 33:40 and 33:48) is moved to the midpoint of its neighbours.
  */
 export function placeSegments(segments: TranscriptSegment[], start: number, seconds: number) {
-  const lastEnd = Math.max(...segments.map((s) => s.end));
+  const inOrder = inOrderIndexes(segments.map((s) => s.start));
+  const ordered = segments.map((s, i) => {
+    if (inOrder.has(i)) return s;
+    const before = segments.findLast((_, j) => j < i && inOrder.has(j))?.start ?? 0;
+    const after = segments.find((_, j) => j > i && inOrder.has(j))?.start ?? before;
+    const moved = (before + after) / 2;
+    // The end can be right when the start is wrong, so it is kept if it fits after the new start.
+    return { ...s, start: moved, end: Math.min(Math.max(s.end, moved), after) };
+  });
+  const lastEnd = Math.max(...ordered.map((s) => s.end));
   const scale = lastEnd > seconds ? seconds / lastEnd : 1;
-  return segments.map((s) => ({
+  return ordered.map((s) => ({
     ...s,
     start: round(start + s.start * scale),
     end: round(start + s.end * scale),
