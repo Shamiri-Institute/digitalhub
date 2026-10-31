@@ -57,6 +57,8 @@ export default function SchoolsDatatable({
   isSubComponent = false,
   className,
   columnVisibilityState,
+  title,
+  description,
 }: {
   role: ImplementerRole;
   schools: SchoolsTableData[];
@@ -65,6 +67,8 @@ export default function SchoolsDatatable({
   isSubComponent?: boolean;
   className?: string;
   columnVisibilityState?: VisibilityState;
+  title?: string;
+  description?: string;
 }) {
   const [dialog, setDialog] = useState<OpenSchoolDialog | null>(null);
   const school =
@@ -111,6 +115,8 @@ export default function SchoolsDatatable({
         renderTableActions={renderTableActions()}
         disablePagination={disablePagination}
         isSubComponent={isSubComponent}
+        title={title}
+        description={description}
       />
       {role === "HUB_COORDINATOR" && (
         <>

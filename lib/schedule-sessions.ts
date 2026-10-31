@@ -56,13 +56,18 @@ async function sessionScope(role: ImplementerRole) {
 /**
  * Starts loading the sessions the URL names; the schedule reads the promise in a Suspense boundary.
  * `hubIds` are the hubs the user may see, and `sessionsWhere` selects the same sessions, for
- * loaders of data about them (attendance).
+ * loaders of data about them (attendance). `onlyHubId` narrows to one hub the caller has
+ * already authorized.
  */
 export async function loadScheduleSessions(
   searchParams: ScheduleSearchParams,
   role: ImplementerRole,
+  onlyHubId?: string,
 ) {
-  const [timeZone, scope] = await Promise.all([viewerTimeZone(), sessionScope(role)]);
+  const [timeZone, scope] = await Promise.all([
+    viewerTimeZone(),
+    onlyHubId ? { hubIds: [onlyHubId] } : sessionScope(role),
+  ]);
   if (!timeZone)
     return { timeZone, sessions: null, hubIds: scope.hubIds, sessionsWhere: sql`false` };
   const params = await searchParams;

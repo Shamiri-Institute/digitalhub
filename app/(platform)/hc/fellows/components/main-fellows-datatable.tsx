@@ -39,12 +39,16 @@ export default function MainFellowsDatatable({
   fellows,
   supervisors,
   role,
+  title,
+  description,
 }: {
   fellows: MainFellowTableData[];
   supervisors: (Pick<typeof supervisor.$inferSelect, "id" | "supervisorName"> & {
     fellows: Pick<typeof fellow.$inferSelect, "id" | "fellowName" | "droppedOut">[];
   })[];
   role: ImplementerRole;
+  title?: string;
+  description?: string;
 }) {
   const [dialog, setDialog] = useState<OpenMainFellowDialog | null>(null);
   const fellow =
@@ -106,6 +110,8 @@ export default function MainFellowsDatatable({
           County: false,
           "Sub-county": false,
         }}
+        title={title}
+        description={description}
       />
       {fellow && (
         <>

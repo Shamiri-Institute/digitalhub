@@ -48,6 +48,7 @@ test.afterAll(async () => {
     await db.delete(interventionSession).where(inArray(interventionSession.hubId, hubIds));
     await db.delete(school).where(inArray(school.hubId, hubIds));
     await db.delete(sessionName).where(inArray(sessionName.hubId, hubIds));
+    await db.delete(school).where(inArray(school.hubId, hubIds));
   }
   await db.delete(hub).where(ilike(hub.hubName, `${HUB_PREFIX}%`));
 });
@@ -459,10 +460,7 @@ test("a hub page lists its schools and steps to the hubs beside it by name", asy
   await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Hubs");
   await expect(page.getByRole("button", { name: "Previous hub", exact: true })).toBeDisabled();
 
-  const schoolsTab = page.getByRole("link", { name: /^Schools/ });
-  const schoolsCount = Number((await schoolsTab.innerText()).replace(/\D/g, ""));
-  // The table shows 10 rows a page.
-  await expect(dataRows(page)).toHaveCount(Math.min(schoolsCount, 10));
+  await expect(dataRows(page).first()).toBeVisible();
 
   await page.getByRole("link", { name: `Next hub: ${secondHub}` }).click();
   await expect(page.getByRole("heading", { name: secondHub })).toBeVisible();
@@ -470,7 +468,7 @@ test("a hub page lists its schools and steps to the hubs beside it by name", asy
   await expect(page.getByRole("heading", { name: firstHub })).toBeVisible();
 });
 
-test("a hub page counts its sessions and the attended ones missing fellow attendance", async ({
+test("a hub page counts its sessions as marked attended, unmarked, upcoming and cancelled, and its tabs count active rows", async ({
   page,
   context,
 }) => {
@@ -534,6 +532,14 @@ test("a hub page counts its sessions and the attended ones missing fellow attend
   await db
     .insert(fellowAttendance)
     .values({ fellowId: leader.id, sessionId: leaderMarked.id, attended: true });
+  const droppedOutSchoolId = objectId("school");
+  await db.insert(school).values({
+    id: droppedOutSchoolId,
+    schoolName: `${HUB_PREFIX} Dropped out school`,
+    visibleId: droppedOutSchoolId,
+    hubId: statsHub.id,
+    droppedOut: true,
+  });
 
   await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl(`/admin/hubs/${statsHub.id}/schools`));
@@ -546,6 +552,12 @@ test("a hub page counts its sessions and the attended ones missing fellow attend
   await expect(stats).toContainText("50%");
   await expect(stats).toContainText("1 of 2 sessions with groups");
   await expect(stats).toContainText("1 session marked attended without fellow attendance");
+
+  // The tables list every row; the badges leave out the cancelled session and dropped-out school.
+  await expect(dataRows(page)).toHaveCount(2);
+  const tabs = page.getByRole("navigation", { name: "Hub sections" });
+  await expect(tabs.getByRole("link", { name: /^Schools/ })).toHaveText(/^Schools\s*1$/);
+  await expect(tabs.getByRole("link", { name: /^Sessions/ })).toHaveText(/^Sessions\s*4$/);
 });
 
 test("a hub of another implementer is not found", async ({ page, context }) => {

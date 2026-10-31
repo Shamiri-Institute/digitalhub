@@ -125,6 +125,8 @@ type DataTableProps<TData, TValue> = RowSelectionProps<TData> & {
   columnVisibilityState?: VisibilityState;
   enableRowSelection?: boolean | ((row: Row<TData>) => boolean) | undefined;
   renderTableActions?: ReactNode;
+  title?: string;
+  description?: string;
   getRowCanExpand?: (row: Row<TData>) => boolean;
   renderSubComponent?: (props: { row: Row<TData> }) => ReactNode;
   /**
@@ -177,6 +179,8 @@ function DataTableContent<TData, TValue>({
   columnVisibilityState = {},
   enableRowSelection,
   renderTableActions,
+  title,
+  description,
   rowSelectionDescription = "rows",
   getRowCanExpand = () => true,
   renderSubComponent,
@@ -283,11 +287,24 @@ function DataTableContent<TData, TValue>({
     <div className="no-scrollbar overflow-hidden">
       <div
         className={cn(
-          "flex flex-col-reverse p-1 lg:flex-row lg:items-end lg:justify-between",
+          "flex p-1 lg:flex-row lg:justify-between",
+          title
+            ? "flex-col gap-2 px-0 pb-4 lg:items-center lg:gap-6"
+            : "flex-col-reverse lg:items-end",
           isSubComponent ? "bg-background-secondary/50 p-2 shadow-inner" : "",
         )}
       >
-        <div className="shrink-0">
+        <div className={title ? "min-w-0 flex-1" : "shrink-0"}>
+          {title && (
+            <div className="min-w-0">
+              <h3 className="truncate text-xl font-semibold">{title}</h3>
+              {description && (
+                <p className="truncate text-sm text-muted-foreground" title={description}>
+                  {description}
+                </p>
+              )}
+            </div>
+          )}
           {table.getSelectedRowModel().rows.length > 0 && (
             <div className="flex w-full items-center justify-between gap-4 lg:w-auto">
               <span className="text-sm">
@@ -304,7 +321,12 @@ function DataTableContent<TData, TValue>({
             </div>
           )}
         </div>
-        <div className="lg:min-w-2/3 flex flex-wrap items-center justify-end gap-3 py-2 lg:flex-wrap-reverse lg:py-0">
+        <div
+          className={cn(
+            "flex flex-wrap items-center justify-end gap-3 py-2 lg:flex-wrap-reverse lg:py-0",
+            title ? "shrink-0 empty:hidden" : "lg:min-w-2/3",
+          )}
+        >
           {!disableSearch && (
             <div className="relative mr-1 lg:mr-0">
               <Icons.search
@@ -357,6 +379,7 @@ function DataTableContent<TData, TValue>({
           !isSubComponent
             ? "no-scrollbar relative mt-4 overflow-hidden rounded-lg border lg:mt-0 lg:border-none"
             : "",
+          title && "mt-0",
         )}
       >
         {!isSubComponent ? (
@@ -369,6 +392,8 @@ function DataTableContent<TData, TValue>({
               : "lg:border-x-none rounded-none lg:border-none",
             "overflow-x-scroll",
             className,
+            // A titled header sets the gap above the table; drop margins callers add for the untitled layout.
+            title && "mt-0 lg:mt-0",
           )}
         >
           <TableHeader>
