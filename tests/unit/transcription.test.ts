@@ -13,6 +13,7 @@ vi.mock("server-only", () => ({}));
 import {
   DamagedAudioError,
   PROMPT_SHA256,
+  placeSegments,
   planChunks,
   readDurations,
   transcribeAudio,
@@ -46,6 +47,25 @@ describe("planChunks", () => {
     expect(planChunks(601).map((c) => c.start)).toEqual([0, 300.5]);
     expect(planChunks(600)).toEqual([{ start: 0, seconds: 600 }]);
     expect(planChunks(45)).toEqual([{ start: 0, seconds: 45 }]);
+  });
+});
+
+describe("placeSegments", () => {
+  it("offsets a chunk's segments to recording time", () => {
+    expect(placeSegments([{ start: 1, end: 2.5, text: "a" }], 540, 540)).toEqual([
+      { start: 541, end: 542.5, text: "a" },
+    ]);
+  });
+
+  it("scales a chunk whose times run past its end back inside it", () => {
+    const overrun = [
+      { start: 0, end: 300, text: "a" },
+      { start: 540, end: 552, text: "b" },
+    ];
+    expect(placeSegments(overrun, 1620, 540)).toEqual([
+      { start: 1620, end: 1913.478, text: "a" },
+      { start: 2148.261, end: 2160, text: "b" },
+    ]);
   });
 });
 

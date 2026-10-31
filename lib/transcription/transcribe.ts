@@ -221,6 +221,23 @@ async function inParallel<T, R>(items: T[], limit: number, run: (item: T) => Pro
   return results;
 }
 
+const round = (s: number) => Math.round(s * 1000) / 1000;
+
+/**
+ * Moves a chunk's segments to recording time. Gemini's times run late through a chunk (12 s past
+ * the end of a 9-minute chunk on preview), so a chunk that overruns is scaled back to its length;
+ * otherwise its last lines would sort after the next chunk's first.
+ */
+export function placeSegments(segments: TranscriptSegment[], start: number, seconds: number) {
+  const lastEnd = Math.max(...segments.map((s) => s.end));
+  const scale = lastEnd > seconds ? seconds / lastEnd : 1;
+  return segments.map((s) => ({
+    ...s,
+    start: round(start + s.start * scale),
+    end: round(start + s.end * scale),
+  }));
+}
+
 /** Transcribes the audio at `url`; throws DamagedAudioError when it cannot be decoded in full. */
 export async function transcribeAudio(url: string, signal: AbortSignal): Promise<Transcript> {
   const { mp3, audioSeconds } = await prepareAudio(url, signal);
@@ -245,16 +262,9 @@ export async function transcribeAudio(url: string, signal: AbortSignal): Promise
     }
   });
 
-  const round = (s: number) => Math.round(s * 1000) / 1000;
   const transcript = {
-    segments: results.flatMap(({ start, result }) =>
-      "segments" in result
-        ? result.segments.map((s) => ({
-            ...s,
-            start: round(s.start + start),
-            end: round(s.end + start),
-          }))
-        : [],
+    segments: results.flatMap(({ start, end, result }) =>
+      "segments" in result ? placeSegments(result.segments, start, end - start) : [],
     ),
     gaps: results.flatMap(({ start, end, result }) =>
       "gap" in result ? [{ start: round(start), end: round(end), reason: result.gap }] : [],
