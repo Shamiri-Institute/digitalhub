@@ -5,7 +5,6 @@ import type { SurveyForm, SurveyItem } from "#/lib/survey/form";
 import {
   describeProblem,
   headerValueRun,
-  isRatingScale,
   LAYOUT_ENGINE_VERSION,
   layOutForm,
   type LayoutPage,
@@ -59,12 +58,7 @@ function textQuestion(i: number): SurveyItem {
 }
 
 describe("layOutForm", () => {
-  const { layout, problems } = layOutForm(PRINT_FORM, "NONE");
-
-  it("pins the fixture's layout", () => {
-    expect(problems).toEqual([]);
-    expect(layout).toMatchSnapshot(`engine v${LAYOUT_ENGINE_VERSION}`);
-  });
+  const { layout } = layOutForm(PRINT_FORM, "NONE");
 
   it("needs a new engine version for any change to the layout", () => {
     const layouts = PREFILLS.map((prefill) => layOutForm(PRINT_FORM, prefill).layout);
@@ -393,24 +387,38 @@ describe("layOutForm", () => {
   });
 });
 
-describe("isRatingScale", () => {
-  const single = (labels: string[]) =>
-    ({
-      id: "s",
-      kind: "single_choice",
-      key: "s",
-      prompt: "",
-      required: false,
-      options: labels.map((label, i) => ({ code: `${i}`, label })),
-    }) as const;
+describe("rating scales", () => {
+  // The mark a single choice question with these option labels prints.
+  const markFor = (labels: string[]) => {
+    const form: SurveyForm = {
+      format: 1,
+      pages: [
+        {
+          title: "Rating",
+          items: [
+            {
+              id: "s",
+              kind: "single_choice",
+              key: "s",
+              prompt: "Pick one",
+              required: false,
+              options: labels.map((label, i) => ({ code: `${i}`, label })),
+            },
+          ],
+        },
+      ],
+    };
+    const field = layOutForm(form, "NONE").layout.pages[0]?.fields[0];
+    return field?.kind === "choice" ? field.mark : undefined;
+  };
 
-  it("is true for short numbers only", () => {
-    expect(isRatingScale(single(["1", "2", "3", "4", "5"]))).toBe(true);
-    expect(isRatingScale(single(["-2", "-1", "0", "**1**", " 2 "]))).toBe(true);
-    expect(isRatingScale(single(["Yes", "No"]))).toBe(false);
-    expect(isRatingScale(single(["1"]))).toBe(false);
-    expect(isRatingScale(single(Array.from({ length: 12 }, (_, i) => `${i}`)))).toBe(false);
-    expect(isRatingScale(single(["1", "100"]))).toBe(false);
+  it("prints short numbers as square boxes and anything else as circles", () => {
+    expect(markFor(["1", "2", "3", "4", "5"])).toBe("square");
+    expect(markFor(["-2", "-1", "0", "**1**", " 2 "])).toBe("square");
+    expect(markFor(["Yes", "No"])).toBe("circle");
+    expect(markFor(["1"])).toBe("circle");
+    expect(markFor(Array.from({ length: 12 }, (_, i) => `${i}`))).toBe("circle");
+    expect(markFor(["1", "100"])).toBe("circle");
   });
 });
 

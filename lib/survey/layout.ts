@@ -378,7 +378,7 @@ export function qrPlaceholderRun(qr: Rect): TextRun {
 }
 
 /** A single choice question whose options are all short numbers prints as a row of boxes. */
-export function isRatingScale(item: Extract<SurveyItem, { kind: "single_choice" }>) {
+function isRatingScale(item: Extract<SurveyItem, { kind: "single_choice" }>) {
   return (
     item.options.length >= 2 &&
     item.options.length <= 11 &&
