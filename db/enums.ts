@@ -154,6 +154,14 @@ export const RecordingProcessingStatus = {
 export type RecordingProcessingStatus =
   (typeof RecordingProcessingStatus)[keyof typeof RecordingProcessingStatus];
 
+export const TranscriptionStatus = {
+  QUEUED: "QUEUED",
+  PROCESSING: "PROCESSING",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
+} as const;
+export type TranscriptionStatus = (typeof TranscriptionStatus)[keyof typeof TranscriptionStatus];
+
 export const TicketPriorityLevel = {
   LOW: "LOW",
   MEDIUM: "MEDIUM",

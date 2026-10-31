@@ -157,11 +157,16 @@ DEBUG="0"        # Set to 1 to log every SQL statement Drizzle runs
 NEXT_PUBLIC_ENABLE_PERF_PROFILER="0"  # Set to 1 to enable the performance profiler
 
 # ====================================
-# RECORDINGS / FIDELITY SERVICE
+# RECORDING TRANSCRIPTION
 # ====================================
-FIDELITY_API_URL="https://fidelity-service.example.com"  # External fidelity-analysis API
-FIDELITY_API_KEY="your-fidelity-api-key"
-RECORDINGS_API_KEY="your-recordings-api-key"  # Shared secret for the recordings worker
+FIDELITY_AB_TEST_SUPERVISOR_IDS=""  # Comma-separated supervisor IDs whose uploads are transcribed
+CRON_SECRET="your-cron-secret"      # Bearer token Vercel Cron sends to /api/cron/*; 16+ characters
+# Gemini: Vertex AI in production, an AI Studio key for local development
+GOOGLE_GENAI_USE_VERTEXAI="true"
+GOOGLE_CLOUD_PROJECT="your-gcp-project"
+GOOGLE_CLOUD_LOCATION="your-vertex-region"
+GEMINI_API_KEY=""                    # Local development only, instead of the three above
+RECORDINGS_API_KEY="your-recordings-api-key"  # Legacy webhooks of the retired Fidelity Ratings API
 
 # ====================================
 # SENTRY (Error Monitoring) — OPTIONAL
@@ -200,6 +205,22 @@ When `NEXT_PUBLIC_ENV=development` and `TEST_USER_PASSWORD` is set, sign in as a
 2. Configure authorized origins: `http://localhost:3000`
 3. Configure redirect URI: `http://localhost:3000/api/auth/callback/google`
 4. Add credentials to `.env.development`
+
+### Recording Transcription
+
+Uploads from supervisors in `FIDELITY_AB_TEST_SUPERVISOR_IDS` are queued in the `transcriptions` table. Vercel Cron calls `/api/cron/transcriptions` every minute, and the worker transcribes queued recordings with Gemini (`lib/transcription/`). Cron runs only on production deployments. Elsewhere, run the worker by hand:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/transcriptions
+```
+
+For uploads in development, run a local S3 server with [Garage](https://garagehq.deuxfleurs.fr/) (`brew install garage`), then put the values from the header of `scripts/local-s3.sh` in `.env.development.local`:
+
+```bash
+scripts/local-s3.sh   # S3 on http://localhost:3900, bucket "recordings"
+```
+
+`tests/e2e/recording-transcription.spec.ts` uploads, transcribes and reads back a recording. It calls Gemini, so it needs credentials, costs a few cents a run, and never runs in CI.
 
 ---
 

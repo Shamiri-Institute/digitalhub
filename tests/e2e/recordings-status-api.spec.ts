@@ -183,7 +183,7 @@ test("POST /api/recordings/batch/status stores results from the fidelity webhook
   expect(succeededRecording.status).toBe("COMPLETED");
   expect(succeededRecording.overallScore).toBe("3.5");
   expect(succeededRecording.fidelityFeedback).toEqual(fidelityRatings);
-  expect(succeededRecording.transcript).toEqual(transcript);
+  expect(succeededRecording.legacyTranscript).toEqual(transcript);
   expect(succeededRecording.errorMessage).toBeNull();
   expect(succeededRecording.processedAt).not.toBeNull();
 

@@ -3,10 +3,19 @@ import { type NextRequest, NextResponse } from "next/server";
 import { type BatchRecordingUpdate, updateRecordingsStatusBatch } from "#/lib/recordings/status";
 import { db } from "#/db/client";
 import type { JsonValue } from "#/db/schema";
-import type { RecordingResult } from "#/lib/fidelity-ratings-api";
 import { verifyRecordingsApiKey } from "#/lib/recordings-api";
 
 export const dynamic = "force-dynamic";
+
+// One recording in the retired Fidelity Ratings API's completion payload.
+type RecordingResult = {
+  recording_id: string | number;
+  s3_key: string;
+  status: "success" | "failed";
+  transcript?: Record<string, unknown> | unknown[];
+  fidelity_ratings?: Record<string, unknown> & { overall_score?: string };
+  error?: string;
+};
 
 /**
  * POST /api/recordings/batch/status
