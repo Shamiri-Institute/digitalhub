@@ -1,5 +1,5 @@
 import { parseDate } from "@internationalized/date";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ImplementerRole } from "#/db/enums";
 import { parseScheduleView, sameRange, scheduleRange, scheduleSearch } from "#/lib/schedule-view";
@@ -10,10 +10,24 @@ const params = (query: string) => {
 };
 
 describe("parseScheduleView", () => {
+  // 22:30 on 8 October in UTC is already 9 October in Nairobi.
+  const atLateEvening = () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-08T22:30:00Z"));
+  };
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("falls back to the month view on today in the viewer's zone", () => {
+    atLateEvening();
     const view = parseScheduleView(params(""), ImplementerRole.SUPERVISOR, "Africa/Nairobi");
     expect(view.mode).toBe("month");
     expect(view.span).toBe("month");
+    expect(view.date.toString()).toBe("2026-10-09");
+    expect(parseScheduleView(params(""), ImplementerRole.SUPERVISOR, "UTC").date.toString()).toBe(
+      "2026-10-08",
+    );
   });
 
   it("gives the table view only to hub coordinators", () => {
@@ -26,13 +40,14 @@ describe("parseScheduleView", () => {
   });
 
   it("reads the list span and ignores a bad date", () => {
+    atLateEvening();
     const view = parseScheduleView(
       params("mode=list&span=month&date=not-a-date"),
       ImplementerRole.FELLOW,
       "UTC",
     );
     expect(view.span).toBe("month");
-    expect(view.date.toString()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(view.date.toString()).toBe("2026-10-08");
   });
 
   it("reads the supervisors or fellows choice in the table view and falls back to supervisors", () => {

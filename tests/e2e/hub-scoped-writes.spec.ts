@@ -396,6 +396,17 @@ test("a fellow marks one student missed and two students attended at once", asyn
       await db.insert(studentAttendance).values(originalAttendances);
     }
   });
+  // Start the bulk pair as missed with a reason and the single student unmarked, so both marks
+  // have to change what is stored.
+  await db.delete(studentAttendance).where(attendanceAtSession);
+  await db.insert(studentAttendance).values(
+    attendedStudents.map(({ id }) => ({
+      studentId: id,
+      sessionId: triage.sessionId,
+      attended: false,
+      absenceReason: "E2E earlier reason",
+    })),
+  );
   await signInWithEmail(context, triage.email);
 
   let attendance = await openStudentAttendance(page);
@@ -433,7 +444,8 @@ test("a fellow marks one student missed and two students attended at once", asyn
     );
   }
 
-  // No page shows the absence reason; one row per student also rules out duplicate writes.
+  // The reopened dialog shows neither the missed student's reason nor that the pair's earlier
+  // reason was cleared, so read the stored rows.
   const markedStudentAttendances = await db
     .select({
       studentId: studentAttendance.studentId,

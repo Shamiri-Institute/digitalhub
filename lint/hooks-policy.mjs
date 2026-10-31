@@ -74,7 +74,9 @@ const effectHooks = new Set(["useEffect", "useLayoutEffect", "useEffectEvent"]);
 const noFormResetInEffect = {
   meta: {
     type: "suggestion",
-    docs: { description: "Disallow form.reset/setValue inside effects" },
+    docs: {
+      description: "Disallow form.reset/setValue (or a destructured reset/setValue) in effects",
+    },
     messages: {
       inEffect:
         "Reset or set form values in the handler that opens or changes the dialog, or render the form inside DialogContent; not in an effect.",
@@ -84,11 +86,8 @@ const noFormResetInEffect = {
     return {
       CallExpression(node) {
         const { callee } = node;
-        if (
-          callee.type !== "MemberExpression" ||
-          !["reset", "setValue"].includes(calleeName(callee) ?? "")
-        )
-          return;
+        // `form.reset()`, or `reset()` destructured from `useForm()`.
+        if (!["reset", "setValue"].includes(calleeName(callee) ?? "")) return;
         for (let fn = node.parent; fn; fn = fn.parent) {
           const call = fn.parent;
           if (
