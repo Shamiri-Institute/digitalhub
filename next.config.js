@@ -1,4 +1,4 @@
-const { withSentryConfig } = require("@sentry/nextjs");
+const { withSentryConfig } = require("@sentry/nextjs/config");
 
 // Sentry is fully optional and configured via environment variables so that
 // forks can plug in their own Sentry project — or run with Sentry disabled
@@ -135,7 +135,8 @@ module.exports = withSentryConfig(nextConfig, {
     name: process.env.VERCEL_GIT_COMMIT_SHA || undefined,
   },
 
-  silent: true,
+  // Vercel builds set CI, so their logs show whether source maps and the release reached Sentry.
+  silent: !process.env.CI,
 
   widenClientFileUpload: true,
 
@@ -143,17 +144,9 @@ module.exports = withSentryConfig(nextConfig, {
   // proxy.ts excludes this route in its matcher; keep the two in sync.
   tunnelRoute: "/monitoring",
 
-  webpack: {
-    treeshake: { removeDebugLogging: true },
-
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
-
-    reactComponentAnnotation: {
-      enabled: true,
-    },
+  reactComponentAnnotation: {
+    enabled: true,
   },
+
+  bundleSizeOptimizations: { excludeDebugStatements: true },
 });
