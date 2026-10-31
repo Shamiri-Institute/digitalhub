@@ -13,6 +13,7 @@ import {
   type OnChangeFn,
   type PaginationState,
   type Row,
+  type RowData,
   type RowSelectionState,
   type SortDirection,
   type SortingState,
@@ -58,6 +59,13 @@ import {
   tableViewSearch,
 } from "#/lib/table-view";
 import { cn } from "#/lib/utils";
+
+declare module "@tanstack/react-table" {
+  // oxlint-disable-next-line typescript/no-unused-vars -- the augmentation must repeat ColumnMeta's type parameters
+  interface ColumnMeta<TData extends RowData, TValue> {
+    headerClassName?: string;
+  }
+}
 
 // oxlint-disable-next-line typescript/no-explicit-any -- FilterFn generic requires any for universal compatibility with all table data types
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -414,6 +422,7 @@ function DataTableContent<TData, TValue>({
                         header.column.columnDef.id !== "checkbox" && "truncate",
                         "py-2",
                         isActionColumn(header.column.id) ? "action-cell" : null,
+                        header.column.columnDef.meta?.headerClassName,
                       )}
                     >
                       {columnSorts ? (
