@@ -28,6 +28,9 @@ jobs:
       - name: Format & Lint Check
         run: npm run stylecheck
 
+      - name: ESLint
+        run: npm run lint
+
       - name: Typechecks
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"

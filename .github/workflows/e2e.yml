@@ -112,3 +112,48 @@ jobs:
           name: playwright-artifacts
           path: test-results
           retention-days: 30
+
+  # The Vitest suite holds the only proof of the database triggers, upload tokens and the layout
+  # engine version. It writes rows, so it gets its own database rather than sharing the e2e one.
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: youth
+          POSTGRES_PASSWORD: thriving
+          POSTGRES_DB: shamiri_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Cache node_modules
+        uses: actions/cache@v5
+        id: node-modules-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node24-modules-${{ hashFiles('package.json', 'package-lock.json') }}
+      - name: Install dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Migrate database
+        run: npm run db:migrate
+      - name: Seed test database
+        run: npm run db:seed
+
+      - name: Run unit tests
+        run: npm run test:unit -- --run
