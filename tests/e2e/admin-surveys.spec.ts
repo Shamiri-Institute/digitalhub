@@ -16,7 +16,7 @@ import {
   createPublishedSurvey as createSurveyFixture,
   TWO_QUESTIONS,
 } from "#/tests/survey-fixtures";
-import { getUrl } from "#/tests/pages/helpers";
+import { getUrl, searchRows } from "#/tests/pages/helpers";
 import { PRINT_FORM } from "#/tests/unit/fixtures/survey-print-form";
 
 /**
@@ -153,12 +153,15 @@ test("a survey of another implementer is not found", async ({ page, context }) =
   });
   if (!other) throw new Error("The seed has a single implementer");
   const foreign = await createPublishedSurvey({ implementerId: other.id, projectId }, userId);
+  const own = await createPublishedSurvey(scope, userId);
 
   const response = await page.goto(getUrl(`/admin/surveys/${foreign.id}`));
   expect(response?.status()).toBe(404);
 
+  // The list shows ten rows a page, so search it, and find the caller's own survey first.
   await page.goto(getUrl("/admin/surveys"));
-  await expect(page.getByRole("link", { name: foreign.title })).toHaveCount(0);
+  await expect(await searchRows(page, own.title)).toHaveCount(1);
+  await expect(await searchRows(page, foreign.title)).toHaveCount(0);
 });
 
 test("an admin outside the Research team has no Surveys tab and cannot open surveys", async ({

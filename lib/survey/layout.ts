@@ -31,7 +31,7 @@ export type Rect = { x: number; y: number; w: number; h: number };
 export type HeaderSlotId = "serial" | "school" | "studentName" | "studentId";
 
 /** The header fields each copy fills in, per prefill. Copy values and header slots follow it. */
-export const PREFILL_HEADER_SLOTS = {
+const PREFILL_HEADER_SLOTS = {
   NONE: ["serial"],
   SCHOOL: ["serial", "school"],
   STUDENT: ["serial", "studentName", "studentId"],
