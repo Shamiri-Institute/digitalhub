@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { objectId } from "#/lib/crypto";
 import type { SurveyForm } from "#/lib/survey/form";
 import type { Layout } from "#/lib/survey/layout";
+import type { TranscriptGap, TranscriptSegment } from "#/lib/transcription/transcribe";
 import {
   bigserial,
   boolean,
@@ -17,6 +18,7 @@ import {
   pgEnum,
   pgSequence,
   pgTable,
+  real,
   serial,
   text,
   timestamp,
@@ -48,6 +50,7 @@ import {
   TicketCategory,
   TicketPriorityLevel,
   TicketStatus,
+  TranscriptionStatus,
   TriageActionTaken,
   caseStatusOptions,
   referralStatusOptions,
@@ -78,6 +81,10 @@ export const questionnaireTypeEnum = pgEnum("questionnaire_types", enumValues(Qu
 export const recordingProcessingStatusEnum = pgEnum(
   "recording_processing_status",
   enumValues(RecordingProcessingStatus),
+);
+export const transcriptionStatusEnum = pgEnum(
+  "transcription_status",
+  enumValues(TranscriptionStatus),
 );
 export const referralStatusOptionsEnum = pgEnum(
   "referralStatusOptions",
@@ -3218,7 +3225,9 @@ export const sessionRecording = pgTable(
       withTimezone: true,
       mode: "date",
     }),
-    transcript: jsonb().$type<JsonValue>(),
+    // Written by the retired Python pipeline (Feb-Jul 2026), in its own shape. New transcripts live
+    // in the transcription table.
+    legacyTranscript: jsonb("transcript").$type<JsonValue>(),
     promptVersion: integer("prompt_version"),
   },
   (table) => [
@@ -3277,6 +3286,67 @@ export const sessionRecording = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+  ],
+);
+
+// One row per transcription run. A COMPLETED row never changes, so whatever scored it can point at it.
+export const transcription = pgTable(
+  "transcriptions",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("trn")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    recordingId: varchar("recording_id", { length: 255 }).notNull(),
+    status: transcriptionStatusEnum().default(TranscriptionStatus.QUEUED).notNull(),
+    // Counts claims, and fences each write to the claim that made it.
+    attempts: integer().default(0).notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true, mode: "date" }),
+    completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
+    errorMessage: text("error_message"),
+    model: text(),
+    promptVersion: text("prompt_version"),
+    promptSha256: text("prompt_sha256"),
+    audioSeconds: real("audio_seconds"),
+    chunkCount: integer("chunk_count"),
+    segments: jsonb().$type<TranscriptSegment[]>(),
+    gaps: jsonb().$type<TranscriptGap[]>(),
+  },
+  (table) => [
+    index("transcriptions_recording_id_created_at_idx").on(
+      table.recordingId,
+      table.createdAt.desc(),
+    ),
+    uniqueIndex("transcriptions_one_active_per_recording_key")
+      .on(table.recordingId)
+      .where(sql`${table.status} IN ('QUEUED', 'PROCESSING')`),
+    foreignKey({
+      columns: [table.recordingId],
+      foreignColumns: [sessionRecording.id],
+      name: "transcriptions_recording_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    check("transcriptions_attempts_check", sql`${table.attempts} >= 0`),
+    check(
+      "transcriptions_processing_check",
+      sql`${table.status} <> 'PROCESSING' OR ${table.startedAt} IS NOT NULL`,
+    ),
+    check(
+      "transcriptions_completed_check",
+      sql`${table.status} <> 'COMPLETED' OR (${table.segments} IS NOT NULL AND ${table.gaps} IS NOT NULL AND ${table.completedAt} IS NOT NULL AND ${table.model} IS NOT NULL AND ${table.promptVersion} IS NOT NULL AND ${table.promptSha256} IS NOT NULL AND ${table.audioSeconds} > 0)`,
+    ),
+    check(
+      "transcriptions_failed_check",
+      sql`${table.status} <> 'FAILED' OR ${table.errorMessage} IS NOT NULL`,
+    ),
   ],
 );
 

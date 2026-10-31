@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.7.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.6.0...v2.7.0) (2026-10-31)
+
+### Features
+
+- **recordings:** transcribe uploaded session recordings in the SDH ([#1011](https://github.com/Shamiri-Institute/digitalhub/issues/1011)) ([f794b35](https://github.com/Shamiri-Institute/digitalhub/commit/f794b35d0f085fa41bf889fb7a76d76a051c9f18))
+
+### Bug Fixes
+
+- follow-ups from the useState audit batch ([#1010](https://github.com/Shamiri-Institute/digitalhub/issues/1010)) ([70b2972](https://github.com/Shamiri-Institute/digitalhub/commit/70b29729e3e14827d68dec3f288ae18f42e8e207))
+
 ## [2.6.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.5.0...v2.6.0) (2026-10-30)
 
 ### Features
