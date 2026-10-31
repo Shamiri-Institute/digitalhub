@@ -117,8 +117,14 @@ test("the fellow portal HTML has no ID or M-Pesa number of the fellow's supervis
 }) => {
   const {
     rows: [fixture],
-  } = await db.execute<{ email: string; idNumber: string; mpesaNumber: string }>(sql`
-    select u.email, sv.id_number as "idNumber", sv.mpesa_number as "mpesaNumber"
+  } = await db.execute<{
+    email: string;
+    fellowName: string;
+    idNumber: string;
+    mpesaNumber: string;
+  }>(sql`
+    select u.email, f.fellow_name as "fellowName", sv.id_number as "idNumber",
+      sv.mpesa_number as "mpesaNumber"
     from fellows f
     join implementer_members m on m.identifier = f.id and m.role = 'FELLOW'
     join users u on u.id = m.user_id
@@ -131,6 +137,9 @@ test("the fellow portal HTML has no ID or M-Pesa number of the fellow's supervis
   await signInWithEmail(context, fixture.email);
   const response = await page.goto(getUrl("/fel/portal"), { waitUntil: "networkidle" });
   const html = (await response?.text()) ?? "";
+  // The portal loaded the fellow's own row, so the numbers' absence means something.
+  await expect(page).toHaveURL(/\/fel\/portal/);
+  await expect(page.getByRole("cell", { name: fixture.fellowName }).first()).toBeVisible();
   expect(html).not.toContain(fixture.idNumber);
   expect(html).not.toContain(fixture.mpesaNumber);
 });

@@ -20,8 +20,8 @@ export type Role =
   | "OPERATIONS"
   | "ADMIN";
 
-export type BenchUser = { id: string; email: string; identifier: string | null };
-export type Route = { role: Role; path: string };
+type PlatformUser = { id: string; email: string; identifier: string | null };
+type Route = { role: Role; path: string };
 
 const PREFIX_ROLE: Record<string, Role> = {
   hc: "HUB_COORDINATOR",
@@ -63,8 +63,8 @@ const SCHOOL_FOR_ROLE: Partial<Record<Role, string>> = {
  * Deterministic user per role: not archived, exactly one membership (so the active
  * membership is unambiguous), implementer active in the default project, profile has data.
  */
-export async function pickUser(role: Role): Promise<BenchUser> {
-  const rows = await query<BenchUser>(
+export async function pickUser(role: Role): Promise<PlatformUser> {
+  const rows = await query<PlatformUser>(
     `select u.id, u.email, m.identifier
      from users u
      join implementer_members m on m.user_id = u.id
@@ -110,11 +110,11 @@ export function discoverPagePaths(): Route[] {
 }
 
 export async function resolveRoutes(): Promise<{
-  users: Record<Role, BenchUser>;
+  users: Record<Role, PlatformUser>;
   routes: Route[];
 }> {
   const roles = [...new Set(discoverPagePaths().map((r) => r.role))];
-  const users = {} as Record<Role, BenchUser>;
+  const users = {} as Record<Role, PlatformUser>;
   const schools = {} as Record<Role, string | null>;
   for (const role of roles) {
     users[role] = await pickUser(role);

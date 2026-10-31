@@ -1,19 +1,12 @@
 import { type ConsoleMessage, expect, type Response, test } from "@playwright/test";
 
 import { signInAs } from "#/tests/helpers";
-import { type Role, resolveRoutes } from "#/tests/platform-routes";
+import { discoverPagePaths, resolveRoutes } from "#/tests/platform-routes";
 import { getUrl } from "#/tests/pages/helpers";
 
 const ERROR_TEXTS = ["Oops! Something went wrong!", "Application error", "Internal Server Error"];
-const ROLES: Role[] = [
-  "ADMIN",
-  "CLINICAL_LEAD",
-  "CLINICAL_TEAM",
-  "FELLOW",
-  "HUB_COORDINATOR",
-  "OPERATIONS",
-  "SUPERVISOR",
-];
+// Every role with a page under app/(platform), so a new role's pages are covered too.
+const ROLES = [...new Set(discoverPagePaths().map((route) => route.role))];
 
 for (const role of ROLES) {
   test(`${role} pages render without errors`, async ({ page, context }) => {
@@ -45,6 +38,7 @@ for (const role of ROLES) {
         const finalPath = new URL(page.url()).pathname;
         expect.soft(finalPath, `${route.path} redirected to login`).not.toContain("/login");
         expect.soft(failedActions, `${route.path} had a failed server action`).toEqual([]);
+        expect.soft(consoleErrors, `${route.path} logged an error`).toEqual([]);
         const text = await page.getByRole("main").first().innerText();
         for (const errorText of ERROR_TEXTS) {
           expect.soft(text, `${route.path} rendered an error`).not.toContain(errorText);
