@@ -1,6 +1,17 @@
 import { type APIRequestContext, expect, test } from "@playwright/test";
 
-import { and, asc, eq, inArray, isNotNull, isNull, ne, notExists, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  ne,
+  notExists,
+  or,
+  type SQLWrapper,
+} from "drizzle-orm";
 
 import { db } from "#/db/client";
 import {
@@ -39,7 +50,8 @@ type UploadTarget = {
   fellowId: string;
   groupId: string;
   sessionId: string;
-  foreignGroupId: string | null;
+  /** Another leader's group, with an occurred session at its own school. */
+  foreign: { groupId: string; sessionId: string } | null;
 };
 
 async function sessionCookieHeader(email: string) {
@@ -65,6 +77,44 @@ const schoolsWithOccurredSessions = db
   .select({ schoolId: interventionSession.schoolId })
   .from(interventionSession)
   .where(eq(interventionSession.occurred, true));
+
+/**
+ * A group led by one of `leaderIds`, and an occurred session at that group's school. Asking for it
+ * passes every check but the one on who leads or supervises the group, so only that check can
+ * refuse it.
+ */
+async function foreignGroupWithSession(leaderIds: SQLWrapper) {
+  const [foreign] = await db
+    .select({ groupId: interventionGroup.id, sessionId: interventionSession.id })
+    .from(interventionGroup)
+    .innerJoin(
+      interventionSession,
+      and(
+        eq(interventionSession.schoolId, interventionGroup.schoolId),
+        eq(interventionSession.occurred, true),
+      ),
+    )
+    .where(
+      and(
+        inArray(interventionGroup.leaderId, leaderIds),
+        isNull(interventionGroup.archivedAt),
+        notExists(
+          db
+            .select({ id: sessionRecording.id })
+            .from(sessionRecording)
+            .where(
+              and(
+                eq(sessionRecording.groupId, interventionGroup.id),
+                eq(sessionRecording.sessionId, interventionSession.id),
+              ),
+            ),
+        ),
+      ),
+    )
+    .orderBy(asc(interventionGroup.id), asc(interventionSession.id))
+    .limit(1);
+  return foreign ?? null;
+}
 
 async function findFellowUploadTarget(): Promise<UploadTarget | null> {
   const [group] = await db
@@ -94,18 +144,17 @@ async function findFellowUploadTarget(): Promise<UploadTarget | null> {
   const email = await emailForProfile(group.leaderId, "FELLOW");
   if (!email) return null;
 
-  const foreign = await db.query.interventionGroup.findFirst({
-    where: (g, { ne }) => ne(g.leaderId, group.leaderId),
-    orderBy: (g, { asc }) => asc(g.id),
-    columns: { id: true },
-  });
+  const otherLeaders = db
+    .select({ id: fellow.id })
+    .from(fellow)
+    .where(ne(fellow.id, group.leaderId));
 
   return {
     email,
     fellowId: group.leaderId,
     groupId: group.id,
     sessionId: session.id,
-    foreignGroupId: foreign?.id ?? null,
+    foreign: await foreignGroupWithSession(otherLeaders),
   };
 }
 
@@ -166,19 +215,19 @@ async function findRecordingUploadTarget(): Promise<UploadTarget | null> {
   const otherSupervisorsFellows = db
     .select({ id: fellow.id })
     .from(fellow)
-    .where(ne(fellow.supervisorId, supervisorId));
-  const foreign = await db.query.interventionGroup.findFirst({
-    where: (g, { inArray }) => inArray(g.leaderId, otherSupervisorsFellows),
-    orderBy: (g, { asc }) => asc(g.id),
-    columns: { id: true },
-  });
+    .where(
+      and(
+        ne(fellow.supervisorId, supervisorId),
+        or(eq(fellow.droppedOut, false), isNull(fellow.droppedOut)),
+      ),
+    );
 
   return {
     email: target.email,
     fellowId: target.fellowId,
     groupId: target.groupId,
     sessionId: target.sessionId,
-    foreignGroupId: foreign?.id ?? null,
+    foreign: await foreignGroupWithSession(otherSupervisorsFellows),
   };
 }
 
@@ -222,38 +271,37 @@ test.beforeAll(async () => {
 });
 
 test.describe("S3 presign auth gate (unauthenticated)", () => {
-  test("POST student-attendance without a session returns 401 and no url", async ({ request }) => {
-    const { res, body } = await postPresign(request, attendanceBody);
-    expect(res.status()).toBe(401);
-    expect(body.error).toBe("Unauthorized");
-    expect(body.url).toBeUndefined();
-  });
-
-  test("POST recordings without a session returns 401 and no url", async ({ request }) => {
-    const { res, body } = await postPresign(request, recordingBody);
-    expect(res.status()).toBe(401);
-    expect(body.url).toBeUndefined();
-  });
-
-  test("POST empty JSON without a session returns 401 (auth before zod)", async ({ request }) => {
-    const { res, body } = await postPresign(request, {});
-    expect(res.status()).toBe(401);
-    expect(body.url).toBeUndefined();
-  });
-
-  test("POST unknown bucket without a session returns 401", async ({ request }) => {
-    const { res, body } = await postPresign(request, { ...attendanceBody, bucket: "payments" });
-    expect(res.status()).toBe(401);
-    expect(body.url).toBeUndefined();
-  });
+  // The session is checked before the body is parsed, so even a body that fails validation is 401.
+  for (const [what, data] of [
+    ["a student-attendance body", attendanceBody],
+    ["a recordings body", recordingBody],
+    ["an empty body", {}],
+    ["an unknown bucket", { ...attendanceBody, bucket: "payments" }],
+  ] as const) {
+    test(`POST ${what} without a session returns 401 and no url`, async ({ request }) => {
+      const { res, body } = await postPresign(request, data);
+      expect(res.status()).toBe(401);
+      expect(body.error).toBe("Unauthorized");
+      expect(body.url).toBeUndefined();
+    });
+  }
 });
 
-test("an invalid body is rejected with 400 and no url", async ({ request }) => {
-  const { res, body } = await postPresign(request, { ...attendanceBody, size: 0 }, fellowToken);
-  expect(res.status()).toBe(400);
-  expect(body.error).toBe("Invalid request body");
-  expect(body.url).toBeUndefined();
-});
+for (const [what, data] of [
+  ["groupId is missing", { ...attendanceBody, groupId: undefined }],
+  ["sessionId is missing", { ...attendanceBody, sessionId: undefined }],
+  ["size is missing", { ...attendanceBody, size: undefined }],
+  ["size is zero", { ...attendanceBody, size: 0 }],
+  ["size is a string", { ...attendanceBody, size: "1024" }],
+  ["the bucket is unknown", { ...attendanceBody, bucket: "uploads" }],
+] as const) {
+  test(`a body where ${what} is rejected with 400 and no url`, async ({ request }) => {
+    const { res, body } = await postPresign(request, data, fellowToken);
+    expect(res.status()).toBe(400);
+    expect(body.error).toBe("Invalid request body");
+    expect(body.url).toBeUndefined();
+  });
+}
 
 test.describe("S3 presign student-attendance (Fellow session)", () => {
   test("Fellow can mint a student-attendance URL for a group they lead", async ({ request }) => {
@@ -299,14 +347,11 @@ test.describe("S3 presign student-attendance (Fellow session)", () => {
   });
 
   test("Fellow cannot mint for a group they do not lead (IDOR)", async ({ request }) => {
-    const foreignGroupId = attendanceTarget.foreignGroupId ?? "grp_not_mine";
+    const { foreign } = attendanceTarget;
+    required(foreign, "a group another fellow leads, with an occurred session at its school");
     const { res, body } = await postPresign(
       request,
-      {
-        ...attendanceBody,
-        groupId: foreignGroupId,
-        sessionId: attendanceTarget.sessionId,
-      },
+      { ...attendanceBody, ...foreign },
       attendanceTargetToken,
     );
 
@@ -315,27 +360,18 @@ test.describe("S3 presign student-attendance (Fellow session)", () => {
     expect(body.url).toBeUndefined();
   });
 
-  test("attendance is pdf only: text/html is rejected", async ({ request }) => {
-    const { res, body } = await postPresign(
-      request,
-      { ...attendanceBody, contentType: "text/html" },
-      fellowToken,
-    );
-    expect(res.status()).toBe(400);
-    expect(body.error).toBe("Unsupported content type");
-    expect(body.url).toBeUndefined();
-  });
-
-  test("attendance is pdf only: audio/mpeg is rejected", async ({ request }) => {
-    const { res, body } = await postPresign(
-      request,
-      { ...attendanceBody, contentType: "audio/mpeg" },
-      fellowToken,
-    );
-    expect(res.status()).toBe(400);
-    expect(body.error).toBe("Unsupported content type");
-    expect(body.url).toBeUndefined();
-  });
+  for (const contentType of ["text/html", "audio/mpeg"]) {
+    test(`attendance is pdf only: ${contentType} is rejected`, async ({ request }) => {
+      const { res, body } = await postPresign(
+        request,
+        { ...attendanceBody, contentType },
+        fellowToken,
+      );
+      expect(res.status()).toBe(400);
+      expect(body.error).toBe("Unsupported content type");
+      expect(body.url).toBeUndefined();
+    });
+  }
 
   test("attendance rejects a file over the bucket maximum", async ({ request }) => {
     const { res, body } = await postPresign(
@@ -361,18 +397,6 @@ test.describe("S3 presign student-attendance (Fellow session)", () => {
     );
     expect(res.status()).toBe(200);
     expect(body.url).toBeDefined();
-  });
-
-  test("Fellow cannot mint a recordings URL", async ({ request }) => {
-    // The fellow leads this group, so only the role can refuse it.
-    const { res, body } = await postPresign(
-      request,
-      { ...recordingBody, ...ownedBy(attendanceTarget) },
-      attendanceTargetToken,
-    );
-    expect(res.status()).toBe(403);
-    expect(body.error).toBe("Forbidden");
-    expect(body.url).toBeUndefined();
   });
 });
 
@@ -401,14 +425,14 @@ test.describe("S3 presign recordings (Supervisor session)", () => {
   test("Supervisor cannot mint for a group outside their supervision (IDOR)", async ({
     request,
   }) => {
-    const foreignGroupId = recordingTarget.foreignGroupId ?? "grp_not_mine";
+    const { foreign } = recordingTarget;
+    required(
+      foreign,
+      "a group of another supervisor's fellow, with an occurred session at its school",
+    );
     const { res, body } = await postPresign(
       request,
-      {
-        ...recordingBody,
-        groupId: foreignGroupId,
-        sessionId: recordingTarget.sessionId,
-      },
+      { ...recordingBody, ...foreign },
       recordingTargetToken,
     );
 
@@ -438,58 +462,54 @@ test.describe("S3 presign recordings (Supervisor session)", () => {
     expect(body.error).toBe("File too large");
     expect(body.url).toBeUndefined();
   });
-
-  test("Supervisor cannot mint a student-attendance URL", async ({ request }) => {
-    // The supervisor supervises this group's fellow, so only the role can refuse it.
-    const { res, body } = await postPresign(
-      request,
-      { ...attendanceBody, ...ownedBy(recordingTarget) },
-      recordingTargetToken,
-    );
-    expect(res.status()).toBe(403);
-    expect(body.error).toBe("Forbidden");
-    expect(body.url).toBeUndefined();
-  });
 });
 
-test.describe("S3 presign other roles", () => {
-  test("Hub coordinator cannot mint recordings", async ({ request }) => {
-    const { res, body } = await postPresign(
-      request,
-      { ...recordingBody, ...ownedBy(recordingTarget) },
-      hubToken,
-    );
-    expect(res.status()).toBe(403);
-    expect(body.url).toBeUndefined();
-  });
-
-  test("Hub coordinator cannot mint student-attendance", async ({ request }) => {
-    const { res, body } = await postPresign(
-      request,
-      { ...attendanceBody, ...ownedBy(attendanceTarget) },
-      hubToken,
-    );
-    expect(res.status()).toBe(403);
-    expect(body.url).toBeUndefined();
-  });
-
-  test("Admin cannot mint student-attendance as if they were a Fellow", async ({ request }) => {
-    const { res, body } = await postPresign(
-      request,
-      { ...attendanceBody, ...ownedBy(attendanceTarget) },
-      adminToken,
-    );
-    expect(res.status()).toBe(403);
-    expect(body.url).toBeUndefined();
-  });
-
-  test("Admin cannot mint recordings", async ({ request }) => {
-    const { res, body } = await postPresign(
-      request,
-      { ...recordingBody, ...ownedBy(recordingTarget) },
-      adminToken,
-    );
-    expect(res.status()).toBe(403);
-    expect(body.url).toBeUndefined();
-  });
+test.describe("S3 presign refuses the roles a bucket is not for", () => {
+  // Each body names a group and session its uploader may use, so only the role can refuse it.
+  const cases = [
+    {
+      who: "Fellow",
+      bucket: "recordings",
+      body: () => ({ ...recordingBody, ...ownedBy(attendanceTarget) }),
+      token: () => attendanceTargetToken,
+    },
+    {
+      who: "Supervisor",
+      bucket: "student-attendance",
+      body: () => ({ ...attendanceBody, ...ownedBy(recordingTarget) }),
+      token: () => recordingTargetToken,
+    },
+    {
+      who: "Hub coordinator",
+      bucket: "recordings",
+      body: () => ({ ...recordingBody, ...ownedBy(recordingTarget) }),
+      token: () => hubToken,
+    },
+    {
+      who: "Hub coordinator",
+      bucket: "student-attendance",
+      body: () => ({ ...attendanceBody, ...ownedBy(attendanceTarget) }),
+      token: () => hubToken,
+    },
+    {
+      who: "Admin",
+      bucket: "recordings",
+      body: () => ({ ...recordingBody, ...ownedBy(recordingTarget) }),
+      token: () => adminToken,
+    },
+    {
+      who: "Admin",
+      bucket: "student-attendance",
+      body: () => ({ ...attendanceBody, ...ownedBy(attendanceTarget) }),
+      token: () => adminToken,
+    },
+  ];
+  for (const { who, bucket, body: requestBody, token } of cases) {
+    test(`${who} cannot mint a ${bucket} URL`, async ({ request }) => {
+      const { res, body } = await postPresign(request, requestBody(), token());
+      expect(res.status()).toBe(403);
+      expect(body.error).toBe("Forbidden");
+      expect(body.url).toBeUndefined();
+    });
+  }
 });
