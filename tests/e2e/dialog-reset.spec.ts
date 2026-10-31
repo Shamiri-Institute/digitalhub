@@ -573,11 +573,14 @@ test("add supervisor starts empty on each open and clears the sub-county with th
   await expect(subCounty).toContainText("Select sub-county");
 });
 
-test("my profile clears the sub-county when the county changes", async ({ page, context }) => {
+test("my profile shows the saved sub-county and clears it when the county changes", async ({
+  page,
+  context,
+}) => {
   const {
     rows: [fixture],
-  } = await db.execute<{ email: string }>(sql`
-    select u.email from supervisors s
+  } = await db.execute<{ email: string; subCounty: string }>(sql`
+    select u.email, s.sub_county as "subCounty" from supervisors s
     join implementer_members m on m.identifier = s.id and m.role = 'SUPERVISOR'
     join users u on u.id = m.user_id
     where s.sub_county is not null and s.county is not null and ${signableMember()}
@@ -589,6 +592,7 @@ test("my profile clears the sub-county when the county changes", async ({ page, 
   await page.getByAltText("Profile arrow drop down icon").click();
   await page.getByRole("menuitem", { name: "My Profile" }).click();
   const dialog = page.getByRole("dialog", { name: "Edit profile" });
+  await expect(dialog.getByRole("combobox", { name: "Sub-county" })).toHaveText(fixture.subCounty);
   await expectCountyChangeClearsSubCounty(page, dialog);
 });
 

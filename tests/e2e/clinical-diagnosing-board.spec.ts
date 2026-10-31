@@ -13,8 +13,8 @@ type Owner = { email: string; supervisorId: string; schoolId: string };
 let owner: Owner;
 
 test.beforeAll(async () => {
-  // The cases table remembers an expanded row by its position, so the test's case is the
-  // supervisor's only one and keeps its row across the refresh that follows a status change.
+  // The cases table keys rows by case id, so the test's case keeps its expanded row across the
+  // refresh that follows a status change, among the supervisor's other cases.
   const {
     rows: [row],
   } = await db.execute<Owner>(sql`
@@ -26,10 +26,10 @@ test.beforeAll(async () => {
     where ${signableMember()}
       and exists (select 1 from intervention_groups g
         where g.school_id = sc.id and g.archived_at is null)
-      and not exists (select 1 from clinical_screening_info c where c.current_supervisor_id = sv.id)
+      and exists (select 1 from clinical_screening_info c where c.current_supervisor_id = sv.id)
     order by sv.id, sc.id
     limit 1`);
-  required(row, "no supervisor without clinical cases who has a school with a group");
+  required(row, "no supervisor with clinical cases who has a school with a group");
   owner = row;
 });
 
@@ -53,7 +53,7 @@ test("a case terminated with its row open shows and saves its endpoint issues", 
     .update(clinicalScreeningInfo)
     .set({ generalPresentingIssuesBaseline: { "Family issues": "true" } })
     .where(eq(clinicalScreeningInfo.id, clinicalCase.caseId));
-  // Terminating a case names one of its clinical sessions, which no page creates.
+  // Terminating a case names one of its clinical sessions; inserting one gives it a known label.
   const sessionLabel = `e2e-termination-${Date.now()}`;
   await db.insert(clinicalSessionAttendance).values({
     caseId: clinicalCase.caseId,
@@ -91,35 +91,4 @@ test("a case terminated with its row open shows and saves its endpoint issues", 
   await expect(page.getByRole("button", { name: "Save Endpoint" })).toBeVisible();
   await expect(peerPressure).toBeChecked();
   await expect(familyIssues).not.toBeChecked();
-});
-
-test("a supervisor unsets a saved emergency severity", async ({ page, context, undo }) => {
-  const clinicalCase = await createClinicalCase({
-    schoolId: owner.schoolId,
-    currentSupervisorId: owner.supervisorId,
-  });
-  undo(() => clinicalCase.remove());
-  const highRiskBullying = page.getByRole("checkbox", { name: "Bullying: High risk" });
-  const saveBaseline = page.getByRole("button", { name: "Save Baseline" });
-  const saved = page.getByText("Baseline presenting issues updated successfully", { exact: true });
-
-  await signInWithEmail(context, owner.email);
-  await page.goto(getUrl("/sc/clinical"));
-  await openCase(page, clinicalCase.pseudonym);
-  await highRiskBullying.click();
-  await saveBaseline.click();
-  await expect(saved).toBeVisible();
-
-  await page.reload();
-  await openCase(page, clinicalCase.pseudonym);
-  await expect(highRiskBullying).toBeChecked();
-  await highRiskBullying.click();
-  await expect(highRiskBullying).not.toBeChecked();
-  await saveBaseline.click();
-  await expect(saved).toBeVisible();
-
-  await page.reload();
-  await openCase(page, clinicalCase.pseudonym);
-  await expect(saveBaseline).toBeVisible();
-  await expect(highRiskBullying).not.toBeChecked();
 });

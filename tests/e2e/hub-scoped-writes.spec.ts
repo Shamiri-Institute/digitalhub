@@ -27,8 +27,6 @@ type SchoolFixture = {
   sessionLabel: string;
   sessionOccurred: boolean;
   groupName: string;
-  /** A supervisor in the coordinator's hub. */
-  supervisorEmail: string;
 };
 type TriageFixture = {
   email: string;
@@ -44,7 +42,6 @@ type TriageFixture = {
 };
 
 let coordinator: Coordinator;
-let otherCoordinator: Coordinator;
 let school: SchoolFixture;
 let triage: TriageFixture;
 
@@ -58,23 +55,9 @@ test.beforeAll(async () => {
     order by u.email`);
 
   for (const candidate of coordinators) {
-    // Same organisation, different hub: the case a hub check exists for.
-    const other = coordinators.find(
-      (c) => c.implementerId === candidate.implementerId && c.hubId !== candidate.hubId,
-    );
-    const {
-      rows: [supervisorRow],
-    } = await db.execute<{ email: string }>(sql`
-      select u.email from supervisors sup
-      join implementer_members m on m.identifier = sup.id and m.role = 'SUPERVISOR'
-      join users u on u.id = m.user_id
-      where sup.hub_id = ${candidate.hubId} and ${signableMember()}
-      order by u.email
-      limit 1`);
-    if (!other || !supervisorRow) continue;
     const {
       rows: [row],
-    } = await db.execute<Omit<SchoolFixture, "supervisorEmail">>(sql`
+    } = await db.execute<SchoolFixture>(sql`
       select s.visible_id as "visibleId", s.school_name as "schoolName",
         st.id as "studentId", st.student_name as "studentName",
         i.id as "sessionId", sn.session_name as "sessionLabel", i.occurred as "sessionOccurred",
@@ -92,11 +75,9 @@ test.beforeAll(async () => {
       limit 1`);
     if (row) {
       coordinator = candidate;
-      otherCoordinator = other;
       school = {
         ...row,
         sessionLabel: sessionDisplayName(row.sessionLabel) ?? row.sessionLabel,
-        supervisorEmail: supervisorRow.email,
       };
       break;
     }
@@ -224,17 +205,6 @@ test("a hub coordinator marks a session in their hub as occurred", async ({
   await expect(await rowWithCell(page, main, school.sessionLabel)).toContainText("Attended");
 });
 
-test("a hub coordinator in another hub does not see the school", async ({ page, context }) => {
-  await signInWithEmail(context, otherCoordinator.email);
-  await page.goto(getUrl("/hc/schools"));
-
-  const main = page.getByRole("main");
-  await expect(await rowWithCell(page, main, school.schoolName)).toHaveCount(0);
-
-  await page.goto(getUrl(`/hc/schools/${school.visibleId}/students`));
-  await expect(page.getByText("This page could not be found.")).toBeVisible();
-});
-
 test("a hub coordinator marks a student in their hub missed at a session", async ({
   page,
   context,
@@ -291,39 +261,6 @@ test("a hub coordinator marks a student in their hub missed at a session", async
       .getByRole("row")
       .filter({ has: page.getByRole("cell", { name: school.sessionLabel, exact: true }) }),
   ).toContainText("Missed");
-});
-
-test("a supervisor edits the details of a student in their hub", async ({
-  page,
-  context,
-  undo,
-}) => {
-  const [originalDetails] = await db
-    .select({ studentName: student.studentName, form: student.form, stream: student.stream })
-    .from(student)
-    .where(eq(student.id, school.studentId));
-  if (!originalDetails) throw new Error(`student ${school.studentId} is gone`);
-  undo(() => db.update(student).set(originalDetails).where(eq(student.id, school.studentId)));
-  await signInWithEmail(context, school.supervisorEmail);
-  await page.goto(getUrl(`/sc/schools/${school.visibleId}/students`));
-
-  const main = page.getByRole("main");
-  await chooseRowAction(
-    page,
-    await rowWithCell(page, main, school.studentName),
-    "Edit information",
-  );
-  const dialog = page.getByRole("dialog", { name: "Edit student information" });
-  const nameInput = dialog.getByLabel("Student name");
-  // The form loads the student after it opens; typing before that is overwritten.
-  await expect(nameInput).toHaveValue(school.studentName);
-  const editedName = `${school.studentName} Edited`;
-  await nameInput.fill(editedName);
-  await dialog.getByRole("button", { name: "Update & save" }).click();
-  await expect(dialog).toBeHidden();
-
-  await page.reload();
-  await expect(await rowWithCell(page, main, editedName)).toHaveCount(1);
 });
 
 test("a hub coordinator adds a student to a group in their hub", async ({

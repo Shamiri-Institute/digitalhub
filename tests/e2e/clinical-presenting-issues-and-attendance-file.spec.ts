@@ -93,7 +93,7 @@ async function expandCase(page: Page) {
   await expect(page.getByRole("button", { name: "Save Baseline" })).toBeVisible();
 }
 
-test("a supervisor saves emergency, general and other presenting issues together", async ({
+test("a supervisor saves emergency, general and other presenting issues, then unsets one", async ({
   page,
   context,
 }) => {
@@ -116,13 +116,26 @@ test("a supervisor saves emergency, general and other presenting issues together
   await expect(highRiskBullying).toBeChecked();
   await expect(familyIssues(page)).toBeChecked();
   await expect(page.getByRole("textbox", { name: "Other Issues" })).toHaveValue(otherIssues);
+
+  // Unticking a saved severity removes it; the server replaces the issues rather than merging.
+  await highRiskBullying.click();
+  await expect(highRiskBullying).not.toBeChecked();
+  await page.getByRole("button", { name: "Save Baseline" }).click();
+  await expect(
+    page.getByText("Baseline presenting issues updated successfully", { exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expandCase(page);
+  await expect(highRiskBullying).not.toBeChecked();
+  await expect(familyIssues(page)).toBeChecked();
+  await expect(page.getByRole("textbox", { name: "Other Issues" })).toHaveValue(otherIssues);
 });
 
 test("a save from a page loaded before the case was terminated changes nothing", async ({
   page,
   context,
 }) => {
-  // Terminating a case names one of its clinical sessions, which no page creates.
+  // Terminating a case names one of its clinical sessions; inserting one gives it a known label.
   const sessionLabel = `e2e-termination-${Date.now()}`;
   await db.insert(clinicalSessionAttendance).values({
     caseId: clinicalCase.caseId,
@@ -165,11 +178,10 @@ test("a save from a page loaded before the case was terminated changes nothing",
   await expect(familyIssues(page)).not.toBeChecked();
 });
 
-test("a fellow deletes their group's attendance document even when the file store fails", async ({
-  page,
-  context,
-  undo,
-}) => {
+// The document is archived before its file is deleted from the store, and the delete succeeds
+// whatever the store answers; whether the store fails depends on its credentials, so this test
+// proves the archive, not the failure path.
+test("a fellow deletes their group's attendance document", async ({ page, context, undo }) => {
   test.skip(
     !process.env.S3_STUDENT_ATTENDANCE_BUCKET || !process.env.S3_STUDENT_ATTENDANCE_REGION,
     "set S3_STUDENT_ATTENDANCE_BUCKET and S3_STUDENT_ATTENDANCE_REGION (mock values will do)",
