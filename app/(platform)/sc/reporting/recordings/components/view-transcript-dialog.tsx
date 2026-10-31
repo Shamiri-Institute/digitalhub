@@ -38,10 +38,22 @@ function TranscriptLines({
     return <p className="text-sm text-shamiri-text-grey">No transcript is available.</p>;
   }
 
+  // Segments are stored in the order of the audio cuts; Gemini's times are estimates and can
+  // disagree with it, so only the gaps (our own cut times) are placed by time.
+  const { segments } = loaded;
+  const firstSegmentFrom = (start: number) => {
+    const index = segments.findIndex((segment) => segment.start >= start);
+    return index === -1 ? segments.length : index;
+  };
   const lines = [
-    ...loaded.segments.map((segment) => ({ ...segment, gap: false })),
-    ...loaded.gaps.map((gap) => ({ ...gap, text: "", gap: true })),
-  ].toSorted((a, b) => a.start - b.start);
+    ...segments.map((segment, index) => ({ ...segment, gap: false, order: index })),
+    ...loaded.gaps.map((gap) => ({
+      ...gap,
+      text: "",
+      gap: true,
+      order: firstSegmentFrom(gap.start) - 0.5,
+    })),
+  ].toSorted((a, b) => a.order - b.order);
 
   return (
     <ol className="divide-y divide-grey-border rounded-md border border-grey-border">
