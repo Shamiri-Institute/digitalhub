@@ -30,8 +30,12 @@ test("the school breadcrumb names the hub and switches between the implementer's
     order by u.email, s.visible_id
     limit 1`);
   required(fixture, "no admin with a school");
-  const { rows: implementerSchools } = await db.execute<{ schoolName: string }>(sql`
-    select s.school_name as "schoolName"
+  const { rows: implementerSchools } = await db.execute<{
+    schoolName: string;
+    visibleId: string;
+    hubName: string;
+  }>(sql`
+    select s.school_name as "schoolName", s.visible_id as "visibleId", h.hub_name as "hubName"
     from schools s
     join hubs h on h.id = s.hub_id
     join projects p on p.id = h.project_id and p.is_default
@@ -51,4 +55,16 @@ test("the school breadcrumb names the hub and switches between the implementer's
   expect(optionSchools.toSorted(byName)).toEqual(
     implementerSchools.map((s) => s.schoolName).toSorted(byName),
   );
+
+  // Picking another school opens the same tab of that school.
+  const other = implementerSchools.find(
+    (school) =>
+      school.visibleId !== fixture.visibleId &&
+      implementerSchools.filter((s) => s.schoolName === school.schoolName).length === 1,
+  );
+  required(other, "a second, uniquely named school of the implementer");
+  await page.getByPlaceholder("Search schools...").fill(other.schoolName);
+  await options.filter({ hasText: other.schoolName }).first().click();
+  await expect(page).toHaveURL(new RegExp(`/admin/schools/${other.visibleId}/sessions$`));
+  await expect(page.getByText(`Hubs/${other.hubName}/${other.schoolName}`)).toBeVisible();
 });

@@ -720,7 +720,7 @@ test("weekly hub report starts empty on each open", async ({ page, context }) =>
   const fixture = await pickCoordinatorSchools();
   await signInWithEmail(context, fixture.email);
   await page.goto(getUrl("/hc/schools"));
-  const dialog = page.getByTestId("weekly-hub-report-dialog");
+  const dialog = page.getByRole("dialog", { name: "Submit weekly hub report" });
   const recommendations = dialog.getByRole("textbox", { name: "Recommendations" });
   await page.getByRole("button", { name: "Weekly Hub Report" }).click();
   await recommendations.fill(typed);

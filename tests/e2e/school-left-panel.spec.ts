@@ -19,11 +19,7 @@ type Fixture = {
   studentsCount: number;
 };
 
-test("the school panel renders on the server and shows a session cancelled on the tab", async ({
-  page,
-  context,
-  undo,
-}) => {
+test("the school panel shows a session cancelled on the tab", async ({ page, context, undo }) => {
   const {
     rows: [fixture],
   } = await db.execute<Fixture>(sql`
@@ -44,7 +40,8 @@ test("the school panel renders on the server and shows a session cancelled on th
       and (select count(*) from intervention_sessions o where o.school_id = s.id) <= 10
       and (select count(*) from intervention_sessions o
         where o.school_id = s.id and o.session_id = i.session_id) = 1
-    order by u.email, s.visible_id, i.session_date
+    -- The latest open session: dialog-reset marks the earliest one.
+    order by u.email, s.visible_id, i.session_date desc
     limit 1`);
   required(fixture, "no school with an open session");
   const sessionLabel = sessionDisplayName(fixture.sessionName);
@@ -72,5 +69,8 @@ test("the school panel renders on the server and shows a session cancelled on th
       .where(eq(interventionSession.id, fixture.sessionId)),
   );
   await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click();
+  await expect(panel.getByTitle(`${sessionLabel}: Cancelled`)).toBeVisible();
+
+  await page.reload();
   await expect(panel.getByTitle(`${sessionLabel}: Cancelled`)).toBeVisible();
 });
