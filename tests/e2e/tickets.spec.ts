@@ -29,6 +29,7 @@ test("supervisor creates a ticket and can view it in the list", async ({ page, c
   await dialog.getByRole("button", { name: "Submit" }).click();
   await expect(dialog).toBeHidden();
 
+  await page.reload();
   const row = await searchRows(page, subject);
   await expect(row).toBeVisible();
   // The table lowercases these through CSS, so innerText does not match the stored value.

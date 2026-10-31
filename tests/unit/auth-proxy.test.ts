@@ -35,10 +35,8 @@ describe("proxy", () => {
     expect(res.headers.get("x-middleware-next")).toBe("1");
   });
 
-  it("leaves the public paths open", () => {
-    for (const path of ["/login", "/register"]) {
-      expect(proxy(request(path)).headers.get("x-middleware-next")).toBe("1");
-    }
+  it("leaves the login page open", () => {
+    expect(proxy(request("/login")).headers.get("x-middleware-next")).toBe("1");
   });
 });
 

@@ -15,7 +15,7 @@ import {
 /** A page by its position, or an item by its id. */
 export type Selection = { page: number } | { item: string } | null;
 
-export type BuilderState = {
+type BuilderState = {
   form: SurveyForm;
   /** The form as last saved. Unsaved changes are the difference, never a separate flag. */
   savedForm: SurveyForm;
@@ -188,7 +188,7 @@ export function hasUnsavedChanges(state: BuilderState) {
   );
 }
 
-export function findItem(form: SurveyForm, itemId: string) {
+function findItem(form: SurveyForm, itemId: string) {
   return form.pages.flatMap((page) => page.items).find((item) => item.id === itemId);
 }
 
@@ -205,13 +205,13 @@ export function currentPage(form: SurveyForm, selection: Selection) {
 }
 
 /** Falls back to the first page when `pageNumber` names none of the form's pages. */
-export function pageIndexFromPageNumber(pageNumber: string | null | undefined, form: SurveyForm) {
+function pageIndexFromPageNumber(pageNumber: string | null | undefined, form: SurveyForm) {
   const pageIndex = pageNumber && /^\d+$/.test(pageNumber) ? Number(pageNumber) - 1 : -1;
   return pageIndex >= 0 && pageIndex < form.pages.length ? pageIndex : 0;
 }
 
 /** The position of the page holding an item, or -1. */
-export function pageOf(form: SurveyForm, itemId: string) {
+function pageOf(form: SurveyForm, itemId: string) {
   return form.pages.findIndex((page) => page.items.some((item) => item.id === itemId));
 }
 
@@ -252,7 +252,7 @@ function blankItem(kind: ItemKind, id: string, taken: ReadonlySet<string>): Surv
  * A key made from a prompt: lowercase words joined by `_`, starting with a letter, numbered when
  * the form already has it (`age_2`). Null for a prompt with no letters or digits.
  */
-export function suggestKey(prompt: string, taken: ReadonlySet<string>) {
+function suggestKey(prompt: string, taken: ReadonlySet<string>) {
   const slug = prompt
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")

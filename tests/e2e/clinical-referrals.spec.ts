@@ -107,13 +107,14 @@ test("the recipient accepts a referred case and it becomes theirs", async ({ pag
   await expect(page.getByText("Referred case accepted").first()).toBeVisible();
 
   await page.reload({ waitUntil: "networkidle" });
+  await expect(referredCases(page)).toBeVisible();
   await expect(referralCard(page)).toHaveCount(0);
   await expect(await searchRows(page, pseudonym)).toHaveCount(1);
 
   await page.context().clearCookies();
   await signInWithEmail(page.context(), referrer.email);
   await page.goto(getUrl("/sc/clinical"));
-  await expect(page.getByRole("button", { name: "New case" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "New case", exact: true })).toBeVisible();
   await expect(await searchRows(page, pseudonym)).toHaveCount(0);
 });
 
@@ -126,8 +127,9 @@ test("the recipient rejects a referred case and the referrer keeps it", async ({
   await expect(page.getByText("Referred case rejected").first()).toBeVisible();
 
   await page.reload({ waitUntil: "networkidle" });
+  await expect(referredCases(page)).toBeVisible();
   await expect(referralCard(page)).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "New case" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "New case", exact: true })).toBeVisible();
   await expect(await searchRows(page, pseudonym)).toHaveCount(0);
 
   await page.context().clearCookies();

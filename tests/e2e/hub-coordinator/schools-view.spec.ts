@@ -21,7 +21,7 @@ test("Hub Coordinator can submit a weekly hub report", async ({ page, context, u
   ] as const;
 
   await page.getByRole("button", { name: "Weekly Hub Report" }).click();
-  const dialog = page.getByTestId("weekly-hub-report-dialog");
+  const dialog = page.getByRole("dialog", { name: "Submit weekly hub report" });
   await dialog.getByRole("combobox", { name: "Select week" }).click();
   await page.getByRole("option", { name: "Week 1" }).click();
   for (const [section, stars] of ratings) {

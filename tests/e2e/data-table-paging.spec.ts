@@ -83,6 +83,11 @@ test("saving a row on page 2 keeps the table on page 2", async ({ page, context,
   await expect(pageStatus).toHaveText(/^2 of /);
   await expect(pageNumber).toHaveValue("2");
 
+  // The save itself, read back after a reload, which reopens page 2 from the URL.
+  await page.reload();
+  await expect(pageStatus).toHaveText(/^2 of /);
+  await expect(dataRows(page).filter({ hasText: savedName })).toBeVisible();
+
   await main.getByRole("button", { name: "1", exact: true }).click();
   await expect(pageStatus).toHaveText(/^1 of /);
   await expect(pageNumber).toHaveValue("1");

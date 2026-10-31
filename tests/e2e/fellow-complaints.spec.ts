@@ -15,8 +15,9 @@ let supervisorEmail: string;
 let targetFellow: { fellowId: string; fellowName: string };
 let otherSupervisorEmail: string;
 
-// Same organisation, so the only reason the complaint is hidden is who supervises the fellow.
-async function pickSameOrgSupervisorOfOtherFellows(
+// Same hub as the fellow, so the only reason the complaint is hidden is who supervises the fellow:
+// supervisors only see their own hub too.
+async function pickSameHubSupervisorOfOtherFellows(
   implementerId: string,
   excludedEmail: string,
   fellowId: string,
@@ -29,13 +30,14 @@ async function pickSameOrgSupervisorOfOtherFellows(
     join users u on u.id = m.user_id
     join supervisors s on s.id = m.identifier
     where m.role = 'SUPERVISOR' and m.implementer_id = ${implementerId}
+      and s.hub_id = (select hub_id from fellows where id = ${fellowId})
       and u.email <> ${excludedEmail}
       and not exists (select 1 from fellows f where f.id = ${fellowId}
         and f.supervisor_id = s.id)
       and ${signableMember()}
     order by u.email
     limit 1`);
-  if (!otherSupervisor) throw new Error("No second supervisor in the same organisation");
+  if (!otherSupervisor) throw new Error("No second supervisor in the fellow's hub");
   return otherSupervisor;
 }
 
@@ -60,7 +62,7 @@ test.beforeAll(async () => {
   required(supervisedFellow, "no supervised fellow");
   supervisorEmail = supervisedFellow.email;
 
-  const otherSupervisor = await pickSameOrgSupervisorOfOtherFellows(
+  const otherSupervisor = await pickSameHubSupervisorOfOtherFellows(
     supervisedFellow.implementerId,
     supervisorEmail,
     supervisedFellow.fellowId,

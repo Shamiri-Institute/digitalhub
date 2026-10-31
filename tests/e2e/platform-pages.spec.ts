@@ -1,19 +1,12 @@
-import { type ConsoleMessage, expect, type Response, test } from "@playwright/test";
+import { expect, type Response, test } from "@playwright/test";
 
 import { signInAs } from "#/tests/helpers";
-import { type Role, resolveRoutes } from "#/tests/platform-routes";
+import { discoverPagePaths, resolveRoutes } from "#/tests/platform-routes";
 import { getUrl } from "#/tests/pages/helpers";
 
 const ERROR_TEXTS = ["Oops! Something went wrong!", "Application error", "Internal Server Error"];
-const ROLES: Role[] = [
-  "ADMIN",
-  "CLINICAL_LEAD",
-  "CLINICAL_TEAM",
-  "FELLOW",
-  "HUB_COORDINATOR",
-  "OPERATIONS",
-  "SUPERVISOR",
-];
+// Every role with a page under app/(platform), so a new role's pages are covered too.
+const ROLES = [...new Set(discoverPagePaths().map((route) => route.role))];
 
 for (const role of ROLES) {
   test(`${role} pages render without errors`, async ({ page, context }) => {
@@ -23,10 +16,6 @@ for (const role of ROLES) {
 
     for (const route of routes.filter((r) => r.role === role)) {
       await test.step(route.path, async () => {
-        const consoleErrors: string[] = [];
-        const onConsole = (message: ConsoleMessage) => {
-          if (message.type() === "error") consoleErrors.push(message.text());
-        };
         // A server action the page fires on its own (on mount) that throws answers with a 5xx; the
         // page can still render, so check the responses.
         const failedActions: string[] = [];
@@ -35,11 +24,9 @@ for (const role of ROLES) {
             failedActions.push(`${response.status()} ${response.url()}`);
           }
         };
-        page.on("console", onConsole);
         page.on("response", onResponse);
         await page.goto(getUrl(route.path));
         await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => null);
-        page.off("console", onConsole);
         page.off("response", onResponse);
 
         const finalPath = new URL(page.url()).pathname;

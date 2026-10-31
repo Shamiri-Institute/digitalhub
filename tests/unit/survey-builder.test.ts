@@ -1,16 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  type BuilderState,
-  builderReducer,
-  currentPage,
-  findItem,
-  initBuilder,
-  newItemId,
-  pageIndexFromPageNumber,
-  pageOf,
-  suggestKey,
-} from "#/lib/survey/builder";
+import { builderReducer, currentPage, initBuilder, newItemId } from "#/lib/survey/builder";
 import { checkForm, lockedQuestions } from "#/lib/survey/check-form";
 import type { SurveyForm } from "#/lib/survey/form";
 
@@ -43,21 +33,41 @@ const FORM: SurveyForm = {
   ],
 };
 
+type BuilderState = ReturnType<typeof initBuilder>;
+
 const start = (publishedKeys: string[] = []) =>
   initBuilder({ form: FORM, revision: 3, publishedKeys });
 const ids = (state: BuilderState) => state.form.pages.map((page) => page.items.map((i) => i.id));
+const findItem = (form: SurveyForm, itemId: string) =>
+  form.pages.flatMap((page) => page.items).find((item) => item.id === itemId);
+
+/** The key a new text question gets once its prompt is typed. */
+function keyFor(prompt: string, publishedKeys: string[] = []) {
+  const id = newItemId();
+  const added = builderReducer(start(publishedKeys), {
+    type: "addItem",
+    page: 0,
+    kind: "text",
+    id,
+  });
+  const item = findItem(added.form, id);
+  if (item?.kind !== "text") throw new Error("missing");
+  const typed = builderReducer(added, { type: "replaceItem", item: { ...item, prompt } });
+  const result = findItem(typed.form, id);
+  return result?.kind === "text" ? result.key : undefined;
+}
 
 describe("builderReducer", () => {
   it("moves an item past the end of its page onto the next page, unchanged", () => {
     const state = builderReducer(start(), { type: "moveItem", itemId: "age", by: 1 });
     expect(ids(state)).toEqual([["intro"], ["age", "mood"]]);
-    expect(findItem(state.form, "age")).toEqual(findItem(FORM, "age"));
+    expect(findItem(state.form, "age")).toEqual(FORM.pages[0]?.items[1]);
   });
 
   it("moves an item to another page with its key and settings", () => {
     const state = builderReducer(start(), { type: "moveItemToPage", itemId: "mood", page: 0 });
     expect(ids(state)).toEqual([["intro", "age", "mood"], []]);
-    expect(findItem(state.form, "mood")).toEqual(findItem(FORM, "mood"));
+    expect(findItem(state.form, "mood")).toEqual(FORM.pages[1]?.items[0]);
   });
 
   it("ignores a move past the first item of the form", () => {
@@ -106,7 +116,6 @@ describe("builderReducer", () => {
     const state = builderReducer(selected, { type: "addItem", page: 0, kind: "date", id });
     expect(ids(state)[0]).toEqual(["intro", id, "age"]);
     expect(state.selection).toEqual({ item: id });
-    expect(pageOf(state.form, id)).toBe(0);
     expect(findItem(state.form, id)).toMatchObject({ kind: "date", key: "question" });
   });
 
@@ -167,24 +176,20 @@ describe("builderReducer", () => {
   });
 });
 
-describe("pageIndexFromPageNumber", () => {
-  it("reads a page by the number its tab shows", () => {
-    expect(pageIndexFromPageNumber("1", FORM)).toBe(0);
-    expect(pageIndexFromPageNumber("2", FORM)).toBe(1);
-  });
-
-  it("falls back to the first page for a missing, malformed or out of range number", () => {
-    for (const pageNumber of [null, undefined, "", "0", "3", "-1", "1.5", "2abc", " 2"]) {
-      expect(pageIndexFromPageNumber(pageNumber, FORM)).toBe(0);
-    }
-  });
-});
-
 describe("initBuilder", () => {
+  const openAt = (pageNumber: string | null | undefined) =>
+    initBuilder({ form: FORM, revision: 3, publishedKeys: [], pageNumber }).selection;
+
   it("opens the page the URL names, with every item closed", () => {
-    const opened = initBuilder({ form: FORM, revision: 3, publishedKeys: [], pageNumber: "2" });
-    expect(opened.selection).toEqual({ page: 1 });
+    expect(openAt("1")).toEqual({ page: 0 });
+    expect(openAt("2")).toEqual({ page: 1 });
     expect(start().selection).toEqual({ page: 0 });
+  });
+
+  it("opens the first page for a missing, malformed or out of range number", () => {
+    for (const pageNumber of [null, undefined, "", "0", "3", "-1", "1.5", "2abc", " 2"]) {
+      expect(openAt(pageNumber)).toEqual({ page: 0 });
+    }
   });
 
   it("selects nothing in a form with no pages", () => {
@@ -195,20 +200,20 @@ describe("initBuilder", () => {
   });
 });
 
-describe("suggestKey", () => {
-  it("makes a key from a prompt", () => {
-    expect(suggestKey("  Café visits per week? ", new Set())).toBe("cafe_visits_per_week");
-    expect(suggestKey("2nd language", new Set())).toBe("q_2nd_language");
-    expect(suggestKey("?!", new Set())).toBeNull();
-    expect(suggestKey("Age", new Set(["age", "age_2"]))).toBe("age_3");
+describe("a new question's key", () => {
+  it("is made from its prompt", () => {
+    expect(keyFor("  Café visits per week? ")).toBe("cafe_visits_per_week");
+    expect(keyFor("2nd language")).toBe("q_2nd_language");
+    expect(keyFor("?!")).toBe("question");
+    expect(keyFor("Age", ["age_2"])).toBe("age_3");
   });
 
-  it("keeps a key within 64 characters, prefix and number included", () => {
+  it("stays within 64 characters, prefix and number included", () => {
     const long = `9${"x".repeat(80)}`;
-    const first = suggestKey(long, new Set());
+    const first = keyFor(long);
     expect(first).toHaveLength(64);
     expect(first).toMatch(/^q_9x+$/);
-    const second = suggestKey(long, new Set([first ?? ""]));
+    const second = keyFor(long, [first ?? ""]);
     expect(second).toHaveLength(64);
     expect(second).toMatch(/_2$/);
   });
