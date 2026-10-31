@@ -135,7 +135,8 @@ module.exports = withSentryConfig(nextConfig, {
     name: process.env.VERCEL_GIT_COMMIT_SHA || undefined,
   },
 
-  silent: true,
+  // Vercel builds set CI, so their logs show whether source maps and the release reached Sentry.
+  silent: !process.env.CI,
 
   widenClientFileUpload: true,
 
