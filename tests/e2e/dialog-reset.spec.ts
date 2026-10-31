@@ -154,8 +154,9 @@ test("student group evaluation shows the chosen session's saved comment, not typ
   await engagementComment.fill(typed);
   await closeDialog(page, dialog);
 
+  // A fresh open shows the latest session again, not the session or text left behind.
   await open();
-  await expect(engagementComment).not.toHaveValue(typed);
+  await expect(engagementComment).toHaveValue(fixture.latestComment);
 });
 
 test("monthly supervisor evaluation clears the chosen month and comments when reopened", async ({
@@ -990,20 +991,47 @@ test("mark attendance shows each session's saved status on reopen and after swit
   page,
   context,
 }) => {
+  // The dialog lists a school's occurred sessions earliest first and opens on the latest. A school
+  // whose supervisor has a different status at the earliest one shows whether switching sessions
+  // loads that session's status.
   const {
     rows: [fixture],
-  } = await db.execute<{ email: string; visibleId: string; supervisorName: string }>(sql`
-    select u.email, sc.visible_id as "visibleId", sv.supervisor_name as "supervisorName"
+  } = await db.execute<{
+    email: string;
+    visibleId: string;
+    supervisorName: string;
+    firstStatus: string;
+  }>(sql`
+    with ranked as (
+      select i.id, i.school_id,
+        row_number() over (partition by i.school_id order by i.session_date) as from_first,
+        row_number() over (partition by i.school_id order by i.session_date desc) as from_last,
+        count(*) over (partition by i.school_id, i.session_date) as sharing_date
+      from intervention_sessions i
+      where i.occurred
+    ),
+    statuses as (
+      select r.*, case when a.attended then 'Attended' when a.attended = false then 'Missed'
+          else 'Unmarked' end as status
+      from ranked r
+      join schools sc on sc.id = r.school_id
+      left join supervisor_attendances a
+        on a.session_id = r.id and a.supervisor_id = sc.assigned_supervisor_id
+    )
+    select u.email, sc.visible_id as "visibleId", sv.supervisor_name as "supervisorName",
+      first.status as "firstStatus"
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
     join users u on u.id = m.user_id
     join schools sc on sc.hub_id = hc.assigned_hub_id and sc.archived_at is null
     join supervisors sv on sv.id = sc.assigned_supervisor_id and sv.supervisor_name is not null
-    where ${signableMember()}
-      and (select count(*) from intervention_sessions i where i.school_id = sc.id and i.occurred) >= 2
+    join statuses first on first.school_id = sc.id and first.from_first = 1
+      and first.sharing_date = 1
+    join statuses last on last.school_id = sc.id and last.from_last = 1 and last.sharing_date = 1
+    where ${signableMember()} and first.status <> last.status
     order by u.email, sc.visible_id
     limit 1`);
-  required(fixture, "no school with two occurred sessions");
+  required(fixture, "no school whose supervisor's first and last sessions differ in status");
 
   await signInWithEmail(context, fixture.email);
   await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/supervisors`));
@@ -1034,7 +1062,8 @@ test("mark attendance shows each session's saved status on reopen and after swit
   await dialog.getByRole("radio", { name: other }).click();
   await session.click();
   await page.getByRole("option").first().click();
+  await expect.poll(checkedStatus).toBe(fixture.firstStatus);
   await session.click();
   await page.getByRole("option").last().click();
-  expect(await checkedStatus()).toBe(saved);
+  await expect.poll(checkedStatus).toBe(saved);
 });
