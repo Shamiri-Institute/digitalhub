@@ -1,5 +1,6 @@
 import "server-only";
 
+import * as Sentry from "@sentry/nextjs";
 import { and, asc, eq, inArray, lt, or, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -7,7 +8,7 @@ import { type RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums"
 import { sessionRecording, transcription } from "#/db/schema";
 import { getPresignedUrl } from "#/lib/s3/s3.service";
 import {
-  DamagedAudioError,
+  UnusableAudioError,
   PROMPT_SHA256,
   PROMPT_VERSION,
   TRANSCRIPTION_MODEL,
@@ -124,13 +125,28 @@ export async function finishTranscription(
   });
 }
 
+// Ids, reasons and counts only: the transcript is speech from sessions with minors. Retried errors
+// stay in the logs, so a short Gemini outage alerts no one; the run's last attempt reports it.
+function report(
+  run: ClaimedTranscription,
+  reason: string,
+  message: string,
+  level: "error" | "warning",
+) {
+  Sentry.captureMessage(message, {
+    level,
+    fingerprint: ["transcription", reason],
+    tags: { transcription_reason: reason },
+    extra: { transcriptionId: run.id, recordingId: run.recordingId, attempt: run.attempts },
+  });
+}
+
 async function runTranscription(run: ClaimedTranscription) {
   const label = `[transcription ${run.id} attempt ${run.attempts}]`;
   if (run.attempts > MAX_ATTEMPTS) {
-    await finishTranscription(run, {
-      status: TranscriptionStatus.FAILED,
-      errorMessage: `Transcription stopped responding ${MAX_ATTEMPTS} times`,
-    });
+    const errorMessage = `Transcription stopped responding ${MAX_ATTEMPTS} times`;
+    await finishTranscription(run, { status: TranscriptionStatus.FAILED, errorMessage });
+    report(run, "stopped_responding", errorMessage, "error");
     return;
   }
   try {
@@ -162,12 +178,20 @@ async function runTranscription(run: ClaimedTranscription) {
       `${label} ${recorded ? "completed" : "result dropped: claimed again"}: ` +
         `${transcript.chunkCount} chunks, ${transcript.gaps.length} gaps`,
     );
+    if (recorded && transcript.gaps.length > 0) {
+      report(run, "gaps", `Transcription completed with ${transcript.gaps.length} gaps`, "warning");
+    }
   } catch (error) {
     const errorMessage = (error instanceof Error ? error.message : String(error)).slice(0, 500);
-    const permanent = error instanceof DamagedAudioError || run.attempts >= MAX_ATTEMPTS;
-    const status = permanent ? TranscriptionStatus.FAILED : TranscriptionStatus.QUEUED;
+    const unusable = error instanceof UnusableAudioError;
+    const status =
+      unusable || run.attempts >= MAX_ATTEMPTS
+        ? TranscriptionStatus.FAILED
+        : TranscriptionStatus.QUEUED;
     await finishTranscription(run, { status, errorMessage });
     console.error(`${label} ${status}: ${errorMessage}`);
+    if (unusable) report(run, "unusable_audio", errorMessage, "warning");
+    else if (status === TranscriptionStatus.FAILED) report(run, "failed", errorMessage, "error");
   }
 }
 

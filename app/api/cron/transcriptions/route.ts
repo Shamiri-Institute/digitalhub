@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { env } from "#/env";
@@ -18,5 +19,15 @@ export async function GET(request: NextRequest) {
   ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  return NextResponse.json({ claimed: await runQueuedTranscriptions() });
+  // Preview calls are manual, so only production check-ins: Sentry alerts when a minute's check-in
+  // is missed (cron blocked, wrong secret, bad deploy), the worker throws, or it runs past 15 min.
+  const claimed =
+    process.env.VERCEL_ENV === "production"
+      ? await Sentry.withMonitor("transcription-worker", runQueuedTranscriptions, {
+          schedule: { type: "crontab", value: "* * * * *" },
+          checkinMargin: 2,
+          maxRuntime: 15,
+        })
+      : await runQueuedTranscriptions();
+  return NextResponse.json({ claimed });
 }

@@ -11,7 +11,8 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import {
-  DamagedAudioError,
+  MAX_AUDIO_SECONDS,
+  UnusableAudioError,
   PROMPT_SHA256,
   placeSegments,
   planChunks,
@@ -110,7 +111,21 @@ describe("transcribeAudio", () => {
     writeFileSync(damaged, bytes);
 
     await expect(transcribeAudio(damaged, AbortSignal.timeout(60_000))).rejects.toThrow(
-      DamagedAudioError,
+      UnusableAudioError,
     );
   });
+
+  it("refuses a recording longer than any session, before calling Gemini", async () => {
+    if (!ffmpegPath) throw new Error("ffmpeg-static has no binary for this platform");
+    const long = path.join(dir, "long.mp3");
+    const seconds = MAX_AUDIO_SECONDS + 60;
+    const args = `-loglevel error -f lavfi -i anullsrc=r=8000:cl=mono -t ${seconds} -b:a 8k`;
+    execFileSync(ffmpegPath, [...args.split(" "), long]);
+
+    await expect(transcribeAudio(long, AbortSignal.timeout(120_000))).rejects.toThrow(
+      new UnusableAudioError(
+        "The recording is 2 h 1 min long, longer than any session. Check that the right file was uploaded.",
+      ),
+    );
+  }, 150_000);
 });

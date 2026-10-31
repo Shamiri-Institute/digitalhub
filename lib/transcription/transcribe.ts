@@ -27,6 +27,9 @@ const CHUNKS_IN_FLIGHT = 6;
 // about 0.1 s, which the 1 s floor absorbs on short files.
 const MAX_LOST_RATIO = 0.005;
 const MAX_LOST_SECONDS = 1;
+// Sessions run to about 75 minutes. A longer file is the wrong upload or a recorder left on, so it
+// is refused before any Gemini call.
+export const MAX_AUDIO_SECONDS = 120 * 60;
 
 export type TranscriptSegment = { start: number; end: number; text: string };
 export type TranscriptGap = {
@@ -42,7 +45,8 @@ export type Transcript = {
 };
 
 /** The recording cannot be transcribed honestly; retrying will not help. */
-export class DamagedAudioError extends Error {}
+/** The supervisor has to upload another file: retrying cannot help. */
+export class UnusableAudioError extends Error {}
 
 const RESPONSE_SCHEMA = {
   type: Type.ARRAY,
@@ -115,11 +119,11 @@ async function prepareAudio(url: string, signal: AbortSignal) {
     signal,
   );
   const durations = readDurations(stderr);
-  if (!durations) throw new DamagedAudioError("ffmpeg could not read the recording's duration");
+  if (!durations) throw new UnusableAudioError("ffmpeg could not read the recording's duration");
   const lostSeconds = durations.declared - durations.decoded;
   if (lostSeconds > Math.max(MAX_LOST_SECONDS, MAX_LOST_RATIO * durations.declared)) {
     const minutes = (s: number) => (s / 60).toFixed(1);
-    throw new DamagedAudioError(
+    throw new UnusableAudioError(
       `The audio file is damaged: only ${minutes(durations.decoded)} of ` +
         `${minutes(durations.declared)} minutes could be read. Re-export the recording and upload it again.`,
     );
@@ -265,9 +269,16 @@ export function placeSegments(segments: TranscriptSegment[], start: number, seco
   }));
 }
 
-/** Transcribes the audio at `url`; throws DamagedAudioError when it cannot be decoded in full. */
+/** Transcribes the audio at `url`; throws UnusableAudioError when it is damaged or too long. */
 export async function transcribeAudio(url: string, signal: AbortSignal): Promise<Transcript> {
   const { mp3, audioSeconds } = await prepareAudio(url, signal);
+  if (audioSeconds > MAX_AUDIO_SECONDS) {
+    const minutes = Math.round(audioSeconds / 60);
+    throw new UnusableAudioError(
+      `The recording is ${Math.floor(minutes / 60)} h ${minutes % 60} min long, longer than any ` +
+        "session. Check that the right file was uploaded.",
+    );
+  }
   const chunks = planChunks(audioSeconds);
   // Vertex AI or an API key, from GOOGLE_GENAI_USE_VERTEXAI / GOOGLE_CLOUD_PROJECT /
   // GOOGLE_CLOUD_LOCATION or GEMINI_API_KEY. Each attempt times out after 300 s; the SDK retries
