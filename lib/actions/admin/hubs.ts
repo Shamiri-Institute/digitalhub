@@ -5,8 +5,7 @@ import { refresh } from "next/cache";
 import type { z } from "zod";
 
 import { db, isForeignKeyViolation, isUniqueViolation, type Transaction } from "#/db/client";
-import { hub, interventionSession, sessionName } from "#/db/schema";
-import { countOf } from "#/db/sql";
+import { hub, sessionName } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import {
   assignSessionCodes,
@@ -132,7 +131,7 @@ async function updateSessionNames(
   const loaded = new Set(loadedSessionNameIds);
   if (loaded.size !== stored.length || stored.some((n) => !loaded.has(n.id))) {
     throw new AdminActionError(
-      "This hub's session types changed since you opened it. Please close the dialog and open it again.",
+      "This hub's session types changed since you opened it. Please reload the page and try again.",
     );
   }
 
@@ -177,44 +176,6 @@ async function updateSessionNames(
   const added = newSessionNameRows(hubId, submitted, codes);
   if (added.length > 0) {
     await tx.insert(sessionName).values(added);
-  }
-}
-
-/**
- * A hub's session names for the edit form, each with how many sessions use it. Codes sort by
- * length first, so s10 comes after s9 and the last row of a group is its highest code.
- */
-function querySessionNames(hubId: string) {
-  return db.query.sessionName.findMany({
-    where: (n, { eq }) => eq(n.hubId, hubId),
-    columns: { id: true, sessionName: true, sessionType: true, sessionLabel: true, amount: true },
-    extras: (n) => ({
-      sessionCount: countOf(interventionSession.sessionId, n.id).as("session_count"),
-    }),
-    orderBy: (n, { asc }) => [asc(sql`length(${n.sessionName})`), asc(n.sessionName), asc(n.id)],
-  });
-}
-
-export type HubSessionName = Awaited<ReturnType<typeof querySessionNames>>[number];
-
-export async function fetchHubSessionNames(
-  hubId: string,
-): Promise<ActionResponse<HubSessionName[]>> {
-  try {
-    const { implementerId } = await requireSuperAdmin();
-
-    const ownHub = await db.query.hub.findFirst({
-      where: (h, { and, eq }) => and(eq(h.id, hubId), eq(h.implementerId, implementerId)),
-      columns: { id: true },
-    });
-    if (!ownHub) {
-      throw new AdminActionError("Hub not found");
-    }
-
-    const sessionNames = await querySessionNames(hubId);
-    return { success: true, message: "Loaded the session types", data: sessionNames };
-  } catch (error) {
-    return actionFailure(error, "Sorry, could not load the hub's session types.");
   }
 }
 

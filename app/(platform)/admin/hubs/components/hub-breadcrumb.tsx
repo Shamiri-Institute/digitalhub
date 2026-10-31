@@ -62,7 +62,20 @@ export default function HubBreadcrumb({
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
-              <Command defaultValue={currentHub.hubName}>
+              <Command
+                defaultValue={currentHub.hubName}
+                // Each hub is a link, and Enter clicks it, so leaving a page with unsaved changes
+                // asks first whether the click or the keyboard picked the hub.
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter") return;
+                  const selected = event.currentTarget.querySelector<HTMLElement>(
+                    '[cmdk-item][aria-selected="true"]',
+                  );
+                  if (!selected) return;
+                  event.preventDefault();
+                  selected.click();
+                }}
+              >
                 <span className="px-4 pb-1 pt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
                   switch hub
                 </span>
@@ -73,16 +86,18 @@ export default function HubBreadcrumb({
                     <CommandItem
                       key={h.id}
                       value={h.hubName}
-                      onSelect={() => router.push(hubPath(h.id))}
+                      asChild
                       className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"
                     >
-                      <span className="font-medium">{h.hubName}</span>
-                      <Check
-                        className={cn(
-                          "h-4 w-4",
-                          h.id === currentHub.id ? "opacity-100" : "opacity-0",
-                        )}
-                      />
+                      <Link href={hubPath(h.id)}>
+                        <span className="font-medium">{h.hubName}</span>
+                        <Check
+                          className={cn(
+                            "h-4 w-4",
+                            h.id === currentHub.id ? "opacity-100" : "opacity-0",
+                          )}
+                        />
+                      </Link>
                     </CommandItem>
                   ))}
                 </CommandList>
