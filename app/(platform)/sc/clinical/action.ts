@@ -1,6 +1,6 @@
 "use server";
 
-import { and, count, desc, eq, ne } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { refresh } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
@@ -17,6 +17,7 @@ import { nextStudentVisibleId } from "#/db/sql";
 import {
   clinicalCaseNotes,
   clinicalCaseReopening,
+  clinicalCaseReview,
   clinicalCaseTermination,
   clinicalCaseTransferTrail,
   clinicalFollowUpTreatmentPlan,
@@ -26,6 +27,7 @@ import {
   hub,
   type JsonValue,
   student,
+  supervisor,
 } from "#/db/schema";
 import { latestRisk } from "#/lib/actions/clinical/cases";
 import { objectId } from "#/lib/crypto";
@@ -101,6 +103,53 @@ async function requireCaseAccess(caseId: string) {
     throw new NotFoundError("Clinical case");
   }
   return { actor, clinicalCase };
+}
+
+type ClinicalLeadScope = { profileId: string; hubId: string | null };
+
+/** The cases a clinical lead may act on: the rule requireCaseAccess applies, in SQL. */
+function clinicalLeadCaseIds(clinicalLead: ClinicalLeadScope) {
+  return db
+    .select({ id: clinicalScreeningInfo.id })
+    .from(clinicalScreeningInfo)
+    .where(
+      or(
+        eq(clinicalScreeningInfo.clinicalLeadId, clinicalLead.profileId),
+        clinicalLead.hubId === null
+          ? undefined
+          : inArray(
+              clinicalScreeningInfo.currentSupervisorId,
+              db
+                .select({ id: supervisor.id })
+                .from(supervisor)
+                .where(eq(supervisor.hubId, clinicalLead.hubId)),
+            ),
+      ),
+    );
+}
+
+/** Reviews of the terminations and reopenings of the cases a clinical lead may act on. */
+function clinicalLeadCaseReviews(
+  clinicalLead: ClinicalLeadScope,
+  review: Pick<typeof clinicalCaseReview, "terminationId" | "reopeningId">,
+) {
+  const scopedCaseIds = clinicalLeadCaseIds(clinicalLead);
+  return or(
+    inArray(
+      review.terminationId,
+      db
+        .select({ id: clinicalCaseTermination.id })
+        .from(clinicalCaseTermination)
+        .where(inArray(clinicalCaseTermination.caseId, scopedCaseIds)),
+    ),
+    inArray(
+      review.reopeningId,
+      db
+        .select({ id: clinicalCaseReopening.id })
+        .from(clinicalCaseReopening)
+        .where(inArray(clinicalCaseReopening.caseId, scopedCaseIds)),
+    ),
+  );
 }
 
 /** The case access and the session, after checking the session is one of that case's sessions. */
@@ -716,14 +765,21 @@ export async function terminateClinicalCase(data: {
         "Clinical case",
       );
 
-      await tx.insert(clinicalCaseTermination).values({
-        caseId: data.caseId,
-        terminationDate: new Date(),
-        terminationReason: data.terminationReason,
-        terminationReasonExplanation: data.terminationReasonExplanation,
-        sessionId: data.sessionId,
-        createdBy: actor.userId,
-      });
+      const termination = requireUpdated(
+        await tx
+          .insert(clinicalCaseTermination)
+          .values({
+            caseId: data.caseId,
+            terminationDate: new Date(),
+            terminationReason: data.terminationReason,
+            terminationReasonExplanation: data.terminationReasonExplanation,
+            sessionId: data.sessionId,
+            createdBy: actor.userId,
+          })
+          .returning({ id: clinicalCaseTermination.id }),
+        "Termination",
+      );
+      await tx.insert(clinicalCaseReview).values({ terminationId: termination.id });
     });
 
     refresh();
@@ -755,12 +811,19 @@ export async function unterminateClinicalCase(data: { caseId: string; reason: st
         .where(eq(clinicalCaseTermination.caseId, data.caseId))
         .orderBy(desc(clinicalCaseTermination.createdAt), desc(clinicalCaseTermination.id))
         .limit(1);
-      await tx.insert(clinicalCaseReopening).values({
-        caseId: data.caseId,
-        terminationId: termination?.id ?? null,
-        reason,
-        createdBy: actor.userId,
-      });
+      const reopening = requireUpdated(
+        await tx
+          .insert(clinicalCaseReopening)
+          .values({
+            caseId: data.caseId,
+            terminationId: termination?.id ?? null,
+            reason,
+            createdBy: actor.userId,
+          })
+          .returning({ id: clinicalCaseReopening.id }),
+        "Reopening",
+      );
+      await tx.insert(clinicalCaseReview).values({ reopeningId: reopening.id });
 
       requireUpdated(
         await tx
@@ -916,6 +979,64 @@ export async function referClinicalCaseToClinicalLead(data: {
 }
 
 export type CaseReferredToMe = Awaited<ReturnType<typeof getCasesReferredToMe>>[number];
+
+async function requireClinicalLeadActor() {
+  const actor = await requireClinicalActor();
+  if (actor.role !== ImplementerRole.CLINICAL_LEAD) {
+    throw new Error("Only a clinical lead can review cases");
+  }
+  return actor;
+}
+
+export async function getCasesToReview() {
+  const clinicalLead = await requireClinicalLeadActor();
+  const caseColumns = { columns: { id: true, pseudonym: true } } as const;
+  const creatorColumns = { columns: { name: true } } as const;
+  return db.query.clinicalCaseReview.findMany({
+    where: (review, { and, isNull }) =>
+      and(isNull(review.reviewedAt), clinicalLeadCaseReviews(clinicalLead, review)),
+    orderBy: (review, { asc }) => [asc(review.createdAt), asc(review.id)],
+    columns: { id: true, createdAt: true },
+    with: {
+      termination: {
+        columns: { terminationReason: true, terminationReasonExplanation: true },
+        with: { case: caseColumns, user: creatorColumns },
+      },
+      reopening: {
+        columns: { reason: true },
+        with: { case: caseColumns, user: creatorColumns },
+      },
+    },
+  });
+}
+
+export type CaseToReview = Awaited<ReturnType<typeof getCasesToReview>>[number];
+
+export async function markClinicalCaseReviewed(reviewId: string) {
+  try {
+    const clinicalLead = await requireClinicalLeadActor();
+    const reviewed = await db
+      .update(clinicalCaseReview)
+      .set({ reviewedBy: clinicalLead.userId, reviewedAt: new Date() })
+      .where(
+        and(
+          eq(clinicalCaseReview.id, reviewId),
+          isNull(clinicalCaseReview.reviewedAt),
+          clinicalLeadCaseReviews(clinicalLead, clinicalCaseReview),
+        ),
+      )
+      .returning({ id: clinicalCaseReview.id });
+    if (reviewed.length === 0) {
+      return { success: false, message: "The review is not found or is already reviewed." };
+    }
+
+    refresh();
+    return { success: true, message: null };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Failed to mark the case reviewed" };
+  }
+}
 
 export async function getCasesReferredToMe() {
   const actor = await requireClinicalActor();

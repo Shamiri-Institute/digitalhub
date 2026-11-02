@@ -1,13 +1,14 @@
-import type { Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { format } from "date-fns";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import type { ClinicalSessionLabel } from "#/db/enums";
 import {
   clinicalCaseNotes,
   clinicalCaseReopening,
+  clinicalCaseReview,
   clinicalCaseTermination,
   clinicalScreeningInfo,
   clinicalSessionAttendance,
@@ -485,7 +486,64 @@ test("a supervisor terminates their case", async ({ page, context, undo }) => {
   const reasons = page.getByRole("dialog");
   await expect(reasons).toContainText("Student refused to return to sessions");
   await expect(reasons).toContainText(terminationReasonExplanation);
+
+  await context.clearCookies();
+  await markReviewedAsHubClinicalLead(page, context, "Terminated", terminationReasonExplanation);
 });
+
+async function hubClinicalLeadEmail() {
+  const hubLeads = await db.query.clinicalLead.findMany({
+    where: (cl, { eq }) => eq(cl.assignedHubId, owner.hubId),
+    columns: { id: true },
+    orderBy: (cl, { asc }) => asc(cl.id),
+  });
+  let hubLeadEmail: string | undefined;
+  for (const lead of hubLeads) {
+    hubLeadEmail ??= (await emailForProfile(lead.id, "CLINICAL_LEAD")) ?? undefined;
+  }
+  required(hubLeadEmail, "no clinical lead in the supervisor's hub");
+  return hubLeadEmail;
+}
+
+async function markReviewedAsHubClinicalLead(
+  page: Page,
+  context: BrowserContext,
+  kind: "Terminated" | "Reopened",
+  reason: string,
+) {
+  const hubLeadEmail = await hubClinicalLeadEmail();
+  await signInWithEmail(context, hubLeadEmail);
+  await page.goto(getUrl("/cl/clinical"));
+  const review = page
+    .getByRole("listitem")
+    .filter({ hasText: pseudonym })
+    .filter({ hasText: kind });
+  await expect(review).toContainText(reason);
+  await review.getByRole("button", { name: "Mark reviewed" }).click();
+  await expect(page.getByText("Case marked reviewed").first()).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole("heading", { name: /Cases to review/ })).toBeVisible();
+  await expect(review).toHaveCount(0);
+
+  // The reviewer comes from the session and no page shows it, so read it.
+  const reviewer = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.email, hubLeadEmail),
+    columns: { id: true },
+  });
+  const reviewedCaseReviews = await db
+    .select({ reviewedBy: clinicalCaseReview.reviewedBy })
+    .from(clinicalCaseReview)
+    .leftJoin(
+      clinicalCaseTermination,
+      eq(clinicalCaseReview.terminationId, clinicalCaseTermination.id),
+    )
+    .leftJoin(clinicalCaseReopening, eq(clinicalCaseReview.reopeningId, clinicalCaseReopening.id))
+    .where(
+      or(eq(clinicalCaseTermination.caseId, caseId), eq(clinicalCaseReopening.caseId, caseId)),
+    );
+  expect(reviewedCaseReviews).toEqual([{ reviewedBy: reviewer?.id }]);
+}
 
 async function ownerUserId() {
   const ownerUser = await db.query.user.findFirst({
@@ -565,17 +623,7 @@ test("a clinical lead reopens a terminated case with a reason and keeps its term
   context,
   undo,
 }) => {
-  const hubLeads = await db.query.clinicalLead.findMany({
-    where: (cl, { eq }) => eq(cl.assignedHubId, owner.hubId),
-    columns: { id: true },
-    orderBy: (cl, { asc }) => asc(cl.id),
-  });
-  let hubLeadEmail: string | undefined;
-  for (const lead of hubLeads) {
-    hubLeadEmail ??= (await emailForProfile(lead.id, "CLINICAL_LEAD")) ?? undefined;
-  }
-  required(hubLeadEmail, "no clinical lead in the supervisor's hub");
-
+  const hubLeadEmail = await hubClinicalLeadEmail();
   const clinicalSessionId = await addClinicalSession("S3", undo);
   const [termination] = await db
     .insert(clinicalCaseTermination)
@@ -630,4 +678,7 @@ test("a clinical lead reopens a terminated case with a reason and keeps its term
     columns: { id: true },
   });
   expect(kept).toEqual({ id: termination.id });
+
+  await context.clearCookies();
+  await markReviewedAsHubClinicalLead(page, context, "Reopened", reason);
 });

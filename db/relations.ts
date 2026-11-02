@@ -5,6 +5,8 @@ import {
   adminUser,
   attendanceDocuments,
   clinicalCaseNotes,
+  clinicalCaseReopening,
+  clinicalCaseReview,
   clinicalCaseTermination,
   clinicalCaseTransferTrail,
   clinicalFollowUpTreatmentPlan,
@@ -106,6 +108,28 @@ export const clinicalCaseNotesRelations = relations(clinicalCaseNotes, ({ one })
     fields: [clinicalCaseNotes.createdBy],
     references: [user.id],
     relationName: "ClinicalCaseNotes_user",
+  }),
+}));
+
+export const clinicalCaseReopeningRelations = relations(clinicalCaseReopening, ({ one }) => ({
+  case: one(clinicalScreeningInfo, {
+    fields: [clinicalCaseReopening.caseId],
+    references: [clinicalScreeningInfo.id],
+  }),
+  user: one(user, {
+    fields: [clinicalCaseReopening.createdBy],
+    references: [user.id],
+  }),
+}));
+
+export const clinicalCaseReviewRelations = relations(clinicalCaseReview, ({ one }) => ({
+  termination: one(clinicalCaseTermination, {
+    fields: [clinicalCaseReview.terminationId],
+    references: [clinicalCaseTermination.id],
+  }),
+  reopening: one(clinicalCaseReopening, {
+    fields: [clinicalCaseReview.reopeningId],
+    references: [clinicalCaseReopening.id],
   }),
 }));
 

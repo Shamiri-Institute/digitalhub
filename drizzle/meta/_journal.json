@@ -330,6 +330,13 @@
       "when": 1793617044553,
       "tag": "0046_clinical_case_hierarchy",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1793627699760,
+      "tag": "0047_clinical_case_reviews",
+      "breakpoints": true
     }
   ]
 }
