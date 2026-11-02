@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, type SQL } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import type { z } from "zod";
 
@@ -13,6 +13,7 @@ import {
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
+  fellow,
   interventionGroup,
   interventionSession,
   interventionSessionRating,
@@ -347,6 +348,8 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
 /**
  * Throws unless the caller may see the session: an admin of the implementer that runs its hub in
  * the active project, a supervisor or hub coordinator of its hub, or a fellow who leads a group at its school.
+ * `callerGroups` keeps the groups the caller works with: a fellow's own, a supervisor's fellows', or
+ * every group when undefined.
  */
 async function requireSessionVisibleToCaller(sessionId: string) {
   const membership = await requireAuthRole(
@@ -371,7 +374,7 @@ async function requireSessionVisibleToCaller(sessionId: string) {
     if (!sessionHub) {
       throw new NotFoundError("Session");
     }
-    return { membership, fellowId: undefined, sessionHubId };
+    return { membership, callerGroups: undefined, sessionHubId };
   }
   if (membership.role === ImplementerRole.FELLOW) {
     const fellowId = membership.identifier;
@@ -386,26 +389,33 @@ async function requireSessionVisibleToCaller(sessionId: string) {
     if (!fellowId || !ledGroup) {
       throw new NotFoundError("Session");
     }
-    return { membership, fellowId, sessionHubId };
+    return { membership, callerGroups: eq(interventionGroup.leaderId, fellowId), sessionHubId };
   }
-  const { hubId } = await requireHubCoordinatorOrSupervisor();
+  const { role, profileId, hubId } = await requireHubCoordinatorOrSupervisor();
   requireSessionInCallerHub(session, hubId);
-  return { membership, fellowId: undefined, sessionHubId };
+  const callerGroups =
+    role === ImplementerRole.SUPERVISOR
+      ? inArray(
+          interventionGroup.leaderId,
+          db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, profileId)),
+        )
+      : undefined;
+  return { membership, callerGroups, sessionHubId };
 }
 
-function sessionAttendances(sessionId: string, fellowId: string | undefined) {
+function sessionAttendances(sessionId: string, callerGroups: SQL | undefined) {
   return db.query.studentAttendance.findMany({
     where: (a, { and, eq, inArray }) =>
       and(
         eq(a.sessionId, sessionId),
-        fellowId
+        callerGroups
           ? inArray(
               a.studentId,
               db
                 .select({ id: student.id })
                 .from(student)
                 .innerJoin(interventionGroup, eq(interventionGroup.id, student.assignedGroupId))
-                .where(eq(interventionGroup.leaderId, fellowId)),
+                .where(callerGroups),
             )
           : undefined,
       ),
@@ -421,23 +431,18 @@ function sessionAttendances(sessionId: string, fellowId: string | undefined) {
 }
 
 export async function fetchSessionAttendances(sessionId: string) {
-  const { fellowId } = await requireSessionVisibleToCaller(sessionId);
-  return sessionAttendances(sessionId, fellowId);
+  const { callerGroups } = await requireSessionVisibleToCaller(sessionId);
+  return sessionAttendances(sessionId, callerGroups);
 }
 
-/** Students of the session's school groups (a fellow's own groups only) with their attendance. */
+/** Students of the caller's groups at the session's school, with their attendance. */
 export async function fetchSessionStudentAttendance(sessionId: string) {
-  const { fellowId } = await requireSessionVisibleToCaller(sessionId);
+  const { callerGroups } = await requireSessionVisibleToCaller(sessionId);
   const groupIds = db
     .select({ id: interventionGroup.id })
     .from(interventionGroup)
     .innerJoin(interventionSession, eq(interventionSession.schoolId, interventionGroup.schoolId))
-    .where(
-      and(
-        eq(interventionSession.id, sessionId),
-        fellowId ? eq(interventionGroup.leaderId, fellowId) : undefined,
-      ),
-    );
+    .where(and(eq(interventionSession.id, sessionId), callerGroups));
   const [students, attendances] = await Promise.all([
     db.query.student.findMany({
       where: (st, { inArray }) => inArray(st.assignedGroupId, groupIds),
@@ -452,7 +457,7 @@ export async function fetchSessionStudentAttendance(sessionId: string) {
       extras: clinicalCasesCountExtras,
       orderBy: (st, { asc }) => asc(st.id),
     }),
-    sessionAttendances(sessionId, fellowId),
+    sessionAttendances(sessionId, callerGroups),
   ]);
   return { students, attendances };
 }

@@ -2,8 +2,16 @@ import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { onlySessionAtSchoolThatWeek, required, signInAs, uniqueFellowName } from "#/tests/helpers";
-import { chooseRowAction, scheduleUrl } from "#/tests/pages/helpers";
+import { sessionDisplayName } from "#/lib/utils";
+import {
+  onlySessionAtSchoolThatWeek,
+  required,
+  signableMember,
+  signInAs,
+  signInWithEmail,
+  uniqueFellowName,
+} from "#/tests/helpers";
+import { chooseRowAction, getUrl, rowWithCell, scheduleUrl } from "#/tests/pages/helpers";
 
 // Two occurred sessions in one list week at different schools. At each, a fellow of the session's
 // hub leads exactly one group there, since the dialog offers each leader with the first group it
@@ -97,4 +105,55 @@ test("student attendance opened from the schedule loads the students of each ses
   await page.getByRole("option", { name: fixture.otherLeaderOption, exact: true }).click();
   await expect(dialog.getByRole("row").filter({ hasText: fixture.otherStudentName })).toBeVisible();
   await expect(dialog.getByRole("row").filter({ hasText: fixture.studentName })).toHaveCount(0);
+});
+
+test("a supervisor's student attendance loads the students of their fellows' groups", async ({
+  page,
+  context,
+}) => {
+  const {
+    rows: [fixture],
+  } = await db.execute<{
+    email: string;
+    visibleId: string;
+    sessionName: string;
+    leaderOption: string;
+    studentName: string;
+  }>(sql`
+    select u.email, s.visible_id as "visibleId", sn.session_name as "sessionName",
+      f.fellow_name || ' (' || g.group_name || ')' as "leaderOption", st.student_name as "studentName"
+    from supervisors sv
+    join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
+    join users u on u.id = m.user_id
+    join fellows f on f.supervisor_id = sv.id and f.fellow_name is not null and ${uniqueFellowName()}
+    join intervention_groups g on g.leader_id = f.id
+      and (select count(*) from intervention_groups o
+        where o.school_id = g.school_id and o.leader_id = f.id) = 1
+    join schools s on s.id = g.school_id and s.hub_id = sv.hub_id and s.archived_at is null
+    join intervention_sessions i on i.school_id = s.id and i.occurred
+      and coalesce(i.status::text, '') <> 'Cancelled'
+    join session_names sn on sn.id = i.session_id
+    join lateral (
+      select o.student_name from students o
+      where o.assigned_group_id = g.id
+      order by o.id
+      limit 1
+    ) st on st.student_name is not null
+    where ${signableMember()}
+    order by u.email, s.visible_id, i.id
+    limit 1`);
+  required(
+    fixture,
+    "no supervisor whose fellow leads a group with students at an occurred session",
+  );
+  await signInWithEmail(context, fixture.email);
+
+  await page.goto(getUrl(`/sc/schools/${fixture.visibleId}/sessions`));
+  const sessionName = sessionDisplayName(fixture.sessionName) ?? fixture.sessionName;
+  const sessionRow = await rowWithCell(page, page.getByRole("main"), sessionName);
+  await chooseRowAction(page, sessionRow.first(), "View student attendance");
+  const dialog = page.getByRole("dialog", { name: "Mark student attendance" });
+  await dialog.getByRole("combobox").filter({ hasText: "Select a fellow" }).click();
+  await page.getByRole("option", { name: fixture.leaderOption, exact: true }).click();
+  await expect(dialog.getByRole("row").filter({ hasText: fixture.studentName })).toBeVisible();
 });
