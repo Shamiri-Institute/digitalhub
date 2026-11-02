@@ -4,7 +4,6 @@ import type React from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 import type { HubStats as HubStatsData } from "../queries";
-import { CountUp, SweepIn } from "./stats-motion";
 
 const formatCount = (n: number) => n.toLocaleString("en-US");
 const plural = (n: number, one: string, many: string) =>
@@ -31,12 +30,7 @@ const states = [
 
 function StateBar({ counts }: { counts: Pick<SessionStates, (typeof states)[number]["key"]> }) {
   const total = states.reduce((sum, s) => sum + counts[s.key], 0);
-  const share = (n: number) => (total > 0 ? (n / total) * 100 : 0);
-  // A few unmarked sessions among hundreds would be a sliver too thin to see.
-  const unmarkedWidth = counts.unmarked > 0 ? Math.max(share(counts.unmarked), 4) : 0;
-  const othersScale = (100 - unmarkedWidth) / (100 - share(counts.unmarked) || 1);
-  const width = (key: (typeof states)[number]["key"]) =>
-    key === "unmarked" ? unmarkedWidth : share(counts[key]) * othersScale;
+  const share = (n: number) => (n / total) * 100;
   let offset = 0;
 
   return (
@@ -46,12 +40,12 @@ function StateBar({ counts }: { counts: Pick<SessionStates, (typeof states)[numb
           .filter((s) => counts[s.key] > 0)
           .map((s) => {
             const x = offset;
-            offset += width(s.key);
+            offset += share(counts[s.key]);
             return (
               <rect
                 key={s.key}
                 x={`${x}%`}
-                width={`${width(s.key)}%`}
+                width={`${share(counts[s.key])}%`}
                 height="100%"
                 strokeWidth={1}
                 className={cn(s.fill, "stroke-white")}
@@ -162,7 +156,7 @@ export default function HubStats({ stats }: { stats: HubStatsData }) {
           {hasSessions ? <Legend sessions={sessions} /> : <Note>No sessions scheduled yet</Note>}
         </div>
         <Figure
-          value={<CountUp value={sessions.held} />}
+          value={formatCount(sessions.held)}
           unit={
             sessions.scheduled > 0
               ? `marked attended of ${formatCount(sessions.scheduled)} scheduled`
@@ -170,25 +164,14 @@ export default function HubStats({ stats }: { stats: HubStatsData }) {
           }
         />
         <div className="pt-1">
-          <SweepIn>
-            <StateBar counts={sessions} />
-          </SweepIn>
+          <StateBar counts={sessions} />
         </div>
       </div>
       <StatCell label="Fellow attendance">
         {sessions.attendanceExpected > 0 ? (
           <>
             <Figure
-              value={
-                <>
-                  <CountUp
-                    value={Math.round(
-                      (sessions.attendanceRecorded / sessions.attendanceExpected) * 100,
-                    )}
-                  />
-                  %
-                </>
-              }
+              value={`${Math.round((sessions.attendanceRecorded / sessions.attendanceExpected) * 100)}%`}
             />
             <Note>
               {formatCount(sessions.attendanceRecorded)} of{" "}
@@ -210,13 +193,13 @@ export default function HubStats({ stats }: { stats: HubStatsData }) {
           </>
         ) : (
           <>
-            <Figure value={<CountUp value={ratings.average} decimals={1} />} unit="/ 5 average" />
+            <Figure value={ratings.average.toFixed(1)} unit="/ 5 average" />
             <Note>from {plural(ratings.count, "weekly rating", "weekly ratings")}</Note>
           </>
         )}
       </StatCell>
       <StatCell label="Groups formed">
-        <Figure value={<CountUp value={stats.groups} />} />
+        <Figure value={formatCount(stats.groups)} />
         <Note>
           {stats.groups > 0
             ? `${plural(stats.studentsInGroups, "student", "students")} in groups`
@@ -224,7 +207,7 @@ export default function HubStats({ stats }: { stats: HubStatsData }) {
         </Note>
       </StatCell>
       <StatCell label="Dropouts">
-        <Figure value={<CountUp value={stats.droppedOutStudents} />} unit="students" />
+        <Figure value={formatCount(stats.droppedOutStudents)} unit="students" />
         <Note>and {plural(stats.droppedOutFellows, "fellow", "fellows")}</Note>
       </StatCell>
       {(sessions.unmarked > 0 || missingAttendance > 0 || allHeld) && (
