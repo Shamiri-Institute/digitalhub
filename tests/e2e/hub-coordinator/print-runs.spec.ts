@@ -204,9 +204,7 @@ test("a coordinator whose hub is archived can't open the print page", async ({
     await db.delete(user).where(eq(user.id, created.id));
     await db.delete(hub).where(eq(hub.id, hubId));
   });
-  await db
-    .insert(hub)
-    .values({ id: hubId, hubName: label, implementerId, projectId, archivedAt: new Date() });
+  await db.insert(hub).values({ id: hubId, hubName: label, implementerId, projectId });
   await db.insert(hubCoordinator).values({
     id: coordinatorId,
     visibleId: label,
@@ -224,7 +222,12 @@ test("a coordinator whose hub is archived can't open the print page", async ({
   await context.clearCookies();
   await signInWithEmail(context, email);
 
+  // While the hub is open the same coordinator can print, so the archive is what refuses them.
   await page.goto(getUrl("/hc/surveys"));
+  await expect(page.getByRole("heading", { name: "Ready to print" })).toBeVisible();
+
+  await db.update(hub).set({ archivedAt: new Date() }).where(eq(hub.id, hubId));
+  await page.reload();
   await expect(page.getByText("Not a hub coordinator", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ready to print" })).toHaveCount(0);
 });

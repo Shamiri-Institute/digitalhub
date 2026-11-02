@@ -31,7 +31,7 @@ export type Rect = { x: number; y: number; w: number; h: number };
 export type HeaderSlotId = "serial" | "school" | "studentName" | "studentId";
 
 /** The header fields each copy fills in, per prefill. Copy values and header slots follow it. */
-export const PREFILL_HEADER_SLOTS = {
+const PREFILL_HEADER_SLOTS = {
   NONE: ["serial"],
   SCHOOL: ["serial", "school"],
   STUDENT: ["serial", "studentName", "studentId"],
@@ -378,7 +378,7 @@ export function qrPlaceholderRun(qr: Rect): TextRun {
 }
 
 /** A single choice question whose options are all short numbers prints as a row of boxes. */
-export function isRatingScale(item: Extract<SurveyItem, { kind: "single_choice" }>) {
+function isRatingScale(item: Extract<SurveyItem, { kind: "single_choice" }>) {
   return (
     item.options.length >= 2 &&
     item.options.length <= 11 &&

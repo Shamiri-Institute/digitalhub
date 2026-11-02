@@ -75,10 +75,7 @@ export default function WeeklyHubReportButtonAndForm() {
           Weekly Hub Report
         </Button>
       </DialogTrigger>
-      <DialogContent
-        className="max-h-[90vh] overflow-y-auto"
-        data-testid="weekly-hub-report-dialog"
-      >
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <WeeklyHubReportButtonAndFormForm close={() => setDialogOpen(false)} />
       </DialogContent>
     </Dialog>

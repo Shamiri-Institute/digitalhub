@@ -48,7 +48,8 @@ test("a session picked in the attendance history is not preselected once the his
     join lateral (select i.id, i.session_date from intervention_sessions i
       where i.school_id = s.id and i.occurred order by i.session_date desc limit 1) latest on true
     where ${signableMember()} and latest.session_date - oldest.session_date > interval '1 day'
-    order by u.email, s.id
+    -- The last school: specs that count or edit a school's students take the first.
+    order by u.email, s.visible_id desc
     limit 1`);
   required(fixture, "no hub coordinator's school with a group and occurred sessions on two days");
   const olderDate = await sessionDateLabel(fixture.olderSessionId);

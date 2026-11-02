@@ -80,8 +80,7 @@ export async function sessionCookieFor(email: string) {
 
 /**
  * A seeded user for a role, chosen from the database rather than from a fixed email, because the
- * seed reassigns the fixture accounts. Same picker the bench harness uses, so the tests and the
- * benchmark exercise the same accounts.
+ * seed reassigns the fixture accounts.
  */
 export async function signInAs(context: BrowserContext, role: Role) {
   const user = await pickUser(role);

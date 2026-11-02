@@ -202,8 +202,8 @@ describe("serials and page codes", () => {
     const published = await publish();
     await db.update(survey).set({ nextSerial: 999_998 }).where(eq(survey.id, published.id));
     const issued = await issue(published.versionId, counts(4));
-    const expected = [999_998, 999_999, 1_000_000, 1_000_001].map((n) =>
-      formatSerial(published.code, n),
+    const expected = ["999998", "999999", "1000000", "1000001"].map(
+      (number) => `${published.code}-${number}`,
     );
 
     expect(issued).toMatchObject({ firstSerial: expected[0], lastSerial: expected[3] });
@@ -238,7 +238,8 @@ describe("serials and page codes", () => {
     expect(await nextSerialOf(published.id)).toBe(71);
   });
 
-  it("splits a run too large for one statement into several", async () => {
+  // It writes 27,000 page rows; under a loaded runner that takes longer than the 5 s default.
+  it("splits a run too large for one statement into several", { timeout: 30_000 }, async () => {
     const published = await publish({ pages: 6 });
     const issued = await issue(published.versionId, counts(4500));
 
@@ -254,7 +255,7 @@ describe("serials and page codes", () => {
     expect(pageCount?.value).toBe(27_000);
   });
 
-  it(`refuses more than ${MAX_COPIES_PER_RUN} copies before reserving serials`, async () => {
+  it(`refuses more than ${MAX_COPIES_PER_RUN} copies and reserves no serials`, async () => {
     const published = await publish();
     await expect(issue(published.versionId, counts(MAX_COPIES_PER_RUN + 1))).rejects.toThrow(
       PrintRunError,

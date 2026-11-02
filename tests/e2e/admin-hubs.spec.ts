@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { inArray, like } from "drizzle-orm";
+import { ilike, inArray } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { careAdminEmail, plainAdminEmail, superAdminEmail } from "#/db/seed/fixtures";
@@ -23,7 +23,7 @@ const RENAMED_HUB_NAME = `${HUB_PREFIX} Mombasa`;
 
 test.afterAll(async () => {
   const createdHubs = await db.query.hub.findMany({
-    where: (h, { like }) => like(h.hubName, `${HUB_PREFIX}%`),
+    where: (h, { ilike }) => ilike(h.hubName, `${HUB_PREFIX}%`),
     columns: { id: true },
   });
   const hubIds = createdHubs.map((h) => h.id);
@@ -31,7 +31,7 @@ test.afterAll(async () => {
     await db.delete(interventionSession).where(inArray(interventionSession.hubId, hubIds));
     await db.delete(sessionName).where(inArray(sessionName.hubId, hubIds));
   }
-  await db.delete(hub).where(like(hub.hubName, `${HUB_PREFIX}%`));
+  await db.delete(hub).where(ilike(hub.hubName, `${HUB_PREFIX}%`));
 });
 
 test("a super admin adds a hub, cannot add a duplicate, and edits its name and session types", async ({
@@ -63,27 +63,18 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await expect(createConfirm).toBeHidden();
   await expect(addDialog).toBeHidden();
 
-  let row = (await searchRows(page, HUB_NAME)).first();
-  await expect(row).toBeVisible();
-
   // No page shows the project the new hub is stored in.
   const created = await db.query.hub.findFirst({
     where: (h, { eq }) => eq(h.hubName, HUB_NAME),
     columns: { id: true, projectId: true },
   });
   expect(created?.projectId).not.toBeNull();
+  expect(await codesInEditDialog(page, HUB_NAME)).toEqual(
+    hubSessionTypes.map((type) => type.name).toSorted(),
+  );
 
-  const createdSessionNames = await db.query.sessionName.findMany({
-    where: (n, { eq }) => eq(n.hubId, created?.id ?? ""),
-    columns: { sessionName: true, sessionLabel: true, sessionType: true, amount: true },
-  });
-  expect(createdSessionNames).toHaveLength(hubSessionTypes.length);
-  expect(createdSessionNames.find((n) => n.sessionName === "s1")?.amount).toBe(1750);
-  expect(createdSessionNames.find((n) => n.sessionName === "s0")).toMatchObject({
-    sessionLabel: "Pre-session",
-    sessionType: "INTERVENTION",
-    amount: 1000,
-  });
+  const row = (await searchRows(page, HUB_NAME)).first();
+  await expect(row).toBeVisible();
 
   await page.getByRole("button", { name: "Add hub" }).click();
   const duplicateDialog = page.getByRole("dialog");
@@ -98,7 +89,8 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await expect(page.getByText("A hub with this name already exists").first()).toBeVisible();
   await duplicateDialog.getByRole("button", { name: "Cancel" }).click();
   await expect(duplicateDialog).toBeHidden();
-  expect(await db.$count(hub, like(hub.hubName, `${HUB_PREFIX}%`))).toBe(1);
+  // A write that must not happen; `ilike`, as the duplicate differs only in case.
+  expect(await db.$count(hub, ilike(hub.hubName, `${HUB_PREFIX}%`))).toBe(1);
 
   await row.locator('[aria-haspopup="menu"]').click();
   await page.getByRole("menuitem", { name: "Edit hub details", exact: true }).click();
@@ -107,6 +99,8 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await expect(editDialog).toContainText("the amount paid to fellows per lesson");
   await expect(editDialog).not.toContainText("Payouts already recorded keep their amount");
   await editDialog.getByRole("button", { name: "Intervention sessions" }).click();
+  await expect(editDialog.getByLabel("s0 label")).toHaveValue("Pre-session");
+  await expect(editDialog.getByLabel("s0 amount")).toHaveValue("1000");
   await expect(editDialog.getByLabel("s1 label")).toHaveValue("Session 1");
   await expect(editDialog.getByLabel("s1 amount")).toHaveValue("1750");
   await editDialog.getByLabel("Hub name").fill(RENAMED_HUB_NAME);
@@ -126,24 +120,20 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await expect(saveConfirm).toBeHidden();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
-  row = (await searchRows(page, RENAMED_HUB_NAME)).first();
-  await expect(row).toBeVisible();
+  await page.reload();
+  await expect((await searchRows(page, RENAMED_HUB_NAME)).first()).toBeVisible();
   await expect(await searchRows(page, HUB_NAME)).toHaveCount(0);
 
-  const editedSessionNames = await db.query.sessionName.findMany({
-    where: (n, { eq }) => eq(n.hubId, created?.id ?? ""),
-    columns: { sessionName: true, sessionLabel: true, sessionType: true, amount: true },
-  });
-  expect(editedSessionNames).toHaveLength(hubSessionTypes.length);
-  expect(editedSessionNames.find((n) => n.sessionName === "s1")).toMatchObject({
-    sessionLabel: "Lesson 1",
-    sessionType: "INTERVENTION",
-    amount: 1800,
-  });
-  expect(editedSessionNames.find((n) => n.sessionName === "s0")).toMatchObject({
-    sessionLabel: "Pre-session",
-    amount: 1000,
-  });
+  const reopened = await openEditDialog(page, RENAMED_HUB_NAME);
+  await reopened.getByRole("button", { name: "Intervention sessions" }).click();
+  await expect(reopened.getByLabel("s1 label")).toHaveValue("Lesson 1");
+  await expect(reopened.getByLabel("s1 amount")).toHaveValue("1800");
+  await expect(reopened.getByLabel("s0 label")).toHaveValue("Pre-session");
+  await expect(reopened.getByLabel("s0 amount")).toHaveValue("1000");
+  await reopened.getByRole("button", { name: "Cancel" }).click();
+  expect(await codesInEditDialog(page, RENAMED_HUB_NAME)).toEqual(
+    hubSessionTypes.map((type) => type.name).toSorted(),
+  );
 });
 
 test("a super admin picks a hub's session types, and cannot remove one that sessions use", async ({
@@ -373,7 +363,7 @@ test("clearing an amount leaves it empty, and typing a value clears the error", 
   await confirm.getByRole("button", { name: "Go back" }).click();
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toBeHidden();
-  expect(await db.$count(hub, like(hub.hubName, `${HUB_PREFIX} Empty amount`))).toBe(0);
+  expect(await db.$count(hub, ilike(hub.hubName, `${HUB_PREFIX} Empty amount`))).toBe(0);
 });
 
 test("an error inside a collapsed group opens the group and shows the error", async ({

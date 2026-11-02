@@ -1,12 +1,11 @@
 // @vitest-environment node
 import fs from "node:fs";
 import path from "node:path";
-import fontkit from "@pdf-lib/fontkit";
 import { PDFDict, PDFDocument, PDFName } from "pdf-lib";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { describe, expect, it } from "vitest";
 
-import { layOutForm, sampleCopy, type TextRun } from "#/lib/survey/layout";
+import { headerValueRun, layOutForm, sampleCopy } from "#/lib/survey/layout";
 import { PRINT_FONT_FILES, type PrintFonts } from "#/lib/survey/print-fonts";
 import { renderCopiesPdf } from "#/lib/survey/print-pdf";
 import { PRINT_FORM } from "./fixtures/survey-print-form";
@@ -21,6 +20,16 @@ const fonts: PrintFonts = {
   700: readFont(PRINT_FONT_FILES[700]),
 };
 
+async function pageTexts(bytes: Uint8Array) {
+  const pdf = await getDocument({ data: bytes }).promise;
+  const texts: string[] = [];
+  for (let number = 1; number <= pdf.numPages; number++) {
+    const content = await (await pdf.getPage(number)).getTextContent();
+    texts.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
+  }
+  return texts;
+}
+
 describe("renderCopiesPdf", () => {
   it("prints every page of the layout for each copy, with the print fonts embedded", async () => {
     const { layout } = layOutForm(PRINT_FORM, "STUDENT");
@@ -31,6 +40,14 @@ describe("renderCopiesPdf", () => {
     const bytes = await renderCopiesPdf(layout, copies, fonts);
     const doc = await PDFDocument.load(bytes);
     expect(doc.getPageCount()).toBe(6);
+    const texts = await pageTexts(bytes);
+    for (const [index, text] of texts.entries()) {
+      const copy = index < 3 ? copies[0] : copies[1];
+      const other = index < 3 ? copies[1] : copies[0];
+      expect(text).toContain(copy?.serial);
+      expect(text).toContain(copy?.studentName);
+      expect(text).not.toContain(other?.serial);
+    }
     expect(doc.getPage(0).getSize()).toEqual({ width: 595.28, height: 841.89 });
     const baseFonts = doc.context
       .enumerateIndirectObjects()
@@ -57,15 +74,6 @@ describe("renderCopiesPdf", () => {
 
   it("prints the watermark across every page only when asked", async () => {
     const { layout } = layOutForm(PRINT_FORM, "NONE");
-    const pageTexts = async (bytes: Uint8Array) => {
-      const pdf = await getDocument({ data: bytes }).promise;
-      const texts: string[] = [];
-      for (let number = 1; number <= pdf.numPages; number++) {
-        const content = await (await pdf.getPage(number)).getTextContent();
-        texts.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
-      }
-      return texts;
-    };
     const watermarked = await pageTexts(
       await renderCopiesPdf(layout, [sampleCopy(layout)], fonts, { watermark: "PREVIEW" }),
     );
@@ -79,24 +87,39 @@ describe("renderCopiesPdf", () => {
     }
   });
 
-  it("sets every run as wide as the layout measured it", async () => {
+  it("draws every run as wide as the layout measured it", async () => {
     const { layout } = layOutForm(PRINT_FORM, "SCHOOL");
-    const doc = await PDFDocument.create();
-    doc.registerFontkit(fontkit);
-    const features = { kern: false, liga: false, clig: false, calt: false };
-    const embedded = {
-      400: await doc.embedFont(fonts[400], { subset: false, features }),
-      600: await doc.embedFont(fonts[600], { subset: false, features }),
-      700: await doc.embedFont(fonts[700], { subset: false, features }),
-    };
-    const runs: TextRun[] = layout.pages.flatMap((page) => [
-      ...page.header.map((slot) => slot.label),
-      ...page.content.flatMap((d) => (d.kind === "text" ? [d.run] : [])),
-    ]);
-    expect(runs.length).toBeGreaterThan(50);
-    for (const run of runs) {
-      const width = embedded[run.weight].widthOfTextAtSize(run.text, run.size);
-      expect(Math.abs(width - run.width), run.text).toBeLessThanOrEqual(0.006);
+    const copy = sampleCopy(layout);
+    const pdf = await getDocument({ data: await renderCopiesPdf(layout, [copy], fonts) }).promise;
+    let checked = 0;
+    for (const [index, laid] of layout.pages.entries()) {
+      const items = (await (await pdf.getPage(index + 1)).getTextContent()).items.flatMap((item) =>
+        "str" in item && item.str !== ""
+          ? [{ x: item.transform[4] as number, y: item.transform[5] as number, width: item.width }]
+          : [],
+      );
+      const runs = [
+        ...laid.header.flatMap((slot) => [slot.label, headerValueRun(slot, copy)]),
+        ...laid.content.flatMap((drawable) => (drawable.kind === "text" ? [drawable.run] : [])),
+      ].filter((run) => run.text.trim() !== "");
+      for (const run of runs) {
+        const baseline = layout.paper.height - run.baseline;
+        // pdf.js splits a run at its spaces and fills the gaps between runs, so take where the
+        // last piece starting inside the run ends.
+        const end = Math.max(
+          ...items
+            .filter(
+              (item) =>
+                Math.abs(item.y - baseline) < 0.01 &&
+                item.x >= run.x - 0.01 &&
+                item.x < run.x + run.width - 0.01,
+            )
+            .map((item) => item.x + item.width),
+        );
+        expect(Math.abs(end - (run.x + run.width)), run.text).toBeLessThanOrEqual(0.01);
+        checked++;
+      }
     }
+    expect(checked).toBeGreaterThan(50);
   });
 });

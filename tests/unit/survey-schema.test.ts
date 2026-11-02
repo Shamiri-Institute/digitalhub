@@ -1,5 +1,5 @@
 // @vitest-environment node
-// The survey triggers (drizzle/0023) refuse writes the app must never make: changing a published
+// The survey triggers (drizzle/0028) refuse writes the app must never make: changing a published
 // version's form, moving a version's status backwards, rewriting audit
 // history. No screen can attempt these writes, so these tests attempt them against the database
 // and expect the refusal; everything a user can do is tested through the UI in
@@ -46,8 +46,7 @@ const ONE_QUESTION: SurveyForm = {
 
 /**
  * A survey with one version whose form has one page and one question, in the given status. Built
- * with direct inserts because there is no builder or publish screen yet to make a published
- * version; switch to those flows once they exist.
+ * with direct inserts, inside the test's rolled-back transaction, to put each trigger in reach.
  */
 async function createSurvey(tx: Transaction, status: "DRAFT" | "PUBLISHED" = "DRAFT") {
   const member = await tx.query.implementerMember.findFirst({
@@ -132,15 +131,20 @@ describe("survey versions", () => {
     expect(error).toMatch(/cannot change from DRAFT to RETIRED/);
   });
 
-  it("keeps a version's survey and number, even while it is a draft", async () => {
-    const error = await errorOf(async (tx) => {
-      const { version } = await createSurvey(tx);
-      await tx
-        .update(surveyVersion)
-        .set({ versionNumber: 7 })
-        .where(eq(surveyVersion.id, version.id));
-    });
-    expect(error).toMatch(/cannot change from DRAFT to DRAFT/);
+  it("keeps a version's survey, number and origin, even while it is a draft", async () => {
+    const changes: ((tx: Transaction) => Promise<Partial<typeof surveyVersion.$inferInsert>>)[] = [
+      () => Promise.resolve({ versionNumber: 7 }),
+      async (tx) => ({ surveyId: (await createSurvey(tx)).survey.id }),
+      async (tx) => ({ basedOnVersionId: (await createSurvey(tx, "PUBLISHED")).version.id }),
+    ];
+    for (const change of changes) {
+      const error = await errorOf(async (tx) => {
+        const { version } = await createSurvey(tx);
+        const set = await change(tx);
+        await tx.update(surveyVersion).set(set).where(eq(surveyVersion.id, version.id));
+      });
+      expect(error).toMatch(/cannot change from DRAFT to DRAFT/);
+    }
   });
 
   it("rejects a version created as anything but a draft", async () => {
@@ -196,10 +200,19 @@ describe("survey_audit_events", () => {
   });
 
   it("requires a user for a USER event and none otherwise", async () => {
-    const error = await errorOf((tx) =>
+    const userWithout = await errorOf((tx) =>
       tx.execute(sql`insert into survey_audit_events (actor_kind, entity_type, entity_id, action)
         values ('USER', 'SURVEY', 'survey_test', 'SURVEY_CREATED')`),
     );
-    expect(error).toMatch(/survey_audit_events_actor_check/);
+    expect(userWithout).toMatch(/survey_audit_events_actor_check/);
+
+    const systemWith = await errorOf(async (tx) => {
+      const user = await tx.query.user.findFirst({ columns: { id: true } });
+      if (!user) throw new Error("The seed has no user");
+      await tx.execute(sql`insert into survey_audit_events
+        (actor_kind, actor_user_id, entity_type, entity_id, action)
+        values ('SYSTEM', ${user.id}, 'SURVEY', 'survey_test', 'SURVEY_CREATED')`);
+    });
+    expect(systemWith).toMatch(/survey_audit_events_actor_check/);
   });
 });

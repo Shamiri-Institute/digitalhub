@@ -3,24 +3,37 @@ import { type SQL, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { signableMember, signInWithEmail, required } from "#/tests/helpers";
-import { getUrl } from "#/tests/pages/helpers";
+import { getUrl, rowWithCell } from "#/tests/pages/helpers";
 
 const notFoundText = "This page could not be found.";
 
-type Fixture = { email: string; ownSchool: string; otherSchool: string };
+type Fixture = {
+  email: string;
+  ownSchool: string;
+  otherSchool: string;
+  ownSchoolName?: string;
+  otherSchoolName?: string;
+};
 
-const callers: { role: string; base: string; tabs: string[]; fixture: SQL }[] = [
+// `listed`: the caller's schools list names the own school and not the other one.
+const callers: { role: string; base: string; tabs: string[]; fixture: SQL; listed?: true }[] = [
   {
     role: "HUB_COORDINATOR",
     base: "/hc/schools",
     tabs: ["sessions", "supervisors", "fellows", "students", "groups"],
+    listed: true,
     fixture: sql`
       select u.email,
         (select s.visible_id from schools s where s.hub_id = hc.assigned_hub_id
           order by s.visible_id limit 1) as "ownSchool",
+        (select s.school_name from schools s where s.hub_id = hc.assigned_hub_id
+          order by s.visible_id limit 1) as "ownSchoolName",
         (select s.visible_id from schools s join hubs h on h.id = s.hub_id
           where s.hub_id <> hc.assigned_hub_id and h.implementer_id = m.implementer_id
-          order by s.visible_id limit 1) as "otherSchool"
+          order by s.visible_id limit 1) as "otherSchool",
+        (select s.school_name from schools s join hubs h on h.id = s.hub_id
+          where s.hub_id <> hc.assigned_hub_id and h.implementer_id = m.implementer_id
+          order by s.visible_id limit 1) as "otherSchoolName"
       from hub_coordinators hc
       join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
       join users u on u.id = m.user_id
@@ -89,6 +102,12 @@ for (const caller of callers) {
     required(fixture, `no ${caller.role} fixture`);
 
     await signInWithEmail(context, fixture.email);
+    if (caller.listed) {
+      await page.goto(getUrl(caller.base));
+      const main = page.getByRole("main");
+      await expect(await rowWithCell(page, main, fixture.ownSchoolName ?? "")).toHaveCount(1);
+      await expect(await rowWithCell(page, main, fixture.otherSchoolName ?? "")).toHaveCount(0);
+    }
     for (const tab of caller.tabs) {
       await page.goto(getUrl(`${caller.base}/${fixture.ownSchool}/${tab}`));
       await expect(page.getByRole("table").first(), `own school ${tab}`).toBeVisible();

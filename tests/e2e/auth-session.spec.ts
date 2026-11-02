@@ -93,7 +93,7 @@ test("a Google callback without a valid state goes to an error page and sets no 
     maxRedirects: 0,
   });
   expect(res.status()).toBe(302);
-  expect(res.headers().location).toContain("error=");
+  expect(res.headers().location).toContain("error=state_mismatch");
   expect(res.headers()["set-cookie"] ?? "").not.toContain("session_token=");
 });
 
