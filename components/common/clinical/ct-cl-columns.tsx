@@ -6,6 +6,7 @@ import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import ClinicalLeadCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown-cl-ct";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
+import { sortBy } from "#/lib/table-view";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 
@@ -85,6 +86,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
   {
     accessorKey: "caseReport",
     header: "Case Report",
+    sortingFn: sortBy((clinicalCase) => clinicalCase.hasNotes),
     cell: ({ row }) => {
       return (
         <div>

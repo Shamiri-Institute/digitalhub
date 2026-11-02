@@ -25,6 +25,7 @@ import {
 import { ImplementerRole } from "#/db/enums";
 import { requireHubRole } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
+import { requireEvaluationEditable } from "#/lib/evaluation-edit-window";
 
 export async function submitWeeklyTeamMeeting(data: z.infer<typeof WeeklyHubTeamMeetingSchema>) {
   try {
@@ -414,6 +415,7 @@ export async function submitMonthlySupervisorEvaluation(
         message: "Successfully submitted monthly evaluation.",
       };
     }
+    requireEvaluationEditable(match, new Date());
     await db
       .update(monthlySupervisorEvaluation)
       .set({

@@ -1,5 +1,5 @@
 {
-  "id": "c73ed486-8fab-47ba-a51d-1e7141e62b0b",
+  "id": "d7f60a44-a3ab-4a17-97cc-05e21ecd5a55",
   "prevId": "dbc8bfe6-9694-4c64-94e1-3ff306f42f1f",
   "version": "7",
   "dialect": "postgresql",
@@ -8822,269 +8822,6 @@
       },
       "isRLSEnabled": false
     },
-    "public.survey_print_files": {
-      "name": "survey_print_files",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "print_run_id": {
-          "name": "print_run_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "school_id": {
-          "name": "school_id",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "part_number": {
-          "name": "part_number",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "first_serial_number": {
-          "name": "first_serial_number",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "copy_count": {
-          "name": "copy_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "student_ids": {
-          "name": "student_ids",
-          "type": "varchar(255)[]",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "survey_print_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'QUEUED'"
-        },
-        "attempts": {
-          "name": "attempts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "lease_token": {
-          "name": "lease_token",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "leased_until": {
-          "name": "leased_until",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "issued_at": {
-          "name": "issued_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "byte_size": {
-          "name": "byte_size",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "rendered_at": {
-          "name": "rendered_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "error": {
-          "name": "error",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "survey_print_files_print_run_id_first_serial_number_key": {
-          "name": "survey_print_files_print_run_id_first_serial_number_key",
-          "columns": [
-            {
-              "expression": "print_run_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "first_serial_number",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "survey_print_files_print_run_id_school_id_part_number_key": {
-          "name": "survey_print_files_print_run_id_school_id_part_number_key",
-          "columns": [
-            {
-              "expression": "print_run_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "school_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "part_number",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "survey_print_files_school_id_idx": {
-          "name": "survey_print_files_school_id_idx",
-          "columns": [
-            {
-              "expression": "school_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "survey_print_files_unfinished_idx": {
-          "name": "survey_print_files_unfinished_idx",
-          "columns": [
-            {
-              "expression": "attempts",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "first_serial_number",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"survey_print_files\".\"status\" in ('QUEUED', 'RENDERING')",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "survey_print_files_print_run_id_fkey": {
-          "name": "survey_print_files_print_run_id_fkey",
-          "tableFrom": "survey_print_files",
-          "tableTo": "survey_print_runs",
-          "columnsFrom": ["print_run_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "restrict"
-        },
-        "survey_print_files_school_id_fkey": {
-          "name": "survey_print_files_school_id_fkey",
-          "tableFrom": "survey_print_files",
-          "tableTo": "schools",
-          "columnsFrom": ["school_id"],
-          "columnsTo": ["id"],
-          "onDelete": "restrict",
-          "onUpdate": "restrict"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "survey_print_files_copy_count_check": {
-          "name": "survey_print_files_copy_count_check",
-          "value": "\"survey_print_files\".\"copy_count\" between 1 and 1000"
-        },
-        "survey_print_files_part_number_check": {
-          "name": "survey_print_files_part_number_check",
-          "value": "\"survey_print_files\".\"part_number\" >= 1"
-        },
-        "survey_print_files_first_serial_number_check": {
-          "name": "survey_print_files_first_serial_number_check",
-          "value": "\"survey_print_files\".\"first_serial_number\" >= 1"
-        },
-        "survey_print_files_student_ids_check": {
-          "name": "survey_print_files_student_ids_check",
-          "value": "\"survey_print_files\".\"student_ids\" is null or cardinality(\"survey_print_files\".\"student_ids\") = \"survey_print_files\".\"copy_count\""
-        },
-        "survey_print_files_attempts_check": {
-          "name": "survey_print_files_attempts_check",
-          "value": "\"survey_print_files\".\"attempts\" >= 0"
-        },
-        "survey_print_files_lease_check": {
-          "name": "survey_print_files_lease_check",
-          "value": "(\"survey_print_files\".\"status\" = 'RENDERING') = (\"survey_print_files\".\"lease_token\" is not null and \"survey_print_files\".\"leased_until\" is not null)"
-        },
-        "survey_print_files_ready_check": {
-          "name": "survey_print_files_ready_check",
-          "value": "(\"survey_print_files\".\"status\" = 'READY') = (\"survey_print_files\".\"byte_size\" is not null and \"survey_print_files\".\"rendered_at\" is not null)"
-        },
-        "survey_print_files_issued_check": {
-          "name": "survey_print_files_issued_check",
-          "value": "\"survey_print_files\".\"status\" <> 'READY' or \"survey_print_files\".\"issued_at\" is not null"
-        }
-      },
-      "isRLSEnabled": false
-    },
     "public.survey_print_runs": {
       "name": "survey_print_runs",
       "schema": "",
@@ -9143,6 +8880,14 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "survey_print_run_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'QUEUED'"
         }
       },
       "indexes": {
@@ -10479,6 +10224,184 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.transcriptions": {
+      "name": "transcriptions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recording_id": {
+          "name": "recording_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "transcription_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'QUEUED'"
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prompt_version": {
+          "name": "prompt_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prompt_sha256": {
+          "name": "prompt_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "audio_seconds": {
+          "name": "audio_seconds",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "chunk_count": {
+          "name": "chunk_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "segments": {
+          "name": "segments",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gaps": {
+          "name": "gaps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "transcriptions_recording_id_created_at_idx": {
+          "name": "transcriptions_recording_id_created_at_idx",
+          "columns": [
+            {
+              "expression": "recording_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transcriptions_one_active_per_recording_key": {
+          "name": "transcriptions_one_active_per_recording_key",
+          "columns": [
+            {
+              "expression": "recording_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"transcriptions\".\"status\" IN ('QUEUED', 'PROCESSING')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "transcriptions_recording_id_fkey": {
+          "name": "transcriptions_recording_id_fkey",
+          "tableFrom": "transcriptions",
+          "tableTo": "session_recordings",
+          "columnsFrom": ["recording_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "transcriptions_attempts_check": {
+          "name": "transcriptions_attempts_check",
+          "value": "\"transcriptions\".\"attempts\" >= 0"
+        },
+        "transcriptions_processing_check": {
+          "name": "transcriptions_processing_check",
+          "value": "\"transcriptions\".\"status\" <> 'PROCESSING' OR \"transcriptions\".\"started_at\" IS NOT NULL"
+        },
+        "transcriptions_completed_check": {
+          "name": "transcriptions_completed_check",
+          "value": "\"transcriptions\".\"status\" <> 'COMPLETED' OR (\"transcriptions\".\"segments\" IS NOT NULL AND \"transcriptions\".\"gaps\" IS NOT NULL AND \"transcriptions\".\"completed_at\" IS NOT NULL AND \"transcriptions\".\"model\" IS NOT NULL AND \"transcriptions\".\"prompt_version\" IS NOT NULL AND \"transcriptions\".\"prompt_sha256\" IS NOT NULL AND \"transcriptions\".\"audio_seconds\" > 0)"
+        },
+        "transcriptions_failed_check": {
+          "name": "transcriptions_failed_check",
+          "value": "\"transcriptions\".\"status\" <> 'FAILED' OR \"transcriptions\".\"error_message\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.triage_events": {
       "name": "triage_events",
       "schema": "",
@@ -11671,8 +11594,8 @@
       "schema": "public",
       "values": ["USER", "PIPELINE", "SYSTEM"]
     },
-    "public.survey_print_status": {
-      "name": "survey_print_status",
+    "public.survey_print_run_status": {
+      "name": "survey_print_run_status",
       "schema": "public",
       "values": ["QUEUED", "RENDERING", "READY", "FAILED"]
     },
@@ -11710,6 +11633,11 @@
       "name": "ticket_status",
       "schema": "public",
       "values": ["OPEN", "ESCALATED", "RESOLVED", "CANCELLED"]
+    },
+    "public.transcription_status": {
+      "name": "transcription_status",
+      "schema": "public",
+      "values": ["QUEUED", "PROCESSING", "COMPLETED", "FAILED"]
     },
     "public.triage_action_taken": {
       "name": "triage_action_taken",

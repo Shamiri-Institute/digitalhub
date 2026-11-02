@@ -9,11 +9,8 @@ export default function FellowSchoolsDatatableSkeleton({ role }: { role: Impleme
     <DatatableSkeleton
       columns={fellowSchoolsColumns({
         state: {
-          setFellow: () => null,
-          setWeeklyEvaluationDialog: () => false,
-          openEditDialog: () => null,
-          setAttendanceHistoryDialog: () => false,
-          setComplaintsDialog: () => false,
+          openDialog: () => {},
+          openEditDialog: () => {},
           role,
         },
       })}

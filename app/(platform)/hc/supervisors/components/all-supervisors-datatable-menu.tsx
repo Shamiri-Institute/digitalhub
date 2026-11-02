@@ -1,7 +1,10 @@
 "use client";
 
 import { ImplementerRole } from "#/db/enums";
-import type { SupervisorsData } from "#/app/(platform)/hc/supervisors/components/columns";
+import type {
+  SupervisorDialogKind,
+  SupervisorsData,
+} from "#/app/(platform)/hc/supervisors/components/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -14,21 +17,11 @@ import {
 
 export function AllSupervisorsDataTableMenu({
   supervisor,
-  onSupervisorSelect,
-  onEditDialogOpen,
-  onEvaluationDialogOpen,
-  onComplaintDialogOpen,
-  onDropoutDialogOpen,
-  onUndropDialogOpen,
+  openDialog,
   role,
 }: {
   supervisor: SupervisorsData;
-  onSupervisorSelect: (supervisor: SupervisorsData) => void;
-  onEditDialogOpen: () => void;
-  onEvaluationDialogOpen: () => void;
-  onComplaintDialogOpen: () => void;
-  onDropoutDialogOpen: () => void;
-  onUndropDialogOpen: () => void;
+  openDialog: (kind: SupervisorDialogKind, supervisor: SupervisorsData) => void;
   role: ImplementerRole;
 }) {
   return (
@@ -49,19 +42,13 @@ export function AllSupervisorsDataTableMenu({
           <>
             <DropdownMenuItem
               disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-              onClick={() => {
-                onSupervisorSelect(supervisor);
-                onEditDialogOpen();
-              }}
+              onClick={() => openDialog("edit", supervisor)}
             >
               View supervisor information
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-              onClick={() => {
-                onSupervisorSelect(supervisor);
-                onEvaluationDialogOpen();
-              }}
+              onClick={() => openDialog("evaluation", supervisor)}
             >
               View supervisor evaluations
             </DropdownMenuItem>
@@ -71,49 +58,30 @@ export function AllSupervisorsDataTableMenu({
           <>
             <DropdownMenuItem
               disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-              onClick={() => {
-                onSupervisorSelect(supervisor);
-                onEditDialogOpen();
-              }}
+              onClick={() => openDialog("edit", supervisor)}
             >
               Edit supervisor information
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-              onClick={() => {
-                onSupervisorSelect(supervisor);
-                onEvaluationDialogOpen();
-              }}
+              onClick={() => openDialog("evaluation", supervisor)}
             >
               Monthly supervisor evaluation
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-              onClick={() => {
-                onSupervisorSelect(supervisor);
-                onComplaintDialogOpen();
-              }}
+              onClick={() => openDialog("complaint", supervisor)}
             >
               Submit complaint
             </DropdownMenuItem>
             {/* TODO: Add overall supervisor evaluation */}
             <DropdownMenuItem disabled>Overall supervisor evaluation</DropdownMenuItem>
             {supervisor.droppedOut === null || !supervisor.droppedOut ? (
-              <DropdownMenuItem
-                onClick={() => {
-                  onSupervisorSelect(supervisor);
-                  onDropoutDialogOpen();
-                }}
-              >
+              <DropdownMenuItem onClick={() => openDialog("dropout", supervisor)}>
                 <div className="text-shamiri-red">Drop out supervisor</div>
               </DropdownMenuItem>
             ) : (
-              <DropdownMenuItem
-                onClick={() => {
-                  onSupervisorSelect(supervisor);
-                  onUndropDialogOpen();
-                }}
-              >
+              <DropdownMenuItem onClick={() => openDialog("undrop", supervisor)}>
                 <div>Undo drop out</div>
               </DropdownMenuItem>
             )}

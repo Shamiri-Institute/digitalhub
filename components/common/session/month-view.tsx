@@ -1,11 +1,11 @@
 import { type CalendarDate, getWeeksInMonth, isSameDay, isWeekend } from "@internationalized/date";
 import type { ImplementerRole } from "#/db/enums";
-import { type Dispatch, type SetStateAction, useRef } from "react";
+import { useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useLocale } from "react-aria";
 import type { CalendarGridProps } from "react-aria-components";
 import type { CalendarState } from "react-stately";
 import { cn } from "#/lib/utils";
-import { SessionList } from "./session-list";
+import { SessionList, type SessionDialogOpener } from "./session-list";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { sessionsAt } from "#/lib/schedule-view";
 import { syncScrollLeft } from "./sync-scroll";
@@ -17,16 +17,7 @@ export function MonthView({
   state: CalendarState;
   weekdayStyle: CalendarGridProps["weekdayStyle"];
   role: ImplementerRole;
-  dialogState: {
-    setSession: Dispatch<SetStateAction<Session | null>>;
-    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
-    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
-    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  openDialog: SessionDialogOpener;
   supervisorId?: string;
   fellowId?: string;
   sessions: Session[];
@@ -81,7 +72,7 @@ export function MonthView({
                         date={date}
                         weekend={isWeekend(date, "en-US")}
                         role={props.role}
-                        dialogState={props.dialogState}
+                        openDialog={props.openDialog}
                         fellowId={props.fellowId}
                         supervisorId={props.supervisorId}
                         sessions={sessionsAt(props.sessions, date)}
@@ -106,7 +97,7 @@ export function MonthCalendarCell({
   date,
   weekend,
   role,
-  dialogState,
+  openDialog,
   fellowId,
   supervisorId,
   sessions,
@@ -115,16 +106,7 @@ export function MonthCalendarCell({
   date: CalendarDate;
   weekend: boolean;
   role: ImplementerRole;
-  dialogState: {
-    setSession: Dispatch<SetStateAction<Session | null>>;
-    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
-    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
-    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  openDialog: SessionDialogOpener;
   fellowId?: string;
   supervisorId?: string;
   sessions: Session[];
@@ -184,7 +166,7 @@ export function MonthCalendarCell({
           <SessionList
             sessions={sessions}
             role={role}
-            dialogState={dialogState}
+            openDialog={openDialog}
             fellowId={fellowId}
             supervisorId={supervisorId}
           />

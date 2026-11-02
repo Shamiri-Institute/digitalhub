@@ -1,4 +1,4 @@
-const { withSentryConfig } = require("@sentry/nextjs");
+const { withSentryConfig } = require("@sentry/nextjs/config");
 
 // Sentry is fully optional and configured via environment variables so that
 // forks can plug in their own Sentry project — or run with Sentry disabled
@@ -12,12 +12,31 @@ const sentryIngestOrigin = (() => {
   }
 })();
 
+// In development the browser uploads to a local S3 server (scripts/local-s3.sh), which serves
+// each bucket on its own subdomain.
+const localS3Origins = (() => {
+  if (process.env.NODE_ENV === "production" || !process.env.AWS_ENDPOINT_URL_S3) return "";
+  try {
+    const { protocol, host } = new URL(process.env.AWS_ENDPOINT_URL_S3);
+    return `${protocol}//${host} ${protocol}//*.${host}`;
+  } catch {
+    return "";
+  }
+})();
+
 const PRINT_FONTS = ["./public/fonts/figtree/*.ttf"];
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Read from disk by the print job (lib/survey/print-files.ts), in every function that runs it.
+  // ffmpeg-static locates its binary beside its own files, so it is loaded at runtime, and the
+  // binary and the transcription prompts are traced into the route that runs them.
+  serverExternalPackages: ["ffmpeg-static"],
   outputFileTracingIncludes: {
+    "/api/cron/transcriptions": [
+      "./node_modules/ffmpeg-static/ffmpeg",
+      "./lib/transcription/prompts/*.txt",
+    ],
+    // Read from disk by the print job (lib/survey/print-files.ts), in every function that runs it.
     "/api/cron/survey-print-files": PRINT_FONTS,
     "/hc/surveys/**": PRINT_FONTS,
     "/admin/surveys/**": PRINT_FONTS,
@@ -47,7 +66,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'; " +
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.s3.amazonaws.com; " +
               "font-src 'self'; " +
-              `connect-src 'self' ${sentryIngestOrigin} https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; ` +
+              `connect-src 'self' ${sentryIngestOrigin} ${localS3Origins} https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; ` +
               "frame-src https://dash.shamiri.institute; " +
               "frame-ancestors 'none'; " +
               "base-uri 'self'; " +
@@ -122,7 +141,8 @@ module.exports = withSentryConfig(nextConfig, {
     name: process.env.VERCEL_GIT_COMMIT_SHA || undefined,
   },
 
-  silent: true,
+  // Vercel builds set CI, so their logs show whether source maps and the release reached Sentry.
+  silent: !process.env.CI,
 
   widenClientFileUpload: true,
 
@@ -130,17 +150,9 @@ module.exports = withSentryConfig(nextConfig, {
   // proxy.ts excludes this route in its matcher; keep the two in sync.
   tunnelRoute: "/monitoring",
 
-  webpack: {
-    treeshake: { removeDebugLogging: true },
-
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
-
-    reactComponentAnnotation: {
-      enabled: true,
-    },
+  reactComponentAnnotation: {
+    enabled: true,
   },
+
+  bundleSizeOptimizations: { excludeDebugStatements: true },
 });

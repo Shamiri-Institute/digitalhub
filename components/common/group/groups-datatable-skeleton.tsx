@@ -31,12 +31,7 @@ export default function GroupsDatatableSkeleton({
     <DatatableSkeleton
       rows={rows}
       columns={columns({
-        setGroup: () => {},
-        setStudentsDialog: () => {},
-        setEvaluationDialog: () => {},
-        setLeaderDialog: () => {},
-        setArchiveDialog: () => {},
-        setUnarchiveDialog: () => {},
+        openDialog: () => {},
         role,
       })}
       columnVisibilityState={{ "Active Status": false }}

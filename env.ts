@@ -22,14 +22,10 @@ const schema = z.object({
   S3_SURVEY_PRINT_FILES_BUCKET: z.string().default(""),
   S3_SURVEY_PRINT_FILES_REGION: z.string().default("af-south-1"),
 
-  // An S3-compatible server to use instead of AWS, such as SeaweedFS for local runs and CI.
-  S3_ENDPOINT: z.url().optional(),
-
-  // Vercel sends it with each cron request.
-  CRON_SECRET: z.string().optional(),
-
-  FIDELITY_API_URL: z.url().optional(),
   RECORDINGS_API_KEY: z.string().optional(),
+
+  // Vercel Cron sends it as a bearer token. Unset, the cron routes refuse every request.
+  CRON_SECRET: z.string().min(16).optional(),
 
   METABASE_SECRET_KEY: z.string().optional(),
   METABASE_MONITORING_DASHBOARD_ID: z.coerce.number().int().positive().optional(),

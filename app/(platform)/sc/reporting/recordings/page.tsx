@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
+import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import { loadSupervisorRecordings } from "./actions";
 import RecordingsDatatable from "./components/recordings-datatable";
 
@@ -32,7 +33,11 @@ export default async function RecordingsPage() {
 
   return (
     <div className="px-6 py-5">
-      <RecordingsDatatable data={recordings} fellows={fellows} />
+      <RecordingsDatatable
+        data={recordings}
+        fellows={fellows}
+        transcriptionEnabled={isSupervisorInFidelityAbTest(supervisor.profile.id)}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import type { ImplementerRole } from "#/db/enums";
-import { addDays, addHours, format } from "date-fns";
+import { addHours, format } from "date-fns";
 import type React from "react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -40,7 +40,8 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitSessionRatings } from "#/lib/actions/session/session";
-import { cn, sessionDisplayName, updateWindowFor } from "#/lib/utils";
+import { evaluationEditDeadline, mayEditEvaluation } from "#/lib/evaluation-edit-window";
+import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { interventionSessionRating } from "#/db/schema";
 
@@ -88,7 +89,9 @@ function SessionRatingsForm({
   const [existingRating, setExistingRating] = useState<InterventionSessionRating | undefined>(
     rating,
   );
-  const [updateWindowDuration, setUpdateWindowDuration] = useState(() => updateWindowFor(rating));
+  const [now, setNow] = useState(() => new Date());
+  const editWindowClosed =
+    existingRating !== undefined && !mayEditEvaluation(existingRating.createdAt, now);
 
   const form = useForm<z.infer<typeof SessionRatingsSchema>>({
     resolver: zodResolver(SessionRatingsSchema),
@@ -112,10 +115,8 @@ function SessionRatingsForm({
 
   function selectRating(next: InterventionSessionRating | undefined) {
     setExistingRating(next);
+    setNow(new Date());
     form.reset(getDefaultValues(next));
-    if (next) {
-      setUpdateWindowDuration(updateWindowFor(next));
-    }
   }
 
   const onSubmit = async (data: z.infer<typeof SessionRatingsSchema>) => {
@@ -251,7 +252,7 @@ function SessionRatingsForm({
                         <Input
                           type="number"
                           placeholder="No of. students who attended"
-                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                          disabled={mode === "view" || editWindowClosed}
                           {...field}
                           onChange={(e) => {
                             const value =
@@ -278,7 +279,7 @@ function SessionRatingsForm({
                       <RatingStarsInput
                         value={field.value}
                         onChange={field.onChange}
-                        disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                        disabled={mode === "view" || editWindowClosed}
                       />
                     </FormItem>
                   )}
@@ -295,7 +296,7 @@ function SessionRatingsForm({
                       <RatingStarsInput
                         value={field.value}
                         onChange={field.onChange}
-                        disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                        disabled={mode === "view" || editWindowClosed}
                       />
                     </FormItem>
                   )}
@@ -312,7 +313,7 @@ function SessionRatingsForm({
                       <RatingStarsInput
                         value={field.value}
                         onChange={field.onChange}
-                        disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                        disabled={mode === "view" || editWindowClosed}
                       />
                     </FormItem>
                   )}
@@ -329,7 +330,7 @@ function SessionRatingsForm({
                           placeholder="Positive Highlights"
                           className="resize-none"
                           rows={4}
-                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                          disabled={mode === "view" || editWindowClosed}
                           {...field}
                         />
                       </FormControl>
@@ -347,7 +348,7 @@ function SessionRatingsForm({
                           placeholder="Challenges"
                           className="resize-none"
                           rows={4}
-                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                          disabled={mode === "view" || editWindowClosed}
                           {...field}
                         />
                       </FormControl>
@@ -365,7 +366,7 @@ function SessionRatingsForm({
                           placeholder="Recommendations"
                           className="resize-none"
                           rows={4}
-                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
+                          disabled={mode === "view" || editWindowClosed}
                           {...field}
                         />
                       </FormControl>
@@ -376,19 +377,20 @@ function SessionRatingsForm({
               </div>
             </div>
             <Separator />
-            {mode !== "view" &&
-            (existingRating === undefined || (existingRating && updateWindowDuration > 0)) ? (
+            {mode !== "view" ? (
               <div className="space-y-5">
-                {existingRating && updateWindowDuration > 0 && (
+                {existingRating && !editWindowClosed && (
                   <>
                     <DialogAlertWidget separator={false}>
                       <div className="flex items-center gap-2">
                         <span>
                           Update ratings by{" "}
-                          {existingRating &&
-                            format(addDays(existingRating.createdAt, 14), "dd-MM-yyyy")}{" "}
-                          (
-                          <CountdownTimer duration={updateWindowDuration} />)
+                          {format(evaluationEditDeadline(existingRating.createdAt), "dd-MM-yyyy")} (
+                          <CountdownTimer
+                            deadline={evaluationEditDeadline(existingRating.createdAt)}
+                            onExpire={setNow}
+                          />
+                          )
                         </span>
                       </div>
                     </DialogAlertWidget>
@@ -409,9 +411,7 @@ function SessionRatingsForm({
                   <Button
                     variant="brand"
                     type="submit"
-                    disabled={
-                      form.formState.isSubmitting || (existingRating && updateWindowDuration < 0)
-                    }
+                    disabled={form.formState.isSubmitting || editWindowClosed}
                     loading={form.formState.isSubmitting}
                   >
                     {existingRating ? "Update & save" : "Submit"}

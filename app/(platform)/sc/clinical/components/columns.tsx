@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import HandleSessionAttendanceUpdate from "#/app/(platform)/sc/clinical/components/handle-session-attendance-update";
 import { Icons } from "#/components/icons";
+import { sortBy } from "#/lib/table-view";
 import { cn } from "#/lib/utils";
 
 export type AttendanceRecord = {
@@ -22,6 +23,7 @@ export const attendanceColumns: ColumnDef<AttendanceRecord>[] = [
     accessorKey: "sessionDate",
     header: "Date",
     cell: ({ row }) => format(new Date(row.original.sessionDate), "dd MMM yyyy"),
+    sortingFn: sortBy((attendance) => new Date(attendance.sessionDate)),
   },
   {
     accessorKey: "attendanceStatus",

@@ -2,8 +2,8 @@
 
 import { ImplementerRole } from "#/db/enums";
 import type { interventionSession, school as schoolTable, sessionName } from "#/db/schema";
-import type { Row } from "@tanstack/react-table";
-import { useState } from "react";
+import type { Row, RowSelectionState } from "@tanstack/react-table";
+import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { columns, type SupervisorsData } from "#/components/common/supervisor/columns";
@@ -11,6 +11,11 @@ import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { markManySupervisorAttendance, markSupervisorAttendance } from "#/lib/actions/supervisor";
+
+// Marking the selected supervisors reads them from the table's row selection.
+type OpenSupervisorDialog =
+  | { kind: "markAttendance"; supervisorId: string }
+  | { kind: "markSelectedAttendance" };
 
 export default function SupervisorsDataTable({
   supervisors,
@@ -27,24 +32,18 @@ export default function SupervisorsDataTable({
       })
     | null;
 }) {
-  const [batchMode, setBatchMode] = useState<boolean>(false);
-  const [selectedRows, setSelectedRows] = useState<Row<SupervisorsData>[]>([]);
-  const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
-  const [selectedSession] = useState<string>();
-  const [selectedSupervisor, setSelectedSupervisor] = useState<SupervisorsData | null>(null);
+  const [selectedSupervisorIds, setSelectedSupervisorIds] = useState<RowSelectionState>({});
+  const selectedSupervisors = supervisors.filter((s) => selectedSupervisorIds[s.id]);
+  const [dialog, setDialog] = useState<OpenSupervisorDialog | null>(null);
+  const supervisor =
+    dialog?.kind === "markAttendance"
+      ? supervisors.find((s) => s.id === dialog.supervisorId)
+      : undefined;
+  const markingSelected = dialog?.kind === "markSelectedAttendance";
 
-  const supervisor = (() => {
-    if (supervisors.length > 0 && selectedSupervisor) {
-      return supervisors.find((s) => s.id === selectedSupervisor?.id) ?? null;
-    }
-    return selectedSupervisor;
-  })();
-
-  const memoizedColumns = columns({
-    setMarkAttendanceDialog,
-    sessions: school?.interventionSessions ?? [],
-    setSupervisor: setSelectedSupervisor,
-  });
+  const onDialogOpenChange = (open: SetStateAction<boolean>) => {
+    if (!open) setDialog(null);
+  };
 
   const renderTableActions = () => {
     return (
@@ -54,12 +53,10 @@ export default function SupervisorsDataTable({
             variant="outline"
             className="flex gap-1"
             disabled={
-              (school?.droppedOut !== null && school?.droppedOut) || selectedRows.length === 0
+              (school?.droppedOut !== null && school?.droppedOut) ||
+              selectedSupervisors.length === 0
             }
-            onClick={() => {
-              setBatchMode(true);
-              setMarkAttendanceDialog(true);
-            }}
+            onClick={() => setDialog({ kind: "markSelectedAttendance" })}
           >
             <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
             <span>Mark supervisor attendance</span>
@@ -72,8 +69,13 @@ export default function SupervisorsDataTable({
   return (
     <div>
       <DataTable
+        urlState
         data={supervisors}
-        columns={memoizedColumns}
+        columns={columns({
+          openMarkAttendance: ({ id: supervisorId }) =>
+            setDialog({ kind: "markAttendance", supervisorId }),
+          sessions: school?.interventionSessions ?? [],
+        })}
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No supervisors found for this hub"
         columnVisibilityState={{
@@ -88,12 +90,13 @@ export default function SupervisorsDataTable({
           row.original.droppedOut === null || !row.original.droppedOut
         }
         rowSelectionDescription={"supervisors"}
-        onRowSelectionChange={setSelectedRows}
+        getRowId={(s) => s.id}
+        rowSelection={selectedSupervisorIds}
+        onRowSelectionChange={setSelectedSupervisorIds}
       />
       <MarkAttendance
         title={"Mark supervisor attendance"}
         sessions={school?.interventionSessions.filter((session) => session.occurred) ?? []}
-        selectedSessionId={selectedSession}
         attendances={
           supervisor?.supervisorAttendances.map((attendance) => {
             const {
@@ -117,18 +120,18 @@ export default function SupervisorsDataTable({
           }) ?? []
         }
         id={supervisor?.id}
-        isOpen={markAttendanceDialog}
-        setIsOpen={setMarkAttendanceDialog}
+        isOpen={dialog !== null}
+        setIsOpen={onDialogOpenChange}
         markAttendanceAction={markSupervisorAttendance}
-        bulkMode={batchMode}
-        setBulkMode={setBatchMode}
+        bulkMode={markingSelected}
         markBulkAttendanceAction={markManySupervisorAttendance}
-        selectedIds={selectedRows.map((x): string => x.original.id)}
+        selectedIds={selectedSupervisors.map((s) => s.id)}
+        onSuccess={() => setSelectedSupervisorIds({})}
       >
         <DialogAlertWidget>
           <div className="flex flex-wrap items-center gap-2">
-            {batchMode ? (
-              <span>{selectedRows.length} supervisors</span>
+            {markingSelected ? (
+              <span>{selectedSupervisors.length} supervisors</span>
             ) : (
               <span>{supervisor?.supervisorName}</span>
             )}

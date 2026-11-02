@@ -8,7 +8,6 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-import { env } from "#/env";
 import { getS3Credentials } from "#/lib/s3/s3.config";
 import type { PresignedUploadOptions, S3Bucket } from "#/lib/s3/s3.types";
 import { requireBucket } from "#/lib/s3/utils/require-bucket";
@@ -25,7 +24,9 @@ function createClient(bucket: S3Bucket): S3Client {
     region: requireBucket(bucket).region,
     credentials: getS3Credentials(),
     requestChecksumCalculation: "WHEN_REQUIRED",
-    ...(env.S3_ENDPOINT && { endpoint: env.S3_ENDPOINT, forcePathStyle: true }),
+    // A local S3 server (AWS_ENDPOINT_URL_S3, which the SDK reads itself) is reached by path, so
+    // Node never has to resolve a bucket's *.localhost name.
+    forcePathStyle: !!process.env.AWS_ENDPOINT_URL_S3,
     requestHandler: {
       connectionTimeout: 3_000,
       // Uploads go from the browser straight to S3, so the server only makes small calls, except

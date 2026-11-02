@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { type Dispatch, type SetStateAction, useEffect } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -22,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { sortBy } from "#/lib/table-view";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
 export default function AttendanceHistory({
@@ -39,13 +40,6 @@ export default function AttendanceHistory({
   setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>;
   children: React.ReactNode;
 }) {
-  // effect: clears the parent's selected session when the dialog closes
-  useEffect(() => {
-    if (!open) {
-      setSelectedSessionId(undefined);
-    }
-  }, [open, setSelectedSessionId]);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="lg:w-3/5 lg:max-w-none">
@@ -65,9 +59,7 @@ export default function AttendanceHistory({
         <DialogFooter className="flex justify-end gap-2">
           <Button
             variant="brand"
-            onClick={() => {
-              onOpenChange(false);
-            }}
+            onClick={() => onOpenChange(false)}
             className="flex items-center gap-2"
           >
             Done
@@ -88,6 +80,7 @@ const columns = (
     accessorFn: (row) => {
       return row.session && format(row.session.sessionDate, "dd MMM yyyy");
     },
+    sortingFn: sortBy((attendance) => attendance.session?.sessionDate),
   },
   {
     header: "Session",

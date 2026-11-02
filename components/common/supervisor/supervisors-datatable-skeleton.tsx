@@ -7,8 +7,7 @@ export default function SupervisorsDatatableSkeleton() {
   return (
     <DatatableSkeleton
       columns={columns({
-        setMarkAttendanceDialog: () => {},
-        setSupervisor: () => {},
+        openMarkAttendance: () => {},
         sessions: [],
       })}
       columnVisibilityState={{

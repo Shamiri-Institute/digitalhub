@@ -36,7 +36,8 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitWeeklyFellowEvaluation } from "#/lib/actions/fellow";
-import { cn, updateWindowFor } from "#/lib/utils";
+import { evaluationEditDeadline, mayEditEvaluation } from "#/lib/evaluation-edit-window";
+import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { project as projectTable, weeklyFellowRatings } from "#/db/schema";
 
@@ -74,9 +75,9 @@ function WeeklyFellowEvaluationForm({
   const [existingEvaluation, setExistingEvaluation] = useState<WeeklyFellowRatings | undefined>(
     _evaluation,
   );
-  const [updateWindowDuration, setUpdateWindowDuration] = useState(() =>
-    updateWindowFor(_evaluation),
-  );
+  const [now, setNow] = useState(() => new Date());
+  const editWindowClosed =
+    existingEvaluation !== undefined && !mayEditEvaluation(existingEvaluation.createdAt, now);
 
   const weeks =
     mode === "view"
@@ -120,9 +121,7 @@ function WeeklyFellowEvaluationForm({
       punctualityNotes: evaluation?.punctualityNotes ?? "",
       punctualityRating: evaluation?.punctualityRating ?? 0,
     });
-    if (evaluation) {
-      setUpdateWindowDuration(updateWindowFor(evaluation));
-    }
+    setNow(new Date());
   }
 
   const onSubmit = async (data: z.infer<typeof WeeklyFellowEvaluationSchema>) => {
@@ -212,13 +211,17 @@ function WeeklyFellowEvaluationForm({
               </FormItem>
             )}
           />
-          {mode !== "view" && existingEvaluation && updateWindowDuration > 0 ? (
+          {mode !== "view" && existingEvaluation && !editWindowClosed ? (
             <DialogAlertWidget separator={false}>
               <div className="flex items-center gap-2">
                 <span>
                   Update ratings by{" "}
-                  {format(addDays(existingEvaluation.createdAt, 14), "dd-MM-yyyy")} (
-                  <CountdownTimer duration={updateWindowDuration} />)
+                  {format(evaluationEditDeadline(existingEvaluation.createdAt), "dd-MM-yyyy")} (
+                  <CountdownTimer
+                    deadline={evaluationEditDeadline(existingEvaluation.createdAt)}
+                    onExpire={setNow}
+                  />
+                  )
                 </span>
               </div>
             </DialogAlertWidget>
@@ -237,7 +240,7 @@ function WeeklyFellowEvaluationForm({
                   <RatingStarsInput
                     value={field.value}
                     onChange={field.onChange}
-                    disabled={mode === "view" || (existingEvaluation && updateWindowDuration === 0)}
+                    disabled={mode === "view" || editWindowClosed}
                   />
                 </FormItem>
               )}
@@ -246,7 +249,7 @@ function WeeklyFellowEvaluationForm({
               <FormField
                 control={form.control}
                 name="behaviourNotes"
-                disabled={existingEvaluation && updateWindowDuration <= 0}
+                disabled={editWindowClosed}
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
@@ -255,7 +258,7 @@ function WeeklyFellowEvaluationForm({
                         {...field}
                         rows={4}
                         placeholder={
-                          existingEvaluation && updateWindowDuration <= 0
+                          editWindowClosed
                             ? ""
                             : "pertains to evaluating the fellow's demeanor, covering approachability, respectfulness, attitude, collaboration, communication style."
                         }
@@ -282,7 +285,7 @@ function WeeklyFellowEvaluationForm({
                   <RatingStarsInput
                     value={field.value}
                     onChange={field.onChange}
-                    disabled={mode === "view" || (existingEvaluation && updateWindowDuration === 0)}
+                    disabled={mode === "view" || editWindowClosed}
                   />
                 </FormItem>
               )}
@@ -291,7 +294,7 @@ function WeeklyFellowEvaluationForm({
               <FormField
                 control={form.control}
                 name="programDeliveryNotes"
-                disabled={existingEvaluation && updateWindowDuration <= 0}
+                disabled={editWindowClosed}
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
@@ -300,7 +303,7 @@ function WeeklyFellowEvaluationForm({
                         {...field}
                         rows={4}
                         placeholder={
-                          existingEvaluation && updateWindowDuration <= 0
+                          editWindowClosed
                             ? ""
                             : "assesses adherence to protocols, ethical standards, confidentiality, cultural competence"
                         }
@@ -327,7 +330,7 @@ function WeeklyFellowEvaluationForm({
                   <RatingStarsInput
                     value={field.value}
                     onChange={field.onChange}
-                    disabled={mode === "view" || (existingEvaluation && updateWindowDuration === 0)}
+                    disabled={mode === "view" || editWindowClosed}
                   />
                 </FormItem>
               )}
@@ -336,7 +339,7 @@ function WeeklyFellowEvaluationForm({
               <FormField
                 control={form.control}
                 name="dressingAndGroomingNotes"
-                disabled={existingEvaluation && updateWindowDuration <= 0}
+                disabled={editWindowClosed}
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
@@ -345,7 +348,7 @@ function WeeklyFellowEvaluationForm({
                         {...field}
                         rows={4}
                         placeholder={
-                          existingEvaluation && updateWindowDuration <= 0
+                          editWindowClosed
                             ? ""
                             : "assesses the personal presentation of fellows considering appropriate attire and grooming standards in compliance with specific school administration requirements."
                         }
@@ -372,7 +375,7 @@ function WeeklyFellowEvaluationForm({
                   <RatingStarsInput
                     value={field.value}
                     onChange={field.onChange}
-                    disabled={mode === "view" || (existingEvaluation && updateWindowDuration === 0)}
+                    disabled={mode === "view" || editWindowClosed}
                   />
                 </FormItem>
               )}
@@ -381,7 +384,7 @@ function WeeklyFellowEvaluationForm({
               <FormField
                 control={form.control}
                 name="punctualityNotes"
-                disabled={existingEvaluation && updateWindowDuration <= 0}
+                disabled={editWindowClosed}
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
@@ -390,7 +393,7 @@ function WeeklyFellowEvaluationForm({
                         {...field}
                         rows={4}
                         placeholder={
-                          existingEvaluation && updateWindowDuration <= 0
+                          editWindowClosed
                             ? ""
                             : "assesses the timely arrival and adherence to scheduled program sessions, including supervision and school sessions"
                         }
@@ -407,8 +410,7 @@ function WeeklyFellowEvaluationForm({
             )}
           </div>
           <Separator />
-          {mode !== "view" &&
-          (existingEvaluation === undefined || (existingEvaluation && updateWindowDuration > 0)) ? (
+          {mode !== "view" ? (
             <div className="space-y-5">
               <DialogFooter className="flex justify-end">
                 <Button
@@ -424,9 +426,7 @@ function WeeklyFellowEvaluationForm({
                 <Button
                   variant="brand"
                   type="submit"
-                  disabled={
-                    form.formState.isSubmitting || (existingEvaluation && updateWindowDuration < 0)
-                  }
+                  disabled={form.formState.isSubmitting || editWindowClosed}
                   loading={form.formState.isSubmitting}
                 >
                   {existingEvaluation ? "Update & save" : "Submit"}

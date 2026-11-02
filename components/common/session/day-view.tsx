@@ -2,35 +2,26 @@
 
 import { type CalendarDate, isToday } from "@internationalized/date";
 import type { ImplementerRole } from "#/db/enums";
-import { type Dispatch, type SetStateAction, useRef } from "react";
+import { useRef } from "react";
 import { useCalendarCell, useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
-import { SessionList } from "./session-list";
+import { SessionList, type SessionDialogOpener } from "./session-list";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { sessionsAt } from "#/lib/schedule-view";
 
 export function DayView({
   state,
   role,
-  dialogState,
+  openDialog,
   supervisorId,
   fellowId,
   sessions: allSessions,
 }: {
   state: CalendarState;
   role: ImplementerRole;
-  dialogState: {
-    setSession: Dispatch<SetStateAction<Session | null>>;
-    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
-    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
-    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  openDialog: SessionDialogOpener;
   supervisorId?: string;
   fellowId?: string;
   sessions: Session[];
@@ -96,7 +87,7 @@ export function DayView({
                 date={currentDate}
                 state={state}
                 role={role}
-                dialogState={dialogState}
+                openDialog={openDialog}
                 fellowId={fellowId}
                 supervisorId={supervisorId}
                 sessions={sessionsAt(sessions, currentDate, hour)}
@@ -114,7 +105,7 @@ function DayCalendarCell({
   date,
   state,
   role,
-  dialogState,
+  openDialog,
   fellowId,
   supervisorId,
   sessions,
@@ -123,16 +114,7 @@ function DayCalendarCell({
   date: CalendarDate;
   state: CalendarState;
   role: ImplementerRole;
-  dialogState: {
-    setSession: Dispatch<SetStateAction<Session | null>>;
-    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
-    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
-    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  openDialog: SessionDialogOpener;
   fellowId?: string;
   supervisorId?: string;
   sessions: Session[];
@@ -168,7 +150,7 @@ function DayCalendarCell({
           <SessionList
             sessions={sessions}
             role={role}
-            dialogState={dialogState}
+            openDialog={openDialog}
             fellowId={fellowId}
             supervisorId={supervisorId}
           />

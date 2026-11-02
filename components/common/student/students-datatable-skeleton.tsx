@@ -8,15 +8,7 @@ export default function StudentsDatatableSkeleton({ role }: { role: ImplementerR
   return (
     <DatatableSkeleton
       columns={columns({
-        setEditDialog: () => {},
-        setStudent: () => {},
-        setAttendanceHistoryDialog: () => {},
-        setMarkAttendanceDialog: () => {},
-        setReportingNotesDialog: () => {},
-        setGroupTransferHistory: () => {},
-        setMoveSchoolDialog: () => {},
-        setDropoutDialog: () => {},
-        setArchiveDialog: () => {},
+        openDialog: () => {},
         role,
         sessions: [],
       })}

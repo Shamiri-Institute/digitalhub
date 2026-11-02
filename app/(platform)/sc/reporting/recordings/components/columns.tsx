@@ -1,11 +1,11 @@
 "use client";
 
-import type { RecordingProcessingStatus } from "#/db/enums";
+import type { RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Dispatch, SetStateAction } from "react";
 import RecordingStatusBadge from "./recording-status-badge";
 import RecordingsDataTableMenu from "./recordings-datatable-menu";
 import type { JsonValue } from "#/db/schema";
+import { sortBy } from "#/lib/table-view";
 
 export interface RecordingTableData {
   id: string;
@@ -30,12 +30,15 @@ export interface RecordingTableData {
   sessionType: string;
   sessionDate: Date;
   sessionName: string;
+  transcriptionStatus: TranscriptionStatus | null;
+  transcriptionGapCount: number;
 }
 
+export type RecordingDialogKind = "edit" | "viewFeedback" | "viewTranscript";
+
 export interface ColumnState {
-  setViewFeedbackDialog: Dispatch<SetStateAction<boolean>>;
-  setSelectedRecording: Dispatch<SetStateAction<RecordingTableData | null>>;
-  setEditDialog: Dispatch<SetStateAction<boolean>>;
+  openDialog: (kind: RecordingDialogKind, recording: RecordingTableData) => void;
+  transcriptionEnabled: boolean;
 }
 
 function formatDate(date: Date): string {
@@ -89,13 +92,20 @@ export const recordingColumns = (state: ColumnState): ColumnDef<RecordingTableDa
     accessorKey: "status",
     header: "Status",
     id: "status",
-    cell: ({ row }) => <RecordingStatusBadge status={row.original.status} />,
+    cell: ({ row }) => (
+      <RecordingStatusBadge
+        status={row.original.status}
+        hasGaps={row.original.transcriptionGapCount > 0}
+        errorMessage={row.original.errorMessage}
+      />
+    ),
   },
   {
     accessorKey: "overallScore",
     header: "Score",
     id: "score",
     cell: ({ row }) => row.original.overallScore ?? "-",
+    sortingFn: sortBy((recording) => Number.parseFloat(recording.overallScore ?? "")),
   },
   {
     id: "button",

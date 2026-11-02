@@ -1,8 +1,10 @@
 "use client";
 
 import { ImplementerRole } from "#/db/enums";
-import type { Dispatch, SetStateAction } from "react";
-import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
+import type {
+  SchoolFellowTableData,
+  SchoolFellowTableState,
+} from "#/components/common/fellow/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -19,14 +21,7 @@ export function FellowsDatatableMenu({
   role,
 }: {
   fellow: SchoolFellowTableData;
-  state: {
-    setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
-    openDetailsDialog: (fellow: SchoolFellowTableData) => void;
-    setReplaceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
-    setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-    setAssignSupervisorDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  state: SchoolFellowTableState;
   role: ImplementerRole;
 }) {
   return (
@@ -53,40 +48,26 @@ export function FellowsDatatableMenu({
         {role === ImplementerRole.HUB_COORDINATOR && (
           <DropdownMenuItem
             disabled={fellow.droppedOut ?? undefined}
-            onClick={() => {
-              state.setFellow(fellow);
-              state.setAssignSupervisorDialog(true);
-            }}
+            onClick={() => state.openDialog("assignSupervisor", fellow)}
           >
             Assign supervisor
           </DropdownMenuItem>
         )}
         <DropdownMenuItem
           disabled={fellow.groupId === null}
-          onClick={() => {
-            state.setFellow(fellow);
-            state.setStudentsDialog(true);
-          }}
+          onClick={() => state.openDialog("students", fellow)}
         >
           View students in group
         </DropdownMenuItem>
         {(role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR) && (
           <DropdownMenuItem
             disabled={fellow.groupId === null}
-            onClick={() => {
-              state.setFellow(fellow);
-              state.setReplaceDialog(true);
-            }}
+            onClick={() => state.openDialog("replace", fellow)}
           >
             Replace fellow
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem
-          onClick={() => {
-            state.setFellow(fellow);
-            state.setAttendanceHistoryDialog(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDialog("attendanceHistory", fellow)}>
           Session attendance history
         </DropdownMenuItem>
         <DropdownMenuItem>View complaints</DropdownMenuItem>

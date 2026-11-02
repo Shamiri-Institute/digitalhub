@@ -3,7 +3,6 @@
 import { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
-import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { FellowsDatatableMenu } from "#/components/common/fellow/fellows-datatable-menu";
 import type { GroupStudent } from "#/components/common/student/students-in-group";
@@ -27,18 +26,22 @@ export type SchoolFellowTableData = {
   students: GroupStudent[];
 };
 
+export type SchoolFellowDialogKind =
+  | "replace"
+  | "students"
+  | "attendanceHistory"
+  | "assignSupervisor";
+
+export type SchoolFellowTableState = {
+  openDialog: (kind: SchoolFellowDialogKind, fellow: SchoolFellowTableData) => void;
+  openDetailsDialog: (fellow: SchoolFellowTableData) => void;
+};
+
 export const columns = ({
   state,
   role,
 }: {
-  state: {
-    setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
-    openDetailsDialog: (fellow: SchoolFellowTableData) => void;
-    setReplaceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
-    setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-    setAssignSupervisorDialog: Dispatch<SetStateAction<boolean>>;
-  };
+  state: SchoolFellowTableState;
   role: ImplementerRole;
 }): ColumnDef<SchoolFellowTableData>[] => {
   return [

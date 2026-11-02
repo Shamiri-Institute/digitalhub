@@ -1,6 +1,5 @@
 import { ImplementerRole } from "#/db/enums";
-import type { Dispatch, SetStateAction } from "react";
-import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
+import type { GroupTableState, SchoolGroupDataTableData } from "#/components/common/group/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -16,15 +15,7 @@ export function GroupsDatatableMenu({
   state,
 }: {
   group: SchoolGroupDataTableData;
-  state: {
-    setGroup: Dispatch<SetStateAction<SchoolGroupDataTableData | undefined>>;
-    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
-    setLeaderDialog: Dispatch<SetStateAction<boolean>>;
-    setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
-    setArchiveDialog: Dispatch<SetStateAction<boolean>>;
-    setUnarchiveDialog: Dispatch<SetStateAction<boolean>>;
-    role: ImplementerRole;
-  };
+  state: GroupTableState;
 }) {
   return (
     <DropdownMenu>
@@ -42,29 +33,14 @@ export function GroupsDatatableMenu({
         <DropdownMenuSeparator />
         {(state.role === ImplementerRole.HUB_COORDINATOR ||
           state.role === ImplementerRole.SUPERVISOR) && (
-          <DropdownMenuItem
-            onClick={() => {
-              state.setGroup(group);
-              state.setLeaderDialog(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => state.openDialog("replaceLeader", group)}>
             Replace fellow
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem
-          onClick={() => {
-            state.setGroup(group);
-            state.setStudentsDialog(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDialog("students", group)}>
           View students in group
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            state.setGroup(group);
-            state.setEvaluationDialog(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDialog("evaluation", group)}>
           View student group evaluation
         </DropdownMenuItem>
         {(state.role === ImplementerRole.HUB_COORDINATOR ||
@@ -72,10 +48,7 @@ export function GroupsDatatableMenu({
           !group.archivedAt && (
             <DropdownMenuItem
               className="text-shamiri-red"
-              onClick={() => {
-                state.setGroup(group);
-                state.setArchiveDialog(true);
-              }}
+              onClick={() => state.openDialog("archive", group)}
             >
               Archive group
             </DropdownMenuItem>
@@ -83,10 +56,7 @@ export function GroupsDatatableMenu({
         {state.role === ImplementerRole.HUB_COORDINATOR && group.archivedAt && (
           <DropdownMenuItem
             className="text-shamiri-red"
-            onClick={() => {
-              state.setGroup(group);
-              state.setUnarchiveDialog(true);
-            }}
+            onClick={() => state.openDialog("unarchive", group)}
           >
             Unarchive group
           </DropdownMenuItem>

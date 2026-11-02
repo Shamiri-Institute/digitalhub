@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
+import { sortBy } from "#/lib/table-view";
 import { sessionDisplayName } from "#/lib/utils";
 
 export default function GroupTransferHistory({
@@ -93,6 +94,7 @@ const columns = (
     accessorFn: (row) => {
       return format(row.createdAt, "dd MMM yyyy");
     },
+    sortingFn: sortBy((transfer) => transfer.createdAt),
   },
   {
     header: "Session",

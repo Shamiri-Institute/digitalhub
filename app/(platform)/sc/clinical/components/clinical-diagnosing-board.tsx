@@ -52,136 +52,83 @@ export const general_presenting_issues = [
 
 type Severity = "Low risk" | "Moderate risk" | "High risk" | "Severe risk";
 
-const initializeIssues = (
-  issues: typeof emergency_presenting_issues | typeof general_presenting_issues,
-  presentingIssues: unknown,
-): Record<string, Severity> => {
-  const initialState: Record<string, Severity> = {};
+type Phase = "baseline" | "endpoint";
 
-  if (presentingIssues) {
-    issues.forEach((issue) => {
-      const value = (presentingIssues as Record<string, Severity>)[issue.name];
-      if (value) {
-        initialState[issue.id.toString()] = value;
-      }
-    });
-  }
+/** Which presenting issues the board edits: an Active case's baseline, otherwise its endpoint. */
+export function presentingIssuesPhase(clinicalCase: Pick<ClinicalCases, "caseStatus">): Phase {
+  return clinicalCase.caseStatus === "Active" ? "baseline" : "endpoint";
+}
 
-  return initialState;
-};
-
-export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: ClinicalCases }) {
-  const isBaseline = currentcase.caseStatus === "Active";
-
-  const initialEmergencyState = isBaseline
+function savedSelections(currentcase: ClinicalCases, phase: Phase) {
+  const isBaseline = phase === "baseline";
+  const emergency = isBaseline
     ? currentcase.emergencyPresentingIssuesBaseline
     : currentcase.emergencyPresentingIssuesEndpoint;
-
-  const initialGeneralState = isBaseline
+  const general = isBaseline
     ? currentcase.generalPresentingIssuesBaseline
     : currentcase.generalPresentingIssuesEndpoint;
+  const other = isBaseline
+    ? currentcase.generalPresentingIssuesOtherSpecifiedBaseline
+    : currentcase.generalPresentingIssuesOtherSpecifiedEndpoint;
 
-  const initialOtherIssues = isBaseline
-    ? currentcase.generalPresentingIssuesOtherSpecifiedBaseline || ""
-    : currentcase.generalPresentingIssuesOtherSpecifiedEndpoint || "";
-
-  const [emergencyIssues, setEmergencyIssues] = useState<Record<string, Severity>>(() =>
-    initializeIssues(
-      emergency_presenting_issues,
-      isBaseline
-        ? currentcase.emergencyPresentingIssuesBaseline
-        : currentcase.emergencyPresentingIssuesEndpoint,
-    ),
-  );
-
-  const [generalIssues, setGeneralIssues] = useState<Record<string, boolean>>(() => {
-    const initialState: Record<string, boolean> = {};
-
-    const generalIssuesData = isBaseline
-      ? currentcase.generalPresentingIssuesBaseline
-      : currentcase.generalPresentingIssuesEndpoint;
-
-    if (generalIssuesData) {
-      general_presenting_issues.forEach((issue) => {
-        if (
-          generalIssuesData &&
-          typeof generalIssuesData === "object" &&
-          issue.name in generalIssuesData
-        ) {
-          initialState[issue.id.toString()] = true;
-        }
-      });
+  const emergencyIssues: Record<string, Severity> = {};
+  const generalIssues: Record<string, boolean> = {};
+  if (emergency && typeof emergency === "object") {
+    for (const issue of emergency_presenting_issues) {
+      const severity = (emergency as Record<string, Severity | undefined>)[issue.name];
+      if (severity) emergencyIssues[issue.id] = severity;
     }
+  }
+  if (general && typeof general === "object") {
+    for (const issue of general_presenting_issues) {
+      if (issue.name in general) generalIssues[issue.id] = true;
+    }
+  }
+  return { emergencyIssues, generalIssues, otherIssues: other || "" };
+}
 
-    return initialState;
-  });
+/** The board's selections keyed by issue name, as the case stores them. */
+function toPresentingIssues(
+  emergencyIssues: Record<string, Severity>,
+  generalIssues: Record<string, boolean>,
+) {
+  const emergency: Record<string, Severity> = {};
+  const general: Record<string, string> = {};
+  for (const issue of emergency_presenting_issues) {
+    const severity = emergencyIssues[issue.id];
+    if (severity) emergency[issue.name] = severity;
+  }
+  for (const issue of general_presenting_issues) {
+    if (generalIssues[issue.id]) general[issue.name] = "true";
+  }
+  return { emergency, general };
+}
 
-  const [otherIssues, setOtherIssues] = useState(initialOtherIssues);
+export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: ClinicalCases }) {
+  const phase = presentingIssuesPhase(currentcase);
+  const isBaseline = phase === "baseline";
+  const saved = savedSelections(currentcase, phase);
+
+  const [emergencyIssues, setEmergencyIssues] = useState(saved.emergencyIssues);
+  const [generalIssues, setGeneralIssues] = useState(saved.generalIssues);
+  const [otherIssues, setOtherIssues] = useState(saved.otherIssues);
   const [isSaving, setIsSaving] = useState(false);
 
-  const hasChanges = (() => {
-    const currentEmergencyData = Object.entries(emergencyIssues).reduce(
-      (acc, [id, severity]) => {
-        const issueName = emergency_presenting_issues.find((i) => i.id.toString() === id)?.name;
-        if (issueName) {
-          acc[issueName] = severity;
-        }
-        return acc;
-      },
-      {} as Record<string, Severity>,
-    );
-
-    const currentGeneralData = Object.entries(generalIssues).reduce(
-      (acc, [id, selected]) => {
-        const issueName = general_presenting_issues.find((i) => i.id.toString() === id)?.name;
-        if (issueName && selected) {
-          acc[issueName] = "true";
-        }
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    const emergencyChanged =
-      JSON.stringify(currentEmergencyData) !== JSON.stringify(initialEmergencyState);
-    const generalChanged =
-      JSON.stringify(currentGeneralData) !== JSON.stringify(initialGeneralState);
-    const otherIssuesChanged = otherIssues !== initialOtherIssues;
-
-    return emergencyChanged || generalChanged || otherIssuesChanged;
-  })();
+  const presentingIssues = toPresentingIssues(emergencyIssues, generalIssues);
+  const hasChanges =
+    JSON.stringify(presentingIssues) !==
+      JSON.stringify(toPresentingIssues(saved.emergencyIssues, saved.generalIssues)) ||
+    otherIssues !== saved.otherIssues;
 
   const handleSaveAll = async () => {
     setIsSaving(true);
     try {
-      const emergencyData = Object.entries(emergencyIssues).reduce(
-        (acc, [id, severity]) => {
-          const issueName = emergency_presenting_issues.find((i) => i.id.toString() === id)?.name;
-          if (issueName) {
-            acc[issueName] = severity;
-          }
-          return acc;
-        },
-        {} as Record<string, Severity>,
-      );
-
-      const generalData = Object.entries(generalIssues).reduce(
-        (acc, [id, selected]) => {
-          const issueName = general_presenting_issues.find((i) => i.id.toString() === id)?.name;
-          if (issueName && selected) {
-            acc[issueName] = "true";
-          }
-          return acc;
-        },
-        {} as Record<string, string>,
-      );
-
       const result = await updateClinicalCasePresentingIssues({
         caseId: currentcase.id,
-        emergencyPresentingIssues: emergencyData,
-        generalPresentingIssues: generalData,
+        emergencyPresentingIssues: presentingIssues.emergency,
+        generalPresentingIssues: presentingIssues.general,
         otherIssues: otherIssues,
-        phase: isBaseline ? "baseline" : "endpoint",
+        phase,
       });
       if (!result.success) {
         toast({ title: "Error", description: result.message, variant: "destructive" });
@@ -204,43 +151,10 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
     }
   };
 
-  const handleClearAll = () => {
-    setEmergencyIssues(
-      initializeIssues(
-        emergency_presenting_issues,
-        isBaseline
-          ? currentcase.emergencyPresentingIssuesBaseline
-          : currentcase.emergencyPresentingIssuesEndpoint,
-      ),
-    );
-
-    setGeneralIssues(() => {
-      const initialState: Record<string, boolean> = {};
-
-      const generalIssuesData = isBaseline
-        ? currentcase.generalPresentingIssuesBaseline
-        : currentcase.generalPresentingIssuesEndpoint;
-
-      if (generalIssuesData) {
-        general_presenting_issues.forEach((issue) => {
-          if (
-            generalIssuesData &&
-            typeof generalIssuesData === "object" &&
-            issue.name in generalIssuesData
-          ) {
-            initialState[issue.id.toString()] = true;
-          }
-        });
-      }
-
-      return initialState;
-    });
-
-    setOtherIssues(
-      isBaseline
-        ? currentcase.generalPresentingIssuesOtherSpecifiedBaseline || ""
-        : currentcase.generalPresentingIssuesOtherSpecifiedEndpoint || "",
-    );
+  const discardChanges = () => {
+    setEmergencyIssues(saved.emergencyIssues);
+    setGeneralIssues(saved.generalIssues);
+    setOtherIssues(saved.otherIssues);
   };
 
   return (
@@ -272,7 +186,7 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleClearAll} disabled={!hasChanges}>
+            <Button variant="outline" onClick={discardChanges} disabled={!hasChanges}>
               Clear All
             </Button>
             <Button
@@ -297,11 +211,12 @@ function EmergencyPresentingIssues({
   selectedSeverities: Record<string, Severity>;
   setSelectedSeverities: React.Dispatch<React.SetStateAction<Record<string, Severity>>>;
 }) {
-  const handleSelect = (issueId: string, severity: Severity) => {
-    setSelectedSeverities((prev: Record<string, Severity>) => ({
-      ...prev,
-      [issueId]: severity,
-    }));
+  const handleSelect = (issueId: string, severity: Severity, checked: boolean) => {
+    setSelectedSeverities((prev) =>
+      checked
+        ? { ...prev, [issueId]: severity }
+        : Object.fromEntries(Object.entries(prev).filter(([id]) => id !== issueId)),
+    );
   };
 
   return (
@@ -327,8 +242,8 @@ function EmergencyPresentingIssues({
                     <Checkbox
                       aria-label={`${issue.name}: ${severity}`}
                       checked={selectedSeverities[issue.id] === severity}
-                      onCheckedChange={() =>
-                        handleSelect(issue.id.toString(), severity as Severity)
+                      onCheckedChange={(checked) =>
+                        handleSelect(issue.id.toString(), severity as Severity, checked === true)
                       }
                       className={cn(
                         "h-6 w-6 border",

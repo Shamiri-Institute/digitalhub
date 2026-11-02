@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { interventionSessionRating, sessionComment } from "#/db/schema";
@@ -53,12 +53,9 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  if (!interventionSessionId) return;
-  await db
-    .delete(sessionComment)
-    .where(
-      and(eq(sessionComment.sessionId, interventionSessionId), eq(sessionComment.content, notes)),
-    );
+  // The note goes on the school's first rated session, which need not be the fixture's, so remove
+  // it by its text, which is unique to this run.
+  await db.delete(sessionComment).where(eq(sessionComment.content, notes));
   await db.delete(interventionSessionRating).where(eq(interventionSessionRating.id, ratingId));
 });
 

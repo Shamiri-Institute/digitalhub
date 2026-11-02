@@ -27,6 +27,7 @@ export default function RatingStarsInput({
             <button
               type="button"
               key={index.toString()}
+              disabled={disabled}
               className={cn(
                 "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
                 value && value >= 5 - index

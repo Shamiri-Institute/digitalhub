@@ -14,11 +14,11 @@ import type {
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
-import type { Dispatch, SetStateAction } from "react";
 import StudentsDataTableMenu from "#/components/common/student/students-datatable-menu";
 import SessionHistoryWidget from "#/components/common/supervisor/sessions-history-widget";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
+import { sortBy } from "#/lib/table-view";
 import { wrapColumnHeader } from "#/lib/utils";
 
 type GroupSummary = Pick<typeof interventionGroup.$inferSelect, "id" | "groupName"> & {
@@ -51,16 +51,18 @@ export type SchoolStudentTableData = typeof student.$inferSelect & {
   > & { fromGroup: GroupSummary | null })[];
 };
 
+export type StudentDialogKind =
+  | "edit"
+  | "markAttendance"
+  | "attendanceHistory"
+  | "reportingNotes"
+  | "groupTransferHistory"
+  | "moveSchool"
+  | "dropout"
+  | "archive";
+
 export const columns = (state: {
-  setEditDialog: Dispatch<SetStateAction<boolean>>;
-  setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-  setDropoutDialog: Dispatch<SetStateAction<boolean>>;
-  setArchiveDialog: Dispatch<SetStateAction<boolean>>;
-  setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
-  setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
-  setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
-  setMoveSchoolDialog: Dispatch<SetStateAction<boolean>>;
+  openDialog: (kind: StudentDialogKind, student: SchoolStudentTableData) => void;
   role: ImplementerRole;
   sessions: (typeof interventionSession.$inferSelect)[];
 }): ColumnDef<SchoolStudentTableData>[] => [
@@ -190,6 +192,7 @@ export const columns = (state: {
     header: () => wrapColumnHeader("Date added"),
     id: "Date added",
     accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
+    sortingFn: sortBy((student) => student.createdAt),
   },
   {
     id: "button",

@@ -1,9 +1,9 @@
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole, type SessionStatus } from "#/db/enums";
-import type { ColumnDef, Row } from "@tanstack/react-table";
+import type { ColumnDef, Row, RowSelectionState } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { CheckCheck, InfoIcon } from "lucide-react";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -18,13 +18,7 @@ import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogPortal,
-  DialogTitle,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -47,15 +41,7 @@ import { sessionDisplayName } from "#/lib/utils";
 
 type SupervisorData = ScheduleSupervisor;
 
-export default function FellowAttendance({
-  supervisors,
-  supervisorId,
-  session,
-  fellowRatings,
-  role,
-  isOpen,
-  setIsOpen,
-}: {
+type FellowAttendanceProps = {
   supervisors?: SupervisorData[];
   supervisorId?: string;
   session: Session | null;
@@ -66,148 +52,143 @@ export default function FellowAttendance({
   role: ImplementerRole;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-}) {
-  const [_selectedSupervisor, setSelectedSupervisor] = useState<string>();
-  const [fellows, setFellows] = useState<FellowAttendancesTableData[]>([]);
+};
 
+export default function FellowAttendance({ isOpen, setIsOpen, ...props }: FellowAttendanceProps) {
+  return (
+    <div>
+      <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
+        <DialogContent className="w-3/4 max-w-none">
+          <FellowAttendanceContent key={props.session?.id} setIsOpen={setIsOpen} {...props} />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function FellowAttendanceContent({
+  supervisors,
+  supervisorId,
+  session,
+  fellowRatings,
+  role,
+  setIsOpen,
+}: Omit<FellowAttendanceProps, "isOpen">) {
   const form = useForm<{ supervisor: string }>({
     defaultValues: {
       supervisor: supervisorId,
     },
   });
-  const watcher = form.watch("supervisor");
-
-  // effect: rebuilds the attendance rows when the watched supervisor field changes
-  useEffect(() => {
-    const supervisor = supervisors?.find((supervisor) => supervisor.id === watcher);
-    if (supervisor) {
-      const attendances = supervisor.fellows.map((fellow) => {
-        const sessionAttendance = fellow.fellowAttendances.find(
-          (attendance) => attendance.sessionId === session?.id,
-        );
-
-        const group = fellow.groups.find((group) => group.schoolId === session?.schoolId);
-        return {
-          id: sessionAttendance?.id.toString(),
-          processedAt: sessionAttendance?.processedAt ?? null,
-          sessionId: session?.id,
-          fellowId: fellow.id,
-          fellowName: fellow.fellowName,
-          cellNumber: fellow.cellNumber,
-          attended: sessionAttendance?.attended ?? null,
-          supervisorName: supervisor.supervisorName,
-          supervisorId: supervisor.id,
-          schoolName: session?.school?.schoolName ?? session?.venue,
-          groupName: group?.groupName ?? null,
-          groupType: group?.groupType,
-          groupId: group?.id,
-          groupStudentCount: group?.studentsCount,
-          averageRating:
-            fellowRatings.find((rating) => rating.id === fellow.id)?.averageRating ?? null,
-          sessionType: session?.session?.sessionType,
-          sessionName: session?.session?.sessionName,
-          occurred: session?.occurred,
-          sessionStatus: session?.status,
-          sessionDate: session?.sessionDate,
-          droppedOut: fellow.droppedOut ?? undefined,
-        };
-      });
-      setFellows(attendances);
-    }
-  }, [fellowRatings, _selectedSupervisor, session, supervisors, watcher]);
+  const selectedSupervisorId = form.watch("supervisor");
+  const selectedSupervisor = supervisors?.find(
+    (supervisor) => supervisor.id === selectedSupervisorId,
+  );
+  const fellowAttendances: FellowAttendancesTableData[] =
+    selectedSupervisor?.fellows.map((fellow) => {
+      const sessionAttendance = fellow.fellowAttendances.find(
+        (attendance) => attendance.sessionId === session?.id,
+      );
+      const group = fellow.groups.find((group) => group.schoolId === session?.schoolId);
+      return {
+        id: sessionAttendance?.id.toString(),
+        processedAt: sessionAttendance?.processedAt ?? null,
+        sessionId: session?.id,
+        fellowId: fellow.id,
+        fellowName: fellow.fellowName,
+        cellNumber: fellow.cellNumber,
+        attended: sessionAttendance?.attended ?? null,
+        supervisorName: selectedSupervisor.supervisorName,
+        supervisorId: selectedSupervisor.id,
+        schoolName: session?.school?.schoolName ?? session?.venue,
+        groupName: group?.groupName ?? null,
+        groupType: group?.groupType,
+        groupId: group?.id,
+        groupStudentCount: group?.studentsCount,
+        averageRating:
+          fellowRatings.find((rating) => rating.id === fellow.id)?.averageRating ?? null,
+        sessionType: session?.session?.sessionType,
+        sessionName: session?.session?.sessionName,
+        occurred: session?.occurred,
+        sessionStatus: session?.status,
+        sessionDate: session?.sessionDate,
+        droppedOut: fellow.droppedOut ?? undefined,
+      };
+    }) ?? [];
 
   return (
-    <div>
-      <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
-        <DialogPortal>
-          <DialogContent className="w-3/4 max-w-none">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">
-                {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
-                  ? "View fellow attendance"
-                  : role === ImplementerRole.SUPERVISOR
-                    ? "Mark fellow attendance"
-                    : null}
-              </DialogTitle>
-            </DialogHeader>
-            {session && (
-              <SessionDetail
-                state={{ session }}
-                layout={"compact"}
-                withDropdown={false}
-                role={role}
-              />
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-xl font-bold">
+          {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
+            ? "View fellow attendance"
+            : role === ImplementerRole.SUPERVISOR
+              ? "Mark fellow attendance"
+              : null}
+        </DialogTitle>
+      </DialogHeader>
+      {session && (
+        <SessionDetail state={{ session }} layout={"compact"} withDropdown={false} role={role} />
+      )}
+
+      <div className="mb-4">
+        <Form {...form}>
+          <FormField
+            control={form.control}
+            name="supervisor"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className={"text-sm"}>Select a supervisor</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a supervisor" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {supervisors?.map((supervisor) => (
+                      <SelectItem key={supervisor.id} value={supervisor.id}>
+                        {supervisor.supervisorName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
             )}
+          />
+        </Form>
+      </div>
 
-            <div className="mb-4">
-              <Form {...form}>
-                <FormField
-                  control={form.control}
-                  name="supervisor"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className={"text-sm"}>Select a supervisor</FormLabel>
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedSupervisor(value);
-                        }}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a supervisor" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {supervisors?.map((supervisor) => (
-                            <SelectItem key={supervisor.id} value={supervisor.id}>
-                              {supervisor.supervisorName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </Form>
-            </div>
-
-            <div className="space-y-4">
-              <FellowAttendanceDataTable
-                data={fellows}
-                emptyStateMessage={watcher === undefined ? "Please select a supervisor" : undefined}
-                enableRowSelection={(row: Row<FellowAttendancesTableData>) =>
-                  !(
-                    row.original.sessionType === "INTERVENTION" &&
-                    row.original.groupId === undefined
-                  ) &&
-                  (row.original.sessionType !== "INTERVENTION" ||
-                    row.original.groupType === "TREATMENT") &&
-                  (row.original.supervisorId === supervisorId || role === "HUB_COORDINATOR") &&
-                  !row.original.droppedOut &&
-                  row.original.processedAt === null
-                }
-                session={session}
-                role={role}
-                editColumns={true}
-              />
-              <div className="flex justify-end gap-6">
-                <Button
-                  className="bg-shamiri-new-blue"
-                  onClick={() => {
-                    setIsOpen(false);
-                  }}
-                >
-                  Done
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-    </div>
+      <div className="space-y-4">
+        <FellowAttendanceDataTable
+          data={fellowAttendances}
+          emptyStateMessage={
+            selectedSupervisor === undefined ? "Please select a supervisor" : undefined
+          }
+          enableRowSelection={(row: Row<FellowAttendancesTableData>) =>
+            !(row.original.sessionType === "INTERVENTION" && row.original.groupId === undefined) &&
+            (row.original.sessionType !== "INTERVENTION" ||
+              row.original.groupType === "TREATMENT") &&
+            (row.original.supervisorId === supervisorId || role === "HUB_COORDINATOR") &&
+            !row.original.droppedOut &&
+            row.original.processedAt === null
+          }
+          session={session}
+          role={role}
+          editColumns={true}
+        />
+        <div className="flex justify-end gap-6">
+          <Button
+            className="bg-shamiri-new-blue"
+            onClick={() => {
+              setIsOpen(false);
+            }}
+          >
+            Done
+          </Button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -234,7 +215,10 @@ export function FellowAttendanceDataTable({
   }) => ColumnDef<FellowAttendancesTableData>[];
   role: ImplementerRole;
 }) {
-  const [selectedRows, setSelectedRows] = useState<Row<FellowAttendancesTableData>[]>([]);
+  const [selectedRowIds, setSelectedRowIds] = useState<RowSelectionState>({});
+  const selectedFellowAttendances = data.filter(
+    (fellowAttendance) => selectedRowIds[fellowAttendanceRowId(fellowAttendance)],
+  );
   const [attendance, setAttendance] = useState<FellowAttendancesTableData | undefined>();
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [attendanceDialog, setAttendanceDialog] = useState<boolean>(false);
@@ -245,7 +229,7 @@ export function FellowAttendanceDataTable({
         <Button
           variant="outline"
           className="flex gap-1"
-          disabled={selectedRows.length === 0}
+          disabled={selectedFellowAttendances.length === 0}
           onClick={() => {
             setBulkMode(true);
             setAttendanceDialog(true);
@@ -278,7 +262,9 @@ export function FellowAttendanceDataTable({
         emptyStateMessage={emptyStateMessage}
         rowSelectionDescription="fellows"
         enableRowSelection={enableRowSelection}
-        onRowSelectionChange={setSelectedRows}
+        getRowId={fellowAttendanceRowId}
+        rowSelection={selectedRowIds}
+        onRowSelectionChange={setSelectedRowIds}
         renderTableActions={
           !overrideColumns &&
           (role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR) &&
@@ -315,13 +301,14 @@ export function FellowAttendanceDataTable({
         bulkMode={bulkMode}
         setBulkMode={setBulkMode}
         markBulkAttendanceAction={markManyFellowAttendance}
-        selectedIds={selectedRows.map((x): string => x.original.fellowId)}
+        selectedIds={selectedFellowAttendances.map((fellowAttendance) => fellowAttendance.fellowId)}
+        onSuccess={() => setSelectedRowIds({})}
       >
         <div className="flex flex-col gap-y-3">
           <DialogAlertWidget>
             <div className="flex items-center gap-2">
               {bulkMode ? (
-                <span>{selectedRows.length} fellows</span>
+                <span>{selectedFellowAttendances.length} fellows</span>
               ) : (
                 <span>{attendance?.fellowName}</span>
               )}
@@ -368,6 +355,11 @@ export function FellowAttendanceDataTable({
       )}
     </div>
   );
+}
+
+// The schedule's table view lists a fellow once for each of the day's sessions.
+function fellowAttendanceRowId(fellowAttendance: FellowAttendancesTableData) {
+  return `${fellowAttendance.sessionId ?? ""}:${fellowAttendance.fellowId}`;
 }
 
 export type FellowAttendancesTableData = {

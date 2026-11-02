@@ -9,6 +9,9 @@ import type { AdminHub } from "../queries";
 
 export type HubsWithSchools = AdminHub;
 
+const firstCoordinatorOf = (hub: HubsWithSchools) =>
+  hub.coordinators.toSorted((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
+
 function buildColumns(canManageHubs: boolean): ColumnDef<HubsWithSchools>[] {
   return [
     {
@@ -42,24 +45,15 @@ function buildColumns(canManageHubs: boolean): ColumnDef<HubsWithSchools>[] {
       id: "Implementer",
     },
     {
-      accessorKey: "coordinator",
+      accessorFn: (hub) => firstCoordinatorOf(hub)?.coordinatorName ?? "",
       header: "Hub coordinator",
       id: "Hub coordinator",
-      cell: ({ row }) => {
-        const first = row.original.coordinators.toSorted(
-          (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
-        )[0];
-        return first?.coordinatorName ?? "";
-      },
     },
     {
-      accessorKey: "coordinator",
       header: "Hub coordinator phone number",
       id: "Hub coordinator phone number",
       cell: ({ row }) => {
-        const first = row.original.coordinators.toSorted(
-          (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
-        )[0];
+        const first = firstCoordinatorOf(row.original);
         return first ? RenderParsedPhoneNumber(first.cellNumber ?? undefined) : "";
       },
     },

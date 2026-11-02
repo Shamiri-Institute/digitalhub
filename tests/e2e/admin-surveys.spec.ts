@@ -17,7 +17,7 @@ import {
   removeSurvey,
   TWO_QUESTIONS,
 } from "#/tests/survey-fixtures";
-import { getUrl } from "#/tests/pages/helpers";
+import { getUrl, searchRows } from "#/tests/pages/helpers";
 import { PRINT_FORM } from "#/tests/unit/fixtures/survey-print-form";
 
 /**
@@ -154,12 +154,15 @@ test("a survey of another implementer is not found", async ({ page, context }) =
   });
   if (!other) throw new Error("The seed has a single implementer");
   const foreign = await createPublishedSurvey({ implementerId: other.id, projectId }, userId);
+  const own = await createPublishedSurvey(scope, userId);
 
   const response = await page.goto(getUrl(`/admin/surveys/${foreign.id}`));
   expect(response?.status()).toBe(404);
 
+  // The list shows ten rows a page, so search it, and find the caller's own survey first.
   await page.goto(getUrl("/admin/surveys"));
-  await expect(page.getByRole("link", { name: foreign.title })).toHaveCount(0);
+  await expect(await searchRows(page, own.title)).toHaveCount(1);
+  await expect(await searchRows(page, foreign.title)).toHaveCount(0);
 });
 
 test("an admin outside the Research team has no Surveys tab and cannot open surveys", async ({
@@ -263,7 +266,7 @@ test("the builder saves a form of several pages and every item kind", async ({ p
   });
   await page.getByRole("link", { name: draft.title }).click();
   expect(prompt).toContain("unsaved changes");
-  await expect(page).toHaveURL(/\/versions\/1$/);
+  await expect(page).toHaveURL(/\/versions\/1(\?page=\d+)?$/);
 
   // So does the browser's Back button. Dismissed, the navigation is cancelled and never loads.
   prompt = "";
@@ -273,7 +276,7 @@ test("the builder saves a form of several pages and every item kind", async ({ p
   });
   await page.goBack({ timeout: 3000 }).catch(() => null);
   expect(prompt).toContain("unsaved changes");
-  await expect(page).toHaveURL(/\/versions\/1$/);
+  await expect(page).toHaveURL(/\/versions\/1(\?page=\d+)?$/);
   await expect(page.getByLabel("Required")).toBeChecked();
 
   await save(page);
@@ -525,13 +528,13 @@ test("a print dialog opened on page 2 before the page knows the time zone keeps 
   // Opening the dialog leaves the table on page 2, where v1 is.
   await expect(rowOf(1)).toHaveCount(1);
 
-  // The refresh brings the time zone. Its new rows send the table back to page 1, as DataTable
-  // does whenever its rows change, and the dialog stays open on v1.
+  // The refresh brings the time zone. The table keeps its page through the new rows, so v1 stays
+  // on screen with its date, and the dialog stays open on it.
   releaseRefresh();
-  await expect(rowOf(11).locator("td").nth(createdIndex)).toHaveText(
+  await expect(rowOf(1).locator("td").nth(createdIndex)).toHaveText(
     format(new Date(), "dd MMM yyyy"),
   );
-  await expect(rowOf(1)).toHaveCount(0);
+  await expect(rowOf(11)).toHaveCount(0);
   await expect(
     dialog.getByRole("heading", { name: `Print copies of ${published.code} v1` }),
   ).toBeVisible();

@@ -1,7 +1,6 @@
 import type { ImplementerRole } from "#/db/enums";
 import Link from "next/link";
-import type { Dispatch, SetStateAction } from "react";
-import type { SchoolsTableData } from "#/components/common/schools/columns";
+import type { SchoolsTableData, SchoolTableState } from "#/components/common/schools/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -19,18 +18,7 @@ export default function SchoolTableDropdown({
 }: {
   schoolRow: SchoolsTableData;
   role: ImplementerRole;
-  state: {
-    editDialog: boolean;
-    setEditDialog: Dispatch<SetStateAction<boolean>>;
-    pointSupervisorDialog: boolean;
-    setPointSupervisorDialog: Dispatch<SetStateAction<boolean>>;
-    schoolDropOutDialog: boolean;
-    setSchoolDropOutDialog: Dispatch<SetStateAction<boolean>>;
-    undoDropOutDialog: boolean;
-    setUndoDropOutDialog: Dispatch<SetStateAction<boolean>>;
-    school: SchoolsTableData | null;
-    setSchool: Dispatch<SetStateAction<SchoolsTableData | null>>;
-  };
+  state: SchoolTableState;
 }) {
   return (
     <DropdownMenu>
@@ -71,30 +59,17 @@ export default function SchoolTableDropdown({
         {role === "HUB_COORDINATOR" &&
           (!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
             <div>
-              <DropdownMenuItem
-                onClick={() => {
-                  state.setSchool(schoolRow);
-                  state.setEditDialog(true);
-                }}
-              >
+              <DropdownMenuItem onClick={() => state.openDialog("edit", schoolRow)}>
                 Edit school information
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  state.setSchool(schoolRow);
-                  state.setPointSupervisorDialog(true);
-                }}
-              >
+              <DropdownMenuItem onClick={() => state.openDialog("pointSupervisor", schoolRow)}>
                 {schoolRow.assignedSupervisorId !== null
                   ? "Change point supervisor"
                   : "Assign point supervisor"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-shamiri-red"
-                onClick={() => {
-                  state.setSchool(schoolRow);
-                  state.setSchoolDropOutDialog(true);
-                }}
+                onClick={() => state.openDialog("dropout", schoolRow)}
               >
                 Dropout school
               </DropdownMenuItem>
@@ -102,10 +77,7 @@ export default function SchoolTableDropdown({
           ) : (
             <DropdownMenuItem
               className="text-shamiri-red"
-              onClick={() => {
-                state.setSchool(schoolRow);
-                state.setUndoDropOutDialog(true);
-              }}
+              onClick={() => state.openDialog("undoDropout", schoolRow)}
             >
               Undo dropout
             </DropdownMenuItem>

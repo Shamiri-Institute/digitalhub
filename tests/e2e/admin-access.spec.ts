@@ -56,6 +56,7 @@ test("a super admin adds an admin and changes their team", async ({ page, contex
   await addDialog.getByRole("button", { name: "Save" }).click();
   await expect(addDialog).toBeHidden();
 
+  await page.reload();
   let row = (await searchRows(page, NEW_ADMIN_EMAIL)).first();
   await expect(row).toBeVisible();
   await expect(row).toContainText("Care");
@@ -71,6 +72,7 @@ test("a super admin adds an admin and changes their team", async ({ page, contex
   await editDialog.getByRole("button", { name: "Save" }).click();
   await expect(editDialog).toBeHidden();
 
+  await page.reload();
   row = (await searchRows(page, NEW_ADMIN_EMAIL)).first();
   await expect(row).toContainText("Research");
   await expect(row).toContainText("Super admin");
@@ -159,6 +161,7 @@ test("adding an admin reuses the user whose email only differs in case", async (
   await dialog.getByLabel("Email address").fill(MIXED_CASE_EMAIL);
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toBeHidden();
+  await page.reload();
   await expect((await searchRows(page, MIXED_CASE_EMAIL.toLowerCase())).first()).toBeVisible();
 
   // No second user was made: the ADMIN membership belongs to the existing one.

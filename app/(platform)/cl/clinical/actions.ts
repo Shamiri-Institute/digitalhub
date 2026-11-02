@@ -87,6 +87,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
 
   const cases = await db.query.clinicalScreeningInfo.findMany({
     where: (c, { eq }) => eq(c.clinicalLeadId, clinicalLeadId),
+    orderBy: (c, { desc }) => [desc(c.createdAt), desc(c.id)],
     with: {
       student: {
         with: {

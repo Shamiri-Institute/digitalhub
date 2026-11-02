@@ -8,6 +8,7 @@ import type { ReferralOptions } from "#/app/(platform)/sc/clinical/components/re
 import ClinicalCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
+import { sortBy } from "#/lib/table-view";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 
@@ -74,6 +75,7 @@ export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDe
         if (Number.isNaN(parsed.getTime())) return "N/A";
         return format(parsed, "dd MMM yyyy");
       },
+      sortingFn: sortBy((clinicalCase) => new Date(clinicalCase.dateAdded)),
     },
     {
       accessorKey: "caseStatus",

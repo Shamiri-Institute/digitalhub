@@ -10,6 +10,7 @@ import {
   getClinicalCaseNotes,
 } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import { Alert, AlertDescription, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -75,6 +76,11 @@ const CaseReportSchema = z.object({
 
 type CaseReportFormValues = z.infer<typeof CaseReportSchema>;
 
+type NotesLoad =
+  | { status: "loading" }
+  | { status: "failed" }
+  | { status: "loaded"; notes: Awaited<ReturnType<typeof getClinicalCaseNotes>> };
+
 export default function CaseNotesForm({
   children,
   clinicalCase,
@@ -85,24 +91,48 @@ export default function CaseNotesForm({
   role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
-  const [showOtherInput, setShowOtherInput] = useState(false);
-  const [hasExistingNotes, setHasExistingNotes] = useState(false);
-  // null until the case's notes load; the session select waits for them, so choosing a session
-  // prefills from loaded notes instead of wiping what the user typed when they arrive.
-  const [notes, setNotes] = useState<Awaited<ReturnType<typeof getClinicalCaseNotes>> | null>(null);
+  // The session select waits for the notes, so choosing a session prefills from loaded notes
+  // instead of wiping what the user typed when they arrive.
+  const [notesLoad, setNotesLoad] = useState<NotesLoad>({ status: "loading" });
 
   const onOpenChange = (nextOpen: boolean) => {
     setDialogOpen(nextOpen);
     if (nextOpen) {
-      setNotes(null);
+      setNotesLoad({ status: "loading" });
       getClinicalCaseNotes(clinicalCase.id)
-        .then(setNotes)
-        .catch(() => {
-          setNotes([]);
-          toast({ title: "Failed to load case notes", variant: "destructive" });
-        });
+        .then((notes) => setNotesLoad({ status: "loaded", notes }))
+        .catch(() => setNotesLoad({ status: "failed" }));
     }
   };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
+        <CaseNotesContent
+          clinicalCase={clinicalCase}
+          role={role}
+          notesLoad={notesLoad}
+          onClose={() => setDialogOpen(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Inside DialogContent, so closing the dialog unmounts the form and the next open starts clean.
+function CaseNotesContent({
+  clinicalCase,
+  role,
+  notesLoad,
+  onClose,
+}: {
+  clinicalCase: ClinicalCases;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
+  notesLoad: NotesLoad;
+  onClose: () => void;
+}) {
+  const notes = notesLoad.status === "loaded" ? notesLoad.notes : null;
 
   const form = useForm<CaseReportFormValues>({
     resolver: zodResolver(CaseReportSchema),
@@ -126,8 +156,6 @@ export default function CaseNotesForm({
   const selectSession = (sessionId: string) => {
     const existingNote = notes?.find((note) => note.sessionId === sessionId);
 
-    setHasExistingNotes(!!existingNote);
-
     if (existingNote) {
       form.reset({
         sessionId,
@@ -144,8 +172,6 @@ export default function CaseNotesForm({
           explanation: existingNote.followUpPlanExplanation,
         },
       });
-
-      setShowOtherInput((existingNote.treatmentInterventions ?? []).includes("Other"));
     } else {
       form.reset({
         sessionId,
@@ -162,7 +188,6 @@ export default function CaseNotesForm({
           explanation: "",
         },
       });
-      setShowOtherInput(false);
     }
   };
 
@@ -187,14 +212,13 @@ export default function CaseNotesForm({
         toast({
           title: "Case report updated successfully",
         });
+        onClose();
       } else {
         toast({
           title: "Something went wrong, please try again",
           variant: "destructive",
         });
       }
-      setDialogOpen(false);
-      form.reset();
     } catch {
       toast({
         title: "Something went wrong, please try again",
@@ -204,371 +228,379 @@ export default function CaseNotesForm({
   };
 
   const showNecessaryConditions = form.watch("riskLevel") !== "no";
+  const showOtherInput = form.watch("treatmentInterventions").includes("Other");
+  const selectedSessionId = form.watch("sessionId");
+  const hasExistingNotes =
+    !!selectedSessionId && !!notes?.some((note) => note.sessionId === selectedSessionId);
+  // Until the notes load, whether the session already has notes is unknown.
+  const fieldsLocked = notes === null || hasExistingNotes;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
-        <DialogHeader className="bg-white">
-          <DialogTitle>Case Notes</DialogTitle>
-          {hasExistingNotes && (
-            <p className="text-sm text-muted-foreground">
-              This session already has notes and cannot be edited
-            </p>
-          )}
-        </DialogHeader>
-        <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
-        <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="sessionId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Select session
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={selectSession}
-                    value={field.value}
-                    disabled={!clinicalCase.clinicalSessionAttendance?.length || notes === null}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select session" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {clinicalCase.clinicalSessionAttendance?.map((session) => {
-                        const hasNotes = notes?.some((note) => note.sessionId === session.id);
-                        return (
-                          <SelectItem key={session.id} value={session.id}>
-                            <div className="flex w-full items-center justify-between">
-                              <span>
-                                {session.session} - {format(new Date(session.date), "dd MMM yyyy")}
+    <>
+      <DialogHeader className="bg-white">
+        <DialogTitle>Case Notes</DialogTitle>
+        {hasExistingNotes && (
+          <p className="text-sm text-muted-foreground">
+            This session already has notes and cannot be edited
+          </p>
+        )}
+      </DialogHeader>
+      {notesLoad.status === "failed" && (
+        <Alert variant="destructive">
+          <AlertTitle>Could not load this case&apos;s notes</AlertTitle>
+          <AlertDescription>
+            Sessions stay locked until the notes load. Close the dialog and try again, or reload the
+            page.
+          </AlertDescription>
+        </Alert>
+      )}
+      <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
+      <Form {...form}>
+        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="sessionId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Select session
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <Select
+                  onValueChange={selectSession}
+                  value={field.value}
+                  disabled={!clinicalCase.clinicalSessionAttendance?.length || notes === null}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select session" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {clinicalCase.clinicalSessionAttendance?.map((session) => {
+                      const hasNotes = notes?.some((note) => note.sessionId === session.id);
+                      return (
+                        <SelectItem key={session.id} value={session.id}>
+                          <div className="flex w-full items-center justify-between">
+                            <span>
+                              {session.session} - {format(new Date(session.date), "dd MMM yyyy")}
+                            </span>
+                            {hasNotes && (
+                              <span className="ml-2 text-sm text-muted-foreground">
+                                (View only)
                               </span>
-                              {hasNotes && (
-                                <span className="ml-2 text-sm text-muted-foreground">
-                                  (View only)
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  {!clinicalCase.clinicalSessionAttendance?.length ? (
-                    <p className="text-sm text-muted-foreground">
-                      No sessions available. Please mark a session as done before creating case
-                      notes.
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Please ensure the session is marked as done before creating case notes.
-                    </p>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                            )}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                {!clinicalCase.clinicalSessionAttendance?.length ? (
+                  <p className="text-sm text-muted-foreground">
+                    No sessions available. Please mark a session as done before creating case notes.
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Please ensure the session is marked as done before creating case notes.
+                  </p>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="presentingIssues"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Situation: What issues did the student present and in what state?
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    rows={4}
+                    disabled={fieldsLocked}
+                    className={fieldsLocked ? "bg-muted" : ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="orsAssessment"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ORS Assessment</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    {...field}
+                    disabled={fieldsLocked}
+                    className={fieldsLocked ? "bg-muted" : ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="riskLevel"
+            render={({ field: _field }) => (
+              <FormItem>
+                <FormLabel>
+                  Risk Level Assignment
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <div className="space-y-2">
+                  {riskLevels.map((level) => (
+                    <FormField
+                      key={level}
+                      control={form.control}
+                      name="riskLevel"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value === level}
+                              disabled={fieldsLocked}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange(level);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal capitalize">{level}</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {showNecessaryConditions && (
             <FormField
               control={form.control}
-              name="presentingIssues"
+              name="necessaryConditions"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Situation: What issues did the student present and in what state?
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                  <FormLabel>Necessary Conditions</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
-                      rows={4}
-                      disabled={hasExistingNotes}
-                      className={hasExistingNotes ? "bg-muted" : ""}
+                      rows={3}
+                      disabled={fieldsLocked}
+                      className={fieldsLocked ? "bg-muted" : ""}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          )}
 
+          <FormField
+            control={form.control}
+            name="treatmentInterventions"
+            render={() => (
+              <FormItem>
+                <FormLabel>
+                  Intervention(s)
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <div className="space-y-2">
+                  {treatmentInterventions.map((intervention) => (
+                    <FormField
+                      key={intervention}
+                      control={form.control}
+                      name="treatmentInterventions"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(intervention)}
+                              disabled={fieldsLocked}
+                              onCheckedChange={(checked) => {
+                                const value = intervention;
+                                return checked === true
+                                  ? field.onChange([...field.value, value])
+                                  : field.onChange(field.value?.filter((val) => val !== value));
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">{intervention}</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {showOtherInput && (
             <FormField
               control={form.control}
-              name="orsAssessment"
+              name="otherIntervention"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ORS Assessment</FormLabel>
+                  <FormLabel>
+                    Other Intervention
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
                       {...field}
-                      disabled={hasExistingNotes}
-                      className={hasExistingNotes ? "bg-muted" : ""}
+                      disabled={fieldsLocked}
+                      className={fieldsLocked ? "bg-muted" : ""}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          )}
 
+          <FormField
+            control={form.control}
+            name="interventionExplanation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Intervention: What techniques, approaches and tools did you use?
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    rows={4}
+                    disabled={fieldsLocked}
+                    className={fieldsLocked ? "bg-muted" : ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="studentResponseExplanation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Student Behavioural and Emotional Responses
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    rows={4}
+                    placeholder="Explain the student's response to the session..."
+                    disabled={fieldsLocked}
+                    className={fieldsLocked ? "bg-muted" : ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="space-y-4">
             <FormField
               control={form.control}
-              name="riskLevel"
-              render={({ field: _field }) => (
+              name="followUpPlan.isGroupSession"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Risk Level Assignment
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <div className="space-y-2">
-                    {riskLevels.map((level) => (
-                      <FormField
-                        key={level}
-                        control={form.control}
-                        name="riskLevel"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value === level}
-                                disabled={hasExistingNotes}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    field.onChange(level);
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal capitalize">{level}</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
+                  <FormLabel>Plan: What is the plan for future session(s)?</FormLabel>
+                  <div className="flex space-x-4">
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={!field.value}
+                          disabled={fieldsLocked}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              field.onChange(false);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal">Individual Session</FormLabel>
+                    </FormItem>
+
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          disabled={fieldsLocked}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              field.onChange(true);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal">Group Session</FormLabel>
+                    </FormItem>
                   </div>
-                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            {showNecessaryConditions && (
-              <FormField
-                control={form.control}
-                name="necessaryConditions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Necessary Conditions</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        rows={3}
-                        disabled={hasExistingNotes}
-                        className={hasExistingNotes ? "bg-muted" : ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
             <FormField
               control={form.control}
-              name="treatmentInterventions"
-              render={() => (
-                <FormItem>
-                  <FormLabel>
-                    Intervention(s)
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <div className="space-y-2">
-                    {treatmentInterventions.map((intervention) => (
-                      <FormField
-                        key={intervention}
-                        control={form.control}
-                        name="treatmentInterventions"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(intervention)}
-                                disabled={hasExistingNotes}
-                                onCheckedChange={(checked) => {
-                                  const value = intervention;
-                                  if (value === "Other") {
-                                    setShowOtherInput(checked === true);
-                                  }
-                                  return checked === true
-                                    ? field.onChange([...field.value, value])
-                                    : field.onChange(field.value?.filter((val) => val !== value));
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal">{intervention}</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {showOtherInput && (
-              <FormField
-                control={form.control}
-                name="otherIntervention"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Other Intervention
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        disabled={hasExistingNotes}
-                        className={hasExistingNotes ? "bg-muted" : ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <FormField
-              control={form.control}
-              name="interventionExplanation"
+              name="followUpPlan.explanation"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Intervention: What techniques, approaches and tools did you use?
+                    Explanation
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       rows={4}
-                      disabled={hasExistingNotes}
-                      className={hasExistingNotes ? "bg-muted" : ""}
+                      placeholder="Enter explanation for follow-up plan..."
+                      disabled={fieldsLocked}
+                      className={fieldsLocked ? "bg-muted" : ""}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="studentResponseExplanation"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Student Behavioural and Emotional Responses
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      rows={4}
-                      placeholder="Explain the student's response to the session..."
-                      disabled={hasExistingNotes}
-                      className={hasExistingNotes ? "bg-muted" : ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="followUpPlan.isGroupSession"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Plan: What is the plan for future session(s)?</FormLabel>
-                    <div className="flex space-x-4">
-                      <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={!field.value}
-                            disabled={hasExistingNotes}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                field.onChange(false);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">Individual Session</FormLabel>
-                      </FormItem>
-
-                      <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            disabled={hasExistingNotes}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                field.onChange(true);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">Group Session</FormLabel>
-                      </FormItem>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="followUpPlan.explanation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Explanation
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        rows={4}
-                        placeholder="Enter explanation for follow-up plan..."
-                        disabled={hasExistingNotes}
-                        className={hasExistingNotes ? "bg-muted" : ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-4">
-              <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
-                {hasExistingNotes ? "Close" : "Cancel"}
+          <div className="flex justify-end space-x-4">
+            <Button variant="ghost" type="button" onClick={onClose}>
+              {fieldsLocked ? "Close" : "Cancel"}
+            </Button>
+            {!fieldsLocked && (
+              <Button
+                variant="brand"
+                type="submit"
+                loading={form.formState.isSubmitting}
+                disabled={form.formState.isSubmitting}
+              >
+                Submit
               </Button>
-              {!hasExistingNotes && (
-                <Button
-                  variant="brand"
-                  type="submit"
-                  loading={form.formState.isSubmitting}
-                  disabled={form.formState.isSubmitting}
-                >
-                  Submit
-                </Button>
-              )}
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            )}
+          </div>
+        </form>
+      </Form>
+    </>
   );
 }

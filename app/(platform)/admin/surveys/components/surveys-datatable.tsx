@@ -15,6 +15,7 @@ export default function SurveysDataTable({ surveys }: { surveys: SurveyListItem[
   return (
     <>
       <DataTable
+        urlState
         data={surveys}
         columns={columns}
         className="data-table bg-white lg:mt-4"

@@ -46,6 +46,7 @@ import {
   sessionComment,
   sessionName,
   sessionRecording,
+  transcription,
   student,
   studentAttendance,
   studentGroupTransferTrail,
@@ -799,7 +800,8 @@ export const sessionNameRelations = relations(sessionName, ({ one, many }) => ({
   }),
 }));
 
-export const sessionRecordingRelations = relations(sessionRecording, ({ one }) => ({
+export const sessionRecordingRelations = relations(sessionRecording, ({ one, many }) => ({
+  transcriptions: many(transcription),
   fellow: one(fellow, {
     fields: [sessionRecording.fellowId],
     references: [fellow.id],
@@ -1210,5 +1212,12 @@ export const weeklyTeamMeetingReportRelations = relations(weeklyTeamMeetingRepor
     fields: [weeklyTeamMeetingReport.hubId],
     references: [hub.id],
     relationName: "WeeklyTeamMeetingReport_hub",
+  }),
+}));
+
+export const transcriptionRelations = relations(transcription, ({ one }) => ({
+  recording: one(sessionRecording, {
+    fields: [transcription.recordingId],
+    references: [sessionRecording.id],
   }),
 }));

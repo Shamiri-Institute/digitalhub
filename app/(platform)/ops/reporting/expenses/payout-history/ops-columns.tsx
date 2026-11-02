@@ -6,6 +6,7 @@ import Image from "next/image";
 import type { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import TriggerConfirmPayout from "#/app/(platform)/ops/reporting/expenses/payout-history/trigger-confirm-payout";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
+import { sortBy } from "#/lib/table-view";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 
@@ -54,6 +55,8 @@ export const opsColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
   {
     accessorKey: "duration",
     header: "Duration",
+    // A payout period starts on the day it was added.
+    sortingFn: sortBy((payout) => payout.dateAdded),
   },
   {
     accessorKey: "totalPayoutAmount",

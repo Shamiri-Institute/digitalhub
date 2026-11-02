@@ -18,15 +18,17 @@ import {
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { toast, toastOnFailure } from "#/components/ui/use-toast";
 
+type AttendanceMark = "attended" | "missed" | "unmarked";
+
 export default function HandleSessionAttendanceUpdate({ row }: { row: Row<AttendanceRecord> }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<string>(
+  const savedMark: AttendanceMark =
     row.getValue("attendanceStatus") === true
       ? "attended"
       : row.getValue("attendanceStatus") === false
         ? "missed"
-        : "unmarked",
-  );
+        : "unmarked";
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedMark, setSelectedMark] = useState<AttendanceMark>(savedMark);
 
   const [isPending, startTransition] = useTransition();
 
@@ -63,7 +65,14 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
           <DropdownMenuLabel>
             <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
           </DropdownMenuLabel>
-          <DropdownMenuItem onSelect={() => setIsOpen(true)}>Mark attendance</DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              setSelectedMark(savedMark);
+              setIsOpen(true);
+            }}
+          >
+            Mark attendance
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -76,24 +85,18 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
             </p>
             <p className="text-sm text-muted-foreground">
               Current Status:{" "}
-              {row.getValue("attendanceStatus") === true
+              {savedMark === "attended"
                 ? "Attended"
-                : row.getValue("attendanceStatus") === false
+                : savedMark === "missed"
                   ? "Missed"
                   : "Not marked"}
             </p>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <RadioGroup
-              defaultValue={
-                row.getValue("attendanceStatus") === true
-                  ? "attended"
-                  : row.getValue("attendanceStatus") === false
-                    ? "missed"
-                    : "unmarked"
-              }
+              value={selectedMark}
               onValueChange={(value) => {
-                setSelectedStatus(value);
+                setSelectedMark(value as AttendanceMark);
               }}
               className="grid grid-cols-3 gap-2"
             >
@@ -135,11 +138,7 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
                 loading={isPending}
                 onClick={() => {
                   const status =
-                    selectedStatus === "attended"
-                      ? true
-                      : selectedStatus === "missed"
-                        ? false
-                        : null;
+                    selectedMark === "attended" ? true : selectedMark === "missed" ? false : null;
                   handleAttendanceUpdate(status);
                 }}
               >

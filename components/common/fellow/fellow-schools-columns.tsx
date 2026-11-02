@@ -3,7 +3,6 @@ import type { ImplementerRole } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
 import Image from "next/image";
-import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
 import FellowSchoolDatatableDropdownMenu, {
@@ -12,20 +11,28 @@ import FellowSchoolDatatableDropdownMenu, {
 import { Badge } from "#/components/ui/badge";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Checkbox } from "#/components/ui/checkbox";
+import { sortBy } from "#/lib/table-view";
 import { sessionDisplayName } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import FellowsTableDropdown from "./fellow-schools-datatable-dropdown-menu";
 
+export type FellowDialogKind = "weeklyEvaluation" | "attendanceHistory" | "complaints";
+
+export type FellowGroupDialogKind = "markAttendance" | "students" | "groupEvaluation";
+
+function nextUpcomingSession({ school }: FellowGroupData) {
+  return school.interventionSessions
+    .filter((session) => isAfter(session.sessionDate, new Date()))
+    .toSorted((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime())[0];
+}
+
 export const fellowSchoolsColumns = ({
   state,
 }: {
   state: {
-    setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    openDialog: (kind: FellowDialogKind, fellow: FellowsData) => void;
     openEditDialog: (fellow: FellowsData) => void;
-    setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-    setComplaintsDialog: Dispatch<SetStateAction<boolean>>;
-    setFellow: Dispatch<SetStateAction<FellowsData | null>>;
     role: ImplementerRole;
   };
 }): ColumnDef<FellowsData>[] => [
@@ -141,10 +148,7 @@ export const subColumns = ({
   state,
 }: {
   state: {
-    setFellowGroup: Dispatch<SetStateAction<FellowGroupData | undefined>>;
-    setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
-    setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    openDialog: (kind: FellowGroupDialogKind, group: FellowGroupData) => void;
     role: ImplementerRole;
   };
 }): ColumnDef<FellowGroupData>[] => [
@@ -188,16 +192,8 @@ export const subColumns = ({
   {
     header: "Upcoming session",
     id: "Upcoming session",
-    accessorFn: ({ school }) => {
-      const upcomingSessions = school.interventionSessions
-        .filter((session) => {
-          return isAfter(session.sessionDate, new Date());
-        })
-        .toSorted((a, b) => {
-          return a.sessionDate.getTime() - b.sessionDate.getTime();
-        });
-
-      const firstUpcoming = upcomingSessions[0];
+    accessorFn: (group) => {
+      const firstUpcoming = nextUpcomingSession(group);
       if (firstUpcoming) {
         return `${sessionDisplayName(firstUpcoming.session?.sessionName)} - ${format(
           firstUpcoming.sessionDate,
@@ -206,6 +202,7 @@ export const subColumns = ({
       }
       return null;
     },
+    sortingFn: sortBy((group) => nextUpcomingSession(group)?.sessionDate),
   },
   {
     accessorKey: "groupName",

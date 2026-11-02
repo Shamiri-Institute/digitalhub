@@ -9,7 +9,6 @@ import {
   type SchoolsInHubData,
 } from "#/app/(platform)/sc/clinical/action";
 
-type StudentInHub = SchoolsInHubData["schools"][number]["students"][number];
 type FellowInProject = SchoolsInHubData["fellowsInProject"][number];
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -124,10 +123,6 @@ export function AddNewClinicalCaseForm({
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [selectedHubId, setSelectedHubId] = useState<string>("");
-  const [students, setStudents] = useState<StudentInHub[]>([]);
-  const [availableSessions, setAvailableSessions] = useState<
-    Array<{ id: string; sessionLabel: string }>
-  >([]);
   const [fellowsInHub, setFellowsInHub] = useState<FellowInProject[]>([]);
 
   const form = useForm<FormValues>({
@@ -142,23 +137,18 @@ export function AddNewClinicalCaseForm({
     },
   });
 
+  const selectedSchool = schools.find((school) => school.id === selectedSchoolId);
+  const students = selectedSchool?.students ?? [];
+  const availableSessions = (selectedSchool?.interventionSessions ?? []).map(({ id, session }) => ({
+    id,
+    sessionLabel: session?.sessionLabel || "",
+  }));
+
   const handleSchoolSelect = (schoolId: string) => {
     setSelectedSchoolId(schoolId);
     form.setValue("school", schoolId);
-
-    const selectedSchool = schools?.find((school) => school.id === schoolId);
-    if (selectedSchool?.students) {
-      setStudents(selectedSchool.students);
-    }
-
-    if (selectedSchool?.interventionSessions) {
-      setAvailableSessions(
-        selectedSchool.interventionSessions.map(({ id, session }) => ({
-          id,
-          sessionLabel: session?.sessionLabel || "",
-        })),
-      );
-    }
+    setSelectedStudentId("");
+    form.setValue("session", "");
   };
 
   const toggleNewStudent = () => {
@@ -230,8 +220,8 @@ export function AddNewClinicalCaseForm({
             : undefined,
         pseudonym: data.pseudonym,
         initialContact: data.initialContact,
-        supervisorId: data.supervisor,
-        fellowId: data.fellow,
+        supervisorId: data.supervisor || undefined,
+        fellowId: data.fellow || undefined,
         sessionId: data.session,
       });
 
@@ -244,7 +234,6 @@ export function AddNewClinicalCaseForm({
         setSelectedSchoolId("");
         setSelectedStudentId("");
         setSelectedHubId("");
-        setAvailableSessions([]);
         setInitialContactType("");
         setFellowsInHub([]);
         setOpen(false);
@@ -628,7 +617,7 @@ export function AddNewClinicalCaseForm({
                           Select Session
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select session" />
                           </SelectTrigger>

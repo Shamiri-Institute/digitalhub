@@ -18,6 +18,7 @@ export default function FellowsTableSkeleton() {
   });
 
   const emptyData: HubPayoutHistoryType[] = Array.from(Array(10).keys()).map(() => ({
+    id: "",
     dateAdded: new Date(),
     duration: "",
     totalPayoutAmount: 0,

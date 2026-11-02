@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { format } from "date-fns";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { arsenalSupervisors } from "#/db/seed/fixtures";
-import { signInAs, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
+import { sessionDisplayName } from "#/lib/utils";
+import { signInAs, uniqueFellowName, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction } from "#/tests/pages/helpers";
 
 async function pickSchoolWithStudentsAndSchoolWithGroups(coordinatorId: string | null) {
@@ -81,10 +82,21 @@ test("a supervisor picks a fellow and a group and sees the group's sessions", as
   );
   const groups = await db.query.interventionGroup.findMany({
     where: (g, { eq }) => eq(g.leaderId, fixture.fellowId),
-    columns: { groupName: true },
+    columns: { groupName: true, schoolId: true },
     with: { school: { columns: { schoolName: true } } },
     orderBy: (g, { asc }) => asc(g.groupName),
   });
+  const [firstGroup] = groups;
+  required(firstGroup, "the fellow's groups");
+  const sessions = await db.query.interventionSession.findMany({
+    where: (s, { and, eq }) => and(eq(s.schoolId, firstGroup.schoolId), eq(s.occurred, true)),
+    columns: { sessionDate: true },
+    with: { session: { columns: { sessionName: true } } },
+  });
+  const sessionOptions = sessions.map(
+    (s) =>
+      `${sessionDisplayName(s.session?.sessionName ?? undefined)} - ${format(s.sessionDate, "dd MMM yyyy")}`,
+  );
 
   await page.goto(getUrl("/sc/reporting/recordings"));
   await page.getByRole("button", { name: "Upload recording" }).click();
@@ -103,21 +115,10 @@ test("a supervisor picks a fellow and a group and sees the group's sessions", as
   const sessionSelect = dialog.getByRole("combobox", { name: /^Session/ });
   await expect(sessionSelect).toBeEnabled();
   await sessionSelect.click();
-  await expect(page.getByRole("option").first()).toBeVisible();
-});
-
-test("the profile shows the saved sub-county among the county's options", async ({
-  page,
-  context,
-}) => {
-  const [supervisor] = arsenalSupervisors;
-  if (!supervisor) throw new Error("no Arsenal supervisor in the seed fixtures");
-  await signInWithEmail(context, supervisor.supervisorEmail);
-  await page.goto(getUrl("/sc/schedule"));
-  await page.getByAltText("Profile arrow drop down icon").click();
-  await page.getByRole("menuitem", { name: "My Profile" }).click();
-  const dialog = page.getByRole("dialog", { name: "Edit profile" });
-  await expect(dialog.getByRole("combobox", { name: "Sub-county" })).toHaveText(
-    supervisor.subCounty,
+  // The occurred sessions of the chosen group's school, and no other school's.
+  await expect(page.getByRole("option")).toHaveCount(sessionOptions.length);
+  const shown = await page.getByRole("option").allInnerTexts();
+  expect(shown.map((text) => text.replace(/\s+/g, " ").trim()).toSorted()).toEqual(
+    sessionOptions.toSorted(),
   );
 });

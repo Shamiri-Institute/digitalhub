@@ -36,8 +36,8 @@ export async function loadHubFellowAttendance() {
         mpesaNumber: fellow.mpesaNumber,
         supervisorName: supervisor.supervisorName,
         specialSession: attendancesWhere(sql`${sessionName.sessionType} = 'SPECIAL'`),
-        preCount: attendancesWhere(sql`${sessionName.sessionLabel} = 's0'`),
-        mainCount: attendancesWhere(sql`${sessionName.sessionLabel} in ('s1', 's2', 's3', 's4')`),
+        preCount: attendancesWhere(sql`${sessionName.sessionName} = 's0'`),
+        mainCount: attendancesWhere(sql`${sessionName.sessionName} in ('s1', 's2', 's3', 's4')`),
         trainingCount: attendancesWhere(sql`${sessionName.sessionType} = 'TRAINING'`),
         supervisionCount: attendancesWhere(sql`${sessionName.sessionType} = 'SUPERVISION'`),
         paidAmount: sql<number>`coalesce(sum(${payoutStatements.amount}) filter (where ${payoutStatements.confirmedAt} is not null), 0)::int`,
@@ -84,6 +84,7 @@ export async function loadHubFellowAttendance() {
   const payoutsByFellow = Map.groupBy(payouts, (row) => row.fellowId);
 
   return fellows.map((hubFellow) => ({
+    id: hubFellow.id,
     fellowName: hubFellow.fellowName,
     hub: hubCoordinator.profile.assignedHub?.hubName,
     supervisorName: hubFellow.supervisorName,

@@ -10,6 +10,7 @@ export default async function SupervisorClinicalCasesTable({
   const data = await getData();
   return (
     <DataTable
+      urlState
       data={data}
       columns={columns}
       className="data-table data-table-action bg-white lg:mt-4"

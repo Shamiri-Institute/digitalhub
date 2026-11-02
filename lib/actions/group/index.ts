@@ -20,6 +20,7 @@ import {
   requireSchoolInHub,
 } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
+import { requireEvaluationEditable } from "#/lib/evaluation-edit-window";
 import { getSchoolInitials } from "#/lib/utils";
 
 /** Throws when the row was already deleted or belongs to another hub's school. */
@@ -177,7 +178,7 @@ export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEva
       engagementComment,
     };
 
-    const [ledGroup, session] = await Promise.all([
+    const [ledGroup, session, savedReport] = await Promise.all([
       db.query.interventionGroup.findFirst({
         where: (g, { and, eq }) => and(eq(g.id, groupId), eq(g.leaderId, fellowId)),
         columns: { groupName: true, schoolId: true },
@@ -186,10 +187,15 @@ export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEva
         where: (s, { eq }) => eq(s.id, sessionId),
         columns: { schoolId: true },
       }),
+      db.query.interventionGroupReport.findFirst({
+        where: (r, { and, eq }) => and(eq(r.sessionId, sessionId), eq(r.groupId, groupId)),
+        columns: { createdAt: true },
+      }),
     ]);
     if (!ledGroup || session?.schoolId !== ledGroup.schoolId) {
       throw new Error("No InterventionGroup found");
     }
+    requireEvaluationEditable(savedReport, new Date());
 
     await db
       .insert(interventionGroupReport)

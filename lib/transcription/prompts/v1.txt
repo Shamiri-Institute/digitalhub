@@ -1,0 +1,8 @@
+
+    Transcribe this audio.
+    Return a JSON list where every item has:
+    - "text": The spoken phrase.
+    - "start": Start time in seconds (float).
+    - "end": End time in seconds (float).
+    Do not identify speakers.
+    

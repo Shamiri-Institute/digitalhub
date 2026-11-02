@@ -17,13 +17,13 @@ import {
 
 export default function AttendanceDocumentDialog({
   session,
-  groupId,
+  fellowId,
   role,
   open,
   onOpenChange,
 }: {
   session: Session | null;
-  groupId?: string;
+  fellowId?: string;
   role: ImplementerRole;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
@@ -33,6 +33,7 @@ export default function AttendanceDocumentDialog({
   const handleRefresh = () => {
     setRefreshKey((k) => k + 1);
   };
+  const groupId = session?.school?.interventionGroups?.find((g) => g.leaderId === fellowId)?.id;
   if (!session || !groupId) return null;
 
   return (

@@ -15,13 +15,14 @@ import {
 
 export function SearchCommand({ data }: { data: { id: string; schoolName: string }[] }) {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const selectedSchoolName = data.find(
+    (school) => school.id === searchParams.get("query"),
+  )?.schoolName;
 
   const handleReset = () => {
-    setSelected(null);
     const params = new URLSearchParams(searchParams);
     params.delete("query");
     router.replace(`${pathname}?${params.toString()}`);
@@ -40,7 +41,7 @@ export function SearchCommand({ data }: { data: { id: string; schoolName: string
         }}
       >
         <Search className="h-4 w-4 shrink-0 opacity-50" />
-        <span className="select-none">{selected ?? "Search"}</span>
+        <span className="select-none">{selectedSchoolName ?? "Search"}</span>
       </button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
@@ -50,26 +51,19 @@ export function SearchCommand({ data }: { data: { id: string; schoolName: string
         <CommandList>
           <CommandEmpty>No schools found</CommandEmpty>
           <CommandGroup heading="Schools">
-            {data
-              .map((school) => school)
-              .map((sch) => (
-                <CommandItem
-                  key={sch.id}
-                  onSelect={() => {
-                    setSelected(sch.schoolName);
-                    const params = new URLSearchParams(searchParams);
-                    if (sch) {
-                      params.set("query", sch.id);
-                    } else {
-                      params.delete("query");
-                    }
-                    router.replace(`${pathname}?${params.toString()}`);
-                    setOpen(false);
-                  }}
-                >
-                  {sch.schoolName}
-                </CommandItem>
-              ))}
+            {data.map((school) => (
+              <CommandItem
+                key={school.id}
+                onSelect={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set("query", school.id);
+                  router.push(`${pathname}?${params.toString()}`);
+                  setOpen(false);
+                }}
+              >
+                {school.schoolName}
+              </CommandItem>
+            ))}
           </CommandGroup>
           <CommandSeparator />
           <CommandGroup heading="Options">

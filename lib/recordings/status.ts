@@ -38,7 +38,7 @@ export async function updateRecordingStatus(
         processedAt: status === "COMPLETED" || status === "FAILED" ? new Date() : undefined,
         overallScore: feedback?.overallScore,
         fidelityFeedback: feedback?.fidelityFeedback,
-        transcript: feedback?.transcript,
+        legacyTranscript: feedback?.transcript,
         errorMessage: feedback?.errorMessage,
         retryCount:
           status === "FAILED"

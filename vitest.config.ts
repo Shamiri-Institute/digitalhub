@@ -6,6 +6,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "#": path.resolve(__dirname, "./"),
+      // Tests run on the server, so they get the build Next serves to server code: a no-op.
+      "server-only": path.resolve(
+        __dirname,
+        "node_modules/next/dist/compiled/server-only/empty.js",
+      ),
     },
   },
   plugins: [react()],

@@ -51,6 +51,7 @@ interface PageItemsProps {
   pageIndex: number;
   /** The item open for editing, if it is on this page. */
   openItemId: string | undefined;
+  showPage: (pageIndex: number) => void;
   dispatch: Dispatch<BuilderAction>;
   editable: boolean;
   messages: Map<string, string>;
@@ -64,6 +65,7 @@ export default function PageItems({
   form,
   pageIndex,
   openItemId,
+  showPage,
   dispatch,
   editable,
   messages,
@@ -77,7 +79,6 @@ export default function PageItems({
   const number = pageIndex + 1;
   const lastPage = form.pages.length - 1;
   const questions = page.items.filter(isQuestion).length;
-  const showPage = () => dispatch({ type: "select", selection: { page: pageIndex } });
 
   return (
     <section aria-label={`Page ${number}`} className="space-y-5">
@@ -250,7 +251,7 @@ export default function PageItems({
                     </Button>
                   </>
                 )}
-                <IconButton label="Close" onClick={showPage}>
+                <IconButton label="Close" onClick={() => showPage(pageIndex)}>
                   <ChevronUp className="h-4 w-4" />
                 </IconButton>
               </div>

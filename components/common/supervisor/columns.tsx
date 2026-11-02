@@ -9,7 +9,6 @@ import type {
 } from "#/db/schema";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
-import type { Dispatch, SetStateAction } from "react";
 import SessionHistoryWidget from "#/components/common/supervisor/sessions-history-widget";
 import { SupervisorsDataTableMenu } from "#/components/common/supervisor/supervisors-datatable-menu";
 import { Badge } from "#/components/ui/badge";
@@ -36,11 +35,12 @@ export type SupervisorsData = Pick<
   })[];
 };
 
-export const columns = (state: {
-  setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+export type SupervisorTableState = {
+  openMarkAttendance: (supervisor: SupervisorsData) => void;
   sessions: (typeof interventionSession.$inferSelect)[];
-  setSupervisor: Dispatch<SetStateAction<SupervisorsData | null>>;
-}): ColumnDef<SupervisorsData>[] => [
+};
+
+export const columns = (state: SupervisorTableState): ColumnDef<SupervisorsData>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (

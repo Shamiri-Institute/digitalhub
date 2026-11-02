@@ -1,6 +1,6 @@
 import type { ImplementerRole } from "#/db/enums";
-import type { Dispatch, SetStateAction } from "react";
 import { memo } from "react";
+import type { FellowGroupDialogKind } from "#/components/common/fellow/fellow-schools-columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -18,12 +18,9 @@ const FellowSchoolDatatableDropdownMenu = memo(function FellowSchoolDatatableDro
   group,
   state,
 }: {
-  group?: FellowGroupData;
+  group: FellowGroupData;
   state: {
-    setFellowGroup: Dispatch<SetStateAction<FellowsData["groups"][number] | undefined>>;
-    setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
-    setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    openDialog: (kind: FellowGroupDialogKind, group: FellowGroupData) => void;
     role: ImplementerRole;
   };
 }) {
@@ -42,29 +39,14 @@ const FellowSchoolDatatableDropdownMenu = memo(function FellowSchoolDatatableDro
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {state.role === "SUPERVISOR" ? (
-          <DropdownMenuItem
-            onClick={() => {
-              state.setFellowGroup(group);
-              state.setAttendanceDialog(true);
-            }}
-          >
+          <DropdownMenuItem onClick={() => state.openDialog("markAttendance", group)}>
             Mark attendance
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuItem
-          onClick={() => {
-            state.setFellowGroup(group);
-            state.setStudentsDialog(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDialog("students", group)}>
           View students in group
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            state.setFellowGroup(group);
-            state.setEvaluationDialog(true);
-          }}
-        >
+        <DropdownMenuItem onClick={() => state.openDialog("groupEvaluation", group)}>
           Weekly group evaluation
         </DropdownMenuItem>
       </DropdownMenuContent>

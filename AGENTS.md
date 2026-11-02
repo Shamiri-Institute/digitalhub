@@ -10,7 +10,6 @@ A task is done when these pass:
 
 ```bash
 npm run typecheck
-npm run lint        # ESLint, Next.js rules
 npm run stylecheck  # oxfmt --check, oxlint --type-aware
 ```
 
@@ -24,7 +23,7 @@ and the tests that cover the change pass. Use npm only.
 
 ## React hooks
 
-oxlint's `hooks-policy/justify` rule (`lint/hooks-policy.mjs`) fails any `useEffect`, `useLayoutEffect`, `useMemo` or `useCallback` without a comment on the line above that starts `effect:`, `memo:` or `callback:` and states the reason. Write a handler or a derived value instead:
+oxlint's `hooks-policy/justify` rule (`lint/hooks-policy.mjs`) fails any `useEffect`, `useLayoutEffect`, `useMemo` or `useCallback` without a comment on the line above that starts `effect:`, `layouteffect:`, `memo:` or `callback:` and states the reason. Write a handler or a derived value instead:
 
 - Work a user event starts goes in the handler (`onClick`, `onOpenChange`, `onSubmit`).
 - Values derived from props or state are computed during render.
@@ -33,7 +32,7 @@ oxlint's `hooks-policy/justify` rule (`lint/hooks-policy.mjs`) fails any `useEff
 - Memoize only for a measured or obvious hot path, and say why in the PR. A lint rule whose only fix is memoization is not enforced.
 - A dialog's form lives in a component inside `DialogContent`, so Radix unmounts it on close and each open starts from the row's values.
 - A multi-step dialog (form, then confirm) keeps its steps as state in one `Dialog`. Example: `components/common/fellow/fellow-dropout-form.tsx`.
-- Clear a dependent field (sub-county, absence reason) in the parent field's `onValueChange`. `hooks-policy/no-form-reset-in-effect` fails on `reset` or `setValue` in an effect.
+- Clear a dependent field (sub-county, absence reason) in the parent field's `onValueChange`. `hooks-policy/no-form-reset-in-effect` fails on `reset` or `setValue` (`form.reset`, or destructured from `useForm`) in an effect.
 
 ## Data
 
@@ -64,7 +63,7 @@ Schema changes:
 
 better-auth. Pages get the signed-in user from the role helpers in `app/auth.ts` (`currentSupervisor()`, `currentHubCoordinator()`, ...); server actions authorize with `requireAuthRole` and `requireHubRole` from `lib/auth/`.
 
-`proxy.ts` only checks that the session cookie exists, and imports nothing that queries the database. The RDS security group admits only the static egress IPs of Vercel Functions, and Routing Middleware runs on other IPs, so a query there fails every request in production while passing locally. Role checks go in the `app/auth.ts` helpers, not in `proxy.ts` or a `layout.tsx`.
+`proxy.ts` only checks that the session cookie exists, and imports nothing that queries the database. Role checks go in the `app/auth.ts` helpers, not in `proxy.ts` or a `layout.tsx`.
 
 Every export of a `"use server"` file is a public POST endpoint, even when only server components call it. Take the scope (hub, fellow, implementer) from the session, never from the arguments.
 
@@ -74,7 +73,7 @@ Every export of a `"use server"` file is a public POST endpoint, even when only 
 - E2E specs sign in as seeded users picked from the database (`signInAs`, `signInWithEmail` in `tests/helpers.ts`).
 - A spec that changes data creates its own rows, or picks rows no other spec edits, and removes what it made.
 - Test behaviour through real dependencies: the local Postgres, and an S3-compatible server such as MinIO for uploads. Leave out a test that would need a mocked module, env, SDK client or network call.
-- E2E specs drive the UI. Action IDs and encoding are framework internals, so a spec never posts to a server action directly; `tests/e2e/personnel-authz.spec.ts` predates this rule.
+- E2E specs drive the UI. Action IDs and encoding are framework internals, so a spec never posts to a server action directly.
 - After a mutation, assert through the UI after a reload. Read the database only for what no page shows (values the server takes from the session, stored but undisplayed data, revoked sessions, writes that must not happen), with a comment saying so.
 
 ## Code style

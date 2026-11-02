@@ -29,11 +29,14 @@ export async function loadHubSchoolFeedback() {
 
   const formattedData = schools.map((school) => {
     const studentTeacherSatisfaction =
-      school.schoolFeedbacks.reduce(
-        (acc, curr) => acc + (curr?.studentTeacherSatisfactionRating ?? 0),
-        0,
-      ) / school.schoolFeedbacks.length;
+      school.schoolFeedbacks.length > 0
+        ? school.schoolFeedbacks.reduce(
+            (acc, curr) => acc + (curr?.studentTeacherSatisfactionRating ?? 0),
+            0,
+          ) / school.schoolFeedbacks.length
+        : 0;
     return {
+      id: school.id,
       schoolName: school.schoolName,
       studentTeacherSatisfaction,
       supervisorRatings: school.schoolFeedbacks.map((feedback) => ({

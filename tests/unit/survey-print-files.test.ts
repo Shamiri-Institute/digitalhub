@@ -1,8 +1,8 @@
 // @vitest-environment node
-// The print job against the database and an S3-compatible server (SeaweedFS or MinIO, at S3_ENDPOINT): what
-// it puts in S3, and how it recovers from a worker that died. The run page's progress and the
-// download are tested through the UI in tests/e2e/hub-coordinator/print-runs.spec.ts.
-import { BucketAlreadyOwnedByYou, CreateBucketCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+// The print job against the database and a local S3 server (scripts/local-s3.sh locally, SeaweedFS
+// in CI): what it puts in S3, and how it recovers from a worker that died. The run page's progress
+// and the download are tested through the UI in tests/e2e/hub-coordinator/print-runs.spec.ts.
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -52,13 +52,6 @@ beforeAll(async () => {
     visibleId: testSchoolId,
     hubId: scope.hubId,
   });
-  try {
-    await getS3Client("survey-print-files").send(
-      new CreateBucketCommand({ Bucket: getBucket("survey-print-files").bucket }),
-    );
-  } catch (error) {
-    if (!(error instanceof BucketAlreadyOwnedByYou)) throw error;
-  }
 });
 
 afterAll(async () => {

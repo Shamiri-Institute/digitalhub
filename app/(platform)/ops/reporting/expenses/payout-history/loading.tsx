@@ -18,6 +18,7 @@ export default function PayoutHistoryTableSkeleton() {
   });
 
   const emptyData: OpsHubsPayoutHistoryType[] = Array.from(Array(10).keys()).map(() => ({
+    id: "",
     dateAdded: new Date(),
     duration: "",
     totalPayoutAmount: 0,

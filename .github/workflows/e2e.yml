@@ -23,7 +23,7 @@ env:
   S3_STUDENT_ATTENDANCE_BUCKET: mock-s3-attendance-bucket
   S3_STUDENT_ATTENDANCE_REGION: af-south-1
   # Print files go to the SeaweedFS server started below.
-  S3_ENDPOINT: http://localhost:8333
+  AWS_ENDPOINT_URL_S3: http://localhost:8333
   S3_SURVEY_PRINT_FILES_BUCKET: survey-print-files
   S3_SURVEY_PRINT_FILES_REGION: af-south-1
   RECORDINGS_API_KEY: e2e-recordings-api-key
@@ -100,7 +100,7 @@ jobs:
             sleep 1
           done
           AWS_ACCESS_KEY_ID=$S3_UPLOAD_KEY AWS_SECRET_ACCESS_KEY=$S3_UPLOAD_SECRET \
-            aws --endpoint-url "$S3_ENDPOINT" s3 mb s3://survey-print-files
+            aws --endpoint-url "$AWS_ENDPOINT_URL_S3" s3 mb s3://survey-print-files
 
       - name: Migrate database
         run: npm run db:migrate
@@ -109,6 +109,9 @@ jobs:
       # ideally we might want to create a different seed script for these tests so that we have deterministic data
       - name: Seed test database
         run: npm run db:seed
+      # Some unit tests read and write this database, so they run here, after the seed.
+      - name: Unit tests
+        run: npx vitest run
 
       - name: Cache Next.js build
         uses: actions/cache@v5

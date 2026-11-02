@@ -1,21 +1,27 @@
 "use client";
 import { rankItem } from "@tanstack/match-sorter-utils";
 import {
+  type Column,
   type ColumnDef,
   type FilterFn,
   flexRender,
+  functionalUpdate,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   type OnChangeFn,
+  type PaginationState,
   type Row,
   type RowSelectionState,
+  type SortDirection,
   type SortingState,
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { Fragment, type ReactNode, useEffect, useState } from "react";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Fragment, type ReactNode, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -40,6 +46,17 @@ import {
   TableHeader,
   TableRow,
 } from "#/components/ui/table";
+import {
+  compareCellValues,
+  DEFAULT_PAGE_SIZE,
+  PAGE_SIZES,
+  parseTableView,
+  rowIdsFromOwnIds,
+  type TableView,
+  type TableViewParams,
+  tableViewParams,
+  tableViewSearch,
+} from "#/lib/table-view";
 import { cn } from "#/lib/utils";
 
 // oxlint-disable-next-line typescript/no-explicit-any -- FilterFn generic requires any for universal compatibility with all table data types
@@ -49,7 +66,54 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed;
 };
 
-interface DataTableProps<TData, TValue> {
+// TanStack's "auto" sorting picks a comparison from the rows after the tenth, so in a short table
+// it compares text by character code and leaves empty cells anywhere.
+const defaultColumn = {
+  sortingFn: <TData,>(rowA: Row<TData>, rowB: Row<TData>, columnId: string) =>
+    compareCellValues(rowA.getValue(columnId), rowB.getValue(columnId)),
+};
+
+/** The columns that hold a row's controls: expand, select and its actions menu. */
+const isActionColumn = (columnId: string) => ["button", "checkbox", "expand"].includes(columnId);
+
+// An action column never sorts, even when its cell reads a value.
+const canSortBy = <TData,>(column: Column<TData>) =>
+  column.getCanSort() && !isActionColumn(column.id);
+
+const ariaSort = (sortDirection: SortDirection | false) =>
+  sortDirection === "asc" ? "ascending" : sortDirection === "desc" ? "descending" : "none";
+
+function SortToggle<TData>({ column, children }: { column: Column<TData>; children: ReactNode }) {
+  const sortDirection = column.getIsSorted();
+  const SortIcon =
+    sortDirection === "asc" ? ArrowUp : sortDirection === "desc" ? ArrowDown : ArrowUpDown;
+  return (
+    <Button
+      type="button"
+      variant="base"
+      size="base"
+      onClick={() => column.toggleSorting()}
+      className="max-w-full gap-1 font-semibold hover:text-shamiri-text-dark-grey"
+    >
+      <span className="truncate">{children}</span>
+      <SortIcon className={cn("h-4 w-4 shrink-0", !sortDirection && "opacity-40")} />
+    </Button>
+  );
+}
+
+type RowSelectionProps<TData> =
+  | {
+      getRowId: (row: TData) => string;
+      rowSelection: RowSelectionState;
+      onRowSelectionChange: (rowSelection: RowSelectionState) => void;
+    }
+  | {
+      getRowId?: (row: TData) => string;
+      rowSelection?: undefined;
+      onRowSelectionChange?: undefined;
+    };
+
+type DataTableProps<TData, TValue> = RowSelectionProps<TData> & {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   editColumns?: boolean;
@@ -57,16 +121,48 @@ interface DataTableProps<TData, TValue> {
   disablePagination?: boolean;
   isSubComponent?: boolean;
   className?: string;
-  onRowSelectionChange?: (rows: Row<TData>[]) => void;
   rowSelectionDescription?: string;
   columnVisibilityState?: VisibilityState;
   enableRowSelection?: boolean | ((row: Row<TData>) => boolean) | undefined;
   renderTableActions?: ReactNode;
   getRowCanExpand?: (row: Row<TData>) => boolean;
   renderSubComponent?: (props: { row: Row<TData> }) => ReactNode;
+  /**
+   * Keeps the page, page size and sort in the URL, so a reload, back/forward or a shared link opens
+   * the same view. Only for a page's main list table, with a prefix when the page has two. Search
+   * text never goes in the URL: it matches students' names and clinical data.
+   */
+  urlState?: boolean | { prefix: string };
+};
+
+type UrlView = { params: TableViewParams; get: (name: string) => string | null };
+
+export default function DataTable<TData, TValue>(
+  props: DataTableProps<TData, TValue> & { emptyStateMessage: string },
+) {
+  return props.urlState ? (
+    <UrlStateDataTable {...props} />
+  ) : (
+    <DataTableContent {...props} urlView={null} />
+  );
 }
 
-export default function DataTable<TData, TValue>({
+// Only URL-bound tables read the search params, so the tables in dialogs don't re-render when the
+// URL changes.
+function UrlStateDataTable<TData, TValue>(
+  props: DataTableProps<TData, TValue> & { emptyStateMessage: string },
+) {
+  const searchParams = useSearchParams();
+  const prefix = typeof props.urlState === "object" ? props.urlState.prefix : undefined;
+  return (
+    <DataTableContent
+      {...props}
+      urlView={{ params: tableViewParams(prefix), get: (name) => searchParams.get(name) }}
+    />
+  );
+}
+
+function DataTableContent<TData, TValue>({
   columns,
   data,
   editColumns = true,
@@ -75,6 +171,8 @@ export default function DataTable<TData, TValue>({
   isSubComponent = false,
   className,
   emptyStateMessage,
+  getRowId,
+  rowSelection: controlledRowSelection,
   onRowSelectionChange,
   columnVisibilityState = {},
   enableRowSelection,
@@ -82,50 +180,104 @@ export default function DataTable<TData, TValue>({
   rowSelectionDescription = "rows",
   getRowCanExpand = () => true,
   renderSubComponent,
-}: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
+  urlView,
+}: DataTableProps<TData, TValue> & { emptyStateMessage: string; urlView: UrlView | null }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(columnVisibilityState);
-  const [rowSelection, setRowSelection] = useState({});
+  const [uncontrolledRowSelection, setUncontrolledRowSelection] = useState<RowSelectionState>({});
+  const rowSelection = controlledRowSelection ?? uncontrolledRowSelection;
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: DEFAULT_PAGE_SIZE,
+  });
+  const [typedPageNumber, setTypedPageNumber] = useState<string | null>(null);
 
-  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (state) => {
-    setRowSelection(state);
+  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (updater) => {
+    const nextRowSelection = functionalUpdate(updater, rowSelection);
+    if (onRowSelectionChange) {
+      onRowSelectionChange(nextRowSelection);
+    } else {
+      setUncontrolledRowSelection(nextRowSelection);
+    }
   };
 
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+  // The data is already here, so a URL-bound table replaces the URL without asking the server for
+  // the page again. The router hands the new params back through useSearchParams.
+  const replaceUrlView = (params: TableViewParams, nextView: TableView) => {
+    const search = tableViewSearch(window.location.search, params, nextView);
+    if (search !== window.location.search) {
+      window.history.replaceState(null, "", `${window.location.pathname}${search}`);
+    }
+  };
+
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    if (urlView) {
+      replaceUrlView(urlView.params, {
+        sorting: functionalUpdate(updater, table.getState().sorting),
+        pagination: { ...table.getState().pagination, pageIndex: 0 },
+      });
+    } else {
+      setSorting(updater);
+      setPagination((current) => ({ ...current, pageIndex: 0 }));
+    }
+  };
 
   const table = useReactTable({
     data,
     columns,
+    defaultColumn,
+    getRowId: getRowId ?? rowIdsFromOwnIds(data),
     getRowCanExpand,
     getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
+    sortDescFirst: false,
+    onSortingChange: handleSortingChange,
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: disablePagination ? undefined : getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: handleRowSelectionChange,
-    onPaginationChange: setPagination,
+    // A page size change arrives as TanStack's own updater, which keeps the top row in view; the
+    // URL gets the page and size it returns.
+    onPaginationChange: urlView
+      ? (updater) =>
+          replaceUrlView(urlView.params, {
+            pagination: functionalUpdate(updater, table.getState().pagination),
+            sorting: table.getState().sorting,
+          })
+      : setPagination,
     enableRowSelection,
     state: { sorting, columnVisibility, rowSelection, pagination },
-    autoResetPageIndex: true,
+    autoResetPageIndex: false,
     getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: fuzzyFilter,
   });
 
-  // effect: notifies the parent when the table's row selection changes
-  useEffect(() => {
-    const rows = table.getSelectedRowModel().rows;
-    if (onRowSelectionChange) {
-      onRowSelectionChange(rows);
+  if (urlView) {
+    // The page is clamped to the rows the data and search leave, and the sort to the columns that
+    // sort, which only the built table knows, so the URL's view is applied to it here. Nothing is
+    // written back: a page past the end shows the last page and stays in the URL until the next
+    // page change, so the clamp cannot loop with the URL.
+    const sortableColumnIds = table
+      .getAllLeafColumns()
+      .filter(canSortBy)
+      .map((column) => column.id);
+    const urlTableView = parseTableView(
+      urlView.get,
+      urlView.params,
+      table.getRowCount(),
+      sortableColumnIds,
+    );
+    table.setOptions((options) => ({
+      ...options,
+      state: { ...options.state, ...urlTableView },
+    }));
+  } else {
+    // A refresh can leave fewer pages than the current one. Setting state during render makes React
+    // render again with the last page before it paints an empty one.
+    const lastPageIndex = Math.max(table.getPageCount() - 1, 0);
+    if (pagination.pageIndex > lastPageIndex) {
+      setPagination({ ...pagination, pageIndex: lastPageIndex });
     }
-  }, [onRowSelectionChange, rowSelection, table]);
-
-  // effect: clears the row selection when the data prop changes
-  useEffect(() => {
-    table.resetRowSelection();
-  }, [data, table]);
+  }
 
   return (
     <div className="no-scrollbar overflow-hidden">
@@ -160,7 +312,10 @@ export default function DataTable<TData, TValue>({
                 strokeWidth={1.75}
               />
               <Input
-                onChange={(e) => table.setGlobalFilter(String(e.target.value))}
+                onChange={(e) => {
+                  table.setGlobalFilter(String(e.target.value));
+                  table.firstPage();
+                }}
                 placeholder="Search..."
                 className="w-64 bg-white pl-10"
               />
@@ -219,26 +374,31 @@ export default function DataTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} id={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    id={header.id}
-                    className={cn(
-                      "min-w-[80px] bg-background-secondary/50 px-4! text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
-                      header.column.columnDef.id !== "checkbox" && "truncate",
-                      "py-2",
-                      header.column.columnDef.id === "button" ||
-                        header.column.columnDef.id === "checkbox" ||
-                        header.column.columnDef.id === "expand"
-                        ? "action-cell"
-                        : null,
-                    )}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const headerContent = header.isPlaceholder
+                    ? null
+                    : flexRender(header.column.columnDef.header, header.getContext());
+                  const columnSorts = canSortBy(header.column) && !header.isPlaceholder;
+                  return (
+                    <TableHead
+                      key={header.id}
+                      id={header.id}
+                      aria-sort={columnSorts ? ariaSort(header.column.getIsSorted()) : undefined}
+                      className={cn(
+                        "min-w-[80px] bg-background-secondary/50 px-4! text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
+                        header.column.columnDef.id !== "checkbox" && "truncate",
+                        "py-2",
+                        isActionColumn(header.column.id) ? "action-cell" : null,
+                      )}
+                    >
+                      {columnSorts ? (
+                        <SortToggle column={header.column}>{headerContent}</SortToggle>
+                      ) : (
+                        headerContent
+                      )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -260,9 +420,7 @@ export default function DataTable<TData, TValue>({
                         id={cell.id}
                         className={cn(
                           "truncate border-y border-l first:border-l-0",
-                          cell.column.columnDef.id === "button" ||
-                            cell.column.columnDef.id === "checkbox" ||
-                            cell.column.columnDef.id === "expand"
+                          isActionColumn(cell.column.id)
                             ? "relative cursor-pointer border-l-0 p-0!"
                             : "px-4! py-2",
                         )}
@@ -357,11 +515,19 @@ export default function DataTable<TData, TValue>({
                   type="number"
                   min="1"
                   max={table.getPageCount()}
-                  defaultValue={table.getState().pagination.pageIndex + 1}
+                  value={typedPageNumber ?? table.getState().pagination.pageIndex + 1}
                   onChange={(e) => {
-                    const page = e.target.value ? Number(e.target.value) - 1 : 0;
-                    table.setPageIndex(page);
+                    setTypedPageNumber(e.target.value);
+                    const pageNumber = Number(e.target.value);
+                    if (
+                      Number.isInteger(pageNumber) &&
+                      pageNumber >= 1 &&
+                      pageNumber <= table.getPageCount()
+                    ) {
+                      table.setPageIndex(pageNumber - 1);
+                    }
                   }}
+                  onBlur={() => setTypedPageNumber(null)}
                   className="w-16 rounded border p-1"
                 />
               </span>
@@ -379,7 +545,7 @@ export default function DataTable<TData, TValue>({
                   <SelectValue placeholder="Pick rows" />
                 </SelectTrigger>
                 <SelectContent>
-                  {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                  {PAGE_SIZES.map((pageSize) => (
                     <SelectItem key={pageSize} value={pageSize.toString()}>
                       Show {pageSize}
                     </SelectItem>

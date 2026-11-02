@@ -15,6 +15,7 @@ export default function AdminAccessDataTable({ admins }: { admins: ImplementerAd
   return (
     <div className="space-y-3 py-10">
       <DataTable
+        urlState
         data={admins}
         columns={columns}
         className="data-table data-table-action bg-white lg:mt-4"

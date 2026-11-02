@@ -9,18 +9,7 @@ export default function SchoolsDatatableSkeleton({ role }: { role: ImplementerRo
     <DatatableSkeleton
       columns={columns({
         role,
-        state: {
-          editDialog: false,
-          setEditDialog: () => null,
-          pointSupervisorDialog: false,
-          setPointSupervisorDialog: () => null,
-          schoolDropOutDialog: false,
-          setSchoolDropOutDialog: () => null,
-          undoDropOutDialog: false,
-          setUndoDropOutDialog: () => null,
-          school: null,
-          setSchool: () => null,
-        },
+        state: { openDialog: () => {} },
       })}
       columnVisibilityState={{
         "School ID": false,

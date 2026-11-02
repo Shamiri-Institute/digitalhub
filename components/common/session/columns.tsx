@@ -4,10 +4,13 @@ import { type ImplementerRole, SessionStatus } from "#/db/enums";
 import type { interventionGroup, school, supervisor } from "#/db/schema";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import type { Dispatch, SetStateAction } from "react";
-import { SessionDropDown } from "#/components/common/session/session-list";
+import {
+  SessionDropDown,
+  type SessionDialogOpener,
+} from "#/components/common/session/session-list";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { Icons } from "#/components/icons";
+import { sortBy } from "#/lib/table-view";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
 // The school sessions pages load a school's sessions with the whole school subtree attached.
@@ -22,31 +25,21 @@ export type SessionData = Omit<Session, "school"> & {
 
 export const columns = (state: {
   role: ImplementerRole;
-  setRatingsDialog: Dispatch<SetStateAction<boolean>>;
-  setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
-  setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
-  setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
-  setAttendanceDocumentDialog: Dispatch<SetStateAction<boolean>>;
-  setSession: Dispatch<SetStateAction<Session | null>>;
+  openDialog: SessionDialogOpener;
   fellowId?: string;
   supervisorId?: string;
 }): ColumnDef<SessionData>[] => [
   {
     header: "Date of attendance",
     id: "Date of attendance",
-    cell: ({ row }) => {
-      return format(row.original.sessionDate, "dd MMM yyyy");
-    },
+    accessorFn: (row) => format(row.sessionDate, "dd MMM yyyy"),
+    sortingFn: sortBy((session) => session.sessionDate),
   },
   {
     header: "Last updated",
     id: "Last updated",
-    cell: ({ row }) => {
-      return format(row.original.updatedAt, "dd MMM yyyy");
-    },
+    accessorFn: (row) => format(row.updatedAt, "dd MMM yyyy"),
+    sortingFn: sortBy((session) => session.updatedAt),
   },
   {
     header: "Session type",
@@ -117,18 +110,7 @@ export const columns = (state: {
     id: "button",
     cell: ({ row }) => (
       <SessionDropDown
-        state={{
-          session: row.original,
-          setRatingsDialog: state.setRatingsDialog,
-          setSession: state.setSession,
-          setFellowAttendanceDialog: state.setFellowAttendanceDialog,
-          setStudentAttendanceDialog: state.setStudentAttendanceDialog,
-          setSupervisorAttendanceDialog: state.setSupervisorAttendanceDialog,
-          setSessionOccurrenceDialog: state.setSessionOccurrenceDialog,
-          setRescheduleSessionDialog: state.setRescheduleSessionDialog,
-          setCancelSessionDialog: state.setCancelSessionDialog,
-          setAttendanceDocumentDialog: state.setAttendanceDocumentDialog,
-        }}
+        state={{ session: row.original, openDialog: state.openDialog }}
         role={state.role}
         fellowId={state.fellowId}
         supervisorId={state.supervisorId}

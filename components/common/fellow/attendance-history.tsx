@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
+import { sortBy } from "#/lib/table-view";
 
 // A fellow attendance with the session, group and payout rows the school fellows page and
 // `loadFellowsData` attach.
@@ -95,6 +96,7 @@ const columns: ColumnDef<FellowAttendanceHistoryRow>[] = [
     accessorFn: (row) => {
       return row.session && format(row.session.sessionDate, "dd-MM-yyyy");
     },
+    sortingFn: sortBy((attendance) => attendance.session?.sessionDate),
   },
   {
     header: "School/Venue",

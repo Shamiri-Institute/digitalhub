@@ -79,10 +79,13 @@ faker.setDefaultRefDate(seedToday);
 const SESSION_WEEKS_BEFORE_TODAY = 4;
 
 // The same ids on every run, in creation order, so fixtures that order by id pick the same rows.
+// The time part is fixed, not today's date, so preview env vars can name seeded rows
+// (FIDELITY_AB_TEST_SUPERVISOR_IDS names the static supervisor).
+const SEED_ID_TIME = Date.UTC(2026, 0, 1);
 let seedIdCount = 0;
 function objectId(prefix: string) {
   seedIdCount += 1;
-  const time = seedToday.getTime().toString(16).padStart(12, "0");
+  const time = SEED_ID_TIME.toString(16).padStart(12, "0");
   const count = seedIdCount.toString(16).padStart(12, "0");
   return TypeID.fromUUID(
     prefix,
@@ -1988,8 +1991,13 @@ async function createSessionRecordings(
 
     const sessions = sessionsBySchool.get(school.id) ?? [];
     const groups = school.interventionGroups.slice(0, DEMO_GROUPS_PER_SCHOOL);
+    // The school's latest occurred session has no recording, so its supervisor can upload one.
+    const [latestOccurred] = sessions
+      .filter((session) => session.occurred)
+      .toSorted((a, b) => b.sessionDate.getTime() - a.sessionDate.getTime());
 
     for (const session of sessions) {
+      if (session === latestOccurred) continue;
       for (const group of groups) {
         const recordingId = objectId("rec");
         const sessionType = session.sessionType ?? "session";
@@ -2033,7 +2041,7 @@ async function createSessionRecordings(
           overallScore,
           promptVersion,
           fidelityFeedback,
-          transcript,
+          legacyTranscript: transcript,
         });
       }
     }

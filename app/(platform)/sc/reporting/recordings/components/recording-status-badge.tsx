@@ -5,6 +5,8 @@ import { Badge, type BadgeProps } from "#/components/ui/badge";
 
 interface RecordingStatusBadgeProps {
   status: RecordingProcessingStatus;
+  hasGaps: boolean;
+  errorMessage: string | null;
 }
 
 const statusConfig: Record<
@@ -17,8 +19,22 @@ const statusConfig: Record<
   FAILED: { label: "Failed", variant: "destructive" },
 };
 
-export default function RecordingStatusBadge({ status }: RecordingStatusBadgeProps) {
+export default function RecordingStatusBadge({
+  status,
+  hasGaps,
+  errorMessage,
+}: RecordingStatusBadgeProps) {
+  if (status === "COMPLETED" && hasGaps) {
+    return (
+      <Badge variant="warning" title="Parts of the recording could not be transcribed">
+        Completed with gaps
+      </Badge>
+    );
+  }
   const config = statusConfig[status];
-
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  return (
+    <Badge variant={config.variant} title={errorMessage ?? undefined}>
+      {config.label}
+    </Badge>
+  );
 }
