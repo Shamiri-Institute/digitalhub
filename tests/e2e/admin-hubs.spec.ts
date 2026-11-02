@@ -509,7 +509,7 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
     projectId: seededHub.projectId,
   });
   const day = 24 * 60 * 60 * 1000;
-  const session = (occurred: boolean, daysFromNow: number, status?: "Cancelled") => ({
+  const session = (occurred: boolean, daysFromNow: number, status?: "Cancelled" | null) => ({
     id: objectId("session"),
     hubId: statsHub.id,
     schoolId,
@@ -527,6 +527,7 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
       session(true, -6),
       session(false, -5),
       session(false, 5),
+      session(false, 6, null),
       session(false, -4, "Cancelled"),
     ]);
   await db
@@ -544,8 +545,8 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
   await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl(`/admin/hubs/${statsHub.id}/schools`));
   const stats = page.getByRole("region", { name: "Hub stats" });
-  await expect(stats).toContainText("marked attended of 4 scheduled");
-  for (const segment of ["2 attended", "1 unmarked", "1 upcoming", "1 cancelled"]) {
+  await expect(stats).toContainText("marked attended of 5 scheduled");
+  for (const segment of ["2 attended", "1 unmarked", "2 upcoming", "1 cancelled"]) {
     await expect(stats).toContainText(segment);
   }
   await expect(stats).toContainText("1 past session needs marking");
@@ -557,7 +558,7 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
   await expect(dataRows(page)).toHaveCount(2);
   const tabs = page.getByRole("navigation", { name: "Hub sections" });
   await expect(tabs.getByRole("link", { name: /^Schools/ })).toHaveText(/^Schools\s*1$/);
-  await expect(tabs.getByRole("link", { name: /^Sessions/ })).toHaveText(/^Sessions\s*4$/);
+  await expect(tabs.getByRole("link", { name: /^Sessions/ })).toHaveText(/^Sessions\s*5$/);
 });
 
 test("a hub of another implementer is not found", async ({ page, context }) => {

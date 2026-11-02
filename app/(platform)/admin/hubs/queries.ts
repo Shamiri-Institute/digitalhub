@@ -83,7 +83,7 @@ export const fetchAdminHub = cache(async (hubId: string) => {
         interventionSession.hubId,
         h.id,
         sql.raw(
-          `"intervention_sessions"."status" <> 'Cancelled' and "intervention_sessions"."archived_at" is null`,
+          `("intervention_sessions"."occurred" or "intervention_sessions"."status" is distinct from 'Cancelled') and "intervention_sessions"."archived_at" is null`,
         ),
       ).as("sessions_count"),
       schoolsCount: countOf(school.hubId, h.id, sql.raw(isActive(`"schools"`))).as("schools_count"),
