@@ -10,7 +10,6 @@ A task is done when these pass:
 
 ```bash
 npm run typecheck
-npm run lint        # ESLint, Next.js rules
 npm run stylecheck  # oxfmt --check, oxlint --type-aware
 ```
 
