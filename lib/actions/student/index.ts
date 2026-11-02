@@ -202,7 +202,10 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
   }
 }
 
-export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
+export async function markStudentAttendance(
+  data: z.infer<typeof MarkAttendanceSchema>,
+  { refreshPage = true }: { refreshPage?: boolean } = {},
+) {
   try {
     const { userId } = await requireHubRole(...STUDENT_WRITE_ROLES);
 
@@ -259,7 +262,9 @@ export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceS
           attended: status,
         },
       });
-    refresh();
+    if (refreshPage) {
+      refresh();
+    }
     return {
       success: true,
       message: `Successfully marked attendance for ${studentRow.studentName}`,
@@ -372,7 +377,6 @@ export async function markManyStudentsAttendance(
           ),
         );
     });
-    refresh();
     return {
       success: true,
       message: `Successfully marked attendance for ${ids.length} students`,

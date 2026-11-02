@@ -442,7 +442,9 @@ function SessionStudents({
         sessionMode="single"
         isOpen={markAttendanceDialog}
         setIsOpen={setMarkAttendanceDialog}
-        markAttendanceAction={(data) => saveAttendance(markStudentAttendance(data))}
+        markAttendanceAction={(data) =>
+          saveAttendance(markStudentAttendance(data, { refreshPage: false }))
+        }
         markBulkAttendanceAction={(ids, data) =>
           saveAttendance(markManyStudentsAttendance(ids, data))
         }

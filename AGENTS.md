@@ -48,7 +48,7 @@ Drizzle ORM 0.45 on PostgreSQL (`pg` driver). Write native Drizzle: relational q
 - `update` and `delete` match zero rows silently. Check `.returning()` and throw where the caller expects not-found.
 - Export each query's result type beside it (`export type X = Awaited<ReturnType<typeof fn>>`) and type consumers with it.
 - Helpers that run inside `db.transaction` take a `Transaction` from `#/db/client`.
-- A mutation server action calls `refresh()` from `next/cache` once its write succeeds, after any transaction commits. The app has no server cache, so the client makes no follow-up revalidate call.
+- A mutation server action calls `refresh()` from `next/cache` once its write succeeds, after any transaction commits. The app has no server cache, so the client makes no follow-up revalidate call. Skip it only where the page shows none of the written data and the client updates from the action's result, as the session attendance dialog's marks do.
 - Server-side date maths ("today", which days a calendar shows) uses the viewer's zone from the `tz` cookie (`TIME_ZONE_COOKIE` in `lib/schedule-view.ts`). When the cookie is missing, render without data and let the client set it and refresh; never fall back to a fixed zone. The exception is scheduling a school's sessions, which happen at the school and use `Africa/Nairobi`.
 
 Schema changes:
