@@ -316,6 +316,13 @@
       "when": 1793605477649,
       "tag": "0044_clinical_lead_referral_recipient",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1793609315313,
+      "tag": "0045_close_old_clinical_lead_referrals",
+      "breakpoints": true
     }
   ]
 }
