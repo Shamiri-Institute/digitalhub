@@ -4,7 +4,6 @@ import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { ImplementerRole } from "#/db/enums";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import HubsDataTable from "./components/hubs-datatable";
 import { fetchAdminHubs } from "./queries";
@@ -17,7 +16,6 @@ export default async function HubsPage() {
 
   const implementerId = admin?.session?.user.activeMembership?.implementerId;
   const projectId = await getActiveProjectId();
-  const role = admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN;
 
   const hubs = implementerId != null ? await fetchAdminHubs(implementerId, projectId) : [];
 
@@ -26,7 +24,7 @@ export default async function HubsPage() {
       <div className="container w-full grow space-y-3 py-10">
         <PageHeading title="Hubs" />
         <Separator />
-        <HubsDataTable hubs={hubs} role={role} canManageHubs={admin.profile.isSuperAdmin} />
+        <HubsDataTable hubs={hubs} canManageHubs={admin.profile.isSuperAdmin} />
       </div>
       <PageFooter />
     </div>

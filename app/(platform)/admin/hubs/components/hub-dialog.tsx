@@ -64,6 +64,7 @@ type FormSessionType = {
   label: string;
   amount: number;
 };
+type HubToEdit = Pick<AdminHub, "id" | "hubName">;
 type SharedFormValues = { hubName: string; sessionTypes: FormSessionType[] };
 
 const SESSION_TYPE_GROUPS: Record<SessionTypeGroup, { label: string; noun: string }> = {
@@ -209,7 +210,7 @@ function useConfirmedSave<T>(action: (values: T) => Promise<ActionResponse>, onD
 interface HubDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  edit?: { hub: AdminHub; sessionNames: HubSessionName[] };
+  edit?: { hub: HubToEdit; sessionNames: HubSessionName[] };
 }
 
 export default function HubDialog({ open, onOpenChange, edit }: HubDialogProps) {
@@ -286,7 +287,7 @@ function EditHubForm({
   sessionNames,
   onDone,
 }: {
-  hub: AdminHub;
+  hub: HubToEdit;
   sessionNames: HubSessionName[];
   onDone: () => void;
 }) {

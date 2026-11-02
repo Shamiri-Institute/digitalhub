@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ChevronsUpDown } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import type { AdminProject } from "#/app/(platform)/layout";
 import { Button } from "#/components/ui/button";
@@ -32,6 +33,8 @@ export function ProjectSwitcher({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
   const activeProjectId = user?.activeProjectId ?? null;
 
   const activeProject = projects.find((p) => p.id === activeProjectId);
@@ -44,6 +47,10 @@ export function ProjectSwitcher({
       if (!result.success) {
         toast({ variant: "destructive", description: result.error ?? "Could not switch project." });
         return;
+      }
+      // A hub belongs to one project, so its page is not found in the new one.
+      if (pathname.startsWith("/admin/hubs/")) {
+        router.push("/admin/hubs");
       }
     } finally {
       setLoading(false);
