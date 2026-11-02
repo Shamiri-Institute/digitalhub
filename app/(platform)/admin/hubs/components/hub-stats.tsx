@@ -5,13 +5,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip
 import { cn } from "#/lib/utils";
 import type { HubStats as HubStatsData } from "../queries";
 
-const formatCount = (n: number) => n.toLocaleString("en-US");
+export const formatCount = (n: number) => n.toLocaleString("en-US");
 const plural = (n: number, one: string, many: string) =>
   `${formatCount(n)} ${n === 1 ? one : many}`;
 
-type SessionStates = HubStatsData["sessions"];
+type SessionStates = Pick<
+  HubStatsData["sessions"],
+  "held" | "unmarked" | "upcoming" | "cancelled" | "scheduled"
+>;
 
-const states = [
+export const states = [
   {
     key: "held",
     label: "attended",
@@ -28,7 +31,11 @@ const states = [
   { key: "cancelled", label: "cancelled", fill: "fill-red-base", swatch: "bg-red-base" },
 ] as const;
 
-function StateBar({ counts }: { counts: Pick<SessionStates, (typeof states)[number]["key"]> }) {
+export function StateBar({
+  counts,
+}: {
+  counts: Pick<SessionStates, (typeof states)[number]["key"]>;
+}) {
   const total = states.reduce((sum, s) => sum + counts[s.key], 0);
   const share = (n: number) => (n / total) * 100;
   let offset = 0;
@@ -117,7 +124,7 @@ function NoData() {
   );
 }
 
-function StatCell({ label, children }: { label: string; children: React.ReactNode }) {
+export function StatCell({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1 bg-white px-4 py-3 xl:whitespace-nowrap">
       <p className="text-sm font-medium text-shamiri-black">{label}</p>
@@ -126,7 +133,7 @@ function StatCell({ label, children }: { label: string; children: React.ReactNod
   );
 }
 
-function Figure({ value, unit }: { value: React.ReactNode; unit?: string }) {
+export function Figure({ value, unit }: { value: React.ReactNode; unit?: string }) {
   return (
     <p className="text-shamiri-black">
       <span className="text-3xl font-semibold tabular-nums">{value}</span>
@@ -135,14 +142,42 @@ function Figure({ value, unit }: { value: React.ReactNode; unit?: string }) {
   );
 }
 
-function Note({ children }: { children: React.ReactNode }) {
+export function Note({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-shamiri-text-dark-grey">{children}</p>;
+}
+
+export function SessionsStat({
+  sessions,
+  className,
+}: {
+  sessions: SessionStates;
+  className?: string;
+}) {
+  const hasSessions = sessions.scheduled + sessions.cancelled > 0;
+  return (
+    <div className={cn("space-y-1 bg-white px-4 py-3 xl:whitespace-nowrap", className)}>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <p className="text-sm font-medium text-shamiri-black">Sessions</p>
+        {hasSessions ? <Legend sessions={sessions} /> : <Note>No sessions scheduled yet</Note>}
+      </div>
+      <Figure
+        value={formatCount(sessions.held)}
+        unit={
+          sessions.scheduled > 0
+            ? `marked attended of ${formatCount(sessions.scheduled)} scheduled`
+            : "marked attended"
+        }
+      />
+      <div className="pt-1">
+        <StateBar counts={sessions} />
+      </div>
+    </div>
+  );
 }
 
 export default function HubStats({ stats }: { stats: HubStatsData }) {
   const { sessions, ratings } = stats;
   const missingAttendance = sessions.attendanceExpected - sessions.attendanceRecorded;
-  const hasSessions = sessions.scheduled + sessions.cancelled > 0;
   const allHeld = sessions.scheduled > 0 && sessions.held === sessions.scheduled;
 
   return (
@@ -150,23 +185,7 @@ export default function HubStats({ stats }: { stats: HubStatsData }) {
       aria-label="Hub stats"
       className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border xl:grid-cols-[minmax(0,1fr)_repeat(4,max-content)]"
     >
-      <div className="col-span-2 space-y-1 bg-white px-4 py-3 xl:col-span-1 xl:whitespace-nowrap">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-          <p className="text-sm font-medium text-shamiri-black">Sessions</p>
-          {hasSessions ? <Legend sessions={sessions} /> : <Note>No sessions scheduled yet</Note>}
-        </div>
-        <Figure
-          value={formatCount(sessions.held)}
-          unit={
-            sessions.scheduled > 0
-              ? `marked attended of ${formatCount(sessions.scheduled)} scheduled`
-              : "marked attended"
-          }
-        />
-        <div className="pt-1">
-          <StateBar counts={sessions} />
-        </div>
-      </div>
+      <SessionsStat sessions={sessions} className="col-span-2 xl:col-span-1" />
       <StatCell label="Fellow attendance">
         {sessions.attendanceExpected > 0 ? (
           <>

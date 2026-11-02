@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { type AnyColumn, and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { cache } from "react";
 
 import { currentAdminUser } from "#/app/auth";
@@ -6,6 +6,7 @@ import { db } from "#/db/client";
 import {
   fellow,
   fellowAttendance,
+  hub,
   hubCoordinator,
   interventionGroup,
   interventionSession,
@@ -23,27 +24,68 @@ import { getActiveProjectId } from "#/lib/active-project-id";
 const isActive = (alias: string) =>
   `${alias}.archived_at is null and ${alias}.dropped_out is not true`;
 
-export async function fetchAdminHubs(implementerId: string, projectId: string) {
-  const hubs = await db.query.hub.findMany({
-    where: (h, { and, eq }) => and(eq(h.implementerId, implementerId), eq(h.projectId, projectId)),
-    with: {
-      implementer: { columns: { implementerName: true } },
-      coordinators: { columns: { coordinatorName: true, cellNumber: true, createdAt: true } },
-    },
-    extras: (h, { sql }) => ({
-      fellowsCount:
-        sql<number>`(select count(*)::int from fellows f where f.hub_id = ${h.id} and ${sql.raw(isActive("f"))})`.as(
-          "fellows_count",
-        ),
-      supervisorsCount:
-        sql<number>`(select count(*)::int from supervisors s where s.hub_id = ${h.id} and ${sql.raw(isActive("s"))})`.as(
-          "supervisors_count",
-        ),
-    }),
-    orderBy: (h, { asc }) => [asc(h.hubName), asc(h.id)],
-  });
+const activeCountsOf = (hubId: AnyColumn) => ({
+  schoolsCount: countOf(school.hubId, hubId, sql.raw(isActive(`"schools"`))).as("schools_count"),
+  supervisorsCount: countOf(supervisor.hubId, hubId, sql.raw(isActive(`"supervisors"`))).as(
+    "supervisors_count",
+  ),
+  fellowsCount: countOf(fellow.hubId, hubId, sql.raw(isActive(`"fellows"`))).as("fellows_count"),
+  studentsCount:
+    sql<number>`(select count(*)::int from students st join schools sc on sc.id = st.school_id where sc.hub_id = ${hubId} and ${sql.raw(isActive("st"))})`.as(
+      "students_count",
+    ),
+});
 
-  return hubs;
+const notHeld = sql`not ${interventionSession.occurred} and ${interventionSession.status} is distinct from 'Cancelled'`;
+const sessionStateCounts = {
+  held: sql<number>`count(*) filter (where ${interventionSession.occurred})::int`,
+  unmarked: sql<number>`count(*) filter (where ${notHeld} and ${interventionSession.sessionDate} <= now())::int`,
+  upcoming: sql<number>`count(*) filter (where ${notHeld} and ${interventionSession.sessionDate} > now())::int`,
+  cancelled: sql<number>`count(*) filter (where not ${interventionSession.occurred} and ${interventionSession.status} = 'Cancelled')::int`,
+};
+type SessionStateCounts = { held: number; unmarked: number; upcoming: number; cancelled: number };
+export const withScheduled = (counts: SessionStateCounts) => ({
+  ...counts,
+  scheduled: counts.held + counts.unmarked + counts.upcoming,
+});
+
+export async function fetchAdminHubs(implementerId: string, projectId: string) {
+  const [hubs, sessionsByHub] = await Promise.all([
+    db.query.hub.findMany({
+      where: (h, { and, eq }) =>
+        and(eq(h.implementerId, implementerId), eq(h.projectId, projectId)),
+      columns: { id: true, hubName: true },
+      with: {
+        coordinators: {
+          columns: { coordinatorName: true },
+          where: (c, { isNull }) => isNull(c.archivedAt),
+          orderBy: (c, { asc }) => [asc(c.coordinatorName), asc(c.id)],
+        },
+      },
+      extras: (h) => activeCountsOf(h.id),
+      orderBy: (h, { asc }) => [asc(h.hubName), asc(h.id)],
+    }),
+    db
+      .select({ hubId: interventionSession.hubId, ...sessionStateCounts })
+      .from(interventionSession)
+      .innerJoin(hub, eq(hub.id, interventionSession.hubId))
+      .where(
+        and(
+          eq(hub.implementerId, implementerId),
+          eq(hub.projectId, projectId),
+          isNull(interventionSession.archivedAt),
+        ),
+      )
+      .groupBy(interventionSession.hubId),
+  ]);
+
+  const sessionsOfHub = new Map(sessionsByHub.map(({ hubId, ...counts }) => [hubId, counts]));
+  return hubs.map((h) => ({
+    ...h,
+    sessions: withScheduled(
+      sessionsOfHub.get(h.id) ?? { held: 0, unmarked: 0, upcoming: 0, cancelled: 0 },
+    ),
+  }));
 }
 
 export type AdminHub = Awaited<ReturnType<typeof fetchAdminHubs>>[number];
@@ -73,10 +115,7 @@ export const fetchAdminHub = cache(async (hubId: string) => {
     columns: { id: true, hubName: true },
     with: { project: { columns: { name: true } } },
     extras: (h, { sql }) => ({
-      studentsCount:
-        sql<number>`(select count(*)::int from students st join schools sc on sc.id = st.school_id where sc.hub_id = ${h.id} and ${sql.raw(isActive("st"))})`.as(
-          "students_count",
-        ),
+      ...activeCountsOf(h.id),
       sessionsCount: countOf(
         interventionSession.hubId,
         h.id,
@@ -84,11 +123,6 @@ export const fetchAdminHub = cache(async (hubId: string) => {
           `("intervention_sessions"."occurred" or "intervention_sessions"."status" is distinct from 'Cancelled') and "intervention_sessions"."archived_at" is null`,
         ),
       ).as("sessions_count"),
-      schoolsCount: countOf(school.hubId, h.id, sql.raw(isActive(`"schools"`))).as("schools_count"),
-      supervisorsCount: countOf(supervisor.hubId, h.id, sql.raw(isActive(`"supervisors"`))).as(
-        "supervisors_count",
-      ),
-      fellowsCount: countOf(fellow.hubId, h.id, sql.raw(isActive(`"fellows"`))).as("fellows_count"),
       hubManagersCount: countOf(
         hubCoordinator.assignedHubId,
         h.id,
@@ -145,17 +179,13 @@ export async function fetchHubStats(hubId: string) {
       and(inArray(interventionGroup.schoolId, hubSchoolIds), isNull(interventionGroup.archivedAt)),
     );
   const groupsAtSessionSchool = sql`select 1 from ${interventionGroup} where ${interventionGroup.schoolId} = ${interventionSession.schoolId} and ${interventionGroup.archivedAt} is null`;
-  const notHeld = sql`not ${interventionSession.occurred} and ${interventionSession.status} is distinct from 'Cancelled'`;
   const leaderAttendanceMarked = sql`select 1 from ${fellowAttendance} where ${fellowAttendance.sessionId} = ${interventionSession.id} and ${fellowAttendance.fellowId} = ${interventionGroup.leaderId} and ${fellowAttendance.attended} is not null`;
 
   const [[sessions], [ratings], groups, studentsInGroups, droppedOutStudents, droppedOutFellows] =
     await Promise.all([
       db
         .select({
-          held: sql<number>`count(*) filter (where ${interventionSession.occurred})::int`,
-          unmarked: sql<number>`count(*) filter (where ${notHeld} and ${interventionSession.sessionDate} <= now())::int`,
-          upcoming: sql<number>`count(*) filter (where ${notHeld} and ${interventionSession.sessionDate} > now())::int`,
-          cancelled: sql<number>`count(*) filter (where not ${interventionSession.occurred} and ${interventionSession.status} = 'Cancelled')::int`,
+          ...sessionStateCounts,
           attendanceExpected: sql<number>`count(*) filter (where ${interventionSession.occurred} and exists (${groupsAtSessionSchool}))::int`,
           attendanceRecorded: sql<number>`count(*) filter (where ${interventionSession.occurred} and exists (${groupsAtSessionSchool}) and not exists (${groupsAtSessionSchool} and not exists (${leaderAttendanceMarked})))::int`,
         })
@@ -195,7 +225,7 @@ export async function fetchHubStats(hubId: string) {
   }
 
   return {
-    sessions: { ...sessions, scheduled: sessions.held + sessions.unmarked + sessions.upcoming },
+    sessions: { ...sessions, ...withScheduled(sessions) },
     ratings,
     groups,
     studentsInGroups,
