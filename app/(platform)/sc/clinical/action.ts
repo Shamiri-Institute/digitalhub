@@ -19,7 +19,6 @@ import {
   clinicalCaseReopening,
   clinicalCaseTermination,
   clinicalCaseTransferTrail,
-  clinicalExpertCaseNotes,
   clinicalFollowUpTreatmentPlan,
   clinicalFollowUpTreatmentPlanAuditTrail,
   clinicalScreeningInfo,
@@ -267,26 +266,6 @@ export async function getClinicalCasesStats() {
     followUpCasesPercentage,
     completedCasesPercentage,
   };
-}
-
-export async function supSubmitConsultClinicalexpert(data: {
-  caseId: string;
-  name: string;
-  comment: string;
-}) {
-  try {
-    await requireSupervisorCaseAccess(data.caseId);
-    await db.insert(clinicalExpertCaseNotes).values({
-      caseId: data.caseId,
-      comment: data.comment,
-      name: data.name,
-    });
-    refresh();
-    return { success: true };
-  } catch (error) {
-    console.error(error);
-    return { error: "Something went wrong" };
-  }
 }
 
 export async function updateClinicalSessionAttendance(

@@ -7,7 +7,6 @@ import {
   clinicalCaseNotes,
   clinicalCaseTermination,
   clinicalCaseTransferTrail,
-  clinicalExpertCaseNotes,
   clinicalFollowUpTreatmentPlan,
   clinicalFollowUpTreatmentPlanAuditTrail,
   clinicalLead,
@@ -139,14 +138,6 @@ export const clinicalCaseTransferTrailRelations = relations(
   }),
 );
 
-export const clinicalExpertCaseNotesRelations = relations(clinicalExpertCaseNotes, ({ one }) => ({
-  case: one(clinicalScreeningInfo, {
-    fields: [clinicalExpertCaseNotes.caseId],
-    references: [clinicalScreeningInfo.id],
-    relationName: "ClinicalExpertCaseNotes_case",
-  }),
-}));
-
 export const clinicalFollowUpTreatmentPlanRelations = relations(
   clinicalFollowUpTreatmentPlan,
   ({ one }) => ({
@@ -222,9 +213,6 @@ export const clinicalScreeningInfoRelations = relations(clinicalScreeningInfo, (
   }),
   caseTransferTrail: many(clinicalCaseTransferTrail, {
     relationName: "ClinicalCaseTransferTrail_case",
-  }),
-  consultingClinicalExpert: many(clinicalExpertCaseNotes, {
-    relationName: "ClinicalExpertCaseNotes_case",
   }),
   sessions: many(clinicalSessionAttendance, { relationName: "ClinicalSessionAttendance_case" }),
   followUptreatmentPlan: one(clinicalFollowUpTreatmentPlan),
