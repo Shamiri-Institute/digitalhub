@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 
+import { currentAdminUser } from "#/app/auth";
 import HubManagersTable from "../../components/hub-managers-table";
 import { fetchAdminHub, fetchHubManagers } from "../../queries";
 
 export default async function HubManagersPage({ params }: { params: Promise<{ hubId: string }> }) {
   const { hubId } = await params;
-  const hub = await fetchAdminHub(hubId);
+  const [hub, admin] = await Promise.all([fetchAdminHub(hubId), currentAdminUser()]);
   if (!hub) {
     notFound();
   }
@@ -14,7 +15,9 @@ export default async function HubManagersPage({ params }: { params: Promise<{ hu
   return (
     <HubManagersTable
       managers={managers}
-      description="Each one signs in to the hub dashboard with the same access. Archiving removes only their hub access; any other role they hold keeps working."
+      hubId={hub.id}
+      hubName={hub.hubName}
+      canManage={admin?.profile.isSuperAdmin ?? false}
     />
   );
 }

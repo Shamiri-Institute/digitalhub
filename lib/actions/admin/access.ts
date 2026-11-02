@@ -5,12 +5,14 @@ import { refresh } from "next/cache";
 import type { z } from "zod";
 
 import { db, isUniqueViolation } from "#/db/client";
-import { adminUser, implementerMember, user } from "#/db/schema";
+import { ImplementerRole } from "#/db/enums";
+import { adminUser } from "#/db/schema";
 import { requireSuperAdmin } from "#/lib/auth/admin-access";
 import { ForbiddenRoleError } from "#/lib/auth/require-auth-role";
 import type { ActionResponse } from "#/types/actions.types";
 import { actionFailure, AdminActionError } from "./action-error";
 import { CreateAdminSchema, UpdateAdminAccessSchema } from "./access-schemas";
+import { addImplementerMember } from "./members";
 
 export async function createAdmin(
   data: z.infer<typeof CreateAdminSchema>,
@@ -29,15 +31,6 @@ export async function createAdmin(
         throw new AdminActionError("An admin with this email already exists");
       }
 
-      const existingUser = await tx.query.user.findFirst({
-        where: (u, { sql }) => sql`lower(${u.email}) = ${parsed.email}`,
-        columns: { id: true, archivedAt: true },
-        with: { memberships: { columns: { id: true }, limit: 1 } },
-      });
-      if (existingUser?.archivedAt) {
-        throw new AdminActionError("This user has been archived");
-      }
-
       const [createdAdmin] = await tx
         .insert(adminUser)
         .values({
@@ -52,27 +45,12 @@ export async function createAdmin(
         throw new Error("Could not create the new admin user");
       }
 
-      let userId = existingUser?.id;
-      if (!userId) {
-        const [createdUser] = await tx
-          .insert(user)
-          .values({ email: parsed.email, name: parsed.adminName })
-          .returning({ id: user.id });
-        if (!createdUser) {
-          throw new Error("Could not create the admin's user");
-        }
-        userId = createdUser.id;
-      }
-
-      // The most recently updated membership is the active one, so a person who already belongs
-      // to another implementer keeps it active: the new membership gets no updatedAt.
-      const hasOtherMembership = (existingUser?.memberships.length ?? 0) > 0;
-      await tx.insert(implementerMember).values({
+      await addImplementerMember(tx, {
         implementerId,
-        userId,
-        role: "ADMIN",
+        email: parsed.email,
+        name: parsed.adminName,
+        role: ImplementerRole.ADMIN,
         identifier: createdAdmin.id,
-        ...(hasOtherMembership ? { updatedAt: null } : {}),
       });
     });
 
