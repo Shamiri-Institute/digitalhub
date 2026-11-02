@@ -7,15 +7,16 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { and, asc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, lt, or, sql } from "drizzle-orm";
 import { after } from "next/server";
 
 import { db, isIntegrityViolation, type Transaction } from "#/db/client";
-import { SurveyPrintStatus } from "#/db/enums";
+import { SurveyPrintStatus, SurveyQuestionnaireStatus } from "#/db/enums";
 import { surveyPrintFile } from "#/db/schema";
 import type { PrintRunViewer } from "#/lib/auth/survey-access";
 import { objectId } from "#/lib/crypto";
 import { getPresignedUrl, putObject } from "#/lib/s3/s3.service";
+import { requireBucket } from "#/lib/s3/utils/require-bucket";
 import type { Layout } from "#/lib/survey/layout";
 import { PRINT_FONT_FILES, type PrintFonts } from "#/lib/survey/print-fonts";
 import { type PrintedCopy, renderCopiesPdf } from "#/lib/survey/print-pdf";
@@ -35,7 +36,7 @@ const FILE_RESERVE_MS = 150_000;
 const MAX_ATTEMPTS = 3;
 /** A failed attempt waits this long times its number, so a short outage can't use up every try. */
 const RETRY_DELAY_SECONDS = 60;
-/** Serialises claims, so the cap on live leases holds when workers claim at the same moment. */
+/** The advisory lock claims take turns on. */
 const CLAIM_LOCK = 2389;
 /** Files rendering at once across all workers, each holding up to about 850 MB while it renders. */
 const MAX_LIVE_LEASES = 6;
@@ -84,6 +85,9 @@ export function kickPrintQueue() {
 }
 
 async function drain(printRunId: string | undefined, deadline: number): Promise<DrainResult> {
+  // Throws while the bucket isn't configured, before any file's copies are issued and rendered for
+  // nothing; the cron's monitor reports it.
+  requireBucket("survey-print-files");
   const result: DrainResult = { ready: 0, failed: 0, retrying: 0 };
   await failAbandonedFiles();
   /* oxlint-disable eslint/no-await-in-loop -- a worker renders one file at a time */
@@ -124,49 +128,65 @@ async function failAbandonedFiles() {
     );
 }
 
-/** The next file to render, or one whose worker's lease ran out, as this worker's for a while. */
+/**
+ * The next file to render, or one whose worker's lease ran out, as this worker's for a while. Runs
+ * take turns: the next file is from the run with the fewest files started, so a small run made
+ * after a large one is printed within a file or two, not after all of the large one's.
+ */
 async function claim(printRunId: string | undefined): Promise<Lease | null> {
-  const claimable = db
-    .select({ id: surveyPrintFile.id })
-    .from(surveyPrintFile)
-    .where(
-      and(
-        or(
-          and(
-            eq(surveyPrintFile.status, SurveyPrintStatus.QUEUED),
-            or(isNull(surveyPrintFile.retryAfter), lt(surveyPrintFile.retryAfter, sql`now()`)),
-          ),
-          and(
-            eq(surveyPrintFile.status, SurveyPrintStatus.RENDERING),
-            lt(surveyPrintFile.leasedUntil, sql`now()`),
-          ),
-        ),
-        lt(surveyPrintFile.attempts, MAX_ATTEMPTS),
-        printRunId === undefined ? undefined : eq(surveyPrintFile.printRunId, printRunId),
-      ),
-    )
-    // A file being retried waits behind files not yet tried, so one that keeps failing can't hold
-    // up the rest of its run.
-    .orderBy(
-      asc(surveyPrintFile.attempts),
-      asc(surveyPrintFile.createdAt),
-      asc(surveyPrintFile.firstSerialNumber),
-    )
-    .limit(1)
-    .for("update", { skipLocked: true });
-  const liveLeases = db
-    .select({ count: sql`count(*)` })
-    .from(surveyPrintFile)
-    .where(
+  const leaseToken = objectId("printlease");
+  return db.transaction(async (tx) => {
+    // Claims take turns, so the cap on files rendering at once holds when workers claim together.
+    await tx.execute(sql`select pg_advisory_xact_lock(${CLAIM_LOCK})`);
+    const liveLeases = await tx.$count(
+      surveyPrintFile,
       and(
         eq(surveyPrintFile.status, SurveyPrintStatus.RENDERING),
         sql`${surveyPrintFile.leasedUntil} > now()`,
       ),
     );
-  const leaseToken = objectId("printlease");
-  const [claimed] = await db.transaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(${CLAIM_LOCK})`);
-    return tx
+    if (liveLeases >= MAX_LIVE_LEASES) {
+      return null;
+    }
+    const startedFilesOfRun = sql`(
+      select count(*) from ${surveyPrintFile} as started
+      where started.print_run_id = ${surveyPrintFile.printRunId} and started.status <> 'QUEUED'
+    )`;
+    // Locked first, then updated by id: inside `IN (subquery)` Postgres may run the subquery more
+    // than once and claim a second file.
+    const [claimable] = await tx
+      .select({ id: surveyPrintFile.id })
+      .from(surveyPrintFile)
+      .where(
+        and(
+          or(
+            and(
+              eq(surveyPrintFile.status, SurveyPrintStatus.QUEUED),
+              or(isNull(surveyPrintFile.retryAfter), lt(surveyPrintFile.retryAfter, sql`now()`)),
+            ),
+            and(
+              eq(surveyPrintFile.status, SurveyPrintStatus.RENDERING),
+              lt(surveyPrintFile.leasedUntil, sql`now()`),
+            ),
+          ),
+          lt(surveyPrintFile.attempts, MAX_ATTEMPTS),
+          printRunId === undefined ? undefined : eq(surveyPrintFile.printRunId, printRunId),
+        ),
+      )
+      // A file being retried waits behind files not yet tried, so one that keeps failing can't
+      // hold up the rest.
+      .orderBy(
+        asc(surveyPrintFile.attempts),
+        asc(startedFilesOfRun),
+        asc(surveyPrintFile.createdAt),
+        asc(surveyPrintFile.firstSerialNumber),
+      )
+      .limit(1)
+      .for("update", { skipLocked: true });
+    if (!claimable) {
+      return null;
+    }
+    const [claimed] = await tx
       .update(surveyPrintFile)
       .set({
         status: SurveyPrintStatus.RENDERING,
@@ -175,10 +195,10 @@ async function claim(printRunId: string | undefined): Promise<Lease | null> {
         attempts: sql`${surveyPrintFile.attempts} + 1`,
         retryAfter: null,
       })
-      .where(and(inArray(surveyPrintFile.id, claimable), sql`(${liveLeases}) < ${MAX_LIVE_LEASES}`))
+      .where(eq(surveyPrintFile.id, claimable.id))
       .returning({ fileId: surveyPrintFile.id, attempts: surveyPrintFile.attempts });
+    return claimed ? { ...claimed, leaseToken } : null;
   });
-  return claimed ? { ...claimed, leaseToken } : null;
 }
 
 /** Issues, renders and uploads one claimed file, and records how it went. */
@@ -261,7 +281,7 @@ async function loadPrintFile(fileId: string) {
         eq(q.printRunId, file.printRunId),
         between(q.serialNumber, file.firstSerialNumber, lastSerialNumber),
       ),
-    columns: { serial: true },
+    columns: { serial: true, status: true },
     with: {
       student: { columns: { studentName: true, admissionNumber: true } },
       pages: { columns: { id: true, code: true }, orderBy: (p, { asc }) => asc(p.pageNumber) },
@@ -271,7 +291,9 @@ async function loadPrintFile(fileId: string) {
   if (questionnaires.length !== file.copyCount) {
     throw new Error(`Print file ${fileId} has ${questionnaires.length} of its copies`);
   }
-  const copies = questionnaires.map((questionnaire): PrintedCopy<Layout> => ({
+  // A copy voided before its file printed is left out, so it is never handed out.
+  const printed = questionnaires.filter((q) => q.status !== SurveyQuestionnaireStatus.VOID);
+  const copies = printed.map((questionnaire): PrintedCopy<Layout> => ({
     // Every header value; the layout prints those its prefill shows.
     values: {
       serial: questionnaire.serial,

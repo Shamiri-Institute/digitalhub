@@ -212,7 +212,6 @@ function Ink({ drawable }: { drawable: Drawable }) {
   }
 }
 
-/** A QR code as the PDF prints it. */
 function Qr({ text, box }: { text: string; box: Rect }) {
   return (
     <g className="fill-shamiri-black">

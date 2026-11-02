@@ -242,6 +242,11 @@ export const SurveyPrintStatus = {
 } as const;
 export type SurveyPrintStatus = (typeof SurveyPrintStatus)[keyof typeof SurveyPrintStatus];
 
+/** A run or file the job has yet to finish, whose page keeps refreshing until it is. */
+export function isPrintUnfinished(status: SurveyPrintStatus) {
+  return status === SurveyPrintStatus.QUEUED || status === SurveyPrintStatus.RENDERING;
+}
+
 export const SURVEY_PRINT_STATUS_LABELS: Record<SurveyPrintStatus, string> = {
   QUEUED: "Queued",
   RENDERING: "Rendering",

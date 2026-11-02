@@ -1,6 +1,14 @@
 -- Print runs become plans: a run reserves its serials and plans one file per school part, and
 -- the files issue the copies and render them. A run's status is read from its files.
 SET LOCAL lock_timeout = '5s';--> statement-breakpoint
+-- Runs made before this have copies but no files, so they would never print; there are none in
+-- any shared database. Stop rather than strand one: plan its files first, or reset the database.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM survey_print_runs) THEN
+    RAISE EXCEPTION 'survey_print_runs has runs made before print files: plan their files, or run npm run db:reset';
+  END IF;
+END $$;--> statement-breakpoint
 CREATE TYPE "public"."survey_print_status" AS ENUM('QUEUED', 'RENDERING', 'READY', 'FAILED');--> statement-breakpoint
 CREATE TABLE "survey_print_files" (
 	"id" text PRIMARY KEY NOT NULL,

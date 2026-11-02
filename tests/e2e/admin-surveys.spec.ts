@@ -431,6 +431,8 @@ test("a Research team admin prints copies of a published version for a hub they 
   context,
   undo,
 }) => {
+  // Waits for the background print job, which CI's 30 s test timeout leaves too little time.
+  test.slow();
   const { userId, scope } = await signInAsResearchAdmin(context);
   const printedHub = await lastHubOf(scope);
   const published = await createPublishedSurvey(scope, userId);

@@ -7,12 +7,13 @@ import { useEffect, useState } from "react";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { SurveyPrintStatus } from "#/db/enums";
+import { isPrintUnfinished, SurveyPrintStatus } from "#/db/enums";
 import { retryPrintRun } from "#/lib/actions/survey/print-runs";
 import type { PrintRunFile } from "#/lib/survey/print-run-queries";
 import { PrintStatusBadge } from "./print-runs-table";
 
-const REFRESH_MS = 3_000;
+// Production renders from a cron each minute, so a file rarely changes faster than this.
+const REFRESH_MS = 15_000;
 
 type PrintFileRow = PrintRunFile & { part: string };
 
@@ -92,8 +93,7 @@ export function PrintFilesTable({
   runStatus: SurveyPrintStatus;
 }) {
   const router = useRouter();
-  const unfinished =
-    runStatus === SurveyPrintStatus.QUEUED || runStatus === SurveyPrintStatus.RENDERING;
+  const unfinished = isPrintUnfinished(runStatus);
   // effect: a timer is an external subscription; it stops once every file is finished.
   useEffect(() => {
     if (!unfinished) {

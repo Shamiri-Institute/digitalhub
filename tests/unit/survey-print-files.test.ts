@@ -21,7 +21,7 @@ import { getS3Client } from "#/lib/s3/s3.service";
 import { getBucket } from "#/lib/s3/s3.config";
 import { drainPrintQueue, printFileKey, retryFailedPrintFiles } from "#/lib/survey/print-files";
 import { pageIdFromQrText } from "#/lib/survey/print-qr";
-import { recordPrintRun } from "#/lib/survey/print-run";
+import { issuePrintFile, recordPrintRun, voidCopy } from "#/lib/survey/print-run";
 import { decodedQrCodes } from "#/tests/print-pdf";
 import { createPublishedSurvey, formWithPages, removeSurvey } from "#/tests/survey-fixtures";
 
@@ -137,6 +137,37 @@ describe("the print job", () => {
     expect(
       (await decodedQrCodes(pdf, "bottom")).map((text) => text && pageIdFromQrText(text)),
     ).toEqual(ids);
+  }, 120_000);
+
+  it("leaves out a copy voided before its file printed", async () => {
+    const recorded = await recordRun(3);
+    const file = await fileOf(recorded.printRunId);
+    await db.transaction((tx) => issuePrintFile(tx, file.id));
+    const [, voided] = await db
+      .select({ id: surveyQuestionnaire.id })
+      .from(surveyQuestionnaire)
+      .where(eq(surveyQuestionnaire.printRunId, recorded.printRunId))
+      .orderBy(asc(surveyQuestionnaire.serialNumber));
+    if (!voided) throw new Error("No second copy");
+    const coordinator = { kind: "hub" as const, ...scope };
+    expect(
+      await db.transaction((tx) =>
+        voidCopy(tx, coordinator, { questionnaireId: voided.id, reason: "Torn in transit" }),
+      ),
+    ).toBe("voided");
+
+    expect(await drainPrintQueue({ printRunId: recorded.printRunId })).toMatchObject({ ready: 1 });
+    const printedIds = (await decodedQrCodes(await storedPdf(file), "top")).map(
+      (text) => text && pageIdFromQrText(text),
+    );
+    const voidedPageIds = await db
+      .select({ id: surveyQuestionnairePage.id })
+      .from(surveyQuestionnairePage)
+      .where(eq(surveyQuestionnairePage.questionnaireId, voided.id));
+    expect(printedIds).toHaveLength(4);
+    for (const { id } of voidedPageIds) {
+      expect(printedIds).not.toContain(id);
+    }
   }, 120_000);
 
   it("leaves a file queued again after a failed attempt until its retry time", async () => {

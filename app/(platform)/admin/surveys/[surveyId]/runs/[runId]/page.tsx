@@ -6,7 +6,7 @@ import { copiesPageOf, PrintRunDetailView } from "#/components/common/survey/pri
 import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import PageFooter from "#/components/ui/page-footer";
 import { surveyScope } from "#/lib/auth/admin-access";
-import { SurveyPrintStatus } from "#/db/enums";
+import { isPrintUnfinished } from "#/db/enums";
 import { kickPrintQueue } from "#/lib/survey/print-files";
 import { fetchPrintRun, fetchPrintRunCopies } from "#/lib/survey/print-run-queries";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
@@ -28,7 +28,7 @@ export default async function AdminPrintRunPage(props: {
     notFound();
   }
   // Where no cron runs (previews, local), viewing an unfinished run keeps its files moving.
-  if (run.status === SurveyPrintStatus.QUEUED || run.status === SurveyPrintStatus.RENDERING) {
+  if (isPrintUnfinished(run.status)) {
     kickPrintQueue();
   }
   const copies = await fetchPrintRunCopies(run, requestedPage);

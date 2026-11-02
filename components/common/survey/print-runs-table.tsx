@@ -16,7 +16,6 @@ const PRINT_STATUS_VARIANT: Record<SurveyPrintStatus, BadgeProps["variant"]> = {
   FAILED: "destructive",
 };
 
-/** A print run's or print file's status. */
 export function PrintStatusBadge({ status }: { status: SurveyPrintStatus }) {
   return <Badge variant={PRINT_STATUS_VARIANT[status]}>{SURVEY_PRINT_STATUS_LABELS[status]}</Badge>;
 }

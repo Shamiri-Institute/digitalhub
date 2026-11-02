@@ -31,6 +31,8 @@ test("a hub coordinator prints 12 numbered copies for one school, downloads them
   context,
   undo,
 }) => {
+  // Waits for the background print job, which CI's 30 s test timeout leaves too little time.
+  test.slow();
   const coordinator = await signInAs(context, "HUB_COORDINATOR");
   const profile = await db.query.hubCoordinator.findFirst({
     where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
@@ -310,6 +312,8 @@ test("changing the copies after a lost reply makes a new run, not the lost one",
   context,
   undo,
 }) => {
+  // Waits for the background print job, which CI's 30 s test timeout leaves too little time.
+  test.slow();
   const { code, schoolName } = await printSetup(context, undo);
 
   await page.goto(getUrl("/hc/surveys"));
@@ -335,7 +339,10 @@ test("changing the copies after a lost reply makes a new run, not the lost one",
   await expect(
     page.getByRole("definition").filter({ hasText: `${code}-000011 to ${code}-000030` }),
   ).toBeVisible();
-  await expect(page.getByRole("cell", { name: new RegExp(`^${code}-\\d{6}$`) })).toHaveCount(20);
+  // The print job issues the copies in the background, after the run is created.
+  await expect(page.getByRole("cell", { name: new RegExp(`^${code}-\\d{6}$`) })).toHaveCount(20, {
+    timeout: 60_000,
+  });
 });
 
 test("asking again for a request whose reply was lost opens its run, not a second one", async ({

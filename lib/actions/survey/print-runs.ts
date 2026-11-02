@@ -51,7 +51,6 @@ export async function createPrintRun(
   }
 }
 
-/** Queues a run's failed files to render again. */
 export async function retryPrintRun(
   data: z.infer<typeof RetryPrintRunSchema>,
 ): Promise<ActionResponse> {
