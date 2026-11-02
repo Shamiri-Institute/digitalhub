@@ -40,6 +40,8 @@ export type DrainResult = { ready: number; failed: number; retrying: number };
 type Lease = { fileId: string; leaseToken: string; attempts: number };
 
 let draining: Promise<DrainResult> | null = null;
+/** Set by a drain that joins the running one, so a file queued as it finds none is not missed. */
+let kickedWhileDraining = false;
 
 /**
  * Renders unfinished files until none can be claimed or the budget runs out, then returns how many
@@ -48,7 +50,11 @@ let draining: Promise<DrainResult> | null = null;
  * restricts it to one run's files, for tests.
  */
 export function drainPrintQueue({ printRunId }: { printRunId?: string } = {}) {
-  draining ??= drain(printRunId, Date.now() + DRAIN_BUDGET_MS).finally(() => {
+  if (draining) {
+    kickedWhileDraining = true;
+    return draining;
+  }
+  draining = drain(printRunId, Date.now() + DRAIN_BUDGET_MS).finally(() => {
     draining = null;
   });
   return draining;
@@ -70,8 +76,12 @@ async function drain(printRunId: string | undefined, deadline: number): Promise<
   await failAbandonedFiles();
   /* oxlint-disable eslint/no-await-in-loop -- a worker renders one file at a time */
   while (deadline - Date.now() > FILE_RESERVE_MS) {
+    kickedWhileDraining = false;
     const lease = await claim(printRunId);
     if (!lease) {
+      if (kickedWhileDraining) {
+        continue;
+      }
       break;
     }
     const outcome = await produce(lease);

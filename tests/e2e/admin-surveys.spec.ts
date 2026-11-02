@@ -454,13 +454,13 @@ test("a Research team admin prints copies of a published version for a hub they 
 
   await expect(page).toHaveURL(new RegExp(`/admin/surveys/${published.id}/runs/surveyprintrun_`));
   await page.reload();
+  // The print job issues the copies in the background, after the run is created.
   await expect(
     page.getByRole("cell", { name: new RegExp(`^${published.code}-\\d{6}$`) }),
-  ).toHaveText([
-    `${published.code}-000001`,
-    `${published.code}-000002`,
-    `${published.code}-000003`,
-  ]);
+  ).toHaveText(
+    [`${published.code}-000001`, `${published.code}-000002`, `${published.code}-000003`],
+    { timeout: 60_000 },
+  );
 
   await page.getByRole("link", { name: published.title }).click();
   const runRow = page.getByRole("row").filter({ hasText: printedHub.hubName });
