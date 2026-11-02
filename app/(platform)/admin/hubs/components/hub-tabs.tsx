@@ -5,6 +5,7 @@ import {
   CalendarDays,
   GraduationCap,
   School,
+  Settings,
   UserCheck,
   Users,
 } from "lucide-react";
@@ -38,6 +39,7 @@ export default function HubTabs({ hub }: { hub: AdminHubDetail }) {
       icon: BriefcaseBusiness,
       count: hub.hubManagersCount,
     },
+    { segment: "settings", label: "Hub settings", icon: Settings, count: undefined },
   ];
 
   return (
@@ -56,16 +58,18 @@ export default function HubTabs({ hub }: { hub: AdminHubDetail }) {
             >
               <Icon aria-hidden className="hidden h-4 w-4 xl:block" />
               <span className="text-nowrap">{label}</span>
-              <span
-                className={cn(
-                  "rounded-md px-1.5 text-sm font-semibold tabular-nums",
-                  active
-                    ? "bg-blue-bg text-shamiri-new-blue"
-                    : "bg-shamiri-light-grey text-shamiri-text-dark-grey",
-                )}
-              >
-                {count.toLocaleString("en-US")}
-              </span>
+              {count !== undefined && (
+                <span
+                  className={cn(
+                    "rounded-md px-1.5 text-sm font-semibold tabular-nums",
+                    active
+                      ? "bg-blue-bg text-shamiri-new-blue"
+                      : "bg-shamiri-light-grey text-shamiri-text-dark-grey",
+                  )}
+                >
+                  {count.toLocaleString("en-US")}
+                </span>
+              )}
             </Link>
           );
         })}

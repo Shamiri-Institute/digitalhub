@@ -167,6 +167,24 @@ export async function fetchHubManagers(hubId: string) {
 
 export type HubManager = Awaited<ReturnType<typeof fetchHubManagers>>[number];
 
+/**
+ * A hub's session types, each with how many sessions use it. Codes sort by length first, so s10
+ * comes after s9 and the last row of a group is its highest code. Callers pass only a hub
+ * `fetchAdminHub` returned.
+ */
+export async function fetchHubSessionNames(hubId: string) {
+  return db.query.sessionName.findMany({
+    where: (n, { eq }) => eq(n.hubId, hubId),
+    columns: { id: true, sessionName: true, sessionType: true, sessionLabel: true, amount: true },
+    extras: (n) => ({
+      sessionCount: countOf(interventionSession.sessionId, n.id).as("session_count"),
+    }),
+    orderBy: (n, { asc }) => [asc(sql`length(${n.sessionName})`), asc(n.sessionName), asc(n.id)],
+  });
+}
+
+export type HubSessionName = Awaited<ReturnType<typeof fetchHubSessionNames>>[number];
+
 export type SiblingHub = Awaited<ReturnType<typeof fetchSiblingHubs>>[number];
 
 // Callers render the result only for a hub `fetchAdminHub` returned.
