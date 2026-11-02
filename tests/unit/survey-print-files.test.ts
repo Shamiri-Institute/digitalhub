@@ -139,6 +139,32 @@ describe("the print job", () => {
     ).toEqual(ids);
   }, 120_000);
 
+  it("leaves a file queued again after a failed attempt until its retry time", async () => {
+    const recorded = await recordRun(2);
+    const file = await fileOf(recorded.printRunId);
+    const retryAt = (offsetMs: number) =>
+      db
+        .update(surveyPrintFile)
+        .set({ attempts: 1, retryAfter: new Date(Date.now() + offsetMs) })
+        .where(eq(surveyPrintFile.id, file.id));
+
+    await retryAt(60_000);
+    expect(await drainPrintQueue({ printRunId: recorded.printRunId })).toEqual({
+      ready: 0,
+      failed: 0,
+      retrying: 0,
+    });
+    expect(await fileOf(recorded.printRunId)).toMatchObject({ status: "QUEUED", attempts: 1 });
+
+    await retryAt(-1_000);
+    expect(await drainPrintQueue({ printRunId: recorded.printRunId })).toMatchObject({ ready: 1 });
+    expect(await fileOf(recorded.printRunId)).toMatchObject({
+      status: "READY",
+      attempts: 2,
+      retryAfter: null,
+    });
+  }, 120_000);
+
   it("takes over a file whose worker died, and fails it once no attempts are left", async () => {
     const recorded = await recordRun(2);
     const file = await fileOf(recorded.printRunId);

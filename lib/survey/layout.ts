@@ -384,15 +384,18 @@ function cellInk(cell: Rect): Drawable {
 }
 
 /**
- * A printed page's code, centred under its QR code for matching a page by hand. Placed from the
- * QR box at print time, so layouts published before page codes printed need no change.
+ * A printed page's code under its QR code, for matching a page by hand: centred, or ending at the
+ * QR's right edge when wider than the QR, as the longest survey codes are. Placed from the QR box at
+ * print time, so layouts published before page codes printed need no change.
  */
 export function pageCodeRun(qr: Rect, code: string): TextRun {
   const size = 6;
-  const fitted = fitText(code, { size, weight: 400, maxWidth: qr.w }, 4);
+  const fitted = fitText(code, { size, weight: 400, maxWidth: 2 * qr.w }, 5);
+  const x = fitted.width <= qr.w ? qr.x + (qr.w - fitted.width) / 2 : qr.x + qr.w - fitted.width;
   return {
-    x: roundPt(qr.x + (qr.w - fitted.width) / 2),
-    baseline: roundPt(qr.y + qr.h + 3 + CAP_HEIGHT * size),
+    x: roundPt(x),
+    // Clear of the header rule, 2 pt below the QR, which a code wider than the QR passes under.
+    baseline: roundPt(qr.y + qr.h + 5 + CAP_HEIGHT * size),
     weight: 400,
     ...fitted,
   };

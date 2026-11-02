@@ -5,7 +5,13 @@ import { PDFDict, PDFDocument, PDFName } from "pdf-lib";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { describe, expect, it } from "vitest";
 
-import { headerValueRun, type Layout, layOutForm, sampleCopy } from "#/lib/survey/layout";
+import {
+  headerValueRun,
+  type Layout,
+  layOutForm,
+  sampleCopy,
+  samplePages,
+} from "#/lib/survey/layout";
 import { PRINT_FONT_FILES, type PrintFonts } from "#/lib/survey/print-fonts";
 import { type PrintedCopy, renderCopiesPdf } from "#/lib/survey/print-pdf";
 import { pageIdFromQrText, pageQrText } from "#/lib/survey/print-qr";
@@ -39,7 +45,10 @@ describe("pageQrText", () => {
     const id = "surveyquestionnairepage_01m6dp88hjf688mjhk7xxwjct5";
     expect(pageQrText(id)).toBe("01M6DP88HJF688MJHK7XXWJCT5");
     expect(pageIdFromQrText(pageQrText(id))).toBe(id);
-    expect(pageIdFromQrText("SAMPLE00000000000000000001-P1")).toBeUndefined();
+    const { layout } = layOutForm(PRINT_FORM, "NONE");
+    for (const sample of samplePages(layout)) {
+      expect(pageIdFromQrText(sample.qr)).toBeUndefined();
+    }
   });
 });
 

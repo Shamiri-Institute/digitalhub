@@ -7,7 +7,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { and, asc, eq, inArray, lt, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { after } from "next/server";
 
 import { db, isIntegrityViolation, type Transaction } from "#/db/client";
@@ -33,6 +33,10 @@ const DRAIN_BUDGET_MS = 240_000;
 /** No file is claimed with less of the budget left than a large file may take to render. */
 const FILE_RESERVE_MS = 150_000;
 const MAX_ATTEMPTS = 3;
+/** A failed attempt waits this long times its number, so a short outage can't use up every try. */
+const RETRY_DELAY_SECONDS = 60;
+/** Serialises claims, so the cap on live leases holds when workers claim at the same moment. */
+const CLAIM_LOCK = 2389;
 /** Files rendering at once across all workers, each holding up to about 850 MB while it renders. */
 const MAX_LIVE_LEASES = 6;
 
@@ -61,8 +65,15 @@ export function drainPrintQueue({ printRunId }: { printRunId?: string } = {}) {
   return draining;
 }
 
-/** Drains the queue after the response is sent. Safe to call any number of times. */
+/**
+ * Drains the queue after the response is sent. Safe to call any number of times. In production the
+ * cron route drains every minute, in a function of its own, so pages and actions never render: a
+ * large file would hold their instance's event loop and memory while other people's requests wait.
+ */
 export function kickPrintQueue() {
+  if (process.env.VERCEL_ENV === "production") {
+    return;
+  }
   after(async () => {
     try {
       await drainPrintQueue();
@@ -121,7 +132,10 @@ async function claim(printRunId: string | undefined): Promise<Lease | null> {
     .where(
       and(
         or(
-          eq(surveyPrintFile.status, SurveyPrintStatus.QUEUED),
+          and(
+            eq(surveyPrintFile.status, SurveyPrintStatus.QUEUED),
+            or(isNull(surveyPrintFile.retryAfter), lt(surveyPrintFile.retryAfter, sql`now()`)),
+          ),
           and(
             eq(surveyPrintFile.status, SurveyPrintStatus.RENDERING),
             lt(surveyPrintFile.leasedUntil, sql`now()`),
@@ -150,16 +164,20 @@ async function claim(printRunId: string | undefined): Promise<Lease | null> {
       ),
     );
   const leaseToken = objectId("printlease");
-  const [claimed] = await db
-    .update(surveyPrintFile)
-    .set({
-      status: SurveyPrintStatus.RENDERING,
-      leaseToken,
-      leasedUntil: sql`now() + make_interval(secs => ${LEASE_SECONDS})`,
-      attempts: sql`${surveyPrintFile.attempts} + 1`,
-    })
-    .where(and(inArray(surveyPrintFile.id, claimable), sql`(${liveLeases}) < ${MAX_LIVE_LEASES}`))
-    .returning({ fileId: surveyPrintFile.id, attempts: surveyPrintFile.attempts });
+  const [claimed] = await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${CLAIM_LOCK})`);
+    return tx
+      .update(surveyPrintFile)
+      .set({
+        status: SurveyPrintStatus.RENDERING,
+        leaseToken,
+        leasedUntil: sql`now() + make_interval(secs => ${LEASE_SECONDS})`,
+        attempts: sql`${surveyPrintFile.attempts} + 1`,
+        retryAfter: null,
+      })
+      .where(and(inArray(surveyPrintFile.id, claimable), sql`(${liveLeases}) < ${MAX_LIVE_LEASES}`))
+      .returning({ fileId: surveyPrintFile.id, attempts: surveyPrintFile.attempts });
+  });
   return claimed ? { ...claimed, leaseToken } : null;
 }
 
@@ -182,9 +200,25 @@ async function produce(lease: Lease): Promise<"ready" | "failed" | "retrying" | 
     const failed = isIntegrityViolation(error) || lease.attempts >= MAX_ATTEMPTS;
     return finish(lease, failed ? "failed" : "retrying", {
       status: failed ? SurveyPrintStatus.FAILED : SurveyPrintStatus.QUEUED,
-      error: error instanceof Error ? error.message : String(error),
+      retryAfter: failed
+        ? null
+        : new Date(Date.now() + RETRY_DELAY_SECONDS * lease.attempts * 1000),
+      error: failureReason(error),
     });
   }
+}
+
+/**
+ * Why an attempt failed, for operators reading the row. A query error's message is the whole
+ * statement and its parameters, up to thousands of values, so the reason is taken from its cause.
+ */
+function failureReason(error: unknown) {
+  let reason = error;
+  while (reason instanceof Error && reason.cause instanceof Error) {
+    reason = reason.cause;
+  }
+  const message = reason instanceof Error ? reason.message : String(reason);
+  return message.slice(0, 1_000);
 }
 
 /** Records a file's outcome, if this worker still holds its lease; another worker's wins otherwise. */
@@ -260,7 +294,14 @@ function printFonts() {
     load(PRINT_FONT_FILES[400]),
     load(PRINT_FONT_FILES[600]),
     load(PRINT_FONT_FILES[700]),
-  ]).then(([regular, semibold, bold]) => ({ 400: regular, 600: semibold, 700: bold }));
+  ]).then(
+    ([regular, semibold, bold]) => ({ 400: regular, 600: semibold, 700: bold }),
+    (error: unknown) => {
+      // Not kept, so the next file reads them again instead of failing on this read's error.
+      fonts = null;
+      throw error;
+    },
+  );
   return fonts;
 }
 
@@ -272,7 +313,7 @@ export function printFileKey(file: { id: string; printRunId: string }) {
 export async function retryFailedPrintFiles(tx: Transaction, printRunId: string) {
   const queued = await tx
     .update(surveyPrintFile)
-    .set({ status: SurveyPrintStatus.QUEUED, attempts: 0, error: null })
+    .set({ status: SurveyPrintStatus.QUEUED, attempts: 0, retryAfter: null, error: null })
     .where(
       and(
         eq(surveyPrintFile.printRunId, printRunId),

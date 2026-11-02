@@ -5,7 +5,14 @@ import { and, eq, inArray, type SQL, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { SurveyPrintStatus, SurveyStatus, SurveyVersionStatus } from "#/db/enums";
-import { student, survey, surveyPrintFile, surveyPrintRun, surveyVersion } from "#/db/schema";
+import {
+  student,
+  survey,
+  surveyPrintFile,
+  surveyPrintRun,
+  surveyQuestionnaire,
+  surveyVersion,
+} from "#/db/schema";
 import { countOf } from "#/db/sql";
 import type { PrintRunViewer } from "#/lib/auth/survey-access";
 import { activeSchool, activeStudent, studentPrintOrder } from "#/lib/survey/print-run";
@@ -132,7 +139,8 @@ function fileCountsOf(runId: typeof surveyPrintRun.id) {
 
 /**
  * A run's status, from its files': ready when all are, queued until one starts, failed when the
- * rest are ready but some failed, and rendering in between.
+ * rest are ready but some failed, and rendering in between. A run is made with its files, so one
+ * without any shows as queued, stuck where someone will notice, not as ready with nothing to print.
  */
 export function printRunStatusOf(counts: {
   files: number;
@@ -140,6 +148,9 @@ export function printRunStatusOf(counts: {
   readyFiles: number;
   failedFiles: number;
 }): SurveyPrintStatus {
+  if (counts.files === 0) {
+    return SurveyPrintStatus.QUEUED;
+  }
   if (counts.readyFiles === counts.files) {
     return SurveyPrintStatus.READY;
   }
@@ -234,11 +245,16 @@ export type PrintRunDetail = NonNullable<Awaited<ReturnType<typeof fetchPrintRun
 export type PrintRunFile = PrintRunDetail["files"][number];
 
 /**
- * One page of a run's copies, in serial order, with their page codes. A page past the last shows
- * the last. Takes the run fetchPrintRun returned, which has checked the viewer may see it.
+ * One page of a run's issued copies, in serial order, with their page codes. A page past the last
+ * shows the last. Takes the run fetchPrintRun returned, which has checked the viewer may see it.
  */
 export async function fetchPrintRunCopies(run: PrintRunDetail, requestedPage: number) {
-  const pageCount = Math.max(1, Math.ceil(run.copyCount / COPIES_PER_PAGE));
+  // Copies are issued a file at a time, so a run being printed has fewer than its copyCount.
+  const issuedCopies = await db.$count(
+    surveyQuestionnaire,
+    eq(surveyQuestionnaire.printRunId, run.id),
+  );
+  const pageCount = Math.max(1, Math.ceil(issuedCopies / COPIES_PER_PAGE));
   const page = Math.min(requestedPage, pageCount);
   const copies = await db.query.surveyQuestionnaire.findMany({
     where: (q, { eq }) => eq(q.printRunId, run.id),

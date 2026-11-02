@@ -11560,6 +11560,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "retry_after": {
+          "name": "retry_after",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "issued_at": {
           "name": "issued_at",
           "type": "timestamp with time zone",

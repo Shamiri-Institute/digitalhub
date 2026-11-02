@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import type { SurveyVersionPrefill } from "#/db/enums";
@@ -172,8 +172,24 @@ export async function removeSurvey(match: { code: string } | { id: string }) {
     .innerJoin(surveyVersion, eq(surveyVersion.id, surveyPrintRun.versionId))
     .innerJoin(survey, eq(survey.id, surveyVersion.surveyId))
     .where(surveyMatch);
+  await db.transaction(async (tx) => {
+    // Locks the files before the survey, in the order the print job takes them, so a job still
+    // issuing one of these files is waited for instead of deadlocking with the delete.
+    if (files.length > 0) {
+      await tx
+        .select({ id: surveyPrintFile.id })
+        .from(surveyPrintFile)
+        .where(
+          inArray(
+            surveyPrintFile.id,
+            files.map((file) => file.id),
+          ),
+        )
+        .for("update");
+    }
+    await tx.delete(survey).where(surveyMatch);
+  });
   await Promise.all(
     files.map((file) => deleteObject({ Key: printFileKey(file) }, "survey-print-files")),
   );
-  await db.delete(survey).where(surveyMatch);
 }

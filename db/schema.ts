@@ -2833,11 +2833,13 @@ export const surveyPrintFile = pgTable(
     // Held by the worker rendering the file, until leasedUntil; a later worker may take it over.
     leaseToken: text("lease_token"),
     leasedUntil: timestamp("leased_until", { withTimezone: true, mode: "date" }),
+    // A file queued again after a failed attempt is not claimed before this.
+    retryAfter: timestamp("retry_after", { withTimezone: true, mode: "date" }),
     // When its copies and pages were inserted; they are inserted once.
     issuedAt: timestamp("issued_at", { withTimezone: true, mode: "date" }),
     byteSize: integer("byte_size"),
     renderedAt: timestamp("rendered_at", { withTimezone: true, mode: "date" }),
-    // Why the last attempt failed, as shown on the run page.
+    // Why the last attempt failed, for operators; the run page shows only that it failed.
     error: text(),
   },
   (table) => [

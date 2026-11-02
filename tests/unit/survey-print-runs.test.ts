@@ -424,6 +424,9 @@ describe("print files", () => {
     expect(status(1, 1, 1)).toBe("RENDERING");
     expect(status(0, 2, 1)).toBe("FAILED");
     expect(status(0, 3, 0)).toBe("READY");
+    expect(printRunStatusOf({ files: 0, queuedFiles: 0, readyFiles: 0, failedFiles: 0 })).toBe(
+      "QUEUED",
+    );
   });
 });
 

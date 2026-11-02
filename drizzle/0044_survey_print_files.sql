@@ -16,6 +16,7 @@ CREATE TABLE "survey_print_files" (
 	"attempts" integer DEFAULT 0 NOT NULL,
 	"lease_token" text,
 	"leased_until" timestamp with time zone,
+	"retry_after" timestamp with time zone,
 	"issued_at" timestamp with time zone,
 	"byte_size" integer,
 	"rendered_at" timestamp with time zone,

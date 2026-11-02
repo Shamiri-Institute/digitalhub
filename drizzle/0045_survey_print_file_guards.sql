@@ -105,8 +105,8 @@ FOR EACH STATEMENT EXECUTE FUNCTION survey_print_files_plan_check();--> statemen
 -- that ran out.
 CREATE FUNCTION survey_print_files_guard() RETURNS trigger AS $$
 DECLARE
-  job_columns text[] := ARRAY['status', 'attempts', 'lease_token', 'leased_until', 'issued_at',
-    'byte_size', 'rendered_at', 'error', 'updated_at'];
+  job_columns text[] := ARRAY['status', 'attempts', 'lease_token', 'leased_until', 'retry_after',
+    'issued_at', 'byte_size', 'rendered_at', 'error', 'updated_at'];
 BEGIN
   IF to_jsonb(NEW) - job_columns <> to_jsonb(OLD) - job_columns THEN
     RAISE EXCEPTION 'survey_print_files %: its plan does not change', OLD.id

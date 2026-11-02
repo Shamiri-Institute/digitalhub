@@ -79,7 +79,7 @@ export async function getPresignedUrl(
     Bucket: requireBucket(bucket).bucket,
     Key: key,
     ...(downloadName && {
-      ResponseContentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`,
+      ResponseContentDisposition: `attachment; filename*=UTF-8''${rfc5987(downloadName)}`,
     }),
   });
   return getSignedUrl(s3Client, command, { expiresIn });
@@ -129,4 +129,12 @@ export async function getPresignedUploadUrl(
     signableHeaders,
   });
   return { url, bucket: bucketName };
+}
+
+/** `encodeURIComponent` leaves ' ( ) * ! as they are; RFC 5987 header values must encode them. */
+function rfc5987(value: string) {
+  return encodeURIComponent(value).replaceAll(
+    /['()*!]/g,
+    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
 }

@@ -16,9 +16,14 @@ export function pageQrText(pageId: string) {
   return pageId.slice(PAGE_ID_PREFIX.length).toUpperCase();
 }
 
-/** The page id a scanned QR code names, or undefined for one that isn't a page's. */
+/**
+ * The page id a scanned QR code names, or undefined for one that isn't a page's, such as a sample's.
+ * A typeid suffix is 26 Crockford base32 characters, the first 0 to 7.
+ */
 export function pageIdFromQrText(text: string) {
-  return /^[0-9A-Z]{26}$/.test(text) ? `${PAGE_ID_PREFIX}${text.toLowerCase()}` : undefined;
+  return /^[0-7][0-9A-HJKMNP-TV-Z]{25}$/.test(text)
+    ? `${PAGE_ID_PREFIX}${text.toLowerCase()}`
+    : undefined;
 }
 
 /**
@@ -26,30 +31,30 @@ export function pageIdFromQrText(text: string) {
  * row, in layout coordinates. The quiet zone is the blank space the layout keeps around the box.
  */
 export function qrRects(text: string, qr: Rect): Rect[] {
-  const { data: rows } = encode(text, { ecc: "M", border: 0 });
-  const moduleSize = qr.w / rows.length;
+  const { data: moduleRows } = encode(text, { ecc: "M", border: 0 });
+  const moduleSize = qr.w / moduleRows.length;
   const at = (value: number) => Number(value.toFixed(3));
-  const rects: Rect[] = [];
-  rows.forEach((row, r) => {
-    let c = 0;
-    while (c < row.length) {
-      if (!row[c]) {
-        c += 1;
+  const darkRuns: Rect[] = [];
+  moduleRows.forEach((darkModules, rowIndex) => {
+    let column = 0;
+    while (column < darkModules.length) {
+      if (!darkModules[column]) {
+        column += 1;
         continue;
       }
-      const start = c;
-      while (c < row.length && row[c]) {
-        c += 1;
+      const runStart = column;
+      while (column < darkModules.length && darkModules[column]) {
+        column += 1;
       }
-      rects.push({
-        x: at(qr.x + start * moduleSize),
-        y: at(qr.y + r * moduleSize),
-        w: at((c - start) * moduleSize),
+      darkRuns.push({
+        x: at(qr.x + runStart * moduleSize),
+        y: at(qr.y + rowIndex * moduleSize),
+        w: at((column - runStart) * moduleSize),
         h: at(moduleSize),
       });
     }
   });
-  return rects;
+  return darkRuns;
 }
 
 /**
