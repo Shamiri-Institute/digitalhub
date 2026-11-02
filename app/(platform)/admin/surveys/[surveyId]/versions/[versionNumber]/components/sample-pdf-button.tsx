@@ -5,9 +5,8 @@ import { useState } from "react";
 
 import { Button } from "#/components/ui/button";
 import { toast } from "#/components/ui/use-toast";
-import { type Layout, sampleCopy } from "#/lib/survey/layout";
+import { type Layout, sampleCopy, samplePages } from "#/lib/survey/layout";
 import { loadPrintFontsInBrowser } from "#/lib/survey/print-fonts";
-import { pageCode } from "#/lib/survey/serial";
 
 interface SamplePdfButtonProps {
   layout: Layout;
@@ -24,15 +23,9 @@ export default function SamplePdfButton({ layout, fileName, disabled }: SamplePd
     try {
       // Loaded on click, so pdf-lib and fontkit stay out of the builder's first load.
       const { renderCopiesPdf } = await import("#/lib/survey/print-pdf");
-      const values = sampleCopy(layout);
-      // The QR codes hold the sample's page codes, which match no printed page if scanned.
-      const pages = layout.pages.map((_, index) => {
-        const code = pageCode(values.serial, index + 1);
-        return { id: code, code };
-      });
       const bytes = await renderCopiesPdf(
         layout,
-        [{ values, pages }],
+        [{ values: sampleCopy(layout), pages: samplePages(layout) }],
         await loadPrintFontsInBrowser(),
         { watermark: "PREVIEW" },
       );
