@@ -64,8 +64,7 @@ export default function HubBreadcrumb({
             <PopoverContent className="w-full p-0" align="start">
               <Command
                 defaultValue={currentHub.hubName}
-                // Each hub is a link, and Enter clicks it, so leaving a page with unsaved changes
-                // asks first whether the click or the keyboard picked the hub.
+                // cmdk's Enter runs onSelect, not a click; click the link so the leave guard can stop it.
                 onKeyDown={(event) => {
                   if (event.key !== "Enter") return;
                   const selected = event.currentTarget.querySelector<HTMLElement>(

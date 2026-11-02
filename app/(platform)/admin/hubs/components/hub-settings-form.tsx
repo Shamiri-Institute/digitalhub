@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Info, Plus } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 
@@ -14,7 +14,6 @@ import { zodResolver } from "#/lib/zod-resolver";
 import type { HubSessionName } from "../queries";
 import {
   HUB_DETAILS_DESCRIPTION,
-  PayoutNote,
   SESSION_TYPES_DESCRIPTION,
   SessionGroupHeading,
   SettingsSection,
@@ -32,10 +31,7 @@ import {
 
 type EditFormValues = z.infer<typeof EditHubFormSchema>;
 
-/**
- * The hub settings for a super admin. The page keys this form on the saved values, so a save
- * remounts it with the new ones as its defaults.
- */
+/** The hub settings for a super admin. */
 export default function HubSettingsForm({
   hub,
   sessionNames,
@@ -88,7 +84,11 @@ export default function HubSettingsForm({
           </div>
         </SettingsSection>
         <SettingsSection title="Session types" description={SESSION_TYPES_DESCRIPTION}>
-          <PayoutNote />
+          <p className="flex items-start gap-2 rounded-lg border border-blue-border bg-blue-bg px-4 py-3 text-sm text-foreground">
+            <Info aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-shamiri-new-blue" />
+            Attendance marked after you save is paid at the new amount. Payouts already recorded
+            keep their amount, including when attendance is unmarked.
+          </p>
           <SessionTypeGroups storedById={storedById} />
         </SettingsSection>
         {unsavedChangeCount > 0 && (

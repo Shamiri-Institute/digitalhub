@@ -162,7 +162,6 @@ export function useConfirmedSave<T>(
   return { pending, setPending, isSaving, confirm };
 }
 
-/** `storedName` is the saved name; when the field differs from it, the field shows it. */
 export function HubNameField({ storedName }: { storedName?: string }) {
   const { control } = useFormContext<SharedFormValues>();
   return (
