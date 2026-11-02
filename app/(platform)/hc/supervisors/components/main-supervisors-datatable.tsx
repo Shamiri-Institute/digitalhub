@@ -24,10 +24,14 @@ export default function MainSupervisorsDataTable({
   supervisors,
   project,
   role,
+  title,
+  description,
 }: {
   supervisors: SupervisorsData[];
   project: Pick<typeof projectTable.$inferSelect, "actualStartDate" | "actualEndDate"> | null;
   role: ImplementerRole;
+  title?: string;
+  description?: string;
 }) {
   const [dialog, setDialog] = useState<OpenSupervisorDialog | null>(null);
   const supervisor = dialog && supervisors.find((s) => s.id === dialog.supervisorId);
@@ -78,6 +82,8 @@ export default function MainSupervisorsDataTable({
           subCounty: false,
         }}
         renderTableActions={renderTableActions()}
+        title={title}
+        description={description}
       />
       {supervisor && (
         <>

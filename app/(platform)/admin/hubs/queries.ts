@@ -6,10 +6,12 @@ import { db } from "#/db/client";
 import {
   fellow,
   fellowAttendance,
+  hubCoordinator,
   interventionGroup,
   interventionSession,
   school,
   student,
+  supervisor,
   weeklyFellowRatings,
 } from "#/db/schema";
 import { countOf } from "#/db/sql";
@@ -18,8 +20,8 @@ import { getActiveProjectId } from "#/lib/active-project-id";
 // drizzle-orm 0.45 rewrites every column reference inside a relational-query `extras`
 // expression to the current table's alias, so a correlated subquery must name the other
 // table in plain SQL and touch the current row only through the callback parameter.
-const notDroppedOut = (alias: string) =>
-  `(${alias}.dropped_out = false or ${alias}.dropped_out is null)`;
+const isActive = (alias: string) =>
+  `${alias}.archived_at is null and ${alias}.dropped_out is not true`;
 
 export async function fetchAdminHubs(implementerId: string, projectId: string) {
   const hubs = await db.query.hub.findMany({
@@ -30,11 +32,11 @@ export async function fetchAdminHubs(implementerId: string, projectId: string) {
     },
     extras: (h, { sql }) => ({
       fellowsCount:
-        sql<number>`(select count(*)::int from fellows f where f.hub_id = ${h.id} and ${sql.raw(notDroppedOut("f"))})`.as(
+        sql<number>`(select count(*)::int from fellows f where f.hub_id = ${h.id} and ${sql.raw(isActive("f"))})`.as(
           "fellows_count",
         ),
       supervisorsCount:
-        sql<number>`(select count(*)::int from supervisors s where s.hub_id = ${h.id} and ${sql.raw(notDroppedOut("s"))})`.as(
+        sql<number>`(select count(*)::int from supervisors s where s.hub_id = ${h.id} and ${sql.raw(isActive("s"))})`.as(
           "supervisors_count",
         ),
     }),
@@ -70,8 +72,28 @@ export const fetchAdminHub = cache(async (hubId: string) => {
       ),
     columns: { id: true, hubName: true },
     with: { project: { columns: { name: true } } },
-    extras: (h) => ({
-      schoolsCount: countOf(school.hubId, h.id).as("schools_count"),
+    extras: (h, { sql }) => ({
+      studentsCount:
+        sql<number>`(select count(*)::int from students st join schools sc on sc.id = st.school_id where sc.hub_id = ${h.id} and ${sql.raw(isActive("st"))})`.as(
+          "students_count",
+        ),
+      sessionsCount: countOf(
+        interventionSession.hubId,
+        h.id,
+        sql.raw(
+          `("intervention_sessions"."occurred" or "intervention_sessions"."status" is distinct from 'Cancelled') and "intervention_sessions"."archived_at" is null`,
+        ),
+      ).as("sessions_count"),
+      schoolsCount: countOf(school.hubId, h.id, sql.raw(isActive(`"schools"`))).as("schools_count"),
+      supervisorsCount: countOf(supervisor.hubId, h.id, sql.raw(isActive(`"supervisors"`))).as(
+        "supervisors_count",
+      ),
+      fellowsCount: countOf(fellow.hubId, h.id, sql.raw(isActive(`"fellows"`))).as("fellows_count"),
+      hubManagersCount: countOf(
+        hubCoordinator.assignedHubId,
+        h.id,
+        sql.raw(`"hub_coordinators"."archived_at" is null`),
+      ).as("hub_managers_count"),
     }),
   });
 });
@@ -91,6 +113,25 @@ export async function fetchSiblingHubs() {
     orderBy: (h, { asc }) => [asc(h.hubName), asc(h.id)],
   });
 }
+
+// Callers pass only a hub `fetchAdminHub` returned.
+export async function fetchHubManagers(hubId: string) {
+  return db.query.hubCoordinator.findMany({
+    where: (c, { eq }) => eq(c.assignedHubId, hubId),
+    columns: {
+      id: true,
+      coordinatorName: true,
+      coordinatorEmail: true,
+      cellNumber: true,
+      createdAt: true,
+      archivedAt: true,
+    },
+    // Active managers (no archive date) first, then the most recently archived.
+    orderBy: (c, { asc, desc }) => [desc(c.archivedAt), asc(c.coordinatorName), asc(c.id)],
+  });
+}
+
+export type HubManager = Awaited<ReturnType<typeof fetchHubManagers>>[number];
 
 export type SiblingHub = Awaited<ReturnType<typeof fetchSiblingHubs>>[number];
 

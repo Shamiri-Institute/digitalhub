@@ -13,5 +13,12 @@ export default async function HubSchoolsPage({ params }: { params: Promise<{ hub
   }
   const schools = await fetchSchoolsTableRows(hub.id);
 
-  return <SchoolsDatatable schools={schools} role={ImplementerRole.ADMIN} />;
+  return (
+    <SchoolsDatatable
+      schools={schools}
+      role={ImplementerRole.ADMIN}
+      title="Schools"
+      description="Track which schools have a session coming up and which are behind on reports."
+    />
+  );
 }

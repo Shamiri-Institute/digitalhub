@@ -1,14 +1,10 @@
 import { and, count, eq, inArray, isNull, or, sql } from "drizzle-orm";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
-import { currentAdminUser } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
 import HubStudentsDetailsCharts from "#/components/charts/students-charts";
 import StudentsStats from "#/components/students-stats";
-import PageFooter from "#/components/ui/page-footer";
-import PageHeading from "#/components/ui/page-heading";
-import { Separator } from "#/components/ui/separator";
 import { db } from "#/db/client";
 import {
   clinicalLead,
@@ -18,42 +14,33 @@ import {
   student,
   supervisor,
 } from "#/db/schema";
-import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
-import { getActiveProjectId } from "#/lib/active-project-id";
 import { fetchStudentClinicalStats } from "#/lib/actions/clinical/students";
+import { fetchAdminHub } from "../../queries";
 
-export default async function StudentsPage() {
-  const admin = await currentAdminUser();
-  if (!admin) {
-    redirect("/login");
+export default async function HubStudentsPage({ params }: { params: Promise<{ hubId: string }> }) {
+  const hub = await fetchAdminHub((await params).hubId);
+  if (!hub) {
+    notFound();
   }
-  const projectId = await getActiveProjectId();
-  const { implementerId } = admin.profile;
+  const hubId = hub.id;
 
-  const projectHubIds = implementerHubsInProject(implementerId, projectId);
-  const projectSchoolIds = db
-    .select({ id: school.id })
-    .from(school)
-    .where(inArray(school.hubId, projectHubIds));
-  const projectCaseFilter = or(
+  const hubSchoolIds = db.select({ id: school.id }).from(school).where(eq(school.hubId, hubId));
+  const hubCaseFilter = or(
     inArray(
       clinicalScreeningInfo.currentSupervisorId,
-      db
-        .select({ id: supervisor.id })
-        .from(supervisor)
-        .where(inArray(supervisor.hubId, projectHubIds)),
+      db.select({ id: supervisor.id }).from(supervisor).where(eq(supervisor.hubId, hubId)),
     ),
     inArray(
       clinicalScreeningInfo.clinicalLeadId,
       db
         .select({ id: clinicalLead.id })
         .from(clinicalLead)
-        .where(inArray(clinicalLead.assignedHubId, projectHubIds)),
+        .where(eq(clinicalLead.assignedHubId, hubId)),
     ),
   );
-  const activeProjectStudentFilter = and(
+  const activeHubStudentFilter = and(
     isNull(student.archivedAt),
-    inArray(student.schoolId, projectSchoolIds),
+    inArray(student.schoolId, hubSchoolIds),
   );
 
   const [
@@ -65,10 +52,10 @@ export default async function StudentsPage() {
     incompleteStudentCount,
     studentGroupRatingsRaw,
   ] = await Promise.all([
-    db.$count(interventionSession, inArray(interventionSession.hubId, projectHubIds)),
-    fetchStudentClinicalStats(projectCaseFilter),
+    db.$count(interventionSession, eq(interventionSession.hubId, hubId)),
+    fetchStudentClinicalStats(hubCaseFilter),
     db.query.student.findMany({
-      where: () => activeProjectStudentFilter,
+      where: () => activeHubStudentFilter,
       columns: { yearOfBirth: true, age: true, gender: true, form: true },
     }),
     db
@@ -78,23 +65,21 @@ export default async function StudentsPage() {
       JOIN intervention_sessions ins ON ins.id = sa.session_id
       JOIN students s ON s.id = sa.student_id
       JOIN schools sc ON s.school_id = sc.id
-      JOIN hubs h ON sc.hub_id = h.id
       WHERE sa.attended = true
         AND s.archived_at IS NULL
-        AND h.project_id = ${projectId}
-        AND h.implementer_id = ${implementerId}
+        AND sc.hub_id = ${hubId}
       GROUP BY ins.session_type
     `)
       .then((r) => r.rows),
     db
       .select({ dropOutReason: student.dropOutReason, count: count(student.dropOutReason) })
       .from(student)
-      .where(and(activeProjectStudentFilter, eq(student.droppedOut, true)))
+      .where(and(activeHubStudentFilter, eq(student.droppedOut, true)))
       .groupBy(student.dropOutReason),
     db.$count(
       student,
       and(
-        activeProjectStudentFilter,
+        activeHubStudentFilter,
         or(
           isNull(student.studentName),
           isNull(student.gender),
@@ -110,9 +95,7 @@ export default async function StudentsPage() {
       FROM intervention_session_ratings isr
       JOIN intervention_sessions ins ON ins.id = isr.session_id
       JOIN session_names sn ON sn.id = ins.session_id
-      JOIN hubs h ON sn.hub_id = h.id
-      WHERE h.project_id = ${projectId}
-        AND h.implementer_id = ${implementerId}
+      WHERE sn.hub_id = ${hubId}
         AND isr.student_behavior_rating IS NOT NULL
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC
@@ -154,11 +137,7 @@ export default async function StudentsPage() {
   }));
 
   return (
-    <div className="container w-full grow space-y-3 py-10">
-      <PageHeading title="Students" />
-
-      <Separator />
-
+    <div className="space-y-3">
       <StudentsStats
         totalNumberOfStudentsInHub={totalNumberOfStudentsInHub}
         totalGroupSessions={totalGroupSessions}
@@ -180,8 +159,6 @@ export default async function StudentsPage() {
         studentsGroupedByGender={studentsGroupedByGender}
         studentsGroupedByForm={studentsGroupedByForm}
       />
-
-      <PageFooter />
     </div>
   );
 }

@@ -4,7 +4,6 @@ import type React from "react";
 
 import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
-import { Separator } from "#/components/ui/separator";
 import EditHubButton from "../components/edit-hub-button";
 import HubBreadcrumb from "../components/hub-breadcrumb";
 import HubStats from "../components/hub-stats";
@@ -55,7 +54,6 @@ export default async function HubLayout(props: {
           <HubStats stats={stats} />
         </div>
         <HubTabs hub={hub} />
-        <Separator />
         {props.children}
       </div>
       <PageFooter />
