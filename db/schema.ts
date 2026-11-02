@@ -1352,6 +1352,7 @@ export const clinicalSessionAttendance = pgTable(
     date: timestamp({ withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
+    // Who ran the session: the supervisor or the clinical lead who marked it.
     supervisorId: varchar("supervisor_id", { length: 255 }),
     session: varchar({ length: 255 }).notNull(),
     caseId: text("case_id").notNull(),
@@ -1360,6 +1361,20 @@ export const clinicalSessionAttendance = pgTable(
   },
   (table) => [
     index("clinical_session_attendance_caseId_idx").on(table.caseId),
+    // ENG-2399: three legacy sessions keep a second note on the same case, label and date.
+    uniqueIndex("clinical_session_attendance_case_id_session_date_key")
+      .on(table.caseId, table.session, table.date)
+      .where(
+        sql`id NOT IN ('csess_01jxz4tc7pfzv9e2wc4sta5n9n', 'csess_01k0gwykc9ejg9znamq2dnys9d', 'csess_01kj3dq591e6xv54aanbf3vsfj')`,
+      ),
+    uniqueIndex("clinical_session_attendance_case_id_id_key").on(table.caseId, table.id),
+    index("clinical_session_attendance_supervisor_id_idx").on(table.supervisorId),
+    index("clinical_session_attendance_clinical_lead_id_idx").on(table.clinicalLeadId),
+    // F5 is a legacy label from 2024.
+    check(
+      "clinical_session_attendance_session_check",
+      sql`session IN ('Pre', 'S1', 'S2', 'S3', 'S4', 'F1', 'F2', 'F3', 'F4', 'F5')`,
+    ),
     foreignKey({
       columns: [table.caseId],
       foreignColumns: [clinicalScreeningInfo.id],
@@ -1367,6 +1382,20 @@ export const clinicalSessionAttendance = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    foreignKey({
+      columns: [table.supervisorId],
+      foreignColumns: [supervisor.id],
+      name: "clinical_session_attendance_supervisor_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("set null"),
+    foreignKey({
+      columns: [table.clinicalLeadId],
+      foreignColumns: [clinicalLead.id],
+      name: "clinical_session_attendance_clinical_lead_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("set null"),
   ],
 );
 
@@ -2481,6 +2510,7 @@ export const clinicalCaseTermination = pgTable(
   },
   (table) => [
     index("clinical_case_termination_case_id_idx").on(table.caseId),
+    index("clinical_case_termination_session_id_case_id_idx").on(table.sessionId, table.caseId),
     foreignKey({
       columns: [table.caseId],
       foreignColumns: [clinicalScreeningInfo.id],
@@ -2488,11 +2518,11 @@ export const clinicalCaseTermination = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    index("clinical_case_termination_session_id_idx").on(table.sessionId),
+    // The termination's session must be a session of the same case.
     foreignKey({
-      columns: [table.sessionId],
-      foreignColumns: [clinicalSessionAttendance.id],
-      name: "clinical_case_termination_session_id_fkey",
+      columns: [table.sessionId, table.caseId],
+      foreignColumns: [clinicalSessionAttendance.id, clinicalSessionAttendance.caseId],
+      name: "clinical_case_termination_session_id_case_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
@@ -2501,6 +2531,52 @@ export const clinicalCaseTermination = pgTable(
       columns: [table.createdBy],
       foreignColumns: [user.id],
       name: "clinical_case_termination_created_by_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+// Reopening a terminated case keeps its termination; the reason sits here.
+export const clinicalCaseReopening = pgTable(
+  "clinical_case_reopenings",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("casereopening")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    caseId: text("case_id").notNull(),
+    // Null for 2024 cases that were terminated without a termination record.
+    terminationId: text("termination_id"),
+    reason: text().notNull(),
+    createdBy: text("created_by").notNull(),
+  },
+  (table) => [
+    index("clinical_case_reopenings_case_id_idx").on(table.caseId),
+    uniqueIndex("clinical_case_reopenings_termination_id_key").on(table.terminationId),
+    index("clinical_case_reopenings_created_by_idx").on(table.createdBy),
+    check("clinical_case_reopenings_reason_check", sql`btrim(reason) <> ''`),
+    foreignKey({
+      columns: [table.caseId],
+      foreignColumns: [clinicalScreeningInfo.id],
+      name: "clinical_case_reopenings_case_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.terminationId],
+      foreignColumns: [clinicalCaseTermination.id],
+      name: "clinical_case_reopenings_termination_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.createdBy],
+      foreignColumns: [user.id],
+      name: "clinical_case_reopenings_created_by_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),

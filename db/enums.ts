@@ -121,6 +121,20 @@ export const riskStatusOptions = {
 } as const;
 export type riskStatusOptions = (typeof riskStatusOptions)[keyof typeof riskStatusOptions];
 
+/** Clinical session labels in order: a pre-session, four sessions, then follow-ups. */
+export const clinicalSessionLabels = [
+  "Pre",
+  "S1",
+  "S2",
+  "S3",
+  "S4",
+  "F1",
+  "F2",
+  "F3",
+  "F4",
+] as const;
+export type ClinicalSessionLabel = (typeof clinicalSessionLabels)[number];
+
 export const referralStatusOptions = {
   Approved: "Approved",
   Declined: "Declined",

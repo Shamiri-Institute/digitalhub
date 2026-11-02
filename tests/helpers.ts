@@ -5,6 +5,7 @@ import { db } from "#/db/client";
 import {
   adminUser,
   clinicalCaseNotes,
+  clinicalCaseReopening,
   clinicalCaseTermination,
   clinicalCaseTransferTrail,
   clinicalExpertCaseNotes,
@@ -175,6 +176,7 @@ export async function createClinicalCase(owner: { schoolId: string; currentSuper
 
   async function remove() {
     await db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.caseId, caseId));
+    await db.delete(clinicalCaseReopening).where(eq(clinicalCaseReopening.caseId, caseId));
     await db.delete(clinicalCaseTermination).where(eq(clinicalCaseTermination.caseId, caseId));
     await db.delete(clinicalExpertCaseNotes).where(eq(clinicalExpertCaseNotes.caseId, caseId));
     await db.delete(clinicalCaseTransferTrail).where(eq(clinicalCaseTransferTrail.caseId, caseId));

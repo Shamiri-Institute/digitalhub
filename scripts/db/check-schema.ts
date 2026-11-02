@@ -1,4 +1,4 @@
-// 1. Every foreign key needs an index on its referencing columns
+// 1. Every foreign key needs an index on its referencing columns; a partial index does not count
 // 2. A migration that drops a column or table sets lock_timeout, so a busy table fails the
 //    deploy instead of queueing all traffic behind the lock.
 import { readdirSync, readFileSync } from "node:fs";
@@ -18,6 +18,7 @@ async function unindexedForeignKeys() {
       and not exists (
         select 1 from pg_index i
         where i.indrelid = c.conrelid
+          and i.indpred is null
           and (i.indkey::int2[])[0:cardinality(c.conkey) - 1] @> c.conkey
           and (i.indkey::int2[])[0:cardinality(c.conkey) - 1] <@ c.conkey
       )

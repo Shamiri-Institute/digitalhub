@@ -2,6 +2,17 @@ import { sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { hubScope } from "./scope";
 
+/** The risk level of a case's newest note; before the first note, the case's risk at intake. */
+export function latestRiskLevel(
+  sessions: { clinicalCaseNotes: { riskLevel: string; createdAt: Date }[] }[],
+  intakeRiskStatus: string,
+) {
+  const [newest] = sessions
+    .flatMap((session) => session.clinicalCaseNotes)
+    .toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  return newest?.riskLevel || intakeRiskStatus;
+}
+
 /**
  * Case queries take their own scope union: the hub variant also matches
  * cases the clinical lead created themselves (clinicalLeadId), which can
@@ -78,10 +89,11 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
         COALESCE(
           (SELECT ccn.risk_level
            FROM "clinical_case_notes" ccn
-           WHERE ccn."case_id" = csi.id
+           JOIN "clinical_session_attendance" ccs ON ccs.id = ccn."session_id"
+           WHERE ccs."case_id" = csi.id
            ORDER BY ccn.created_at DESC
            LIMIT 1),
-          'N/A'
+          csi."risk_status"::text
         ) as name,
         COUNT(*)::int as value
       FROM "clinical_screening_info" csi
@@ -91,10 +103,11 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
       GROUP BY COALESCE(
         (SELECT ccn.risk_level
          FROM "clinical_case_notes" ccn
-         WHERE ccn."case_id" = csi.id
+         JOIN "clinical_session_attendance" ccs ON ccs.id = ccn."session_id"
+         WHERE ccs."case_id" = csi.id
          ORDER BY ccn.created_at DESC
          LIMIT 1),
-        'N/A'
+        csi."risk_status"::text
       )
     `)
       .then((r) => r.rows),
@@ -242,7 +255,7 @@ export async function fetchClinicalCasesList(
   const { rows: cases } = await db.execute<HubClinicalCases>(sql`
       WITH case_notes AS (
         SELECT
-          ccn.case_id,
+          ccs.case_id,
           json_agg(
             json_build_object(
               'id', ccn.id,
@@ -261,10 +274,11 @@ export async function fetchClinicalCasesList(
             )
           ) AS notes_data
         FROM "clinical_case_notes" ccn
-        GROUP BY ccn.case_id
+        JOIN "clinical_session_attendance" ccs ON ccs.id = ccn."session_id"
+        GROUP BY ccs.case_id
       ),
       case_termination AS (
-        SELECT
+        SELECT DISTINCT ON (cct.case_id)
           cct.case_id,
           json_build_object(
             'id', cct.id,
@@ -275,6 +289,10 @@ export async function fetchClinicalCasesList(
             'sessionId', cct.session_id
           ) AS termination_data
         FROM "clinical_case_termination" cct
+        WHERE NOT EXISTS (
+          SELECT 1 FROM "clinical_case_reopenings" ccr WHERE ccr."termination_id" = cct.id
+        )
+        ORDER BY cct.case_id, cct.created_at DESC, cct.id DESC
       ),
       treatment_plan AS (
         SELECT
@@ -298,10 +316,11 @@ export async function fetchClinicalCasesList(
         COALESCE(
           (SELECT ccn.risk_level
            FROM "clinical_case_notes" ccn
-           WHERE ccn."case_id" = csi.id
+           JOIN "clinical_session_attendance" ccs ON ccs.id = ccn."session_id"
+           WHERE ccs."case_id" = csi.id
            ORDER BY ccn.created_at DESC
            LIMIT 1),
-          'N/A'
+          csi."risk_status"::text
         ) as "riskStatus",
         csi.case_report as "caseReport",
         csi.case_status as "caseStatus",
@@ -317,7 +336,8 @@ export async function fetchClinicalCasesList(
         CASE WHEN csfp.id IS NOT NULL THEN true ELSE false END as "treatmentPlan",
         CASE WHEN EXISTS (
           SELECT 1 FROM "clinical_case_notes" ccn
-          WHERE ccn."case_id" = csi.id
+          JOIN "clinical_session_attendance" ccs ON ccs.id = ccn."session_id"
+          WHERE ccs."case_id" = csi.id
         ) THEN true ELSE false END as "hasNotes",
         COALESCE(s.supervisor_name, 'CLINICAL_LEAD') as "supervisor",
         h.hub_name as "hub",
