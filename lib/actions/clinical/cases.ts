@@ -216,6 +216,7 @@ export type HubClinicalCases = {
   id: string;
   pseudonym: string;
   flagged: boolean;
+  studentHasMultipleOpenCases: boolean;
   riskStatus: string;
   riskSource: string;
   riskDate: Date;
@@ -333,6 +334,12 @@ export async function fetchClinicalCasesList(
         csi.id,
         csi.pseudonym,
         csi.flagged,
+        csi.case_status <> 'Terminated' AND EXISTS (
+          SELECT 1 FROM "clinical_screening_info" other_case
+          WHERE other_case."student_id" = csi."student_id"
+            AND other_case.id <> csi.id
+            AND other_case.case_status <> 'Terminated'
+        ) as "studentHasMultipleOpenCases",
         COALESCE(newest_note.risk_level, csi."risk_status"::text) as "riskStatus",
         COALESCE(newest_note.session || ' note', ${INTAKE_RISK_SOURCE}) as "riskSource",
         COALESCE(newest_note.created_at, csi."created_at") as "riskDate",
