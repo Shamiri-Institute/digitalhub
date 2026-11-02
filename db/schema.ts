@@ -2583,6 +2583,58 @@ export const clinicalCaseReopening = pgTable(
   ],
 );
 
+// The clinical lead reviews each termination and each reopening.
+export const clinicalCaseReview = pgTable(
+  "clinical_case_reviews",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("casereview")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    terminationId: text("termination_id"),
+    reopeningId: text("reopening_id"),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true, mode: "date" }),
+  },
+  (table) => [
+    uniqueIndex("clinical_case_reviews_termination_id_key").on(table.terminationId),
+    uniqueIndex("clinical_case_reviews_reopening_id_key").on(table.reopeningId),
+    index("clinical_case_reviews_reviewed_by_idx").on(table.reviewedBy),
+    check(
+      "clinical_case_reviews_subject_check",
+      sql`num_nonnulls(termination_id, reopening_id) = 1`,
+    ),
+    check(
+      "clinical_case_reviews_reviewed_check",
+      sql`(reviewed_by IS NULL) = (reviewed_at IS NULL)`,
+    ),
+    foreignKey({
+      columns: [table.terminationId],
+      foreignColumns: [clinicalCaseTermination.id],
+      name: "clinical_case_reviews_termination_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.reopeningId],
+      foreignColumns: [clinicalCaseReopening.id],
+      name: "clinical_case_reviews_reopening_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.reviewedBy],
+      foreignColumns: [user.id],
+      name: "clinical_case_reviews_reviewed_by_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
 export const clinicalLead = pgTable(
   "clinical_leads",
   {
