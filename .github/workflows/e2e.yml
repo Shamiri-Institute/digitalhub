@@ -22,7 +22,6 @@ env:
   S3_RECORDINGS_REGION: af-south-1
   S3_STUDENT_ATTENDANCE_BUCKET: mock-s3-attendance-bucket
   S3_STUDENT_ATTENDANCE_REGION: af-south-1
-  RECORDINGS_API_KEY: e2e-recordings-api-key
   BETTER_AUTH_URL: http://localhost:3000
   BETTER_AUTH_SECRET: e2e-better-auth-secret-at-least-32-chars
   PLAYWRIGHT_VERSION: ""

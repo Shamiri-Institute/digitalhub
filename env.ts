@@ -18,8 +18,6 @@ const schema = z.object({
   S3_STUDENT_ATTENDANCE_BUCKET: z.string().default(""),
   S3_STUDENT_ATTENDANCE_REGION: z.string().default("af-south-1"),
 
-  RECORDINGS_API_KEY: z.string().optional(),
-
   // Vercel Cron sends it as a bearer token. Unset, the cron routes refuse every request.
   CRON_SECRET: z.string().min(16).optional(),
 
