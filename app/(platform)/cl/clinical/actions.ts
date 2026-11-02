@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 import { currentClinicalLead } from "#/app/auth";
 import { db } from "#/db/client";
-import { latestRiskLevel } from "#/lib/actions/clinical/cases";
+import { latestRisk } from "#/lib/actions/clinical/cases";
 import { hub } from "#/db/schema";
 import {
   type CaseNotesResult,
@@ -114,15 +114,13 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       attendanceStatus: session.attendanceStatus,
     }));
 
-    const riskLevel = latestRiskLevel(caseInfo.sessions, caseInfo.riskStatus);
-
     return {
       id: caseInfo.id,
       school: caseInfo.student?.school?.schoolName,
       pseudonym: caseInfo.pseudonym || "Anonymous",
       dateAdded: caseInfo.createdAt.toLocaleDateString(),
       caseStatus: caseInfo.caseStatus,
-      risk: riskLevel,
+      ...latestRisk(caseInfo.sessions, caseInfo),
       age,
       referralFrom:
         caseInfo.referredFromSupervisor?.supervisorName ||

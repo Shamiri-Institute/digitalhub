@@ -95,9 +95,14 @@ export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDe
       cell: ({ row }) => {
         const riskLevel = row.original.risk || "N/A";
         return (
-          <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
-            {riskLevel}
-          </Badge>
+          <div className="flex flex-col items-start gap-1">
+            <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
+              {riskLevel}
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              {row.original.riskSource} · {format(row.original.riskDate, "dd MMM yyyy")}
+            </span>
+          </div>
         );
       },
     },

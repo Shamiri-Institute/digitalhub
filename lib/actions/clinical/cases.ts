@@ -2,15 +2,33 @@ import { sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { hubScope } from "./scope";
 
-/** The risk level of a case's newest note; before the first note, the case's risk at intake. */
-export function latestRiskLevel(
-  sessions: { clinicalCaseNotes: { riskLevel: string; createdAt: Date }[] }[],
-  intakeRiskStatus: string,
+const INTAKE_RISK_SOURCE = "Intake/triage";
+
+/** The risk level of a case's newest note; before the first note, the case's risk at intake or triage. */
+export function latestRisk(
+  sessions: {
+    session: string;
+    clinicalCaseNotes: { riskLevel: string; createdAt: Date }[];
+  }[],
+  clinicalCase: { riskStatus: string; createdAt: Date },
 ) {
-  const [newest] = sessions
-    .flatMap((session) => session.clinicalCaseNotes)
+  const [newestNote] = sessions
+    .flatMap((session) =>
+      session.clinicalCaseNotes.map((note) => ({ ...note, session: session.session })),
+    )
     .toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  return newest?.riskLevel || intakeRiskStatus;
+  if (newestNote?.riskLevel) {
+    return {
+      risk: newestNote.riskLevel,
+      riskSource: `${newestNote.session} note`,
+      riskDate: newestNote.createdAt,
+    };
+  }
+  return {
+    risk: clinicalCase.riskStatus,
+    riskSource: INTAKE_RISK_SOURCE,
+    riskDate: clinicalCase.createdAt,
+  };
 }
 
 /**
@@ -199,6 +217,8 @@ export type HubClinicalCases = {
   pseudonym: string;
   flagged: boolean;
   riskStatus: string;
+  riskSource: string;
+  riskDate: Date;
   caseReport: string;
   treatmentPlan: boolean;
   hasNotes: boolean;
@@ -313,15 +333,9 @@ export async function fetchClinicalCasesList(
         csi.id,
         csi.pseudonym,
         csi.flagged,
-        COALESCE(
-          (SELECT ccn.risk_level
-           FROM "clinical_case_notes" ccn
-           JOIN "clinical_session_attendance" ccs ON ccs.id = ccn."session_id"
-           WHERE ccs."case_id" = csi.id
-           ORDER BY ccn.created_at DESC
-           LIMIT 1),
-          csi."risk_status"::text
-        ) as "riskStatus",
+        COALESCE(newest_note.risk_level, csi."risk_status"::text) as "riskStatus",
+        COALESCE(newest_note.session || ' note', ${INTAKE_RISK_SOURCE}) as "riskSource",
+        COALESCE(newest_note.created_at, csi."created_at") as "riskDate",
         csi.case_report as "caseReport",
         csi.case_status as "caseStatus",
         csi.initial_referred_from_specified as "initialContact",
@@ -375,6 +389,14 @@ export async function fetchClinicalCasesList(
         case_termination ct ON csi.id = ct.case_id
       LEFT JOIN
         treatment_plan tp ON csi.id = tp.case_id
+      LEFT JOIN LATERAL (
+        SELECT ccn.risk_level, ccn.created_at, ccs.session
+        FROM "clinical_case_notes" ccn
+        JOIN "clinical_session_attendance" ccs ON ccs.id = ccn."session_id"
+        WHERE ccs."case_id" = csi.id
+        ORDER BY ccn.created_at DESC
+        LIMIT 1
+      ) newest_note ON true
       WHERE ${where}
       ORDER BY
         csi.id DESC
