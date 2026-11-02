@@ -63,6 +63,9 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
         <div className="flex items-center gap-1">
           <span>{row.original.pseudonym}</span>
           {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" /> : null}
+          {row.original.studentHasMultipleOpenCases ? (
+            <Badge variant="warning">Multiple open cases</Badge>
+          ) : null}
         </div>
       );
     },
