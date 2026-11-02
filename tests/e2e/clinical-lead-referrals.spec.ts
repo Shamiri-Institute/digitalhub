@@ -78,9 +78,11 @@ test("a clinical lead accepts a referred case before it becomes theirs", async (
   const referralCard = page
     .getByText(/^Cases referred to you/)
     .locator("..")
-    .getByText(created.studentName, { exact: true })
-    .locator("..");
-  await expect(referralCard).toBeVisible();
+    .getByRole("listitem")
+    .filter({ hasText: created.studentName });
+  await expect(referralCard).toContainText(fixture.supervisorName);
+  await expect(referralCard).toContainText("Severe risk case");
+  await expect(referralCard).toContainText("E2E clinical lead referral");
   await expect(await searchRows(page, created.pseudonym, myCases(page))).toHaveCount(0);
 
   await referralCard.getByRole("button", { name: "Accept referred case" }).click();

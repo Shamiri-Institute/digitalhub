@@ -102,6 +102,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
         columns: { riskLevel: true },
       },
       followUptreatmentPlan: true,
+      referredFromSupervisor: { columns: { supervisorName: true } },
     },
   });
 
@@ -126,7 +127,10 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       risk: riskLevel,
       age,
       referralFrom:
-        caseInfo.referredFromSpecified || caseInfo.initialReferredFromSpecified || "Unknown",
+        caseInfo.referredFromSupervisor?.supervisorName ||
+        caseInfo.referredFromSpecified ||
+        caseInfo.initialReferredFromSpecified ||
+        "Unknown",
       hubId: clinicalLead.profile.assignedHubId,
       flagged: caseInfo.flagged,
       flaggedReason: caseInfo.flaggedReason,

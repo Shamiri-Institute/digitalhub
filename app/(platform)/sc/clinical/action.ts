@@ -47,32 +47,20 @@ async function requireClinicalActor() {
   if (role === ImplementerRole.SUPERVISOR) {
     const supervisor = await db.query.supervisor.findFirst({
       where: (s, { eq }) => eq(s.id, identifier),
-      columns: { id: true, hubId: true, supervisorName: true },
+      columns: { id: true, hubId: true },
     });
     if (supervisor) {
-      return {
-        role,
-        userId,
-        profileId: supervisor.id,
-        hubId: supervisor.hubId,
-        name: supervisor.supervisorName,
-      };
+      return { role, userId, profileId: supervisor.id, hubId: supervisor.hubId };
     }
   }
 
   if (role === ImplementerRole.CLINICAL_LEAD) {
     const clinicalLead = await db.query.clinicalLead.findFirst({
       where: (cl, { eq }) => eq(cl.id, identifier),
-      columns: { id: true, assignedHubId: true, clinicalLeadName: true },
+      columns: { id: true, assignedHubId: true },
     });
     if (clinicalLead) {
-      return {
-        role,
-        userId,
-        profileId: clinicalLead.id,
-        hubId: clinicalLead.assignedHubId,
-        name: clinicalLead.clinicalLeadName,
-      };
+      return { role, userId, profileId: clinicalLead.id, hubId: clinicalLead.assignedHubId };
     }
   }
 
@@ -131,6 +119,7 @@ export async function getClinicalCases() {
         columns: { riskLevel: true },
       },
       followUptreatmentPlan: true,
+      referredFromSupervisor: { columns: { supervisorName: true } },
     },
   });
 
@@ -154,7 +143,11 @@ export async function getClinicalCases() {
       caseStatus: caseInfo.caseStatus,
       risk: riskLevel,
       age,
-      referralFrom: caseInfo.referredFrom || caseInfo.initialReferredFromSpecified || "Unknown",
+      referralFrom:
+        caseInfo.referredFromSupervisor?.supervisorName ||
+        caseInfo.referredFromSpecified ||
+        caseInfo.initialReferredFromSpecified ||
+        "Unknown",
       hubId: supervisor.profile.hubId,
       flagged: caseInfo.flagged,
       flaggedReason: caseInfo.flaggedReason,
@@ -300,14 +293,13 @@ export async function referClinicalCaseToSupervisor(data: {
     const recipient = await db.query.supervisor.findFirst({
       where: (s, { and, eq }) =>
         and(eq(s.id, data.recipientSupervisorId), eq(s.hubId, referrerHubId)),
-      columns: { id: true, supervisorName: true },
+      columns: { id: true },
     });
     if (!recipient) throw new NotFoundError("Supervisor");
 
     await writeReferral(data, actor, {
       role: ImplementerRole.SUPERVISOR,
       id: recipient.id,
-      name: recipient.supervisorName,
     });
     refresh();
     return { success: true };
@@ -329,7 +321,6 @@ async function writeReferral(
   recipient: {
     role: typeof ImplementerRole.SUPERVISOR | typeof ImplementerRole.CLINICAL_LEAD;
     id: string;
-    name: string | null;
   },
 ) {
   const recipientIsLead = recipient.role === ImplementerRole.CLINICAL_LEAD;
@@ -339,7 +330,6 @@ async function writeReferral(
         .update(clinicalScreeningInfo)
         .set({
           referredFrom: referrer.profileId,
-          referredFromSpecified: referrer.name,
           referredTo: recipientIsLead ? "Clinical Lead" : "Supervisor",
           referredToSpecified: recipient.id,
           referredToSupervisorId: recipientIsLead ? null : recipient.id,
@@ -355,10 +345,10 @@ async function writeReferral(
     );
     await tx.insert(clinicalCaseTransferTrail).values({
       caseId: data.caseId,
-      from: referrer.name ?? "",
+      from: referrer.profileId,
       fromRole: referrer.role,
-      to: recipient.name ?? "",
-      toRole: recipient.id,
+      to: recipient.id,
+      toRole: recipient.role,
       date: new Date(),
       referralStatus: "Pending",
     });
@@ -829,14 +819,13 @@ export async function referClinicalCaseToClinicalLead(data: {
           eq(cl.id, data.recipientClinicalLeadId),
           inArray(cl.assignedHubId, referrerProjectHubIds),
         ),
-      columns: { id: true, clinicalLeadName: true },
+      columns: { id: true },
     });
     if (!recipient) throw new NotFoundError("Clinical lead");
 
     await writeReferral(data, actor, {
       role: ImplementerRole.CLINICAL_LEAD,
       id: recipient.id,
-      name: recipient.clinicalLeadName,
     });
     refresh();
     return { success: true };
@@ -845,6 +834,8 @@ export async function referClinicalCaseToClinicalLead(data: {
     return { success: false };
   }
 }
+
+export type CaseReferredToMe = Awaited<ReturnType<typeof getCasesReferredToMe>>[number];
 
 export async function getCasesReferredToMe() {
   const actor = await requireClinicalActor();
@@ -860,7 +851,26 @@ export async function getCasesReferredToMe() {
         eq(c.acceptCase, false),
       ),
     orderBy: (c, { desc }) => [desc(c.createdAt), desc(c.id)],
-    with: { student: true },
+    columns: {
+      id: true,
+      pseudonym: true,
+      riskStatus: true,
+      referralReason: true,
+      referralNotes: true,
+      referredFromSpecified: true,
+    },
+    with: {
+      student: {
+        columns: { studentName: true },
+        with: { school: { columns: { schoolName: true } } },
+      },
+      referredFromSupervisor: { columns: { supervisorName: true } },
+      caseTransferTrail: {
+        orderBy: (t, { desc }) => desc(t.date),
+        limit: 1,
+        columns: { date: true },
+      },
+    },
   });
 }
 

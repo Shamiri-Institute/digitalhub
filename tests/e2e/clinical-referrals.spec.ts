@@ -76,7 +76,7 @@ function referredCases(page: Page) {
 }
 
 function referralCard(page: Page) {
-  return referredCases(page).getByText(studentName, { exact: true }).locator("..");
+  return referredCases(page).getByRole("listitem").filter({ hasText: studentName });
 }
 
 async function referCaseToRecipient(page: Page) {
