@@ -2034,8 +2034,6 @@ async function createSessionRecordings(
           sessionId: session.id,
           uploadedBy: seederUserId,
           supervisorId: school.assignedSupervisorId,
-          // COMPLETED so the /api/recordings/pending worker never picks these up
-          // and nothing is ever submitted to the external Fidelity service.
           status: RecordingProcessingStatus.COMPLETED,
           processedAt: faker.date.recent({ days: 20 }),
           overallScore,

@@ -106,3 +106,17 @@ test("dev login signs a test user in through the login form", async ({ page }) =
   await expect(page).not.toHaveURL(loginUrl);
   await expect(page).toHaveURL(/\/hc\//);
 });
+
+for (const [next, landing] of [
+  ["/hc/schools", new RegExp(`^${getUrl("/hc/schools")}$`)],
+  ["//example.com/hc/schools", new RegExp(`^${getUrl("/hc")}(?!/schools)`)],
+] as const) {
+  test(`dev login with next=${next} stays on this site`, async ({ page }) => {
+    test.skip(!process.env.TEST_USER_PASSWORD, "TEST_USER_PASSWORD is not set");
+    await page.goto(getUrl(`/login?next=${encodeURIComponent(next)}`));
+    await page.getByTestId("email-input").fill("mikel.arteta@test.com");
+    await page.getByTestId("password-input").fill(process.env.TEST_USER_PASSWORD ?? "");
+    await page.getByTestId("credentials-login").click();
+    await expect(page).toHaveURL(landing);
+  });
+}

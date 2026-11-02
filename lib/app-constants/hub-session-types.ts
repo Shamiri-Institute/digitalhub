@@ -45,6 +45,15 @@ export type SessionTypeGroup = HubSessionType["type"];
 
 export type HubSessionCategory = Exclude<SessionTypeGroup, "SPECIAL">;
 
+export const SESSION_TYPE_GROUPS: Record<SessionTypeGroup, { label: string; noun: string }> = {
+  INTERVENTION: { label: "Intervention sessions", noun: "intervention session" },
+  SUPERVISION: { label: "Supervision sessions", noun: "supervision session" },
+  TRAINING: { label: "Training sessions", noun: "training session" },
+  SPECIAL: { label: "Special sessions", noun: "special session" },
+  CLINICAL: { label: "Clinical sessions", noun: "clinical session" },
+  DATA_COLLECTION: { label: "Data follow-up sessions", noun: "data follow-up session" },
+};
+
 /**
  * How each group numbers its codes: intervention runs s0, s1, s2 and the rest start at 1, so
  * supervision runs sv1, sv2. A code never changes once stored, because sessions refer to it.

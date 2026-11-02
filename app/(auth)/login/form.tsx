@@ -11,6 +11,13 @@ import { isCredentialAuthAllowedClient } from "#/lib/auth/client-credential-auth
 import { devLogin } from "#/lib/auth/dev-login";
 import { authClient } from "#/lib/auth-client";
 
+/** The proxy's `?next=` deep link, kept only when it stays on this site. */
+function pathAfterLogin(next: string | null | undefined) {
+  if (!next) return "/?login=1";
+  const target = new URL(next, window.location.origin);
+  return target.origin === window.location.origin ? target.pathname + target.search : "/?login=1";
+}
+
 export function LoginForm() {
   const searchParams = useSearchParams();
   const [clickedGoogle, setClickedGoogle] = useState(false);
@@ -45,7 +52,7 @@ export function LoginForm() {
         toast({ title: result.error, variant: "destructive" });
         return;
       }
-      window.location.assign("/?login=1");
+      window.location.assign(pathAfterLogin(searchParams?.get("next")));
     } finally {
       setIsCredentialLogin(false);
     }
@@ -63,7 +70,7 @@ export function LoginForm() {
           authClient.signIn
             .social({
               provider: "google",
-              callbackURL: "/?login=1",
+              callbackURL: pathAfterLogin(searchParams?.get("next")),
               errorCallbackURL: "/login",
               fetchOptions: { throw: true },
             })

@@ -166,7 +166,6 @@ GOOGLE_GENAI_USE_VERTEXAI="true"
 GOOGLE_CLOUD_PROJECT="your-gcp-project"
 GOOGLE_CLOUD_LOCATION="your-vertex-region"
 GEMINI_API_KEY=""                    # Local development only, instead of the three above
-RECORDINGS_API_KEY="your-recordings-api-key"  # Legacy webhooks of the retired Fidelity Ratings API
 
 # ====================================
 # SENTRY (Error Monitoring) — OPTIONAL

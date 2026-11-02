@@ -340,18 +340,6 @@ function getCurrentUserNavigationLinks(
         <Building2 className="h-4 w-4" strokeWidth={3} />
         <Link href={`/${mainRoute}/hubs`}>Hubs</Link>
       </div>,
-      <div className={`tab-link ${cn(supervisorsActive && "active")}`} key="admin-supervisors">
-        <PeopleIcon />
-        <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
-      </div>,
-      <div className={`tab-link ${cn(fellowsActive && "active")}`} key="admin-fellows">
-        <PeopleIconAlternate />
-        <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
-      </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`} key="admin-students">
-        <GraduationCapIcon />
-        <Link href={`/${mainRoute}/students`}>Students</Link>
-      </div>,
       <div className={`tab-link ${cn(ticketsActive && "active")}`} key="admin-tickets">
         <Icons.ticket />
         <Link href={`/${mainRoute}/tickets`}>Tickets</Link>

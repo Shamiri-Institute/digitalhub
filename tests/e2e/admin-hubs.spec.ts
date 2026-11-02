@@ -1,18 +1,26 @@
 import { expect, type Page, test } from "@playwright/test";
-import { ilike, inArray } from "drizzle-orm";
+import { ilike, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { careAdminEmail, plainAdminEmail, superAdminEmail } from "#/db/seed/fixtures";
-import { hub, interventionSession, sessionName } from "#/db/schema";
+import {
+  fellowAttendance,
+  hub,
+  interventionGroup,
+  interventionSession,
+  school,
+  sessionName,
+  student,
+} from "#/db/schema";
 import { hubSessionTypes } from "#/lib/app-constants/hub-session-types";
 import { objectId } from "#/lib/crypto";
-import { signInWithEmail } from "#/tests/helpers";
-import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { dataRows, getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * Super admins create and edit the hubs of their implementer, in the active project: the name and
  * the label and amount of each session type. Other admins, with or without a team, see the hubs
- * but get no way to add or edit one.
+ * and open each hub's page, but get no way to add or edit one.
  */
 // Each worker loads this file, and its afterAll deletes every hub with its prefix, so two
 // workers that start in the same millisecond must still get different prefixes.
@@ -28,8 +36,28 @@ test.afterAll(async () => {
   });
   const hubIds = createdHubs.map((h) => h.id);
   if (hubIds.length > 0) {
+    const hubSessionIds = db
+      .select({ id: interventionSession.id })
+      .from(interventionSession)
+      .where(inArray(interventionSession.hubId, hubIds));
+    const hubSchoolIds = db
+      .select({ id: school.id })
+      .from(school)
+      .where(inArray(school.hubId, hubIds));
+    await db.delete(fellowAttendance).where(inArray(fellowAttendance.sessionId, hubSessionIds));
+    await db.delete(interventionGroup).where(inArray(interventionGroup.schoolId, hubSchoolIds));
     await db.delete(interventionSession).where(inArray(interventionSession.hubId, hubIds));
+    await db.delete(school).where(inArray(school.hubId, hubIds));
     await db.delete(sessionName).where(inArray(sessionName.hubId, hubIds));
+    await db
+      .delete(student)
+      .where(
+        inArray(
+          student.schoolId,
+          db.select({ id: school.id }).from(school).where(inArray(school.hubId, hubIds)),
+        ),
+      );
+    await db.delete(school).where(inArray(school.hubId, hubIds));
   }
   await db.delete(hub).where(ilike(hub.hubName, `${HUB_PREFIX}%`));
 });
@@ -69,10 +97,11 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
     columns: { id: true, projectId: true },
   });
   expect(created?.projectId).not.toBeNull();
-  expect(await codesInEditDialog(page, HUB_NAME)).toEqual(
+  expect(await codesInHubSettings(page, HUB_NAME)).toEqual(
     hubSessionTypes.map((type) => type.name).toSorted(),
   );
 
+  await page.goto(getUrl("/admin/hubs"));
   const row = (await searchRows(page, HUB_NAME)).first();
   await expect(row).toBeVisible();
 
@@ -92,21 +121,34 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   // A write that must not happen; `ilike`, as the duplicate differs only in case.
   expect(await db.$count(hub, ilike(hub.hubName, `${HUB_PREFIX}%`))).toBe(1);
 
-  await row.locator('[aria-haspopup="menu"]').click();
-  await page.getByRole("menuitem", { name: "Edit hub details", exact: true }).click();
-  const editDialog = page.getByRole("dialog");
-  await expect(editDialog.getByLabel("Hub name")).toHaveValue(HUB_NAME);
-  await expect(editDialog).toContainText("the amount paid to fellows per lesson");
-  await expect(editDialog).not.toContainText("Payouts already recorded keep their amount");
-  await editDialog.getByRole("button", { name: "Intervention sessions" }).click();
-  await expect(editDialog.getByLabel("s0 label")).toHaveValue("Pre-session");
-  await expect(editDialog.getByLabel("s0 amount")).toHaveValue("1000");
-  await expect(editDialog.getByLabel("s1 label")).toHaveValue("Session 1");
-  await expect(editDialog.getByLabel("s1 amount")).toHaveValue("1750");
-  await editDialog.getByLabel("Hub name").fill(RENAMED_HUB_NAME);
-  await editDialog.getByLabel("s1 label").fill("Lesson 1");
-  await editDialog.getByLabel("s1 amount").fill("1800");
-  await editDialog.getByRole("button", { name: "Save" }).click();
+  await row.getByRole("link", { name: HUB_NAME, exact: true }).click();
+  await expect(page.getByRole("heading", { name: HUB_NAME })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Schools\s*0/ })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(page.getByText("No schools found for this hub")).toBeVisible();
+  await page.getByRole("link", { name: "Hub settings" }).click();
+  await expect(page.getByLabel("Hub name")).toHaveValue(HUB_NAME);
+  await expect(page.getByText("Payouts already recorded keep their amount")).toBeVisible();
+  await expect(page.getByLabel("s0 label")).toHaveValue("Pre-session");
+  await expect(page.getByLabel("s0 amount")).toHaveValue("1000");
+  await expect(page.getByLabel("s1 label")).toHaveValue("Session 1");
+  await expect(page.getByLabel("s1 amount")).toHaveValue("1750");
+  await expect(page.getByRole("button", { name: "Review and save" })).toHaveCount(0);
+  await page.getByLabel("Hub name").fill(RENAMED_HUB_NAME);
+  await page.getByLabel("s1 label").fill("Lesson 1");
+  await page.getByLabel("s1 amount").fill("1800");
+  await expect(page.getByText(`was ${HUB_NAME}`)).toBeVisible();
+  await expect(page.getByText("was Session 1")).toBeVisible();
+  await expect(page.getByText("was 1,750")).toBeVisible();
+  await expect(page.getByText("2 unsaved changes")).toBeVisible();
+
+  page.once("dialog", (dialog) => void dialog.dismiss());
+  await page.getByRole("link", { name: /^Schools/ }).click();
+  await expect(page.getByLabel("Hub name")).toHaveValue(RENAMED_HUB_NAME);
+
+  await page.getByRole("button", { name: "Review and save" }).click();
 
   const saveConfirm = page.getByRole("dialog", { name: "Save changes to hub?" });
   await expect(saveConfirm).toContainText(`${HUB_NAME} will be renamed to ${RENAMED_HUB_NAME}`);
@@ -115,25 +157,23 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await expect(editedRow).toContainText("was Session 1");
   await expect(editedRow).toContainText("was 1,750");
   await expect(editedRow).toContainText("now 1,800");
-  await expect(saveConfirm).toContainText("Payouts already recorded keep their amount");
   await saveConfirm.getByRole("button", { name: "Save changes" }).click();
   await expect(saveConfirm).toBeHidden();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByText(/unsaved change/)).toHaveCount(0);
 
   await page.reload();
+  await expect(page.getByRole("heading", { name: RENAMED_HUB_NAME })).toBeVisible();
+  await page.goto(getUrl("/admin/hubs"));
   await expect((await searchRows(page, RENAMED_HUB_NAME)).first()).toBeVisible();
   await expect(await searchRows(page, HUB_NAME)).toHaveCount(0);
 
-  const reopened = await openEditDialog(page, RENAMED_HUB_NAME);
-  await reopened.getByRole("button", { name: "Intervention sessions" }).click();
-  await expect(reopened.getByLabel("s1 label")).toHaveValue("Lesson 1");
-  await expect(reopened.getByLabel("s1 amount")).toHaveValue("1800");
-  await expect(reopened.getByLabel("s0 label")).toHaveValue("Pre-session");
-  await expect(reopened.getByLabel("s0 amount")).toHaveValue("1000");
-  await reopened.getByRole("button", { name: "Cancel" }).click();
-  expect(await codesInEditDialog(page, RENAMED_HUB_NAME)).toEqual(
+  expect(await codesInHubSettings(page, RENAMED_HUB_NAME)).toEqual(
     hubSessionTypes.map((type) => type.name).toSorted(),
   );
+  await expect(page.getByLabel("s1 label")).toHaveValue("Lesson 1");
+  await expect(page.getByLabel("s1 amount")).toHaveValue("1800");
+  await expect(page.getByLabel("s0 label")).toHaveValue("Pre-session");
+  await expect(page.getByLabel("s0 amount")).toHaveValue("1000");
 });
 
 test("a super admin picks a hub's session types, and cannot remove one that sessions use", async ({
@@ -161,7 +201,7 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
   await expect(addDialog.getByLabel("dfu1 amount")).toHaveValue("500");
 
   await addDialog.getByRole("button", { name: /Intervention sessions/ }).click();
-  await expect(addDialog.getByRole("button", { name: "Remove s3" })).toHaveCount(0);
+  await expect(addDialog.getByRole("button", { name: "Remove s3" })).toBeDisabled();
   await addDialog.getByRole("button", { name: "Remove s4" }).click();
   await expect(addDialog.getByLabel("s4 label")).toHaveCount(0);
 
@@ -179,7 +219,7 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
   await createConfirm.getByRole("button", { name: "Create hub", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
-  expect(await codesInEditDialog(page, hubName)).toEqual(
+  expect(await codesInHubSettings(page, hubName)).toEqual(
     [
       "s0",
       "s1",
@@ -223,29 +263,28 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
       sessionDate: new Date(),
     });
 
-    await page.reload();
-    const row = (await searchRows(page, hubName)).first();
-    await row.locator('[aria-haspopup="menu"]').click();
-    await page.getByRole("menuitem", { name: "Edit hub details", exact: true }).click();
-    const editDialog = page.getByRole("dialog");
-    await editDialog.getByRole("button", { name: /Supervision sessions/ }).click();
-    await expect(editDialog.getByRole("button", { name: "Remove sv6" })).toHaveCount(0);
-    await expect(
-      editDialog.getByText("sv6 is used by 1 session, so it cannot be removed."),
-    ).toBeVisible();
+    await openHubSettings(page, hubName);
+    const removeSv6 = page.getByRole("button", { name: "Remove sv6" });
+    await expect(removeSv6).toBeDisabled();
+    await expect(removeSv6).toHaveAccessibleDescription(
+      "sv6 is used by 1 session, so it cannot be removed.",
+    );
+    await expect(page.getByRole("button", { name: "Remove s2" })).toHaveAccessibleDescription(
+      "Only the last intervention session can be removed.",
+    );
+    await expect(page.getByText("No clinical sessions at this hub.")).toBeVisible();
 
-    await editDialog.getByRole("button", { name: /Clinical sessions/ }).click();
-    await editDialog.getByRole("button", { name: "Add clinical session" }).click();
-    await expect(editDialog.getByLabel("cl1 label")).toHaveValue("Clinical 1");
-    await editDialog.getByRole("button", { name: /Intervention sessions/ }).click();
-    await editDialog.getByRole("button", { name: "Remove s3" }).click();
-    await editDialog.getByRole("button", { name: "Save" }).click();
+    await page.getByRole("button", { name: "Add clinical session" }).click();
+    await expect(page.getByLabel("cl1 label")).toHaveValue("Clinical 1");
+    await page.getByRole("button", { name: "Remove s3" }).click();
+    await page.getByRole("button", { name: "Review and save" }).click();
     const saveConfirm = page.getByRole("dialog", { name: "Save changes to hub?" });
     await expect(saveConfirm).toContainText("2 session types will change");
     await saveConfirm.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByText(/unsaved change/)).toHaveCount(0);
 
-    const editedCodes = await codesInEditDialog(page, hubName);
+    const editedCodes = await codesInHubSettings(page, hubName);
     expect(editedCodes).toContain("cl1");
     expect(editedCodes).toContain("sv6");
     expect(editedCodes).not.toContain("s3");
@@ -253,20 +292,20 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
   });
 
   await test.step("a form opened before another admin saved cannot save", async () => {
-    const staleDialog = await openEditDialog(page, hubName);
+    await openHubSettings(page, hubName);
     const other = await context.newPage();
-    const otherDialog = await openEditDialog(other, hubName);
-    await otherDialog.getByRole("button", { name: /Training sessions/ }).click();
-    await otherDialog.getByRole("button", { name: "Add training session" }).click();
-    await otherDialog.getByRole("button", { name: "Save" }).click();
+    await openHubSettings(other, hubName);
+    await other.getByRole("button", { name: "Add training session" }).click();
+    await other.getByRole("button", { name: "Review and save" }).click();
     await other
       .getByRole("dialog", { name: "Save changes to hub?" })
       .getByRole("button", { name: "Save changes" })
       .click();
     await expect(other.getByRole("dialog")).toHaveCount(0);
+    await expect(other.getByText(/unsaved change/)).toHaveCount(0);
     await other.close();
-    await staleDialog.getByLabel("Hub name").fill(`${hubName} renamed`);
-    await staleDialog.getByRole("button", { name: "Save" }).click();
+    await page.getByLabel("Hub name").fill(`${hubName} renamed`);
+    await page.getByRole("button", { name: "Review and save" }).click();
     await page
       .getByRole("dialog", { name: "Save changes to hub?" })
       .getByRole("button", { name: "Save changes" })
@@ -274,12 +313,12 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
     await expect(
       page.getByText("This hub's session types changed since you opened it").first(),
     ).toBeVisible();
-    await staleDialog.getByRole("button", { name: "Cancel" }).click();
-    expect(await codesInEditDialog(page, hubName)).toContain("t6");
+    await page.getByRole("button", { name: "Discard" }).click();
+    expect(await codesInHubSettings(page, hubName)).toContain("t6");
   });
 
   await test.step("the server refuses to remove a type that a session starts using after the form opened", async () => {
-    const removeDialog = await openEditDialog(page, hubName);
+    await openHubSettings(page, hubName);
     const s2 = await db.query.sessionName.findFirst({
       where: (n, { and, eq }) => and(eq(n.hubId, created.id), eq(n.sessionName, "s2")),
       columns: { id: true },
@@ -293,9 +332,8 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
       yearOfImplementation: new Date().getFullYear(),
       sessionDate: new Date(),
     });
-    await removeDialog.getByRole("button", { name: /Intervention sessions/ }).click();
-    await removeDialog.getByRole("button", { name: "Remove s2" }).click();
-    await removeDialog.getByRole("button", { name: "Save" }).click();
+    await page.getByRole("button", { name: "Remove s2" }).click();
+    await page.getByRole("button", { name: "Review and save" }).click();
     await page
       .getByRole("dialog", { name: "Save changes to hub?" })
       .getByRole("button", { name: "Save changes" })
@@ -303,39 +341,29 @@ test("a super admin picks a hub's session types, and cannot remove one that sess
     await expect(
       page.getByText("A session type you removed already has intervention sessions").first(),
     ).toBeVisible();
-    await removeDialog.getByRole("button", { name: "Cancel" }).click();
-    expect(await codesInEditDialog(page, hubName)).toContain("s2");
+    await page.getByRole("button", { name: "Discard" }).click();
+    expect(await codesInHubSettings(page, hubName)).toContain("s2");
   });
 });
 
-const SESSION_GROUPS = [
-  /Intervention sessions/,
-  /Supervision sessions/,
-  /Training sessions/,
-  /Clinical sessions/,
-  /Data follow-up sessions/,
-];
-
-async function openEditDialog(page: Page, hubName: string) {
+async function openHubPage(page: Page, hubName: string) {
   await page.goto(getUrl("/admin/hubs"));
   const row = (await searchRows(page, hubName)).first();
-  await row.locator('[aria-haspopup="menu"]').click();
-  await page.getByRole("menuitem", { name: "Edit hub details", exact: true }).click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog.getByLabel("Hub name")).toHaveValue(hubName);
-  return dialog;
+  await row.getByRole("link", { name: `Open ${hubName}` }).click();
+  await expect(page.getByRole("heading", { name: hubName })).toBeVisible();
 }
 
-async function codesInEditDialog(page: Page, hubName: string) {
-  const dialog = await openEditDialog(page, hubName);
-  for (const group of SESSION_GROUPS) {
-    await dialog.getByRole("button", { name: group }).click();
-  }
-  const names = await dialog
+async function openHubSettings(page: Page, hubName: string) {
+  await openHubPage(page, hubName);
+  await page.getByRole("link", { name: "Hub settings" }).click();
+  await expect(page.getByLabel("Hub name")).toHaveValue(hubName);
+}
+
+async function codesInHubSettings(page: Page, hubName: string) {
+  await openHubSettings(page, hubName);
+  const names = await page
     .getByRole("textbox", { name: / label$/ })
     .evaluateAll((inputs) => inputs.map((input) => input.getAttribute("aria-label") ?? ""));
-  await dialog.getByRole("button", { name: "Cancel" }).click();
-  await expect(dialog).toBeHidden();
   return names.map((name) => name.replace(/ label$/, "")).toSorted();
 }
 
@@ -394,19 +422,197 @@ test("an error inside a collapsed group opens the group and shows the error", as
 });
 
 for (const email of [careAdminEmail, plainAdminEmail]) {
-  test(`${email} sees the hubs but cannot add or edit one`, async ({ page, context }) => {
+  test(`${email} sees the hubs and their settings but cannot add or edit one`, async ({
+    page,
+    context,
+  }) => {
     await signInWithEmail(context, email);
     await page.goto(getUrl("/admin/hubs"));
 
     await expect(page.getByRole("heading", { name: "Hubs" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add hub" })).toHaveCount(0);
 
-    await page.locator('tbody [aria-haspopup="menu"]').first().click();
-    await expect(page.getByRole("menuitem", { name: "Edit hub details", exact: true })).toHaveCount(
-      0,
-    );
-    await expect(
-      page.getByRole("menuitem", { name: "View hub coordinator profile" }),
-    ).toBeVisible();
+    await page
+      .getByRole("link", { name: /^Open / })
+      .first()
+      .click();
+    await expect(page.getByRole("link", { name: /^Schools/ })).toBeVisible();
+
+    await page.getByRole("link", { name: "Hub settings" }).click();
+    const hubDetails = page.getByRole("region", { name: "Hub details" });
+    const sessionTypes = page.getByRole("region", { name: "Session types" });
+    await expect(hubDetails).toContainText("Hub name");
+    await expect(sessionTypes).toContainText("Intervention sessions");
+    await expect(hubDetails.getByRole("textbox")).toHaveCount(0);
+    await expect(sessionTypes.getByRole("textbox")).toHaveCount(0);
+    await expect(sessionTypes.getByRole("spinbutton")).toHaveCount(0);
+    await expect(sessionTypes.getByRole("button")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Review and save" })).toHaveCount(0);
   });
 }
+
+test("a hub page lists its schools and steps to the hubs beside it by name", async ({
+  page,
+  context,
+}) => {
+  await signInWithEmail(context, plainAdminEmail);
+  await page.goto(getUrl("/admin/hubs"));
+  const hubLinks = page.getByRole("link", { name: /^Open / });
+  await expect(hubLinks.first()).toBeVisible();
+  const hubNames = (
+    await hubLinks.evaluateAll((links) =>
+      links.map((link) => link.getAttribute("aria-label") ?? ""),
+    )
+  ).map((label) => label.replace(/^Open /, ""));
+  test.skip(hubNames.length < 2, "the admin sees a single hub");
+  const [firstHub = "", secondHub = ""] = hubNames;
+
+  await page.getByRole("link", { name: firstHub, exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/hubs\/[^/]+\/schools$/);
+  await expect(page.getByRole("heading", { name: firstHub })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Hubs");
+  await expect(page.getByRole("button", { name: "Previous hub", exact: true })).toBeDisabled();
+
+  await expect(dataRows(page).first()).toBeVisible();
+
+  await page.getByRole("link", { name: `Next hub: ${secondHub}` }).click();
+  await expect(page.getByRole("heading", { name: secondHub })).toBeVisible();
+  await page.getByRole("link", { name: `Previous hub: ${firstHub}` }).click();
+  await expect(page.getByRole("heading", { name: firstHub })).toBeVisible();
+});
+
+test("a hub page counts its sessions as marked attended, unmarked, upcoming and cancelled, its tabs count active rows, and the hubs list counts the same", async ({
+  page,
+  context,
+}) => {
+  const {
+    rows: [seededHub],
+  } = await db.execute<{ implementerId: string; projectId: string }>(sql`
+    select h.implementer_id as "implementerId", h.project_id as "projectId"
+    from hubs h
+    join projects p on p.id = h.project_id and p.is_default
+    join implementer_members m on m.implementer_id = h.implementer_id
+    join users u on u.id = m.user_id and u.email = ${superAdminEmail}
+    order by h.id
+    limit 1`);
+  required(seededHub, "a hub of the super admin's implementer in the default project");
+  const leader = await db.query.fellow.findFirst({
+    columns: { id: true },
+    orderBy: (f, { asc }) => asc(f.id),
+  });
+  required(leader, "a seeded fellow to lead the group");
+  // Sessions, groups and attendance are not made from the admin pages, so the spec inserts them.
+  const [statsHub] = await db
+    .insert(hub)
+    .values({ id: objectId("hub"), hubName: `${HUB_PREFIX} Stats`, ...seededHub })
+    .returning({ id: hub.id });
+  required(statsHub, "the inserted hub");
+  const schoolId = objectId("school");
+  await db.insert(school).values({
+    id: schoolId,
+    schoolName: `${HUB_PREFIX} School`,
+    visibleId: schoolId,
+    hubId: statsHub.id,
+  });
+  await db.insert(interventionGroup).values({
+    id: objectId("group"),
+    groupName: "Stats group",
+    leaderId: leader.id,
+    schoolId,
+    projectId: seededHub.projectId,
+  });
+  const day = 24 * 60 * 60 * 1000;
+  const session = (occurred: boolean, daysFromNow: number, status?: "Cancelled" | null) => ({
+    id: objectId("session"),
+    hubId: statsHub.id,
+    schoolId,
+    projectId: seededHub.projectId,
+    occurred,
+    status,
+    yearOfImplementation: new Date().getFullYear(),
+    sessionDate: new Date(Date.now() + daysFromNow * day),
+  });
+  const leaderMarked = session(true, -7);
+  await db
+    .insert(interventionSession)
+    .values([
+      leaderMarked,
+      session(true, -6),
+      session(false, -5),
+      session(false, 5),
+      session(false, 6, null),
+      session(false, -4, "Cancelled"),
+    ]);
+  await db
+    .insert(fellowAttendance)
+    .values({ fellowId: leader.id, sessionId: leaderMarked.id, attended: true });
+  const droppedOutSchoolId = objectId("school");
+  await db.insert(school).values({
+    id: droppedOutSchoolId,
+    schoolName: `${HUB_PREFIX} Dropped out school`,
+    visibleId: droppedOutSchoolId,
+    hubId: statsHub.id,
+    droppedOut: true,
+  });
+  const statsStudent = (droppedOut: boolean) => {
+    const id = objectId("student");
+    return { id, visibleId: id, schoolId, droppedOut };
+  };
+  await db.insert(student).values([statsStudent(false), statsStudent(true)]);
+
+  await signInWithEmail(context, superAdminEmail);
+  await page.goto(getUrl(`/admin/hubs/${statsHub.id}/schools`));
+  const stats = page.getByRole("region", { name: "Hub stats" });
+  await expect(stats).toContainText("marked attended of 5 scheduled");
+  for (const segment of ["2 attended", "1 unmarked", "2 upcoming", "1 cancelled"]) {
+    await expect(stats).toContainText(segment);
+  }
+  await expect(stats).toContainText("1 past session needs marking");
+  await expect(stats).toContainText("50%");
+  await expect(stats).toContainText("1 of 2 sessions with groups");
+  await expect(stats).toContainText("1 session marked attended without fellow attendance");
+
+  // The tables list every row; the badges leave out the cancelled session and dropped-out rows.
+  await expect(dataRows(page)).toHaveCount(2);
+  const tabs = page.getByRole("navigation", { name: "Hub sections" });
+  await expect(tabs.getByRole("link", { name: /^Schools/ })).toHaveText(/^Schools\s*1$/);
+  await expect(tabs.getByRole("link", { name: /^Sessions/ })).toHaveText(/^Sessions\s*5$/);
+  await expect(tabs.getByRole("link", { name: /^Students/ })).toHaveText(/^Students\s*1$/);
+
+  await page.goto(getUrl("/admin/hubs"));
+  const listRow = (await searchRows(page, `${HUB_PREFIX} Stats`)).first();
+  await expect(listRow.getByRole("cell")).toHaveText([
+    `${HUB_PREFIX} Stats`,
+    "",
+    "1",
+    "0",
+    "0",
+    "1",
+    "2 of 5",
+    "",
+  ]);
+});
+
+test("a hub of another implementer is not found", async ({ page, context }) => {
+  const {
+    rows: [fixture],
+  } = await db.execute<{ email: string; ownHub: string; foreignHub: string | null }>(sql`
+    select u.email,
+      (select h.id from hubs h join projects p on p.id = h.project_id and p.is_default
+        where h.implementer_id = m.implementer_id order by h.id limit 1) as "ownHub",
+      (select h.id from hubs h where h.implementer_id <> m.implementer_id
+        order by h.id limit 1) as "foreignHub"
+    from implementer_members m
+    join users u on u.id = m.user_id
+    where m.role = 'ADMIN' and ${signableMember()}
+    order by u.email
+    limit 1`);
+  required(fixture?.foreignHub, "a hub of an implementer the admin is not a member of");
+  await signInWithEmail(context, fixture.email);
+
+  const own = await page.goto(getUrl(`/admin/hubs/${fixture.ownHub}/schools`));
+  expect(own?.status()).toBe(200);
+  const foreign = await page.goto(getUrl(`/admin/hubs/${fixture.foreignHub}/schools`));
+  expect(foreign?.status()).toBe(404);
+  await expect(page.getByText("This page could not be found.")).toBeVisible();
+});

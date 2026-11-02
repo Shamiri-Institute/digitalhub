@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
-import MainSupervisorsDataTable from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
+import SupervisorsTable from "#/app/(platform)/hc/supervisors/components/supervisors-table";
 import SupervisorChartsWrapper from "#/app/(platform)/hc/supervisors/components/supervisor-charts-container";
 import WeeklyHubTeamMeetingForm from "#/app/(platform)/hc/supervisors/components/weekly-hub-team-meeting";
 import { currentHubCoordinator } from "#/app/auth";
@@ -10,8 +10,6 @@ import { redirect } from "next/navigation";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { db } from "#/db/client";
-import type { ImplementerRole } from "#/db/enums";
 
 export default async function SupervisorsPage() {
   const coordinator = await currentHubCoordinator();
@@ -50,40 +48,5 @@ export default async function SupervisorsPage() {
       </div>
       <PageFooter />
     </div>
-  );
-}
-
-async function SupervisorsTable({
-  hubId,
-  projectId,
-  role,
-}: {
-  hubId: string;
-  projectId: string | null;
-  role: ImplementerRole;
-}) {
-  const [supervisors, project] = await Promise.all([
-    db.query.supervisor.findMany({
-      where: (s, { eq }) => eq(s.hubId, hubId),
-      with: {
-        assignedSchools: {
-          columns: { schoolName: true },
-          orderBy: (school, { asc }) => [asc(school.schoolName), asc(school.id)],
-        },
-        fellows: { columns: { droppedOut: true } },
-        monthlySupervisorEvaluation: true,
-      },
-      orderBy: (s, { asc }) => asc(s.supervisorName),
-    }),
-    projectId
-      ? db.query.project.findFirst({
-          where: (p, { eq }) => eq(p.id, projectId),
-          columns: { actualStartDate: true, actualEndDate: true },
-        })
-      : undefined,
-  ]);
-
-  return (
-    <MainSupervisorsDataTable supervisors={supervisors} project={project ?? null} role={role} />
   );
 }

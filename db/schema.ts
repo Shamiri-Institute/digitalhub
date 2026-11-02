@@ -1458,6 +1458,7 @@ export const clinicalScreeningInfo = pgTable(
     riskStatus: riskStatusOptionsEnum("risk_status").notNull(),
     currentSupervisorId: varchar("current_supervisor_id", { length: 255 }),
     referredToSupervisorId: varchar("referred_to_supervisor_id", { length: 255 }),
+    referredToClinicalLeadId: text("referred_to_clinical_lead_id"),
     acceptCase: boolean("accept_case").default(false).notNull(),
     generalPresentingIssues: varchar("general_presenting_issues", { length: 255 }),
     generalPresentingIssuesOtherSpecified: text("general_presenting_issues_other_specified"),
@@ -1533,6 +1534,16 @@ export const clinicalScreeningInfo = pgTable(
       columns: [table.sessionWhenCaseIsFlaggedId],
       foreignColumns: [interventionSession.id],
       name: "clinical_screening_info_session_when_case_is_flagged_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("set null"),
+    index("clinical_screening_info_referred_to_clinical_lead_id_idx").on(
+      table.referredToClinicalLeadId,
+    ),
+    foreignKey({
+      columns: [table.referredToClinicalLeadId],
+      foreignColumns: [clinicalLead.id],
+      name: "clinical_screening_info_referred_to_clinical_lead_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("set null"),

@@ -97,6 +97,8 @@ function FellowAttendanceContent({
         fellowName: fellow.fellowName,
         cellNumber: fellow.cellNumber,
         attended: sessionAttendance?.attended ?? null,
+        absenceReason: sessionAttendance?.absenceReason ?? undefined,
+        absenceComments: sessionAttendance?.absenceComments ?? undefined,
         supervisorName: selectedSupervisor.supervisorName,
         supervisorId: selectedSupervisor.id,
         schoolName: session?.school?.schoolName ?? session?.venue,

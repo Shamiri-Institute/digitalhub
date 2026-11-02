@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.7.2](https://github.com/Shamiri-Institute/digitalhub/compare/v2.7.1...v2.7.2) (2026-11-02)
+
+### Bug Fixes
+
+- **clinical:** add an accept step for clinical-lead referrals, and fix form state ([#1018](https://github.com/Shamiri-Institute/digitalhub/issues/1018)) ([f61de2e](https://github.com/Shamiri-Institute/digitalhub/commit/f61de2e00aa4b7d49e5795bbbb5b589b32ea6c9c))
+
 ## [2.7.1](https://github.com/Shamiri-Institute/digitalhub/compare/v2.7.0...v2.7.1) (2026-10-31)
 
 ## [2.7.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.6.0...v2.7.0) (2026-10-31)

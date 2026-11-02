@@ -24,7 +24,7 @@ import PageProof from "./page-proof";
 import PageTabs from "./page-tabs";
 import PublishDialog from "./publish-dialog";
 import SamplePdfButton from "./sample-pdf-button";
-import { useLeaveGuard } from "./use-leave-guard";
+import { useLeaveGuard } from "#/lib/hooks/use-leave-guard";
 
 interface SurveyBuilderProps {
   surveyCode: string;

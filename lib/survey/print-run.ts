@@ -1,7 +1,7 @@
 // Recording print runs, issuing their copies and voiding them, shared by the print-run actions, the
 // print job, the seed and tests so they can't drift apart. Every rule a request must meet is checked
 // here; the triggers in drizzle/0042_survey_print_run_guards.sql and
-// drizzle/0044_survey_print_file_guards.sql back up the ones about hubs, schools, students and pages.
+// drizzle/0047_survey_print_file_guards.sql back up the ones about hubs, schools, students and pages.
 
 import { createHash } from "node:crypto";
 

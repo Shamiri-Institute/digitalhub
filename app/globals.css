@@ -47,6 +47,7 @@
   --color-shamiri-green: #00ba34;
   --color-shamiri-border-green: #ccf1d6;
   --color-shamiri-light-orange: #f98600;
+  --color-shamiri-dark-orange: #b45309;
   --color-canvas: hsl(var(--canvas));
 
   --color-primary: hsl(var(--primary));
