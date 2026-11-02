@@ -338,10 +338,10 @@ async function writeReferral(
       await tx
         .update(clinicalScreeningInfo)
         .set({
-          referredFrom: referrer.name,
+          referredFrom: referrer.profileId,
           referredFromSpecified: referrer.name,
           referredTo: recipientIsLead ? "Clinical Lead" : "Supervisor",
-          referredToSpecified: recipient.name,
+          referredToSpecified: recipient.id,
           referredToSupervisorId: recipientIsLead ? null : recipient.id,
           referredToClinicalLeadId: recipientIsLead ? recipient.id : null,
           referralNotes: data.referralNotes,
@@ -358,7 +358,7 @@ async function writeReferral(
       from: referrer.name ?? "",
       fromRole: referrer.role,
       to: recipient.name ?? "",
-      toRole: recipient.role,
+      toRole: recipient.id,
       date: new Date(),
       referralStatus: "Pending",
     });

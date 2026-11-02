@@ -15,17 +15,19 @@ async function pickLeadAndSupervisorInOneHub() {
     leadName: string;
     supervisorEmail: string;
     supervisorId: string;
+    supervisorName: string;
     hubId: string;
   }>(sql`
     select lu.email as "leadEmail", cl.clinical_lead_name as "leadName",
-      su.email as "supervisorEmail", sv.id as "supervisorId", sv.hub_id as "hubId"
+      su.email as "supervisorEmail", sv.id as "supervisorId",
+      sv.supervisor_name as "supervisorName", sv.hub_id as "hubId"
     from clinical_leads cl
     join implementer_members lm on lm.identifier = cl.id and lm.role = 'CLINICAL_LEAD'
     join users lu on lu.id = lm.user_id
     join supervisors sv on sv.hub_id = cl.assigned_hub_id
     join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
     join users su on su.id = m.user_id
-    where cl.clinical_lead_name is not null and ${signableMember()} and ${signableMember("lm")}
+    where cl.clinical_lead_name is not null and sv.supervisor_name is not null and ${signableMember()} and ${signableMember("lm")}
     order by cl.id, sv.id
     limit 1`);
   required(row, "no clinical lead with a supervisor in their hub");
@@ -86,5 +88,7 @@ test("a clinical lead accepts a referred case before it becomes theirs", async (
 
   await page.reload({ waitUntil: "networkidle" });
   await expect(referralCard).toHaveCount(0);
-  await expect(await searchRows(page, created.pseudonym, myCases(page))).toHaveCount(1);
+  const acceptedRow = await searchRows(page, created.pseudonym, myCases(page));
+  await expect(acceptedRow).toHaveCount(1);
+  await expect(acceptedRow).toContainText(fixture.supervisorName);
 });
