@@ -1590,6 +1590,7 @@ async function createClinicalRecords(
         });
 
         notesData.push({
+          caseId,
           sessionId: clinicalSessionId,
           createdBy: seederUserId,
           presentingIssues: faker.lorem.sentence(),

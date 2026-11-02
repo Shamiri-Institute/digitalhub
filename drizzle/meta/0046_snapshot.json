@@ -1,5 +1,5 @@
 {
-  "id": "e9a007bb-ee4a-418b-82af-2ea4909959c7",
+  "id": "9f84e4da-5cc1-49cf-998d-5a25cdf88e86",
   "prevId": "23cca16d-7ddd-432f-b7b5-f7de84662de7",
   "version": "7",
   "dialect": "postgresql",
@@ -467,6 +467,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "case_id": {
+          "name": "case_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "session_id": {
           "name": "session_id",
           "type": "text",
@@ -481,9 +487,15 @@
         }
       },
       "indexes": {
-        "clinical_case_notes_session_id_key": {
-          "name": "clinical_case_notes_session_id_key",
+        "clinical_case_notes_case_id_session_id_key": {
+          "name": "clinical_case_notes_case_id_session_id_key",
           "columns": [
+            {
+              "expression": "case_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
             {
               "expression": "session_id",
               "isExpression": false,
@@ -492,6 +504,21 @@
             }
           ],
           "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clinical_case_notes_session_id_idx": {
+          "name": "clinical_case_notes_session_id_idx",
+          "columns": [
+            {
+              "expression": "session_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -513,6 +540,15 @@
         }
       },
       "foreignKeys": {
+        "clinical_case_notes_case_id_fkey": {
+          "name": "clinical_case_notes_case_id_fkey",
+          "tableFrom": "clinical_case_notes",
+          "tableTo": "clinical_screening_info",
+          "columnsFrom": ["case_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
         "clinical_case_notes_session_id_fkey": {
           "name": "clinical_case_notes_session_id_fkey",
           "tableFrom": "clinical_case_notes",
@@ -536,6 +572,135 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.clinical_case_reopenings": {
+      "name": "clinical_case_reopenings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "case_id": {
+          "name": "case_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "termination_id": {
+          "name": "termination_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "clinical_case_reopenings_case_id_idx": {
+          "name": "clinical_case_reopenings_case_id_idx",
+          "columns": [
+            {
+              "expression": "case_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clinical_case_reopenings_termination_id_key": {
+          "name": "clinical_case_reopenings_termination_id_key",
+          "columns": [
+            {
+              "expression": "termination_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clinical_case_reopenings_created_by_idx": {
+          "name": "clinical_case_reopenings_created_by_idx",
+          "columns": [
+            {
+              "expression": "created_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "clinical_case_reopenings_case_id_fkey": {
+          "name": "clinical_case_reopenings_case_id_fkey",
+          "tableFrom": "clinical_case_reopenings",
+          "tableTo": "clinical_screening_info",
+          "columnsFrom": ["case_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "clinical_case_reopenings_termination_id_fkey": {
+          "name": "clinical_case_reopenings_termination_id_fkey",
+          "tableFrom": "clinical_case_reopenings",
+          "tableTo": "clinical_case_termination",
+          "columnsFrom": ["termination_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "clinical_case_reopenings_created_by_fkey": {
+          "name": "clinical_case_reopenings_created_by_fkey",
+          "tableFrom": "clinical_case_reopenings",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "clinical_case_reopenings_reason_check": {
+          "name": "clinical_case_reopenings_reason_check",
+          "value": "btrim(reason) <> ''"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.clinical_case_termination": {
@@ -599,8 +764,8 @@
         }
       },
       "indexes": {
-        "clinical_case_termination_case_id_key": {
-          "name": "clinical_case_termination_case_id_key",
+        "clinical_case_termination_case_id_idx": {
+          "name": "clinical_case_termination_case_id_idx",
           "columns": [
             {
               "expression": "case_id",
@@ -609,7 +774,7 @@
               "nulls": "last"
             }
           ],
-          "isUnique": true,
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}

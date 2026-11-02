@@ -72,7 +72,7 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
         toast({
           variant: "destructive",
           title: "Something went wrong",
-          description: "Failed to update session attendance",
+          description: response.error ?? "Failed to update session attendance",
         });
         return;
       }

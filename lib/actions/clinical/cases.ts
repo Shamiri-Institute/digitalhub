@@ -278,7 +278,7 @@ export async function fetchClinicalCasesList(
         GROUP BY ccs.case_id
       ),
       case_termination AS (
-        SELECT
+        SELECT DISTINCT ON (cct.case_id)
           cct.case_id,
           json_build_object(
             'id', cct.id,
@@ -289,6 +289,10 @@ export async function fetchClinicalCasesList(
             'sessionId', cct.session_id
           ) AS termination_data
         FROM "clinical_case_termination" cct
+        WHERE NOT EXISTS (
+          SELECT 1 FROM "clinical_case_reopenings" ccr WHERE ccr."termination_id" = cct.id
+        )
+        ORDER BY cct.case_id, cct.created_at DESC, cct.id DESC
       ),
       treatment_plan AS (
         SELECT

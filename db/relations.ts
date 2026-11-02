@@ -93,6 +93,11 @@ export const attendanceDocumentsRelations = relations(attendanceDocuments, ({ on
 }));
 
 export const clinicalCaseNotesRelations = relations(clinicalCaseNotes, ({ one }) => ({
+  case: one(clinicalScreeningInfo, {
+    fields: [clinicalCaseNotes.caseId],
+    references: [clinicalScreeningInfo.id],
+    relationName: "ClinicalCaseNotes_case",
+  }),
   session: one(clinicalSessionAttendance, {
     fields: [clinicalCaseNotes.sessionId],
     references: [clinicalSessionAttendance.id],
@@ -222,12 +227,13 @@ export const clinicalScreeningInfoRelations = relations(clinicalScreeningInfo, (
     relationName: "ClinicalExpertCaseNotes_case",
   }),
   sessions: many(clinicalSessionAttendance, { relationName: "ClinicalSessionAttendance_case" }),
-  clinicalCaseTermination: many(clinicalCaseTermination, {
-    relationName: "ClinicalCaseTermination_case",
-  }),
   followUptreatmentPlan: one(clinicalFollowUpTreatmentPlan),
   clinicalFollowUpTreatmentPlanAuditTrail: many(clinicalFollowUpTreatmentPlanAuditTrail, {
     relationName: "ClinicalFollowUpTreatmentPlanAuditTrail_case",
+  }),
+  clinicalCaseNotes: many(clinicalCaseNotes, { relationName: "ClinicalCaseNotes_case" }),
+  clinicalCaseTermination: many(clinicalCaseTermination, {
+    relationName: "ClinicalCaseTermination_case",
   }),
 }));
 
