@@ -109,21 +109,21 @@ function HubManagerMenu({ manager, scope }: { manager: HubManager; scope: HubSco
             Copy email
           </DropdownMenuItem>
           {scope.canManage && <DropdownMenuSeparator />}
-          {scope.canManage && manager.archivedAt && (
-            <DropdownMenuItem onClick={toastOnError(restore)} disabled={isRestoring}>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Restore {manager.coordinatorName}
-            </DropdownMenuItem>
-          )}
-          {scope.canManage && !manager.archivedAt && (
-            <DropdownMenuItem
-              className="text-shamiri-light-red"
-              onClick={() => setArchiveOpen(true)}
-            >
-              <Archive className="mr-2 h-4 w-4" />
-              Archive hub manager
-            </DropdownMenuItem>
-          )}
+          {scope.canManage &&
+            (manager.archivedAt ? (
+              <DropdownMenuItem onClick={toastOnError(restore)} disabled={isRestoring}>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Restore {manager.coordinatorName}
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                className="text-shamiri-light-red"
+                onClick={() => setArchiveOpen(true)}
+              >
+                <Archive className="mr-2 h-4 w-4" />
+                Archive hub manager
+              </DropdownMenuItem>
+            ))}
         </DropdownMenuContent>
       </DropdownMenu>
       {scope.canManage && (

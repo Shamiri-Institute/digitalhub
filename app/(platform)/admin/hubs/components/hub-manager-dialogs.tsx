@@ -274,31 +274,6 @@ export function ArchiveHubManagerDialog({
   hubId: string;
   hubName: string;
 }) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="lg:max-w-md">
-        <ArchiveHubManagerConfirm
-          manager={manager}
-          hubId={hubId}
-          hubName={hubName}
-          onDone={() => onOpenChange(false)}
-        />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function ArchiveHubManagerConfirm({
-  manager,
-  hubId,
-  hubName,
-  onDone,
-}: {
-  manager: HubManager;
-  hubId: string;
-  hubName: string;
-  onDone: () => void;
-}) {
   const [isArchiving, setIsArchiving] = useState(false);
 
   const archive = async () => {
@@ -311,33 +286,34 @@ function ArchiveHubManagerConfirm({
       return;
     }
     toast({ description: response.message });
-    onDone();
+    onOpenChange(false);
   };
 
   return (
-    <>
-      <DialogHeader>
-        <DialogTitle className="text-xl">Archive {manager.coordinatorName}?</DialogTitle>
-        <DialogDescription>
-          They lose access to the {hubName} hub dashboard. Any other role they hold keeps working.
-          You can restore them later.
-        </DialogDescription>
-      </DialogHeader>
-      <DialogFooter className="flex justify-end gap-2">
-        {/* Focus starts on Cancel, so pressing Enter does not archive. */}
-        <Button variant="ghost" type="button" autoFocus onClick={onDone}>
-          Cancel
-        </Button>
-        <Button
-          variant="destructive"
-          type="button"
-          disabled={isArchiving}
-          loading={isArchiving}
-          onClick={toastOnError(archive)}
-        >
-          Archive hub manager
-        </Button>
-      </DialogFooter>
-    </>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="lg:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-xl">Archive {manager.coordinatorName}?</DialogTitle>
+          <DialogDescription>
+            They lose access to the {hubName} hub dashboard. Any other role they hold keeps working.
+            You can restore them later.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex justify-end gap-2">
+          <Button variant="ghost" type="button" autoFocus onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            type="button"
+            disabled={isArchiving}
+            loading={isArchiving}
+            onClick={toastOnError(archive)}
+          >
+            Archive hub manager
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

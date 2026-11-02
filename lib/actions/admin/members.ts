@@ -3,10 +3,7 @@ import type { ImplementerRole } from "#/db/enums";
 import { implementerMember, user } from "#/db/schema";
 import { AdminActionError } from "./action-error";
 
-/**
- * Gives the person with `email` a membership of `implementerId` in `role`, creating their user
- * when they have none. `email` is lowercase. Throws when their user has been archived.
- */
+// `email` must already be lowercase.
 export async function addImplementerMember(
   tx: Transaction,
   member: {

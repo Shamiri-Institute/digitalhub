@@ -8,7 +8,6 @@ import { loginEmail } from "./access-schemas";
 
 const counties = KENYAN_COUNTIES.map((county) => county.name) as [string, ...string[]];
 
-// Left blank in the form, an optional detail is stored as null.
 const optionalDetail = z
   .string()
   .trim()

@@ -8,11 +8,6 @@ import { objectId } from "#/lib/crypto";
 import { required, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
-/**
- * Super admins add a hub's managers, archive them, which takes away their hub access, and restore
- * them, which gives it back. Other admins see the active and archived managers but cannot change
- * them.
- */
 const RUN_ID = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const HUB_PREFIX = `E2E Hub Managers ${RUN_ID}`;
 const EMAIL_PREFIX = `e2e-hub-manager-${RUN_ID}`;
@@ -32,7 +27,7 @@ test.afterAll(async () => {
   await db.delete(hub).where(like(hub.hubName, `${HUB_PREFIX}%`));
 });
 
-/** A new hub of the super admin's implementer in the default project, which admins open first. */
+// In the default project, which admins open first.
 async function createHub(name: string) {
   const {
     rows: [seededHub],
@@ -53,7 +48,6 @@ async function createHub(name: string) {
   return createdHub;
 }
 
-/** The hub manager's status badge, found in their row. */
 function managerStatus(page: Page, name: string, status: "Active" | "Archived") {
   return page.getByRole("row", { name }).getByText(status, { exact: true });
 }

@@ -17,7 +17,6 @@ import { addImplementerMember } from "./members";
 
 const NOT_FOUND_MESSAGE = "Hub manager not found";
 
-/** The hub, when it belongs to the caller's implementer and active project. */
 async function findCallerHub(tx: Transaction, hubId: string, implementerId: string) {
   const projectId = await getActiveProjectId();
   const callerHub = await tx.query.hub.findFirst({
@@ -31,10 +30,7 @@ async function findCallerHub(tx: Transaction, hubId: string, implementerId: stri
   return callerHub;
 }
 
-/**
- * Deletes the hub manager's hub membership, leaving the person's other memberships. Some older
- * hub managers never had one, and some archived outside the app kept theirs.
- */
+// Not checked for a deleted row: older hub managers may never have had a membership.
 async function removeHubAccess(tx: Transaction, implementerId: string, hubManagerId: string) {
   await tx
     .delete(implementerMember)
@@ -47,10 +43,7 @@ async function removeHubAccess(tx: Transaction, implementerId: string, hubManage
     );
 }
 
-/**
- * coordinator_email is unique across implementers. This check names the clash for the common
- * case; the unique index still catches two adds at the same moment.
- */
+// coordinator_email is unique across implementers; this names the clash, the index catches races.
 async function assertHubManagerEmailIsFree(tx: Transaction, email: string, implementerId: string) {
   const clashing = await tx.query.hubCoordinator.findFirst({
     where: (c, { sql }) => sql`lower(trim(${c.coordinatorEmail})) = ${email}`,
