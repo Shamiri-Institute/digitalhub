@@ -8,9 +8,11 @@ import {
   type CopyValues,
   type Drawable,
   type FontWeight,
+  footerPageCodeRun,
   headerValueRun,
   type Layout,
   pageCodeRun,
+  type PrintedPage,
   type TextRun,
 } from "#/lib/survey/layout";
 import type { PrintFonts } from "#/lib/survey/print-fonts";
@@ -23,8 +25,8 @@ const WATERMARK_RED = rgb(0.86, 0.15, 0.15);
 /** One printed copy: its header values, and for each page of the layout what identifies it. */
 export type PrintedCopy<L extends Layout> = {
   values: CopyValues<L["prefill"]>;
-  /** In page order. The QR code holds `id`; `code` prints under it. */
-  pages: { id: string; code: string }[];
+  /** In page order. */
+  pages: PrintedPage[];
 };
 
 /**
@@ -71,9 +73,12 @@ export async function renderCopiesPdf<L extends Layout>(
         text(page, headerValueRun(slot, copy.values));
       }
       text(page, pageCodeRun(laid.qr, printedPage.code));
-      page.node.addContentStream(
-        doc.context.register(doc.context.flateStream(qrOperators(printedPage.id, laid.qr, height))),
-      );
+      let qrInk = qrOperators(printedPage.qr, laid.qr, height);
+      if (laid.footerQr) {
+        text(page, footerPageCodeRun(laid.footerQr, printedPage.code));
+        qrInk += qrOperators(printedPage.qr, laid.footerQr, height);
+      }
+      page.node.addContentStream(doc.context.register(doc.context.flateStream(qrInk)));
     });
   }
   return doc.save();
@@ -120,6 +125,7 @@ async function renderTemplates(layout: Layout, fonts: PrintFonts, watermark: str
           size: drawable.r,
           borderWidth: drawable.stroke,
           borderColor: BLACK,
+          ...(drawable.filled && { color: BLACK }),
         });
         return;
       case "line":

@@ -13,8 +13,11 @@ export async function pageTexts(bytes: Uint8Array) {
   return texts;
 }
 
-/** What a scanner reads from each page's QR code, from the page drawn at 300 dpi. */
-export async function decodedQrCodes(bytes: Uint8Array) {
+/**
+ * What a scanner reads from each page's QR code in one band of the page, drawn at 300 dpi: the top
+ * or bottom quarter, as if the rest of the page were torn off. Null where it finds none.
+ */
+export async function decodedQrCodes(bytes: Uint8Array, band: "top" | "bottom") {
   const pdf = await getDocument({ data: bytes.slice() }).promise;
   const decoded: (string | null)[] = [];
   for (let number = 1; number <= pdf.numPages; number++) {
@@ -27,7 +30,9 @@ export async function decodedQrCodes(bytes: Uint8Array) {
       canvasContext: context as unknown as CanvasRenderingContext2D,
       viewport,
     }).promise;
-    const image = context.getImageData(0, 0, canvas.width, canvas.height);
+    const bandHeight = Math.round(canvas.height / 4);
+    const top = band === "top" ? 0 : canvas.height - bandHeight;
+    const image = context.getImageData(0, top, canvas.width, bandHeight);
     decoded.push(jsQR(image.data, image.width, image.height)?.data ?? null);
   }
   return decoded;

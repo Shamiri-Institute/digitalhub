@@ -19,6 +19,7 @@ import { getPresignedUrl, putObject } from "#/lib/s3/s3.service";
 import type { Layout } from "#/lib/survey/layout";
 import { PRINT_FONT_FILES, type PrintFonts } from "#/lib/survey/print-fonts";
 import { type PrintedCopy, renderCopiesPdf } from "#/lib/survey/print-pdf";
+import { pageQrText } from "#/lib/survey/print-qr";
 import { issuePrintFile } from "#/lib/survey/print-run";
 import { fetchPrintRun } from "#/lib/survey/print-run-queries";
 import { serialRangeOf } from "#/lib/survey/serial";
@@ -244,7 +245,7 @@ async function loadPrintFile(fileId: string) {
       studentName: questionnaire.student?.studentName ?? "",
       studentId: questionnaire.student?.admissionNumber ?? "",
     },
-    pages: questionnaire.pages,
+    pages: questionnaire.pages.map((page) => ({ qr: pageQrText(page.id), code: page.code })),
   }));
   return { id: file.id, printRunId: file.printRunId, layout, copies };
 }

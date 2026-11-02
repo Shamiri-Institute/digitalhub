@@ -20,6 +20,7 @@ import { objectId } from "#/lib/crypto";
 import { getS3Client } from "#/lib/s3/s3.service";
 import { getBucket } from "#/lib/s3/s3.config";
 import { drainPrintQueue, printFileKey, retryFailedPrintFiles } from "#/lib/survey/print-files";
+import { pageIdFromQrText } from "#/lib/survey/print-qr";
 import { recordPrintRun } from "#/lib/survey/print-run";
 import { decodedQrCodes } from "#/tests/print-pdf";
 import { createPublishedSurvey, formWithPages, removeSurvey } from "#/tests/survey-fixtures";
@@ -128,7 +129,14 @@ describe("the print job", () => {
       .where(eq(surveyQuestionnaire.printRunId, recorded.printRunId))
       .orderBy(asc(surveyQuestionnaire.serialNumber), asc(surveyQuestionnairePage.pageNumber));
     expect(pageIds).toHaveLength(20);
-    expect(await decodedQrCodes(pdf)).toEqual(pageIds.map((p) => p.id));
+    const ids = pageIds.map((p) => p.id);
+    expect(
+      (await decodedQrCodes(pdf, "top")).map((text) => text && pageIdFromQrText(text)),
+    ).toEqual(ids);
+    // As if the top of every page were torn off.
+    expect(
+      (await decodedQrCodes(pdf, "bottom")).map((text) => text && pageIdFromQrText(text)),
+    ).toEqual(ids);
   }, 120_000);
 
   it("takes over a file whose worker died, and fails it once no attempts are left", async () => {

@@ -9,6 +9,7 @@
 import { SurveyVersionPrefill } from "#/db/enums";
 import { isQuestion, type SurveyForm, type SurveyItem } from "#/lib/survey/form";
 import { isBlank, plainText } from "#/lib/survey/rich-text";
+import { pageCode } from "#/lib/survey/serial";
 import {
   breakText,
   CAP_HEIGHT,
@@ -23,7 +24,7 @@ import {
 export type { FontWeight };
 
 /** Bump when a change to this file moves anything on the page; stored beside each layout. */
-export const LAYOUT_ENGINE_VERSION = 1;
+export const LAYOUT_ENGINE_VERSION = 2;
 
 export type Prefill = SurveyVersionPrefill;
 export type Rect = { x: number; y: number; w: number; h: number };
@@ -55,7 +56,7 @@ export type TextRun = {
 export type Drawable =
   | { kind: "text"; run: TextRun }
   | { kind: "rect"; rect: Rect; stroke: number }
-  | { kind: "circle"; cx: number; cy: number; r: number; stroke: number }
+  | { kind: "circle"; cx: number; cy: number; r: number; stroke: number; filled?: true }
   | { kind: "line"; x1: number; y1: number; x2: number; y2: number; stroke: number; dotted?: true };
 
 /**
@@ -88,8 +89,11 @@ export type ChoiceMark = { code: string; box: Rect };
 export type LayoutPage = {
   /** The form's page position, from 1. */
   number: number;
-  markers: { topLeft: Rect; bottomLeft: Rect; bottomRight: Rect };
+  /** `bottomLeft` only in layouts from engine version 1, before the footer QR took its corner. */
+  markers: { topLeft: Rect; bottomLeft?: Rect; bottomRight: Rect };
   qr: Rect;
+  /** A second QR with the same page id, so a page torn at the top can still be matched. */
+  footerQr?: Rect;
   /** Exactly the prefill's header slots, in order. */
   header: HeaderSlot[];
   /**
@@ -130,11 +134,13 @@ const MARKER = 15;
 /** Blank space kept around each corner marker for the scanner. Not yet confirmed by its team. */
 const QUIET_ZONE = 6;
 const QR = 54;
+/** A version 2 QR at the 1.64 pt modules a version 4 one had in the 54 pt box. */
+const FOOTER_QR = 41;
 const CONTENT = {
   left: INSET,
   right: PAPER.width - INSET,
   top: 90,
-  bottom: PAPER.height - INSET - MARKER - QUIET_ZONE,
+  bottom: PAPER.height - INSET - FOOTER_QR - QUIET_ZONE,
 };
 const CONTENT_WIDTH = CONTENT.right - CONTENT.left;
 /** The header band, between the top-left marker and the QR code, each with its quiet zone. */
@@ -197,7 +203,7 @@ export function layOutForm<P extends Prefill>(
   const problems: LayoutProblem[] = [];
   const pages = form.pages.map((page, index): LayoutPage => {
     const number = index + 1;
-    const content = pageHeading(number, form.pages.length, page.title);
+    const content = [...pageHeading(number, form.pages.length, page.title), ...markingGuide()];
     const titleChar = unprintableChar(oneLine(plainText(page.title ?? "")));
     if (titleChar) {
       problems.push({ kind: "unprintable_title", page: number, char: titleChar });
@@ -244,7 +250,6 @@ export function layOutForm<P extends Prefill>(
       number,
       markers: {
         topLeft: rect(INSET, INSET, MARKER, MARKER),
-        bottomLeft: rect(INSET, PAPER.height - INSET - MARKER, MARKER, MARKER),
         bottomRight: rect(
           PAPER.width - INSET - MARKER,
           PAPER.height - INSET - MARKER,
@@ -253,6 +258,7 @@ export function layOutForm<P extends Prefill>(
         ),
       },
       qr: rect(PAPER.width - INSET - QR, INSET, QR, QR),
+      footerQr: rect(INSET, PAPER.height - INSET - FOOTER_QR, FOOTER_QR, FOOTER_QR),
       header: PREFILL_HEADER_SLOTS[prefill].map(headerSlot),
       content,
       fields,
@@ -270,6 +276,20 @@ export function layOutForm<P extends Prefill>(
     },
     problems,
   };
+}
+
+/** What identifies one printed page: the text its QR codes hold, and its code in print. */
+export type PrintedPage = { qr: string; code: string };
+
+/**
+ * Stand-in pages for the preview and the sample PDF. Their QR text is as long as a real page's, so
+ * the codes print at the same size, and reads as a sample to anyone who scans one.
+ */
+export function samplePages(layout: Layout): PrintedPage[] {
+  return layout.pages.map(({ number }) => ({
+    qr: `SAMPLE${String(number).padStart(20, "0")}`,
+    code: pageCode(SAMPLE_VALUES.serial, number),
+  }));
 }
 
 /** Stand-in header values for the preview and the sample PDF. */
@@ -363,20 +383,6 @@ function cellInk(cell: Rect): Drawable {
   return { kind: "rect", rect: cell, stroke: 0.75 };
 }
 
-/** The "QR" label centred in the QR box, until print runs print each page's code there. */
-export function qrPlaceholderRun(qr: Rect): TextRun {
-  const size = 9;
-  const width = measure("QR", 600, size);
-  return {
-    x: roundPt(qr.x + (qr.w - width) / 2),
-    baseline: roundPt(qr.y + (qr.h + CAP_HEIGHT * size) / 2),
-    size,
-    weight: 600,
-    text: "QR",
-    width: roundPt(width),
-  };
-}
-
 /**
  * A printed page's code, centred under its QR code for matching a page by hand. Placed from the
  * QR box at print time, so layouts published before page codes printed need no change.
@@ -390,6 +396,51 @@ export function pageCodeRun(qr: Rect, code: string): TextRun {
     weight: 400,
     ...fitted,
   };
+}
+
+/** A printed page's code beside its footer QR, level with the QR's bottom edge. */
+export function footerPageCodeRun(qr: Rect, code: string): TextRun {
+  const size = 7;
+  const x = qr.x + qr.w + 5;
+  const fitted = fitText(code, { size, weight: 400, maxWidth: 150 }, 5);
+  return { x: roundPt(x), baseline: roundPt(qr.y + qr.h), weight: 400, ...fitted };
+}
+
+/**
+ * "Mark your answer:" with a filled circle and a crossed one, in the footer and ending short of
+ * the bottom-right marker. Either mark counts as choosing an option.
+ */
+function markingGuide(): Drawable[] {
+  const r = CHOICE.mark / 2;
+  const style = { size: 8, weight: 400 } as const;
+  const centreY = PAPER.height - INSET - MARKER / 2;
+  const baseline = roundPt(centreY + (CAP_HEIGHT * style.size) / 2);
+  const label = "Mark your answer:";
+  const crossedX = PAPER.width - INSET - MARKER - QUIET_ZONE - r;
+  const orWidth = measure("or", style.weight, style.size);
+  const orX = crossedX - r - 5 - orWidth;
+  const filledX = orX - 5 - r;
+  const labelWidth = measure(label, style.weight, style.size);
+  const labelX = filledX - r - 6 - labelWidth;
+  const arm = r * Math.SQRT1_2;
+  const text = (value: string, x: number, width: number): Drawable => ({
+    kind: "text",
+    run: { x: roundPt(x), baseline, ...style, text: value, width: roundPt(width) },
+  });
+  return [
+    text(label, labelX, labelWidth),
+    { kind: "circle", cx: roundPt(filledX), cy: roundPt(centreY), r, stroke: 1, filled: true },
+    text("or", orX, orWidth),
+    { kind: "circle", cx: roundPt(crossedX), cy: roundPt(centreY), r, stroke: 1 },
+    ...[-1, 1].map((slope): Drawable => ({
+      kind: "line",
+      x1: roundPt(crossedX - arm),
+      y1: roundPt(centreY - slope * arm),
+      x2: roundPt(crossedX + arm),
+      y2: roundPt(centreY + slope * arm),
+      stroke: 1,
+    })),
+  ];
 }
 
 /** A single choice question whose options are all short numbers prints as a row of boxes. */
