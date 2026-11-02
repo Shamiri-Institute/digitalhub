@@ -78,6 +78,8 @@ export function fetchScheduleSupervisors(hubIds: string[] | SQLWrapper, sessions
               id: true,
               sessionId: true,
               attended: true,
+              absenceReason: true,
+              absenceComments: true,
               processedAt: true,
             },
           },

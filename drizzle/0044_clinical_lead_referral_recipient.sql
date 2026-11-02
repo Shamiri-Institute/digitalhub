@@ -1,0 +1,3 @@
+ALTER TABLE "clinical_screening_info" ADD COLUMN "referred_to_clinical_lead_id" text;--> statement-breakpoint
+ALTER TABLE "clinical_screening_info" ADD CONSTRAINT "clinical_screening_info_referred_to_clinical_lead_id_fkey" FOREIGN KEY ("referred_to_clinical_lead_id") REFERENCES "public"."clinical_leads"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
+CREATE INDEX "clinical_screening_info_referred_to_clinical_lead_id_idx" ON "clinical_screening_info" USING btree ("referred_to_clinical_lead_id");

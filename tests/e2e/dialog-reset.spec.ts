@@ -411,6 +411,12 @@ test("school details show each school's saved name, not typed text", async ({ pa
 
   await openFor(nameB);
   await expect(schoolName).toHaveValue(nameB);
+  await expectCountyChangeClearsSubCounty(
+    page,
+    dialog,
+    dialog.getByRole("combobox", { name: "School county" }),
+    dialog.getByRole("combobox", { name: "School sub-county" }),
+  );
 });
 
 test("weekly session report shows each session's saved highlights, not typed text", async ({
@@ -480,9 +486,12 @@ test("weekly session report shows each session's saved highlights, not typed tex
   await expect(highlights).toHaveValue(sessionB.highlights);
 });
 
-async function expectCountyChangeClearsSubCounty(page: Page, dialog: Locator) {
-  const county = dialog.getByRole("combobox", { name: /^County/ });
-  const subCounty = dialog.getByRole("combobox", { name: /^Sub-county/ });
+async function expectCountyChangeClearsSubCounty(
+  page: Page,
+  dialog: Locator,
+  county = dialog.getByRole("combobox", { name: /^County/ }),
+  subCounty = dialog.getByRole("combobox", { name: /^Sub-county/ }),
+) {
   await county.click();
   await page.getByRole("option", { name: "Nairobi", exact: true }).click();
   await subCounty.click();
@@ -592,8 +601,14 @@ test("my profile shows the saved sub-county and clears it when the county change
   await page.getByAltText("Profile arrow drop down icon").click();
   await page.getByRole("menuitem", { name: "My Profile" }).click();
   const dialog = page.getByRole("dialog", { name: "Edit profile" });
-  await expect(dialog.getByRole("combobox", { name: "Sub-county" })).toHaveText(fixture.subCounty);
+  const subCounty = dialog.getByRole("combobox", { name: "Sub-county" });
+  await expect(subCounty).toHaveText(fixture.subCounty);
   await expectCountyChangeClearsSubCounty(page, dialog);
+
+  await closeDialog(page, dialog);
+  await page.getByAltText("Profile arrow drop down icon").click();
+  await page.getByRole("menuitem", { name: "My Profile" }).click();
+  await expect(subCounty).toHaveText(fixture.subCounty);
 });
 
 test("schedule a session switches between school and venue with the session type", async ({

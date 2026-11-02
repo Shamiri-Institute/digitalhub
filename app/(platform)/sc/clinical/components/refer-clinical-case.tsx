@@ -57,7 +57,6 @@ const REFERRAL_OPTIONS = {
 };
 
 export type ReferralOptions = {
-  currentSupervisor: { id: string; name: string | null } | undefined;
   supervisorsInHub: { id: string; name: string | null }[];
   clinicalLeads: { id: string; name: string | null }[];
 };
@@ -65,7 +64,7 @@ export type ReferralOptions = {
 export default function ReferClinicalCase({
   children,
   clinicalCase,
-  referralOptions: { currentSupervisor, supervisorsInHub, clinicalLeads },
+  referralOptions: { supervisorsInHub, clinicalLeads },
 }: {
   children: React.ReactNode;
   clinicalCase: ClinicalCases;
@@ -91,27 +90,16 @@ export default function ReferClinicalCase({
       if (data.referTo === "Clinical Lead") {
         response = await referClinicalCaseToClinicalLead({
           caseId: clinicalCase.id,
-          referredToPersonId: data.clinicalLeadId ?? "",
+          recipientClinicalLeadId: data.clinicalLeadId ?? "",
           referralNotes: data.message,
           referralReason: data.referralReason,
-          referredFrom: currentSupervisor?.name ?? "",
-          referredFromSpecified: currentSupervisor?.id ?? "",
-          referredTo: data.referTo,
-          referredToPerson:
-            clinicalLeads.find((lead) => lead.id === data.clinicalLeadId)?.name ?? "",
         });
       } else if (data.referTo === "Supervisor") {
         response = await referClinicalCaseToSupervisor({
           caseId: clinicalCase.id,
-          supervisorName: currentSupervisor?.name ?? "",
+          recipientSupervisorId: data.supervisorId ?? "",
           referralNotes: data.message,
-          referredFromSpecified: currentSupervisor?.name ?? "",
-          referredFrom: currentSupervisor?.id ?? "",
-          referredToPerson: data.supervisorId ?? null,
-          externalCare: null,
-          referTo: data.referTo,
           referralReason: data.referralReason,
-          referredTo: data.referTo,
         });
       } else {
         response = { success: false, message: "Invalid referral type" };

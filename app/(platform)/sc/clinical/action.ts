@@ -1,6 +1,7 @@
 "use server";
 
 import { and, count, desc, eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { refresh } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentUserSession } from "#/app/auth";
@@ -46,20 +47,32 @@ async function requireClinicalActor() {
   if (role === ImplementerRole.SUPERVISOR) {
     const supervisor = await db.query.supervisor.findFirst({
       where: (s, { eq }) => eq(s.id, identifier),
-      columns: { id: true, hubId: true },
+      columns: { id: true, hubId: true, supervisorName: true },
     });
     if (supervisor) {
-      return { role, userId, profileId: supervisor.id, hubId: supervisor.hubId };
+      return {
+        role,
+        userId,
+        profileId: supervisor.id,
+        hubId: supervisor.hubId,
+        name: supervisor.supervisorName,
+      };
     }
   }
 
   if (role === ImplementerRole.CLINICAL_LEAD) {
     const clinicalLead = await db.query.clinicalLead.findFirst({
       where: (cl, { eq }) => eq(cl.id, identifier),
-      columns: { id: true, assignedHubId: true },
+      columns: { id: true, assignedHubId: true, clinicalLeadName: true },
     });
     if (clinicalLead) {
-      return { role, userId, profileId: clinicalLead.id, hubId: clinicalLead.assignedHubId };
+      return {
+        role,
+        userId,
+        profileId: clinicalLead.id,
+        hubId: clinicalLead.assignedHubId,
+        name: clinicalLead.clinicalLeadName,
+      };
     }
   }
 
@@ -275,55 +288,81 @@ export async function updateClinicalSessionAttendance(
 }
 
 export async function referClinicalCaseToSupervisor(data: {
-  referTo: string;
-  referralReason: string;
   caseId: string;
-  referredFrom: string;
-  referredFromSpecified: string;
-  referredTo: string;
-  referredToPerson: string | null;
-  externalCare: string | null;
+  recipientSupervisorId: string;
+  referralReason: string;
   referralNotes: string;
-  supervisorName: string;
 }) {
   try {
-    await requireCaseAccess(data.caseId);
-    await db.transaction(async (tx) => {
-      requireUpdated(
-        await tx
-          .update(clinicalScreeningInfo)
-          .set({
-            referredFrom: data.referredFrom,
-            referredFromSpecified: data.supervisorName,
-            referredTo: data.referredTo,
-            referredToSpecified: data.referredToPerson ?? data.externalCare,
-            referralNotes: data.referralNotes,
-            referredToSupervisorId: data.referredToPerson ?? null,
-            referralStatus: "Pending",
-            referralReason: data.referralReason,
-            acceptCase: false,
-          })
-          .where(eq(clinicalScreeningInfo.id, data.caseId))
-          .returning({ id: clinicalScreeningInfo.id }),
-        "Clinical case",
-      );
-      await tx.insert(clinicalCaseTransferTrail).values({
-        caseId: data.caseId,
-        from: data.referredFrom,
-        fromRole: data.referredFromSpecified,
-        to: data.supervisorName,
-        toRole: data.referredToPerson ?? data.referredTo,
-        date: new Date(),
-        referralStatus: "Pending",
-      });
+    const { actor } = await requireCaseAccess(data.caseId);
+    const referrerHubId = actor.hubId;
+    if (!referrerHubId) throw new NotFoundError("Supervisor");
+    const recipient = await db.query.supervisor.findFirst({
+      where: (s, { and, eq }) =>
+        and(eq(s.id, data.recipientSupervisorId), eq(s.hubId, referrerHubId)),
+      columns: { id: true, supervisorName: true },
     });
+    if (!recipient) throw new NotFoundError("Supervisor");
 
+    await writeReferral(data, actor, {
+      role: ImplementerRole.SUPERVISOR,
+      id: recipient.id,
+      name: recipient.supervisorName,
+    });
     refresh();
     return { success: true };
   } catch (error) {
     console.error(error);
     return { success: false };
   }
+}
+
+type ClinicalActor = Awaited<ReturnType<typeof requireClinicalActor>>;
+
+/**
+ * Opens a referral to one recipient. A new referral replaces any open one, so the case waits on
+ * one person at a time.
+ */
+async function writeReferral(
+  data: { caseId: string; referralReason: string; referralNotes: string },
+  referrer: ClinicalActor,
+  recipient: {
+    role: typeof ImplementerRole.SUPERVISOR | typeof ImplementerRole.CLINICAL_LEAD;
+    id: string;
+    name: string | null;
+  },
+) {
+  const recipientIsLead = recipient.role === ImplementerRole.CLINICAL_LEAD;
+  await db.transaction(async (tx) => {
+    requireUpdated(
+      await tx
+        .update(clinicalScreeningInfo)
+        .set({
+          referredFrom: referrer.name,
+          referredFromSpecified: referrer.name,
+          referredTo: recipientIsLead ? "Clinical Lead" : "Supervisor",
+          referredToSpecified: recipient.name,
+          referredToSupervisorId: recipientIsLead ? null : recipient.id,
+          referredToClinicalLeadId: recipientIsLead ? recipient.id : null,
+          referralNotes: data.referralNotes,
+          referralReason: data.referralReason,
+          referralStatus: "Pending",
+          acceptCase: false,
+        })
+        .where(eq(clinicalScreeningInfo.id, data.caseId))
+        .returning({ id: clinicalScreeningInfo.id }),
+      "Clinical case",
+    );
+    await tx.insert(clinicalCaseTransferTrail).values({
+      caseId: data.caseId,
+      from: referrer.name ?? "",
+      fromRole: referrer.role,
+      to: recipient.name ?? "",
+      toRole: recipient.role,
+      date: new Date(),
+      referralStatus: "Pending",
+    });
+  });
 }
 
 export async function getSchoolsInHub() {
@@ -770,44 +809,35 @@ export async function updateClinicalCaseAttendance(data: {
 }
 
 export async function referClinicalCaseToClinicalLead(data: {
-  referralReason: string;
   caseId: string;
-  referredFrom: string;
-  referredFromSpecified: string;
-  referredTo: string;
-  referredToPerson: string;
+  recipientClinicalLeadId: string;
+  referralReason: string;
   referralNotes: string;
-  referredToPersonId: string;
 }) {
   try {
-    await requireCaseAccess(data.caseId);
-    await db.transaction(async (tx) => {
-      requireUpdated(
-        await tx
-          .update(clinicalScreeningInfo)
-          .set({
-            clinicalLeadId: data.referredToPersonId,
-            referralNotes: data.referralNotes,
-            referralStatus: "Pending",
-            referralReason: data.referralReason,
-            referredTo: data.referredTo,
-            acceptCase: false,
-          })
-          .where(eq(clinicalScreeningInfo.id, data.caseId))
-          .returning({ id: clinicalScreeningInfo.id }),
-        "Clinical case",
-      );
-      await tx.insert(clinicalCaseTransferTrail).values({
-        caseId: data.caseId,
-        from: data.referredFrom,
-        fromRole: data.referredFromSpecified,
-        to: data.referredToPerson,
-        toRole: data.referredToPersonId,
-        date: new Date(),
-        referralStatus: "Pending",
-      });
+    const { actor } = await requireCaseAccess(data.caseId);
+    if (!actor.hubId) throw new NotFoundError("Clinical lead");
+    const referrerHub = alias(hub, "referrer_hub");
+    const referrerProjectHubIds = db
+      .select({ id: hub.id })
+      .from(hub)
+      .innerJoin(referrerHub, eq(referrerHub.projectId, hub.projectId))
+      .where(eq(referrerHub.id, actor.hubId));
+    const recipient = await db.query.clinicalLead.findFirst({
+      where: (cl, { and, eq, inArray }) =>
+        and(
+          eq(cl.id, data.recipientClinicalLeadId),
+          inArray(cl.assignedHubId, referrerProjectHubIds),
+        ),
+      columns: { id: true, clinicalLeadName: true },
     });
+    if (!recipient) throw new NotFoundError("Clinical lead");
 
+    await writeReferral(data, actor, {
+      role: ImplementerRole.CLINICAL_LEAD,
+      id: recipient.id,
+      name: recipient.clinicalLeadName,
+    });
     refresh();
     return { success: true };
   } catch (error) {
@@ -816,20 +846,22 @@ export async function referClinicalCaseToClinicalLead(data: {
   }
 }
 
-export async function getReferredCasesToSupervisor() {
-  const supervisor = await currentSupervisor();
-  if (!supervisor) {
-    throw new Error("Supervisor not found");
-  }
-  const supervisorId = supervisor.profile.id;
-
-  const referredCases = await db.query.clinicalScreeningInfo.findMany({
+export async function getCasesReferredToMe() {
+  const actor = await requireClinicalActor();
+  return db.query.clinicalScreeningInfo.findMany({
     where: (c, { and, eq }) =>
-      and(eq(c.referredToSupervisorId, supervisorId), eq(c.acceptCase, false)),
+      and(
+        eq(
+          actor.role === ImplementerRole.CLINICAL_LEAD
+            ? c.referredToClinicalLeadId
+            : c.referredToSupervisorId,
+          actor.profileId,
+        ),
+        eq(c.acceptCase, false),
+      ),
+    orderBy: (c, { desc }) => [desc(c.createdAt), desc(c.id)],
     with: { student: true },
   });
-
-  return referredCases;
 }
 
 async function latestTransferTrail(tx: Transaction, caseId: string) {
@@ -846,25 +878,26 @@ async function latestTransferTrail(tx: Transaction, caseId: string) {
 }
 
 /**
- * Records the signed-in supervisor's answer to a case referred to them. Only the supervisor the
- * case was referred to may answer, and only while the referral is open. A case referred to someone
- * else reads as missing.
+ * Records the signed-in recipient's answer to a case referred to them. Only the supervisor or
+ * clinical lead the case was referred to may answer, and only while the referral is open. A case
+ * referred to someone else reads as missing. Accepting makes the case the recipient's.
  */
 async function answerReferral(caseId: string, decision: "Approved" | "Declined") {
-  const supervisor = await currentSupervisor();
-  if (!supervisor) {
-    throw new Error("Unauthorized");
-  }
-  const referralRecipientId = supervisor.profile.id;
+  const recipient = await requireClinicalActor();
+  const recipientIsLead = recipient.role === ImplementerRole.CLINICAL_LEAD;
+  const pendingRecipientColumn = recipientIsLead
+    ? clinicalScreeningInfo.referredToClinicalLeadId
+    : clinicalScreeningInfo.referredToSupervisorId;
+  const closeReferral = recipientIsLead
+    ? { referredToClinicalLeadId: null }
+    : { referredToSupervisorId: null };
+  const takeCase = recipientIsLead
+    ? { clinicalLeadId: recipient.profileId }
+    : { currentSupervisorId: recipient.profileId };
   const caseChanges =
     decision === "Approved"
-      ? {
-          currentSupervisorId: referralRecipientId,
-          referredToSupervisorId: null,
-          acceptCase: true,
-          referralStatus: null,
-        }
-      : { referredToSupervisorId: null, acceptCase: false, referralStatus: decision };
+      ? { ...closeReferral, ...takeCase, acceptCase: true, referralStatus: null }
+      : { ...closeReferral, acceptCase: false, referralStatus: decision };
   await db.transaction(async (tx) => {
     requireUpdated(
       await tx
@@ -873,7 +906,7 @@ async function answerReferral(caseId: string, decision: "Approved" | "Declined")
         .where(
           and(
             eq(clinicalScreeningInfo.id, caseId),
-            eq(clinicalScreeningInfo.referredToSupervisorId, referralRecipientId),
+            eq(pendingRecipientColumn, recipient.profileId),
             eq(clinicalScreeningInfo.acceptCase, false),
           ),
         )

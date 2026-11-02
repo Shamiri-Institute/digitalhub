@@ -159,14 +159,14 @@ test.describe("fellow attendance", () => {
 
     await page.reload();
     const reopened = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
-    await expect(await searchRows(page, fixture.fellowName, reopened)).toContainText("Missed");
-
-    // The reopened mark dialog does not show the saved reason, so read the stored one.
-    const [markedFellowAttendance] = await db
-      .select({ absenceReason: fellowAttendance.absenceReason })
-      .from(fellowAttendance)
-      .where(eq(fellowAttendance.id, fixture.attendanceId));
-    expect(markedFellowAttendance).toEqual({ absenceReason });
+    const markedRow = await searchRows(page, fixture.fellowName, reopened);
+    await expect(markedRow).toContainText("Missed");
+    await chooseRowAction(page, markedRow, "Mark attendance");
+    await expect(mark.getByRole("combobox", { name: "Select reason for above" })).toHaveText(
+      absenceReason,
+    );
+    await page.keyboard.press("Escape");
+    await expect(mark).toBeHidden();
 
     // The reversal cancels what was paid, not the session's new rate.
     expect(await fellowTotal(page, fixture.fellowName)).toBe(totalBefore - paidBefore);
