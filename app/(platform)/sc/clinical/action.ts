@@ -28,7 +28,7 @@ import {
   type JsonValue,
   student,
 } from "#/db/schema";
-import { latestRiskLevel } from "#/lib/actions/clinical/cases";
+import { latestRisk } from "#/lib/actions/clinical/cases";
 import { objectId } from "#/lib/crypto";
 
 export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
@@ -180,15 +180,13 @@ export async function getClinicalCases() {
       attendanceStatus: session.attendanceStatus,
     }));
 
-    const riskLevel = latestRiskLevel(caseInfo.sessions, caseInfo.riskStatus);
-
     return {
       id: caseInfo.id,
       school: caseInfo.student?.school?.schoolName,
       pseudonym: caseInfo.pseudonym || "Anonymous",
       dateAdded: caseInfo.createdAt.toLocaleDateString(),
       caseStatus: caseInfo.caseStatus,
-      risk: riskLevel,
+      ...latestRisk(caseInfo.sessions, caseInfo),
       age,
       referralFrom:
         caseInfo.referredFromSupervisor?.supervisorName ||

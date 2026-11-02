@@ -318,6 +318,55 @@ test("a case without notes shows its intake risk", async ({ page, context, undo 
   await expect(await searchRows(page, pseudonym)).toContainText(/high/i);
 });
 
+test("a case's risk names its source and date: intake until the first note, then the note", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixtureCase = await db.query.clinicalScreeningInfo.findFirst({
+    where: (c, { eq }) => eq(c.id, caseId),
+    columns: { createdAt: true },
+  });
+  required(fixtureCase, `case ${caseId} is gone`);
+  const clinicalSessionId = await addClinicalSession("S2", undo);
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+  await expect(await searchRows(page, pseudonym)).toContainText(
+    `Intake/triage · ${format(fixtureCase.createdAt, "dd MMM yyyy")}`,
+  );
+
+  const [note] = await db
+    .insert(clinicalCaseNotes)
+    .values({
+      caseId,
+      sessionId: clinicalSessionId,
+      createdBy: await ownerUserId(),
+      presentingIssues: "e2e",
+      orsAssessment: 20,
+      riskLevel: "high",
+      necessaryConditions: "e2e",
+      otherIntervention: "",
+      interventionExplanation: "e2e",
+      studentResponseExplanations: "e2e",
+      followUpPlan: "INDIVIDUAL",
+      followUpPlanExplanation: "e2e",
+    })
+    .returning({ createdAt: clinicalCaseNotes.createdAt });
+  required(note, "could not insert the case note fixture");
+  undo(() =>
+    db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.sessionId, clinicalSessionId)),
+  );
+  const noteSource = `S2 note · ${format(note.createdAt, "dd MMM yyyy")}`;
+
+  await page.reload();
+  await expect(await searchRows(page, pseudonym)).toContainText(noteSource);
+
+  await context.clearCookies();
+  await signInAs(context, "CLINICAL_TEAM");
+  await page.goto(getUrl("/ct/clinical"));
+  await expect(await searchRows(page, pseudonym)).toContainText(noteSource);
+});
+
 test("a supervisor writes case notes and reads them back after a reload", async ({
   page,
   context,
