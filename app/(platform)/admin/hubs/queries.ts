@@ -20,7 +20,6 @@ import { getActiveProjectId } from "#/lib/active-project-id";
 // drizzle-orm 0.45 rewrites every column reference inside a relational-query `extras`
 // expression to the current table's alias, so a correlated subquery must name the other
 // table in plain SQL and touch the current row only through the callback parameter.
-// Active as the schools table's status column defines it.
 const isActive = (alias: string) =>
   `${alias}.archived_at is null and ${alias}.dropped_out is not true`;
 
@@ -73,7 +72,6 @@ export const fetchAdminHub = cache(async (hubId: string) => {
       ),
     columns: { id: true, hubName: true },
     with: { project: { columns: { name: true } } },
-    // Each tab lists every row and its badge counts the active ones.
     extras: (h, { sql }) => ({
       studentsCount:
         sql<number>`(select count(*)::int from students st join schools sc on sc.id = st.school_id where sc.hub_id = ${h.id} and ${sql.raw(isActive("st"))})`.as(
