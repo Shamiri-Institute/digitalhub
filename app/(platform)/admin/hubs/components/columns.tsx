@@ -22,12 +22,19 @@ const countColumn = (
   enableGlobalFilter: false,
 });
 
-function SessionStatesLegend({ className }: { className?: string }) {
+function SessionStatesLegend({
+  counts,
+  className,
+}: {
+  counts?: AdminHub["sessions"];
+  className?: string;
+}) {
   return (
-    <ul className={cn("flex items-center gap-2.5", className)}>
+    <ul className={className}>
       {states.map((s) => (
-        <li key={s.key} className="flex items-center gap-1">
+        <li key={s.key} className="flex items-center gap-1.5 tabular-nums">
           <span aria-hidden className={cn("h-2.5 w-2.5 rounded-sm", s.swatch)} />
+          {counts && `${formatCount(counts[s.key])} `}
           {s.label}
         </li>
       ))}
@@ -52,7 +59,7 @@ const sessionsColumn: ColumnDef<AdminHub> = {
           <Info aria-hidden className="h-3.5 w-3.5" />
         </TooltipTrigger>
         <TooltipContent className="max-w-64 space-y-2 font-normal">
-          <SessionStatesLegend className="flex-wrap gap-x-3 gap-y-1" />
+          <SessionStatesLegend className="flex flex-wrap items-center gap-x-3 gap-y-1" />
           <p>
             Unmarked: the session date has passed, but nobody has marked it attended or cancelled.
           </p>
@@ -72,14 +79,7 @@ const sessionsColumn: ColumnDef<AdminHub> = {
             <StateBar counts={sessions} />
           </TooltipTrigger>
           <TooltipContent>
-            <ul className="space-y-0.5">
-              {states.map((s) => (
-                <li key={s.key} className="flex items-center gap-1.5 tabular-nums">
-                  <span aria-hidden className={cn("h-2.5 w-2.5 rounded-sm", s.swatch)} />
-                  {formatCount(sessions[s.key])} {s.label}
-                </li>
-              ))}
-            </ul>
+            <SessionStatesLegend counts={sessions} className="space-y-0.5" />
           </TooltipContent>
         </Tooltip>
         <span className="w-24 shrink-0 tabular-nums">

@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { type AnyColumn, and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { cache } from "react";
 
 import { currentAdminUser } from "#/app/auth";
@@ -23,6 +23,18 @@ import { getActiveProjectId } from "#/lib/active-project-id";
 // table in plain SQL and touch the current row only through the callback parameter.
 const isActive = (alias: string) =>
   `${alias}.archived_at is null and ${alias}.dropped_out is not true`;
+
+const activeCountsOf = (hubId: AnyColumn) => ({
+  schoolsCount: countOf(school.hubId, hubId, sql.raw(isActive(`"schools"`))).as("schools_count"),
+  supervisorsCount: countOf(supervisor.hubId, hubId, sql.raw(isActive(`"supervisors"`))).as(
+    "supervisors_count",
+  ),
+  fellowsCount: countOf(fellow.hubId, hubId, sql.raw(isActive(`"fellows"`))).as("fellows_count"),
+  studentsCount:
+    sql<number>`(select count(*)::int from students st join schools sc on sc.id = st.school_id where sc.hub_id = ${hubId} and ${sql.raw(isActive("st"))})`.as(
+      "students_count",
+    ),
+});
 
 const notHeld = sql`not ${interventionSession.occurred} and ${interventionSession.status} is distinct from 'Cancelled'`;
 const sessionStateCounts = {
@@ -50,21 +62,7 @@ export async function fetchAdminHubs(implementerId: string, projectId: string) {
           orderBy: (c, { asc }) => [asc(c.coordinatorName), asc(c.id)],
         },
       },
-      extras: (h, { sql }) => ({
-        schoolsCount: countOf(school.hubId, h.id, sql.raw(isActive(`"schools"`))).as(
-          "schools_count",
-        ),
-        supervisorsCount: countOf(supervisor.hubId, h.id, sql.raw(isActive(`"supervisors"`))).as(
-          "supervisors_count",
-        ),
-        fellowsCount: countOf(fellow.hubId, h.id, sql.raw(isActive(`"fellows"`))).as(
-          "fellows_count",
-        ),
-        studentsCount:
-          sql<number>`(select count(*)::int from students st join schools sc on sc.id = st.school_id where sc.hub_id = ${h.id} and ${sql.raw(isActive("st"))})`.as(
-            "students_count",
-          ),
-      }),
+      extras: (h) => activeCountsOf(h.id),
       orderBy: (h, { asc }) => [asc(h.hubName), asc(h.id)],
     }),
     db
@@ -117,10 +115,7 @@ export const fetchAdminHub = cache(async (hubId: string) => {
     columns: { id: true, hubName: true },
     with: { project: { columns: { name: true } } },
     extras: (h, { sql }) => ({
-      studentsCount:
-        sql<number>`(select count(*)::int from students st join schools sc on sc.id = st.school_id where sc.hub_id = ${h.id} and ${sql.raw(isActive("st"))})`.as(
-          "students_count",
-        ),
+      ...activeCountsOf(h.id),
       sessionsCount: countOf(
         interventionSession.hubId,
         h.id,
@@ -128,11 +123,6 @@ export const fetchAdminHub = cache(async (hubId: string) => {
           `("intervention_sessions"."occurred" or "intervention_sessions"."status" is distinct from 'Cancelled') and "intervention_sessions"."archived_at" is null`,
         ),
       ).as("sessions_count"),
-      schoolsCount: countOf(school.hubId, h.id, sql.raw(isActive(`"schools"`))).as("schools_count"),
-      supervisorsCount: countOf(supervisor.hubId, h.id, sql.raw(isActive(`"supervisors"`))).as(
-        "supervisors_count",
-      ),
-      fellowsCount: countOf(fellow.hubId, h.id, sql.raw(isActive(`"fellows"`))).as("fellows_count"),
       hubManagersCount: countOf(
         hubCoordinator.assignedHubId,
         h.id,
