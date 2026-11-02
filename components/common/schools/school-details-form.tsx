@@ -276,7 +276,13 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
                 render={({ field }) => (
                   <FormItem className="col-span-3">
                     <FormLabel>School county</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={(county) => {
+                        field.onChange(county);
+                        form.setValue("schoolSubCounty", "");
+                      }}
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           {isCountySelectionValid ? (
@@ -307,10 +313,10 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          {isSubCountyValid() ? (
-                            <SelectValue placeholder="Select sub-county" />
+                          {field.value && !isSubCountyValid() ? (
+                            <SelectValue>{field.value}</SelectValue>
                           ) : (
-                            <SelectValue>{form.getValues("schoolSubCounty")}</SelectValue>
+                            <SelectValue placeholder="Select sub-county" />
                           )}
                         </SelectTrigger>
                       </FormControl>

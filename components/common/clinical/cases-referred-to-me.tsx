@@ -1,108 +1,115 @@
 "use client";
 
+import { format } from "date-fns";
 import { useTransition } from "react";
 import {
   acceptReferredClinicalCase,
+  type CaseReferredToMe,
   rejectReferredClinicalCase,
 } from "#/app/(platform)/sc/clinical/action";
-import { Icons } from "#/components/icons";
+import { Badge } from "#/components/ui/badge";
+import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { toastOnFailure, useToast } from "#/components/ui/use-toast";
-import type { clinicalScreeningInfo, student } from "#/db/schema";
+import { riskStatusOptions } from "#/db/enums";
 
-type CasesType = typeof clinicalScreeningInfo.$inferSelect & {
-  student: typeof student.$inferSelect;
-};
+const riskBadgeVariant = {
+  [riskStatusOptions.High]: "destructive",
+  [riskStatusOptions.Medium]: "warning",
+  [riskStatusOptions.Low]: "shamiri-green",
+  [riskStatusOptions.No]: "outline-solid",
+} as const;
 
-export function CasesReferredToMe({ cases }: { cases: CasesType[] }) {
+export function CasesReferredToMe({ cases }: { cases: CaseReferredToMe[] }) {
   return (
-    <div className="w-full">
-      <span className="text-sm font-medium">Cases referred to you : {cases.length}</span>
-      {cases.map((stud) => (
-        <RefferedCasesTab
-          key={stud.id}
-          name={stud?.student.studentName}
-          caseId={stud.id}
-          referralNotes={stud.referralNotes}
-        />
-      ))}
-    </div>
+    <section className="w-full space-y-2">
+      <h2 className="text-sm font-medium">Cases referred to you ({cases.length})</h2>
+      {cases.length > 0 && (
+        <ul className="space-y-2">
+          {cases.map((referredCase) => (
+            <ReferredCaseCard key={referredCase.id} referredCase={referredCase} />
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
-export function RefferedCasesTab({
-  name,
-  caseId,
-  referralNotes,
-}: {
-  name: string | null;
-  caseId: string;
-  referralNotes: string | null;
-}) {
+function ReferredCaseCard({ referredCase }: { referredCase: CaseReferredToMe }) {
   const { toast } = useToast();
-
   const [isPending, startTransition] = useTransition();
+  const referrerName =
+    referredCase.referredFromSupervisor?.supervisorName ?? referredCase.referredFromSpecified;
+  const referredAt = referredCase.caseTransferTrail[0]?.date;
+  const referralDetails = [
+    referredCase.student.school?.schoolName,
+    referrerName && `Referred by ${referrerName}`,
+    referredAt && format(referredAt, "d MMM yyyy"),
+  ].filter(Boolean);
 
-  const handleAcceptReferredCase = () => {
+  const answer = (decision: "accept" | "reject") =>
     startTransition(() =>
       toastOnFailure(async () => {
-        const response = await acceptReferredClinicalCase(caseId);
+        const response =
+          decision === "accept"
+            ? await acceptReferredClinicalCase(referredCase.id)
+            : await rejectReferredClinicalCase(referredCase.id);
+        const [done, doing] =
+          decision === "accept" ? ["accepted", "accepting"] : ["rejected", "rejecting"];
         toast(
           response.success
-            ? { variant: "default", title: "Referred case accepted" }
-            : { variant: "destructive", title: "Error accepting referred case. Please try again" },
+            ? { variant: "default", title: `Referred case ${done}` }
+            : { variant: "destructive", title: `Error ${doing} referred case. Please try again` },
         );
       }),
     );
-  };
-
-  const handleRejectReferredCase = () => {
-    startTransition(() =>
-      toastOnFailure(async () => {
-        const response = await rejectReferredClinicalCase(caseId);
-        toast(
-          response.success
-            ? { variant: "default", title: "Referred case rejected" }
-            : { variant: "destructive", title: "Error rejecting referred case. Please try again" },
-        );
-      }),
-    );
-  };
-
-  function handleWordLimit(text: string | null, limit: number) {
-    if (!text) return "";
-    if (text.length > limit) {
-      return `${text.slice(0, limit)}...`;
-    }
-    return text;
-  }
 
   return (
-    <Card className="my-2 flex items-center justify-between  gap-5 bg-white p-4 pr-3.5">
-      <p className="text-base font-medium text-brand">{name}</p>
-      <span className="text-sm font-normal text-muted-foreground">
-        {handleWordLimit(referralNotes, 50)}
-      </span>
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={handleAcceptReferredCase}
-          disabled={isPending}
-          className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label="Accept referred case"
-        >
-          <Icons.check className="mx-2 h-6 w-6 align-baseline text-muted-green xl:h-7 xl:w-7" />
-        </button>
-        <button
-          type="button"
-          onClick={handleRejectReferredCase}
-          disabled={isPending}
-          className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label="Reject referred case"
-        >
-          <Icons.xIcon className="mx-2 h-6 w-6 align-baseline text-shamiri-red xl:h-7 xl:w-7" />
-        </button>
-      </div>
-    </Card>
+    <li>
+      <Card className="flex flex-col gap-4 bg-white p-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-base font-medium text-shamiri-new-blue">
+              {referredCase.student.studentName ?? referredCase.pseudonym}
+            </p>
+            {referredCase.pseudonym && (
+              <span className="text-sm text-muted-foreground">{referredCase.pseudonym}</span>
+            )}
+            <Badge variant={riskBadgeVariant[referredCase.riskStatus]}>
+              Risk: {referredCase.riskStatus}
+            </Badge>
+          </div>
+          {referralDetails.length > 0 && (
+            <p className="text-sm text-muted-foreground">{referralDetails.join(" · ")}</p>
+          )}
+          {(referredCase.referralReason || referredCase.referralNotes) && (
+            <p className="text-sm whitespace-pre-line">
+              {referredCase.referralReason && (
+                <span className="font-medium">{referredCase.referralReason}. </span>
+              )}
+              {referredCase.referralNotes}
+            </p>
+          )}
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <Button
+            variant="outline"
+            disabled={isPending}
+            onClick={() => answer("reject")}
+            aria-label="Reject referred case"
+          >
+            Reject
+          </Button>
+          <Button
+            variant="brand"
+            disabled={isPending}
+            onClick={() => answer("accept")}
+            aria-label="Accept referred case"
+          >
+            Accept
+          </Button>
+        </div>
+      </Card>
+    </li>
   );
 }

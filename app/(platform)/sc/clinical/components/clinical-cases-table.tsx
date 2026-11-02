@@ -31,7 +31,6 @@ export default function ClinicalCasesTable({
 }) {
   const supervisorOptions = supervisorsInHub.map((s) => ({ id: s.id, name: s.supervisorName }));
   const referralOptions = {
-    currentSupervisor: supervisorOptions.find((s) => s.id === currentSupervisorId),
     supervisorsInHub: supervisorOptions.filter((s) => s.id !== currentSupervisorId),
     clinicalLeads: clinicalLeads.map((l) => ({ id: l.id, name: l.clinicalLeadName })),
   };

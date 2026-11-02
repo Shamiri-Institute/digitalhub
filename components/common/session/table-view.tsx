@@ -314,6 +314,8 @@ export function TableView({
               fellowId: fellow.id,
               fellowName: fellow.fellowName,
               attended: fellow_attendance?.attended ?? null,
+              absenceReason: fellow_attendance?.absenceReason ?? undefined,
+              absenceComments: fellow_attendance?.absenceComments ?? undefined,
               averageRating: null,
               sessionId: session.id,
               groupName: group.groupName ?? null,

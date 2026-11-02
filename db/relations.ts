@@ -205,6 +205,11 @@ export const clinicalScreeningInfoRelations = relations(clinicalScreeningInfo, (
     references: [supervisor.id],
     relationName: "referredtocases",
   }),
+  referredFromSupervisor: one(supervisor, {
+    fields: [clinicalScreeningInfo.referredFrom],
+    references: [supervisor.id],
+    relationName: "ClinicalScreeningInfo_referredFromSupervisor",
+  }),
   sessionWhenCaseIsFlagged: one(interventionSession, {
     fields: [clinicalScreeningInfo.sessionWhenCaseIsFlaggedId],
     references: [interventionSession.id],
@@ -961,6 +966,9 @@ export const supervisorRelations = relations(supervisor, ({ one, many }) => ({
     relationName: "ClinicalScreeningInfo_currentSupervisor",
   }),
   referredToMeClinicalCases: many(clinicalScreeningInfo, { relationName: "referredtocases" }),
+  referredByMeClinicalCases: many(clinicalScreeningInfo, {
+    relationName: "ClinicalScreeningInfo_referredFromSupervisor",
+  }),
   fellowComplaints: many(fellowComplaints, { relationName: "FellowComplaints_supervisor" }),
   weeklyFellowRatings: many(weeklyFellowRatings, {
     relationName: "WeeklyFellowRatings_supervisor",
