@@ -7,8 +7,9 @@ import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import EditHubButton from "../components/edit-hub-button";
 import HubBreadcrumb from "../components/hub-breadcrumb";
+import HubStats from "../components/hub-stats";
 import HubTabs from "../components/hub-tabs";
-import { fetchAdminHub, fetchSiblingHubs } from "../queries";
+import { fetchAdminHub, fetchHubStats, fetchSiblingHubs } from "../queries";
 
 export async function generateMetadata(props: {
   params: Promise<{ hubId: string }>;
@@ -23,10 +24,11 @@ export default async function HubLayout(props: {
   params: Promise<{ hubId: string }>;
 }) {
   const { hubId } = await props.params;
-  const [hub, siblingHubs, admin] = await Promise.all([
+  const [hub, siblingHubs, admin, stats] = await Promise.all([
     fetchAdminHub(hubId),
     fetchSiblingHubs(),
     currentAdminUser(),
+    fetchHubStats(hubId),
   ]);
   if (!hub) {
     notFound();
@@ -36,18 +38,21 @@ export default async function HubLayout(props: {
     <div className="flex h-full flex-col bg-white">
       <div className="container w-full grow space-y-6 py-10">
         <HubBreadcrumb hubs={siblingHubs} currentHub={hub} />
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-2">
-            <h2 className="text-4xl font-semibold leading-[48px] text-black">{hub.hubName}</h2>
-            <p className="text-sm font-medium uppercase tracking-wide text-shamiri-text-dark-grey">
-              {hub.project.name}
-            </p>
-          </div>
-          {admin?.profile.isSuperAdmin && (
-            <div className="shrink-0 self-start">
-              <EditHubButton hub={hub} />
+        <div className="space-y-2">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-2">
+              <h2 className="text-4xl font-semibold leading-[48px] text-black">{hub.hubName}</h2>
+              <p className="text-sm font-medium uppercase tracking-wide text-shamiri-text-dark-grey">
+                {hub.project.name}
+              </p>
             </div>
-          )}
+            {admin?.profile.isSuperAdmin && (
+              <div className="shrink-0 self-start">
+                <EditHubButton hub={hub} />
+              </div>
+            )}
+          </div>
+          <HubStats stats={stats} />
         </div>
         <HubTabs hub={hub} />
         <Separator />

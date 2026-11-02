@@ -1,8 +1,17 @@
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { cache } from "react";
 
 import { currentAdminUser } from "#/app/auth";
 import { db } from "#/db/client";
-import { school } from "#/db/schema";
+import {
+  fellow,
+  fellowAttendance,
+  interventionGroup,
+  interventionSession,
+  school,
+  student,
+  weeklyFellowRatings,
+} from "#/db/schema";
 import { countOf } from "#/db/sql";
 import { getActiveProjectId } from "#/lib/active-project-id";
 
@@ -84,3 +93,74 @@ export async function fetchSiblingHubs() {
 }
 
 export type SiblingHub = Awaited<ReturnType<typeof fetchSiblingHubs>>[number];
+
+// Callers render the result only for a hub `fetchAdminHub` returned.
+export async function fetchHubStats(hubId: string) {
+  const hubSchoolIds = db.select({ id: school.id }).from(school).where(eq(school.hubId, hubId));
+  const hubGroupIds = db
+    .select({ id: interventionGroup.id })
+    .from(interventionGroup)
+    .where(
+      and(inArray(interventionGroup.schoolId, hubSchoolIds), isNull(interventionGroup.archivedAt)),
+    );
+  const groupsAtSessionSchool = sql`select 1 from ${interventionGroup} where ${interventionGroup.schoolId} = ${interventionSession.schoolId} and ${interventionGroup.archivedAt} is null`;
+  const notHeld = sql`not ${interventionSession.occurred} and ${interventionSession.status} is distinct from 'Cancelled'`;
+  const leaderAttendanceMarked = sql`select 1 from ${fellowAttendance} where ${fellowAttendance.sessionId} = ${interventionSession.id} and ${fellowAttendance.fellowId} = ${interventionGroup.leaderId} and ${fellowAttendance.attended} is not null`;
+
+  const [[sessions], [ratings], groups, studentsInGroups, droppedOutStudents, droppedOutFellows] =
+    await Promise.all([
+      db
+        .select({
+          held: sql<number>`count(*) filter (where ${interventionSession.occurred})::int`,
+          unmarked: sql<number>`count(*) filter (where ${notHeld} and ${interventionSession.sessionDate} <= now())::int`,
+          upcoming: sql<number>`count(*) filter (where ${notHeld} and ${interventionSession.sessionDate} > now())::int`,
+          cancelled: sql<number>`count(*) filter (where not ${interventionSession.occurred} and ${interventionSession.status} = 'Cancelled')::int`,
+          attendanceExpected: sql<number>`count(*) filter (where ${interventionSession.occurred} and exists (${groupsAtSessionSchool}))::int`,
+          attendanceRecorded: sql<number>`count(*) filter (where ${interventionSession.occurred} and exists (${groupsAtSessionSchool}) and not exists (${groupsAtSessionSchool} and not exists (${leaderAttendanceMarked})))::int`,
+        })
+        .from(interventionSession)
+        .where(and(eq(interventionSession.hubId, hubId), isNull(interventionSession.archivedAt))),
+      db
+        .select({
+          average: sql<
+            number | null
+          >`((avg(${weeklyFellowRatings.behaviourRating}) + avg(${weeklyFellowRatings.dressingAndGroomingRating}) + avg(${weeklyFellowRatings.programDeliveryRating}) + avg(${weeklyFellowRatings.punctualityRating})) / 4)::float8`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(weeklyFellowRatings)
+        .innerJoin(fellow, eq(fellow.id, weeklyFellowRatings.fellowId))
+        .where(eq(fellow.hubId, hubId)),
+      db.$count(interventionGroup, inArray(interventionGroup.id, hubGroupIds)),
+      db.$count(
+        student,
+        and(inArray(student.assignedGroupId, hubGroupIds), isNull(student.archivedAt)),
+      ),
+      db.$count(
+        student,
+        and(
+          inArray(student.schoolId, hubSchoolIds),
+          eq(student.droppedOut, true),
+          isNull(student.archivedAt),
+        ),
+      ),
+      db.$count(
+        fellow,
+        and(eq(fellow.hubId, hubId), eq(fellow.droppedOut, true), isNull(fellow.archivedAt)),
+      ),
+    ]);
+
+  if (!sessions || !ratings) {
+    throw new Error("An aggregate without GROUP BY returned no row");
+  }
+
+  return {
+    sessions: { ...sessions, scheduled: sessions.held + sessions.unmarked + sessions.upcoming },
+    ratings,
+    groups,
+    studentsInGroups,
+    droppedOutStudents,
+    droppedOutFellows,
+  };
+}
+
+export type HubStats = Awaited<ReturnType<typeof fetchHubStats>>;

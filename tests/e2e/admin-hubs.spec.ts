@@ -3,7 +3,14 @@ import { ilike, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { careAdminEmail, plainAdminEmail, superAdminEmail } from "#/db/seed/fixtures";
-import { hub, interventionSession, sessionName } from "#/db/schema";
+import {
+  fellowAttendance,
+  hub,
+  interventionGroup,
+  interventionSession,
+  school,
+  sessionName,
+} from "#/db/schema";
 import { hubSessionTypes } from "#/lib/app-constants/hub-session-types";
 import { objectId } from "#/lib/crypto";
 import { required, signableMember, signInWithEmail } from "#/tests/helpers";
@@ -28,7 +35,18 @@ test.afterAll(async () => {
   });
   const hubIds = createdHubs.map((h) => h.id);
   if (hubIds.length > 0) {
+    const hubSessionIds = db
+      .select({ id: interventionSession.id })
+      .from(interventionSession)
+      .where(inArray(interventionSession.hubId, hubIds));
+    const hubSchoolIds = db
+      .select({ id: school.id })
+      .from(school)
+      .where(inArray(school.hubId, hubIds));
+    await db.delete(fellowAttendance).where(inArray(fellowAttendance.sessionId, hubSessionIds));
+    await db.delete(interventionGroup).where(inArray(interventionGroup.schoolId, hubSchoolIds));
     await db.delete(interventionSession).where(inArray(interventionSession.hubId, hubIds));
+    await db.delete(school).where(inArray(school.hubId, hubIds));
     await db.delete(sessionName).where(inArray(sessionName.hubId, hubIds));
   }
   await db.delete(hub).where(ilike(hub.hubName, `${HUB_PREFIX}%`));
@@ -450,6 +468,84 @@ test("a hub page lists its schools and steps to the hubs beside it by name", asy
   await expect(page.getByRole("heading", { name: secondHub })).toBeVisible();
   await page.getByRole("link", { name: `Previous hub: ${firstHub}` }).click();
   await expect(page.getByRole("heading", { name: firstHub })).toBeVisible();
+});
+
+test("a hub page counts its sessions and the attended ones missing fellow attendance", async ({
+  page,
+  context,
+}) => {
+  const {
+    rows: [seededHub],
+  } = await db.execute<{ implementerId: string; projectId: string }>(sql`
+    select h.implementer_id as "implementerId", h.project_id as "projectId"
+    from hubs h
+    join projects p on p.id = h.project_id and p.is_default
+    join implementer_members m on m.implementer_id = h.implementer_id
+    join users u on u.id = m.user_id and u.email = ${superAdminEmail}
+    order by h.id
+    limit 1`);
+  required(seededHub, "a hub of the super admin's implementer in the default project");
+  const leader = await db.query.fellow.findFirst({
+    columns: { id: true },
+    orderBy: (f, { asc }) => asc(f.id),
+  });
+  required(leader, "a seeded fellow to lead the group");
+  // Sessions, groups and attendance are not made from the admin pages, so the spec inserts them.
+  const [statsHub] = await db
+    .insert(hub)
+    .values({ id: objectId("hub"), hubName: `${HUB_PREFIX} Stats`, ...seededHub })
+    .returning({ id: hub.id });
+  required(statsHub, "the inserted hub");
+  const schoolId = objectId("school");
+  await db.insert(school).values({
+    id: schoolId,
+    schoolName: `${HUB_PREFIX} School`,
+    visibleId: schoolId,
+    hubId: statsHub.id,
+  });
+  await db.insert(interventionGroup).values({
+    id: objectId("group"),
+    groupName: "Stats group",
+    leaderId: leader.id,
+    schoolId,
+    projectId: seededHub.projectId,
+  });
+  const day = 24 * 60 * 60 * 1000;
+  const session = (occurred: boolean, daysFromNow: number, status?: "Cancelled") => ({
+    id: objectId("session"),
+    hubId: statsHub.id,
+    schoolId,
+    projectId: seededHub.projectId,
+    occurred,
+    status,
+    yearOfImplementation: new Date().getFullYear(),
+    sessionDate: new Date(Date.now() + daysFromNow * day),
+  });
+  const leaderMarked = session(true, -7);
+  await db
+    .insert(interventionSession)
+    .values([
+      leaderMarked,
+      session(true, -6),
+      session(false, -5),
+      session(false, 5),
+      session(false, -4, "Cancelled"),
+    ]);
+  await db
+    .insert(fellowAttendance)
+    .values({ fellowId: leader.id, sessionId: leaderMarked.id, attended: true });
+
+  await signInWithEmail(context, superAdminEmail);
+  await page.goto(getUrl(`/admin/hubs/${statsHub.id}/schools`));
+  const stats = page.getByRole("region", { name: "Hub stats" });
+  await expect(stats).toContainText("marked attended of 4 scheduled");
+  for (const segment of ["2 attended", "1 unmarked", "1 upcoming", "1 cancelled"]) {
+    await expect(stats).toContainText(segment);
+  }
+  await expect(stats).toContainText("1 past session needs marking");
+  await expect(stats).toContainText("50%");
+  await expect(stats).toContainText("1 of 2 sessions with groups");
+  await expect(stats).toContainText("1 session marked attended without fellow attendance");
 });
 
 test("a hub of another implementer is not found", async ({ page, context }) => {
