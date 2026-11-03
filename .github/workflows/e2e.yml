@@ -16,16 +16,16 @@ env:
   AWS_ACCESS_KEY_ID: mock-aws-access-key-id
   AWS_SECRET_ACCESS_KEY: mock-aws-secret-access-key
   AWS_REGION: af-south-1
-  S3_UPLOAD_KEY: mock-s3-upload-key
-  S3_UPLOAD_SECRET: mock-s3-upload-secret
-  S3_RECORDINGS_BUCKET: mock-s3-recordings-bucket
+  # The key, secret and buckets scripts/local-s3.sh gives the SeaweedFS server started below.
+  S3_UPLOAD_KEY: GKdeadbeefdeadbeefdeadbeef
+  S3_UPLOAD_SECRET: "0000000000000000000000000000000000000000000000000000000000000001"
+  S3_RECORDINGS_BUCKET: recordings
   S3_RECORDINGS_REGION: af-south-1
-  S3_STUDENT_ATTENDANCE_BUCKET: mock-s3-attendance-bucket
-  S3_STUDENT_ATTENDANCE_REGION: af-south-1
-  # Print files go to the SeaweedFS server started below.
-  AWS_ENDPOINT_URL_S3: http://localhost:8333
   S3_SURVEY_PRINT_FILES_BUCKET: survey-print-files
   S3_SURVEY_PRINT_FILES_REGION: af-south-1
+  AWS_ENDPOINT_URL_S3: http://localhost:8333
+  S3_STUDENT_ATTENDANCE_BUCKET: mock-s3-attendance-bucket
+  S3_STUDENT_ATTENDANCE_REGION: af-south-1
   BETTER_AUTH_URL: http://localhost:3000
   BETTER_AUTH_SECRET: e2e-better-auth-secret-at-least-32-chars
   PLAYWRIGHT_VERSION: ""
@@ -88,18 +88,14 @@ jobs:
       - run: npx playwright install-deps chromium
         if: steps.playwright-cache.outputs.cache-hit == 'true'
 
-      # An S3-compatible server for print files. A job service can't be given SeaweedFS's
-      # `server -s3` command, so it runs as a step. With no identities configured it accepts any
-      # signed request, so the S3 key and secret above are only placeholders.
+      # The S3 server developers run, from the same script, so it checks request signatures here too.
       - name: Start SeaweedFS
         run: |
-          docker run -d --name seaweedfs -p 8333:8333 chrislusf/seaweedfs:4.50 server -s3
-          for attempt in $(seq 1 60); do
-            curl -s -o /dev/null http://localhost:8333 && break
-            sleep 1
-          done
-          AWS_ACCESS_KEY_ID=$S3_UPLOAD_KEY AWS_SECRET_ACCESS_KEY=$S3_UPLOAD_SECRET \
-            aws --endpoint-url "$AWS_ENDPOINT_URL_S3" s3 mb s3://survey-print-files
+          curl -fsSLo seaweedfs.tar.gz https://github.com/seaweedfs/seaweedfs/releases/download/4.52/linux_amd64.tar.gz
+          echo "8b538c22d47d0c3fb6792adaa6b0c735a967401270a53427d5a476dcaca9b7ae  seaweedfs.tar.gz" | sha256sum -c -
+          sudo tar -xzf seaweedfs.tar.gz -C /usr/local/bin weed
+          nohup scripts/local-s3.sh >seaweedfs.log 2>&1 &
+          timeout 120 sh -c 'until grep -q "S3 ready" seaweedfs.log; do sleep 1; done' || { cat seaweedfs.log; exit 1; }
 
       - name: Migrate database
         run: npm run db:migrate

@@ -72,7 +72,7 @@ Every export of a `"use server"` file is a public POST endpoint, even when only 
 - `npm test` runs Playwright against `next dev`; `npm run test:prod` builds and runs against `next start`, as CI does. `npm run test:unit` runs Vitest.
 - E2E specs sign in as seeded users picked from the database (`signInAs`, `signInWithEmail` in `tests/helpers.ts`).
 - A spec that changes data creates its own rows, or picks rows no other spec edits, and removes what it made.
-- Test behaviour through real dependencies: the local Postgres, and an S3-compatible server such as MinIO for uploads. Leave out a test that would need a mocked module, env, SDK client or network call.
+- Test behaviour through real dependencies: the local Postgres, and SeaweedFS for S3 (`scripts/local-s3.sh`, which CI runs too). Leave out a test that would need a mocked module, env, SDK client or network call.
 - E2E specs drive the UI. Action IDs and encoding are framework internals, so a spec never posts to a server action directly.
 - After a mutation, assert through the UI after a reload. Read the database only for what no page shows (values the server takes from the session, stored but undisplayed data, revoked sessions, writes that must not happen), with a comment saying so.
 
@@ -91,7 +91,7 @@ Vercel, with preview deployments per branch. `vercel:build` runs production migr
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
