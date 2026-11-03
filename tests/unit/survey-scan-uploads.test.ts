@@ -313,6 +313,9 @@ describe("scan files", () => {
 
   it("takes a scan's type from its extension only when the browser gives none", () => {
     expect(scanContentTypeOf({ type: "image/png", name: "page.png" })).toBe("image/png");
+    expect(scanContentTypeOf({ type: "Application/PDF; charset=binary", name: "a.pdf" })).toBe(
+      "application/pdf",
+    );
     expect(scanContentTypeOf({ type: "", name: "Batch 1.PDF" })).toBe("application/pdf");
     expect(scanContentTypeOf({ type: "application/octet-stream", name: "p.jpg" })).toBe(
       "image/jpeg",

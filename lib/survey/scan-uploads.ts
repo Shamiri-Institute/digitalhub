@@ -59,6 +59,8 @@ export async function startScanUpload(
       uploadedBy: scope.userId,
       s3Key: `scans/${uploadId}`,
       ...file,
+      // The database's clock, which the hour below is measured on.
+      updatedAt: sql`now()`,
     })
     .onConflictDoUpdate({
       target: surveyUpload.sha256,
@@ -67,7 +69,6 @@ export async function startScanUpload(
         uploadedBy: scope.userId,
         fileName: file.fileName,
         // Not the type: a resume keeps the one its object is stored with, so the two always agree.
-        // The database's clock, which the hour below is measured on.
         updatedAt: sql`now()`,
       },
       setWhere: and(
@@ -128,7 +129,6 @@ function base64Checksum(sha256: string) {
   return Buffer.from(sha256, "hex").toString("base64");
 }
 
-/** Whether a stored object is `file`: the same size, type and checksum. */
 function isStoredAs(stored: Extract<HeadOutcome, { status: "ok" }>, file: StoredScanFile) {
   return (
     stored.contentLength === file.byteSize &&
@@ -175,7 +175,6 @@ export async function releaseScanUpload(viewer: SurveyViewer, uploadId: string) 
   }
 }
 
-/** Deletes the caller's unfinished upload row, if it is still theirs and unfinished. */
 async function deleteUnfinishedUpload(viewer: SurveyViewer, uploadId: string) {
   const [deleted] = await db
     .delete(surveyUpload)

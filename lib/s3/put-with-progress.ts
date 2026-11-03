@@ -25,14 +25,14 @@ export function putWithProgress(
         return;
       }
       stalled = setTimeout(() => {
-        xhr.abort();
         fail(new Error(reason));
+        xhr.abort();
       }, ms);
     };
     const watchForStall = () => giveUpAfter(stallMs, "Upload stalled");
     const abort = () => {
-      xhr.abort();
       fail(new DOMException("Upload cancelled", "AbortError"));
+      xhr.abort();
     };
     if (signal?.aborted) {
       return abort();
@@ -50,7 +50,7 @@ export function putWithProgress(
     xhr.onreadystatechange = () => {
       if (xhr.readyState === 4) {
         if (xhr.status === 0) {
-          // Aborted, or a network error; those paths reject.
+          // Aborted, or a network error; onabort and onerror reject.
           return;
         }
         clearTimeout(stalled);
@@ -69,6 +69,8 @@ export function putWithProgress(
       }
     };
 
+    // Also an abort this code didn't start, such as the browser stopping the page's requests.
+    xhr.onabort = () => fail(new DOMException("Upload aborted", "AbortError"));
     xhr.onerror = () => {
       console.error("XHR Error:", xhr.status, xhr.statusText);
       fail(new Error(`Network error: ${xhr.status} ${xhr.statusText}`));

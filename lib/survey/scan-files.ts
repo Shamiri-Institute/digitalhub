@@ -4,6 +4,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 
 import { MAX_FILE_SIZE } from "#/lib/s3/s3.types";
+import { normalizeContentType } from "#/lib/s3/utils/normalize-content-type";
 
 export const SCAN_CONTENT_TYPES = ["application/pdf", "image/jpeg", "image/png"] as const;
 export type ScanContentType = (typeof SCAN_CONTENT_TYPES)[number];
@@ -26,10 +27,11 @@ export function isScanContentType(contentType: string): contentType is ScanConte
  * files from a network share or scanner app), from its extension.
  */
 export function scanContentTypeOf(file: { type: string; name: string }) {
-  if (isScanContentType(file.type)) {
-    return file.type;
+  const browserType = normalizeContentType(file.type);
+  if (isScanContentType(browserType)) {
+    return browserType;
   }
-  const browserGaveNoType = file.type === "" || file.type === "application/octet-stream";
+  const browserGaveNoType = browserType === "" || browserType === "application/octet-stream";
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
   return browserGaveNoType && Object.hasOwn(EXTENSION_CONTENT_TYPES, extension)
     ? EXTENSION_CONTENT_TYPES[extension]
