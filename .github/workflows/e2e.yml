@@ -26,6 +26,8 @@ env:
   AWS_ENDPOINT_URL_S3: http://localhost:8333
   S3_STUDENT_ATTENDANCE_BUCKET: mock-s3-attendance-bucket
   S3_STUDENT_ATTENDANCE_REGION: af-south-1
+  S3_SURVEY_SCANS_BUCKET: survey-scans
+  S3_SURVEY_SCANS_REGION: af-south-1
   BETTER_AUTH_URL: http://localhost:3000
   BETTER_AUTH_SECRET: e2e-better-auth-secret-at-least-32-chars
   PLAYWRIGHT_VERSION: ""

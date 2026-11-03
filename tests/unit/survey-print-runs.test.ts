@@ -22,7 +22,7 @@ import {
   surveyVersion,
 } from "#/db/schema";
 import { ForbiddenRoleError, NotFoundError } from "#/lib/auth/require-auth-role";
-import { type HubSurveyScope, printRunScope } from "#/lib/auth/survey-access";
+import { type HubSurveyScope, surveyHubScope } from "#/lib/auth/survey-access";
 import {
   fetchPrintableHubs,
   fetchPrintRun,
@@ -548,10 +548,10 @@ describe("one copy per student", () => {
 
 describe("hub scope", () => {
   it("refuses a hub coordinator naming another hub", async () => {
-    await expect(printRunScope({ kind: "hub", ...scope }, otherHubId)).rejects.toThrow(
+    await expect(surveyHubScope({ kind: "hub", ...scope }, otherHubId)).rejects.toThrow(
       ForbiddenRoleError,
     );
-    await expect(printRunScope({ kind: "hub", ...scope }, scope.hubId)).resolves.toEqual(scope);
+    await expect(surveyHubScope({ kind: "hub", ...scope }, scope.hubId)).resolves.toEqual(scope);
   });
 
   it("leaves out a school that dropped out, from the form and from a run", async () => {

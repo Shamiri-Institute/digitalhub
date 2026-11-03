@@ -12,12 +12,14 @@ const sentryIngestOrigin = (() => {
   }
 })();
 
-// In development the browser uploads to a local S3 server (scripts/local-s3.sh), which serves
-// each bucket on its own subdomain.
+// Locally and in CI the browser uploads to a local S3 server (scripts/local-s3.sh, SeaweedFS), which
+// serves each bucket on its own subdomain. CI's E2E tests run a production build, so the build
+// allows the server whenever it is on this machine.
 const localS3Origins = (() => {
-  if (process.env.NODE_ENV === "production" || !process.env.AWS_ENDPOINT_URL_S3) return "";
+  if (!process.env.AWS_ENDPOINT_URL_S3) return "";
   try {
-    const { protocol, host } = new URL(process.env.AWS_ENDPOINT_URL_S3);
+    const { protocol, host, hostname } = new URL(process.env.AWS_ENDPOINT_URL_S3);
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") return "";
     return `${protocol}//${host} ${protocol}//*.${host}`;
   } catch {
     return "";

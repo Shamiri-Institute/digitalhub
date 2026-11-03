@@ -22,6 +22,10 @@ const schema = z.object({
   S3_SURVEY_PRINT_FILES_BUCKET: z.string().default(""),
   S3_SURVEY_PRINT_FILES_REGION: z.string().default("af-south-1"),
 
+  // Scanned questionnaires, uploaded by the browser through presigned PUTs. Needs CORS.
+  S3_SURVEY_SCANS_BUCKET: z.string().default(""),
+  S3_SURVEY_SCANS_REGION: z.string().default("af-south-1"),
+
   // Vercel Cron sends it as a bearer token. Unset, the cron routes refuse every request.
   CRON_SECRET: z.string().min(16).optional(),
 

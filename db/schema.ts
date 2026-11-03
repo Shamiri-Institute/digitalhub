@@ -46,6 +46,7 @@ import {
   SurveyPrintStatus,
   SurveyQuestionnaireStatus,
   SurveyStatus,
+  SurveyUploadStatus,
   SurveyVersionPrefill,
   SurveyVersionStatus,
   TicketCategory,
@@ -121,6 +122,10 @@ export const surveyVersionPrefillEnum = pgEnum(
 );
 export const surveyAuditActorEnum = pgEnum("survey_audit_actor", enumValues(SurveyAuditActor));
 export const surveyPrintStatusEnum = pgEnum("survey_print_status", enumValues(SurveyPrintStatus));
+export const surveyUploadStatusEnum = pgEnum(
+  "survey_upload_status",
+  enumValues(SurveyUploadStatus),
+);
 export const surveyQuestionnaireStatusEnum = pgEnum(
   "survey_questionnaire_status",
   enumValues(SurveyQuestionnaireStatus),
@@ -3030,6 +3035,68 @@ export const surveyPrintFile = pgTable(
       columns: [table.schoolId],
       foreignColumns: [school.id],
       name: "survey_print_files_school_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+  ],
+);
+// A scanned file a hub sent in, stored in the survey-scans bucket. Its hash is unique, so the same
+// scan is never processed twice; the row is made before the upload, to hold the hash
+// (lib/survey/scan-uploads.ts). Its hub gives its implementer and project.
+export const surveyUpload = pgTable(
+  "survey_uploads",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyupload")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    hubId: varchar("hub_id", { length: 255 }).notNull(),
+    uploadedBy: varchar("uploaded_by", { length: 255 }).notNull(),
+    s3Key: text("s3_key").notNull(),
+    fileName: text("file_name").notNull(),
+    // Lowercase hex.
+    sha256: text().notNull(),
+    contentType: text("content_type").notNull(),
+    byteSize: integer("byte_size").notNull(),
+    // Null for a PDF until the pipeline counts its pages.
+    pageCount: integer("page_count"),
+    status: surveyUploadStatusEnum().default(SurveyUploadStatus.PENDING).notNull(),
+    error: text(),
+    uploadedAt: timestamp("uploaded_at", { withTimezone: true, mode: "date" }),
+  },
+  (table) => [
+    uniqueIndex("survey_uploads_sha256_key").on(table.sha256),
+    uniqueIndex("survey_uploads_s3_key_key").on(table.s3Key),
+    index("survey_uploads_hub_id_created_at_idx").on(table.hubId, table.createdAt),
+    index("survey_uploads_uploaded_by_idx").on(table.uploadedBy),
+    check("survey_uploads_sha256_check", sql`${table.sha256} ~ '^[0-9a-f]{64}$'`),
+    check("survey_uploads_byte_size_check", sql`${table.byteSize} > 0`),
+    check(
+      "survey_uploads_uploaded_check",
+      sql`${table.status} = 'PENDING' or ${table.uploadedAt} is not null`,
+    ),
+    check(
+      "survey_uploads_error_check",
+      sql`(${table.status} = 'FAILED') = (${table.error} is not null)`,
+    ),
+    foreignKey({
+      columns: [table.hubId],
+      foreignColumns: [hub.id],
+      name: "survey_uploads_hub_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.uploadedBy],
+      foreignColumns: [user.id],
+      name: "survey_uploads_uploaded_by_fkey",
     })
       .onUpdate("restrict")
       .onDelete("restrict"),

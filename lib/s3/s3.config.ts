@@ -34,6 +34,12 @@ const BUCKET_ENV: Record<
     regionVar: "S3_SURVEY_PRINT_FILES_REGION",
     regionValue: env.S3_SURVEY_PRINT_FILES_REGION,
   },
+  "survey-scans": {
+    bucketVar: "S3_SURVEY_SCANS_BUCKET",
+    bucketValue: env.S3_SURVEY_SCANS_BUCKET,
+    regionVar: "S3_SURVEY_SCANS_REGION",
+    regionValue: env.S3_SURVEY_SCANS_REGION,
+  },
 };
 
 export const getS3Credentials = (): S3Credentials => {

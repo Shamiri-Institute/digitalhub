@@ -3,9 +3,9 @@ import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { requireSurveyScope } from "#/lib/auth/admin-access";
 import { ForbiddenRoleError, NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
-import { PrintRunError } from "#/lib/survey/print-run";
+import { SurveyError } from "#/lib/actions/survey/respond";
 
-/** Where a print run's copies may go: one hub, inside the caller's implementer and project. */
+/** One hub a caller works in (prints copies for, uploads scans for), inside their implementer and project. */
 export type HubSurveyScope = {
   userId: string;
   implementerId: string;
@@ -14,19 +14,20 @@ export type HubSurveyScope = {
 };
 
 /**
- * Who is looking at print runs: a hub coordinator sees their hub's, a Research admin every hub's
- * in their implementer and project. There is no unscoped viewer, so no query can forget the filter.
+ * Who is looking at a hub's survey work (print runs, scan uploads): a hub coordinator sees their
+ * hub's, a Research admin every hub's in their implementer and project. There is no unscoped viewer,
+ * so no query can forget the filter.
  */
-export type PrintRunViewer =
+export type SurveyViewer =
   | ({ kind: "hub" } & HubSurveyScope)
   | { kind: "project"; userId: string; implementerId: string; projectId: string };
 
 /**
- * The signed-in hub coordinator as a print-run viewer: their hub, taken from the session, and that
+ * The signed-in hub coordinator as a survey viewer: their hub, taken from the session, and that
  * hub's implementer and project, whose surveys they may print. Null for anyone else, and for a
  * coordinator without a hub or whose hub is archived. Pages and actions both use it.
  */
-export async function hubCoordinatorViewer(): Promise<PrintRunViewer | null> {
+export async function hubCoordinatorViewer(): Promise<SurveyViewer | null> {
   const coordinator = await currentHubCoordinator();
   const userId = coordinator?.session.user.id;
   const coordinatorHub = coordinator?.profile.assignedHub;
@@ -42,7 +43,7 @@ export async function hubCoordinatorViewer(): Promise<PrintRunViewer | null> {
   };
 }
 
-export async function requirePrintRunViewer(): Promise<PrintRunViewer> {
+export async function requireSurveyViewer(): Promise<SurveyViewer> {
   const { role } = await requireAuthRole(ImplementerRole.ADMIN, ImplementerRole.HUB_COORDINATOR);
   if (role === ImplementerRole.HUB_COORDINATOR) {
     const viewer = await hubCoordinatorViewer();
@@ -55,23 +56,23 @@ export async function requirePrintRunViewer(): Promise<PrintRunViewer> {
 }
 
 /**
- * The hub a run goes to. A hub coordinator's is their own, and naming another hub is refused before
- * any query runs. An admin names a hub, which must be an unarchived hub of their implementer and
- * project.
+ * The hub a print run or an upload is for. A hub coordinator's is their own, and naming another hub
+ * is refused before any query runs. An admin names a hub, which must be an unarchived hub of their
+ * implementer and project.
  */
-export async function printRunScope(
-  viewer: PrintRunViewer,
+export async function surveyHubScope(
+  viewer: SurveyViewer,
   requestedHubId: string | undefined,
 ): Promise<HubSurveyScope> {
   if (viewer.kind === "hub") {
     if (requestedHubId !== undefined && requestedHubId !== viewer.hubId) {
-      throw new ForbiddenRoleError("You can only print for your own hub");
+      throw new ForbiddenRoleError("You can only choose your own hub");
     }
     const { kind: _, ...scope } = viewer;
     return scope;
   }
   if (!requestedHubId) {
-    throw new PrintRunError("Choose a hub");
+    throw new SurveyError("Choose a hub");
   }
   const hubInProject = await db.query.hub.findFirst({
     where: (h, { and, eq, isNull }) =>

@@ -33,7 +33,12 @@ export function verifyUploadClaim(
 }
 
 export type HeadOutcome =
-  | { status: "ok"; contentLength: number; contentType: string | undefined }
+  | {
+      status: "ok";
+      contentLength: number;
+      contentType: string | undefined;
+      checksumSha256: string | undefined;
+    }
   | { status: "not-found" }
   | { status: "error" };
 
@@ -45,13 +50,22 @@ function isNotFoundError(error: unknown): boolean {
   return name === "NotFound" || name === "NoSuchKey" || httpStatus === 404;
 }
 
-export async function verifyUploadedObject(key: string, bucket: S3Bucket): Promise<HeadOutcome> {
+export async function verifyUploadedObject(
+  key: string,
+  bucket: S3Bucket,
+  options?: { withChecksum?: boolean },
+): Promise<HeadOutcome> {
   try {
-    const head = await headObject(key, bucket);
+    const head = await headObject(key, bucket, options);
     if (head.contentLength === undefined) {
       return { status: "error" };
     }
-    return { status: "ok", contentLength: head.contentLength, contentType: head.contentType };
+    return {
+      status: "ok",
+      contentLength: head.contentLength,
+      contentType: head.contentType,
+      checksumSha256: head.checksumSha256,
+    };
   } catch (error) {
     if (isNotFoundError(error)) {
       return { status: "not-found" };

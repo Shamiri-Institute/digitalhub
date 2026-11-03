@@ -1,4 +1,7 @@
+import { createHash } from "node:crypto";
+
 import { eq, inArray } from "drizzle-orm";
+import { PDFDocument } from "pdf-lib";
 
 import { db } from "#/db/client";
 import type { SurveyVersionPrefill } from "#/db/enums";
@@ -8,6 +11,7 @@ import {
   survey,
   surveyPrintFile,
   surveyPrintRun,
+  surveyUpload,
   surveyVersion,
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
@@ -192,4 +196,24 @@ export async function removeSurvey(match: { code: string } | { id: string }) {
   await Promise.all(
     files.map((file) => deleteObject({ Key: printFileKey(file) }, "survey-print-files")),
   );
+}
+
+/** Deletes a test's scan uploads, found by their files' hashes, and their objects in S3. */
+export async function removeScanUploads(sha256s: string[]) {
+  if (sha256s.length === 0) {
+    return;
+  }
+  const removed = await db
+    .delete(surveyUpload)
+    .where(inArray(surveyUpload.sha256, sha256s))
+    .returning({ s3Key: surveyUpload.s3Key });
+  await Promise.all(removed.map(({ s3Key }) => deleteObject({ Key: s3Key }, "survey-scans")));
+}
+
+/** A one-page PDF no other test has made, so its hash is unique, with that hash in hex. */
+export async function uniqueScanPdf(label: string) {
+  const pdf = await PDFDocument.create();
+  pdf.addPage([595, 842]).drawText(`${label} ${objectId("scan")}`, { x: 50, y: 780, size: 12 });
+  const bytes = await pdf.save();
+  return { bytes, sha256: createHash("sha256").update(bytes).digest("hex") };
 }

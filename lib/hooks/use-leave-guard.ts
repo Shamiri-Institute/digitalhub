@@ -14,7 +14,7 @@ type NavigationApi = Pick<EventTarget, "addEventListener" | "removeEventListener
  * any link in the app (the sidebar's included), and on the browser's Back and Forward. Returns a
  * function to call just before leaving on purpose, such as a reload the page offers.
  */
-export function useLeaveGuard(unsaved: boolean) {
+export function useLeaveGuard(unsaved: boolean, message = LEAVE_MESSAGE) {
   const leaving = useRef(false);
 
   // effect: listens to the window, document and navigation, outside React, while there are unsaved changes
@@ -22,7 +22,7 @@ export function useLeaveGuard(unsaved: boolean) {
     if (!unsaved) {
       return;
     }
-    const confirmLeave = () => leaving.current || window.confirm(LEAVE_MESSAGE);
+    const confirmLeave = () => leaving.current || window.confirm(message);
 
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       if (!leaving.current) {
@@ -61,7 +61,7 @@ export function useLeaveGuard(unsaved: boolean) {
       document.removeEventListener("click", onClick, true);
       navigation?.removeEventListener("navigate", onNavigate);
     };
-  }, [unsaved]);
+  }, [unsaved, message]);
 
   return () => {
     leaving.current = true;

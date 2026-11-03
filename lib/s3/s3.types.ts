@@ -4,7 +4,12 @@ import { z } from "zod";
 export const S3_UPLOAD_BUCKETS = ["recordings", "student-attendance"] as const;
 
 /** Every bucket the app uses; only the server writes to the others. */
-export const S3_BUCKETS = [...S3_UPLOAD_BUCKETS, "survey-print-files"] as const;
+export const S3_BUCKETS = [
+  ...S3_UPLOAD_BUCKETS,
+  "survey-print-files",
+  // Uploaded by the browser too, but presigned by the scan upload actions (lib/survey/scan-uploads.ts).
+  "survey-scans",
+] as const;
 
 export type S3Bucket = (typeof S3_BUCKETS)[number];
 
@@ -81,6 +86,10 @@ export interface S3Credentials {
 export interface PresignedUploadOptions {
   contentLength?: number;
   expiresIn?: number;
+  /** Base64 SHA-256 the body must hash to; S3 refuses any other body. */
+  checksumSha256?: string;
+  /** Refuse the PUT when the key already holds an object. On unless the caller turns it off. */
+  ifNoneMatch?: boolean;
 }
 
 export const RecordingsS3KeySchema = z.object({

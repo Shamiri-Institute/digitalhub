@@ -7,6 +7,7 @@ export const SurveyAuditEntity = {
   SURVEY_VERSION: "SURVEY_VERSION",
   PRINT_RUN: "PRINT_RUN",
   QUESTIONNAIRE: "QUESTIONNAIRE",
+  SCAN_UPLOAD: "SCAN_UPLOAD",
 } as const;
 export type SurveyAuditEntity = (typeof SurveyAuditEntity)[keyof typeof SurveyAuditEntity];
 
@@ -18,6 +19,7 @@ export const SurveyAuditAction = {
   SURVEY_ACTIVATED: "SURVEY_ACTIVATED",
   PRINT_RUN_CREATED: "PRINT_RUN_CREATED",
   QUESTIONNAIRE_VOIDED: "QUESTIONNAIRE_VOIDED",
+  SCAN_UPLOADED: "SCAN_UPLOADED",
 } as const;
 export type SurveyAuditAction = (typeof SurveyAuditAction)[keyof typeof SurveyAuditAction];
 
@@ -25,14 +27,19 @@ type SurveyEvent = {
   actor:
     | { kind: typeof SurveyAuditActor.USER; userId: string }
     | { kind: typeof SurveyAuditActor.PIPELINE | typeof SurveyAuditActor.SYSTEM };
-  surveyId: string;
-  entityType: SurveyAuditEntity;
   entityId: string;
   action: SurveyAuditAction;
   before?: JsonValue;
   after?: JsonValue;
   reason?: string;
-};
+} & (
+  | {
+      entityType: Exclude<SurveyAuditEntity, typeof SurveyAuditEntity.SCAN_UPLOAD>;
+      surveyId: string;
+    }
+  // An upload's pages aren't matched to a survey yet.
+  | { entityType: typeof SurveyAuditEntity.SCAN_UPLOAD; surveyId?: undefined }
+);
 
 /**
  * Records a change to survey data. Call it inside the transaction that makes the change, so the
@@ -42,7 +49,7 @@ export async function recordSurveyEvent(tx: Transaction, event: SurveyEvent) {
   await tx.insert(surveyAuditEvent).values({
     actorKind: event.actor.kind,
     actorUserId: event.actor.kind === SurveyAuditActor.USER ? event.actor.userId : null,
-    surveyId: event.surveyId,
+    surveyId: event.surveyId ?? null,
     entityType: event.entityType,
     entityId: event.entityId,
     action: event.action,

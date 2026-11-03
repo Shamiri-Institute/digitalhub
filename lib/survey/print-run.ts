@@ -27,7 +27,7 @@ import {
   surveyQuestionnairePage,
   surveyVersion,
 } from "#/db/schema";
-import type { HubSurveyScope, PrintRunViewer } from "#/lib/auth/survey-access";
+import type { HubSurveyScope, SurveyViewer } from "#/lib/auth/survey-access";
 import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { objectId } from "#/lib/crypto";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
@@ -433,7 +433,7 @@ async function insertInChunks<T extends PgTable>(
  */
 export async function voidCopy(
   tx: Transaction,
-  viewer: PrintRunViewer,
+  viewer: SurveyViewer,
   { questionnaireId, reason }: { questionnaireId: string; reason: string },
 ): Promise<"voided" | "already-void" | "not-found"> {
   const [copy] = await tx

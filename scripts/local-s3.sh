@@ -7,6 +7,7 @@
 #   S3_RECORDINGS_BUCKET=recordings
 #   S3_RECORDINGS_REGION=af-south-1
 #   S3_SURVEY_PRINT_FILES_BUCKET=survey-print-files
+#   S3_SURVEY_SCANS_BUCKET=survey-scans
 set -eu
 
 dir="${SEAWEEDFS_DIR:-$(pwd)/.seaweedfs}"
@@ -23,12 +24,12 @@ chmod 600 "$dir/s3.json"
 
 # -ip as well as -ip.bind: otherwise the volume server advertises the LAN address and every write fails.
 weed mini -dir="$dir/data" -ip=127.0.0.1 -ip.bind=127.0.0.1 -s3.config="$dir/s3.json" -webdav=false \
-  -bucket=recordings,survey-print-files >"$dir/server.log" 2>&1 &
+  -bucket=recordings,survey-print-files,survey-scans >"$dir/server.log" 2>&1 &
 server=$!
 trap 'kill $server' INT TERM EXIT
 
-# S3 answers before -bucket has made the buckets, so wait for both.
-# Browsers upload straight to the recordings bucket with presigned PUTs, so it needs CORS.
+# S3 answers before -bucket has made the buckets, so wait for them.
+# Browsers upload straight to the recordings and scans buckets with presigned PUTs, so they need CORS.
 # Print files are written by the server and downloaded through presigned links, so need none.
 AWS_ENDPOINT_URL_S3=http://localhost:8333 node -e '
 const { S3Client, HeadBucketCommand, PutBucketCorsCommand } = require("@aws-sdk/client-s3");
@@ -37,7 +38,7 @@ const s3 = new S3Client({
   forcePathStyle: true,
   credentials: { accessKeyId: process.argv[1], secretAccessKey: process.argv[2] },
 });
-const buckets = ["recordings", "survey-print-files"];
+const buckets = ["recordings", "survey-print-files", "survey-scans"];
 (async () => {
   for (let attempt = 1; ; attempt++) {
     try {
@@ -48,10 +49,10 @@ const buckets = ["recordings", "survey-print-files"];
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
-  await s3.send(new PutBucketCorsCommand({
-    Bucket: "recordings",
-    CORSConfiguration: { CORSRules: [{ AllowedOrigins: ["http://localhost:3000"], AllowedMethods: ["GET", "PUT", "HEAD"], AllowedHeaders: ["*"], ExposeHeaders: ["ETag"] }] },
-  }));
+  const cors = { CORSRules: [{ AllowedOrigins: ["http://localhost:3000"], AllowedMethods: ["GET", "PUT", "HEAD"], AllowedHeaders: ["*"], ExposeHeaders: ["ETag"] }] };
+  await Promise.all(["recordings", "survey-scans"].map((Bucket) =>
+    s3.send(new PutBucketCorsCommand({ Bucket, CORSConfiguration: cors })),
+  ));
   console.log("SeaweedFS S3 ready on http://localhost:8333 (buckets: " + buckets.join(", ") + ")");
 })();
 ' "$key_id" "$secret"

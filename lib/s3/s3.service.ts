@@ -55,16 +55,24 @@ export function deleteObject(input: Pick<DeleteObjectCommandInput, "Key">, bucke
 export async function headObject(
   key: string,
   bucket: S3Bucket,
-): Promise<{ contentLength: number | undefined; contentType: string | undefined }> {
+  { withChecksum = false }: { withChecksum?: boolean } = {},
+): Promise<{
+  contentLength: number | undefined;
+  contentType: string | undefined;
+  /** Base64, when asked for and the object was put with a SHA-256 checksum. */
+  checksumSha256: string | undefined;
+}> {
   const s3Client = getS3Client(bucket);
   const command = new HeadObjectCommand({
     Bucket: requireBucket(bucket).bucket,
     Key: key,
+    ChecksumMode: withChecksum ? "ENABLED" : undefined,
   });
   const response = await s3Client.send(command);
   return {
     contentLength: response.ContentLength,
     contentType: response.ContentType,
+    checksumSha256: response.ChecksumSHA256,
   };
 }
 
@@ -101,34 +109,57 @@ export async function putObject(
   );
 }
 
+/**
+ * A URL the browser PUTs one file to, and the headers it must send with it: the signature covers
+ * them, so S3 refuses the PUT if any differs. The browser sets Content-Length itself.
+ */
 export async function getPresignedUploadUrl(
   key: string,
   bucket: S3Bucket,
   contentType: string,
   options: PresignedUploadOptions = {},
-): Promise<{ url: string; bucket: string }> {
-  const { contentLength, expiresIn = 3600 } = options;
+): Promise<{ url: string; bucket: string; headers: Record<string, string> }> {
+  const { contentLength, expiresIn = 3600, checksumSha256, ifNoneMatch = true } = options;
   const bucketName = requireBucket(bucket).bucket;
+  const cacheControl = "max-age=630720000";
 
   const command = new PutObjectCommand({
     Bucket: bucketName,
     Key: key,
     ContentType: contentType,
-    CacheControl: "max-age=630720000",
-    IfNoneMatch: "*",
-    ...(contentLength !== undefined ? { ContentLength: contentLength } : {}),
+    CacheControl: cacheControl,
+    ...(ifNoneMatch && { IfNoneMatch: "*" }),
+    ...(contentLength !== undefined && { ContentLength: contentLength }),
+    ...(checksumSha256 !== undefined && { ChecksumSHA256: checksumSha256 }),
   });
 
-  const signableHeaders = new Set(["content-type", "if-none-match"]);
+  const headers: Record<string, string> = {
+    "Content-Type": contentType,
+    "Cache-Control": cacheControl,
+    ...(ifNoneMatch && { "If-None-Match": "*" }),
+    ...(checksumSha256 !== undefined && { "x-amz-checksum-sha256": checksumSha256 }),
+  };
+  const signableHeaders = new Set(["content-type"]);
+  if (ifNoneMatch) {
+    signableHeaders.add("if-none-match");
+  }
   if (contentLength !== undefined) {
     signableHeaders.add("content-length");
+  }
+  // Left to itself the presigner moves x-amz-* headers into the query string, where S3 does not
+  // check the body against the checksum.
+  const unhoistableHeaders = new Set<string>();
+  if (checksumSha256 !== undefined) {
+    signableHeaders.add("x-amz-checksum-sha256");
+    unhoistableHeaders.add("x-amz-checksum-sha256");
   }
 
   const url = await getSignedUrl(getS3Client(bucket), command, {
     expiresIn,
     signableHeaders,
+    unhoistableHeaders,
   });
-  return { url, bucket: bucketName };
+  return { url, bucket: bucketName, headers };
 }
 
 /** `encodeURIComponent` leaves ' ( ) * ! as they are; RFC 5987 header values must encode them. */

@@ -3,6 +3,7 @@
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 
+import { putWithProgress } from "#/lib/s3/put-with-progress";
 import { type S3ApiRequest, S3_UPLOAD_BUCKETS } from "#/lib/s3/s3.types";
 import { normalizeContentType } from "#/lib/s3/utils/normalize-content-type";
 
@@ -146,43 +147,16 @@ export function useS3Upload() {
 
     addFile(file);
 
-    // Send File directly (not ArrayBuffer) to allow streaming without loading into memory
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          updateFileProgress(file, event.loaded);
-        }
-      };
-
-      xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4) {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            updateFileProgress(file, file.size);
-            resolve();
-          } else {
-            console.error("Upload failed:", {
-              status: xhr.status,
-              statusText: xhr.statusText,
-              response: xhr.responseText,
-            });
-            reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
-          }
-        }
-      };
-
-      xhr.onerror = () => {
-        console.error("XHR Error:", xhr.status, xhr.statusText);
-        reject(new Error(`Network error: ${xhr.status} ${xhr.statusText}`));
-      };
-
-      xhr.open("PUT", url, true);
-      xhr.setRequestHeader("Content-Type", contentType);
-      xhr.setRequestHeader("Cache-Control", "max-age=630720000");
-      xhr.setRequestHeader("If-None-Match", "*");
-      xhr.send(file);
-    });
+    await putWithProgress(
+      url,
+      {
+        "Content-Type": contentType,
+        "Cache-Control": "max-age=630720000",
+        "If-None-Match": "*",
+      },
+      file,
+      (bytesSent) => updateFileProgress(file, bytesSent),
+    );
 
     return {
       url: `https://${bucketName}.s3.amazonaws.com/${key}`,

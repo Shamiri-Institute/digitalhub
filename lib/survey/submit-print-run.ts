@@ -1,5 +1,5 @@
 import { db, isUniqueViolation } from "#/db/client";
-import { type PrintRunViewer, printRunScope } from "#/lib/auth/survey-access";
+import { type SurveyViewer, surveyHubScope } from "#/lib/auth/survey-access";
 import {
   type RecordedPrintRun,
   recordPrintRun,
@@ -23,14 +23,14 @@ export type PrintRunSubmission = {
  * student or school archived in between can't refuse the retry, and it never makes a second run.
  */
 export async function submitPrintRun(
-  viewer: PrintRunViewer,
+  viewer: SurveyViewer,
   submission: PrintRunSubmission,
 ): Promise<RecordedPrintRun> {
   const earlier = await recordedRunOf(submission, viewer.userId);
   if (earlier) {
     return earlier;
   }
-  const scope = await printRunScope(viewer, submission.hubId);
+  const scope = await surveyHubScope(viewer, submission.hubId);
   try {
     return await db.transaction((tx) => recordPrintRun(tx, scope, submission));
   } catch (error) {

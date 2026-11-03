@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 
+import { ADMIN_SURVEY_TABS } from "#/components/common/survey/survey-tabs";
+import TabToggleNavigation from "#/components/common/tabs/tab-navigation";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
@@ -19,6 +21,7 @@ export default async function AdminSurveysPage() {
     <div className="flex h-full flex-col bg-white">
       <div className="container w-full grow space-y-3 py-10">
         <PageHeading title="Surveys" />
+        <TabToggleNavigation options={ADMIN_SURVEY_TABS} className="px-0" />
         <Separator />
         <SurveysDataTable surveys={surveys} />
       </div>
