@@ -12,19 +12,31 @@ const sentryIngestOrigin = (() => {
   }
 })();
 
-// Locally and in CI the browser uploads to a local S3 server: Garage from scripts/local-s3.sh, which
-// serves each bucket on its own subdomain, or SeaweedFS in CI. CI's E2E tests run a production
-// build, so the build allows the server whenever it is on this machine.
-const localS3Origins = (() => {
+// The browser PUTs uploads straight to S3. Locally and in CI that is the SeaweedFS server from
+// scripts/local-s3.sh, wherever AWS_ENDPOINT_URL_S3 points; CI's E2E tests run a production build,
+// so this holds in one too. Buckets are in the URL's path there (forcePathStyle), so the endpoint's
+// own origin is enough.
+const s3EndpointOrigin = (() => {
   if (!process.env.AWS_ENDPOINT_URL_S3) return "";
   try {
-    const { protocol, host, hostname } = new URL(process.env.AWS_ENDPOINT_URL_S3);
-    if (hostname !== "localhost" && hostname !== "127.0.0.1") return "";
-    return `${protocol}//${host} ${protocol}//*.${host}`;
+    return new URL(process.env.AWS_ENDPOINT_URL_S3).origin;
   } catch {
     return "";
   }
 })();
+
+// The regions of the buckets the browser uploads to; each defaults to af-south-1, as in env.ts.
+const s3RegionOrigins = [
+  ...new Set(
+    [
+      process.env.S3_RECORDINGS_REGION,
+      process.env.S3_STUDENT_ATTENDANCE_REGION,
+      process.env.S3_SURVEY_SCANS_REGION,
+    ].map((region) => region ?? "af-south-1"),
+  ),
+]
+  .map((region) => `https://*.s3.${region}.amazonaws.com`)
+  .join(" ");
 
 const PRINT_FONTS = ["./public/fonts/figtree/*.ttf"];
 
@@ -68,7 +80,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'; " +
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.s3.amazonaws.com; " +
               "font-src 'self'; " +
-              `connect-src 'self' ${sentryIngestOrigin} ${localS3Origins} https://*.s3.af-south-1.amazonaws.com https://*.s3.amazonaws.com; ` +
+              `connect-src 'self' ${sentryIngestOrigin} ${s3EndpointOrigin} ${s3RegionOrigins} https://*.s3.amazonaws.com; ` +
               "frame-src https://dash.shamiri.institute; " +
               "frame-ancestors 'none'; " +
               "base-uri 'self'; " +

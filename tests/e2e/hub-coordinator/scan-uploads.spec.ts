@@ -30,10 +30,12 @@ test("a hub coordinator uploads a scan once, and sees only their hub's uploads",
 
   const scan = await uniqueScanPdf("Scan upload spec");
   const fileName = `scan-${scan.sha256.slice(0, 8)}.pdf`;
+  const nextScan = await uniqueScanPdf("Scan upload spec, next batch");
+  const nextFileName = `next-${nextScan.sha256.slice(0, 8)}.pdf`;
   // Another hub's upload, made here because no page lets this coordinator make one.
   const otherHubScan = await uniqueScanPdf("Scan upload spec, other hub");
   const otherHubFileName = `other-hub-${otherHubScan.sha256.slice(0, 8)}.pdf`;
-  undo(() => removeScanUploads([scan.sha256, otherHubScan.sha256]));
+  undo(() => removeScanUploads([scan.sha256, nextScan.sha256, otherHubScan.sha256]));
   const otherHubUploadId = objectId("surveyupload");
   await db.insert(surveyUpload).values({
     id: otherHubUploadId,
@@ -67,9 +69,17 @@ test("a hub coordinator uploads a scan once, and sees only their hub's uploads",
   await expect(page.getByRole("row", { name: new RegExp(fileName) })).toContainText("Uploaded");
   await expect(page.getByText(otherHubFileName)).toHaveCount(0);
 
-  await chooseScan();
+  // The refused file comes last, so the table must still show the one uploaded before it.
+  await page.getByLabel("Scanned files").setInputFiles([
+    { name: nextFileName, mimeType: "application/pdf", buffer: Buffer.from(nextScan.bytes) },
+    { name: fileName, mimeType: "application/pdf", buffer: Buffer.from(scan.bytes) },
+  ]);
   await expect(
     addedFiles.getByText(`This file was already uploaded as ${fileName}`, { exact: true }),
   ).toBeVisible();
+  await expect(page.getByRole("row", { name: new RegExp(nextFileName) })).toContainText("Uploaded");
+  await expect(page.getByRole("row", { name: new RegExp(fileName) })).toHaveCount(1);
+  await page.reload();
+  await expect(page.getByRole("row", { name: new RegExp(nextFileName) })).toContainText("Uploaded");
   await expect(page.getByRole("row", { name: new RegExp(fileName) })).toHaveCount(1);
 });

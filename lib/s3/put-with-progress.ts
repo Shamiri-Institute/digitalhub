@@ -1,15 +1,15 @@
 /**
  * PUTs a file to a presigned URL, reporting the bytes sent. It sends the File itself, which the
- * browser streams without reading it into memory. It fails when `signal` aborts, and, given
- * `stallMs`, when no bytes move for that long, which a dropped connection can otherwise leave
- * hanging.
+ * browser streams without reading it into memory. It fails when `signal` aborts, given `stallMs`
+ * when no bytes move for that long, and given `answerMs` when no answer comes that long after every
+ * byte is sent; a dropped connection can otherwise leave it hanging.
  */
 export function putWithProgress(
   url: string,
   headers: Record<string, string>,
   file: File,
   onProgress: (bytesSent: number) => void,
-  { signal, stallMs }: { signal?: AbortSignal; stallMs?: number } = {},
+  { signal, stallMs, answerMs }: { signal?: AbortSignal; stallMs?: number; answerMs?: number } = {},
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -19,16 +19,17 @@ export function putWithProgress(
       signal?.removeEventListener("abort", abort);
       reject(error);
     };
-    const watchForStall = () => {
-      if (stallMs === undefined) {
+    const giveUpAfter = (ms: number | undefined, reason: string) => {
+      clearTimeout(stalled);
+      if (ms === undefined) {
         return;
       }
-      clearTimeout(stalled);
       stalled = setTimeout(() => {
         xhr.abort();
-        fail(new Error("Upload stalled"));
-      }, stallMs);
+        fail(new Error(reason));
+      }, ms);
     };
+    const watchForStall = () => giveUpAfter(stallMs, "Upload stalled");
     const abort = () => {
       xhr.abort();
       fail(new DOMException("Upload cancelled", "AbortError"));
@@ -38,8 +39,7 @@ export function putWithProgress(
     }
     signal?.addEventListener("abort", abort, { once: true });
 
-    // Once every byte is sent, the wait is for the server's answer, which no progress measures.
-    xhr.upload.onload = () => clearTimeout(stalled);
+    xhr.upload.onload = () => giveUpAfter(answerMs, "No answer to the upload");
     xhr.upload.onprogress = (event) => {
       watchForStall();
       if (event.lengthComputable) {

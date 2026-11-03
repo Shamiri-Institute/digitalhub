@@ -3,7 +3,7 @@ import { z } from "zod";
 import { SurveyVersionPrefill } from "#/db/enums";
 import { MAX_SCAN_BYTES, SCAN_CONTENT_TYPES } from "#/lib/survey/scan-files";
 import { MAX_COPIES_PER_RUN } from "#/lib/survey/serial";
-import { stringValidation } from "#/lib/utils";
+import { formatBytes, stringValidation } from "#/lib/utils";
 
 export const CreateSurveySchema = z.object({
   title: stringValidation("Please enter a title").max(255, {
@@ -109,15 +109,10 @@ export const StartScanUploadSchema = z.object({
   byteSize: z
     .int()
     .positive({ error: "The file is empty" })
-    .max(MAX_SCAN_BYTES, { error: "Choose a file of 500 MB or less" }),
+    .max(MAX_SCAN_BYTES, { error: `Choose a file of ${formatBytes(MAX_SCAN_BYTES)} or less` }),
   sha256: z.string().regex(/^[0-9a-f]{64}$/, { error: "Please choose the file again" }),
 });
 
 export const ScanUploadSchema = z.object({
   uploadId: stringValidation("Missing upload"),
-});
-
-export const FinishScanUploadSchema = ScanUploadSchema.extend({
-  /** False while more files of the batch are still to come, so the page re-renders once. */
-  refreshPage: z.boolean().default(true),
 });

@@ -43,7 +43,7 @@ type QueuedScan = {
   id: number;
   file: File;
   /** Stops this file's upload, whether it is waiting or being sent. */
-  cancel: AbortController;
+  abortController: AbortController;
   contentType: ScanContentType | undefined;
   hubName?: string;
   state: ScanState;
@@ -55,6 +55,11 @@ const CANCELLABLE: ScanState["kind"][] = ["waiting", "checking", "uploading"];
 
 /** A PUT that sends nothing for this long is given up, so it can't hold up the files behind it. */
 const STALL_MS = 60_000;
+/**
+ * How long S3 has to answer once the browser has sent every byte. The browser counts bytes as sent
+ * once they are in the network buffer, and a slow link may take minutes to drain it.
+ */
+const ANSWER_MS = 10 * 60_000;
 /** How often a PUT in progress renews the hour before anyone else may take the upload over. */
 const HOLD_RENEW_MS = 10 * 60_000;
 
@@ -67,9 +72,15 @@ function checkBeforeSending(file: File, contentType: ScanContentType | undefined
     return refused("Not a PDF, JPEG or PNG file");
   }
   if (file.size > MAX_SCAN_BYTES) {
-    return refused("Larger than 500 MB");
+    return refused(`Larger than ${formatBytes(MAX_SCAN_BYTES)}`);
   }
   return { kind: "waiting" };
+}
+
+function giveUpScanUpload(uploadId: string) {
+  cancelScanUpload({ uploadId })
+    .then((cancelled) => !cancelled.success && console.error(cancelled.message))
+    .catch((error: unknown) => console.error("Could not give up the scan upload", error));
 }
 
 /**
@@ -84,7 +95,7 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
   const nextScanId = useRef(0);
   // Uploads run in the order files were added, each after the one before has settled.
   const uploadQueue = useRef(Promise.resolve());
-  const unfinishedUploads = useRef(new Set<AbortController>());
+  const unfinishedUploadControllers = useRef(new Set<AbortController>());
 
   const needsHub = hubs !== undefined && !chosenHubId;
   const uploadsInProgress = scans.filter((scan) => IN_PROGRESS.includes(scan.state.kind)).length;
@@ -95,10 +106,10 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
 
   // effect: stops the uploads still running or waiting when the uploader leaves the page
   useEffect(() => {
-    const unfinished = unfinishedUploads.current;
+    const unfinishedControllers = unfinishedUploadControllers.current;
     return () => {
-      for (const cancel of unfinished) {
-        cancel.abort();
+      for (const controller of unfinishedControllers) {
+        controller.abort();
       }
     };
   }, []);
@@ -111,8 +122,8 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
     contentType: ScanContentType,
     uploadHubId: string | undefined,
   ) => {
-    const { id, file, cancel } = scan;
-    const { signal } = cancel;
+    const { id, file, abortController } = scan;
+    const { signal } = abortController;
     let uploadId: string | undefined;
     try {
       signal.throwIfAborted();
@@ -131,73 +142,71 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
         return setScanState(id, refused(started.message));
       }
       if (!started.data.stored) {
-        const sent = await sendFile(scan, started.data);
-        if (!sent) {
-          return setScanState(
-            id,
-            refused("The upload didn't finish. Check your connection and add the file again"),
-          );
-        }
+        await sendFile(scan, started.data);
       }
       setScanState(id, { kind: "saving" });
-      const finished = await finishScanUpload({
-        uploadId: started.data.uploadId,
-        // The page re-renders once, after the last file of the batch.
-        refreshPage: unfinishedUploads.current.size === 1,
-      });
+      const finished = await finishScanUpload({ uploadId: started.data.uploadId });
       setScanState(id, finished.success ? { kind: "uploaded" } : refused(finished.message));
     } catch (error) {
       if (signal.aborted) {
-        // Cancelled, or the page was left: free the file for anyone at once.
+        // Cancelled, or the app navigated away: free the file for anyone at once. Closing the tab
+        // runs nothing, so then the file is held until the hour is up.
         if (uploadId) {
-          void cancelScanUpload({ uploadId });
+          giveUpScanUpload(uploadId);
         }
         return;
       }
       setScanState(id, refused("Something went wrong. Add the file again"));
       reportError(error);
     } finally {
-      unfinishedUploads.current.delete(cancel);
+      unfinishedUploadControllers.current.delete(abortController);
     }
   };
 
   /**
-   * PUTs the file, keeping the upload this user's while it is sent. Answers false when the PUT
-   * failed, having given the upload up; a cancel throws instead.
+   * PUTs the file, keeping the upload this user's while it is sent. A failed PUT doesn't throw: its
+   * bytes may still have arrived, which only the finish can tell. A cancel throws.
    */
   const sendFile = async (
-    { id, file, cancel: { signal } }: QueuedScan,
+    { id, file, abortController: { signal } }: QueuedScan,
     { uploadId, url, headers }: { uploadId: string; url: string; headers: Record<string, string> },
   ) => {
     setScanState(id, { kind: "uploading", percent: 0 });
-    const keepHeld = setInterval(() => void keepScanUploadHeld({ uploadId }), HOLD_RENEW_MS);
+    let shownPercent = 0;
+    const keepHeld = setInterval(
+      () =>
+        void keepScanUploadHeld({ uploadId }).catch((error: unknown) =>
+          console.error("Could not keep the scan upload held", error),
+        ),
+      HOLD_RENEW_MS,
+    );
     try {
       await putWithProgress(
         url,
         headers,
         file,
-        (bytesSent) =>
-          setScanState(id, {
-            kind: "uploading",
-            percent: Math.round((bytesSent / file.size) * 100),
-          }),
-        { signal, stallMs: STALL_MS },
+        (bytesSent) => {
+          const percent = Math.round((bytesSent / file.size) * 100);
+          if (percent !== shownPercent) {
+            shownPercent = percent;
+            setScanState(id, { kind: "uploading", percent });
+          }
+        },
+        { signal, stallMs: STALL_MS, answerMs: ANSWER_MS },
       );
-      return true;
     } catch (error) {
       if (signal.aborted) {
         throw error;
       }
-      void cancelScanUpload({ uploadId });
-      return false;
+      reportError(error);
     } finally {
       clearInterval(keepHeld);
     }
   };
 
   const cancelUpload = (scan: QueuedScan) => {
-    scan.cancel.abort();
-    unfinishedUploads.current.delete(scan.cancel);
+    scan.abortController.abort();
+    unfinishedUploadControllers.current.delete(scan.abortController);
     setScanState(scan.id, { kind: "cancelled" });
   };
 
@@ -211,7 +220,7 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
       return {
         id: nextScanId.current++,
         file,
-        cancel: new AbortController(),
+        abortController: new AbortController(),
         contentType,
         hubName,
         state: checkBeforeSending(file, contentType),
@@ -221,7 +230,7 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
     for (const scan of added) {
       const { contentType } = scan;
       if (scan.state.kind === "waiting" && contentType) {
-        unfinishedUploads.current.add(scan.cancel);
+        unfinishedUploadControllers.current.add(scan.abortController);
         // upload() settles every file itself; the catch keeps one surprise from stopping the rest.
         uploadQueue.current = uploadQueue.current
           .then(() => upload(scan, contentType, chosenHubId))
@@ -296,7 +305,7 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
           )}
         </span>
         <span className="text-sm text-shamiri-text-dark-grey">
-          PDF, JPEG or PNG, up to 500 MB each. Add as many as you like.
+          PDF, JPEG or PNG, up to {formatBytes(MAX_SCAN_BYTES)} each. Add as many as you like.
         </span>
         <input
           type="file"

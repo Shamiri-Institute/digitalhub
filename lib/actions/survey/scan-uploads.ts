@@ -13,7 +13,7 @@ import {
 } from "#/lib/survey/scan-uploads";
 import type { ActionResponse } from "#/types/actions.types";
 import { failure, invalid } from "./respond";
-import { FinishScanUploadSchema, ScanUploadSchema, StartScanUploadSchema } from "./schemas";
+import { ScanUploadSchema, StartScanUploadSchema } from "./schemas";
 
 /**
  * Starts uploading a scanned file: refuses one that is already uploaded, before any bytes move, and
@@ -39,18 +39,16 @@ export async function startScanUpload(
 }
 
 export async function finishScanUpload(
-  data: z.input<typeof FinishScanUploadSchema>,
+  data: z.infer<typeof ScanUploadSchema>,
 ): Promise<ActionResponse> {
   try {
     const viewer = await requireSurveyViewer();
-    const input = FinishScanUploadSchema.safeParse(data);
+    const input = ScanUploadSchema.safeParse(data);
     if (!input.success) {
       return invalid(input.error);
     }
     const uploaded = await finishUpload(viewer, input.data.uploadId);
-    if (input.data.refreshPage) {
-      refresh();
-    }
+    refresh();
     return { success: true, message: `Uploaded ${uploaded.fileName}` };
   } catch (error) {
     return failure(error, "Sorry, could not save the upload.");
@@ -75,7 +73,7 @@ export async function keepScanUploadHeld(
 }
 
 /**
- * Gives up an upload that was cancelled or didn't finish, so the file is free to send again. Like
+ * Gives up an upload its uploader cancelled, so the file is free to send again. Like
  * startScanUpload, it doesn't refresh(): no page shows the row it deletes.
  */
 export async function cancelScanUpload(

@@ -126,9 +126,6 @@ describe("scan uploads", () => {
     await expect(startScanUpload(colleague, file)).rejects.toThrow(
       "Someone else is uploading this file",
     );
-    await expect(finishScanUpload(hubViewer(uploader), first.uploadId)).rejects.toThrow(
-      "The file did not reach storage",
-    );
 
     await db
       .update(surveyUpload)
@@ -157,6 +154,32 @@ describe("scan uploads", () => {
     expect(again).toEqual({ uploadId: first.uploadId, stored: true });
     expect(await finishScanUpload(hubViewer(uploader), again.uploadId)).toMatchObject({
       status: "UPLOADED",
+    });
+  });
+
+  it("sends a resumed upload as its first type, when nothing was stored yet", async () => {
+    const { file, bytes } = await scanFile("Kibera batch 12");
+    const first = await startScanUpload(uploader, file);
+
+    const asImage = await startScanUpload(uploader, { ...file, contentType: "image/png" });
+    expect(asImage).toMatchObject({ uploadId: first.uploadId, stored: false });
+    expect(toSend(asImage).headers["Content-Type"]).toBe("application/pdf");
+    expect((await put(asImage, bytes)).status).toBe(200);
+    expect(await finishScanUpload(hubViewer(uploader), asImage.uploadId)).toMatchObject({
+      contentType: "application/pdf",
+    });
+  });
+
+  it("keeps an upload's first type when it is resumed as another", async () => {
+    const { file, bytes } = await scanFile("Kibera batch 10");
+    const first = await startScanUpload(uploader, file);
+    expect((await put(first, bytes)).status).toBe(200);
+
+    const asImage = await startScanUpload(uploader, { ...file, contentType: "image/png" });
+    expect(asImage).toEqual({ uploadId: first.uploadId, stored: true });
+    expect(await finishScanUpload(hubViewer(uploader), asImage.uploadId)).toMatchObject({
+      contentType: "application/pdf",
+      pageCount: null,
     });
   });
 
@@ -204,6 +227,7 @@ describe("scan uploads", () => {
     await expect(finishScanUpload(movedHub, started.uploadId)).rejects.toThrow(
       "You no longer upload for this file's hub, so it can't be finished",
     );
+    // Kept, for when the coordinator is back on that hub, or for a colleague after the hour.
     expect(await uploadOf(file.sha256)).toMatchObject({ status: "PENDING" });
   });
 
@@ -229,14 +253,36 @@ describe("scan uploads", () => {
     await expect(headObject(s3Key, "survey-scans")).rejects.toThrow();
   });
 
+  it("discards an object stored as another type than its upload", async () => {
+    const { file, bytes } = await scanFile("Kibera batch 11");
+    const started = await startScanUpload(uploader, file);
+    const s3Key = await s3KeyOf(started.uploadId);
+    // Put straight to S3, as a store that didn't enforce the signed type would let through.
+    await getS3Client("survey-scans").send(
+      new PutObjectCommand({
+        Bucket: process.env.S3_SURVEY_SCANS_BUCKET,
+        Key: s3Key,
+        Body: Buffer.from(bytes),
+        ContentType: "image/png",
+        ChecksumSHA256: Buffer.from(file.sha256, "hex").toString("base64"),
+      }),
+    );
+
+    await expect(finishScanUpload(hubViewer(uploader), started.uploadId)).rejects.toThrow(
+      "The stored file doesn't match the one you chose",
+    );
+    expect(await uploadOf(file.sha256)).toBeUndefined();
+    await expect(headObject(s3Key, "survey-scans")).rejects.toThrow();
+  });
+
   it("refuses any bytes but the ones the upload was started with", async () => {
     const { file } = await scanFile("Kibera batch 3");
     const other = await uniqueScanPdf("Kibera batch 3, another scan");
 
     const started = await startScanUpload(uploader, { ...file, byteSize: other.bytes.length });
     const response = await put(started, other.bytes);
-    // AWS and SeaweedFS answer BadDigest, Garage InvalidDigest.
     expect(response.status).toBe(400);
+    expect(await response.text()).toContain("<Code>BadDigest</Code>");
     // Sending the header the other file would need breaks the signature.
     const forged = await fetch(toSend(started).url, {
       method: "PUT",
@@ -250,7 +296,7 @@ describe("scan uploads", () => {
     await expect(finishScanUpload(hubViewer(uploader), started.uploadId)).rejects.toThrow(
       "The file did not reach storage",
     );
-    expect(await uploadOf(file.sha256)).toMatchObject({ status: "PENDING" });
+    expect(await uploadOf(file.sha256)).toBeUndefined();
   });
 });
 

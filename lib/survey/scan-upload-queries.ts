@@ -3,7 +3,7 @@
 
 import { db } from "#/db/client";
 import { SurveyUploadStatus } from "#/db/enums";
-import { hub } from "#/db/schema";
+import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
 
 /** The viewer's uploads, newest first. Unfinished ones are left out: no file is in S3 for them yet. */
@@ -14,18 +14,7 @@ export async function fetchScanUploads(viewer: SurveyViewer) {
         ne(u.status, SurveyUploadStatus.PENDING),
         viewer.kind === "hub"
           ? eq(u.hubId, viewer.hubId)
-          : inArray(
-              u.hubId,
-              db
-                .select({ id: hub.id })
-                .from(hub)
-                .where(
-                  and(
-                    eq(hub.implementerId, viewer.implementerId),
-                    eq(hub.projectId, viewer.projectId),
-                  ),
-                ),
-            ),
+          : inArray(u.hubId, implementerHubsInProject(viewer.implementerId, viewer.projectId)),
       ),
     columns: {
       id: true,
