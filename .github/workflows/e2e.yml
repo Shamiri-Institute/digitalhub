@@ -91,8 +91,9 @@ jobs:
       # The S3 server developers run, from the same script, so it checks request signatures here too.
       - name: Start SeaweedFS
         run: |
-          curl -fsSL https://github.com/seaweedfs/seaweedfs/releases/download/4.52/linux_amd64.tar.gz \
-            | sudo tar -xz -C /usr/local/bin weed
+          curl -fsSLo seaweedfs.tar.gz https://github.com/seaweedfs/seaweedfs/releases/download/4.52/linux_amd64.tar.gz
+          echo "8b538c22d47d0c3fb6792adaa6b0c735a967401270a53427d5a476dcaca9b7ae  seaweedfs.tar.gz" | sha256sum -c -
+          sudo tar -xzf seaweedfs.tar.gz -C /usr/local/bin weed
           nohup scripts/local-s3.sh >seaweedfs.log 2>&1 &
           timeout 120 sh -c 'until grep -q "S3 ready" seaweedfs.log; do sleep 1; done' || { cat seaweedfs.log; exit 1; }
 

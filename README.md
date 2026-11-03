@@ -213,7 +213,7 @@ Uploads from supervisors in `FIDELITY_AB_TEST_SUPERVISOR_IDS` are queued in the 
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/transcriptions
 ```
 
-For uploads in development, run a local S3 server with [SeaweedFS](https://github.com/seaweedfs/seaweedfs) (`brew install seaweedfs`), then put the values from the header of `scripts/local-s3.sh` in `.env.development.local`. CI runs the same script.
+For uploads in development, run a local S3 server with [SeaweedFS](https://github.com/seaweedfs/seaweedfs). Put its `weed` binary on your `PATH`: `brew install seaweedfs` with Homebrew, or download `weed` for your platform from the [releases page](https://github.com/seaweedfs/seaweedfs/releases). Then put the values from the header of `scripts/local-s3.sh` in `.env.development.local`. CI runs the same script.
 
 ```bash
 scripts/local-s3.sh   # S3 on http://localhost:8333, buckets "recordings" and "survey-print-files"

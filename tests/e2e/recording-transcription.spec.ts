@@ -1,3 +1,5 @@
+import type { Page } from "@playwright/test";
+
 import { expect, test } from "#/tests/fixtures";
 import { format } from "date-fns";
 import { eq, sql } from "drizzle-orm";
@@ -10,19 +12,14 @@ import { sessionDisplayName } from "#/lib/utils";
 import { required, signInWithEmail } from "#/tests/helpers";
 import { cellUnder, chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
 
-// Uploads a recording through the UI to the local S3 (scripts/local-s3.sh), runs the cron worker,
-// and reads the transcript back. The worker calls Gemini for real and spends a few cents a run, so
-// the spec never runs in CI, and locally it skips without credentials or an A/B supervisor.
+// Uploads a recording through the UI to the local S3 (scripts/local-s3.sh), then runs the cron
+// worker and reads the transcript back. The worker calls Gemini for real and spends a few cents a
+// run, so transcription never runs in CI, and locally it skips without credentials or an A/B
+// supervisor. Without an A/B supervisor the upload goes to any seeded supervisor.
 const transcribingSupervisorId = process.env.FIDELITY_AB_TEST_SUPERVISOR_IDS?.split(",")[0];
 const hasGemini = !!process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_USE_VERTEXAI === "true";
-test.skip(!!process.env.CI, "calls Gemini, which CI must not pay for");
-test.skip(
-  !transcribingSupervisorId ||
-    !hasGemini ||
-    !process.env.AWS_ENDPOINT_URL_S3 ||
-    !process.env.CRON_SECRET,
-  "needs FIDELITY_AB_TEST_SUPERVISOR_IDS, Gemini credentials, local S3 and CRON_SECRET",
-);
+test.skip(!process.env.AWS_ENDPOINT_URL_S3, "needs the local S3 server (scripts/local-s3.sh)");
+test.describe.configure({ mode: "serial" });
 
 type SupervisedGroup = {
   email: string;
@@ -56,10 +53,11 @@ test.beforeAll(async () => {
     join schools sc on sc.id = g.school_id
     join intervention_sessions i on i.school_id = g.school_id and i.occurred
     join session_names sn on sn.id = i.session_id
-    where f.supervisor_id = ${transcribingSupervisorId} and coalesce(f.dropped_out, false) = false
+    where coalesce(f.dropped_out, false) = false
+      ${transcribingSupervisorId ? sql`and f.supervisor_id = ${transcribingSupervisorId}` : sql``}
     order by g.id, i.session_date desc
     limit 1`);
-  required(group, "an occurred session at a school of the A/B supervisor's fellows");
+  required(group, "an occurred session at a school of a supervisor's fellows");
 
   const sessionDate = new Date(Date.UTC(2020, 0, 6, 9));
   const [created] = await db
@@ -90,12 +88,14 @@ test.afterAll(async () => {
   await db.delete(interventionSession).where(eq(interventionSession.id, target.sessionId));
 });
 
-test("an uploaded recording is transcribed and its transcript can be read", async ({
-  context,
-  page,
-  request,
-}) => {
-  test.setTimeout(10 * 60_000);
+// The uploaded file is 67.0 KB; the group's seeded recordings of this session name are not.
+async function uploadedRow(page: Page) {
+  return (await rowWithCell(page, page.getByRole("main"), target.groupName))
+    .filter({ has: page.getByRole("cell", { name: target.sessionName, exact: true }) })
+    .filter({ has: page.getByRole("cell", { name: "67.0 KB", exact: true }) });
+}
+
+test("a supervisor uploads a session recording", async ({ context, page }) => {
   await signInWithEmail(context, target.email);
   await page.goto(getUrl("/sc/reporting/recordings"));
 
@@ -126,14 +126,21 @@ test("an uploaded recording is transcribed and its transcript can be read", asyn
   await expect(dialog).toBeHidden({ timeout: 120_000 });
 
   await page.reload();
-  const main = page.getByRole("main");
-  // The group also has a seeded recording of a session with this name; only the upload is 67.0 KB.
-  const uploadedRow = async () =>
-    (await rowWithCell(page, main, target.groupName))
-      .filter({ has: page.getByRole("cell", { name: target.sessionName, exact: true }) })
-      .filter({ has: page.getByRole("cell", { name: "67.0 KB", exact: true }) });
-  const row = await uploadedRow();
-  await expect(await cellUnder(page, row, "Status")).toHaveText("Pending");
+  await expect(await cellUnder(page, await uploadedRow(page), "Status")).toHaveText("Pending");
+});
+
+test("an uploaded recording is transcribed and its transcript can be read", async ({
+  context,
+  page,
+  request,
+}) => {
+  test.skip(!!process.env.CI, "calls Gemini, which CI must not pay for");
+  test.skip(
+    !transcribingSupervisorId || !hasGemini || !process.env.CRON_SECRET,
+    "needs FIDELITY_AB_TEST_SUPERVISOR_IDS, Gemini credentials and CRON_SECRET",
+  );
+  test.setTimeout(10 * 60_000);
+  await signInWithEmail(context, target.email);
 
   const worker = await request.get(getUrl("/api/cron/transcriptions"), {
     headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
@@ -141,8 +148,8 @@ test("an uploaded recording is transcribed and its transcript can be read", asyn
   });
   expect(worker.status()).toBe(200);
 
-  await page.reload();
-  const transcribedRow = await uploadedRow();
+  await page.goto(getUrl("/sc/reporting/recordings"));
+  const transcribedRow = await uploadedRow(page);
   await expect(await cellUnder(page, transcribedRow, "Status")).toHaveText("Completed");
 
   await chooseRowAction(page, transcribedRow, "View transcript");

@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Runs SeaweedFS (brew install seaweedfs) as the S3 server for uploads in development, E2E tests and CI.
+# Runs SeaweedFS (`weed` on PATH, see README) as the S3 server for uploads in development, E2E tests and CI.
 # Point the app at it from .env.development.local:
 #   AWS_ENDPOINT_URL_S3=http://localhost:8333
 #   S3_UPLOAD_KEY=GKdeadbeefdeadbeefdeadbeef
