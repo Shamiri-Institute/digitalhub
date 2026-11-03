@@ -1,4 +1,4 @@
-import { type AnyColumn, and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { type AnyColumn, and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { cache } from "react";
 
 import { currentAdminUser } from "#/app/auth";
@@ -11,6 +11,7 @@ import {
   interventionGroup,
   interventionSession,
   school,
+  sessionName,
   student,
   supervisor,
   weeklyFellowRatings,
@@ -196,54 +197,86 @@ export async function fetchHubStats(hubId: string) {
     .where(
       and(inArray(interventionGroup.schoolId, hubSchoolIds), isNull(interventionGroup.archivedAt)),
     );
-  const groupsAtSessionSchool = sql`select 1 from ${interventionGroup} where ${interventionGroup.schoolId} = ${interventionSession.schoolId} and ${interventionGroup.archivedAt} is null`;
-  const leaderAttendanceMarked = sql`select 1 from ${fellowAttendance} where ${fellowAttendance.sessionId} = ${interventionSession.id} and ${fellowAttendance.fellowId} = ${interventionGroup.leaderId} and ${fellowAttendance.attended} is not null`;
+  const groupAttendanceMarked = sql`select 1 from ${fellowAttendance} where ${fellowAttendance.sessionId} = ${interventionSession.id} and ${fellowAttendance.groupId} = ${interventionGroup.id} and ${fellowAttendance.attended} is not null`;
 
-  const [[sessions], [ratings], groups, studentsInGroups, droppedOutStudents, droppedOutFellows] =
-    await Promise.all([
-      db
-        .select({
-          ...sessionStateCounts,
-          attendanceExpected: sql<number>`count(*) filter (where ${interventionSession.occurred} and exists (${groupsAtSessionSchool}))::int`,
-          attendanceRecorded: sql<number>`count(*) filter (where ${interventionSession.occurred} and exists (${groupsAtSessionSchool}) and not exists (${groupsAtSessionSchool} and not exists (${leaderAttendanceMarked})))::int`,
-        })
-        .from(interventionSession)
-        .where(and(eq(interventionSession.hubId, hubId), isNull(interventionSession.archivedAt))),
-      db
-        .select({
-          average: sql<
-            number | null
-          >`((avg(${weeklyFellowRatings.behaviourRating}) + avg(${weeklyFellowRatings.dressingAndGroomingRating}) + avg(${weeklyFellowRatings.programDeliveryRating}) + avg(${weeklyFellowRatings.punctualityRating})) / 4)::float8`,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(weeklyFellowRatings)
-        .innerJoin(fellow, eq(fellow.id, weeklyFellowRatings.fellowId))
-        .where(eq(fellow.hubId, hubId)),
-      db.$count(interventionGroup, inArray(interventionGroup.id, hubGroupIds)),
-      db.$count(
-        student,
-        and(inArray(student.assignedGroupId, hubGroupIds), isNull(student.archivedAt)),
-      ),
-      db.$count(
-        student,
+  const [
+    [sessions],
+    [attendances],
+    [ratings],
+    groups,
+    studentsInGroups,
+    droppedOutStudents,
+    droppedOutFellows,
+  ] = await Promise.all([
+    db
+      .select(sessionStateCounts)
+      .from(interventionSession)
+      .where(and(eq(interventionSession.hubId, hubId), isNull(interventionSession.archivedAt))),
+    // The pre-session (s0) runs before most groups form, so it expects no attendance.
+    db
+      .select({
+        expected: sql<number>`count(*)::int`,
+        marked: sql<number>`count(*) filter (where exists (${groupAttendanceMarked}))::int`,
+      })
+      .from(interventionSession)
+      .innerJoin(
+        sessionName,
         and(
-          inArray(student.schoolId, hubSchoolIds),
-          eq(student.droppedOut, true),
-          isNull(student.archivedAt),
+          eq(sessionName.id, interventionSession.sessionId),
+          eq(sessionName.sessionType, "INTERVENTION"),
+          ne(sessionName.sessionName, "s0"),
+        ),
+      )
+      .innerJoin(
+        interventionGroup,
+        and(
+          eq(interventionGroup.schoolId, interventionSession.schoolId),
+          isNull(interventionGroup.archivedAt),
+        ),
+      )
+      .where(
+        and(
+          eq(interventionSession.hubId, hubId),
+          isNull(interventionSession.archivedAt),
+          eq(interventionSession.occurred, true),
         ),
       ),
-      db.$count(
-        fellow,
-        and(eq(fellow.hubId, hubId), eq(fellow.droppedOut, true), isNull(fellow.archivedAt)),
+    db
+      .select({
+        average: sql<
+          number | null
+        >`((avg(${weeklyFellowRatings.behaviourRating}) + avg(${weeklyFellowRatings.dressingAndGroomingRating}) + avg(${weeklyFellowRatings.programDeliveryRating}) + avg(${weeklyFellowRatings.punctualityRating})) / 4)::float8`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(weeklyFellowRatings)
+      .innerJoin(fellow, eq(fellow.id, weeklyFellowRatings.fellowId))
+      .where(eq(fellow.hubId, hubId)),
+    db.$count(interventionGroup, inArray(interventionGroup.id, hubGroupIds)),
+    db.$count(
+      student,
+      and(inArray(student.assignedGroupId, hubGroupIds), isNull(student.archivedAt)),
+    ),
+    db.$count(
+      student,
+      and(
+        inArray(student.schoolId, hubSchoolIds),
+        eq(student.droppedOut, true),
+        isNull(student.archivedAt),
       ),
-    ]);
+    ),
+    db.$count(
+      fellow,
+      and(eq(fellow.hubId, hubId), eq(fellow.droppedOut, true), isNull(fellow.archivedAt)),
+    ),
+  ]);
 
-  if (!sessions || !ratings) {
+  if (!sessions || !attendances || !ratings) {
     throw new Error("An aggregate without GROUP BY returned no row");
   }
 
   return {
     sessions: { ...sessions, ...withScheduled(sessions) },
+    attendances,
     ratings,
     groups,
     studentsInGroups,

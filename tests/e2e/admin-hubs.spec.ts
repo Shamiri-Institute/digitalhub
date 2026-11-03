@@ -496,11 +496,13 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
     order by h.id
     limit 1`);
   required(seededHub, "a hub of the super admin's implementer in the default project");
-  const leader = await db.query.fellow.findFirst({
+  const [leader, previousLeader] = await db.query.fellow.findMany({
     columns: { id: true },
     orderBy: (f, { asc }) => asc(f.id),
+    limit: 2,
   });
   required(leader, "a seeded fellow to lead the group");
+  required(previousLeader, "a seeded fellow who led the group before");
   // Sessions, groups and attendance are not made from the admin pages, so the spec inserts them.
   const [statsHub] = await db
     .insert(hub)
@@ -514,16 +516,39 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
     visibleId: schoolId,
     hubId: statsHub.id,
   });
+  const groupId = objectId("group");
   await db.insert(interventionGroup).values({
-    id: objectId("group"),
+    id: groupId,
     groupName: "Stats group",
     leaderId: leader.id,
     schoolId,
     projectId: seededHub.projectId,
   });
+  const [s0, s1] = await db
+    .insert(sessionName)
+    .values([
+      {
+        hubId: statsHub.id,
+        sessionName: "s0",
+        sessionLabel: "Pre-session",
+        sessionType: "INTERVENTION",
+        amount: 0,
+      },
+      {
+        hubId: statsHub.id,
+        sessionName: "s1",
+        sessionLabel: "Session 1",
+        sessionType: "INTERVENTION",
+        amount: 0,
+      },
+    ])
+    .returning({ id: sessionName.id });
+  required(s0, "the inserted pre-session type");
+  required(s1, "the inserted session type");
   const day = 24 * 60 * 60 * 1000;
   const session = (occurred: boolean, daysFromNow: number, status?: "Cancelled" | null) => ({
     id: objectId("session"),
+    sessionId: s1.id,
     hubId: statsHub.id,
     schoolId,
     projectId: seededHub.projectId,
@@ -532,20 +557,36 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
     yearOfImplementation: new Date().getFullYear(),
     sessionDate: new Date(Date.now() + daysFromNow * day),
   });
-  const leaderMarked = session(true, -7);
+  await db.insert(interventionSession).values({ ...session(true, -8), sessionId: s0.id });
+
+  await signInWithEmail(context, superAdminEmail);
+  await page.goto(getUrl(`/admin/hubs/${statsHub.id}/schools`));
+  const stats = page.getByRole("region", { name: "Hub stats" });
+  await expect(stats).toContainText("Pre-sessions are not counted");
+
+  const [markedForGroup, alsoMarkedForGroup, markedWithoutGroup] = [-7, -6, -3].map((daysAgo) =>
+    session(true, daysAgo),
+  );
+  required(markedForGroup, "a held session");
+  required(alsoMarkedForGroup, "a held session");
+  required(markedWithoutGroup, "a held session");
   await db
     .insert(interventionSession)
     .values([
-      leaderMarked,
-      session(true, -6),
+      markedForGroup,
+      alsoMarkedForGroup,
+      markedWithoutGroup,
       session(false, -5),
       session(false, 5),
       session(false, 6, null),
       session(false, -4, "Cancelled"),
     ]);
-  await db
-    .insert(fellowAttendance)
-    .values({ fellowId: leader.id, sessionId: leaderMarked.id, attended: true });
+  // Only rows carrying the group's id count, whoever marked them.
+  await db.insert(fellowAttendance).values([
+    { fellowId: previousLeader.id, groupId, sessionId: markedForGroup.id, attended: true },
+    { fellowId: previousLeader.id, groupId, sessionId: alsoMarkedForGroup.id, attended: false },
+    { fellowId: leader.id, sessionId: markedWithoutGroup.id, attended: true },
+  ]);
   const droppedOutSchoolId = objectId("school");
   await db.insert(school).values({
     id: droppedOutSchoolId,
@@ -560,23 +601,21 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
   };
   await db.insert(student).values([statsStudent(false), statsStudent(true)]);
 
-  await signInWithEmail(context, superAdminEmail);
-  await page.goto(getUrl(`/admin/hubs/${statsHub.id}/schools`));
-  const stats = page.getByRole("region", { name: "Hub stats" });
-  await expect(stats).toContainText("marked attended of 5 scheduled");
-  for (const segment of ["2 attended", "1 unmarked", "2 upcoming", "1 cancelled"]) {
+  await page.reload();
+  await expect(stats).toContainText("marked attended of 7 scheduled");
+  for (const segment of ["4 attended", "1 unmarked", "2 upcoming", "1 cancelled"]) {
     await expect(stats).toContainText(segment);
   }
   await expect(stats).toContainText("1 past session needs marking");
-  await expect(stats).toContainText("50%");
-  await expect(stats).toContainText("1 of 2 sessions with groups");
-  await expect(stats).toContainText("1 session marked attended without fellow attendance");
+  await expect(stats).toContainText("67%");
+  await expect(stats).toContainText("2 of 3 attendances");
+  await expect(stats).toContainText("1 fellow attendance not marked");
 
   // The tables list every row; the badges leave out the cancelled session and dropped-out rows.
   await expect(dataRows(page)).toHaveCount(2);
   const tabs = page.getByRole("navigation", { name: "Hub sections" });
   await expect(tabs.getByRole("link", { name: /^Schools/ })).toHaveText(/^Schools\s*1$/);
-  await expect(tabs.getByRole("link", { name: /^Sessions/ })).toHaveText(/^Sessions\s*5$/);
+  await expect(tabs.getByRole("link", { name: /^Sessions/ })).toHaveText(/^Sessions\s*7$/);
   await expect(tabs.getByRole("link", { name: /^Students/ })).toHaveText(/^Students\s*1$/);
 
   await page.goto(getUrl("/admin/hubs"));
@@ -588,7 +627,7 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
     "0",
     "0",
     "1",
-    "2 of 5",
+    "4 of 7",
     "",
   ]);
 });

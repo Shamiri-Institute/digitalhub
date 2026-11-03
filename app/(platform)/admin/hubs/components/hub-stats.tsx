@@ -81,21 +81,38 @@ function Legend({ sessions }: { sessions: SessionStates }) {
             <span aria-hidden className={cn("h-2.5 w-2.5 rounded-sm", s.swatch)} />
             {formatCount(sessions[s.key])} {s.label}
             {s.key === "unmarked" && (
-              <Tooltip>
-                <TooltipTrigger
-                  aria-label="What unmarked means"
-                  className="-my-1 -ml-1.5 inline-flex h-6 w-6 items-center justify-center rounded-sm text-shamiri-text-dark-grey hover:text-shamiri-black focus-visible:outline-2 focus-visible:outline-shamiri-new-blue"
-                >
-                  <Info aria-hidden className="h-3.5 w-3.5" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-60">
-                  The session date has passed, but nobody has marked it attended or cancelled.
-                </TooltipContent>
-              </Tooltip>
+              <InfoTip label="What unmarked means" className="-ml-1.5">
+                The session date has passed, but nobody has marked it attended or cancelled.
+              </InfoTip>
             )}
           </li>
         ))}
     </ul>
+  );
+}
+
+function InfoTip({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        aria-label={label}
+        className={cn(
+          "-my-1 inline-flex h-6 w-6 items-center justify-center rounded-sm text-shamiri-text-dark-grey hover:text-shamiri-black focus-visible:outline-2 focus-visible:outline-shamiri-new-blue",
+          className,
+        )}
+      >
+        <Info aria-hidden className="h-3.5 w-3.5" />
+      </TooltipTrigger>
+      <TooltipContent className="max-w-60">{children}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -124,10 +141,21 @@ function NoData() {
   );
 }
 
-export function StatCell({ label, children }: { label: string; children: React.ReactNode }) {
+export function StatCell({
+  label,
+  info,
+  children,
+}: {
+  label: string;
+  info?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1 bg-white px-4 py-3 xl:whitespace-nowrap">
-      <p className="text-sm font-medium text-shamiri-black">{label}</p>
+      <p className="flex items-center gap-1 text-sm font-medium text-shamiri-black">
+        {label}
+        {info && <InfoTip label={`What ${label.toLowerCase()} counts`}>{info}</InfoTip>}
+      </p>
       {children}
     </div>
   );
@@ -176,8 +204,8 @@ export function SessionsStat({
 }
 
 export default function HubStats({ stats }: { stats: HubStatsData }) {
-  const { sessions, ratings } = stats;
-  const missingAttendance = sessions.attendanceExpected - sessions.attendanceRecorded;
+  const { sessions, attendances, ratings } = stats;
+  const missingAttendance = attendances.expected - attendances.marked;
   const allHeld = sessions.scheduled > 0 && sessions.held === sessions.scheduled;
 
   return (
@@ -186,21 +214,26 @@ export default function HubStats({ stats }: { stats: HubStatsData }) {
       className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border xl:grid-cols-[minmax(0,1fr)_repeat(4,max-content)]"
     >
       <SessionsStat sessions={sessions} className="col-span-2 xl:col-span-1" />
-      <StatCell label="Fellow attendance">
-        {sessions.attendanceExpected > 0 ? (
+      <StatCell
+        label="Fellow attendance"
+        info="Each group's leader needs an attendance, present or absent, for every intervention session marked attended at their school. Pre-sessions are not counted."
+      >
+        {attendances.expected > 0 ? (
           <>
-            <Figure
-              value={`${Math.round((sessions.attendanceRecorded / sessions.attendanceExpected) * 100)}%`}
-            />
+            <Figure value={`${Math.round((attendances.marked / attendances.expected) * 100)}%`} />
             <Note>
-              {formatCount(sessions.attendanceRecorded)} of{" "}
-              {formatCount(sessions.attendanceExpected)} sessions with groups
+              {formatCount(attendances.marked)} of{" "}
+              {plural(attendances.expected, "attendance", "attendances")}
             </Note>
           </>
         ) : (
           <>
             <Figure value={<NoData />} />
-            <Note>Shown once sessions with groups are marked attended</Note>
+            <Note>
+              {sessions.held > 0
+                ? "Pre-sessions are not counted"
+                : "No sessions marked attended yet"}
+            </Note>
           </>
         )}
       </StatCell>
@@ -238,8 +271,7 @@ export default function HubStats({ stats }: { stats: HubStatsData }) {
           )}
           {missingAttendance > 0 && (
             <Notice tone="attention">
-              {plural(missingAttendance, "session", "sessions")} marked attended without fellow
-              attendance
+              {plural(missingAttendance, "fellow attendance", "fellow attendances")} not marked
             </Notice>
           )}
           {allHeld && <Notice tone="done">All sessions marked attended</Notice>}
