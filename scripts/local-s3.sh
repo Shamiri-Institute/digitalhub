@@ -6,6 +6,7 @@
 #   S3_UPLOAD_SECRET=0000000000000000000000000000000000000000000000000000000000000001
 #   S3_RECORDINGS_BUCKET=recordings
 #   S3_RECORDINGS_REGION=af-south-1
+#   S3_SURVEY_PRINT_FILES_BUCKET=survey-print-files
 set -eu
 
 dir="${GARAGE_DIR:-$(pwd)/.garage}"
@@ -45,6 +46,9 @@ fi
 garage key info "$key_id" >/dev/null 2>&1 || garage key import --yes -n local "$key_id" "$secret"
 garage bucket info recordings >/dev/null 2>&1 || garage bucket create recordings
 garage bucket allow --read --write --owner recordings --key "$key_id"
+# Print files are written by the server and downloaded through presigned links, so need no CORS.
+garage bucket info survey-print-files >/dev/null 2>&1 || garage bucket create survey-print-files
+garage bucket allow --read --write --owner survey-print-files --key "$key_id"
 
 # Browsers upload straight to the bucket with presigned PUTs, so the bucket needs CORS.
 AWS_ENDPOINT_URL_S3=http://localhost:3900 node -e '
@@ -55,7 +59,7 @@ new S3Client({
 }).send(new PutBucketCorsCommand({
   Bucket: "recordings",
   CORSConfiguration: { CORSRules: [{ AllowedOrigins: ["http://localhost:3000"], AllowedMethods: ["GET", "PUT", "HEAD"], AllowedHeaders: ["*"], ExposeHeaders: ["ETag"] }] },
-})).then(() => console.log("Garage S3 ready on http://localhost:3900 (bucket: recordings)"));
+})).then(() => console.log("Garage S3 ready on http://localhost:3900 (buckets: recordings, survey-print-files)"));
 ' "$key_id" "$secret"
 
 wait $server

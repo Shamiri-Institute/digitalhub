@@ -3,14 +3,17 @@ import localFont from "next/font/local";
 import {
   type CopyValues,
   type Drawable,
+  footerPageCodeRun,
   headerValueRun,
   type Layout,
   type LayoutPage,
+  pageCodeRun,
   type Prefill,
-  qrPlaceholderRun,
+  type PrintedPage,
   type Rect,
   type TextRun,
 } from "#/lib/survey/layout";
+import { qrRects } from "#/lib/survey/print-qr";
 import { cn } from "#/lib/utils";
 
 /** The print font files the PDF embeds, so the sheet sets text as the paper does. */
@@ -26,6 +29,7 @@ interface PageProofProps {
   paper: Layout["paper"];
   page: LayoutPage;
   copy: CopyValues<Prefill>;
+  printedPage: PrintedPage | undefined;
   /** What keeps this page from printing, in words. */
   problems: string[];
   /** The item open for editing, outlined on the sheet. */
@@ -42,6 +46,7 @@ export default function PageProof({
   paper,
   page,
   copy,
+  printedPage,
   problems,
   openItemId,
   itemsWithIssues,
@@ -100,7 +105,18 @@ export default function PageProof({
               <rect key={corner} x={marker.x} y={marker.y} width={marker.w} height={marker.h} />
             ))}
           </g>
-          <QrPlaceholder qr={page.qr} />
+          {printedPage && (
+            <>
+              <Qr text={printedPage.qr} box={page.qr} />
+              <Text run={pageCodeRun(page.qr, printedPage.code)} />
+              {page.footerQr && (
+                <>
+                  <Qr text={printedPage.qr} box={page.footerQr} />
+                  <Text run={footerPageCodeRun(page.footerQr, printedPage.code)} />
+                </>
+              )}
+            </>
+          )}
           {page.header.map((slot) => (
             <g key={slot.slot}>
               <Text run={slot.label} />
@@ -174,7 +190,10 @@ function Ink({ drawable }: { drawable: Drawable }) {
           cy={drawable.cy}
           r={drawable.r}
           strokeWidth={drawable.stroke}
-          className="fill-none stroke-shamiri-black"
+          className={cn(
+            "stroke-shamiri-black",
+            drawable.filled ? "fill-shamiri-black" : "fill-none",
+          )}
         />
       );
     case "line":
@@ -193,19 +212,12 @@ function Ink({ drawable }: { drawable: Drawable }) {
   }
 }
 
-/** Where each copy's page code prints once print runs exist. */
-function QrPlaceholder({ qr }: { qr: Rect }) {
+function Qr({ text, box }: { text: string; box: Rect }) {
   return (
-    <g>
-      <rect
-        x={qr.x}
-        y={qr.y}
-        width={qr.w}
-        height={qr.h}
-        strokeDasharray="3 2"
-        className="fill-none stroke-shamiri-text-grey"
-      />
-      <Text run={qrPlaceholderRun(qr)} className="fill-shamiri-text-grey" />
+    <g className="fill-shamiri-black">
+      {qrRects(text, box).map(({ x, y, w, h }) => (
+        <rect key={`${x},${y}`} x={x} y={y} width={w} height={h} />
+      ))}
     </g>
   );
 }

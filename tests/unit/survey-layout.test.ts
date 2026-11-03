@@ -24,9 +24,10 @@ const PREFILLS: Prefill[] = ["NONE", "SCHOOL", "STUDENT"];
  */
 const LAYOUT_HASHES: Record<number, string> = {
   1: "6efbce7376bd2afbfad842b6e261100192a0bdd3388a8831c64fa0b6d3616ce3",
+  2: "cc8f00fa57ed2dbf4f3d2c62b1fbecd4ff0a82dba0ece1dac13ad24b7c4bc5f0",
 };
-/** The content box: between the markers' outer edges, below the header, above the markers. */
-const CONTENT = { left: 24, right: 571.28, top: 90, bottom: 796.89 };
+/** The content box: between the markers' outer edges, below the header, above the footer. */
+const CONTENT = { left: 24, right: 571.28, top: 90, bottom: 770.89 };
 
 function boxesOf(field: ResponseField): Rect[] {
   switch (field.kind) {
@@ -82,6 +83,38 @@ describe("layOutForm", () => {
       `The layout changed. Bump LAYOUT_ENGINE_VERSION and record ${hash} as its hash.`,
     ).toBe(LAYOUT_HASHES[LAYOUT_ENGINE_VERSION]);
     expect(new Set(Object.values(LAYOUT_HASHES)).size).toBe(Object.keys(LAYOUT_HASHES).length);
+  });
+
+  it("puts a second QR in the bottom-left corner, with the marking guide, below the content", () => {
+    for (const page of layout.pages) {
+      expect(page.markers).toEqual({
+        topLeft: { x: 24, y: 24, w: 15, h: 15 },
+        bottomRight: { x: 556.28, y: 802.89, w: 15, h: 15 },
+      });
+      expect(page.footerQr).toEqual({ x: 24, y: 776.89, w: 41, h: 41 });
+      const guide = page.content.flatMap((d) => {
+        if (d.kind === "text" && d.run.baseline > CONTENT.bottom) {
+          return [{ ink: d.run.text, left: d.run.x, right: d.run.x + d.run.width }];
+        }
+        if (d.kind === "circle" && d.cy > CONTENT.bottom) {
+          return [
+            { ink: d.filled ? "filled circle" : "circle", left: d.cx - d.r, right: d.cx + d.r },
+          ];
+        }
+        return [];
+      });
+      expect(guide.map((g) => g.ink)).toEqual([
+        "Mark your answer:",
+        "filled circle",
+        "or",
+        "circle",
+      ]);
+      for (const { left, right } of guide) {
+        // Clear of the footer QR and its page code, and of the bottom-right marker.
+        expect(left).toBeGreaterThan(24 + 41 + 5 + 150);
+        expect(right).toBeLessThanOrEqual(556.28 - 6);
+      }
+    }
   });
 
   it("numbers pages by their place in the form", () => {
@@ -172,11 +205,11 @@ describe("layOutForm", () => {
     };
     const result = layOutForm(form, "NONE");
     expect(result.problems).toEqual([
-      { kind: "overflow", page: 2, itemIds: ["t8", "t9", "t10", "t11", "t12"], overBy: 379.11 },
+      { kind: "overflow", page: 2, itemIds: ["t8", "t9", "t10", "t11", "t12"], overBy: 405.11 },
     ]);
     const [problem] = result.problems;
     expect(problem && describeProblem(problem, form)).toBe(
-      "Page 2 doesn't fit on A4: it runs 134 mm past the bottom. Move item 8 (“Question 8”) and 4 more items to another page.",
+      "Page 2 doesn't fit on A4: it runs 143 mm past the bottom. Move item 8 (“Question 8”) and 4 more items to another page.",
     );
     // The items that don't fit still have places, below the paper's content box.
     expect(result.layout.pages[1]?.items.at(-1)?.box.y).toBeGreaterThan(CONTENT.bottom);

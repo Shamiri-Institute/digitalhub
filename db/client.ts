@@ -55,6 +55,11 @@ export function isForeignKeyViolation(error: unknown) {
   return code === "23503" || code === "23001";
 }
 
+/** Any of Postgres's integrity constraint violations (class 23): retrying the same write fails again. */
+export function isIntegrityViolation(error: unknown) {
+  return pgError(error)?.code?.startsWith("23") ?? false;
+}
+
 /** Postgres `serialization_failure`: a serializable transaction conflicted; retry it. */
 export function isSerializationFailure(error: unknown) {
   return pgError(error)?.code === "40001";

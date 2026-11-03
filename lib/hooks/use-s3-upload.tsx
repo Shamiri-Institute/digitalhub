@@ -3,7 +3,7 @@
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 
-import { S3_BUCKETS, type S3ApiRequest } from "#/lib/s3/s3.types";
+import { type S3ApiRequest, S3_UPLOAD_BUCKETS } from "#/lib/s3/s3.types";
 import { normalizeContentType } from "#/lib/s3/utils/normalize-content-type";
 
 type PresignedUrl = {
@@ -112,9 +112,9 @@ export function useS3Upload() {
   };
 
   const uploadToS3 = async (file: File, target: UploadTarget): Promise<UploadResult> => {
-    if (!S3_BUCKETS.includes(target?.bucket)) {
+    if (!S3_UPLOAD_BUCKETS.includes(target?.bucket)) {
       throw new Error(
-        `uploadToS3 requires an explicit bucket (${S3_BUCKETS.join(" or ")}); received ${String(target?.bucket)}`,
+        `uploadToS3 requires an explicit bucket (${S3_UPLOAD_BUCKETS.join(" or ")}); received ${String(target?.bucket)}`,
       );
     }
 

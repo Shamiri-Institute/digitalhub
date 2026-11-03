@@ -17,7 +17,7 @@ import {
   initBuilder,
 } from "#/lib/survey/builder";
 import { checkForm, indexIssues } from "#/lib/survey/check-form";
-import { describeProblem, layOutForm, sampleCopy } from "#/lib/survey/layout";
+import { describeProblem, layOutForm, sampleCopy, samplePages } from "#/lib/survey/layout";
 import type { BuilderData } from "../../../../queries";
 import PageItems from "./page-items";
 import PageProof from "./page-proof";
@@ -233,6 +233,7 @@ export default function SurveyBuilder({
                 paper={proof.layout.paper}
                 page={proofPage}
                 copy={sampleCopy(proof.layout)}
+                printedPage={samplePages(proof.layout)[proofPage.number - 1]}
                 problems={pageProblems}
                 openItemId={openItemId}
                 itemsWithIssues={itemsWithIssues}

@@ -4,6 +4,12 @@
 const SERIAL_DIGITS = 6;
 
 export const MAX_COPIES_PER_RUN = 50_000;
+/**
+ * A run prints as one file per school, split into parts of at most this many copies and
+ * MAX_PAGES_PER_FILE pages: about what one function call renders in time and memory.
+ */
+export const MAX_COPIES_PER_FILE = 1_000;
+export const MAX_PAGES_PER_FILE = 20_000;
 
 /** `formatSerial("BASE26", 17)` is `BASE26-000017`. Wider numbers print in full, so they stay unique. */
 export function formatSerial(surveyCode: string, serialNumber: number) {

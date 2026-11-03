@@ -24,6 +24,8 @@ const localS3Origins = (() => {
   }
 })();
 
+const PRINT_FONTS = ["./public/fonts/figtree/*.ttf"];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // ffmpeg-static locates its binary beside its own files, so it is loaded at runtime, and the
@@ -34,6 +36,10 @@ const nextConfig = {
       "./node_modules/ffmpeg-static/ffmpeg",
       "./lib/transcription/prompts/*.txt",
     ],
+    // Read from disk by the print job (lib/survey/print-files.ts), in every function that runs it.
+    "/api/cron/survey-print-files": PRINT_FONTS,
+    "/hc/surveys/**": PRINT_FONTS,
+    "/admin/surveys/**": PRINT_FONTS,
   },
   images: {
     remotePatterns: [

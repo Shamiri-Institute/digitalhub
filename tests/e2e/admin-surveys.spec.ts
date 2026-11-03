@@ -14,6 +14,7 @@ import { createAdminCopy, signInWithEmail } from "#/tests/helpers";
 import {
   createPrintSchool,
   createPublishedSurvey as createSurveyFixture,
+  removeSurvey,
   TWO_QUESTIONS,
 } from "#/tests/survey-fixtures";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
@@ -430,6 +431,8 @@ test("a Research team admin prints copies of a published version for a hub they 
   context,
   undo,
 }) => {
+  // Waits for the background print job, which CI's 30 s test timeout leaves too little time.
+  test.slow();
   const { userId, scope } = await signInAsResearchAdmin(context);
   const printedHub = await lastHubOf(scope);
   const published = await createPublishedSurvey(scope, userId);
@@ -438,7 +441,7 @@ test("a Research team admin prints copies of a published version for a hub they 
     schoolName: `Print ${published.code}`,
   });
   // Undo runs last-registered first: the survey, with its runs and copies, then the school.
-  undo(printedSchool.remove, () => db.delete(survey).where(eq(survey.id, published.id)));
+  undo(printedSchool.remove, () => removeSurvey({ id: published.id }));
 
   await page.goto(getUrl(`/admin/surveys/${published.id}`));
   await page.getByLabel("Actions for v1").click();
@@ -453,13 +456,13 @@ test("a Research team admin prints copies of a published version for a hub they 
 
   await expect(page).toHaveURL(new RegExp(`/admin/surveys/${published.id}/runs/surveyprintrun_`));
   await page.reload();
+  // The print job issues the copies in the background, after the run is created.
   await expect(
     page.getByRole("cell", { name: new RegExp(`^${published.code}-\\d{6}$`) }),
-  ).toHaveText([
-    `${published.code}-000001`,
-    `${published.code}-000002`,
-    `${published.code}-000003`,
-  ]);
+  ).toHaveText(
+    [`${published.code}-000001`, `${published.code}-000002`, `${published.code}-000003`],
+    { timeout: 60_000 },
+  );
 
   await page.getByRole("link", { name: published.title }).click();
   const runRow = page.getByRole("row").filter({ hasText: printedHub.hubName });
@@ -485,7 +488,7 @@ test("a print dialog opened on page 2 before the page knows the time zone keeps 
     hubId: printedHub.id,
     schoolName: `Print ${published.code}`,
   });
-  undo(printedSchool.remove, () => db.delete(survey).where(eq(survey.id, published.id)));
+  undo(printedSchool.remove, () => removeSurvey({ id: published.id }));
 
   // A first visit has no time zone cookie, so the page sets it and refreshes. The refresh is held
   // until the dialog is open and filled in.
@@ -764,7 +767,7 @@ test("a page that doesn't fit is named and can't be published", async ({ page, c
   ).toContainText("Doesn't print");
   await showPage(page, 2);
   const warning =
-    "Page 2 doesn't fit on A4: it runs 153 mm past the bottom. Move item 2 (“Tell us about friends”) to another page.";
+    "Page 2 doesn't fit on A4: it runs 162 mm past the bottom. Move item 2 (“Tell us about friends”) to another page.";
   await expect(page.locator("figure").getByText(warning)).toBeVisible();
   await expect(page.getByRole("button", { name: "Sample PDF" })).toBeDisabled();
 

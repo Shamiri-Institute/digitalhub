@@ -18,6 +18,10 @@ const schema = z.object({
   S3_STUDENT_ATTENDANCE_BUCKET: z.string().default(""),
   S3_STUDENT_ATTENDANCE_REGION: z.string().default("af-south-1"),
 
+  // Print run PDFs, written by the server and downloaded through presigned links.
+  S3_SURVEY_PRINT_FILES_BUCKET: z.string().default(""),
+  S3_SURVEY_PRINT_FILES_REGION: z.string().default("af-south-1"),
+
   // Vercel Cron sends it as a bearer token. Unset, the cron routes refuse every request.
   CRON_SECRET: z.string().min(16).optional(),
 

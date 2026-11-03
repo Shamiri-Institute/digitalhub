@@ -5,9 +5,18 @@ import { PDFDict, PDFDocument, PDFName } from "pdf-lib";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { describe, expect, it } from "vitest";
 
-import { headerValueRun, layOutForm, sampleCopy } from "#/lib/survey/layout";
+import {
+  headerValueRun,
+  type Layout,
+  layOutForm,
+  sampleCopy,
+  samplePages,
+} from "#/lib/survey/layout";
 import { PRINT_FONT_FILES, type PrintFonts } from "#/lib/survey/print-fonts";
-import { renderCopiesPdf } from "#/lib/survey/print-pdf";
+import { type PrintedCopy, renderCopiesPdf } from "#/lib/survey/print-pdf";
+import { pageIdFromQrText, pageQrText } from "#/lib/survey/print-qr";
+import { pageCode } from "#/lib/survey/serial";
+import { decodedQrCodes, pageTexts } from "#/tests/print-pdf";
 import { PRINT_FORM } from "./fixtures/survey-print-form";
 
 function readFont(file: string) {
@@ -20,15 +29,28 @@ const fonts: PrintFonts = {
   700: readFont(PRINT_FONT_FILES[700]),
 };
 
-async function pageTexts(bytes: Uint8Array) {
-  const pdf = await getDocument({ data: bytes }).promise;
-  const texts: string[] = [];
-  for (let number = 1; number <= pdf.numPages; number++) {
-    const content = await (await pdf.getPage(number)).getTextContent();
-    texts.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
-  }
-  return texts;
+/** A copy whose QR text is its page code with a `QR-` prefix, so a test can tell them apart. */
+function printed<L extends Layout>(layout: L, values: PrintedCopy<L>["values"]): PrintedCopy<L> {
+  return {
+    values,
+    pages: layout.pages.map((_, index) => {
+      const code = pageCode(values.serial, index + 1);
+      return { qr: `QR-${code}`, code };
+    }),
+  };
 }
+
+describe("pageQrText", () => {
+  it("holds a page id in upper case without its prefix, and reads back to the id", () => {
+    const id = "surveyquestionnairepage_01m6dp88hjf688mjhk7xxwjct5";
+    expect(pageQrText(id)).toBe("01M6DP88HJF688MJHK7XXWJCT5");
+    expect(pageIdFromQrText(pageQrText(id))).toBe(id);
+    const { layout } = layOutForm(PRINT_FORM, "NONE");
+    for (const sample of samplePages(layout)) {
+      expect(pageIdFromQrText(sample.qr)).toBeUndefined();
+    }
+  });
+});
 
 describe("renderCopiesPdf", () => {
   it("prints every page of the layout for each copy, with the print fonts embedded", async () => {
@@ -37,7 +59,11 @@ describe("renderCopiesPdf", () => {
       { serial: "WB27-000001", studentName: "Achieng Otieno", studentId: "STU-1" },
       { serial: "WB27-000002", studentName: "Baraka Mwangi", studentId: "STU-2" },
     ];
-    const bytes = await renderCopiesPdf(layout, copies, fonts);
+    const bytes = await renderCopiesPdf(
+      layout,
+      copies.map((values) => printed(layout, values)),
+      fonts,
+    );
     const doc = await PDFDocument.load(bytes);
     expect(doc.getPageCount()).toBe(6);
     const texts = await pageTexts(bytes);
@@ -66,7 +92,7 @@ describe("renderCopiesPdf", () => {
     for (const prefill of ["NONE", "SCHOOL", "STUDENT"] as const) {
       const { layout } = layOutForm(PRINT_FORM, prefill);
       const doc = await PDFDocument.load(
-        await renderCopiesPdf(layout, [sampleCopy(layout)], fonts),
+        await renderCopiesPdf(layout, [printed(layout, sampleCopy(layout))], fonts),
       );
       expect(doc.getPageCount()).toBe(3);
     }
@@ -74,23 +100,74 @@ describe("renderCopiesPdf", () => {
 
   it("prints the watermark across every page only when asked", async () => {
     const { layout } = layOutForm(PRINT_FORM, "NONE");
+    const sample = printed(layout, sampleCopy(layout));
     const watermarked = await pageTexts(
-      await renderCopiesPdf(layout, [sampleCopy(layout)], fonts, { watermark: "PREVIEW" }),
+      await renderCopiesPdf(layout, [sample], fonts, { watermark: "PREVIEW" }),
     );
     expect(watermarked).toHaveLength(3);
     for (const text of watermarked) {
       expect(text).toContain("PREVIEW");
     }
-    const plain = await pageTexts(await renderCopiesPdf(layout, [sampleCopy(layout)], fonts));
+    const plain = await pageTexts(await renderCopiesPdf(layout, [sample], fonts));
     for (const text of plain) {
       expect(text).not.toContain("PREVIEW");
+    }
+  });
+
+  it("prints each page's QR code at the top and the bottom, each with the page code", async () => {
+    const { layout } = layOutForm(PRINT_FORM, "SCHOOL");
+    const copies = Array.from({ length: 10 }, (_, index) =>
+      printed(layout, { serial: `WB27-${String(index + 1).padStart(6, "0")}`, school: "Kilimani" }),
+    );
+    const bytes = await renderCopiesPdf(layout, copies, fonts);
+    const expected = copies.flatMap((copy) => copy.pages.map((page) => page.qr));
+    expect(await decodedQrCodes(bytes, "top")).toEqual(expected);
+    expect(await decodedQrCodes(bytes, "bottom")).toEqual(expected);
+    const texts = await pageTexts(bytes);
+    copies
+      .flatMap((copy) => copy.pages.map((page) => page.code))
+      .forEach((code, index) => expect(texts[index]?.split(code)).toHaveLength(3));
+  }, 60_000);
+
+  it("prints a layout from before the footer QR with its one QR code", async () => {
+    const { layout } = layOutForm(PRINT_FORM, "NONE");
+    const engineOne = {
+      ...layout,
+      pages: layout.pages.map((page) => ({
+        ...page,
+        footerQr: undefined,
+        markers: { ...page.markers, bottomLeft: { x: 24, y: 802.89, w: 15, h: 15 } },
+      })),
+    };
+    const bytes = await renderCopiesPdf(
+      engineOne,
+      [printed(engineOne, sampleCopy(engineOne))],
+      fonts,
+    );
+    expect(await decodedQrCodes(bytes, "top")).toEqual([
+      "QR-SAMPLE-P1",
+      "QR-SAMPLE-P2",
+      "QR-SAMPLE-P3",
+    ]);
+    expect(await decodedQrCodes(bytes, "bottom")).toEqual([null, null, null]);
+  }, 60_000);
+
+  it("prints the marking guide on every page", async () => {
+    const { layout } = layOutForm(PRINT_FORM, "NONE");
+    const texts = await pageTexts(
+      await renderCopiesPdf(layout, [printed(layout, sampleCopy(layout))], fonts),
+    );
+    for (const text of texts) {
+      expect(text).toContain("Mark your answer:");
     }
   });
 
   it("draws every run as wide as the layout measured it", async () => {
     const { layout } = layOutForm(PRINT_FORM, "SCHOOL");
     const copy = sampleCopy(layout);
-    const pdf = await getDocument({ data: await renderCopiesPdf(layout, [copy], fonts) }).promise;
+    const pdf = await getDocument({
+      data: await renderCopiesPdf(layout, [printed(layout, copy)], fonts),
+    }).promise;
     let checked = 0;
     for (const [index, laid] of layout.pages.entries()) {
       const items = (await (await pdf.getPage(index + 1)).getTextContent()).items.flatMap((item) =>

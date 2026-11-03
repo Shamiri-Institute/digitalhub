@@ -1,4 +1,7 @@
 {
   "regions": ["cpt1"],
-  "crons": [{ "path": "/api/cron/transcriptions", "schedule": "* * * * *" }]
+  "crons": [
+    { "path": "/api/cron/transcriptions", "schedule": "* * * * *" },
+    { "path": "/api/cron/survey-print-files", "schedule": "* * * * *" }
+  ]
 }

@@ -15,9 +15,6 @@ import { SurveyStatusBadge } from "../components/status-badges";
 import { fetchSurveyWithVersions } from "../queries";
 import VersionsDataTable from "./components/versions-datatable";
 
-// Creating a print run inserts every copy and page in the action this page serves.
-export const maxDuration = 300;
-
 export default async function AdminSurveyPage(props: { params: Promise<{ surveyId: string }> }) {
   const { surveyId } = await props.params;
   const scope = await surveyScope();

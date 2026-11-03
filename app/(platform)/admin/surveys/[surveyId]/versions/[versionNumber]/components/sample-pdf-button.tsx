@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Button } from "#/components/ui/button";
 import { toast } from "#/components/ui/use-toast";
-import { type Layout, sampleCopy } from "#/lib/survey/layout";
+import { type Layout, sampleCopy, samplePages } from "#/lib/survey/layout";
 import { loadPrintFontsInBrowser } from "#/lib/survey/print-fonts";
 
 interface SamplePdfButtonProps {
@@ -25,7 +25,7 @@ export default function SamplePdfButton({ layout, fileName, disabled }: SamplePd
       const { renderCopiesPdf } = await import("#/lib/survey/print-pdf");
       const bytes = await renderCopiesPdf(
         layout,
-        [sampleCopy(layout)],
+        [{ values: sampleCopy(layout), pages: samplePages(layout) }],
         await loadPrintFontsInBrowser(),
         { watermark: "PREVIEW" },
       );
