@@ -40,8 +40,7 @@ export async function fetchScanUploads(viewer: SurveyViewer) {
       hub: { columns: { hubName: true } },
       uploadedByUser: { columns: { name: true, email: true } },
     },
-    // created_at, which the hub index covers; an upload is finished soon after it is started.
-    orderBy: (u, { desc }) => [desc(u.createdAt), desc(u.id)],
+    orderBy: (u, { desc }) => [desc(u.uploadedAt), desc(u.id)],
   });
 }
 

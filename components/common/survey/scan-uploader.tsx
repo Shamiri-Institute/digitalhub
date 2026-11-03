@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -31,17 +31,22 @@ type ScanState =
   | { kind: "uploading"; percent: number }
   | { kind: "saving" }
   | { kind: "uploaded" }
-  | { kind: "refused"; reason: string };
+  | { kind: "refused"; reason: string }
+  | { kind: "cancelled" };
 
 type QueuedScan = {
   id: number;
   file: File;
+  /** Stops this file's upload, whether it is waiting or being sent. */
+  cancel: AbortController;
   contentType: ScanContentType | undefined;
   hubName?: string;
   state: ScanState;
 };
 
 const IN_PROGRESS: ScanState["kind"][] = ["waiting", "checking", "uploading", "saving"];
+// Saving is left out: by then the file is in S3, and stopping would only leave it unrecorded.
+const CANCELLABLE: ScanState["kind"][] = ["waiting", "checking", "uploading"];
 
 function refused(reason: string): ScanState {
   return { kind: "refused", reason };
@@ -69,11 +74,24 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
   const nextScanId = useRef(0);
   // Uploads run in the order files were added, each after the one before has settled.
   const uploadQueue = useRef(Promise.resolve());
+  const unfinishedUploads = useRef(new Set<AbortController>());
 
   const needsHub = hubs !== undefined && !chosenHubId;
   const uploadsInProgress = scans.filter((scan) => IN_PROGRESS.includes(scan.state.kind)).length;
+  const uploadedCount = scans.filter((scan) => scan.state.kind === "uploaded").length;
+  const refusedCount = scans.filter((scan) => scan.state.kind === "refused").length;
 
   useLeaveGuard(uploadsInProgress > 0, "Scans are still uploading. Leave and stop them?");
+
+  // effect: stops the uploads still running or waiting when the uploader leaves the page
+  useEffect(() => {
+    const unfinished = unfinishedUploads.current;
+    return () => {
+      for (const cancel of unfinished) {
+        cancel.abort();
+      }
+    };
+  }, []);
 
   const setScanState = (id: number, state: ScanState) =>
     setScans((current) => current.map((scan) => (scan.id === id ? { ...scan, state } : scan)));
@@ -83,28 +101,47 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
     contentType: ScanContentType,
     uploadHubId: string | undefined,
   ) => {
-    const { id, file } = scan;
+    const { id, file, cancel } = scan;
+    const { signal } = cancel;
     try {
+      if (signal.aborted) {
+        return;
+      }
       setScanState(id, { kind: "checking" });
+      const sha256 = await fileSha256(file);
+      if (signal.aborted) {
+        return;
+      }
       const started = await startScanUpload({
         hubId: uploadHubId,
         fileName: file.name,
         contentType,
         byteSize: file.size,
-        sha256: await fileSha256(file),
+        sha256,
       });
+      if (signal.aborted) {
+        return;
+      }
       if (!started.success || !started.data) {
         return setScanState(id, refused(started.message));
       }
       setScanState(id, { kind: "uploading", percent: 0 });
       try {
-        await putWithProgress(started.data.url, started.data.headers, file, (bytesSent) =>
-          setScanState(id, {
-            kind: "uploading",
-            percent: Math.round((bytesSent / file.size) * 100),
-          }),
+        await putWithProgress(
+          started.data.url,
+          started.data.headers,
+          file,
+          (bytesSent) =>
+            setScanState(id, {
+              kind: "uploading",
+              percent: Math.round((bytesSent / file.size) * 100),
+            }),
+          signal,
         );
       } catch {
+        if (signal.aborted) {
+          return;
+        }
         return setScanState(
           id,
           refused("The upload didn't finish. Check your connection and add the file again"),
@@ -116,7 +153,15 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
     } catch (error) {
       setScanState(id, refused("Something went wrong. Add the file again"));
       reportError(error);
+    } finally {
+      unfinishedUploads.current.delete(cancel);
     }
+  };
+
+  const cancelUpload = (scan: QueuedScan) => {
+    scan.cancel.abort();
+    unfinishedUploads.current.delete(scan.cancel);
+    setScanState(scan.id, { kind: "cancelled" });
   };
 
   const addFiles = (files: File[]) => {
@@ -129,6 +174,7 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
       return {
         id: nextScanId.current++,
         file,
+        cancel: new AbortController(),
         contentType,
         hubName,
         state: checkBeforeSending(file, contentType),
@@ -138,6 +184,7 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
     for (const scan of added) {
       const { contentType } = scan;
       if (scan.state.kind === "waiting" && contentType) {
+        unfinishedUploads.current.add(scan.cancel);
         uploadQueue.current = uploadQueue.current.then(() =>
           upload(scan, contentType, chosenHubId),
         );
@@ -232,9 +279,13 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
         <div className="rounded-lg border border-grey-border">
           <div className="flex items-center justify-between border-b border-grey-border px-4 py-2">
             <p className="text-sm text-shamiri-text-dark-grey" aria-live="polite">
-              {uploadsInProgress > 0
-                ? `Uploading ${uploadsInProgress} of ${scans.length}`
-                : `${scans.filter((scan) => scan.state.kind === "uploaded").length} of ${scans.length} uploaded`}
+              {[
+                `${uploadedCount} uploaded`,
+                uploadsInProgress > 0 && `${uploadsInProgress} to go`,
+                refusedCount > 0 && `${refusedCount} not uploaded`,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
             <Button
               type="button"
@@ -248,7 +299,7 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
           </div>
           <ul aria-label="Files added" className="divide-y divide-grey-border">
             {scans.map((scan) => (
-              <QueuedScanRow key={scan.id} scan={scan} />
+              <QueuedScanRow key={scan.id} scan={scan} onCancel={() => cancelUpload(scan)} />
             ))}
           </ul>
         </div>
@@ -257,7 +308,7 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
   );
 }
 
-function QueuedScanRow({ scan }: { scan: QueuedScan }) {
+function QueuedScanRow({ scan, onCancel }: { scan: QueuedScan; onCancel: () => void }) {
   const { state } = scan;
   return (
     <li className="flex items-center gap-3 px-4 py-2.5">
@@ -288,6 +339,18 @@ function QueuedScanRow({ scan }: { scan: QueuedScan }) {
           {scanStateText(state)}
         </span>
       )}
+      {CANCELLABLE.includes(state.kind) && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0 text-shamiri-text-dark-grey"
+          aria-label={`Cancel ${scan.file.name}`}
+          onClick={onCancel}
+        >
+          <Icons.xIcon aria-hidden className="size-4" />
+        </Button>
+      )}
     </li>
   );
 }
@@ -304,6 +367,8 @@ function scanStateText(state: Exclude<ScanState, { kind: "refused" }>) {
       return "Saving";
     case "uploaded":
       return "Uploaded";
+    case "cancelled":
+      return "Cancelled";
   }
 }
 
@@ -316,6 +381,8 @@ function ScanStateIcon({ state }: { state: ScanState }) {
       return <Icons.alertCircle aria-hidden className={cn(className, "text-red-base")} />;
     case "waiting":
       return <Icons.fileUp aria-hidden className={cn(className, "text-shamiri-text-grey")} />;
+    case "cancelled":
+      return <Icons.minusCircle aria-hidden className={cn(className, "text-shamiri-text-grey")} />;
     default:
       return (
         <Icons.loaderCircle

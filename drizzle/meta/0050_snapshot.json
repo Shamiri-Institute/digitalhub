@@ -10221,8 +10221,8 @@
           "method": "btree",
           "with": {}
         },
-        "survey_uploads_hub_id_created_at_idx": {
-          "name": "survey_uploads_hub_id_created_at_idx",
+        "survey_uploads_hub_id_uploaded_at_idx": {
+          "name": "survey_uploads_hub_id_uploaded_at_idx",
           "columns": [
             {
               "expression": "hub_id",
@@ -10231,7 +10231,7 @@
               "nulls": "last"
             },
             {
-              "expression": "created_at",
+              "expression": "uploaded_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

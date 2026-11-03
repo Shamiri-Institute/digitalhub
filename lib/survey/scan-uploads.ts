@@ -60,22 +60,14 @@ export async function startScanUpload(
         fileName: file.fileName,
         contentType: file.contentType,
         byteSize: file.byteSize,
-        status: SurveyUploadStatus.PENDING,
-        error: null,
-        pageCount: null,
-        uploadedAt: null,
         updatedAt: new Date(),
       },
-      setWhere: or(
-        // A file the pipeline could not read may be sent again by anyone.
-        eq(surveyUpload.status, SurveyUploadStatus.FAILED),
-        and(
-          eq(surveyUpload.status, SurveyUploadStatus.PENDING),
-          // Its uploader resumes an unfinished upload at once; anyone may take it over after an hour.
-          or(
-            eq(surveyUpload.uploadedBy, scope.userId),
-            lt(surveyUpload.updatedAt, sql`now() - interval '1 hour'`),
-          ),
+      setWhere: and(
+        eq(surveyUpload.status, SurveyUploadStatus.PENDING),
+        // Its uploader resumes an unfinished upload at once; anyone may take it over after an hour.
+        or(
+          eq(surveyUpload.uploadedBy, scope.userId),
+          lt(surveyUpload.updatedAt, sql`now() - interval '1 hour'`),
         ),
       ),
     })
@@ -93,19 +85,22 @@ export async function startScanUpload(
         contentLength: file.byteSize,
         expiresIn: PRESIGNED_UPLOAD_TTL_SECONDS,
         checksumSha256: Buffer.from(file.sha256, "hex").toString("base64"),
-        // A resumed or repeated upload PUTs again over the first try. The checksum pins the bytes,
-        // so nothing else can land there.
+        // A resumed upload may PUT again over its first try. The checksum pins the bytes, so
+        // nothing else can land there.
         ifNoneMatch: false,
       },
     );
     return { uploadId: held.id, url, headers };
   } catch (error) {
-    // Free the hash, so the file isn't held for an hour by an upload that never began.
-    await db
-      .delete(surveyUpload)
-      .where(
-        and(eq(surveyUpload.id, held.id), eq(surveyUpload.status, SurveyUploadStatus.PENDING)),
-      );
+    // Free the hash, so the file isn't held for an hour by an upload that never began. Only a row
+    // this call made: a resumed one may already have its bytes in S3.
+    if (held.id === uploadId) {
+      await db
+        .delete(surveyUpload)
+        .where(
+          and(eq(surveyUpload.id, held.id), eq(surveyUpload.status, SurveyUploadStatus.PENDING)),
+        );
+    }
     throw error;
   }
 }

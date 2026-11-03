@@ -3074,7 +3074,7 @@ export const surveyUpload = pgTable(
   (table) => [
     uniqueIndex("survey_uploads_sha256_key").on(table.sha256),
     uniqueIndex("survey_uploads_s3_key_key").on(table.s3Key),
-    index("survey_uploads_hub_id_created_at_idx").on(table.hubId, table.createdAt),
+    index("survey_uploads_hub_id_uploaded_at_idx").on(table.hubId, table.uploadedAt),
     index("survey_uploads_uploaded_by_idx").on(table.uploadedBy),
     check("survey_uploads_sha256_check", sql`${table.sha256} ~ '^[0-9a-f]{64}$'`),
     check("survey_uploads_byte_size_check", sql`${table.byteSize} > 0`),

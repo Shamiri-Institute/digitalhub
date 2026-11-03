@@ -24,5 +24,5 @@ ALTER TABLE "survey_uploads" ADD CONSTRAINT "survey_uploads_hub_id_fkey" FOREIGN
 ALTER TABLE "survey_uploads" ADD CONSTRAINT "survey_uploads_uploaded_by_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE restrict;--> statement-breakpoint
 CREATE UNIQUE INDEX "survey_uploads_sha256_key" ON "survey_uploads" USING btree ("sha256");--> statement-breakpoint
 CREATE UNIQUE INDEX "survey_uploads_s3_key_key" ON "survey_uploads" USING btree ("s3_key");--> statement-breakpoint
-CREATE INDEX "survey_uploads_hub_id_created_at_idx" ON "survey_uploads" USING btree ("hub_id","created_at");--> statement-breakpoint
+CREATE INDEX "survey_uploads_hub_id_uploaded_at_idx" ON "survey_uploads" USING btree ("hub_id","uploaded_at");--> statement-breakpoint
 CREATE INDEX "survey_uploads_uploaded_by_idx" ON "survey_uploads" USING btree ("uploaded_by");

@@ -50,6 +50,7 @@ export default function TabToggleNavigation({
               key={option.name}
               value={option.name}
               aria-label={`Select ${option.name}`}
+              data-leave-href={option.href}
               className="form-toggle-button text-nowrap"
             >
               {option.name}

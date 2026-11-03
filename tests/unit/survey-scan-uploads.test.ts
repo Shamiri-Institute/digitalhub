@@ -127,34 +127,14 @@ describe("scan uploads", () => {
     });
   });
 
-  it("lets anyone upload again a file the pipeline could not read", async () => {
-    const { file, bytes } = await scanFile("Kibera batch 4");
-    const first = await startScanUpload(uploader, file);
-    expect((await put(first, bytes)).status).toBe(200);
-    await finishScanUpload(hubViewer(uploader), first.uploadId);
-    await db
-      .update(surveyUpload)
-      .set({ status: "FAILED", error: "The pages could not be read" })
-      .where(eq(surveyUpload.id, first.uploadId));
-
-    const again = await startScanUpload(colleague, file);
-    expect(again.uploadId).toBe(first.uploadId);
-    expect((await put(again, bytes)).status).toBe(200);
-    expect(await finishScanUpload(hubViewer(colleague), again.uploadId)).toMatchObject({
-      status: "UPLOADED",
-      error: null,
-      uploadedBy: colleague.userId,
-    });
-  });
-
   it("refuses any bytes but the ones the upload was started with", async () => {
     const { file } = await scanFile("Kibera batch 3");
     const other = await uniqueScanPdf("Kibera batch 3, another scan");
 
     const started = await startScanUpload(uploader, { ...file, byteSize: other.bytes.length });
     const response = await put(started, other.bytes);
+    // AWS and SeaweedFS answer BadDigest, Garage InvalidDigest.
     expect(response.status).toBe(400);
-    expect(await response.text()).toContain("InvalidDigest");
     // Sending the header the other file would need breaks the signature.
     const forged = await fetch(started.url, {
       method: "PUT",
@@ -165,6 +145,9 @@ describe("scan uploads", () => {
       body: Buffer.from(other.bytes),
     });
     expect(forged.status).toBe(403);
+    await expect(finishScanUpload(hubViewer(uploader), started.uploadId)).rejects.toThrow(
+      "The file did not reach storage",
+    );
     expect(await uploadOf(file.sha256)).toMatchObject({ status: "PENDING" });
   });
 });
