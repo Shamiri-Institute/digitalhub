@@ -2,7 +2,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull, ne, notInArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db, pool } from "#/db/client";
@@ -23,6 +23,7 @@ import { removeScanUploads, uniqueScanPdf } from "#/tests/survey-fixtures";
 let uploader: HubSurveyScope;
 let colleague: HubSurveyScope;
 let otherHubCoordinator: HubSurveyScope;
+let otherImplementerMember: HubSurveyScope;
 const createdHashes: string[] = [];
 
 beforeAll(async () => {
@@ -45,6 +46,34 @@ beforeAll(async () => {
   uploader = { ...uploaderHub, userId: uploaderMember.userId };
   colleague = { ...uploaderHub, userId: colleagueMember.userId };
   otherHubCoordinator = { ...otherHub, userId: colleagueMember.userId };
+
+  const [otherImplementerHub] = await db
+    .select({ hubId: hub.id, implementerId: hub.implementerId, projectId: hub.projectId })
+    .from(hub)
+    .where(and(ne(hub.implementerId, uploaderHub.implementerId), isNull(hub.archivedAt)))
+    .orderBy(asc(hub.id))
+    .limit(1);
+  if (!otherImplementerHub) throw new Error("Seed the database first");
+  const [outsider] = await db
+    .select({ userId: implementerMember.userId })
+    .from(implementerMember)
+    .where(
+      and(
+        eq(implementerMember.implementerId, otherImplementerHub.implementerId),
+        // Seeded admins belong to every implementer; an outsider belongs to the other one only.
+        notInArray(
+          implementerMember.userId,
+          db
+            .select({ userId: implementerMember.userId })
+            .from(implementerMember)
+            .where(eq(implementerMember.implementerId, uploaderHub.implementerId)),
+        ),
+      ),
+    )
+    .orderBy(asc(implementerMember.userId))
+    .limit(1);
+  if (!outsider) throw new Error("Seed the database first");
+  otherImplementerMember = { ...otherImplementerHub, userId: outsider.userId };
 });
 
 afterAll(async () => {
@@ -141,6 +170,25 @@ describe("scan uploads", () => {
     expect(await finishScanUpload(hubViewer(colleague), takenOver.uploadId)).toMatchObject({
       status: "UPLOADED",
       uploadedBy: colleague.userId,
+    });
+  });
+
+  it("never lets another organisation take over an unfinished upload", async () => {
+    const { file, bytes } = await scanFile("Kibera batch 13");
+    const started = await startScanUpload(uploader, file);
+    expect((await put(started, bytes)).status).toBe(200);
+    await db
+      .update(surveyUpload)
+      .set({ updatedAt: twoHoursAgo() })
+      .where(eq(surveyUpload.id, started.uploadId));
+
+    await expect(startScanUpload(otherImplementerMember, file)).rejects.toThrow(
+      "Someone else is uploading this file",
+    );
+    expect(await uploadOf(file.sha256)).toMatchObject({
+      hubId: uploader.hubId,
+      uploadedBy: uploader.userId,
+      status: "PENDING",
     });
   });
 

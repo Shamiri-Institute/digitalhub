@@ -4,13 +4,14 @@
 
 import "server-only";
 
-import { and, eq, lt, or, sql } from "drizzle-orm";
+import { and, eq, inArray, lt, or, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { SurveyAuditActor, SurveyUploadStatus } from "#/db/enums";
 import { surveyUpload } from "#/db/schema";
 import { SurveyError } from "#/lib/actions/survey/respond";
 import { ForbiddenRoleError, NotFoundError } from "#/lib/auth/require-auth-role";
+import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import { type HubSurveyScope, type SurveyViewer, surveyHubScope } from "#/lib/auth/survey-access";
 import { objectId } from "#/lib/crypto";
 import { getPresignedUploadUrl } from "#/lib/s3/s3.service";
@@ -73,10 +74,17 @@ export async function startScanUpload(
       },
       setWhere: and(
         eq(surveyUpload.status, SurveyUploadStatus.PENDING),
-        // Its uploader resumes an unfinished upload at once; anyone may take it over after an hour.
+        // Its uploader resumes an unfinished upload at once; after an hour anyone from a hub of the
+        // same implementer and project may take it over, never someone from another organisation.
         or(
           eq(surveyUpload.uploadedBy, scope.userId),
-          lt(surveyUpload.updatedAt, sql`now() - interval '1 hour'`),
+          and(
+            lt(surveyUpload.updatedAt, sql`now() - interval '1 hour'`),
+            inArray(
+              surveyUpload.hubId,
+              implementerHubsInProject(scope.implementerId, scope.projectId),
+            ),
+          ),
         ),
       ),
     })

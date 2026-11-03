@@ -129,6 +129,8 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
       signal.throwIfAborted();
       setScanState(id, { kind: "checking" });
       const sha256 = await fileSha256(file, signal);
+      // Hashing only checks between chunks, so a cancel during the last one lands here.
+      signal.throwIfAborted();
       const started = await startScanUpload({
         hubId: uploadHubId,
         fileName: file.name,
@@ -246,7 +248,8 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
       {hubs && (
         <div className="space-y-1.5">
           <Label htmlFor="scan-hub">Hub</Label>
-          <Select value={chosenHubId} onValueChange={setChosenHubId}>
+          {/* "" while no hub is chosen keeps the Select controlled from the start. */}
+          <Select value={chosenHubId ?? ""} onValueChange={setChosenHubId}>
             <SelectTrigger id="scan-hub" aria-label="Hub" className="w-64">
               <SelectValue placeholder="Choose a hub" />
             </SelectTrigger>
