@@ -31,7 +31,9 @@ export function scanContentTypeOf(file: { type: string; name: string }) {
   }
   const browserGaveNoType = file.type === "" || file.type === "application/octet-stream";
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
-  return browserGaveNoType ? EXTENSION_CONTENT_TYPES[extension] : undefined;
+  return browserGaveNoType && Object.hasOwn(EXTENSION_CONTENT_TYPES, extension)
+    ? EXTENSION_CONTENT_TYPES[extension]
+    : undefined;
 }
 
 /**

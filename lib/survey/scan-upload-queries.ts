@@ -6,7 +6,7 @@ import { SurveyUploadStatus } from "#/db/enums";
 import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
 
-/** The viewer's uploads, newest first. Unfinished ones are left out: no file is in S3 for them yet. */
+/** The viewer's uploads, newest first. Unfinished ones are left out: their file isn't checked yet. */
 export async function fetchScanUploads(viewer: SurveyViewer) {
   return db.query.surveyUpload.findMany({
     where: (u, { and, eq, inArray, ne }) =>

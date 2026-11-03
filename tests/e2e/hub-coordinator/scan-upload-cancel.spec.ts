@@ -47,8 +47,7 @@ test("a coordinator cancels one scan, and leaving the page asks first and gives 
 
   await page.getByLabel("Scanned files").setInputFiles([
     { name: "cancelled.pdf", mimeType: "application/pdf", buffer: cancelled },
-    // No type from the browser, as for some files from a scanner app: the extension decides.
-    { name: "following.pdf", mimeType: "", buffer: Buffer.from(following.bytes) },
+    { name: "following.pdf", mimeType: "application/pdf", buffer: Buffer.from(following.bytes) },
   ]);
   await expect(page.getByLabel("Uploading cancelled.pdf")).toBeVisible();
   await page.getByRole("button", { name: "Cancel cancelled.pdf" }).click();

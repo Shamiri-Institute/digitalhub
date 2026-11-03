@@ -26,25 +26,25 @@ let otherHubCoordinator: HubSurveyScope;
 const createdHashes: string[] = [];
 
 beforeAll(async () => {
-  const [found, otherHub] = await db
+  const [uploaderHub, otherHub] = await db
     .select({ hubId: hub.id, implementerId: hub.implementerId, projectId: hub.projectId })
     .from(hub)
     .innerJoin(project, eq(project.id, hub.projectId))
     .where(and(eq(project.isDefault, true), isNull(hub.archivedAt)))
     .orderBy(asc(hub.id))
     .limit(2);
-  if (!found || !otherHub) throw new Error("Seed the database first");
+  if (!uploaderHub || !otherHub) throw new Error("Seed the database first");
   const members = await db
     .select({ userId: implementerMember.userId })
     .from(implementerMember)
-    .where(eq(implementerMember.implementerId, found.implementerId))
+    .where(eq(implementerMember.implementerId, uploaderHub.implementerId))
     .orderBy(asc(implementerMember.userId))
     .limit(2);
-  const [first, second] = members;
-  if (!first || !second) throw new Error("Seed the database first");
-  uploader = { ...found, userId: first.userId };
-  colleague = { ...found, userId: second.userId };
-  otherHubCoordinator = { ...otherHub, userId: second.userId };
+  const [uploaderMember, colleagueMember] = members;
+  if (!uploaderMember || !colleagueMember) throw new Error("Seed the database first");
+  uploader = { ...uploaderHub, userId: uploaderMember.userId };
+  colleague = { ...uploaderHub, userId: colleagueMember.userId };
+  otherHubCoordinator = { ...otherHub, userId: colleagueMember.userId };
 });
 
 afterAll(async () => {
@@ -232,8 +232,10 @@ describe("scan uploads", () => {
   });
 
   it("discards an object whose checksum isn't the file's, so it can be sent again", async () => {
-    const { file } = await scanFile("Kibera batch 9");
-    const other = await uniqueScanPdf("Kibera batch 9, another scan");
+    const { file, bytes } = await scanFile("Kibera batch 9");
+    // The same size and type, so only the checksum differs.
+    const corrupted = Buffer.from(bytes);
+    corrupted.writeUInt8(corrupted.readUInt8(corrupted.length - 1) ^ 0xff, corrupted.length - 1);
     const started = await startScanUpload(uploader, file);
     const s3Key = await s3KeyOf(started.uploadId);
     // Put straight to S3, as a store that didn't enforce the signed checksum would let through.
@@ -241,8 +243,9 @@ describe("scan uploads", () => {
       new PutObjectCommand({
         Bucket: process.env.S3_SURVEY_SCANS_BUCKET,
         Key: s3Key,
-        Body: Buffer.from(other.bytes),
-        ChecksumSHA256: Buffer.from(other.sha256, "hex").toString("base64"),
+        Body: corrupted,
+        ContentType: file.contentType,
+        ChecksumSHA256: createHash("sha256").update(corrupted).digest("base64"),
       }),
     );
 
@@ -316,5 +319,6 @@ describe("scan files", () => {
     );
     expect(scanContentTypeOf({ type: "text/plain", name: "notes.pdf" })).toBeUndefined();
     expect(scanContentTypeOf({ type: "", name: "notes.txt" })).toBeUndefined();
+    expect(scanContentTypeOf({ type: "", name: "batch.constructor" })).toBeUndefined();
   });
 });

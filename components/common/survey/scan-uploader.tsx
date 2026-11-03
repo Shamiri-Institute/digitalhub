@@ -175,9 +175,11 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
     let shownPercent = 0;
     const keepHeld = setInterval(
       () =>
-        void keepScanUploadHeld({ uploadId }).catch((error: unknown) =>
-          console.error("Could not keep the scan upload held", error),
-        ),
+        void keepScanUploadHeld({ uploadId })
+          .then(
+            (kept) => !kept.success && console.error("Lost the scan upload's hold", kept.message),
+          )
+          .catch((error: unknown) => console.error("Could not keep the scan upload held", error)),
       HOLD_RENEW_MS,
     );
     try {

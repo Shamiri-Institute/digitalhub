@@ -15,7 +15,11 @@ import { type HubSurveyScope, type SurveyViewer, surveyHubScope } from "#/lib/au
 import { objectId } from "#/lib/crypto";
 import { getPresignedUploadUrl } from "#/lib/s3/s3.service";
 import { PRESIGNED_UPLOAD_TTL_SECONDS } from "#/lib/s3/s3.types";
-import { discardOrphanedUpload, verifyUploadedObject } from "#/lib/s3/utils/verify-upload";
+import {
+  discardOrphanedUpload,
+  type HeadOutcome,
+  verifyUploadedObject,
+} from "#/lib/s3/utils/verify-upload";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
 import type { ScanContentType } from "#/lib/survey/scan-files";
 
@@ -63,7 +67,8 @@ export async function startScanUpload(
         uploadedBy: scope.userId,
         fileName: file.fileName,
         // Not the type: a resume keeps the one its object is stored with, so the two always agree.
-        updatedAt: new Date(),
+        // The database's clock, which the hour below is measured on.
+        updatedAt: sql`now()`,
       },
       setWhere: and(
         eq(surveyUpload.status, SurveyUploadStatus.PENDING),
@@ -95,7 +100,7 @@ export async function startScanUpload(
       {
         contentLength: file.byteSize,
         expiresIn: PRESIGNED_UPLOAD_TTL_SECONDS,
-        checksumSha256: Buffer.from(file.sha256, "hex").toString("base64"),
+        checksumSha256: base64Checksum(file.sha256),
         // A resumed upload may PUT again over its first try. The checksum pins the bytes, so
         // nothing else can land there.
         ifNoneMatch: false,
@@ -116,18 +121,26 @@ export async function startScanUpload(
   }
 }
 
-/** Whether S3 already holds `file` at `key`, from an earlier PUT whose finish didn't happen. */
-async function holdsFile(
-  key: string,
-  file: Pick<ScanFile, "byteSize" | "sha256"> & { contentType: string },
-) {
-  const stored = await verifyUploadedObject(key, "survey-scans", { withChecksum: true });
+type StoredScanFile = Pick<ScanFile, "byteSize" | "sha256"> & { contentType: string };
+
+/** The checksum S3 reports for a file of this hex SHA-256. */
+function base64Checksum(sha256: string) {
+  return Buffer.from(sha256, "hex").toString("base64");
+}
+
+/** Whether a stored object is `file`: the same size, type and checksum. */
+function isStoredAs(stored: Extract<HeadOutcome, { status: "ok" }>, file: StoredScanFile) {
   return (
-    stored.status === "ok" &&
     stored.contentLength === file.byteSize &&
     stored.contentType === file.contentType &&
-    stored.checksumSha256 === Buffer.from(file.sha256, "hex").toString("base64")
+    stored.checksumSha256 === base64Checksum(file.sha256)
   );
+}
+
+/** Whether S3 already holds `file` at `key`, from an earlier PUT whose finish didn't happen. */
+async function holdsFile(key: string, file: StoredScanFile) {
+  const stored = await verifyUploadedObject(key, "survey-scans", { withChecksum: true });
+  return stored.status === "ok" && isStoredAs(stored, file);
 }
 
 /**
@@ -137,7 +150,7 @@ async function holdsFile(
 export async function keepScanUploadHeld(viewer: SurveyViewer, uploadId: string) {
   const [held] = await db
     .update(surveyUpload)
-    .set({ updatedAt: new Date() })
+    .set({ updatedAt: sql`now()` })
     .where(
       and(
         eq(surveyUpload.id, uploadId),
@@ -156,7 +169,15 @@ export async function keepScanUploadHeld(viewer: SurveyViewer, uploadId: string)
  * earlier try put in S3. Giving up one that is finished, or no longer the caller's, does nothing.
  */
 export async function releaseScanUpload(viewer: SurveyViewer, uploadId: string) {
-  const [released] = await db
+  const released = await deleteUnfinishedUpload(viewer, uploadId);
+  if (released) {
+    await discardOrphanedUpload(released.s3Key, "survey-scans");
+  }
+}
+
+/** Deletes the caller's unfinished upload row, if it is still theirs and unfinished. */
+async function deleteUnfinishedUpload(viewer: SurveyViewer, uploadId: string) {
+  const [deleted] = await db
     .delete(surveyUpload)
     .where(
       and(
@@ -166,9 +187,7 @@ export async function releaseScanUpload(viewer: SurveyViewer, uploadId: string) 
       ),
     )
     .returning({ s3Key: surveyUpload.s3Key });
-  if (released) {
-    await discardOrphanedUpload(released.s3Key, "survey-scans");
-  }
+  return deleted;
 }
 
 /** Why a file can't be uploaded. Another hub's upload is not described, only said to exist. */
@@ -177,10 +196,14 @@ async function refusalFor(scope: HubSurveyScope, sha256: string) {
     where: (u, { eq }) => eq(u.sha256, sha256),
     columns: { status: true, hubId: true, fileName: true },
   });
-  if (stored?.status === SurveyUploadStatus.PENDING) {
+  if (!stored) {
+    // Given up between the insert and this read.
+    return "Something changed while starting this upload. Add the file again";
+  }
+  if (stored.status === SurveyUploadStatus.PENDING) {
     return "Someone else is uploading this file. Try again later";
   }
-  if (stored?.hubId === scope.hubId) {
+  if (stored.hubId === scope.hubId) {
     return `This file was already uploaded as ${stored.fileName}`;
   }
   return "This file has already been uploaded";
@@ -216,15 +239,7 @@ export async function finishScanUpload(viewer: SurveyViewer, uploadId: string) {
   const stored = await verifyUploadedObject(upload.s3Key, "survey-scans", { withChecksum: true });
   if (stored.status === "not-found") {
     // Nothing is in S3 to delete, so only the row goes, freeing the file.
-    await db
-      .delete(surveyUpload)
-      .where(
-        and(
-          eq(surveyUpload.id, upload.id),
-          eq(surveyUpload.status, SurveyUploadStatus.PENDING),
-          eq(surveyUpload.uploadedBy, viewer.userId),
-        ),
-      );
+    await deleteUnfinishedUpload(viewer, upload.id);
     throw new SurveyError("The file did not reach storage. Upload it again");
   }
   if (stored.status === "error") {
@@ -235,12 +250,7 @@ export async function finishScanUpload(viewer: SurveyViewer, uploadId: string) {
     // doesn't report checksums, not that the bytes differ.
     throw new Error(`Storage reported no checksum for the scan ${upload.s3Key}`);
   }
-  const expectedChecksum = Buffer.from(upload.sha256, "hex").toString("base64");
-  if (
-    stored.contentLength !== upload.byteSize ||
-    stored.contentType !== upload.contentType ||
-    stored.checksumSha256 !== expectedChecksum
-  ) {
+  if (!isStoredAs(stored, upload)) {
     await releaseScanUpload(viewer, upload.id);
     throw new SurveyError("The stored file doesn't match the one you chose. Upload it again");
   }
