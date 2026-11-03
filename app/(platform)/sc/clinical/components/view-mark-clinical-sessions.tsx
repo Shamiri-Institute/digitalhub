@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "#/components/ui/table";
 import { toast, toastOnError } from "#/components/ui/use-toast";
+import type { ClinicalSessionLabel } from "#/db/enums";
 import { cn } from "#/lib/utils";
 
 export const CLINICAL_SESSION_TYPES = [
@@ -32,13 +33,7 @@ export const CLINICAL_SESSION_TYPES = [
   { key: "F4", value: "Follow-Up 4" },
 ] as const;
 
-export default function ViewMarkClinicalSessions({
-  currentcase,
-  userRole,
-}: {
-  currentcase: ClinicalCases;
-  userRole: "CLINICAL_LEAD" | "SUPERVISOR";
-}) {
+export default function ViewMarkClinicalSessions({ currentcase }: { currentcase: ClinicalCases }) {
   const [attendance, setAttendance] = useState<Record<string, boolean | null>>(() => {
     const initialState: Record<string, boolean | null> = {};
     currentcase?.clinicalSessionAttendance?.forEach((record) => {
@@ -55,7 +50,7 @@ export default function ViewMarkClinicalSessions({
     return initialDates;
   });
 
-  const handleAttendance = async (session: string, status: boolean) => {
+  const handleAttendance = async (session: ClinicalSessionLabel, status: boolean) => {
     if (!dates[session]) {
       toast({
         variant: "destructive",
@@ -67,20 +62,17 @@ export default function ViewMarkClinicalSessions({
 
     try {
       const response = await updateClinicalCaseAttendance({
-        supervisorId: currentcase?.currentSupervisorId || null,
         caseId: currentcase.id,
-        session: session,
+        session,
         dateOfSession: dates[session] ?? new Date(),
         attendanceStatus: status,
-        role: userRole,
-        clinicalLeadId: currentcase?.clinicalLeadId || null,
       });
 
       if (!response.success) {
         toast({
           variant: "destructive",
           title: "Something went wrong",
-          description: "Failed to update session attendance",
+          description: response.error ?? "Failed to update session attendance",
         });
         return;
       }

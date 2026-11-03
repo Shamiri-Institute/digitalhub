@@ -65,7 +65,7 @@ export default function ClinicalCasesTable({
             key={`${row.original.id}-${presentingIssuesPhase(row.original)}`}
             currentcase={row.original}
           />
-          <ViewMarkClinicalSessions currentcase={row.original} userRole="SUPERVISOR" />
+          <ViewMarkClinicalSessions currentcase={row.original} />
         </div>
       )}
       emptyStateMessage="No clinical cases found"

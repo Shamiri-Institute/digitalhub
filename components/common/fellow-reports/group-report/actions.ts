@@ -21,20 +21,34 @@ export async function loadFellowGroupReports() {
       and(inArray(g.leaderId, fellowsInCallerScope(caller)), isNull(g.archivedAt)),
     with: {
       leader: { columns: { fellowName: true } },
-      fellowGroupReports: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)], limit: 1 },
+      fellowGroupReports: {
+        with: { fellow: { columns: { fellowName: true } } },
+        orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)],
+      },
     },
     orderBy: (g, { asc }) => asc(g.groupName),
   });
 
-  return groups.map<FellowGroupReportRow>((group) => {
-    const report = group.fellowGroupReports[0] ?? null;
-    return {
+  return groups.flatMap<FellowGroupReportRow>((group) => {
+    if (group.fellowGroupReports.length === 0) {
+      return [
+        {
+          groupId: group.id,
+          groupName: group.groupName,
+          fellowName: group.leader.fellowName ?? "",
+          status: "Not yet submitted",
+          submittedAt: null,
+          report: null,
+        },
+      ];
+    }
+    return group.fellowGroupReports.map(({ fellow: author, ...report }) => ({
       groupId: group.id,
       groupName: group.groupName,
-      fellowName: group.leader.fellowName ?? "",
-      status: report ? "Submitted" : "Not yet submitted",
-      submittedAt: report?.submittedAt ?? null,
+      fellowName: author.fellowName ?? "",
+      status: "Submitted",
+      submittedAt: report.submittedAt,
       report,
-    };
+    }));
   });
 }

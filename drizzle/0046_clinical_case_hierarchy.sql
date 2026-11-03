@@ -1,0 +1,109 @@
+SET LOCAL lock_timeout = '5s';
+--> statement-breakpoint
+-- Merge double-submitted sessions (same case, label and date) into one row: the row with a note,
+-- else the row with a termination, else the newest. Three legacy sessions each hold a second,
+-- different note on the same case, label and date; they stay and the unique index skips them.
+CREATE TEMP TABLE "clinical_session_merge" ON COMMIT DROP AS
+SELECT "id", "keeper_id"
+FROM (
+  SELECT
+    a."id",
+    first_value(a."id") OVER (
+      PARTITION BY a."case_id", a."session", a."date"
+      ORDER BY
+        EXISTS (SELECT 1 FROM "clinical_case_notes" n WHERE n."session_id" = a."id") DESC,
+        EXISTS (SELECT 1 FROM "clinical_case_termination" t WHERE t."session_id" = a."id") DESC,
+        a."created_at" DESC,
+        a."id" DESC
+    ) AS "keeper_id"
+  FROM "clinical_session_attendance" a
+  WHERE a."id" NOT IN ('csess_01jxz4tc7pfzv9e2wc4sta5n9n', 'csess_01k0gwykc9ejg9znamq2dnys9d', 'csess_01kj3dq591e6xv54aanbf3vsfj')
+) ranked
+WHERE "id" <> "keeper_id";
+--> statement-breakpoint
+UPDATE "clinical_case_notes" n SET "session_id" = m."keeper_id"
+FROM "clinical_session_merge" m WHERE n."session_id" = m."id";
+--> statement-breakpoint
+UPDATE "clinical_case_termination" t SET "session_id" = m."keeper_id"
+FROM "clinical_session_merge" m WHERE t."session_id" = m."id";
+--> statement-breakpoint
+DELETE FROM "clinical_session_attendance" a USING "clinical_session_merge" m WHERE a."id" = m."id";
+--> statement-breakpoint
+-- Sessions marked before the typeid rewrite kept the old supervisor and clinical lead ids, because
+-- the columns had no foreign key to cascade through. An old id maps to the case's supervisor or
+-- clinical lead when every case it appears on has the same one.
+UPDATE "clinical_session_attendance" a SET "supervisor_id" = mapped."supervisor_id"
+FROM (
+  SELECT old."supervisor_id" AS "old_id", min(c."current_supervisor_id") AS "supervisor_id"
+  FROM "clinical_session_attendance" old
+  JOIN "clinical_screening_info" c ON c."id" = old."case_id"
+  JOIN "supervisors" s ON s."id" = c."current_supervisor_id"
+  WHERE NOT EXISTS (SELECT 1 FROM "supervisors" current WHERE current."id" = old."supervisor_id")
+  GROUP BY old."supervisor_id"
+  HAVING count(DISTINCT c."current_supervisor_id") = 1
+) mapped
+WHERE a."supervisor_id" = mapped."old_id";
+--> statement-breakpoint
+UPDATE "clinical_session_attendance" a SET "clinical_lead_id" = mapped."clinical_lead_id"
+FROM (
+  SELECT old."clinical_lead_id" AS "old_id", min(c."clinical_lead_id") AS "clinical_lead_id"
+  FROM "clinical_session_attendance" old
+  JOIN "clinical_screening_info" c ON c."id" = old."case_id"
+  JOIN "clinical_leads" cl ON cl."id" = c."clinical_lead_id"
+  WHERE NOT EXISTS (SELECT 1 FROM "clinical_leads" current WHERE current."id" = old."clinical_lead_id")
+  GROUP BY old."clinical_lead_id"
+  HAVING count(DISTINCT c."clinical_lead_id") = 1
+) mapped
+WHERE a."clinical_lead_id" = mapped."old_id";
+--> statement-breakpoint
+UPDATE "clinical_session_attendance" a SET "supervisor_id" = NULL
+WHERE a."supervisor_id" IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM "supervisors" s WHERE s."id" = a."supervisor_id");
+--> statement-breakpoint
+UPDATE "clinical_session_attendance" a SET "clinical_lead_id" = NULL
+WHERE a."clinical_lead_id" IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM "clinical_leads" cl WHERE cl."id" = a."clinical_lead_id");
+--> statement-breakpoint
+CREATE TABLE "clinical_case_reopenings" (
+	"id" text PRIMARY KEY NOT NULL,
+	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	"case_id" text NOT NULL,
+	"termination_id" text,
+	"reason" text NOT NULL,
+	"created_by" text NOT NULL,
+	CONSTRAINT "clinical_case_reopenings_reason_check" CHECK (btrim(reason) <> '')
+);
+--> statement-breakpoint
+ALTER TABLE "clinical_case_termination" DROP CONSTRAINT "clinical_case_termination_session_id_fkey";
+--> statement-breakpoint
+DROP INDEX "clinical_case_termination_session_id_idx";
+--> statement-breakpoint
+ALTER TABLE "clinical_case_reopenings" ADD CONSTRAINT "clinical_case_reopenings_case_id_fkey" FOREIGN KEY ("case_id") REFERENCES "public"."clinical_screening_info"("id") ON DELETE restrict ON UPDATE cascade;
+--> statement-breakpoint
+ALTER TABLE "clinical_case_reopenings" ADD CONSTRAINT "clinical_case_reopenings_termination_id_fkey" FOREIGN KEY ("termination_id") REFERENCES "public"."clinical_case_termination"("id") ON DELETE restrict ON UPDATE cascade;
+--> statement-breakpoint
+ALTER TABLE "clinical_case_reopenings" ADD CONSTRAINT "clinical_case_reopenings_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE cascade;
+--> statement-breakpoint
+CREATE INDEX "clinical_case_reopenings_case_id_idx" ON "clinical_case_reopenings" USING btree ("case_id");
+--> statement-breakpoint
+CREATE UNIQUE INDEX "clinical_case_reopenings_termination_id_key" ON "clinical_case_reopenings" USING btree ("termination_id");
+--> statement-breakpoint
+CREATE INDEX "clinical_case_reopenings_created_by_idx" ON "clinical_case_reopenings" USING btree ("created_by");
+--> statement-breakpoint
+ALTER TABLE "clinical_session_attendance" ADD CONSTRAINT "clinical_session_attendance_supervisor_id_fkey" FOREIGN KEY ("supervisor_id") REFERENCES "public"."supervisors"("id") ON DELETE set null ON UPDATE cascade;
+--> statement-breakpoint
+ALTER TABLE "clinical_session_attendance" ADD CONSTRAINT "clinical_session_attendance_clinical_lead_id_fkey" FOREIGN KEY ("clinical_lead_id") REFERENCES "public"."clinical_leads"("id") ON DELETE set null ON UPDATE cascade;
+--> statement-breakpoint
+CREATE INDEX "clinical_case_termination_session_id_case_id_idx" ON "clinical_case_termination" USING btree ("session_id","case_id");
+--> statement-breakpoint
+CREATE UNIQUE INDEX "clinical_session_attendance_case_id_session_date_key" ON "clinical_session_attendance" USING btree ("case_id","session","date") WHERE id NOT IN ('csess_01jxz4tc7pfzv9e2wc4sta5n9n', 'csess_01k0gwykc9ejg9znamq2dnys9d', 'csess_01kj3dq591e6xv54aanbf3vsfj');
+--> statement-breakpoint
+CREATE UNIQUE INDEX "clinical_session_attendance_case_id_id_key" ON "clinical_session_attendance" USING btree ("case_id","id");
+--> statement-breakpoint
+CREATE INDEX "clinical_session_attendance_supervisor_id_idx" ON "clinical_session_attendance" USING btree ("supervisor_id");
+--> statement-breakpoint
+CREATE INDEX "clinical_session_attendance_clinical_lead_id_idx" ON "clinical_session_attendance" USING btree ("clinical_lead_id");
+--> statement-breakpoint
+ALTER TABLE "clinical_session_attendance" ADD CONSTRAINT "clinical_session_attendance_session_check" CHECK (session IN ('Pre', 'S1', 'S2', 'S3', 'S4', 'F1', 'F2', 'F3', 'F4', 'F5'));
+--> statement-breakpoint
+ALTER TABLE "clinical_case_termination" ADD CONSTRAINT "clinical_case_termination_session_id_case_id_fkey" FOREIGN KEY ("session_id","case_id") REFERENCES "public"."clinical_session_attendance"("id","case_id") ON DELETE restrict ON UPDATE cascade;

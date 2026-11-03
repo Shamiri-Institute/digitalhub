@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.9.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.8.0...v2.9.0) (2026-11-02)
+
+### Features
+
+- **clinical:** flag cases of students with more than one open case ([#1025](https://github.com/Shamiri-Institute/digitalhub/issues/1025)) ([56c2508](https://github.com/Shamiri-Institute/digitalhub/commit/56c2508ecacab0c683a39b8d411849cc32b89fc5))
+- **clinical:** send each case termination and reopening to the clinical lead for review ([#1024](https://github.com/Shamiri-Institute/digitalhub/issues/1024)) ([e96ae92](https://github.com/Shamiri-Institute/digitalhub/commit/e96ae92ab301f614b7144c49f33c8d4a4c0ebfa0))
+- **clinical:** show the source and date of a case's risk level ([#1023](https://github.com/Shamiri-Institute/digitalhub/issues/1023)) ([0e621c8](https://github.com/Shamiri-Institute/digitalhub/commit/0e621c8457992ffed28770fd4121d1910b99bae7))
+
+### Bug Fixes
+
+- **clinical:** enforce the clinical case hierarchy (ENG-2399) ([#957](https://github.com/Shamiri-Institute/digitalhub/issues/957)) ([20798be](https://github.com/Shamiri-Institute/digitalhub/commit/20798bef7d95077ad2044a8c6a50fb8560f35bd7))
+
+## [2.8.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.7.2...v2.8.0) (2026-11-02)
+
+### Features
+
+- **admin:** add a hub page with a schools tab, linked from the hubs list ([#1009](https://github.com/Shamiri-Institute/digitalhub/issues/1009)) ([8d19866](https://github.com/Shamiri-Institute/digitalhub/commit/8d198662dc03bab147ceddc23412bf814e0df7ac))
+- **admin:** add the remaining hub tabs and remove the admin-wide pages ([#1016](https://github.com/Shamiri-Institute/digitalhub/issues/1016)) ([ccd7a06](https://github.com/Shamiri-Institute/digitalhub/commit/ccd7a06e62fd436cf84f9899d8f5cfe69cb17903))
+- **admin:** let super admins add, archive and restore hub managers from the hub page ([#1020](https://github.com/Shamiri-Institute/digitalhub/issues/1020)) ([70a2b35](https://github.com/Shamiri-Institute/digitalhub/commit/70a2b35a38a3e531f92fffb397310a32c90d9f8a))
+- **admin:** move hub editing into a hub settings tab ([#1019](https://github.com/Shamiri-Institute/digitalhub/issues/1019)) ([abfc974](https://github.com/Shamiri-Institute/digitalhub/commit/abfc9747d706d38d8702592ea7ccbf641d67e85d))
+- **admin:** show hub counts and session progress on the hubs list ([#1017](https://github.com/Shamiri-Institute/digitalhub/issues/1017)) ([fb4832d](https://github.com/Shamiri-Institute/digitalhub/commit/fb4832d2450e506f5580113ea305760b47996c3c))
+- **admin:** show hub stats on the hub page ([#1014](https://github.com/Shamiri-Institute/digitalhub/issues/1014)) ([fb071ba](https://github.com/Shamiri-Institute/digitalhub/commit/fb071ba929099999c6441bd25a9079a97ec8935c))
+
 ## [2.7.2](https://github.com/Shamiri-Institute/digitalhub/compare/v2.7.1...v2.7.2) (2026-11-02)
 
 ### Bug Fixes

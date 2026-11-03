@@ -109,7 +109,7 @@ test("case notes show a failed load as a failure and keep the sessions locked", 
   // A session to choose, so the select would be enabled had the notes loaded.
   await db.insert(clinicalSessionAttendance).values({
     caseId: ownCase.caseId,
-    session: `e2e-failed-notes-${Date.now()}`,
+    session: "S1",
     supervisorId: fixture.supervisorId,
     attendanceStatus: true,
   });

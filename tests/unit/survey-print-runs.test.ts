@@ -1,7 +1,7 @@
 // @vitest-environment node
 // The print form is tested through the UI in tests/e2e/hub-coordinator/print-runs.spec.ts; these
 // cover what a screen can't reach (concurrent runs, a resubmitted run, a run past the limit, a
-// file issued twice, the survey lock while copies are issued) and the writes the 0042 and 0047
+// file issued twice, the survey lock while copies are issued) and the writes the 0042 and 0049
 // triggers must refuse, which no screen can attempt.
 import { and, asc, eq, inArray, isNull, sql, TransactionRollbackError } from "drizzle-orm";
 import { DatabaseError } from "pg";

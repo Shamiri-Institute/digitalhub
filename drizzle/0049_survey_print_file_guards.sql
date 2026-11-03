@@ -1,4 +1,4 @@
--- Integrity rules for the print files from 0046 that drizzle cannot express in db/schema.ts.
+-- Integrity rules for the print files from 0048 that drizzle cannot express in db/schema.ts.
 --
 -- A run is now made with its file plan and never changes. What used to be checked when a run's
 -- copies were inserted (the school is in the hub, each student at their school) is checked when

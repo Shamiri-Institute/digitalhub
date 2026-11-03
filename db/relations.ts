@@ -5,9 +5,10 @@ import {
   adminUser,
   attendanceDocuments,
   clinicalCaseNotes,
+  clinicalCaseReopening,
+  clinicalCaseReview,
   clinicalCaseTermination,
   clinicalCaseTransferTrail,
-  clinicalExpertCaseNotes,
   clinicalFollowUpTreatmentPlan,
   clinicalFollowUpTreatmentPlanAuditTrail,
   clinicalLead,
@@ -111,6 +112,28 @@ export const clinicalCaseNotesRelations = relations(clinicalCaseNotes, ({ one })
   }),
 }));
 
+export const clinicalCaseReopeningRelations = relations(clinicalCaseReopening, ({ one }) => ({
+  case: one(clinicalScreeningInfo, {
+    fields: [clinicalCaseReopening.caseId],
+    references: [clinicalScreeningInfo.id],
+  }),
+  user: one(user, {
+    fields: [clinicalCaseReopening.createdBy],
+    references: [user.id],
+  }),
+}));
+
+export const clinicalCaseReviewRelations = relations(clinicalCaseReview, ({ one }) => ({
+  termination: one(clinicalCaseTermination, {
+    fields: [clinicalCaseReview.terminationId],
+    references: [clinicalCaseTermination.id],
+  }),
+  reopening: one(clinicalCaseReopening, {
+    fields: [clinicalCaseReview.reopeningId],
+    references: [clinicalCaseReopening.id],
+  }),
+}));
+
 export const clinicalCaseTerminationRelations = relations(clinicalCaseTermination, ({ one }) => ({
   case: one(clinicalScreeningInfo, {
     fields: [clinicalCaseTermination.caseId],
@@ -139,14 +162,6 @@ export const clinicalCaseTransferTrailRelations = relations(
     }),
   }),
 );
-
-export const clinicalExpertCaseNotesRelations = relations(clinicalExpertCaseNotes, ({ one }) => ({
-  case: one(clinicalScreeningInfo, {
-    fields: [clinicalExpertCaseNotes.caseId],
-    references: [clinicalScreeningInfo.id],
-    relationName: "ClinicalExpertCaseNotes_case",
-  }),
-}));
 
 export const clinicalFollowUpTreatmentPlanRelations = relations(
   clinicalFollowUpTreatmentPlan,
@@ -223,9 +238,6 @@ export const clinicalScreeningInfoRelations = relations(clinicalScreeningInfo, (
   }),
   caseTransferTrail: many(clinicalCaseTransferTrail, {
     relationName: "ClinicalCaseTransferTrail_case",
-  }),
-  consultingClinicalExpert: many(clinicalExpertCaseNotes, {
-    relationName: "ClinicalExpertCaseNotes_case",
   }),
   sessions: many(clinicalSessionAttendance, { relationName: "ClinicalSessionAttendance_case" }),
   followUptreatmentPlan: one(clinicalFollowUpTreatmentPlan),

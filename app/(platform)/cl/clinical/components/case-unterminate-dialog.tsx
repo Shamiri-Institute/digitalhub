@@ -11,7 +11,9 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "#/components/ui/dialog";
+import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
+import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 
 export default function CaseUnterminateDialog({
@@ -25,11 +27,12 @@ export default function CaseUnterminateDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [reason, setReason] = useState("");
 
   const onConfirmSubmit = async () => {
     setLoading(true);
     try {
-      const response = await unterminateClinicalCase({ caseId });
+      const response = await unterminateClinicalCase({ caseId, reason });
       if (response.success) {
         toast({ title: "Case un-terminated successfully" });
         setOpen(false);
@@ -50,7 +53,13 @@ export default function CaseUnterminateDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) setReason("");
+        setOpen(nextOpen);
+      }}
+    >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="w-1/3 max-w-none">
         <DialogHeader>
@@ -58,13 +67,23 @@ export default function CaseUnterminateDialog({
         </DialogHeader>
         <div className="flex flex-col gap-y-4">
           <Separator />
-          <span>Are you sure?</span>
           <div className="flex gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
             <Icons.info className="mt-1 h-4 w-4 shrink-0 stroke-2" />
             <div>
-              This will restore the case to Active status and remove the existing termination
-              record. Please be sure of your action before you confirm.
+              This will restore the case to Active status. The termination record stays in the case
+              history.
             </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="reopen-reason">
+              Reason for reopening <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="reopen-reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              rows={3}
+            />
           </div>
         </div>
         <Separator />
@@ -78,7 +97,7 @@ export default function CaseUnterminateDialog({
           </Button>
           <Button
             variant="destructive"
-            disabled={loading}
+            disabled={loading || !reason.trim()}
             loading={loading}
             onClick={() => {
               void onConfirmSubmit();

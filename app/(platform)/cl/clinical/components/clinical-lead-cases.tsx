@@ -29,7 +29,7 @@ export default function ClinicalLeadCases({
               key={`${row.original.id}-${presentingIssuesPhase(row.original)}`}
               currentcase={row.original}
             />
-            <ViewMarkClinicalSessions currentcase={row.original} userRole="CLINICAL_LEAD" />
+            <ViewMarkClinicalSessions currentcase={row.original} />
           </div>
         )}
         emptyStateMessage="No clinical cases created by you"

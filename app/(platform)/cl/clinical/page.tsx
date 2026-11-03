@@ -6,8 +6,9 @@ import {
   getSchoolsInClinicalLeadHub,
 } from "#/app/(platform)/cl/clinical/actions";
 import ClinicalLeadCases from "#/app/(platform)/cl/clinical/components/clinical-lead-cases";
-import { getCasesReferredToMe } from "#/app/(platform)/sc/clinical/action";
+import { getCasesReferredToMe, getCasesToReview } from "#/app/(platform)/sc/clinical/action";
 import { CasesReferredToMe } from "#/components/common/clinical/cases-referred-to-me";
+import { CasesToReview } from "#/components/common/clinical/cases-to-review";
 import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-clinical-case-form";
 import CasesBreakdown from "#/components/common/clinical/cases-breakdown";
 import AllHubClinicalCasesTable from "#/components/common/clinical/hub-clinical-cases-table";
@@ -22,11 +23,13 @@ export default async function ClinicalPage() {
     allClinicalLeadCases,
     { schools, fellowsInProject, supervisorsInHub, currentClinicalLeadId, hubs },
     referredCases,
+    casesToReview,
   ] = await Promise.all([
     getClinicalCasesInHub(),
     getClinicalCasesCreatedByClinicalLead(),
     getSchoolsInClinicalLeadHub(),
     getCasesReferredToMe(),
+    getCasesToReview(),
   ]);
 
   if (!currentClinicalLeadId) {
@@ -51,6 +54,7 @@ export default async function ClinicalPage() {
         </AddNewClinicalCaseForm>
       </div>
       <CasesReferredToMe cases={referredCases} />
+      <CasesToReview reviews={casesToReview} />
       <CasesBreakdown
         casesByStatus={casesData.casesByStatus}
         casesByRiskStatus={casesData.casesByRiskStatus}

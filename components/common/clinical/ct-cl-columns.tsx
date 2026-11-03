@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
 import Image from "next/image";
 import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import ClinicalLeadCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown-cl-ct";
@@ -62,6 +63,9 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
         <div className="flex items-center gap-1">
           <span>{row.original.pseudonym}</span>
           {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" /> : null}
+          {row.original.studentHasMultipleOpenCases ? (
+            <Badge variant="warning">Multiple open cases</Badge>
+          ) : null}
         </div>
       );
     },
@@ -76,9 +80,14 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
     cell: ({ row }) => {
       const riskLevel = row.original.riskStatus || "N/A";
       return (
-        <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
-          {riskLevel}
-        </Badge>
+        <div className="flex flex-col items-start gap-1">
+          <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
+            {riskLevel}
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            {row.original.riskSource} · {format(row.original.riskDate, "dd MMM yyyy")}
+          </span>
+        </div>
       );
     },
   },

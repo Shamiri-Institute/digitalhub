@@ -3,7 +3,6 @@ import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import CaseNotesForm from "#/app/(platform)/sc/clinical/components/case-notes-form";
 import CaseTerminationForm from "#/app/(platform)/sc/clinical/components/case-termination-form";
 import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/components/cases-sessions-attendance-history";
-import ConsultClinicalExpert from "#/app/(platform)/sc/clinical/components/consult-clinical-expert";
 import MarkCaseAsSpecial from "#/app/(platform)/sc/clinical/components/mark-case-as-special";
 import ReferClinicalCase, {
   type ReferralOptions,
@@ -49,21 +48,10 @@ export default function ClinicalCaseActionsDropdownMenu({
             Edit student information
           </div>
         </ViewEditClinicalCaseStudentInfo>
-        {role === "SUPERVISOR" && (
-          <>
-            {referralOptions && (
-              <ReferClinicalCase clinicalCase={clinicalCase} referralOptions={referralOptions}>
-                <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-                  Refer case
-                </div>
-              </ReferClinicalCase>
-            )}
-            <ConsultClinicalExpert clinicalCase={clinicalCase}>
-              <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-                Consult clinical expert
-              </div>
-            </ConsultClinicalExpert>
-          </>
+        {role === "SUPERVISOR" && referralOptions && (
+          <ReferClinicalCase clinicalCase={clinicalCase} referralOptions={referralOptions}>
+            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">Refer case</div>
+          </ReferClinicalCase>
         )}
         <MarkCaseAsSpecial caseId={clinicalCase.id} reason={clinicalCase.flaggedReason}>
           <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
@@ -113,7 +101,14 @@ export default function ClinicalCaseActionsDropdownMenu({
           </div>
         </TriggerFollowupDialog>
         <CaseTerminationForm clinicalCase={clinicalCase}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+          <div
+            className={cn(
+              "px-2 py-1.5 text-sm",
+              clinicalCase.caseStatus === "Terminated"
+                ? "pointer-events-none cursor-not-allowed text-gray-400"
+                : "cursor-pointer text-shamiri-black",
+            )}
+          >
             Terminate case
           </div>
         </CaseTerminationForm>

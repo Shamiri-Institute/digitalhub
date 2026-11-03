@@ -1,10 +1,14 @@
-import type { Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { eq } from "drizzle-orm";
+import { format } from "date-fns";
+import { eq, or } from "drizzle-orm";
 
 import { db } from "#/db/client";
+import type { ClinicalSessionLabel } from "#/db/enums";
 import {
   clinicalCaseNotes,
+  clinicalCaseReopening,
+  clinicalCaseReview,
   clinicalCaseTermination,
   clinicalScreeningInfo,
   clinicalSessionAttendance,
@@ -274,14 +278,19 @@ test("a supervisor moves their case to follow-up", async ({ page, context, undo 
  * Gives the fixture case a clinical session dated today, labelled so the test can pick it, and
  * queues its removal. Notes and terminations must name one of the case's sessions.
  */
-async function addClinicalSession(sessionLabel: string, undo: Undo) {
+async function addClinicalSession(
+  sessionLabel: ClinicalSessionLabel,
+  undo: Undo,
+  marked: { date?: Date; attendanceStatus?: boolean } = {},
+) {
   const [clinicalSession] = await db
     .insert(clinicalSessionAttendance)
     .values({
       caseId,
       session: sessionLabel,
       supervisorId: owner.profileId,
-      attendanceStatus: true,
+      attendanceStatus: marked.attendanceStatus ?? true,
+      date: marked.date,
     })
     .returning({ id: clinicalSessionAttendance.id });
   if (!clinicalSession) throw new Error("could not insert the clinical session fixture");
@@ -293,13 +302,79 @@ async function addClinicalSession(sessionLabel: string, undo: Undo) {
   return clinicalSession.id;
 }
 
+test("a case without notes shows its intake risk", async ({ page, context, undo }) => {
+  await db
+    .update(clinicalScreeningInfo)
+    .set({ riskStatus: "High" })
+    .where(eq(clinicalScreeningInfo.id, caseId));
+  undo(() =>
+    db
+      .update(clinicalScreeningInfo)
+      .set({ riskStatus: "No" })
+      .where(eq(clinicalScreeningInfo.id, caseId)),
+  );
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+
+  await expect(await searchRows(page, pseudonym)).toContainText(/high/i);
+});
+
+test("a case's risk names its source and date: intake until the first note, then the note", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixtureCase = await db.query.clinicalScreeningInfo.findFirst({
+    where: (c, { eq }) => eq(c.id, caseId),
+    columns: { createdAt: true },
+  });
+  required(fixtureCase, `case ${caseId} is gone`);
+  const clinicalSessionId = await addClinicalSession("S2", undo);
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+  await expect(await searchRows(page, pseudonym)).toContainText(
+    `Intake/triage · ${format(fixtureCase.createdAt, "dd MMM yyyy")}`,
+  );
+
+  const [note] = await db
+    .insert(clinicalCaseNotes)
+    .values({
+      caseId,
+      sessionId: clinicalSessionId,
+      createdBy: await ownerUserId(),
+      presentingIssues: "e2e",
+      orsAssessment: 20,
+      riskLevel: "high",
+      necessaryConditions: "e2e",
+      otherIntervention: "",
+      interventionExplanation: "e2e",
+      studentResponseExplanations: "e2e",
+      followUpPlan: "INDIVIDUAL",
+      followUpPlanExplanation: "e2e",
+    })
+    .returning({ createdAt: clinicalCaseNotes.createdAt });
+  required(note, "could not insert the case note fixture");
+  undo(() =>
+    db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.sessionId, clinicalSessionId)),
+  );
+  const noteSource = `S2 note · ${format(note.createdAt, "dd MMM yyyy")}`;
+
+  await page.reload();
+  await expect(await searchRows(page, pseudonym)).toContainText(noteSource);
+
+  await context.clearCookies();
+  await signInAs(context, "CLINICAL_TEAM");
+  await page.goto(getUrl("/ct/clinical"));
+  await expect(await searchRows(page, pseudonym)).toContainText(noteSource);
+});
+
 test("a supervisor writes case notes and reads them back after a reload", async ({
   page,
   context,
   undo,
 }) => {
-  const sessionLabel = `e2e-notes-${Date.now()}`;
-  const presentingIssues = `${sessionLabel} presenting issues`;
+  const sessionLabel = "S1";
+  const presentingIssues = `e2e-notes-${Date.now()} presenting issues`;
   const clinicalSessionId = await addClinicalSession(sessionLabel, undo);
   undo(() =>
     db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.sessionId, clinicalSessionId)),
@@ -311,7 +386,7 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   async function openNotesForSession() {
     await openCaseAction(page, pseudonym, "Case notes");
     await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-    await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+    await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   }
 
   await openNotesForSession();
@@ -327,7 +402,9 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   await dialog.getByRole("button", { name: "Submit" }).click();
   await expect(dialog).toBeHidden();
 
+  // A saved session's notes open read-only with the stored text, and the case takes their risk.
   await page.reload();
+  await expect(await searchRows(page, pseudonym)).toContainText(/medium/i);
   await openNotesForSession();
   await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue(presentingIssues);
   await expect(dialog.getByRole("button", { name: "Submit" })).toBeHidden();
@@ -350,7 +427,7 @@ test("case notes typed and then cancelled are gone the next time the dialog open
   context,
   undo,
 }) => {
-  const sessionLabel = `e2e-cancelled-notes-${Date.now()}`;
+  const sessionLabel = "S2";
   await addClinicalSession(sessionLabel, undo);
   await signInWithEmail(context, owner.email);
   await page.goto(getUrl("/sc/clinical"));
@@ -358,7 +435,7 @@ test("case notes typed and then cancelled are gone the next time the dialog open
   const dialog = page.getByRole("dialog", { name: "Case Notes" });
   await openCaseAction(page, pseudonym, "Case notes");
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   await dialog.getByRole("textbox", { name: /Situation/ }).fill("Typed, then cancelled");
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toBeHidden();
@@ -369,8 +446,8 @@ test("case notes typed and then cancelled are gone the next time the dialog open
   await expect(dialog.getByRole("textbox", { name: /Situation/ })).toHaveValue("");
 });
 test("a supervisor terminates their case", async ({ page, context, undo }) => {
-  const sessionLabel = `e2e-termination-${Date.now()}`;
-  const terminationReasonExplanation = `${sessionLabel} explanation`;
+  const sessionLabel = "S3";
+  const terminationReasonExplanation = `e2e-termination-${Date.now()} explanation`;
   const clinicalSessionId = await addClinicalSession(sessionLabel, undo);
   undo(
     () =>
@@ -389,7 +466,7 @@ test("a supervisor terminates their case", async ({ page, context, undo }) => {
   await openCaseAction(page, pseudonym, "Terminate case");
   const dialog = page.getByRole("dialog", { name: "Terminate Case" });
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
-  await page.getByRole("option", { name: new RegExp(sessionLabel) }).click();
+  await page.getByRole("option", { name: new RegExp(`^${sessionLabel} `) }).click();
   await dialog.getByRole("combobox").filter({ hasText: "Student no-show" }).click();
   await page.getByRole("option", { name: "Student refused to return to sessions" }).click();
   await dialog
@@ -409,4 +486,199 @@ test("a supervisor terminates their case", async ({ page, context, undo }) => {
   const reasons = page.getByRole("dialog");
   await expect(reasons).toContainText("Student refused to return to sessions");
   await expect(reasons).toContainText(terminationReasonExplanation);
+
+  await context.clearCookies();
+  await markReviewedAsHubClinicalLead(page, context, "Terminated", terminationReasonExplanation);
+});
+
+async function hubClinicalLeadEmail() {
+  const hubLeads = await db.query.clinicalLead.findMany({
+    where: (cl, { eq }) => eq(cl.assignedHubId, owner.hubId),
+    columns: { id: true },
+    orderBy: (cl, { asc }) => asc(cl.id),
+  });
+  let hubLeadEmail: string | undefined;
+  for (const lead of hubLeads) {
+    hubLeadEmail ??= (await emailForProfile(lead.id, "CLINICAL_LEAD")) ?? undefined;
+  }
+  required(hubLeadEmail, "no clinical lead in the supervisor's hub");
+  return hubLeadEmail;
+}
+
+async function markReviewedAsHubClinicalLead(
+  page: Page,
+  context: BrowserContext,
+  kind: "Terminated" | "Reopened",
+  reason: string,
+) {
+  const hubLeadEmail = await hubClinicalLeadEmail();
+  await signInWithEmail(context, hubLeadEmail);
+  await page.goto(getUrl("/cl/clinical"));
+  const review = page
+    .getByRole("listitem")
+    .filter({ hasText: pseudonym })
+    .filter({ hasText: kind });
+  await expect(review).toContainText(reason);
+  await review.getByRole("button", { name: "Mark reviewed" }).click();
+  await expect(page.getByText("Case marked reviewed").first()).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole("heading", { name: /Cases to review/ })).toBeVisible();
+  await expect(review).toHaveCount(0);
+
+  // The reviewer comes from the session and no page shows it, so read it.
+  const reviewer = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.email, hubLeadEmail),
+    columns: { id: true },
+  });
+  const reviewedCaseReviews = await db
+    .select({ reviewedBy: clinicalCaseReview.reviewedBy })
+    .from(clinicalCaseReview)
+    .leftJoin(
+      clinicalCaseTermination,
+      eq(clinicalCaseReview.terminationId, clinicalCaseTermination.id),
+    )
+    .leftJoin(clinicalCaseReopening, eq(clinicalCaseReview.reopeningId, clinicalCaseReopening.id))
+    .where(
+      or(eq(clinicalCaseTermination.caseId, caseId), eq(clinicalCaseReopening.caseId, caseId)),
+    );
+  expect(reviewedCaseReviews).toEqual([{ reviewedBy: reviewer?.id }]);
+}
+
+async function ownerUserId() {
+  const ownerUser = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.email, owner.email),
+    columns: { id: true },
+  });
+  required(ownerUser, "the supervisor has no user");
+  return ownerUser.id;
+}
+
+async function openAttendanceRow(page: Page, sessionDate: Date) {
+  await openCaseAction(page, pseudonym, "View attendance history");
+  const history = page.getByRole("dialog", { name: "Clinical attendance history" });
+  return history.getByRole("row").filter({ hasText: format(sessionDate, "dd MMM yyyy") });
+}
+
+async function markAttendance(page: Page, row: ReturnType<Page["getByRole"]>, mark: string) {
+  await chooseRowAction(page, row, "Mark attendance");
+  const dialog = page.getByRole("dialog", { name: "Mark Attendance" });
+  await dialog.getByRole("radio", { name: mark }).click();
+  await dialog.getByRole("button", { name: "Save changes" }).click();
+}
+
+test("a session label attended once cannot be marked attended again", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const attendedOn = new Date("2026-01-05T09:00:00Z");
+  const missedOn = new Date("2026-01-12T09:00:00Z");
+  await addClinicalSession("S4", undo, { date: attendedOn });
+  await addClinicalSession("S4", undo, { date: missedOn, attendanceStatus: false });
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+
+  await markAttendance(page, await openAttendanceRow(page, missedOn), "Attended");
+  await expect(page.getByText("S4 is already attended on this case").first()).toBeVisible();
+
+  await page.reload();
+  await expect(await openAttendanceRow(page, missedOn)).toContainText("Missed");
+});
+
+test("a session with case notes cannot be marked missed", async ({ page, context, undo }) => {
+  const sessionDate = new Date("2026-01-19T09:00:00Z");
+  const clinicalSessionId = await addClinicalSession("S1", undo, { date: sessionDate });
+  await db.insert(clinicalCaseNotes).values({
+    caseId,
+    sessionId: clinicalSessionId,
+    createdBy: await ownerUserId(),
+    presentingIssues: "e2e",
+    orsAssessment: 20,
+    riskLevel: "no",
+    necessaryConditions: "e2e",
+    otherIntervention: "",
+    interventionExplanation: "e2e",
+    studentResponseExplanations: "e2e",
+    followUpPlan: "INDIVIDUAL",
+    followUpPlanExplanation: "e2e",
+  });
+  undo(() =>
+    db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.sessionId, clinicalSessionId)),
+  );
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+
+  await markAttendance(page, await openAttendanceRow(page, sessionDate), "Missed");
+  await expect(
+    page.getByText("This session has case notes, so it stays attended").first(),
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(await openAttendanceRow(page, sessionDate)).toContainText("Attended");
+});
+
+test("a clinical lead reopens a terminated case with a reason and keeps its termination", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const hubLeadEmail = await hubClinicalLeadEmail();
+  const clinicalSessionId = await addClinicalSession("S3", undo);
+  const [termination] = await db
+    .insert(clinicalCaseTermination)
+    .values({
+      caseId,
+      sessionId: clinicalSessionId,
+      terminationDate: new Date(),
+      terminationReason: "Student refused to return to sessions",
+      terminationReasonExplanation: "e2e",
+      createdBy: await ownerUserId(),
+    })
+    .returning({ id: clinicalCaseTermination.id });
+  required(termination, "could not insert the termination fixture");
+  await db
+    .update(clinicalScreeningInfo)
+    .set({ caseStatus: "Terminated" })
+    .where(eq(clinicalScreeningInfo.id, caseId));
+  undo(
+    () => db.delete(clinicalCaseTermination).where(eq(clinicalCaseTermination.id, termination.id)),
+    () => db.delete(clinicalCaseReopening).where(eq(clinicalCaseReopening.caseId, caseId)),
+    () =>
+      db
+        .update(clinicalScreeningInfo)
+        .set({ caseStatus: "Active" })
+        .where(eq(clinicalScreeningInfo.id, caseId)),
+  );
+  const reason = `e2e-reopen-${Date.now()}`;
+
+  await signInWithEmail(context, hubLeadEmail);
+  await page.goto(getUrl("/cl/clinical"));
+  await openCaseAction(page, pseudonym, "Un-terminate case");
+  const dialog = page.getByRole("dialog", { name: `Un-terminate case - ${pseudonym}` });
+  await expect(dialog.getByRole("button", { name: "Confirm" })).toBeDisabled();
+  await dialog.getByRole("textbox", { name: /Reason for reopening/ }).fill(reason);
+  await dialog.getByRole("button", { name: "Confirm" }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.reload();
+  // The hub table has no status column; its actions menu offers un-terminating only a terminated case.
+  await (await searchRows(page, pseudonym)).getByRole("cell").last().click();
+  await expect(page.getByRole("menu")).toContainText("Actions", { ignoreCase: true });
+  await expect(page.getByRole("menu").getByText("Un-terminate case")).toHaveCount(0);
+
+  // No page shows the termination history, so read it.
+  const reopening = await db.query.clinicalCaseReopening.findFirst({
+    where: (r, { eq }) => eq(r.caseId, caseId),
+    columns: { terminationId: true, reason: true },
+  });
+  expect(reopening).toEqual({ terminationId: termination.id, reason });
+  const kept = await db.query.clinicalCaseTermination.findFirst({
+    where: (t, { eq }) => eq(t.id, termination.id),
+    columns: { id: true },
+  });
+  expect(kept).toEqual({ id: termination.id });
+
+  await context.clearCookies();
+  await markReviewedAsHubClinicalLead(page, context, "Reopened", reason);
 });
