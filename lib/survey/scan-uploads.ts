@@ -10,7 +10,7 @@ import { db } from "#/db/client";
 import { SurveyAuditActor, SurveyUploadStatus } from "#/db/enums";
 import { surveyUpload } from "#/db/schema";
 import { SurveyError } from "#/lib/actions/survey/respond";
-import { NotFoundError } from "#/lib/auth/require-auth-role";
+import { ForbiddenRoleError, NotFoundError } from "#/lib/auth/require-auth-role";
 import { type HubSurveyScope, type SurveyViewer, surveyHubScope } from "#/lib/auth/survey-access";
 import { objectId } from "#/lib/crypto";
 import { getPresignedUploadUrl } from "#/lib/s3/s3.service";
@@ -27,12 +27,16 @@ export type ScanFile = {
   sha256: string;
 };
 
-export type StartedScanUpload = {
-  uploadId: string;
-  url: string;
-  /** Every header the PUT must send; S3 refuses it if one differs. */
-  headers: Record<string, string>;
-};
+export type StartedScanUpload =
+  | {
+      uploadId: string;
+      stored: false;
+      url: string;
+      /** Every header the PUT must send; S3 refuses it if one differs. */
+      headers: Record<string, string>;
+    }
+  /** An earlier try already put these bytes in S3, so the upload only needs finishing. */
+  | { uploadId: string; stored: true };
 
 /**
  * Holds the file's hash for this upload and presigns its PUT, or refuses a file that is already
@@ -75,6 +79,9 @@ export async function startScanUpload(
   if (!held) {
     throw new SurveyError(await refusalFor(scope, file.sha256));
   }
+  if (held.id !== uploadId && (await holdsFile(held.s3Key, file))) {
+    return { uploadId: held.id, stored: true };
+  }
 
   try {
     const { url, headers } = await getPresignedUploadUrl(
@@ -90,7 +97,7 @@ export async function startScanUpload(
         ifNoneMatch: false,
       },
     );
-    return { uploadId: held.id, url, headers };
+    return { uploadId: held.id, stored: false, url, headers };
   } catch (error) {
     // Free the hash, so the file isn't held for an hour by an upload that never began. Only a row
     // this call made: a resumed one may already have its bytes in S3.
@@ -102,6 +109,57 @@ export async function startScanUpload(
         );
     }
     throw error;
+  }
+}
+
+/** Whether S3 already holds `file` at `key`, from an earlier PUT whose finish didn't happen. */
+async function holdsFile(key: string, file: ScanFile) {
+  const stored = await verifyUploadedObject(key, "survey-scans", { withChecksum: true });
+  return (
+    stored.status === "ok" &&
+    stored.contentLength === file.byteSize &&
+    stored.checksumSha256 === Buffer.from(file.sha256, "hex").toString("base64")
+  );
+}
+
+/**
+ * Keeps an unfinished upload its uploader's while its bytes are still moving: the hour after which
+ * anyone may take it over starts again.
+ */
+export async function keepScanUploadHeld(viewer: SurveyViewer, uploadId: string) {
+  const [held] = await db
+    .update(surveyUpload)
+    .set({ updatedAt: new Date() })
+    .where(
+      and(
+        eq(surveyUpload.id, uploadId),
+        eq(surveyUpload.uploadedBy, viewer.userId),
+        eq(surveyUpload.status, SurveyUploadStatus.PENDING),
+      ),
+    )
+    .returning({ id: surveyUpload.id });
+  if (!held) {
+    throw new NotFoundError("Upload");
+  }
+}
+
+/**
+ * Gives up an unfinished upload, so the file is free for anyone at once, and deletes whatever an
+ * earlier try put in S3. Giving up one that is finished, or no longer the caller's, does nothing.
+ */
+export async function releaseScanUpload(viewer: SurveyViewer, uploadId: string) {
+  const [released] = await db
+    .delete(surveyUpload)
+    .where(
+      and(
+        eq(surveyUpload.id, uploadId),
+        eq(surveyUpload.uploadedBy, viewer.userId),
+        eq(surveyUpload.status, SurveyUploadStatus.PENDING),
+      ),
+    )
+    .returning({ s3Key: surveyUpload.s3Key });
+  if (released) {
+    await discardOrphanedUpload(released.s3Key, "survey-scans");
   }
 }
 
@@ -136,7 +194,14 @@ export async function finishScanUpload(viewer: SurveyViewer, uploadId: string) {
     return upload;
   }
   // The coordinator may have moved hub since starting, or the hub been archived.
-  await surveyHubScope(viewer, upload.hubId);
+  try {
+    await surveyHubScope(viewer, upload.hubId);
+  } catch (error) {
+    if (error instanceof ForbiddenRoleError || error instanceof NotFoundError) {
+      throw new SurveyError("You no longer upload for this file's hub, so it can't be finished");
+    }
+    throw error;
+  }
 
   const stored = await verifyUploadedObject(upload.s3Key, "survey-scans", { withChecksum: true });
   if (stored.status === "not-found") {

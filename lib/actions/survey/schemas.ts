@@ -113,6 +113,11 @@ export const StartScanUploadSchema = z.object({
   sha256: z.string().regex(/^[0-9a-f]{64}$/, { error: "Please choose the file again" }),
 });
 
-export const FinishScanUploadSchema = z.object({
+export const ScanUploadSchema = z.object({
   uploadId: stringValidation("Missing upload"),
+});
+
+export const FinishScanUploadSchema = ScanUploadSchema.extend({
+  /** False while more files of the batch are still to come, so the page re-renders once. */
+  refreshPage: z.boolean().default(true),
 });

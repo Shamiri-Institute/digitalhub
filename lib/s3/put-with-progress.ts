@@ -1,17 +1,15 @@
-/** How long a PUT may go without sending a byte before it is given up. */
-const STALL_MS = 60_000;
-
 /**
  * PUTs a file to a presigned URL, reporting the bytes sent. It sends the File itself, which the
- * browser streams without reading it into memory. It fails when `signal` aborts or when no bytes
- * move for a minute, which a dropped connection can otherwise leave hanging.
+ * browser streams without reading it into memory. It fails when `signal` aborts, and, given
+ * `stallMs`, when no bytes move for that long, which a dropped connection can otherwise leave
+ * hanging.
  */
 export function putWithProgress(
   url: string,
   headers: Record<string, string>,
   file: File,
   onProgress: (bytesSent: number) => void,
-  signal?: AbortSignal,
+  { signal, stallMs }: { signal?: AbortSignal; stallMs?: number } = {},
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -22,11 +20,14 @@ export function putWithProgress(
       reject(error);
     };
     const watchForStall = () => {
+      if (stallMs === undefined) {
+        return;
+      }
       clearTimeout(stalled);
       stalled = setTimeout(() => {
         xhr.abort();
         fail(new Error("Upload stalled"));
-      }, STALL_MS);
+      }, stallMs);
     };
     const abort = () => {
       xhr.abort();
@@ -37,6 +38,8 @@ export function putWithProgress(
     }
     signal?.addEventListener("abort", abort, { once: true });
 
+    // Once every byte is sent, the wait is for the server's answer, which no progress measures.
+    xhr.upload.onload = () => clearTimeout(stalled);
     xhr.upload.onprogress = (event) => {
       watchForStall();
       if (event.lengthComputable) {

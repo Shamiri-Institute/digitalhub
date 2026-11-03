@@ -12,7 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { finishScanUpload, startScanUpload } from "#/lib/actions/survey/scan-uploads";
+import {
+  cancelScanUpload,
+  finishScanUpload,
+  keepScanUploadHeld,
+  startScanUpload,
+} from "#/lib/actions/survey/scan-uploads";
 import { useLeaveGuard } from "#/lib/hooks/use-leave-guard";
 import { putWithProgress } from "#/lib/s3/put-with-progress";
 import {
@@ -47,6 +52,11 @@ type QueuedScan = {
 const IN_PROGRESS: ScanState["kind"][] = ["waiting", "checking", "uploading", "saving"];
 // Saving is left out: by then the file is in S3, and stopping would only leave it unrecorded.
 const CANCELLABLE: ScanState["kind"][] = ["waiting", "checking", "uploading"];
+
+/** A PUT that sends nothing for this long is given up, so it can't hold up the files behind it. */
+const STALL_MS = 60_000;
+/** How often a PUT in progress renews the hour before anyone else may take the upload over. */
+const HOLD_RENEW_MS = 10 * 60_000;
 
 function refused(reason: string): ScanState {
   return { kind: "refused", reason };
@@ -103,15 +113,11 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
   ) => {
     const { id, file, cancel } = scan;
     const { signal } = cancel;
+    let uploadId: string | undefined;
     try {
-      if (signal.aborted) {
-        return;
-      }
+      signal.throwIfAborted();
       setScanState(id, { kind: "checking" });
-      const sha256 = await fileSha256(file);
-      if (signal.aborted) {
-        return;
-      }
+      const sha256 = await fileSha256(file, signal);
       const started = await startScanUpload({
         hubId: uploadHubId,
         fileName: file.name,
@@ -119,42 +125,73 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
         byteSize: file.size,
         sha256,
       });
-      if (signal.aborted) {
-        return;
-      }
+      uploadId = started.data?.uploadId;
+      signal.throwIfAborted();
       if (!started.success || !started.data) {
         return setScanState(id, refused(started.message));
       }
-      setScanState(id, { kind: "uploading", percent: 0 });
-      try {
-        await putWithProgress(
-          started.data.url,
-          started.data.headers,
-          file,
-          (bytesSent) =>
-            setScanState(id, {
-              kind: "uploading",
-              percent: Math.round((bytesSent / file.size) * 100),
-            }),
-          signal,
-        );
-      } catch {
-        if (signal.aborted) {
-          return;
+      if (!started.data.stored) {
+        const sent = await sendFile(scan, started.data);
+        if (!sent) {
+          return setScanState(
+            id,
+            refused("The upload didn't finish. Check your connection and add the file again"),
+          );
         }
-        return setScanState(
-          id,
-          refused("The upload didn't finish. Check your connection and add the file again"),
-        );
       }
       setScanState(id, { kind: "saving" });
-      const finished = await finishScanUpload({ uploadId: started.data.uploadId });
+      const finished = await finishScanUpload({
+        uploadId: started.data.uploadId,
+        // The page re-renders once, after the last file of the batch.
+        refreshPage: unfinishedUploads.current.size === 1,
+      });
       setScanState(id, finished.success ? { kind: "uploaded" } : refused(finished.message));
     } catch (error) {
+      if (signal.aborted) {
+        // Cancelled, or the page was left: free the file for anyone at once.
+        if (uploadId) {
+          void cancelScanUpload({ uploadId });
+        }
+        return;
+      }
       setScanState(id, refused("Something went wrong. Add the file again"));
       reportError(error);
     } finally {
       unfinishedUploads.current.delete(cancel);
+    }
+  };
+
+  /**
+   * PUTs the file, keeping the upload this user's while it is sent. Answers false when the PUT
+   * failed, having given the upload up; a cancel throws instead.
+   */
+  const sendFile = async (
+    { id, file, cancel: { signal } }: QueuedScan,
+    { uploadId, url, headers }: { uploadId: string; url: string; headers: Record<string, string> },
+  ) => {
+    setScanState(id, { kind: "uploading", percent: 0 });
+    const keepHeld = setInterval(() => void keepScanUploadHeld({ uploadId }), HOLD_RENEW_MS);
+    try {
+      await putWithProgress(
+        url,
+        headers,
+        file,
+        (bytesSent) =>
+          setScanState(id, {
+            kind: "uploading",
+            percent: Math.round((bytesSent / file.size) * 100),
+          }),
+        { signal, stallMs: STALL_MS },
+      );
+      return true;
+    } catch (error) {
+      if (signal.aborted) {
+        throw error;
+      }
+      void cancelScanUpload({ uploadId });
+      return false;
+    } finally {
+      clearInterval(keepHeld);
     }
   };
 
@@ -185,9 +222,10 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
       const { contentType } = scan;
       if (scan.state.kind === "waiting" && contentType) {
         unfinishedUploads.current.add(scan.cancel);
-        uploadQueue.current = uploadQueue.current.then(() =>
-          upload(scan, contentType, chosenHubId),
-        );
+        // upload() settles every file itself; the catch keeps one surprise from stopping the rest.
+        uploadQueue.current = uploadQueue.current
+          .then(() => upload(scan, contentType, chosenHubId))
+          .catch((error: unknown) => console.error("Scan upload failed", error));
       }
     }
   };

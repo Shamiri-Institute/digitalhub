@@ -1,18 +1,23 @@
 // @vitest-environment node
-// Scan uploads against the database and a local S3 server, putting the bytes the way the browser
-// does: what a second copy of a file meets, how an upload resumes or is taken over, and that S3
-// refuses bytes other than the ones the upload was started with. The pages are tested in
-// tests/e2e/hub-coordinator/scan-uploads.spec.ts.
 import { createHash, randomBytes } from "node:crypto";
 
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db, pool } from "#/db/client";
 import { hub, implementerMember, project, surveyAuditEvent, surveyUpload } from "#/db/schema";
 import type { HubSurveyScope, SurveyViewer } from "#/lib/auth/survey-access";
+import { getS3Client, headObject } from "#/lib/s3/s3.service";
 import { fileSha256, scanContentTypeOf } from "#/lib/survey/scan-files";
-import { finishScanUpload, type ScanFile, startScanUpload } from "#/lib/survey/scan-uploads";
+import {
+  finishScanUpload,
+  keepScanUploadHeld,
+  releaseScanUpload,
+  type ScanFile,
+  type StartedScanUpload,
+  startScanUpload,
+} from "#/lib/survey/scan-uploads";
 import { removeScanUploads, uniqueScanPdf } from "#/tests/survey-fixtures";
 
 let uploader: HubSurveyScope;
@@ -61,10 +66,25 @@ async function scanFile(label: string) {
   return { file, bytes: pdf.bytes };
 }
 
-/** The PUT the browser makes, with the headers the upload was started with. */
-function put(started: { url: string; headers: Record<string, string> }, body: Uint8Array) {
-  return fetch(started.url, { method: "PUT", headers: started.headers, body: Buffer.from(body) });
+function toSend(started: StartedScanUpload) {
+  if (started.stored) throw new Error("Expected an upload still to send");
+  return started;
 }
+
+function put(started: StartedScanUpload, body: Uint8Array) {
+  const { url, headers } = toSend(started);
+  return fetch(url, { method: "PUT", headers, body: Buffer.from(body) });
+}
+
+async function s3KeyOf(uploadId: string) {
+  const upload = await db.query.surveyUpload.findFirst({
+    where: (u, { eq }) => eq(u.id, uploadId),
+  });
+  if (!upload) throw new Error("No such upload");
+  return upload.s3Key;
+}
+
+const twoHoursAgo = () => new Date(Date.now() - 2 * 60 * 60 * 1000);
 
 async function uploadOf(sha256: string) {
   return db.query.surveyUpload.findFirst({ where: (u, { eq }) => eq(u.sha256, sha256) });
@@ -112,7 +132,7 @@ describe("scan uploads", () => {
 
     await db
       .update(surveyUpload)
-      .set({ updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000) })
+      .set({ updatedAt: twoHoursAgo() })
       .where(eq(surveyUpload.id, first.uploadId));
     const takenOver = await startScanUpload(colleague, file);
     expect(takenOver.uploadId).toBe(first.uploadId);
@@ -127,6 +147,88 @@ describe("scan uploads", () => {
     });
   });
 
+  it("finishes without sending again a file whose earlier PUT reached S3", async () => {
+    const { file, bytes } = await scanFile("Kibera batch 5");
+    const first = await startScanUpload(uploader, file);
+    expect((await put(first, bytes)).status).toBe(200);
+
+    // The finish never ran, say the tab closed while saving.
+    const again = await startScanUpload(uploader, file);
+    expect(again).toEqual({ uploadId: first.uploadId, stored: true });
+    expect(await finishScanUpload(hubViewer(uploader), again.uploadId)).toMatchObject({
+      status: "UPLOADED",
+    });
+  });
+
+  it("frees a cancelled upload's file for anyone at once, deleting what reached S3", async () => {
+    const { file, bytes } = await scanFile("Kibera batch 6");
+    const first = await startScanUpload(uploader, file);
+    expect((await put(first, bytes)).status).toBe(200);
+    const s3Key = await s3KeyOf(first.uploadId);
+
+    // Another user's cancel touches nothing.
+    await releaseScanUpload(hubViewer(colleague), first.uploadId);
+    await expect(startScanUpload(colleague, file)).rejects.toThrow(
+      "Someone else is uploading this file",
+    );
+
+    await releaseScanUpload(hubViewer(uploader), first.uploadId);
+    expect(await uploadOf(file.sha256)).toBeUndefined();
+    await expect(headObject(s3Key, "survey-scans")).rejects.toThrow();
+    expect(await startScanUpload(colleague, file)).toMatchObject({ stored: false });
+  });
+
+  it("keeps an upload whose file is still being sent from being taken over", async () => {
+    const { file } = await scanFile("Kibera batch 7");
+    const started = await startScanUpload(uploader, file);
+    await db
+      .update(surveyUpload)
+      .set({ updatedAt: twoHoursAgo() })
+      .where(eq(surveyUpload.id, started.uploadId));
+
+    await keepScanUploadHeld(hubViewer(uploader), started.uploadId);
+    await expect(startScanUpload(colleague, file)).rejects.toThrow(
+      "Someone else is uploading this file",
+    );
+    await expect(keepScanUploadHeld(hubViewer(colleague), started.uploadId)).rejects.toThrow(
+      "Upload not found",
+    );
+  });
+
+  it("won't finish an upload for a hub its coordinator no longer has", async () => {
+    const { file, bytes } = await scanFile("Kibera batch 8");
+    const started = await startScanUpload(uploader, file);
+    expect((await put(started, bytes)).status).toBe(200);
+
+    const movedHub = hubViewer({ ...uploader, hubId: otherHubCoordinator.hubId });
+    await expect(finishScanUpload(movedHub, started.uploadId)).rejects.toThrow(
+      "You no longer upload for this file's hub, so it can't be finished",
+    );
+    expect(await uploadOf(file.sha256)).toMatchObject({ status: "PENDING" });
+  });
+
+  it("discards an object whose checksum isn't the file's, so it can be sent again", async () => {
+    const { file } = await scanFile("Kibera batch 9");
+    const other = await uniqueScanPdf("Kibera batch 9, another scan");
+    const started = await startScanUpload(uploader, file);
+    const s3Key = await s3KeyOf(started.uploadId);
+    // Put straight to S3, as a store that didn't enforce the signed checksum would let through.
+    await getS3Client("survey-scans").send(
+      new PutObjectCommand({
+        Bucket: process.env.S3_SURVEY_SCANS_BUCKET,
+        Key: s3Key,
+        Body: Buffer.from(other.bytes),
+        ChecksumSHA256: Buffer.from(other.sha256, "hex").toString("base64"),
+      }),
+    );
+
+    await expect(finishScanUpload(hubViewer(uploader), started.uploadId)).rejects.toThrow(
+      "The stored file doesn't match the one you chose",
+    );
+    expect(await uploadOf(file.sha256)).toBeUndefined();
+    await expect(headObject(s3Key, "survey-scans")).rejects.toThrow();
+  });
+
   it("refuses any bytes but the ones the upload was started with", async () => {
     const { file } = await scanFile("Kibera batch 3");
     const other = await uniqueScanPdf("Kibera batch 3, another scan");
@@ -136,10 +238,10 @@ describe("scan uploads", () => {
     // AWS and SeaweedFS answer BadDigest, Garage InvalidDigest.
     expect(response.status).toBe(400);
     // Sending the header the other file would need breaks the signature.
-    const forged = await fetch(started.url, {
+    const forged = await fetch(toSend(started).url, {
       method: "PUT",
       headers: {
-        ...started.headers,
+        ...toSend(started).headers,
         "x-amz-checksum-sha256": Buffer.from(other.sha256, "hex").toString("base64"),
       },
       body: Buffer.from(other.bytes),

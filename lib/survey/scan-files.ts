@@ -36,14 +36,20 @@ export function scanContentTypeOf(file: { type: string; name: string }) {
 
 /**
  * Lowercase hex SHA-256 of a file, which the upload is signed with. It reads the file in chunks, so
- * a large scan isn't held in memory whole, as `crypto.subtle.digest` would need.
+ * a large scan isn't held in memory whole, as `crypto.subtle.digest` would need, and stops reading
+ * when `signal` aborts.
  */
-export async function fileSha256(file: Blob): Promise<string> {
+export async function fileSha256(file: Blob, signal?: AbortSignal): Promise<string> {
   const hash = sha256.create();
   const reader = file.stream().getReader();
-  // oxlint-disable-next-line eslint/no-await-in-loop -- a stream gives its chunks one after another
+  /* oxlint-disable eslint/no-await-in-loop -- a stream gives its chunks one after another */
   for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+    if (signal?.aborted) {
+      await reader.cancel();
+      throw signal.reason;
+    }
     hash.update(chunk.value);
   }
+  /* oxlint-enable eslint/no-await-in-loop */
   return bytesToHex(hash.digest());
 }

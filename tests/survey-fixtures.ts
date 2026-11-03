@@ -198,7 +198,6 @@ export async function removeSurvey(match: { code: string } | { id: string }) {
   );
 }
 
-/** Deletes a test's scan uploads, found by their files' hashes, and their objects in S3. */
 export async function removeScanUploads(sha256s: string[]) {
   if (sha256s.length === 0) {
     return;
