@@ -72,7 +72,7 @@ Every export of a `"use server"` file is a public POST endpoint, even when only 
 - `npm test` runs Playwright against `next dev`; `npm run test:prod` builds and runs against `next start`, as CI does. `npm run test:unit` runs Vitest.
 - E2E specs sign in as seeded users picked from the database (`signInAs`, `signInWithEmail` in `tests/helpers.ts`).
 - A spec that changes data creates its own rows, or picks rows no other spec edits, and removes what it made.
-- Test behaviour through real dependencies: the local Postgres, and an S3-compatible server such as MinIO for uploads. Leave out a test that would need a mocked module, env, SDK client or network call.
+- Test behaviour through real dependencies: the local Postgres, and SeaweedFS for S3 (`scripts/local-s3.sh`, which CI runs too). Leave out a test that would need a mocked module, env, SDK client or network call.
 - E2E specs drive the UI. Action IDs and encoding are framework internals, so a spec never posts to a server action directly.
 - After a mutation, assert through the UI after a reload. Read the database only for what no page shows (values the server takes from the session, stored but undisplayed data, revoked sessions, writes that must not happen), with a comment saying so.
 

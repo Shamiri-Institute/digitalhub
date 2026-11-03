@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
-# Runs Garage (brew install garage) as a local S3 server for uploads in development and E2E tests.
+# Runs SeaweedFS (brew install seaweedfs) as the S3 server for uploads in development, E2E tests and CI.
 # Point the app at it from .env.development.local:
-#   AWS_ENDPOINT_URL_S3=http://localhost:3900
+#   AWS_ENDPOINT_URL_S3=http://localhost:8333
 #   S3_UPLOAD_KEY=GKdeadbeefdeadbeefdeadbeef
 #   S3_UPLOAD_SECRET=0000000000000000000000000000000000000000000000000000000000000001
 #   S3_RECORDINGS_BUCKET=recordings
@@ -9,57 +9,51 @@
 #   S3_SURVEY_PRINT_FILES_BUCKET=survey-print-files
 set -eu
 
-dir="${GARAGE_DIR:-$(pwd)/.garage}"
+dir="${SEAWEEDFS_DIR:-$(pwd)/.seaweedfs}"
 key_id=GKdeadbeefdeadbeefdeadbeef
 secret=0000000000000000000000000000000000000000000000000000000000000001
-mkdir -p "$dir"
+mkdir -p "$dir/data"
 chmod 700 "$dir"
 
-cat >"$dir/garage.toml" <<EOF
-metadata_dir = "$dir/meta"
-data_dir = "$dir/data"
-db_engine = "sqlite"
-replication_factor = 1
-rpc_bind_addr = "127.0.0.1:3901"
-rpc_secret = "1111111111111111111111111111111111111111111111111111111111111111"
-
-[s3_api]
-s3_region = "af-south-1"
-api_bind_addr = "127.0.0.1:3900"
-root_domain = ".localhost"
+# With no identity SeaweedFS accepts any signature, so a broken presigned URL would pass here and fail on AWS.
+cat >"$dir/s3.json" <<EOF
+{"identities":[{"name":"local","credentials":[{"accessKey":"$key_id","secretKey":"$secret"}],"actions":["Admin","Read","Write","List","Tagging"]}]}
 EOF
-chmod 600 "$dir/garage.toml"
+chmod 600 "$dir/s3.json"
 
-garage() { command garage -c "$dir/garage.toml" "$@"; }
-
-garage server >"$dir/server.log" 2>&1 &
+# -ip as well as -ip.bind: otherwise the volume server advertises the LAN address and every write fails.
+weed mini -dir="$dir/data" -ip=127.0.0.1 -ip.bind=127.0.0.1 -s3.config="$dir/s3.json" -webdav=false \
+  -bucket=recordings,survey-print-files >"$dir/server.log" 2>&1 &
 server=$!
 trap 'kill $server' INT TERM EXIT
 
-until garage status >/dev/null 2>&1; do sleep 0.5; done
-
-if ! garage layout show | grep -q "Current cluster layout version: [1-9]"; then
-  node_id=$(garage node id -q | cut -d@ -f1)
-  garage layout assign -z local -c 10G "$node_id"
-  garage layout apply --version 1
-fi
-garage key info "$key_id" >/dev/null 2>&1 || garage key import --yes -n local "$key_id" "$secret"
-garage bucket info recordings >/dev/null 2>&1 || garage bucket create recordings
-garage bucket allow --read --write --owner recordings --key "$key_id"
-# Print files are written by the server and downloaded through presigned links, so need no CORS.
-garage bucket info survey-print-files >/dev/null 2>&1 || garage bucket create survey-print-files
-garage bucket allow --read --write --owner survey-print-files --key "$key_id"
-
-# Browsers upload straight to the bucket with presigned PUTs, so the bucket needs CORS.
-AWS_ENDPOINT_URL_S3=http://localhost:3900 node -e '
-const { S3Client, PutBucketCorsCommand } = require("@aws-sdk/client-s3");
-new S3Client({
+# S3 answers before -bucket has made the buckets, so wait for both.
+# Browsers upload straight to the recordings bucket with presigned PUTs, so it needs CORS.
+# Print files are written by the server and downloaded through presigned links, so need none.
+AWS_ENDPOINT_URL_S3=http://localhost:8333 node -e '
+const { S3Client, HeadBucketCommand, PutBucketCorsCommand } = require("@aws-sdk/client-s3");
+const s3 = new S3Client({
   region: "af-south-1",
+  forcePathStyle: true,
   credentials: { accessKeyId: process.argv[1], secretAccessKey: process.argv[2] },
-}).send(new PutBucketCorsCommand({
-  Bucket: "recordings",
-  CORSConfiguration: { CORSRules: [{ AllowedOrigins: ["http://localhost:3000"], AllowedMethods: ["GET", "PUT", "HEAD"], AllowedHeaders: ["*"], ExposeHeaders: ["ETag"] }] },
-})).then(() => console.log("Garage S3 ready on http://localhost:3900 (buckets: recordings, survey-print-files)"));
+});
+const buckets = ["recordings", "survey-print-files"];
+(async () => {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await Promise.all(buckets.map((Bucket) => s3.send(new HeadBucketCommand({ Bucket }))));
+      break;
+    } catch (error) {
+      if (attempt === 120) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+  await s3.send(new PutBucketCorsCommand({
+    Bucket: "recordings",
+    CORSConfiguration: { CORSRules: [{ AllowedOrigins: ["http://localhost:3000"], AllowedMethods: ["GET", "PUT", "HEAD"], AllowedHeaders: ["*"], ExposeHeaders: ["ETag"] }] },
+  }));
+  console.log("SeaweedFS S3 ready on http://localhost:8333 (buckets: " + buckets.join(", ") + ")");
+})();
 ' "$key_id" "$secret"
 
 wait $server

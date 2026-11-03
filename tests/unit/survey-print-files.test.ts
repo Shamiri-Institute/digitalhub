@@ -1,7 +1,7 @@
 // @vitest-environment node
-// The print job against the database and a local S3 server (scripts/local-s3.sh locally, SeaweedFS
-// in CI): what it puts in S3, and how it recovers from a worker that died. The run page's progress
-// and the download are tested through the UI in tests/e2e/hub-coordinator/print-runs.spec.ts.
+// The print job against the database and the local S3 server (scripts/local-s3.sh): what it puts in
+// S3, and how it recovers from a worker that died. The run page's progress and the download are
+// tested through the UI in tests/e2e/hub-coordinator/print-runs.spec.ts.
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";

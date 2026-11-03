@@ -68,4 +68,4 @@ vscode
 # potetos-for-everyone:end
 
 # local S3 (scripts/local-s3.sh)
-.garage/
+.seaweedfs/
