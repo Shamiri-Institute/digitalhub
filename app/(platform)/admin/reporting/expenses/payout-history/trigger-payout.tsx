@@ -33,9 +33,6 @@ export default function TriggerPayout() {
           variant: "destructive",
         });
       }
-    } catch (error) {
-      setLoading(false);
-      console.error(error);
     } finally {
       setLoading(false);
     }

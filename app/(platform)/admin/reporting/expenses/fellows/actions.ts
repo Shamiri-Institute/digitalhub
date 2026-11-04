@@ -9,8 +9,9 @@ export type HubFellowsAttendancesType = Awaited<
 >[number];
 
 export async function loadHubsFellowAttendance() {
-  const { implementerId, projectId } = await requirePayoutScope();
-  const implementerHubIds = implementerHubsInProject(implementerId, projectId);
+  const { implementerId: adminImplementerId, projectId: adminProjectId } =
+    await requirePayoutScope();
+  const implementerHubIds = implementerHubsInProject(adminImplementerId, adminProjectId);
 
   const fellows = await db.query.fellow.findMany({
     where: (f, { inArray }) => inArray(f.hubId, implementerHubIds),

@@ -38,9 +38,6 @@ export default function TriggerConfirmPayout({ dateAdded, disabled }: TriggerCon
           variant: "destructive",
         });
       }
-    } catch (error) {
-      setLoading(false);
-      console.error(error);
     } finally {
       setLoading(false);
     }
