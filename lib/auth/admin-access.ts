@@ -38,14 +38,9 @@ export function canManagePayouts(admin: { isSuperAdmin: boolean; team: AdminTeam
   return admin.isSuperAdmin || admin.team === AdminTeam.OPERATIONS;
 }
 
-/** Surveys and payouts belong to an implementer and a project; an admin works in one of each at a time. */
 export type AdminScope = { userId: string; implementerId: string; projectId: string };
 
-/**
- * The signed-in admin's implementer and active project, when `mayAccess` allows their profile.
- * Pages and server actions both go through the cached wrappers below, so each team's access is
- * checked one way, and the session is read once per request.
- */
+// Pages and actions share the cached wrappers below, so the session is read once per request.
 async function teamScope(
   mayAccess: (admin: { isSuperAdmin: boolean; team: AdminTeam | null }) => boolean,
 ) {
