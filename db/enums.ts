@@ -18,12 +18,16 @@ export type ImplementerRole = (typeof ImplementerRole)[keyof typeof ImplementerR
 export const AdminTeam = {
   CARE: "CARE",
   RESEARCH: "RESEARCH",
+  OPERATIONS: "OPERATIONS",
+  TECH: "TECH",
 } as const;
 export type AdminTeam = (typeof AdminTeam)[keyof typeof AdminTeam];
 
 export const TEAM_LABELS: Record<AdminTeam, string> = {
   CARE: "Care",
   RESEARCH: "Research",
+  OPERATIONS: "Operations",
+  TECH: "Tech",
 };
 
 export const ApprovalStatus = {
