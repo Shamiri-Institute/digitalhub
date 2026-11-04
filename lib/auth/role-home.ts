@@ -1,11 +1,11 @@
 import { ImplementerRole } from "#/db/enums";
 
-export const roleHome: Record<ImplementerRole, string> = {
+// Operations staff are admins on the Operations team; the role has no home of its own.
+export const roleHome: Partial<Record<ImplementerRole, string>> = {
   [ImplementerRole.HUB_COORDINATOR]: "/hc",
   [ImplementerRole.SUPERVISOR]: "/sc",
   [ImplementerRole.FELLOW]: "/fel",
   [ImplementerRole.CLINICAL_LEAD]: "/cl",
-  [ImplementerRole.OPERATIONS]: "/ops",
   [ImplementerRole.CLINICAL_TEAM]: "/ct",
   [ImplementerRole.ADMIN]: "/admin",
 };

@@ -150,17 +150,15 @@ export function LayoutClient({
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-40 max-w-none divide-y">
-              {!pathname.startsWith("/ops/") && (
-                <DropdownMenuItem
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    setIsProfileOpen(true);
-                  }}
-                >
-                  <PeopleIcon fill="#969696" />
-                  <span>My Profile</span>
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem
+                className="flex items-center gap-2"
+                onClick={() => {
+                  setIsProfileOpen(true);
+                }}
+              >
+                <PeopleIcon fill="#969696" />
+                <span>My Profile</span>
+              </DropdownMenuItem>
 
               <DropdownMenuItem className="flex items-center gap-2" onClick={toastOnError(signOut)}>
                 <SignOutIcon fill="#969696" />
