@@ -269,6 +269,29 @@ export const SURVEY_PRINT_STATUS_LABELS: Record<SurveyPrintStatus, string> = {
 };
 
 /**
+ * A scanned file's progress. PENDING holds the file's hash while the browser uploads it, so a second
+ * copy is refused; UPLOADED once its bytes are in S3 and checked. The pipeline (ENG-2391) moves it on.
+ */
+export const SurveyUploadStatus = {
+  PENDING: "PENDING",
+  UPLOADED: "UPLOADED",
+  QUEUED: "QUEUED",
+  PROCESSING: "PROCESSING",
+  PROCESSED: "PROCESSED",
+  FAILED: "FAILED",
+} as const;
+export type SurveyUploadStatus = (typeof SurveyUploadStatus)[keyof typeof SurveyUploadStatus];
+
+export const SURVEY_UPLOAD_STATUS_LABELS: Record<SurveyUploadStatus, string> = {
+  PENDING: "Uploading",
+  UPLOADED: "Uploaded",
+  QUEUED: "Queued",
+  PROCESSING: "Processing",
+  PROCESSED: "Processed",
+  FAILED: "Failed",
+};
+
+/**
  * A printed copy's whole lifecycle, so later phases add no enum values: ISSUED, then PARTIAL,
  * NEEDS_REVIEW or READY as its pages come back, then VERIFIED; VOID from any state, and final.
  */

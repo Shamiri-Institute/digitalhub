@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 import { SurveyVersionPrefill } from "#/db/enums";
+import { MAX_SCAN_BYTES, SCAN_CONTENT_TYPES } from "#/lib/survey/scan-files";
 import { MAX_COPIES_PER_RUN } from "#/lib/survey/serial";
-import { stringValidation } from "#/lib/utils";
+import { formatBytes, stringValidation } from "#/lib/utils";
 
 export const CreateSurveySchema = z.object({
   title: stringValidation("Please enter a title").max(255, {
@@ -98,4 +99,20 @@ export const ListPrintableStudentsSchema = z.object({
   schoolId: stringValidation("Missing school"),
   /** Admins only, as in CreatePrintRunSchema. */
   hubId: z.string().min(1).optional(),
+});
+
+export const StartScanUploadSchema = z.object({
+  /** Admins only, as in CreatePrintRunSchema. */
+  hubId: z.string().min(1).optional(),
+  fileName: z.string().trim().min(1).max(255, { error: "Shorten the file name to 255 characters" }),
+  contentType: z.enum(SCAN_CONTENT_TYPES, { error: "Choose a PDF, JPEG or PNG file" }),
+  byteSize: z
+    .int()
+    .positive({ error: "The file is empty" })
+    .max(MAX_SCAN_BYTES, { error: `Choose a file of ${formatBytes(MAX_SCAN_BYTES)} or less` }),
+  sha256: z.string().regex(/^[0-9a-f]{64}$/, { error: "Please choose the file again" }),
+});
+
+export const ScanUploadSchema = z.object({
+  uploadId: stringValidation("Missing upload"),
 });

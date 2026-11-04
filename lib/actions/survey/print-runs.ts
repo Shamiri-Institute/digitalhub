@@ -5,7 +5,7 @@ import type { z } from "zod";
 
 import { db } from "#/db/client";
 import { NotFoundError } from "#/lib/auth/require-auth-role";
-import { printRunScope, requirePrintRunViewer } from "#/lib/auth/survey-access";
+import { surveyHubScope, requireSurveyViewer } from "#/lib/auth/survey-access";
 import { kickPrintQueue, retryFailedPrintFiles } from "#/lib/survey/print-files";
 import { type RecordedPrintRun, voidCopy } from "#/lib/survey/print-run";
 import {
@@ -36,7 +36,7 @@ export async function createPrintRun(
   data: z.infer<typeof CreatePrintRunSchema>,
 ): Promise<ActionResponse<RecordedPrintRun>> {
   try {
-    const viewer = await requirePrintRunViewer();
+    const viewer = await requireSurveyViewer();
     const input = CreatePrintRunSchema.safeParse(data);
     if (!input.success) {
       return invalid(input.error);
@@ -55,7 +55,7 @@ export async function retryPrintRun(
   data: z.infer<typeof RetryPrintRunSchema>,
 ): Promise<ActionResponse> {
   try {
-    const viewer = await requirePrintRunViewer();
+    const viewer = await requireSurveyViewer();
     const input = RetryPrintRunSchema.safeParse(data);
     if (!input.success) {
       return invalid(input.error);
@@ -84,7 +84,7 @@ export async function voidQuestionnaire(
   data: z.infer<typeof VoidQuestionnaireSchema>,
 ): Promise<ActionResponse> {
   try {
-    const viewer = await requirePrintRunViewer();
+    const viewer = await requireSurveyViewer();
     const input = VoidQuestionnaireSchema.safeParse(data);
     if (!input.success) {
       return invalid(input.error);
@@ -103,7 +103,7 @@ export async function voidQuestionnaire(
 /** For the print form, when it opens: the hubs the caller may print for, from their session. */
 export async function listPrintableHubs(): Promise<ActionResponse<PrintableHubs>> {
   try {
-    const viewer = await requirePrintRunViewer();
+    const viewer = await requireSurveyViewer();
     return { success: true, message: "", data: await fetchPrintableHubs(viewer) };
   } catch (error) {
     return failure(error, "Sorry, could not load the hubs.");
@@ -115,12 +115,12 @@ export async function listPrintableStudents(
   data: z.infer<typeof ListPrintableStudentsSchema>,
 ): Promise<ActionResponse<PrintableStudents>> {
   try {
-    const viewer = await requirePrintRunViewer();
+    const viewer = await requireSurveyViewer();
     const input = ListPrintableStudentsSchema.safeParse(data);
     if (!input.success) {
       return invalid(input.error);
     }
-    const { hubId: printHubId } = await printRunScope(viewer, input.data.hubId);
+    const { hubId: printHubId } = await surveyHubScope(viewer, input.data.hubId);
     const students = await fetchPrintableStudents(printHubId, input.data.schoolId);
     if (!students) {
       throw new NotFoundError("School");

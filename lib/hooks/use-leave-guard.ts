@@ -14,7 +14,7 @@ type NavigationApi = Pick<EventTarget, "addEventListener" | "removeEventListener
  * any link in the app (the sidebar's included), and on the browser's Back and Forward. Returns a
  * function to call just before leaving on purpose, such as a reload the page offers.
  */
-export function useLeaveGuard(unsaved: boolean) {
+export function useLeaveGuard(unsaved: boolean, message = LEAVE_MESSAGE) {
   const leaving = useRef(false);
 
   // effect: listens to the window, document and navigation, outside React, while there are unsaved changes
@@ -22,7 +22,7 @@ export function useLeaveGuard(unsaved: boolean) {
     if (!unsaved) {
       return;
     }
-    const confirmLeave = () => leaving.current || window.confirm(LEAVE_MESSAGE);
+    const confirmLeave = () => leaving.current || window.confirm(message);
 
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       if (!leaving.current) {
@@ -33,9 +33,19 @@ export function useLeaveGuard(unsaved: boolean) {
     const onClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0) return;
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
-      if (!(link instanceof HTMLAnchorElement) || link.target === "_blank" || link.download) return;
-      const url = new URL(link.href);
+      // A control that navigates with the router instead of a link names its target in
+      // data-leave-href, as TabToggleNavigation's tabs do.
+      const target =
+        event.target instanceof Element ? event.target.closest("a[href], [data-leave-href]") : null;
+      if (!target) return;
+      let href: string;
+      if (target instanceof HTMLAnchorElement) {
+        if (target.target === "_blank" || target.download) return;
+        href = target.href;
+      } else {
+        href = target.getAttribute("data-leave-href") ?? "";
+      }
+      const url = new URL(href, window.location.href);
       const here = window.location;
       if (url.origin !== here.origin) return;
       if (url.pathname === here.pathname && url.search === here.search) return;
@@ -61,7 +71,7 @@ export function useLeaveGuard(unsaved: boolean) {
       document.removeEventListener("click", onClick, true);
       navigation?.removeEventListener("navigate", onNavigate);
     };
-  }, [unsaved]);
+  }, [unsaved, message]);
 
   return () => {
     leaving.current = true;

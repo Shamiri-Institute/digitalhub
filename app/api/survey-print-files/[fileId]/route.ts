@@ -1,4 +1,4 @@
-import { requirePrintRunViewer } from "#/lib/auth/survey-access";
+import { requireSurveyViewer } from "#/lib/auth/survey-access";
 import { ForbiddenRoleError, UnauthenticatedError } from "#/lib/auth/require-auth-role";
 import { printFileDownloadUrl } from "#/lib/survey/print-files";
 
@@ -8,7 +8,7 @@ import { printFileDownloadUrl } from "#/lib/survey/print-files";
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ fileId: string }> }) {
   try {
-    const viewer = await requirePrintRunViewer();
+    const viewer = await requireSurveyViewer();
     const url = await printFileDownloadUrl(viewer, (await params).fileId);
     if (!url) {
       return new Response("Not found", { status: 404 });

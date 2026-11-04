@@ -20,6 +20,7 @@ import {
   surveyPrintRun,
   surveyQuestionnaire,
   surveyQuestionnairePage,
+  surveyUpload,
   surveyVersion,
   fellow,
   fellowAttendance,
@@ -336,6 +337,19 @@ export const surveyPrintFileRelations = relations(surveyPrintFile, ({ one }) => 
     fields: [surveyPrintFile.schoolId],
     references: [school.id],
     relationName: "SurveyPrintFile_school",
+  }),
+}));
+
+export const surveyUploadRelations = relations(surveyUpload, ({ one }) => ({
+  hub: one(hub, {
+    fields: [surveyUpload.hubId],
+    references: [hub.id],
+    relationName: "SurveyUpload_hub",
+  }),
+  uploadedByUser: one(user, {
+    fields: [surveyUpload.uploadedBy],
+    references: [user.id],
+    relationName: "SurveyUpload_uploadedByUser",
   }),
 }));
 

@@ -13,7 +13,7 @@ import { after } from "next/server";
 import { db, isIntegrityViolation, type Transaction } from "#/db/client";
 import { SurveyPrintStatus, SurveyQuestionnaireStatus } from "#/db/enums";
 import { surveyPrintFile } from "#/db/schema";
-import type { PrintRunViewer } from "#/lib/auth/survey-access";
+import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { objectId } from "#/lib/crypto";
 import { getPresignedUrl, putObject } from "#/lib/s3/s3.service";
 import { requireBucket } from "#/lib/s3/utils/require-bucket";
@@ -350,7 +350,7 @@ export async function retryFailedPrintFiles(tx: Transaction, printRunId: string)
  * A short-lived link to download a ready file the viewer may see, named for the person printing
  * it. Undefined for a file that isn't ready or isn't the viewer's to see.
  */
-export async function printFileDownloadUrl(viewer: PrintRunViewer, fileId: string) {
+export async function printFileDownloadUrl(viewer: SurveyViewer, fileId: string) {
   const file = await db.query.surveyPrintFile.findFirst({
     where: (f, { and, eq }) => and(eq(f.id, fileId), eq(f.status, SurveyPrintStatus.READY)),
     columns: { id: true, printRunId: true, firstSerialNumber: true, copyCount: true },

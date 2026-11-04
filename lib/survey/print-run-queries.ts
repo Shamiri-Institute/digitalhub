@@ -1,5 +1,5 @@
 // What the print-run pages read, for a hub coordinator or a Research admin. Every query takes a
-// PrintRunViewer, which has no unscoped kind, so each one is filtered to what its viewer may see.
+// SurveyViewer, which has no unscoped kind, so each one is filtered to what its viewer may see.
 
 import { and, eq, inArray, type SQL, sql } from "drizzle-orm";
 
@@ -14,13 +14,13 @@ import {
   surveyVersion,
 } from "#/db/schema";
 import { countOf } from "#/db/sql";
-import type { PrintRunViewer } from "#/lib/auth/survey-access";
+import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { activeSchool, activeStudent, studentPrintOrder } from "#/lib/survey/print-run";
 import { serialRangeOf } from "#/lib/survey/serial";
 
 const COPIES_PER_PAGE = 200;
 
-function versionsInProject(viewer: PrintRunViewer) {
+function versionsInProject(viewer: SurveyViewer) {
   return db
     .select({ id: surveyVersion.id })
     .from(surveyVersion)
@@ -32,7 +32,7 @@ function versionsInProject(viewer: PrintRunViewer) {
 
 function runVisibleTo(
   run: { hubId: typeof surveyPrintRun.hubId; versionId: typeof surveyPrintRun.versionId },
-  viewer: PrintRunViewer,
+  viewer: SurveyViewer,
 ): SQL {
   return viewer.kind === "hub"
     ? eq(run.hubId, viewer.hubId)
@@ -40,7 +40,7 @@ function runVisibleTo(
 }
 
 /** Published versions with a print layout, of the viewer's active surveys. */
-export async function fetchPrintableVersions(viewer: PrintRunViewer) {
+export async function fetchPrintableVersions(viewer: SurveyViewer) {
   const surveys = await db.query.survey.findMany({
     where: (s, { and, eq }) =>
       and(
@@ -72,7 +72,7 @@ export type PrintableVersions = Awaited<ReturnType<typeof fetchPrintableVersions
  * The hubs the viewer may print for (a coordinator's own; an admin's unarchived hubs of their
  * project), each with its active schools and their active students.
  */
-export async function fetchPrintableHubs(viewer: PrintRunViewer) {
+export async function fetchPrintableHubs(viewer: SurveyViewer) {
   return db.query.hub.findMany({
     where: (h, { and, eq, isNull }) =>
       viewer.kind === "hub"
@@ -163,7 +163,7 @@ export function printRunStatusOf(counts: {
   return SurveyPrintStatus.RENDERING;
 }
 
-export async function fetchPrintRuns(viewer: PrintRunViewer, surveyId?: string) {
+export async function fetchPrintRuns(viewer: SurveyViewer, surveyId?: string) {
   const runs = await db.query.surveyPrintRun.findMany({
     where: (r, { and, inArray }) =>
       and(
@@ -194,7 +194,7 @@ export async function fetchPrintRuns(viewer: PrintRunViewer, surveyId?: string) 
 
 export type PrintRunRows = Awaited<ReturnType<typeof fetchPrintRuns>>;
 
-export async function fetchPrintRun(viewer: PrintRunViewer, printRunId: string) {
+export async function fetchPrintRun(viewer: SurveyViewer, printRunId: string) {
   const run = await db.query.surveyPrintRun.findFirst({
     where: (r, { and, eq }) => and(eq(r.id, printRunId), runVisibleTo(r, viewer)),
     columns: {

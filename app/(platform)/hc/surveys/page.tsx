@@ -1,6 +1,8 @@
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { PrintRunsTable } from "#/components/common/survey/print-runs-table";
 import { PrintableVersionsTable } from "#/components/common/survey/printable-versions-table";
+import { HUB_SURVEY_TABS } from "#/components/common/survey/survey-tabs";
+import TabToggleNavigation from "#/components/common/tabs/tab-navigation";
 import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -27,6 +29,7 @@ export default async function HubSurveysPage() {
     <div className="flex h-full flex-col bg-white">
       <div className="container w-full grow space-y-6 py-10">
         <PageHeading title="Surveys" />
+        <TabToggleNavigation options={HUB_SURVEY_TABS} className="px-0" />
         <Separator />
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Ready to print</h2>

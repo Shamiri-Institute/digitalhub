@@ -2,13 +2,20 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
+import { cn } from "#/lib/utils";
 
 export type TabType = {
   name: string;
   href: string;
 };
 
-export default function TabToggleNavigation({ options }: { options: TabType[] }) {
+export default function TabToggleNavigation({
+  options,
+  className,
+}: {
+  options: TabType[];
+  className?: string;
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -23,7 +30,7 @@ export default function TabToggleNavigation({ options }: { options: TabType[] })
   }, [pathname, options, router]);
 
   return (
-    <div className="container flex">
+    <div className={cn("container flex", className)}>
       <ToggleGroup
         type="single"
         className="form-toggle"
@@ -43,6 +50,7 @@ export default function TabToggleNavigation({ options }: { options: TabType[] })
               key={option.name}
               value={option.name}
               aria-label={`Select ${option.name}`}
+              data-leave-href={option.href}
               className="form-toggle-button text-nowrap"
             >
               {option.name}

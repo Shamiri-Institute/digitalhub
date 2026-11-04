@@ -1,0 +1,59 @@
+// What a scanned questionnaire file may be. Shared by the upload form and the upload actions.
+
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
+
+import { MAX_FILE_SIZE } from "#/lib/s3/s3.types";
+import { normalizeContentType } from "#/lib/s3/utils/normalize-content-type";
+
+export const SCAN_CONTENT_TYPES = ["application/pdf", "image/jpeg", "image/png"] as const;
+export type ScanContentType = (typeof SCAN_CONTENT_TYPES)[number];
+
+export const MAX_SCAN_BYTES = MAX_FILE_SIZE;
+
+const EXTENSION_CONTENT_TYPES: Record<string, ScanContentType> = {
+  pdf: "application/pdf",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+};
+
+export function isScanContentType(contentType: string): contentType is ScanContentType {
+  return (SCAN_CONTENT_TYPES as readonly string[]).includes(contentType);
+}
+
+/**
+ * The scan type of a file, from the browser's type or, when the browser gives none (as for some
+ * files from a network share or scanner app), from its extension.
+ */
+export function scanContentTypeOf(file: { type: string; name: string }) {
+  const browserType = normalizeContentType(file.type);
+  if (isScanContentType(browserType)) {
+    return browserType;
+  }
+  const browserGaveNoType = browserType === "" || browserType === "application/octet-stream";
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return browserGaveNoType && Object.hasOwn(EXTENSION_CONTENT_TYPES, extension)
+    ? EXTENSION_CONTENT_TYPES[extension]
+    : undefined;
+}
+
+/**
+ * Lowercase hex SHA-256 of a file, which the upload is signed with. It reads the file in chunks, so
+ * a large scan isn't held in memory whole, as `crypto.subtle.digest` would need, and stops reading
+ * when `signal` aborts.
+ */
+export async function fileSha256(file: Blob, signal?: AbortSignal): Promise<string> {
+  const hash = sha256.create();
+  const reader = file.stream().getReader();
+  /* oxlint-disable eslint/no-await-in-loop -- a stream gives its chunks one after another */
+  for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+    if (signal?.aborted) {
+      await reader.cancel();
+      throw signal.reason;
+    }
+    hash.update(chunk.value);
+  }
+  /* oxlint-enable eslint/no-await-in-loop */
+  return bytesToHex(hash.digest());
+}
