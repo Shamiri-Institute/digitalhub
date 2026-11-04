@@ -57,6 +57,7 @@ interface NavigationLinkProps {
   surveysActive: boolean;
   isSuperAdmin: boolean;
   canManageSurveys: boolean;
+  canManagePayouts: boolean;
 }
 
 export function LayoutClient({
@@ -66,6 +67,7 @@ export function LayoutClient({
   isAdminUser,
   isSuperAdmin,
   canManageSurveys,
+  canManagePayouts,
   adminProjects,
   personnel,
 }: {
@@ -75,6 +77,7 @@ export function LayoutClient({
   isAdminUser: boolean;
   isSuperAdmin: boolean;
   canManageSurveys: boolean;
+  canManagePayouts: boolean;
   adminProjects: AdminProject[] | null;
   personnel: ImplementerPersonnel | null;
 }) {
@@ -241,6 +244,7 @@ export function LayoutClient({
                 surveysActive: surveysActive ?? false,
                 isSuperAdmin,
                 canManageSurveys,
+                canManagePayouts,
               })}
           </div>
         </div>
@@ -323,6 +327,7 @@ function getCurrentUserNavigationLinks(
     surveysActive,
     isSuperAdmin,
     canManageSurveys,
+    canManagePayouts,
   }: NavigationLinkProps,
 ) {
   const links = [];
@@ -363,6 +368,14 @@ function getCurrentUserNavigationLinks(
         <div className={`tab-link ${cn(surveysActive && "active")}`} key="admin-surveys">
           <ClipboardList className="h-5 w-5" />
           <Link href={`/${mainRoute}/surveys`}>Surveys</Link>
+        </div>,
+      );
+    }
+    if (canManagePayouts) {
+      links.push(
+        <div className={`tab-link ${cn(reportingActive && "active")}`} key="admin-reporting">
+          <BarChartIcon />
+          <Link href={`/${mainRoute}/reporting`}>Reporting</Link>
         </div>,
       );
     }

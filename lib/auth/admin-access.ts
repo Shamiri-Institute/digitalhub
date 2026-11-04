@@ -5,6 +5,7 @@ import { currentAdminUser } from "#/app/auth";
 import { db } from "#/db/client";
 import { AdminTeam, ImplementerRole } from "#/db/enums";
 import { hub, implementerMember } from "#/db/schema";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
 
 /**
@@ -58,6 +59,36 @@ export async function requireSurveyScope() {
   if (!scope) {
     throw new ForbiddenRoleError(
       "Forbidden: surveys are managed by super admins and the Research team",
+    );
+  }
+  return scope;
+}
+
+/** Super admins and admins in the Operations team run and confirm fellow payouts. */
+export function canManagePayouts(admin: { isSuperAdmin: boolean; team: AdminTeam | null }) {
+  return admin.isSuperAdmin || admin.team === AdminTeam.OPERATIONS;
+}
+
+export type PayoutScope = { userId: string; implementerId: string; projectId: string };
+
+export const payoutScope = cache(async (): Promise<PayoutScope | null> => {
+  const admin = await currentAdminUser();
+  const userId = admin?.session.user.id;
+  if (!admin || !userId || !canManagePayouts(admin.profile)) {
+    return null;
+  }
+  return {
+    userId,
+    implementerId: admin.profile.implementerId,
+    projectId: await getActiveProjectId(),
+  };
+});
+
+export async function requirePayoutScope() {
+  const scope = await payoutScope();
+  if (!scope) {
+    throw new ForbiddenRoleError(
+      "Forbidden: payouts are managed by super admins and the Operations team",
     );
   }
   return scope;

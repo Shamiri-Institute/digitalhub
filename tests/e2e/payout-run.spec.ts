@@ -8,8 +8,8 @@ import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
- * An ops user runs and confirms a payout. A run executes every eligible statement of the ops user's
- * implementer in their project, so playwright.config.ts runs this spec in its own project after
+ * An Operations admin runs and confirms a payout. A run executes every eligible statement of the
+ * admin's implementer in their project, so playwright.config.ts runs this spec in its own project after
  * every other spec. The database checks cover what no page shows: which statements and attendances
  * a run processed, and who confirmed them.
  */
@@ -30,15 +30,15 @@ test.beforeAll(async () => {
   const {
     rows: [firstOps],
   } = await db.execute<typeof ops>(sql`
-    select u.email, u.id as "userId", o.implementer_id as "implementerId",
+    select u.email, u.id as "userId", a.implementer_id as "implementerId",
       coalesce(u.active_project_id, (select id from projects where is_default)) as "projectId"
-    from ops_users o
-    join implementer_members m on m.identifier = o.id and m.role = 'OPERATIONS'
+    from admin_users a
+    join implementer_members m on m.identifier = a.id and m.role = 'ADMIN'
     join users u on u.id = m.user_id
-    where ${signableMember()}
-    order by o.id
+    where a.team = 'OPERATIONS' and not a.is_super_admin and ${signableMember()}
+    order by u.email
     limit 1`);
-  required(firstOps, "no ops user");
+  required(firstOps, "no Operations admin");
   ops = firstOps;
 
   const eligibleAttendance = sql`
@@ -59,7 +59,7 @@ test.beforeAll(async () => {
   required(row, "no attended, unprocessed attendance");
   fixture = row;
 
-  // Another implementer's hub, moved into the ops user's project until afterAll.
+  // Another implementer's hub, moved into the admin's project until afterAll.
   const {
     rows: [otherRow],
   } = await db.execute<OtherImplementerFixture>(sql`${eligibleAttendance}
@@ -113,9 +113,9 @@ test.afterAll(async () => {
   }
 });
 
-test("an ops user triggers a payout run", async ({ page, context }) => {
+test("an Operations admin triggers a payout run", async ({ page, context }) => {
   await signInWithEmail(context, ops.email);
-  await page.goto(getUrl("/ops/reporting/expenses/payout-history"));
+  await page.goto(getUrl("/admin/reporting/expenses/payout-history"));
 
   await page.getByRole("button", { name: "Manually Trigger Payout" }).click();
   const dialog = page.getByRole("dialog", { name: "Confirm Payout Trigger" });
@@ -154,9 +154,9 @@ test("an ops user triggers a payout run", async ({ page, context }) => {
   await expect(runRow).toContainText(String(run?.expectedPayoutAmount));
 });
 
-test("an ops user confirms the payout run", async ({ page, context }) => {
+test("an Operations admin confirms the payout run", async ({ page, context }) => {
   await signInWithEmail(context, ops.email);
-  await page.goto(getUrl("/ops/reporting/expenses/payout-history"));
+  await page.goto(getUrl("/admin/reporting/expenses/payout-history"));
 
   // Runs are listed newest first, so the run stays on the first page. The table search does not
   // match the formatted date, so find the row by its text instead.

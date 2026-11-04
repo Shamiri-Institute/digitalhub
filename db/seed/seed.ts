@@ -35,11 +35,11 @@ import {
   arsenalCoordinators,
   arsenalFellows,
   arsenalHub,
-  arsenalOpsUser,
   arsenalSupervisors,
   careAdminEmail,
   emiratesAcademy,
   plainAdminEmail,
+  operationsAdminEmail,
   researchAdminEmail,
   sobhaAcademy,
   superAdminEmail,
@@ -62,7 +62,6 @@ type Fellow = InferSelectModel<typeof schema.fellow>;
 type Hub = InferSelectModel<typeof schema.hub>;
 type HubCoordinator = InferSelectModel<typeof schema.hubCoordinator>;
 type Implementer = InferSelectModel<typeof schema.implementer>;
-type OpsUser = InferSelectModel<typeof schema.opsUser>;
 type Project = InferSelectModel<typeof schema.project>;
 type SessionName = InferSelectModel<typeof schema.sessionName>;
 type Supervisor = InferSelectModel<typeof schema.supervisor>;
@@ -222,7 +221,6 @@ async function createCoreUsers(
   hubCoordinators: HubCoordinator[],
   fellows: Fellow[],
   clinicalLeads: ClinicalLead[],
-  operations: OpsUser[],
   clinicalTeam: ClinicalTeam,
   admins: AdminUser[],
   hubs: Hub[],
@@ -233,9 +231,6 @@ async function createCoreUsers(
   const currentProjectHubIds = new Set(
     hubs.filter((h) => h.projectId === defaultProjectId).map((h) => h.id),
   );
-  const currentProjectImplementerIds = new Set(
-    hubs.filter((h) => h.projectId === defaultProjectId).map((h) => h.implementerId),
-  );
 
   const projectHubCoordinators = hubCoordinators.filter((hc) =>
     currentProjectHubIds.has(hc.assignedHubId ?? ""),
@@ -245,16 +240,8 @@ async function createCoreUsers(
   const projectClinicalLeads = clinicalLeads.filter((cl) =>
     currentProjectHubIds.has(cl.assignedHubId ?? ""),
   );
-  const projectOperations = operations.filter((o) =>
-    currentProjectImplementerIds.has(o.implementerId),
-  );
 
   const userData = [
-    {
-      id: objectId("user"),
-      email: "benny@shamiri.institute",
-      role: ImplementerRole.OPERATIONS,
-    },
     {
       id: objectId("user"),
       email: "shadrack.lilan@shamiri.institute",
@@ -328,11 +315,9 @@ async function createCoreUsers(
             ? faker.helpers.arrayElement(projectFellows)
             : role === "CLINICAL_LEAD"
               ? faker.helpers.arrayElement(projectClinicalLeads)
-              : role === "OPERATIONS"
-                ? faker.helpers.arrayElement(projectOperations)
-                : role === "CLINICAL_TEAM"
-                  ? clinicalTeam
-                  : null;
+              : role === "CLINICAL_TEAM"
+                ? clinicalTeam
+                : null;
     const identifier = personnel?.id ?? undefined;
     const implementerId = personnel?.implementerId ?? implementers[0]?.id ?? "";
     return {
@@ -406,6 +391,22 @@ async function createAdminUsers(
       implementerIds: [shamiri.id],
       isSuperAdmin: false,
       team: AdminTeam.RESEARCH,
+    },
+    {
+      userId: objectId("user"),
+      email: operationsAdminEmail,
+      adminName: "Operations Admin",
+      implementerIds: [shamiri.id],
+      isSuperAdmin: false,
+      team: AdminTeam.OPERATIONS,
+    },
+    {
+      userId: objectId("user"),
+      email: "benny@shamiri.institute",
+      adminName: "Benny",
+      implementerIds: [shamiri.id],
+      isSuperAdmin: false,
+      team: AdminTeam.OPERATIONS,
     },
     {
       userId: objectId("user"),
@@ -627,63 +628,6 @@ async function createSupervisors(arsenal: Hub, otherHubs: Hub[], emails: Set<str
     ...staticSupervisorRecords,
     ...dynamicSupervisorRecords,
   ]);
-  await insertMany(schema.implementerMember, membershipData);
-  return created;
-}
-
-async function createOperations(arsenal: Hub, otherHubs: Hub[], emails: Set<string>) {
-  console.log("creating operations users");
-  const operations: (typeof schema.opsUser.$inferInsert)[] = [];
-
-  const staticOps = {
-    id: objectId("user"),
-    ...arsenalOpsUser,
-    implementerId: arsenal.implementerId,
-  };
-  operations.push(staticOps);
-  emails.add(staticOps.email);
-
-  for (const hub of otherHubs) {
-    let uniqueEmail = faker.internet.email().toLowerCase();
-    while (emails.has(uniqueEmail)) {
-      uniqueEmail = faker.internet.email().toLowerCase();
-    }
-    emails.add(uniqueEmail);
-
-    const opsUser = {
-      id: objectId("user"),
-      email: uniqueEmail,
-      implementerId: hub.implementerId,
-      name: faker.person.fullName(),
-    };
-
-    operations.push(opsUser);
-  }
-
-  const createdOperations = await insertManyReturning(
-    schema.user,
-    operations.map(({ id, email }) => ({
-      id,
-      email,
-    })),
-  );
-
-  const membershipData = createdOperations.map((ops) => ({
-    userId: ops.id,
-    implementerId: operations.find((x) => x.id === ops.id)?.implementerId ?? "",
-    role: ImplementerRole.OPERATIONS,
-    identifier: objectId("opsuser"),
-  }));
-
-  const created = await insertManyReturning(
-    schema.opsUser,
-    operations.map((ops) => ({
-      id: membershipData.find((x) => x.userId === ops.id)?.identifier ?? "",
-      email: ops.email,
-      name: ops.name,
-      implementerId: ops.implementerId,
-    })),
-  );
   await insertMany(schema.implementerMember, membershipData);
   return created;
 }
@@ -2246,7 +2190,6 @@ async function main() {
   const clinicalLeads = await createClinicalLeads(arsenal, otherHubs, userEmailSet);
   const clinicalTeam = await createClinicalTeam(arsenal);
   await createResearchSurveys(defaultProjectId);
-  const operations = await createOperations(arsenal, otherHubs, userEmailSet);
   const fellows = await createFellows(arsenal, supervisors, userEmailSet);
 
   await createTickets();
@@ -2257,7 +2200,6 @@ async function main() {
     hubCoordinators,
     fellows,
     clinicalLeads,
-    operations,
     clinicalTeam,
     admins,
     hubs,

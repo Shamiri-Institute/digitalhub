@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
-import type { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
+import type { ImplementerPayoutHistoryType } from "#/app/(platform)/admin/reporting/expenses/payout-history/actions";
 import PayoutActionsDropdown from "#/components/common/expenses/payout-history/payout-actions-dropdown";
 import type { PayoutHistoryEntry } from "#/lib/actions/expenses/payout-history";
 import { sortBy } from "#/lib/table-view";
@@ -69,7 +69,7 @@ export const columns: ColumnDef<PayoutHistoryEntry>[] = [
   },
 ];
 
-export const subColumns: ColumnDef<OpsHubsPayoutHistoryType["fellowDetails"][number]>[] = [
+export const subColumns: ColumnDef<ImplementerPayoutHistoryType["fellowDetails"][number]>[] = [
   {
     accessorKey: "fellowName",
     header: "Fellow Name",
