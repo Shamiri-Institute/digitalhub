@@ -64,16 +64,24 @@ const triageTab: RoleTab = { segment: "triage", label: "Triage", icon: ShieldAle
 const ticketsTab: RoleTab = { segment: "tickets", label: "Tickets", icon: Ticket };
 const surveysTab: RoleTab = { segment: "surveys", label: "Surveys", icon: ClipboardList };
 
-function roleTabs(mainRoute: string, isSuperAdmin: boolean, canManageSurveys: boolean) {
+function roleTabs(
+  mainRoute: string,
+  isSuperAdmin: boolean,
+  canManageSurveys: boolean,
+  canManagePayouts: boolean,
+) {
   switch (mainRoute) {
     case "admin":
-      // Hiding the Users and Surveys tabs is cosmetic: their pages and actions check access themselves.
+      // Hiding the Users, Surveys and Reporting tabs is cosmetic: their pages and actions check access themselves.
       return [
         scheduleTab,
         { segment: "hubs", label: "Hubs", icon: Building2, alsoActiveOn: "schools" },
         ticketsTab,
         ...(isSuperAdmin ? [{ segment: "users", label: "Users", icon: Users }] : []),
         ...(canManageSurveys ? [surveysTab] : []),
+        ...(canManagePayouts
+          ? [{ segment: "reporting", label: "Reporting", icon: ChartColumn }]
+          : []),
       ];
     case "hc":
       return [
@@ -119,6 +127,7 @@ export function LayoutClient({
   isAdminUser,
   isSuperAdmin,
   canManageSurveys,
+  canManagePayouts,
   adminProjects,
   personnel,
 }: {
@@ -128,6 +137,7 @@ export function LayoutClient({
   isAdminUser: boolean;
   isSuperAdmin: boolean;
   canManageSurveys: boolean;
+  canManagePayouts: boolean;
   adminProjects: AdminProject[] | null;
   personnel: ImplementerPersonnel | null;
 }) {
@@ -266,7 +276,7 @@ export function LayoutClient({
             aria-label="Main"
             className="no-scrollbar flex items-center gap-8 overflow-x-auto ps-2 pe-10 mask-r-from-90% lg:mask-none"
           >
-            {roleTabs(mainRoute, isSuperAdmin, canManageSurveys).map((tab) => {
+            {roleTabs(mainRoute, isSuperAdmin, canManageSurveys, canManagePayouts).map((tab) => {
               const active = subRoute === tab.segment || subRoute === tab.alsoActiveOn;
               return (
                 <Link

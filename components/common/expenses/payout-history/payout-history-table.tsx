@@ -2,18 +2,18 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import type { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
-import type { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
+import type { ImplementerPayoutHistoryType } from "#/app/(platform)/admin/reporting/expenses/payout-history/actions";
 import ExpandableReportTable from "#/components/common/expandable-report-table";
 import { columns, subColumns } from "./columns";
 
-type PayoutHistoryType = HubPayoutHistoryType | OpsHubsPayoutHistoryType;
+type PayoutHistoryType = HubPayoutHistoryType | ImplementerPayoutHistoryType;
 
 export default function FellowPayoutHistoryDataTable({
   payoutHistory,
   customColumns,
 }: {
   payoutHistory: PayoutHistoryType[];
-  customColumns?: ColumnDef<OpsHubsPayoutHistoryType>[];
+  customColumns?: ColumnDef<ImplementerPayoutHistoryType>[];
 }) {
   return (
     <ExpandableReportTable

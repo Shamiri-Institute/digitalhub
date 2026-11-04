@@ -1,10 +1,10 @@
 "use client";
 import TabToggleNavigation, { type TabType } from "#/components/common/tabs/tab-navigation";
 
-export default function RenderOpsReportingTabs() {
+export default function RenderAdminReportingTabs() {
   const expensesReportOptions: TabType[] = [
-    { name: "Fellows", href: "/ops/reporting/expenses/fellows" },
-    { name: "Payout history", href: "/ops/reporting/expenses/payout-history" },
+    { name: "Fellows", href: "/admin/reporting/expenses/fellows" },
+    { name: "Payout history", href: "/admin/reporting/expenses/payout-history" },
   ];
   return <TabToggleNavigation options={expensesReportOptions} />;
 }

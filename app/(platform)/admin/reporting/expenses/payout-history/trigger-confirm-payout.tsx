@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { confirmPayoutAction } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
+import { confirmPayoutAction } from "#/app/(platform)/admin/reporting/expenses/payout-history/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,

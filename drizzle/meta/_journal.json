@@ -372,6 +372,13 @@
       "when": 1794300000000,
       "tag": "0052_admin_operations_team",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1794300001000,
+      "tag": "0053_move_ops_users_to_admin",
+      "breakpoints": true
     }
   ]
 }

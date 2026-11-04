@@ -3,7 +3,11 @@ import { LayoutClient } from "#/components/layout-client";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fetchImplementerPersonnel, isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
-import { canManageSurveys, projectsAdministeredBy } from "#/lib/auth/admin-access";
+import {
+  canManagePayouts,
+  canManageSurveys,
+  projectsAdministeredBy,
+} from "#/lib/auth/admin-access";
 
 async function loadAdminProjects() {
   const session = await getCurrentUserSession();
@@ -35,6 +39,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
     user?.activeMembership?.role === ImplementerRole.ADMIN ? await currentAdminUser() : null;
   const isSuperAdmin = adminUser?.profile.isSuperAdmin ?? false;
   const canManageSurveysTab = adminUser !== null && canManageSurveys(adminUser.profile);
+  const canManagePayoutsTab = adminUser !== null && canManagePayouts(adminUser.profile);
   return (
     <LayoutClient
       user={user}
@@ -42,6 +47,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
       isAdminUser={isAdminUser}
       isSuperAdmin={isSuperAdmin}
       canManageSurveys={canManageSurveysTab}
+      canManagePayouts={canManagePayoutsTab}
       adminProjects={adminProjects}
       personnel={personnel}
     >

@@ -17,7 +17,6 @@ export type Role =
   | "FELLOW"
   | "CLINICAL_LEAD"
   | "CLINICAL_TEAM"
-  | "OPERATIONS"
   | "ADMIN";
 
 type PlatformUser = { id: string; email: string; identifier: string | null };
@@ -29,7 +28,6 @@ const PREFIX_ROLE: Record<string, Role> = {
   fel: "FELLOW",
   cl: "CLINICAL_LEAD",
   ct: "CLINICAL_TEAM",
-  ops: "OPERATIONS",
   admin: "ADMIN",
 };
 
@@ -43,7 +41,6 @@ const PROFILE_FILTER: Record<Role, string> = {
       where f.id = m.identifier and f.archived_at is null and s.archived_at is null)`,
   CLINICAL_LEAD: `exists (select 1 from clinical_leads cl where cl.id = m.identifier)`,
   CLINICAL_TEAM: `exists (select 1 from clinical_teams ct where ct.id = m.identifier)`,
-  OPERATIONS: `exists (select 1 from ops_users o where o.id = m.identifier)`,
   ADMIN: `true`,
 };
 
