@@ -12,7 +12,7 @@ import { getCachedSession } from "#/lib/auth";
 function requireRole(session: { user: SessionUser }, role: ImplementerRole) {
   const membership = session.user.activeMembership;
   if (membership && membership.role !== role) {
-    redirect(roleHome[membership.role]);
+    redirect(roleHome[membership.role] ?? "/login");
   }
   return membership;
 }
@@ -164,39 +164,6 @@ export const currentClinicalTeam = cache(async () => {
   };
 });
 
-export type CurrentOpsUser = Awaited<ReturnType<typeof currentOpsUser>>;
-
-export const currentOpsUser = cache(async () => {
-  const session = await getCurrentUserSession();
-  if (!session) {
-    return null;
-  }
-
-  const membership = requireRole(session, ImplementerRole.OPERATIONS);
-  if (!membership) {
-    return null;
-  }
-
-  const { identifier } = membership;
-  if (!identifier) {
-    return null;
-  }
-
-  const opsUser = await db.query.opsUser.findFirst({
-    where: (o, { eq }) => eq(o.id, identifier),
-    with: {
-      implementer: true,
-      assignedHub: true,
-    },
-  });
-
-  if (!opsUser) {
-    return null;
-  }
-
-  return { profile: opsUser, session };
-});
-
 export type CurrentAdminUser = Awaited<ReturnType<typeof currentAdminUser>>;
 
 export const currentAdminUser = cache(async () => {
@@ -283,8 +250,6 @@ export const getCurrentPersonnel = cache(async () => {
         }
       );
     }
-    case ImplementerRole.OPERATIONS:
-      return currentOpsUser();
     case ImplementerRole.CLINICAL_TEAM:
       return currentClinicalTeam();
     case ImplementerRole.ADMIN:

@@ -157,7 +157,6 @@ export const ROLE_NAME_CONFIG: { role: ImplementerRole; table: string; column: s
   { role: "HUB_COORDINATOR", table: "hub_coordinators", column: "coordinator_name" },
   { role: "CLINICAL_LEAD", table: "clinical_leads", column: "clinical_lead_name" },
   { role: "CLINICAL_TEAM", table: "clinical_teams", column: "name" },
-  { role: "OPERATIONS", table: "ops_users", column: "name" },
   { role: "ADMIN", table: "admin_users", column: "name" },
 ];
 

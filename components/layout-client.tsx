@@ -192,15 +192,13 @@ export function LayoutClient({
   // The phone menu and the desktop account menu show the same items; only one is visible.
   const accountMenuItems = (
     <>
-      {!pathname.startsWith("/ops/") && (
-        <DropdownMenuItem
-          className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
-          onSelect={() => setIsProfileOpen(true)}
-        >
-          <UserRound className="size-4 text-shamiri-text-grey" />
-          My Profile
-        </DropdownMenuItem>
-      )}
+      <DropdownMenuItem
+        className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
+        onSelect={() => setIsProfileOpen(true)}
+      >
+        <UserRound className="size-4 text-shamiri-text-grey" />
+        My Profile
+      </DropdownMenuItem>
       <DropdownMenuItem
         className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
         onSelect={toastOnError(signOut)}

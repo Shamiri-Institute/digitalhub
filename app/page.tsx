@@ -8,5 +8,5 @@ export default async function RootPage() {
   if (!session?.user.activeMembership) {
     redirect("/login");
   }
-  redirect(roleHome[session.user.activeMembership.role]);
+  redirect(roleHome[session.user.activeMembership.role] ?? "/login");
 }
