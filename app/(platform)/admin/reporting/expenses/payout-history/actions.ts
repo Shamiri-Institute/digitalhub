@@ -21,8 +21,9 @@ export type ImplementerPayoutHistoryType = Awaited<
 export type FellowPayoutDetail = ImplementerPayoutHistoryType["fellowDetails"][number];
 
 export async function loadImplementerPayoutHistory() {
-  const { implementerId, projectId } = await requirePayoutScope();
-  const implementerHubIds = implementerHubsInProject(implementerId, projectId);
+  const { implementerId: adminImplementerId, projectId: adminProjectId } =
+    await requirePayoutScope();
+  const implementerHubIds = implementerHubsInProject(adminImplementerId, adminProjectId);
   const projectFellowAttendanceIds = db
     .select({ id: fellowAttendance.id })
     .from(fellowAttendance)
@@ -93,8 +94,9 @@ export async function loadImplementerPayoutHistory() {
 }
 
 export async function triggerPayoutAction() {
-  const { implementerId, projectId } = await requirePayoutScope();
-  const implementerHubIds = implementerHubsInProject(implementerId, projectId);
+  const { implementerId: adminImplementerId, projectId: adminProjectId } =
+    await requirePayoutScope();
+  const implementerHubIds = implementerHubsInProject(adminImplementerId, adminProjectId);
   const currentTime = new Date();
 
   try {
@@ -208,8 +210,12 @@ export async function triggerPayoutAction() {
 }
 
 export async function confirmPayoutAction(executedAt: Date) {
-  const { userId, implementerId, projectId } = await requirePayoutScope();
-  const implementerHubIds = implementerHubsInProject(implementerId, projectId);
+  const {
+    userId: confirmingUserId,
+    implementerId: adminImplementerId,
+    projectId: adminProjectId,
+  } = await requirePayoutScope();
+  const implementerHubIds = implementerHubsInProject(adminImplementerId, adminProjectId);
   const currentTime = new Date();
 
   try {
@@ -241,7 +247,7 @@ export async function confirmPayoutAction(executedAt: Date) {
         .update(payoutStatements)
         .set({
           confirmedAt: currentTime,
-          confirmedBy: userId,
+          confirmedBy: confirmingUserId,
         })
         .where(
           inArray(

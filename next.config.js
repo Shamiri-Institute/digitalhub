@@ -129,7 +129,6 @@ const nextConfig = {
         permanent: false,
       },
       {
-        // Operations staff moved into admin; old ops links keep working.
         source: "/ops/:path*",
         destination: "/admin/:path*",
         permanent: false,

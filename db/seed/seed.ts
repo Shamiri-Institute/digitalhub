@@ -402,14 +402,6 @@ async function createAdminUsers(
     },
     {
       userId: objectId("user"),
-      email: "benny@shamiri.institute",
-      adminName: "Benny",
-      implementerIds: [shamiri.id],
-      isSuperAdmin: false,
-      team: AdminTeam.OPERATIONS,
-    },
-    {
-      userId: objectId("user"),
       email: plainAdminEmail,
       adminName: "Plain Admin",
       implementerIds: [shamiri.id],

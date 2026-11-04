@@ -37,17 +37,17 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   // admin it is the cached profile that getCurrentPersonnel already loaded.
   const adminUser =
     user?.activeMembership?.role === ImplementerRole.ADMIN ? await currentAdminUser() : null;
-  const isSuperAdmin = adminUser?.profile.isSuperAdmin ?? false;
-  const canManageSurveysTab = adminUser !== null && canManageSurveys(adminUser.profile);
-  const canManagePayoutsTab = adminUser !== null && canManagePayouts(adminUser.profile);
+  const adminTabs = {
+    users: adminUser?.profile.isSuperAdmin ?? false,
+    surveys: adminUser !== null && canManageSurveys(adminUser.profile),
+    payouts: adminUser !== null && canManagePayouts(adminUser.profile),
+  };
   return (
     <LayoutClient
       user={user}
       profile={userSession ?? null}
       isAdminUser={isAdminUser}
-      isSuperAdmin={isSuperAdmin}
-      canManageSurveys={canManageSurveysTab}
-      canManagePayouts={canManagePayoutsTab}
+      adminTabs={adminTabs}
       adminProjects={adminProjects}
       personnel={personnel}
     >

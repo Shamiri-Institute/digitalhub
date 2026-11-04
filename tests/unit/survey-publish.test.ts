@@ -9,13 +9,13 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db, pool } from "#/db/client";
 import { survey, surveyAuditEvent, surveyVersion } from "#/db/schema";
 import type { SurveyStatus } from "#/db/enums";
-import type { SurveyScope } from "#/lib/auth/admin-access";
+import type { AdminScope } from "#/lib/auth/admin-access";
 import type { SurveyForm, SurveyItem } from "#/lib/survey/form";
 import { LAYOUT_ENGINE_VERSION, type Prefill } from "#/lib/survey/layout";
 import { publishDraftVersion, type PublishRequest } from "#/lib/survey/publish-version";
 import { PRINT_FORM } from "./fixtures/survey-print-form";
 
-let scope: SurveyScope;
+let scope: AdminScope;
 const createdCodes: string[] = [];
 
 beforeAll(async () => {

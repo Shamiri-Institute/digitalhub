@@ -1,5 +1,4 @@
--- Moves operations staff into admin as the OPERATIONS team. Production leaves `dropped_out` null,
--- so an ops user is active unless it is true.
+-- Production leaves `dropped_out` null, so an ops user is active unless it is true.
 --
 -- Nothing here touches `implementer_members.updated_at`: the most recently updated membership is
 -- the person's active one, so a converted membership stays active.
@@ -12,7 +11,6 @@ WHERE o.dropped_out IS NOT TRUE
   AND lower(trim(o.email)) = lower(trim(a.email))
   AND a.team IS NULL;--> statement-breakpoint
 
--- The id has the shape of the ones the app makes, as in 0013.
 INSERT INTO admin_users (id, email, name, implementer_id, team, updated_at)
 SELECT DISTINCT ON (o.implementer_id, lower(trim(o.email)))
   'admin_0' || substr(md5(random()::text || clock_timestamp()::text || o.id), 1, 25),
@@ -36,7 +34,7 @@ FROM ops_users o, admin_users a
 WHERE m.role = 'OPERATIONS'
   AND m.identifier = o.id
   AND o.dropped_out IS NOT TRUE
-  AND a.implementer_id = o.implementer_id
+  AND a.implementer_id = m.implementer_id
   AND lower(trim(a.email)) = lower(trim(o.email))
   AND NOT EXISTS (
     SELECT 1 FROM implementer_members x

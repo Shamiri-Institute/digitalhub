@@ -31,7 +31,6 @@ export default function PayoutHistoryTableSkeleton() {
   return (
     <div className="space-y-3 px-6 py-10">
       <DataTable
-        key="skeleton-complaints-table"
         columns={loadingColumns}
         data={emptyData}
         className="data-table data-table-action lg:mt-4"
