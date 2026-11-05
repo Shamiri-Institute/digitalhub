@@ -27,15 +27,7 @@ async function schoolOptionsForViewer(viewer: MonitoringViewer): Promise<FilterO
   return db
     .select({ id: school.id, name: school.schoolName })
     .from(school)
-    .where(
-      and(
-        eq(school.hubId, viewer.hubId),
-        isNull(school.archivedAt),
-        viewer.role === "supervisor"
-          ? eq(school.assignedSupervisorId, viewer.supervisorId)
-          : undefined,
-      ),
-    )
+    .where(and(eq(school.hubId, viewer.hubId), isNull(school.archivedAt)))
     .orderBy(asc(school.schoolName));
 }
 
@@ -60,12 +52,7 @@ async function fellowOptionsForViewer(viewer: MonitoringViewer): Promise<FilterO
     .select({ id: fellow.id, name: fellow.fellowName })
     .from(fellow)
     .where(
-      and(
-        eq(fellow.hubId, viewer.hubId),
-        isNull(fellow.archivedAt),
-        isNotNull(fellow.fellowName),
-        viewer.role === "supervisor" ? eq(fellow.supervisorId, viewer.supervisorId) : undefined,
-      ),
+      and(eq(fellow.hubId, viewer.hubId), isNull(fellow.archivedAt), isNotNull(fellow.fellowName)),
     )
     .orderBy(asc(fellow.fellowName));
   return viewerFellows.map(({ id, name }) => ({ id, name: name ?? "" }));
@@ -76,8 +63,8 @@ function selectedIfOffered(options: FilterOption[], requestedId: string | undefi
 }
 
 /**
- * URL values only narrow what the viewer may already see: an id outside the viewer's options is
- * ignored, and a supervisor is always locked to themselves.
+ * URL values only narrow what the viewer may already see: an id outside the viewer's hub is ignored.
+ * A supervisor sees the hub, so their own rows are not a filter here: see `supervisorCardScope`.
  */
 export async function resolveMonitoringFilters(
   viewer: MonitoringViewer,
@@ -99,10 +86,7 @@ export async function resolveMonitoringFilters(
       projectId: viewer.projectId,
       hubId: viewer.hubId,
       schoolId: selectedIfOffered(schoolOptions, searchParams.school),
-      supervisorId:
-        viewer.role === "supervisor"
-          ? viewer.supervisorId
-          : selectedIfOffered(supervisorOptions, searchParams.supervisor),
+      supervisorId: selectedIfOffered(supervisorOptions, searchParams.supervisor),
       fellowId: selectedIfOffered(fellowOptions, searchParams.fellow),
       timeZone,
     },

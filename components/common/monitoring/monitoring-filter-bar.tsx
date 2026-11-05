@@ -57,7 +57,7 @@ function FilterSelect({
 
 export function MonitoringFilterBar({
   hubName,
-  lockedSupervisorName,
+  ownSupervisorName,
   schoolOptions,
   supervisorOptions,
   fellowOptions,
@@ -66,7 +66,7 @@ export function MonitoringFilterBar({
   selectedFellowId,
 }: {
   hubName: string;
-  lockedSupervisorName: string | null;
+  ownSupervisorName: string | null;
   schoolOptions: FilterOption[];
   supervisorOptions: FilterOption[];
   fellowOptions: FilterOption[];
@@ -80,10 +80,10 @@ export function MonitoringFilterBar({
         Hub
         <span className="font-normal text-shamiri-text-dark-grey">{hubName}</span>
       </p>
-      {lockedSupervisorName ? (
+      {ownSupervisorName ? (
         <p className="flex flex-col gap-1 text-sm font-medium">
-          Supervisor
-          <span className="font-normal text-shamiri-text-dark-grey">{lockedSupervisorName}</span>
+          You
+          <span className="font-normal text-shamiri-text-dark-grey">{ownSupervisorName}</span>
         </p>
       ) : (
         <FilterSelect

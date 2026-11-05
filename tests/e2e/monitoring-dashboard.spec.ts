@@ -69,7 +69,7 @@ async function expectEveryTabLoads(page: Page) {
 test.describe("Monitoring and Evaluation dashboard", () => {
   test.setTimeout(180_000);
 
-  test("a supervisor stays locked to themselves whatever the URL asks for", async ({
+  test("a supervisor sees their hub with their own figures marked, and their own rows on personal tables", async ({
     context,
     page,
   }) => {
@@ -77,16 +77,28 @@ test.describe("Monitoring and Evaluation dashboard", () => {
     await signInWithEmail(context, email);
 
     await page.goto(
-      `/sc/reporting/monitoring-and-evaluation?tab=supervisors&supervisor=${fixture.otherHubSupervisorId}&fellow=${fixture.sameHubFellowId}`,
+      `/sc/reporting/monitoring-and-evaluation?tab=supervisors&supervisor=${fixture.otherHubSupervisorId}`,
     );
 
     await expect(page.locator("iframe")).toHaveCount(0);
     await expect(page.getByText(fixture.hubName, { exact: true }).first()).toBeVisible();
-    await expect(page.getByText(fixture.supervisorName, { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("combobox", { name: "Supervisor" })).toHaveCount(0);
-    // This fellow belongs to another supervisor, so the id in the URL is ignored.
-    await expect(page.getByRole("combobox", { name: "Fellow" })).toHaveText("All");
     await expect(page.getByText(fixture.otherHubSupervisorName)).toHaveCount(0);
+
+    await page.goto(
+      `/sc/reporting/monitoring-and-evaluation?tab=fellows&fellow=${fixture.sameHubFellowId}`,
+    );
+    // A fellow of another supervisor in the hub can be chosen now that the view is hub-wide.
+    await expect(page.getByRole("combobox", { name: "Fellow" })).toHaveText(
+      fixture.sameHubFellowName,
+    );
+
+    await page.goto("/sc/reporting/monitoring-and-evaluation?tab=supervisors");
+    await expect(page.getByText("Shows your own rows only.").first()).toBeVisible();
+
+    await page.goto("/sc/reporting/monitoring-and-evaluation?tab=students");
+    await expect(page.getByText("You", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Hub", { exact: true }).first()).toBeVisible();
 
     await expectEveryTabLoads(page);
   });

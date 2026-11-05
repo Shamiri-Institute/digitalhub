@@ -8,6 +8,7 @@ import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
+import { supervisorCardScope } from "#/lib/monitoring/supervisor-view";
 import { monitoringTabs } from "#/lib/monitoring/tabs";
 import type { MonitoringCard, MonitoringFilters, MonitoringTab } from "#/lib/monitoring/types";
 import {
@@ -24,43 +25,63 @@ const CARD_WIDTH_CLASSES: Record<MonitoringCard["width"], string> = {
   24: "lg:col-span-24",
 };
 
-async function LoadedCardBody({
-  card,
-  filters,
-}: {
-  card: MonitoringCard;
-  filters: MonitoringFilters;
-}) {
-  const rows = await card.load(filters).catch((error: unknown) => {
+function loadCard(card: MonitoringCard, filters: MonitoringFilters) {
+  return card.load(filters).catch((error: unknown) => {
     Sentry.captureException(error);
     return null;
   });
-  if (!rows) {
+}
+
+async function LoadedCardBody({
+  card,
+  filters,
+  viewer,
+}: {
+  card: MonitoringCard;
+  filters: MonitoringFilters;
+  viewer: MonitoringViewer;
+}) {
+  const ownFilters =
+    viewer.role === "supervisor" ? { ...filters, supervisorId: viewer.supervisorId } : filters;
+  const scope = viewer.role === "supervisor" ? supervisorCardScope(card) : "hub";
+  const [rows, ownRows] = await Promise.all([
+    loadCard(card, scope === "own-rows" ? ownFilters : filters),
+    scope === "you-vs-hub" ? loadCard(card, ownFilters) : undefined,
+  ]);
+  if (!rows || ownRows === null) {
     return (
       <Alert variant="destructive">
         <AlertTitle>This card could not load. Reload the page to try again.</AlertTitle>
       </Alert>
     );
   }
-  return <MonitoringCardView rows={rows} view={card.view} />;
+  const emphasis =
+    viewer.role === "supervisor" && scope !== "own-rows"
+      ? { ownSupervisorName: viewer.supervisorName, ownRows }
+      : undefined;
+  return <MonitoringCardView rows={rows} view={card.view} emphasis={emphasis} />;
 }
 
 function MonitoringCardPanel({
   card,
   filters,
+  viewer,
 }: {
   card: MonitoringCard;
   filters: MonitoringFilters;
+  viewer: MonitoringViewer;
 }) {
+  const showsOwnRowsOnly = viewer.role === "supervisor" && supervisorCardScope(card) === "own-rows";
   return (
     <Card className={cn("min-w-0", CARD_WIDTH_CLASSES[card.width])}>
       <CardHeader>
         <CardTitle className="text-base">{card.title}</CardTitle>
         {card.description && <CardDescription>{card.description}</CardDescription>}
+        {showsOwnRowsOnly && <CardDescription>Shows your own rows only.</CardDescription>}
       </CardHeader>
       <CardContent>
         <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-          <LoadedCardBody card={card} filters={filters} />
+          <LoadedCardBody card={card} filters={filters} viewer={viewer} />
         </Suspense>
       </CardContent>
     </Card>
@@ -101,7 +122,7 @@ export async function MonitoringDashboard({
       <ViewerTimeZoneCookie serverTimeZone={timeZone} />
       <MonitoringFilterBar
         hubName={viewer.hubName}
-        lockedSupervisorName={viewer.role === "supervisor" ? viewer.supervisorName : null}
+        ownSupervisorName={viewer.role === "supervisor" ? viewer.supervisorName : null}
         schoolOptions={options.schoolOptions}
         supervisorOptions={options.supervisorOptions}
         fellowOptions={options.fellowOptions}
@@ -135,7 +156,12 @@ export async function MonitoringDashboard({
             {section.heading && <h2 className="text-lg font-semibold">{section.heading}</h2>}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-24">
               {visibleCards.map((card) => (
-                <MonitoringCardPanel key={card.metabaseCardId} card={card} filters={filters} />
+                <MonitoringCardPanel
+                  key={card.metabaseCardId}
+                  card={card}
+                  filters={filters}
+                  viewer={viewer}
+                />
               ))}
             </div>
           </section>
