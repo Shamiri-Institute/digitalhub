@@ -11,6 +11,7 @@ import {
   LineChart,
   Pie,
   PieChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -34,13 +35,13 @@ function seriesColor(index: number) {
   return SERIES_COLORS[index % SERIES_COLORS.length];
 }
 
-function formatCell(cell: CardCell | undefined, suffix = "") {
+function formatCell(cell: CardCell | undefined) {
   if (cell === null || cell === undefined || cell === "") return "—";
   if (typeof cell === "boolean") return cell ? "Yes" : "No";
   if (typeof cell === "number") {
-    return `${cell.toLocaleString("en", { maximumFractionDigits: 2 })}${suffix}`;
+    return cell.toLocaleString("en", { maximumFractionDigits: 2 });
   }
-  return `${cell}${suffix}`;
+  return cell;
 }
 
 function pivotRowsBySeries(rows: CardRow[], x: string, breakout: string, value: string) {
@@ -69,17 +70,24 @@ function CartesianChart({
     "breakout" in view
       ? pivotRowsBySeries(rows, view.x, view.breakout, view.value)
       : { chartRows: rows, chartSeries: view.series };
+  const formatValue = (value: unknown) =>
+    view.percent
+      ? `${(Number(value) * 100).toLocaleString("en", { maximumFractionDigits: 1 })}%`
+      : formatCell(typeof value === "number" ? value : null);
   const axes = (
     <>
       <CartesianGrid vertical={false} strokeDasharray="3 3" />
       <XAxis dataKey={(row: CardRow) => formatCell(row[view.x])} tick={{ fontSize: 11 }}>
         {view.xLabel && <Label value={view.xLabel} position="insideBottom" offset={-4} />}
       </XAxis>
-      <YAxis tick={{ fontSize: 11 }}>
+      <YAxis tick={{ fontSize: 11 }} tickFormatter={formatValue}>
         {view.yLabel && <Label value={view.yLabel} angle={-90} position="insideLeft" />}
       </YAxis>
-      <Tooltip />
+      <Tooltip formatter={formatValue} />
       {chartSeries.length > 1 && <Legend />}
+      {view.goal !== undefined && (
+        <ReferenceLine y={view.goal} stroke="var(--color-shamiri-red)" strokeDasharray="4 4" />
+      )}
     </>
   );
   return (
@@ -95,7 +103,11 @@ function CartesianChart({
                 name={label}
                 fill={seriesColor(index)}
                 stackId={view.stacked ? "stack" : undefined}
-                label={view.stacked ? undefined : { position: "top", fontSize: 11 }}
+                label={
+                  view.stacked
+                    ? undefined
+                    : { position: "top", fontSize: 11, formatter: formatValue }
+                }
               />
             ))}
           </BarChart>
@@ -132,11 +144,11 @@ function PieCard({ rows, name, value }: { rows: CardRow[]; name: string; value: 
 }
 
 function TableCard({ rows, columns }: { rows: CardRow[]; columns: TableColumn[] }) {
-  const tableColumns: ColumnDef<CardRow, CardCell>[] = columns.map(({ key, label, suffix }) => ({
+  const tableColumns: ColumnDef<CardRow, CardCell>[] = columns.map(({ key, label }) => ({
     id: key,
     header: label,
     accessorFn: (row) => row[key] ?? null,
-    cell: ({ getValue }) => formatCell(getValue(), suffix),
+    cell: ({ getValue }) => formatCell(getValue()),
   }));
   return (
     <DataTable

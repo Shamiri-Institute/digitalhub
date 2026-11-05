@@ -11,13 +11,17 @@ export type CardCell = string | number | boolean | null;
 export type CardRow = Record<string, CardCell>;
 
 export type ChartSeries = { key: string; label: string };
-export type TableColumn = { key: string; label: string; suffix?: string };
+export type TableColumn = { key: string; label: string };
 
 type CartesianView = {
   x: string;
   xLabel?: string;
   yLabel?: string;
   stacked?: boolean;
+  /** Values are 0-1 fractions, shown as percentages. */
+  percent?: boolean;
+  /** A reference line, in the same units as the values. */
+  goal?: number;
 } & (
   | { series: ChartSeries[] }
   /** One series per distinct value of `breakout`, for rows shaped (x, breakout, value). */

@@ -18,6 +18,15 @@ function inViewerZone(column: AnyPgColumn, timeZone: string) {
     : sql`(${column} at time zone ${zone})`;
 }
 
+/**
+ * updated_at stores UTC, but the Metabase cards read it as Nairobi wall time, 3 hours early, because
+ * that was their session zone. The timely-marking and scheduling figures keep that reading so they
+ * match what users saw until the metrics are rebuilt.
+ */
+export function updatedAtAsMetabaseRead(column: AnyPgColumn) {
+  return sql`(${column} at time zone 'Africa/Nairobi')`;
+}
+
 export function dayInViewerZone(column: AnyPgColumn, timeZone: string) {
   return sql<string>`to_char(${inViewerZone(column, timeZone)}, 'YYYY-MM-DD')`;
 }
