@@ -140,12 +140,6 @@ S3_STUDENT_ATTENDANCE_BUCKET="your-student-attendance-bucket"
 S3_STUDENT_ATTENDANCE_REGION="your-aws-region"  # defaults to af-south-1
 
 # ====================================
-# METABASE (Analytics)
-# ====================================
-METABASE_SECRET_KEY="your-metabase-secret-key"
-METABASE_MONITORING_DASHBOARD_ID="your-metabase-dashboard-id"  # Dashboard ID for Monitoring and Evaluation embed
-
-# ====================================
 # APPLICATION SETTINGS
 # ====================================
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
