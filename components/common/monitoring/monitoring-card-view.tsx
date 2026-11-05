@@ -81,7 +81,9 @@ function CartesianChart({
         {view.xLabel && <Label value={view.xLabel} position="insideBottom" offset={-4} />}
       </XAxis>
       <YAxis tick={{ fontSize: 11 }} tickFormatter={formatValue}>
-        {view.yLabel && <Label value={view.yLabel} angle={-90} position="insideLeft" />}
+        {view.yLabel && (
+          <Label value={view.yLabel} angle={-90} position="insideLeft" textAnchor="middle" />
+        )}
       </YAxis>
       <Tooltip formatter={formatValue} />
       {chartSeries.length > 1 && <Legend />}
@@ -102,6 +104,7 @@ function CartesianChart({
                 dataKey={key}
                 name={label}
                 fill={seriesColor(index)}
+                maxBarSize={96}
                 stackId={view.stacked ? "stack" : undefined}
                 label={
                   view.stacked
@@ -210,7 +213,11 @@ export function MonitoringCardView({ rows, view }: { rows: CardRow[]; view: Card
           <p className="text-center text-2xl font-semibold">
             {formatCell(current)} / {formatCell(view.goal)}
           </p>
-          <progress className="h-2 w-full" value={current} max={view.goal} />
+          <progress
+            className="h-2 w-full accent-shamiri-new-blue"
+            value={current}
+            max={view.goal}
+          />
         </div>
       );
     }

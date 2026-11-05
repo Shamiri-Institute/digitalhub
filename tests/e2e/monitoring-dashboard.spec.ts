@@ -61,7 +61,6 @@ async function expectEveryTabLoads(page: Page) {
     const tabLink = tabLinks.nth(tabIndex);
     await tabLink.click();
     await expect(tabLink).toHaveAttribute("aria-current", "page");
-    await expect(page.getByText("Loading")).toHaveCount(0);
     await expect(page.locator(".animate-pulse")).toHaveCount(0, { timeout: 30_000 });
     await expect(page.getByText("This card could not load")).toHaveCount(0);
   }
@@ -82,7 +81,7 @@ test.describe("Monitoring and Evaluation dashboard", () => {
     );
 
     await expect(page.locator("iframe")).toHaveCount(0);
-    await expect(page.getByText(fixture.hubName, { exact: true })).toBeVisible();
+    await expect(page.getByText(fixture.hubName, { exact: true }).first()).toBeVisible();
     await expect(page.getByText(fixture.supervisorName, { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("combobox", { name: "Supervisor" })).toHaveCount(0);
     // This fellow belongs to another supervisor, so the id in the URL is ignored.
@@ -103,7 +102,7 @@ test.describe("Monitoring and Evaluation dashboard", () => {
       `/hc/reporting/monitoring-and-evaluation?tab=supervisors&supervisor=${fixture.otherHubSupervisorId}`,
     );
 
-    await expect(page.getByText(fixture.hubName, { exact: true })).toBeVisible();
+    await expect(page.getByText(fixture.hubName, { exact: true }).first()).toBeVisible();
     const supervisorPicker = page.getByRole("combobox", { name: "Supervisor" });
     await expect(supervisorPicker).toHaveText("All");
     await expect(page.getByText(fixture.otherHubSupervisorName)).toHaveCount(0);

@@ -53,7 +53,7 @@ function MonitoringCardPanel({
   filters: MonitoringFilters;
 }) {
   return (
-    <Card className={cn("col-span-24 min-w-0", CARD_WIDTH_CLASSES[card.width])}>
+    <Card className={cn("min-w-0", CARD_WIDTH_CLASSES[card.width])}>
       <CardHeader>
         <CardTitle className="text-base">{card.title}</CardTitle>
         {card.description && <CardDescription>{card.description}</CardDescription>}
@@ -133,7 +133,7 @@ export async function MonitoringDashboard({
         return (
           <section key={section.heading ?? sectionIndex} className="flex flex-col gap-4">
             {section.heading && <h2 className="text-lg font-semibold">{section.heading}</h2>}
-            <div className="grid grid-cols-24 gap-4">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-24">
               {visibleCards.map((card) => (
                 <MonitoringCardPanel key={card.metabaseCardId} card={card} filters={filters} />
               ))}
