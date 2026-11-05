@@ -1,10 +1,13 @@
 import { currentSupervisor } from "#/app/auth";
-import MetabaseDashboardEmbed from "#/components/common/metabase-dashboard-embed";
+import { MonitoringDashboard } from "#/components/common/monitoring/monitoring-dashboard";
 import { Alert, AlertTitle } from "#/components/ui/alert";
-import { env } from "#/env";
-import { buildMetabaseDashboardEmbedUrl } from "#/lib/metabase-embed";
+import type { MonitoringSearchParams } from "#/lib/monitoring/viewer-filters";
 
-export default async function MonitoringAndEvaluationPage() {
+export default async function MonitoringAndEvaluationPage({
+  searchParams,
+}: {
+  searchParams: Promise<MonitoringSearchParams>;
+}) {
   const supervisor = await currentSupervisor();
 
   if (!supervisor) {
@@ -15,8 +18,8 @@ export default async function MonitoringAndEvaluationPage() {
     );
   }
 
-  const profile = supervisor.profile;
-  if (!profile?.hub) {
+  const { id: supervisorId, supervisorName, hubId, hub } = supervisor.profile;
+  if (!hub || !hubId) {
     return (
       <Alert variant="destructive" className="mx-4 mt-4">
         <AlertTitle>Configuration error: Supervisor hub not found</AlertTitle>
@@ -24,31 +27,17 @@ export default async function MonitoringAndEvaluationPage() {
     );
   }
 
-  const secretKey = env.METABASE_SECRET_KEY;
-  const dashboardId = env.METABASE_MONITORING_DASHBOARD_ID;
-  if (!secretKey) {
-    return (
-      <Alert variant="destructive" className="mx-4 mt-4">
-        <AlertTitle>Configuration error: Metabase secret key not found</AlertTitle>
-      </Alert>
-    );
-  }
-  if (!dashboardId) {
-    return (
-      <Alert variant="destructive" className="mx-4 mt-4">
-        <AlertTitle>
-          Configuration error: Metabase monitoring dashboard ID not found or invalid
-        </AlertTitle>
-      </Alert>
-    );
-  }
-
-  const params = {
-    hub: [profile.hub.hubName],
-    supervisor: [profile.supervisorName ?? ""],
-  };
-
-  const iframeUrl = buildMetabaseDashboardEmbedUrl(params, dashboardId, secretKey);
-
-  return <MetabaseDashboardEmbed iframeUrl={iframeUrl} title="Monitoring and Evaluation" />;
+  return (
+    <MonitoringDashboard
+      viewer={{
+        role: "supervisor",
+        hubId,
+        hubName: hub.hubName,
+        projectId: hub.projectId,
+        supervisorId,
+        supervisorName: supervisorName ?? "",
+      }}
+      searchParams={await searchParams}
+    />
+  );
 }

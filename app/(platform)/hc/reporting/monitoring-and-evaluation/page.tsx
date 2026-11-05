@@ -1,10 +1,13 @@
 import { currentHubCoordinator } from "#/app/auth";
-import MetabaseDashboardEmbed from "#/components/common/metabase-dashboard-embed";
+import { MonitoringDashboard } from "#/components/common/monitoring/monitoring-dashboard";
 import { Alert, AlertTitle } from "#/components/ui/alert";
-import { env } from "#/env";
-import { buildMetabaseDashboardEmbedUrl } from "#/lib/metabase-embed";
+import type { MonitoringSearchParams } from "#/lib/monitoring/viewer-filters";
 
-export default async function MonitoringAndEvaluationPage() {
+export default async function MonitoringAndEvaluationPage({
+  searchParams,
+}: {
+  searchParams: Promise<MonitoringSearchParams>;
+}) {
   const hubCoordinator = await currentHubCoordinator();
 
   if (!hubCoordinator) {
@@ -15,8 +18,7 @@ export default async function MonitoringAndEvaluationPage() {
     );
   }
 
-  const profile = hubCoordinator.profile;
-  const assignedHub = profile.assignedHub;
+  const assignedHub = hubCoordinator.profile.assignedHub;
   if (!assignedHub) {
     return (
       <Alert variant="destructive" className="mx-4 mt-4">
@@ -25,30 +27,15 @@ export default async function MonitoringAndEvaluationPage() {
     );
   }
 
-  const secretKey = env.METABASE_SECRET_KEY;
-  const dashboardId = env.METABASE_MONITORING_DASHBOARD_ID;
-  if (!secretKey) {
-    return (
-      <Alert variant="destructive" className="mx-4 mt-4">
-        <AlertTitle>Configuration error: Metabase secret key not found</AlertTitle>
-      </Alert>
-    );
-  }
-  if (!dashboardId) {
-    return (
-      <Alert variant="destructive" className="mx-4 mt-4">
-        <AlertTitle>
-          Configuration error: Metabase monitoring dashboard ID not found or invalid
-        </AlertTitle>
-      </Alert>
-    );
-  }
-
-  const params = {
-    hub: [assignedHub.hubName],
-    supervisor: [],
-  };
-  const iframeUrl = buildMetabaseDashboardEmbedUrl(params, dashboardId, secretKey);
-
-  return <MetabaseDashboardEmbed iframeUrl={iframeUrl} title="Monitoring and Evaluation" />;
+  return (
+    <MonitoringDashboard
+      viewer={{
+        role: "hub-coordinator",
+        hubId: assignedHub.id,
+        hubName: assignedHub.hubName,
+        projectId: assignedHub.projectId,
+      }}
+      searchParams={await searchParams}
+    />
+  );
 }

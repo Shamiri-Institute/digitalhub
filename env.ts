@@ -28,9 +28,6 @@ const schema = z.object({
 
   // Vercel Cron sends it as a bearer token. Unset, the cron routes refuse every request.
   CRON_SECRET: z.string().min(16).optional(),
-
-  METABASE_SECRET_KEY: z.string().optional(),
-  METABASE_MONITORING_DASHBOARD_ID: z.coerce.number().int().positive().optional(),
 });
 
 export const env = process.env.CI
