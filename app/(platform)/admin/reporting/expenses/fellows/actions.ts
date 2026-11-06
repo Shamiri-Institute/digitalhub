@@ -1,8 +1,7 @@
 "use server";
 
-import { currentOpsUser } from "#/app/auth";
 import { db } from "#/db/client";
-import { getActiveProjectId } from "#/lib/active-project-id";
+import { requirePayoutScope } from "#/lib/auth/admin-access";
 import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 
 export type HubFellowsAttendancesType = Awaited<
@@ -10,19 +9,12 @@ export type HubFellowsAttendancesType = Awaited<
 >[number];
 
 export async function loadHubsFellowAttendance() {
-  const opsUser = await currentOpsUser();
-
-  if (!opsUser) {
-    throw new Error("Unauthorised user");
-  }
-
-  const opsHubIds = implementerHubsInProject(
-    opsUser.profile.implementerId,
-    await getActiveProjectId(),
-  );
+  const { implementerId: adminImplementerId, projectId: adminProjectId } =
+    await requirePayoutScope();
+  const implementerHubIds = implementerHubsInProject(adminImplementerId, adminProjectId);
 
   const fellows = await db.query.fellow.findMany({
-    where: (f, { inArray }) => inArray(f.hubId, opsHubIds),
+    where: (f, { inArray }) => inArray(f.hubId, implementerHubIds),
     with: {
       hub: { columns: { hubName: true } },
       supervisor: { columns: { supervisorName: true } },

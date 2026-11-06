@@ -8,17 +8,17 @@ import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
- * An ops user runs and confirms a payout. A run executes every eligible statement of the ops user's
- * implementer in their project, so playwright.config.ts runs this spec in its own project after
- * every other spec. The database checks cover what no page shows: which statements and attendances
- * a run processed, and who confirmed them.
+ * A run executes every eligible statement of the admin's implementer in their project, so
+ * playwright.config.ts runs this spec in its own project after every other spec. The database
+ * checks cover what no page shows: which statements and attendances a run processed, and who
+ * confirmed them.
  */
 
 test.describe.configure({ mode: "serial" });
 
 type Fixture = { attendanceId: number; sessionAmount: number };
 type OtherImplementerFixture = Fixture & { hubId: string; originalProjectId: string };
-let ops: { email: string; userId: string; implementerId: string; projectId: string };
+let operationsAdmin: { email: string; userId: string; implementerId: string; projectId: string };
 let fixture: Fixture;
 let otherImplementer: OtherImplementerFixture;
 let insertedPayoutId: string;
@@ -28,18 +28,18 @@ const startedAt = new Date();
 
 test.beforeAll(async () => {
   const {
-    rows: [firstOps],
-  } = await db.execute<typeof ops>(sql`
-    select u.email, u.id as "userId", o.implementer_id as "implementerId",
+    rows: [firstOperationsAdmin],
+  } = await db.execute<typeof operationsAdmin>(sql`
+    select u.email, u.id as "userId", a.implementer_id as "implementerId",
       coalesce(u.active_project_id, (select id from projects where is_default)) as "projectId"
-    from ops_users o
-    join implementer_members m on m.identifier = o.id and m.role = 'OPERATIONS'
+    from admin_users a
+    join implementer_members m on m.identifier = a.id and m.role = 'ADMIN'
     join users u on u.id = m.user_id
-    where ${signableMember()}
-    order by o.id
+    where a.team = 'OPERATIONS' and not a.is_super_admin and ${signableMember()}
+    order by u.email
     limit 1`);
-  required(firstOps, "no ops user");
-  ops = firstOps;
+  required(firstOperationsAdmin, "no Operations admin");
+  operationsAdmin = firstOperationsAdmin;
 
   const eligibleAttendance = sql`
     select fa.id as "attendanceId", sn.amount as "sessionAmount",
@@ -54,20 +54,23 @@ test.beforeAll(async () => {
   const {
     rows: [row],
   } = await db.execute<Fixture>(sql`${eligibleAttendance}
-    and h.implementer_id = ${ops.implementerId} and h.project_id = ${ops.projectId}
+    and h.implementer_id = ${operationsAdmin.implementerId} and h.project_id = ${operationsAdmin.projectId}
     order by fa.id limit 1`);
   required(row, "no attended, unprocessed attendance");
   fixture = row;
 
-  // Another implementer's hub, moved into the ops user's project until afterAll.
+  // Another implementer's hub, moved into the admin's project until afterAll.
   const {
     rows: [otherRow],
   } = await db.execute<OtherImplementerFixture>(sql`${eligibleAttendance}
-    and h.implementer_id <> ${ops.implementerId}
+    and h.implementer_id <> ${operationsAdmin.implementerId}
     order by fa.id limit 1`);
   required(otherRow, "no attendance of another implementer");
   otherImplementer = otherRow;
-  await db.update(hub).set({ projectId: ops.projectId }).where(eq(hub.id, otherImplementer.hubId));
+  await db
+    .update(hub)
+    .set({ projectId: operationsAdmin.projectId })
+    .where(eq(hub.id, otherImplementer.hubId));
 
   insertedPayoutId = await insertUnexecutedStatement(fixture);
   otherImplementerPayoutId = await insertUnexecutedStatement(otherImplementer);
@@ -80,7 +83,7 @@ async function insertUnexecutedStatement(attendance: Fixture) {
       fellowAttendanceId: attendance.attendanceId,
       amount: attendance.sessionAmount,
       reason: "MARK_SESSION_ATTENDANCE",
-      createdBy: ops.userId,
+      createdBy: operationsAdmin.userId,
     })
     .returning({ id: payoutStatements.id });
   if (!inserted) throw new Error("could not insert the payout statement fixture");
@@ -113,9 +116,9 @@ test.afterAll(async () => {
   }
 });
 
-test("an ops user triggers a payout run", async ({ page, context }) => {
-  await signInWithEmail(context, ops.email);
-  await page.goto(getUrl("/ops/reporting/expenses/payout-history"));
+test("an Operations admin triggers a payout run", async ({ page, context }) => {
+  await signInWithEmail(context, operationsAdmin.email);
+  await page.goto(getUrl("/admin/reporting/expenses/payout-history"));
 
   await page.getByRole("button", { name: "Manually Trigger Payout" }).click();
   const dialog = page.getByRole("dialog", { name: "Confirm Payout Trigger" });
@@ -154,9 +157,9 @@ test("an ops user triggers a payout run", async ({ page, context }) => {
   await expect(runRow).toContainText(String(run?.expectedPayoutAmount));
 });
 
-test("an ops user confirms the payout run", async ({ page, context }) => {
-  await signInWithEmail(context, ops.email);
-  await page.goto(getUrl("/ops/reporting/expenses/payout-history"));
+test("an Operations admin confirms the payout run", async ({ page, context }) => {
+  await signInWithEmail(context, operationsAdmin.email);
+  await page.goto(getUrl("/admin/reporting/expenses/payout-history"));
 
   // Runs are listed newest first, so the run stays on the first page. The table search does not
   // match the formatted date, so find the row by its text instead.
@@ -176,6 +179,9 @@ test("an ops user confirms the payout run", async ({ page, context }) => {
     .where(gte(payoutStatements.confirmedAt, startedAt));
   expect(confirmedPayouts.length).toBeGreaterThan(0);
   for (const confirmedPayout of confirmedPayouts) {
-    expect(confirmedPayout).toEqual({ executedAt: runExecutedAt, confirmedBy: ops.userId });
+    expect(confirmedPayout).toEqual({
+      executedAt: runExecutedAt,
+      confirmedBy: operationsAdmin.userId,
+    });
   }
 });

@@ -6,6 +6,7 @@ export const superAdminEmail = "admin@shamiri.institute";
 export const careAdminEmail = "care.admin@shamiri.institute";
 export const plainAdminEmail = "plain.admin@shamiri.institute";
 export const researchAdminEmail = "research.admin@shamiri.institute";
+export const operationsAdminEmail = "operations.admin@shamiri.institute";
 
 const arsenalStaffDetails = {
   county: "Nairobi",
@@ -82,8 +83,6 @@ export const arsenalSupervisors = [
     idNumber: "31000005",
   },
 ];
-
-export const arsenalOpsUser = { email: "kai.havertz@test.com", name: "Kai Havertz" };
 
 export const arsenalClinicalLead = {
   clinicalLeadEmail: "ben.white@test.com",

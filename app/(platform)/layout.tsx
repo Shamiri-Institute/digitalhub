@@ -3,7 +3,11 @@ import { LayoutClient } from "#/components/layout-client";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fetchImplementerPersonnel, isCurrentUserAdmin } from "#/lib/actions/fetch-personnel";
-import { canManageSurveys, projectsAdministeredBy } from "#/lib/auth/admin-access";
+import {
+  canManagePayouts,
+  canManageSurveys,
+  projectsAdministeredBy,
+} from "#/lib/auth/admin-access";
 
 async function loadAdminProjects() {
   const session = await getCurrentUserSession();
@@ -33,15 +37,17 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   // admin it is the cached profile that getCurrentPersonnel already loaded.
   const adminUser =
     user?.activeMembership?.role === ImplementerRole.ADMIN ? await currentAdminUser() : null;
-  const isSuperAdmin = adminUser?.profile.isSuperAdmin ?? false;
-  const canManageSurveysTab = adminUser !== null && canManageSurveys(adminUser.profile);
+  const adminTabs = {
+    users: adminUser?.profile.isSuperAdmin ?? false,
+    surveys: adminUser !== null && canManageSurveys(adminUser.profile),
+    payouts: adminUser !== null && canManagePayouts(adminUser.profile),
+  };
   return (
     <LayoutClient
       user={user}
       profile={userSession ?? null}
       isAdminUser={isAdminUser}
-      isSuperAdmin={isSuperAdmin}
-      canManageSurveys={canManageSurveysTab}
+      adminTabs={adminTabs}
       adminProjects={adminProjects}
       personnel={personnel}
     >

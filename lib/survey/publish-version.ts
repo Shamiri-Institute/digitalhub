@@ -8,7 +8,7 @@ import {
 } from "#/db/enums";
 import { survey, surveyVersion } from "#/db/schema";
 import { SurveyError } from "#/lib/actions/survey/respond";
-import type { SurveyScope } from "#/lib/auth/admin-access";
+import type { AdminScope } from "#/lib/auth/admin-access";
 import { type FormIssue, lockedQuestions } from "#/lib/survey/check-form";
 import { describeProblem, type LayoutProblem } from "#/lib/survey/layout";
 import { checkPublish } from "#/lib/survey/publish";
@@ -34,7 +34,7 @@ export type PublishRequest = {
  * again. Throws a SurveyError when the version is not the scope's or is no longer a draft.
  */
 export async function publishDraftVersion(
-  { userId, implementerId, projectId }: SurveyScope,
+  { userId, implementerId, projectId }: AdminScope,
   request: PublishRequest,
 ): Promise<{ result: PublishVersionResult; message: string }> {
   return db.transaction(async (tx) => {

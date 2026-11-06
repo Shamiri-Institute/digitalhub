@@ -40,6 +40,8 @@ import ArrowDropdown from "#/public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { toastOnError } from "#/components/ui/use-toast";
 
+export type AdminTabs = { users: boolean; surveys: boolean; payouts: boolean };
+
 interface NavigationLinkProps {
   scheduleActive: boolean;
   schoolsActive: boolean;
@@ -55,8 +57,7 @@ interface NavigationLinkProps {
   ticketsActive: boolean;
   usersActive: boolean;
   surveysActive: boolean;
-  isSuperAdmin: boolean;
-  canManageSurveys: boolean;
+  adminTabs: AdminTabs;
 }
 
 export function LayoutClient({
@@ -64,8 +65,7 @@ export function LayoutClient({
   user,
   profile,
   isAdminUser,
-  isSuperAdmin,
-  canManageSurveys,
+  adminTabs,
   adminProjects,
   personnel,
 }: {
@@ -73,8 +73,7 @@ export function LayoutClient({
   user: SessionUser | null;
   profile: CurrentPersonnel | null;
   isAdminUser: boolean;
-  isSuperAdmin: boolean;
-  canManageSurveys: boolean;
+  adminTabs: AdminTabs;
   adminProjects: AdminProject[] | null;
   personnel: ImplementerPersonnel | null;
 }) {
@@ -239,8 +238,7 @@ export function LayoutClient({
                 ticketsActive: ticketsActive ?? false,
                 usersActive: usersActive ?? false,
                 surveysActive: surveysActive ?? false,
-                isSuperAdmin,
-                canManageSurveys,
+                adminTabs,
               })}
           </div>
         </div>
@@ -321,8 +319,7 @@ function getCurrentUserNavigationLinks(
     ticketsActive,
     usersActive,
     surveysActive,
-    isSuperAdmin,
-    canManageSurveys,
+    adminTabs,
   }: NavigationLinkProps,
 ) {
   const links = [];
@@ -346,7 +343,7 @@ function getCurrentUserNavigationLinks(
       </div>,
     );
     // Hiding the tab is cosmetic: the page and its actions require a super admin themselves.
-    if (isSuperAdmin) {
+    if (adminTabs.users) {
       links.push(
         <div
           className={`tab-link flex items-center gap-2 ${cn(usersActive && "active")}`}
@@ -358,11 +355,19 @@ function getCurrentUserNavigationLinks(
       );
     }
     // Also cosmetic: the survey pages and actions check survey access themselves.
-    if (canManageSurveys) {
+    if (adminTabs.surveys) {
       links.push(
         <div className={`tab-link ${cn(surveysActive && "active")}`} key="admin-surveys">
           <ClipboardList className="h-5 w-5" />
           <Link href={`/${mainRoute}/surveys`}>Surveys</Link>
+        </div>,
+      );
+    }
+    if (adminTabs.payouts) {
+      links.push(
+        <div className={`tab-link ${cn(reportingActive && "active")}`} key="admin-reporting">
+          <BarChartIcon />
+          <Link href={`/${mainRoute}/reporting`}>Reporting</Link>
         </div>,
       );
     }

@@ -3,14 +3,14 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
-import type { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
-import TriggerConfirmPayout from "#/app/(platform)/ops/reporting/expenses/payout-history/trigger-confirm-payout";
+import type { ImplementerPayoutHistoryType } from "#/app/(platform)/admin/reporting/expenses/payout-history/actions";
+import TriggerConfirmPayout from "#/app/(platform)/admin/reporting/expenses/payout-history/trigger-confirm-payout";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { sortBy } from "#/lib/table-view";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 
-export const opsColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
+export const payoutRunColumns: ColumnDef<ImplementerPayoutHistoryType>[] = [
   {
     id: "button",
     cell: ({ row }) => {
