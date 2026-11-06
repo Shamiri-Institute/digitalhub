@@ -255,7 +255,6 @@ The platform implements role-specific dashboards and data access:
 | **Fellow**          | `/fel/*`   | Conducts intervention sessions with student groups         |
 | **Clinical Lead**   | `/cl/*`    | Handles clinical cases and high-risk screenings            |
 | **Clinical Team**   | `/ct/*`    | Supports clinical operations and case management           |
-| **Operations**      | `/ops/*`   | Administrative oversight and system management             |
 | **Admin**           | `/admin/*` | System administration and configuration                    |
 
 ### Key Entities
