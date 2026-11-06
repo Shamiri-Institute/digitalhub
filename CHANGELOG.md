@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.10.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.9.0...v2.10.0) (2026-11-06)
+
+### Features
+
+- **reporting:** replace the Metabase embed with a native monitoring dashboard\ ([#1035](https://github.com/Shamiri-Institute/digitalhub/issues/1035)) ([83e6376](https://github.com/Shamiri-Institute/digitalhub/commit/83e63764588f0ccafe126f1271fcbe5c60c6423b))
+- **survey:** render print run PDFs per school to S3 ([#993](https://github.com/Shamiri-Institute/digitalhub/issues/993)) ([4063e77](https://github.com/Shamiri-Institute/digitalhub/commit/4063e77b4674d30f252862921a70293912e2a35b))
+- **survey:** upload scanned questionnaires to S3 ([#1028](https://github.com/Shamiri-Institute/digitalhub/issues/1028)) ([aed20f3](https://github.com/Shamiri-Institute/digitalhub/commit/aed20f34f35d26daffedf6fd586ea56ec0c9969e))
+
+### Bug Fixes
+
+- **admin:** count hub fellow attendance per group, not per complete session (ENG-2622) ([#1029](https://github.com/Shamiri-Institute/digitalhub/issues/1029)) ([f92c0c1](https://github.com/Shamiri-Institute/digitalhub/commit/f92c0c1b356bcdbc431397a130d5af69624401f1))
+- **reports:** show each fellow group report under its author ([#1026](https://github.com/Shamiri-Institute/digitalhub/issues/1026)) ([ed36600](https://github.com/Shamiri-Institute/digitalhub/commit/ed36600159316ab3de564643d472a60a1726ebfb))
+
 ## [2.9.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.8.0...v2.9.0) (2026-11-02)
 
 ### Features
