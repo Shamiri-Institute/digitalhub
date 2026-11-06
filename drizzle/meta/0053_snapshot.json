@@ -12356,7 +12356,7 @@
     "public.admin_team": {
       "name": "admin_team",
       "schema": "public",
-      "values": ["CARE", "RESEARCH", "OPERATIONS", "TECH"]
+      "values": ["CARE", "RESEARCH", "OPERATIONS"]
     },
     "public.approval_status": {
       "name": "approval_status",
