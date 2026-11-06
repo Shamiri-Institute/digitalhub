@@ -12,7 +12,7 @@ import { getCachedSession } from "#/lib/auth";
 function requireRole(session: { user: SessionUser }, role: ImplementerRole) {
   const membership = session.user.activeMembership;
   if (membership && membership.role !== role) {
-    redirect(roleHome[membership.role] ?? "/login");
+    redirect(roleHome[membership.role]);
   }
   return membership;
 }
