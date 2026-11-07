@@ -9,6 +9,7 @@ export default function StudentGroupEvaluationDropdownMenu({
 }) {
   return (
     <ViewEditReportDropdown
+      triggerLabel={`Actions for the ${studentGroupEvaluation.session} evaluation`}
       viewLabel="View student group evaluation"
       editLabel="Edit student group evaluation"
       renderDialog={(action, children) => (

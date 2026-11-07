@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { getTicketEscalationStatus } from "#/lib/actions/ticket";
 import {
@@ -19,6 +17,7 @@ import {
 } from "#/lib/actions/ticket/types";
 
 import type { TicketData, TicketTableState } from "./columns";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 
 export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: TicketTableState }) {
   const [status, setStatus] = useState<TicketEscalationStatus | null>(null);
@@ -51,13 +50,7 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
         }
       }}
     >
-      <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="text-shamiri-text-grey h-5 w-5" />
-          </div>
-        </div>
-      </DropdownMenuTrigger>
+      <RowActionsTrigger label={`Actions for ${ticket.subject}`} />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
           <span className="text-shamiri-text-grey text-xs font-medium uppercase">Actions</span>

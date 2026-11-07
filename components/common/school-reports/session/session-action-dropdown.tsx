@@ -11,6 +11,7 @@ export default function SessionDropdownMenu({
 }) {
   return (
     <ViewEditReportDropdown
+      triggerLabel={`Actions for the ${sessionReportData.session} report`}
       viewLabel="View qualitative feedback"
       editLabel="Edit school report"
       renderDialog={(action, children) => (
