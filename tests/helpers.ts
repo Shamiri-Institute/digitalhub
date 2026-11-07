@@ -201,7 +201,7 @@ export async function createClinicalCase(owner: { schoolId: string; currentSuper
  */
 export async function raceOnRow(
   table: string,
-  rowId: string,
+  rowId: string | number,
   act: (waitForWaiting: (count: number) => Promise<void>) => Promise<void>,
 ) {
   const lockHolder = await pool.connect();
