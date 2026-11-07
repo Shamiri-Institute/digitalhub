@@ -72,12 +72,19 @@ export async function getTriageAuditTrail() {
       ? Math.round((audit.createdAt.getTime() - new Date(sessionDate).getTime()) / 3_600_000)
       : null;
 
-    const before: Record<string, unknown> = withNames(audit.beforeData);
-    const after: Record<string, unknown> = withNames(audit.afterData);
-    // The before side stores an empty field as null and the after side leaves it out.
-    const changedFields = Object.keys({ ...before, ...after }).filter(
-      (key) => JSON.stringify(before[key] ?? null) !== JSON.stringify(after[key] ?? null),
-    );
+    // Compared by id, since two supervisors can share a name. The before side stores an empty
+    // field as null and the after side leaves it out.
+    const recordedBefore = asRecord(audit.beforeData);
+    const recordedAfter = asRecord(audit.afterData);
+    const changedFields = Object.keys({ ...recordedBefore, ...recordedAfter })
+      .filter(
+        (key) =>
+          JSON.stringify(recordedBefore[key] ?? null) !==
+          JSON.stringify(recordedAfter[key] ?? null),
+      )
+      .map((key) => NAMED_FIELDS[key] ?? key);
+    const before: Record<string, unknown> = withNames(recordedBefore);
+    const after: Record<string, unknown> = withNames(recordedAfter);
 
     return {
       id: audit.id,
@@ -94,6 +101,12 @@ export async function getTriageAuditTrail() {
     };
   });
 }
+
+/** The fields the trail shows by name in place of the id the audit row stores. */
+const NAMED_FIELDS: Record<string, string> = {
+  referredSupervisorId: "referredSupervisor",
+  reviewedById: "reviewedBy",
+};
 
 function asRecord(data: unknown) {
   return (data ?? {}) as Record<string, unknown>;

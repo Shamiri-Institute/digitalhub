@@ -1,8 +1,8 @@
 import type { Page } from "@playwright/test";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { student, triageEvent, triageEventAudit, user } from "#/db/schema";
+import { student, supervisor, triageEvent, triageEventAudit, user } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { sessionDisplayName } from "#/lib/utils";
 import { expect, test, type Undo } from "#/tests/fixtures";
@@ -341,4 +341,52 @@ test("a review written while the fellow routes the referral elsewhere is refused
   await signInWithEmail(context, fixture.supervisorEmail);
   await page.goto(getUrl("/sc/triage"));
   await expect(studentCell).toBeVisible();
+});
+
+test("the audit trail lists a re-route between two supervisors with the same name", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixture = await pickReroute();
+  required(fixture, "a fellow's group with an occurred session, two supervisors and a lead");
+  const { triageEventId } = await seedReferral(fixture, undo);
+  const fixtureHub = await db.query.hub.findFirst({
+    where: (h, { eq }) => eq(h.id, fixture.hubId),
+    columns: { implementerId: true },
+  });
+  required(fixtureHub, "the fixture's hub");
+  const sharedName = `E2E namesake supervisor ${Date.now()}`;
+  const namesakes = [objectId("sup"), objectId("sup")].map((id) => ({
+    id,
+    supervisorName: sharedName,
+    hubId: fixture.hubId,
+    implementerId: fixtureHub.implementerId,
+  }));
+  await db.insert(supervisor).values(namesakes);
+  undo(() =>
+    db.delete(supervisor).where(
+      inArray(
+        supervisor.id,
+        namesakes.map(({ id }) => id),
+      ),
+    ),
+  );
+  // An edit that routed the referral from one namesake to the other, as the edit form records it.
+  const editor = { id: objectId("user"), name: `E2E namesake editor ${Date.now()}` };
+  await db.insert(user).values(editor);
+  undo(() => db.delete(user).where(eq(user.id, editor.id)));
+  const [from, to] = namesakes;
+  await db.insert(triageEventAudit).values({
+    triageEventId,
+    editedById: editor.id,
+    beforeData: { referredSupervisorId: from?.id },
+    afterData: { referredSupervisorId: to?.id },
+  });
+
+  await signInWithEmail(context, fixture.clinicalLeadEmail);
+  await page.goto(getUrl("/cl/triage/audits"));
+  await expect(page.getByRole("row").filter({ hasText: editor.name })).toContainText(
+    `Referred supervisor: ${sharedName}→${sharedName}`,
+  );
 });
