@@ -44,7 +44,7 @@ export default function VersionMenu({ surveyId, surveyCode, version, hasDraft }:
         <button
           type="button"
           aria-label={`Actions for v${version.versionNumber}`}
-          className="absolute inset-0 flex items-center justify-center border-l focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-shamiri-new-blue/60"
+          className="absolute inset-0 flex items-center justify-center border-l focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-shamiri-new-blue"
         >
           <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
         </button>

@@ -18,27 +18,15 @@ export const columns: ColumnDef<HubFellowsAttendancesType | SupervisorFellowsAtt
       return (
         <button
           type="button"
+          aria-label={row.getIsExpanded() ? "Hide details" : "Show details"}
+          aria-expanded={row.getIsExpanded()}
           onClick={row.getToggleExpandedHandler()}
           className="cursor-pointer px-4 py-2"
         >
           {row.getIsExpanded() ? (
-            <Image
-              unoptimized
-              priority
-              src={ArrowUpIcon}
-              alt="Arrow Up Icon"
-              width={16}
-              height={16}
-            />
+            <Image unoptimized priority src={ArrowUpIcon} alt="" width={16} height={16} />
           ) : (
-            <Image
-              unoptimized
-              priority
-              src={ArrowDownIcon}
-              alt="Arrow Down Icon"
-              width={16}
-              height={16}
-            />
+            <Image unoptimized priority src={ArrowDownIcon} alt="" width={16} height={16} />
           )}
         </button>
       );
