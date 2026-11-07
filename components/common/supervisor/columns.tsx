@@ -93,9 +93,13 @@ export const columns = (state: SupervisorTableState): ColumnDef<SupervisorsData>
             <span>{schools[0]?.schoolName},</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <span className="ml-2 cursor-pointer select-none text-shamiri-new-blue">
-                  +{schools?.length - 1}
-                </span>
+                <button
+                  type="button"
+                  aria-label={`${schools.length - 1} more schools`}
+                  className="ml-2 cursor-pointer select-none rounded-sm text-shamiri-new-blue hover:underline focus-visible:outline-2 focus-visible:outline-shamiri-new-blue"
+                >
+                  +{schools.length - 1}
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuContent>

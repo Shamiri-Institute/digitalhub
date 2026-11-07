@@ -187,7 +187,7 @@ function MarkAttendanceContent({
         <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
       </DialogHeader>
       {children}
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
         {sessionMode === "many" && (
           <FormField
             control={form.control}

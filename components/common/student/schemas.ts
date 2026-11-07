@@ -39,7 +39,7 @@ export const StudentDetailsSchema = z
         const currentYear = new Date().getFullYear();
         const minYear = currentYear - 35;
         const maxYear = currentYear - 9;
-        return !Number.isNaN(year) && val.trim() !== "" && year >= minYear && year <= maxYear;
+        return Number.isInteger(year) && val.trim() !== "" && year >= minYear && year <= maxYear;
       },
       {
         error: "Student must be between 9 and 35 years old",

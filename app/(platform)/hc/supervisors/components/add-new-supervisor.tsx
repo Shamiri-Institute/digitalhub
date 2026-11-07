@@ -98,7 +98,7 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
         <DialogHeader>
           <DialogTitle className="text-xl">Add new supervisor</DialogTitle>
         </DialogHeader>
@@ -115,10 +115,8 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                 control={form.control}
                 name="supervisorName"
                 render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>
-                      Full name <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required className="col-span-2">
+                    <FormLabel>Full name</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -130,10 +128,8 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                 control={form.control}
                 name="cellNumber"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Phone number <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Phone number</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -154,10 +150,8 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                 control={form.control}
                 name="personalEmail"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Email address <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Email address</FormLabel>
                     <FormControl>
                       <Input {...field} type="tel" />
                     </FormControl>
@@ -169,10 +163,8 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                 control={form.control}
                 name="idNumber"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      National ID <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>National ID</FormLabel>
                     <FormControl>
                       <Input {...field} type="tel" />
                     </FormControl>
@@ -184,10 +176,8 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                 control={form.control}
                 name="gender"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Gender <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Gender</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -214,10 +204,8 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                 control={form.control}
                 name="dateOfBirth"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Date of birth <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Date of birth</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -253,10 +241,8 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                 control={form.control}
                 name="county"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      County <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>County</FormLabel>
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
@@ -290,10 +276,8 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                 control={form.control}
                 name="subCounty"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Sub-county <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Sub-county</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -338,10 +322,8 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                 control={form.control}
                 name="mpesaName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Full name <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Full name</FormLabel>
                     <FormControl>
                       <Input {...field} type="tel" />
                     </FormControl>
@@ -353,10 +335,8 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                 control={form.control}
                 name="mpesaNumber"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      M-Pesa number <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>M-Pesa number</FormLabel>
                     <FormControl>
                       <Input
                         {...field}

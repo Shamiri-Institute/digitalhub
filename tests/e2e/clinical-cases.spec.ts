@@ -96,8 +96,10 @@ async function fillCaseForNewStudent(page: Page, casePseudonym: string) {
   await dialog
     .getByRole("textbox", { name: "Enter student name" })
     .fill(`${casePseudonym} student`);
-  await dialog.getByRole("textbox", { name: "Pseudonym*" }).fill(casePseudonym);
-  await dialog.getByRole("spinbutton", { name: "School Admission Number*" }).fill("9001");
+  await dialog.getByRole("textbox", { name: "Pseudonym", exact: true }).fill(casePseudonym);
+  await dialog
+    .getByRole("spinbutton", { name: "School Admission Number", exact: true })
+    .fill("9001");
   await dialog.getByRole("button", { name: "Pick a date" }).click();
   const picker = page.getByRole("dialog").last();
   await picker.getByRole("combobox", { name: "Choose the Year" }).selectOption("2010");
@@ -109,8 +111,8 @@ async function fillCaseForNewStudent(page: Page, casePseudonym: string) {
     .click();
   await dialog.getByRole("combobox").filter({ hasText: "Select gender" }).click();
   await page.getByRole("option", { name: "Female", exact: true }).click();
-  await dialog.getByRole("spinbutton", { name: "Grade/Form*" }).fill("2");
-  await dialog.getByRole("textbox", { name: "Stream*" }).fill("B");
+  await dialog.getByRole("spinbutton", { name: "Grade/Form", exact: true }).fill("2");
+  await dialog.getByRole("textbox", { name: "Stream", exact: true }).fill("B");
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
   await page.getByRole("option").first().click();
   return dialog;
@@ -312,7 +314,7 @@ test("a supervisor opens a case for an existing student with a non-numeric admis
   await dialog.getByRole("button", { name: "Select a student..." }).click();
   await page.getByPlaceholder("Search students...").fill(existingStudentName);
   await page.getByRole("option", { name: existingStudentName, exact: true }).click();
-  await dialog.getByRole("textbox", { name: "Pseudonym*" }).fill(casePseudonym);
+  await dialog.getByRole("textbox", { name: "Pseudonym", exact: true }).fill(casePseudonym);
   await dialog.getByRole("combobox").filter({ hasText: "Select initial contact" }).click();
   await page.getByRole("option", { name: "Student", exact: true }).click();
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();

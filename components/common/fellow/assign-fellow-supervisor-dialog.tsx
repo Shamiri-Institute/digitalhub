@@ -81,7 +81,7 @@ export default function AssignFellowSupervisorDialog({
         </DialogHeader>
         {children}
         <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+          <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <div className="space-y-6">
               <FormField
                 control={form.control}
@@ -90,7 +90,7 @@ export default function AssignFellowSupervisorDialog({
                   <FormItem>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger aria-label="Supervisor">
                           <SelectValue placeholder="Please select a supervisor" />
                         </SelectTrigger>
                       </FormControl>

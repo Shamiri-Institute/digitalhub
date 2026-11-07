@@ -57,10 +57,13 @@ const formSchema = z
     isNewStudent: z.boolean(),
     studentName: z.string().optional(),
     pseudonym: stringValidation("Pseudonym is required"),
-    admissionNumber: z.number().optional(),
+    admissionNumber: z.number().int("Enter a whole number").optional(),
     yearOfBirth: z.date().optional(),
     gender: z.enum(GENDER_OPTIONS).optional(),
-    classForm: z.string().optional(),
+    classForm: z
+      .string()
+      .refine((value) => Number.isInteger(Number(value)), "Enter a whole number")
+      .optional(),
     stream: z.string().optional(),
     initialContact: z.enum(["student", "fellow", "supervisor", "teacher"]),
     supervisor: z.string().optional(),
@@ -273,7 +276,7 @@ export function AddNewClinicalCaseForm({
       {children}
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+          <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <DialogHeader>
               <DialogTitle className="text-xl">Add clinical case</DialogTitle>
             </DialogHeader>
@@ -288,10 +291,7 @@ export function AddNewClinicalCaseForm({
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <FormLabel>
-                      School
-                      <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                    <FormLabel required>School</FormLabel>
                     <Combobox
                       items={schools.map((school) => ({
                         id: school.id,
@@ -306,10 +306,7 @@ export function AddNewClinicalCaseForm({
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <FormLabel>
-                        Student
-                        <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                      <FormLabel required>Student</FormLabel>
                       <Button
                         type="button"
                         variant="link"
@@ -350,11 +347,8 @@ export function AddNewClinicalCaseForm({
                     control={form.control}
                     name="pseudonym"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Pseudonym
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                      <FormItem required>
+                        <FormLabel>Pseudonym</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -369,11 +363,8 @@ export function AddNewClinicalCaseForm({
                         control={form.control}
                         name="admissionNumber"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              School Admission Number
-                              <span className="text-shamiri-light-red">*</span>
-                            </FormLabel>
+                          <FormItem required>
+                            <FormLabel>School Admission Number</FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
@@ -397,10 +388,8 @@ export function AddNewClinicalCaseForm({
                           control={form.control}
                           name="yearOfBirth"
                           render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel>
-                                Year of Birth <span className="text-shamiri-light-red">*</span>
-                              </FormLabel>
+                            <FormItem required className="flex-1">
+                              <FormLabel>Year of Birth</FormLabel>
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <Button
@@ -439,15 +428,14 @@ export function AddNewClinicalCaseForm({
                           control={form.control}
                           name="gender"
                           render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel>
-                                Gender
-                                <span className="text-shamiri-light-red">*</span>
-                              </FormLabel>
+                            <FormItem required className="flex-1">
+                              <FormLabel>Gender</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select gender" />
-                                </SelectTrigger>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select gender" />
+                                  </SelectTrigger>
+                                </FormControl>
                                 <SelectContent>
                                   {GENDER_OPTIONS.map((g) => (
                                     <SelectItem key={g} value={g}>
@@ -467,11 +455,8 @@ export function AddNewClinicalCaseForm({
                           control={form.control}
                           name="classForm"
                           render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel>
-                                Grade/Form
-                                <span className="text-shamiri-light-red">*</span>
-                              </FormLabel>
+                            <FormItem required className="flex-1">
+                              <FormLabel>Grade/Form</FormLabel>
                               <FormControl>
                                 <Input {...field} type="number" placeholder="Enter grade/form" />
                               </FormControl>
@@ -484,11 +469,8 @@ export function AddNewClinicalCaseForm({
                           control={form.control}
                           name="stream"
                           render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel>
-                                Stream
-                                <span className="text-shamiri-light-red">*</span>
-                              </FormLabel>
+                            <FormItem required className="flex-1">
+                              <FormLabel>Stream</FormLabel>
                               <FormControl>
                                 <Input {...field} />
                               </FormControl>
@@ -514,11 +496,8 @@ export function AddNewClinicalCaseForm({
                     control={form.control}
                     name="initialContact"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Initial Contact
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                      <FormItem required>
+                        <FormLabel>Initial Contact</FormLabel>
                         <Select
                           onValueChange={(value) => {
                             field.onChange(value);
@@ -526,9 +505,11 @@ export function AddNewClinicalCaseForm({
                           }}
                           defaultValue={field.value}
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select initial contact" />
-                          </SelectTrigger>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select initial contact" />
+                            </SelectTrigger>
+                          </FormControl>
                           <SelectContent>
                             <SelectItem value="student">Student</SelectItem>
                             <SelectItem value="fellow">Fellow</SelectItem>
@@ -547,11 +528,8 @@ export function AddNewClinicalCaseForm({
                         control={form.control}
                         name="supervisor"
                         render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormLabel>
-                              Select Supervisor
-                              <span className="text-shamiri-light-red">*</span>
-                            </FormLabel>
+                          <FormItem required className="flex-1">
+                            <FormLabel>Select Supervisor</FormLabel>
                             <div>
                               <Combobox
                                 items={supervisorsInHub.map((supervisor) => ({
@@ -573,10 +551,7 @@ export function AddNewClinicalCaseForm({
                     {initialContactType === "fellow" && (
                       <>
                         <div className="w-full">
-                          <FormLabel>
-                            Select Hub
-                            <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
+                          <FormLabel required>Select Hub</FormLabel>
                           <div>
                             <Combobox
                               items={hubs.map((hub) => ({
@@ -595,11 +570,8 @@ export function AddNewClinicalCaseForm({
                           control={form.control}
                           name="fellow"
                           render={({ field }) => (
-                            <FormItem className="w-full">
-                              <FormLabel>
-                                Select Fellow
-                                <span className="text-shamiri-light-red">*</span>
-                              </FormLabel>
+                            <FormItem required className="w-full">
+                              <FormLabel>Select Fellow</FormLabel>
                               <div>
                                 <Combobox
                                   items={fellowsInHub.map((fellow) => ({
@@ -625,15 +597,14 @@ export function AddNewClinicalCaseForm({
                     control={form.control}
                     name="session"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Select Session
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                      <FormItem required>
+                        <FormLabel>Select Session</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select session" />
-                          </SelectTrigger>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select session" />
+                            </SelectTrigger>
+                          </FormControl>
                           <SelectContent>
                             {availableSessions.map((session) => (
                               <SelectItem key={session.id} value={session.id}>

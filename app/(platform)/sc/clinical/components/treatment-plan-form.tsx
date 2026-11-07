@@ -49,8 +49,14 @@ const treatmentInterventions = [
 ] as const;
 
 const TreatmentPlanSchema = z.object({
-  currentOrsScore: z.string().optional(),
-  plannedSessions: stringValidation("Number of planned sessions is required"),
+  currentOrsScore: z
+    .string()
+    .refine((value) => Number.isInteger(Number(value)), "Enter a whole number")
+    .optional(),
+  plannedSessions: stringValidation("Number of planned sessions is required").refine(
+    (value) => Number.isInteger(Number(value)),
+    "Enter a whole number",
+  ),
   sessionFrequency: stringValidation("Session frequency is required"),
   treatmentInterventions: z.array(z.string()).min(1, "Select at least one intervention"),
   otherIntervention: z.string().optional(),
@@ -124,7 +130,11 @@ export default function TreatmentPlanForm({
         </DialogHeader>
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+          <form
+            noValidate
+            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="currentOrsScore"
@@ -143,11 +153,8 @@ export default function TreatmentPlanForm({
               control={form.control}
               name="plannedSessions"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Planned Sessions
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Planned Sessions</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
                   </FormControl>
@@ -160,23 +167,20 @@ export default function TreatmentPlanForm({
               control={form.control}
               name="sessionFrequency"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Session Frequency
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormItem required>
+                  <FormLabel>Session Frequency</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="once_week">Once a week</SelectItem>
-                        <SelectItem value="twice_week">Twice a week</SelectItem>
-                        <SelectItem value="biweekly">Once every two weeks</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="once_week">Once a week</SelectItem>
+                      <SelectItem value="twice_week">Twice a week</SelectItem>
+                      <SelectItem value="biweekly">Once every two weeks</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -186,11 +190,8 @@ export default function TreatmentPlanForm({
               control={form.control}
               name="treatmentInterventions"
               render={() => (
-                <FormItem>
-                  <FormLabel>
-                    Planned Treatment Interventions
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Planned Treatment Interventions</FormLabel>
                   <div className="space-y-2">
                     {treatmentInterventions.map((intervention) => (
                       <FormField
@@ -229,11 +230,8 @@ export default function TreatmentPlanForm({
                 control={form.control}
                 name="otherIntervention"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Other Intervention
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Other Intervention</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -247,11 +245,8 @@ export default function TreatmentPlanForm({
               control={form.control}
               name="interventionExplanation"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Treatment Intervention Explanation
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Treatment Intervention Explanation</FormLabel>
                   <FormControl>
                     <Textarea {...field} rows={4} />
                   </FormControl>

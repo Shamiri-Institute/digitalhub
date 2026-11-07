@@ -144,7 +144,10 @@ export const AddSchoolSchema = BaseSchoolSchema.extend({
     }
     return val;
   }),
-  numbersExpected: z.number().min(1, "Number of students is required"),
+  numbersExpected: z
+    .number({ error: "Number of students is required" })
+    .int("Enter a whole number of students")
+    .min(1, "Number of students is required"),
 });
 
 export const EditSchoolSchema = BaseSchoolSchema.extend({
@@ -152,7 +155,11 @@ export const EditSchoolSchema = BaseSchoolSchema.extend({
     .date({ error: "Please select a date" })
     .optional()
     .transform((val) => val || undefined),
-  numbersExpected: z.number().min(1, "Number of students is required").optional(),
+  numbersExpected: z
+    .number({ error: "Number of students is required" })
+    .int("Enter a whole number of students")
+    .min(1, "Number of students is required")
+    .optional(),
 });
 
 // For backward compatibility

@@ -14,6 +14,7 @@ import CasesBreakdown from "#/components/common/clinical/cases-breakdown";
 import AllHubClinicalCasesTable from "#/components/common/clinical/hub-clinical-cases-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
+import PageHeading from "#/components/ui/page-heading";
 
 export default async function ClinicalPage() {
   // The chart data alone runs 5 queries, a full pool.
@@ -38,7 +39,7 @@ export default async function ClinicalPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
+      <PageHeading title="Clinical cases">
         <AddNewClinicalCaseForm
           schools={schools}
           fellowsInProject={fellowsInProject}
@@ -52,7 +53,7 @@ export default async function ClinicalPage() {
             </Button>
           </DialogTrigger>
         </AddNewClinicalCaseForm>
-      </div>
+      </PageHeading>
       <CasesReferredToMe cases={referredCases} />
       <CasesToReview reviews={casesToReview} />
       <CasesBreakdown

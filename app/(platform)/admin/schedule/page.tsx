@@ -40,6 +40,7 @@ export default async function AdminSchedulePage({
           aria-label="Session schedule"
           sessions={schedule.sessions}
           timeZone={schedule.timeZone}
+          defaultMode={schedule.defaultMode}
           fellowRatings={fellowRatings.data ?? []}
           role={role}
         />

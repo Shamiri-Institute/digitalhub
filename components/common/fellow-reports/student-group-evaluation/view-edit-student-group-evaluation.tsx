@@ -24,6 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
+import { Label } from "#/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -116,34 +117,34 @@ export default function ViewEditStudentGroupEvaluation({
           </div>
 
           <div>
-            <label htmlFor="cooperation" className="text-sm font-medium">
-              Rate cooperation (1-very bad to 5-very good){" "}
-              <span className="text-shamiri-light-red">*</span>
-            </label>
+            <Label htmlFor="cooperation" required>
+              Rate cooperation (1-very bad to 5-very good)
+            </Label>
             <div className="my-1" id="cooperation">
               <DataTableRatingStars rating={studentGroupEvaluation.cooperation ?? 0} />
             </div>
           </div>
           <div>
-            <label htmlFor="engagement" className="text-sm font-medium">
-              Rate engagement (1-very bad to 5-very good){" "}
-              <span className="text-shamiri-light-red">*</span>
-            </label>
+            <Label htmlFor="engagement" required>
+              Rate engagement (1-very bad to 5-very good)
+            </Label>
             <div className="my-1" id="engagement">
               <DataTableRatingStars rating={studentGroupEvaluation.engagement ?? 0} />
             </div>
           </div>
 
           <Form {...form}>
-            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+            <form
+              noValidate
+              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="engagementComment"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Engagement Comments <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Engagement Comments</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -160,10 +161,8 @@ export default function ViewEditStudentGroupEvaluation({
                 control={form.control}
                 name="cooperationComment"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Cooperation Comments <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Cooperation Comments</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -180,10 +179,8 @@ export default function ViewEditStudentGroupEvaluation({
                 control={form.control}
                 name="contentComment"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Content Comments <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Content Comments</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}

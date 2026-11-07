@@ -129,28 +129,34 @@ export function MonthCalendarCell({
         "bg-background-secondary": weekend,
       })}
     >
-      <button
-        type="button"
-        {...buttonProps}
-        ref={ref}
-        className={cn("h-full w-full transition ease-in-out", {
-          "outline-solid outline-2 outline-shamiri-new-blue": isSameDay(date, state.focusedDate),
-          selected: isSelected,
-          disabled: isDisabled,
-          unavailable: isUnavailable,
-        })}
-        onClick={() => {
-          state.setFocusedDate(date);
-        }}
-      >
+      {/* The date button sits behind the chips rather than around them: a chip is its own
+          button, and buttons cannot nest. */}
+      <div className="relative h-full lg:h-[120px] xl:h-[144px]">
+        <button
+          type="button"
+          {...buttonProps}
+          // react-aria leaves tabIndex undefined on days outside the month, which a native
+          // button reads as tabbable; Tab onto one hands focus back to the focused date.
+          tabIndex={buttonProps.tabIndex ?? -1}
+          ref={ref}
+          className={cn("absolute inset-0 transition ease-in-out", {
+            "outline-solid outline-2 outline-shamiri-new-blue": isSameDay(date, state.focusedDate),
+            selected: isSelected,
+            disabled: isDisabled,
+            unavailable: isUnavailable,
+          })}
+          onClick={() => {
+            state.setFocusedDate(date);
+          }}
+        />
         <div
           className={cn(
-            "flex flex-col gap-[8px]",
+            "pointer-events-none relative flex h-full flex-col gap-[8px]",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
-            "h-full lg:h-[120px] xl:h-[144px]",
           )}
         >
           <div
+            aria-hidden
             className={cn("flex", {
               "text-grey-c3": isOutsideVisibleRange,
             })}
@@ -171,7 +177,7 @@ export function MonthCalendarCell({
             supervisorId={supervisorId}
           />
         </div>
-      </button>
+      </div>
     </td>
   );
 }

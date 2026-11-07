@@ -101,17 +101,19 @@ export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicke
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-6">
+          <form
+            noValidate
+            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+            className="space-y-6"
+          >
             <div className="flex flex-col">
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="resolve"
                   render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>
-                        Resolve <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required className="col-span-2">
+                      <FormLabel>Resolve</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
@@ -137,10 +139,8 @@ export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicke
                     control={form.control}
                     name="resolutionReason"
                     render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>
-                          Resolution Reason <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                      <FormItem required className="col-span-2">
+                        <FormLabel>Resolution Reason</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}

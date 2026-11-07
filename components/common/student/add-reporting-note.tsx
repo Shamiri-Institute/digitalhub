@@ -74,15 +74,13 @@ function AddReportingNoteForm({ setIsOpen, student, children }: AddReportingNote
         <DialogTitle className="text-lg font-bold">Add reporting note</DialogTitle>
       </DialogHeader>
       {children}
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
         <FormField
           control={form.control}
           name="notes"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel>
-                Report incident <span className="text-shamiri-light-red">*</span>
-              </FormLabel>
+            <FormItem required className="space-y-2">
+              <FormLabel>Report incident</FormLabel>
               <FormControl>
                 <Textarea placeholder="" className="resize-none" rows={6} {...field} />
               </FormControl>
