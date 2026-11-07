@@ -39,7 +39,7 @@ export default function PageTabs({
             aria-current={selected ? "page" : undefined}
             onClick={() => showPage(index)}
             className={cn(
-              "flex max-w-56 shrink-0 items-baseline gap-2 border-b-2 border-transparent px-4 pb-3 pt-2 text-left text-sm transition-colors hover:text-shamiri-black focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-shamiri-new-blue/60",
+              "flex max-w-56 shrink-0 items-baseline gap-2 border-b-2 border-transparent px-4 pb-3 pt-2 text-left text-sm transition-colors hover:text-shamiri-black focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-shamiri-new-blue",
               selected ? "border-shamiri-new-blue text-shamiri-black" : "text-shamiri-text-grey",
             )}
           >
@@ -62,7 +62,7 @@ export default function PageTabs({
         <button
           type="button"
           onClick={() => dispatch({ type: "addPage" })}
-          className="flex shrink-0 items-center gap-1 rounded-md px-3 pb-3 pt-2 text-sm font-medium text-shamiri-new-blue hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue/60"
+          className="flex shrink-0 items-center gap-1 rounded-md px-3 pb-3 pt-2 text-sm font-medium text-shamiri-new-blue hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue"
         >
           <Plus className="h-4 w-4" />
           Add page
