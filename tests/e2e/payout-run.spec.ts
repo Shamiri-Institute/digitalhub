@@ -163,7 +163,7 @@ test("an ops user triggers a payout run", async ({ page, context }) => {
   await page.reload();
   const runRow = page
     .getByRole("row")
-    .filter({ hasText: format(executedAt, "dd MMM yyyy, HH:mm:ss") });
+    .filter({ hasText: format(executedAt, "dd-MM-yyyy HH:mm:ss") });
   await expect(runRow).toContainText(String(run?.expectedPayoutAmount));
 });
 
@@ -173,7 +173,7 @@ test("an ops user confirms the payout run", async ({ page, context }) => {
 
   // Runs are listed newest first, so the run stays on the first page. The table search does not
   // match the formatted date, so find the row by its text instead.
-  const dateAdded = format(runExecutedAt, "dd MMM yyyy, HH:mm:ss");
+  const dateAdded = format(runExecutedAt, "dd-MM-yyyy HH:mm:ss");
   const runRow = page.getByRole("row").filter({ hasText: dateAdded });
   await runRow.getByRole("button", { name: "Confirm Payout", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Confirm Payout" });
