@@ -68,6 +68,20 @@ const formSchema = z
     session: stringValidation("Session is required"),
   })
   .superRefine((data, ctx) => {
+    if (data.initialContact === "fellow" && !data.fellow) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["fellow"],
+        message: "Select the fellow who made first contact",
+      });
+    }
+    if (data.initialContact === "supervisor" && !data.supervisor) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["supervisor"],
+        message: "Select the supervisor who made first contact",
+      });
+    }
     if (!data.isNewStudent) {
       return;
     }
@@ -577,33 +591,32 @@ export function AddNewClinicalCaseForm({
                           </div>
                         </div>
 
-                        {selectedHubId && (
-                          <FormField
-                            control={form.control}
-                            name="fellow"
-                            render={({ field }) => (
-                              <FormItem className="w-full">
-                                <FormLabel>
-                                  Select Fellow
-                                  <span className="text-shamiri-light-red">*</span>
-                                </FormLabel>
-                                <div>
-                                  <Combobox
-                                    items={fellowsInHub.map((fellow) => ({
-                                      id: fellow.id,
-                                      label: fellow.fellowName || "Unknown Fellow",
-                                    }))}
-                                    activeItemId={field.value || ""}
-                                    onSelectItem={field.onChange}
-                                    placeholder="Select a fellow..."
-                                    inputPlaceholder="Search fellows..."
-                                  />
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
+                        <FormField
+                          control={form.control}
+                          name="fellow"
+                          render={({ field }) => (
+                            <FormItem className="w-full">
+                              <FormLabel>
+                                Select Fellow
+                                <span className="text-shamiri-light-red">*</span>
+                              </FormLabel>
+                              <div>
+                                <Combobox
+                                  items={fellowsInHub.map((fellow) => ({
+                                    id: fellow.id,
+                                    label: fellow.fellowName || "Unknown Fellow",
+                                  }))}
+                                  activeItemId={field.value || ""}
+                                  onSelectItem={field.onChange}
+                                  placeholder="Select a fellow..."
+                                  inputPlaceholder="Search fellows..."
+                                  disabled={!selectedHubId}
+                                />
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </>
                     )}
                   </div>

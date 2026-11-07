@@ -1,4 +1,4 @@
-import type { BrowserContext, Page } from "@playwright/test";
+import type { BrowserContext, Locator, Page } from "@playwright/test";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { format } from "date-fns";
 import { eq, or } from "drizzle-orm";
@@ -12,6 +12,7 @@ import {
   clinicalCaseTermination,
   clinicalScreeningInfo,
   clinicalSessionAttendance,
+  fellow,
   interventionSession,
   student,
 } from "#/db/schema";
@@ -84,7 +85,8 @@ async function openCaseAction(page: Page, name: string, action: string) {
   await chooseRowAction(page, await searchRows(page, name), action);
 }
 
-async function createCaseForNewStudent(page: Page, casePseudonym: string) {
+/** Fills the add-case form for a new student, all but its initial contact. */
+async function fillCaseForNewStudent(page: Page, casePseudonym: string) {
   await page.getByRole("button", { name: "New case" }).click();
   const dialog = page.getByRole("dialog", { name: "Add clinical case" });
   await dialog.getByRole("button", { name: "Select a school..." }).click();
@@ -108,10 +110,19 @@ async function createCaseForNewStudent(page: Page, casePseudonym: string) {
   await page.getByRole("option", { name: "Female", exact: true }).click();
   await dialog.getByRole("spinbutton", { name: "Grade/Form*" }).fill("2");
   await dialog.getByRole("textbox", { name: "Stream*" }).fill("B");
-  await dialog.getByRole("combobox").filter({ hasText: "Select initial contact" }).click();
-  await page.getByRole("option", { name: "Student", exact: true }).click();
   await dialog.getByRole("combobox").filter({ hasText: "Select session" }).click();
   await page.getByRole("option").first().click();
+  return dialog;
+}
+
+async function chooseInitialContact(page: Page, dialog: Locator, initialContact: string) {
+  await dialog.getByRole("combobox").filter({ hasText: "Select initial contact" }).click();
+  await page.getByRole("option", { name: initialContact, exact: true }).click();
+}
+
+async function createCaseForNewStudent(page: Page, casePseudonym: string) {
+  const dialog = await fillCaseForNewStudent(page, casePseudonym);
+  await chooseInitialContact(page, dialog, "Student");
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toBeHidden();
 }
@@ -164,6 +175,50 @@ test("a clinical lead's new case is assigned to them", async ({ page, context, u
     currentSupervisorId: null,
     clinicalLeadId: clinicalLead.profileId,
   });
+});
+
+test("a case first raised by a fellow names that fellow", async ({ page, context, undo }) => {
+  const casePseudonym = `e2e-fellow-contact-${Date.now()}`;
+  const ownerHub = await db.query.hub.findFirst({
+    where: (h, { eq }) => eq(h.id, owner.hubId),
+    columns: { hubName: true, implementerId: true },
+  });
+  required(ownerHub, "the supervisor's hub");
+  const fellowId = objectId("fellow");
+  const fellowName = `E2E first contact fellow ${Date.now()}`;
+  await db.insert(fellow).values({
+    id: fellowId,
+    fellowName,
+    hubId: owner.hubId,
+    implementerId: ownerHub.implementerId,
+  });
+  undo(() => db.delete(fellow).where(eq(fellow.id, fellowId)));
+  undo(() => deleteCase(casePseudonym));
+  await signInWithEmail(context, owner.email);
+  await page.goto(getUrl("/sc/clinical"));
+
+  const dialog = await fillCaseForNewStudent(page, casePseudonym);
+  await chooseInitialContact(page, dialog, "Fellow");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog.getByText("Select the fellow who made first contact")).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Select a hub..." }).click();
+  await page.getByRole("option", { name: ownerHub.hubName, exact: true }).click();
+  await dialog.getByRole("button", { name: "Select a fellow..." }).click();
+  await page.getByPlaceholder("Search fellows...").fill(fellowName);
+  await page.getByRole("option", { name: fellowName, exact: true }).click();
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.reload();
+  await expect(await searchRows(page, casePseudonym)).toBeVisible();
+  // No page names who first raised a case; the clinical charts only count them by kind.
+  expect(
+    await db.query.clinicalScreeningInfo.findFirst({
+      where: (c, { eq }) => eq(c.pseudonym, casePseudonym),
+      columns: { initialReferredFromSpecified: true, initialReferredFrom: true },
+    }),
+  ).toEqual({ initialReferredFromSpecified: "fellow", initialReferredFrom: fellowId });
 });
 
 test("a supervisor opens a case for an existing student with a non-numeric admission number", async ({
