@@ -369,6 +369,16 @@ const SUPERVISOR_HANDOFF_STATUSES = [
   "STUDENT_REFUSED_NOTIFIED",
 ] as const;
 
+/** The actions that hand the student to a supervisor, so the event records how the handoff went. */
+export function triageActionNeedsHandoff(action: string | undefined) {
+  return action === "REFERRED" || action === "ESCALATED" || action === "REFUSED";
+}
+
+/** The actions that name the supervisor who takes the student on. */
+export function triageActionNeedsSupervisor(action: string | undefined) {
+  return action === "REFERRED" || action === "ESCALATED";
+}
+
 export const TriageEventSchema = z
   .object({
     id: z.string().optional(),
@@ -377,12 +387,12 @@ export const TriageEventSchema = z
     riskScreenOutcome: z.enum(RISK_SCREEN_OUTCOMES, {
       message: "Risk screen outcome is required when triage occurred",
     }),
-    riskNotCompletedReason: z.enum(RISK_NOT_COMPLETED_REASONS).optional(),
+    riskNotCompletedReason: z.enum(RISK_NOT_COMPLETED_REASONS).nullish(),
     actionTaken: z.enum(TRIAGE_ACTION_TAKEN, {
       message: "Action taken is required",
     }),
-    referredSupervisorId: z.string().optional(),
-    supervisorHandoffStatus: z.enum(SUPERVISOR_HANDOFF_STATUSES).optional(),
+    referredSupervisorId: z.string().nullish(),
+    supervisorHandoffStatus: z.enum(SUPERVISOR_HANDOFF_STATUSES).nullish(),
     note: z.string().max(200).optional(),
   })
   .superRefine((val, ctx) => {
@@ -393,16 +403,14 @@ export const TriageEventSchema = z
         path: ["riskNotCompletedReason"],
       });
     }
-    const needsHandoff = ["REFERRED", "ESCALATED", "REFUSED"].includes(val.actionTaken ?? "");
-    if (needsHandoff && !val.supervisorHandoffStatus) {
+    if (triageActionNeedsHandoff(val.actionTaken) && !val.supervisorHandoffStatus) {
       ctx.addIssue({
         code: "custom",
         message: "Supervisor handoff status is required for this action",
         path: ["supervisorHandoffStatus"],
       });
     }
-    const needsSupervisor = ["REFERRED", "ESCALATED"].includes(val.actionTaken ?? "");
-    if (needsSupervisor && !val.referredSupervisorId) {
+    if (triageActionNeedsSupervisor(val.actionTaken) && !val.referredSupervisorId) {
       ctx.addIssue({
         code: "custom",
         message: "Please select the supervisor you referred or escalated to",

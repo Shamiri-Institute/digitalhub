@@ -2,7 +2,12 @@
 
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
+import {
+  type TriageEventFormData,
+  TriageEventSchema,
+  triageActionNeedsHandoff,
+  triageActionNeedsSupervisor,
+} from "#/app/(platform)/hc/schemas";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -134,9 +139,8 @@ function TriageEventForm({
   const actionTaken = form.watch("actionTaken");
 
   const showNotCompletedReason = riskScreenOutcome === "NOT_COMPLETED";
-  const showHandoff =
-    actionTaken === "REFERRED" || actionTaken === "ESCALATED" || actionTaken === "REFUSED";
-  const showSupervisorSelect = actionTaken === "REFERRED" || actionTaken === "ESCALATED";
+  const showHandoff = triageActionNeedsHandoff(actionTaken);
+  const showSupervisorSelect = triageActionNeedsSupervisor(actionTaken);
   const forceEscalated = riskScreenOutcome === "ANY_YES";
 
   const onSubmit = async (data: z.infer<typeof TriageEventSchema>) => {
@@ -194,6 +198,7 @@ function TriageEventForm({
                 <Select
                   onValueChange={(value) => {
                     field.onChange(value);
+                    if (value !== "NOT_COMPLETED") form.setValue("riskNotCompletedReason", null);
                     if (value === "ANY_YES") form.setValue("actionTaken", "ESCALATED");
                   }}
                   value={field.value ?? ""}
@@ -258,7 +263,15 @@ function TriageEventForm({
               <FormItem className="space-y-2">
                 <FormLabel className="text-sm">Action taken (required)</FormLabel>
                 <Select
-                  onValueChange={field.onChange}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    if (!triageActionNeedsSupervisor(value)) {
+                      form.setValue("referredSupervisorId", null);
+                    }
+                    if (!triageActionNeedsHandoff(value)) {
+                      form.setValue("supervisorHandoffStatus", null);
+                    }
+                  }}
                   value={field.value ?? ""}
                   disabled={readOnly || loadingExistingEvent}
                 >
