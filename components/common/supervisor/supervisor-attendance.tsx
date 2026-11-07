@@ -30,6 +30,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { markManySupervisorAttendance, markSupervisorAttendance } from "#/lib/actions/supervisor";
 import { cn, sessionDisplayName } from "#/lib/utils";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 
 export default function SupervisorAttendance({
   supervisors,
@@ -346,10 +347,9 @@ const columns = (state: {
           <div className="relative flex items-center">
             <span>{schools[0]},</span>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <span className="ml-2 cursor-pointer select-none text-shamiri-new-blue">
-                  +{schools?.length - 1}
-                </span>
+              <DropdownMenuTrigger className="ml-2 cursor-pointer select-none text-shamiri-new-blue">
+                +{schools.length - 1}
+                <span className="sr-only"> more schools</span>
               </DropdownMenuTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuContent>
@@ -434,13 +434,7 @@ export function SupervisorAttendanceDataTableMenu({
 }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-          </div>
-        </div>
-      </DropdownMenuTrigger>
+      <RowActionsTrigger label={`Actions for ${attendance?.supervisorName}`} />
       <DropdownMenuPortal>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>

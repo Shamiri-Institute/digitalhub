@@ -6,8 +6,8 @@ import { Archive, Copy, RotateCcw, UserPlus } from "lucide-react";
 import { useState } from "react";
 
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 import DataTable from "#/components/data-table";
-import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
@@ -15,7 +15,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { restoreHubManager } from "#/lib/actions/admin/hub-managers";
@@ -86,15 +85,7 @@ function HubManagerMenu({ manager, scope }: { manager: HubManager; scope: HubSco
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label={`Actions for ${manager.coordinatorName}`}
-            className="absolute inset-0 flex items-center justify-center border-l"
-          >
-            <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-          </button>
-        </DropdownMenuTrigger>
+        <RowActionsTrigger label={`Actions for ${manager.coordinatorName}`} />
         <DropdownMenuContent align="end">
           <DropdownMenuItem
             disabled={!managerEmail}

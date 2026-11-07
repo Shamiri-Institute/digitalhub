@@ -20,10 +20,10 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { sortBy } from "#/lib/table-view";
 import { cn, sessionDisplayName } from "#/lib/utils";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 
 export default function AttendanceHistory({
   open,
@@ -142,13 +142,10 @@ const columns = (
     id: "button",
     cell: ({ row }) => (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild={true}>
-          <div className="absolute inset-0 border-l bg-white">
-            <div className="flex h-full w-full items-center justify-center">
-              <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-            </div>
-          </div>
-        </DropdownMenuTrigger>
+        <RowActionsTrigger
+          label={`Actions for ${sessionDisplayName(row.original.session?.session?.sessionName)}`}
+          className="bg-white"
+        />
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>
             <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>

@@ -9,6 +9,7 @@ export default function SchoolFeedbackDropdownMenu({
 }) {
   return (
     <ViewEditReportDropdown
+      triggerLabel={`Actions for ${feedback.supervisorName}'s feedback`}
       viewLabel="View school feedback"
       editLabel="Edit school feedback"
       renderDialog={(action, children) => (

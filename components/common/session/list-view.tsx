@@ -8,6 +8,7 @@ import {
   type SessionDialogOpener,
 } from "#/components/common/session/session-list";
 import type { Session } from "#/lib/actions/fetch-sessions";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
@@ -196,11 +197,10 @@ export function ListView({
                             fellowId={fellowId}
                             supervisorId={supervisorId}
                           >
-                            <div className="absolute inset-0 bg-white">
-                              <div className="flex h-full w-full items-center justify-center">
-                                <Icons.moreHorizontal className="h-5 w-5" />
-                              </div>
-                            </div>
+                            <RowActionsTrigger
+                              label={`Actions for ${sessionDisplayName(session.sessionType ?? "")} at ${session.school?.schoolName ?? session.venue}`}
+                              className="border-l-0 bg-white"
+                            />
                           </SessionDropDown>
                         </td>
                       </tr>

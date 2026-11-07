@@ -76,11 +76,9 @@ export default function SchoolsBreadcrumb({
           )}
           <span>/</span>
           <Popover>
-            <PopoverTrigger asChild className="flex cursor-pointer items-center gap-2">
-              <div className="flex items-center gap-2 text-shamiri-text-dark-grey">
-                {selectedSchool?.schoolName}
-                <ChevronsUpDown className="h-3.5 w-3.5 opacity-60" />
-              </div>
+            <PopoverTrigger className="flex cursor-pointer items-center gap-2 text-shamiri-text-dark-grey">
+              {selectedSchool?.schoolName}
+              <ChevronsUpDown className="h-3.5 w-3.5 opacity-60" />
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
               <Command>

@@ -9,6 +9,7 @@ import {
   type SessionDialogOpener,
 } from "#/components/common/session/session-list";
 import type { Session } from "#/lib/actions/fetch-sessions";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 import { Icons } from "#/components/icons";
 import { sortBy } from "#/lib/table-view";
 import { cn, sessionDisplayName } from "#/lib/utils";
@@ -115,11 +116,10 @@ export const columns = (state: {
         fellowId={state.fellowId}
         supervisorId={state.supervisorId}
       >
-        <div className="absolute inset-0 border-l bg-white">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="h-5 w-5" />
-          </div>
-        </div>
+        <RowActionsTrigger
+          label={`Actions for ${sessionDisplayName(row.original.session?.sessionName)}`}
+          className="bg-white"
+        />
       </SessionDropDown>
     ),
     enableHiding: false,
