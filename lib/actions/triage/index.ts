@@ -2,7 +2,12 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import { refresh } from "next/cache";
-import { type TriageEventFormData, TriageEventSchema } from "#/app/(platform)/hc/schemas";
+import {
+  type TriageEventFormData,
+  TriageEventSchema,
+  triageActionNeedsHandoff,
+  triageActionNeedsSupervisor,
+} from "#/app/(platform)/hc/schemas";
 import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
@@ -33,6 +38,26 @@ function loadTriageEvent(cursor: typeof db | Transaction, id: string) {
     where: (t, { eq }) => eq(t.id, id),
     with: triageEventWith,
   });
+}
+
+/**
+ * The columns a triage form sets. A field the outcome or action does not ask for is stored as null,
+ * even when the form still holds a value from an earlier choice.
+ */
+function triageEventValues(parsed: TriageEventFormData) {
+  return {
+    riskScreenOutcome: parsed.riskScreenOutcome,
+    riskNotCompletedReason:
+      parsed.riskScreenOutcome === "NOT_COMPLETED" ? (parsed.riskNotCompletedReason ?? null) : null,
+    actionTaken: parsed.actionTaken,
+    referredSupervisorId: triageActionNeedsSupervisor(parsed.actionTaken)
+      ? (parsed.referredSupervisorId ?? null)
+      : null,
+    supervisorHandoffStatus: triageActionNeedsHandoff(parsed.actionTaken)
+      ? (parsed.supervisorHandoffStatus ?? null)
+      : null,
+    note: parsed.note ?? null,
+  };
 }
 
 async function getFellowContext() {
@@ -182,12 +207,7 @@ export async function createTriageEvent(
         hubId: session.hubId,
         studentAttendanceId: studentAttendanceId ?? null,
         triageOccurred: true,
-        riskScreenOutcome: parsed.riskScreenOutcome,
-        riskNotCompletedReason: parsed.riskNotCompletedReason ?? null,
-        actionTaken: parsed.actionTaken,
-        referredSupervisorId: parsed.referredSupervisorId ?? null,
-        supervisorHandoffStatus: parsed.supervisorHandoffStatus ?? null,
-        note: parsed.note ?? null,
+        ...triageEventValues(parsed),
         metadata: { createdBy: userId },
       })
       .returning({ id: triageEvent.id });
@@ -239,12 +259,7 @@ export async function updateTriageEvent(
       const [updated] = await tx
         .update(triageEvent)
         .set({
-          riskScreenOutcome: parsed.riskScreenOutcome,
-          riskNotCompletedReason: parsed.riskNotCompletedReason ?? null,
-          actionTaken: parsed.actionTaken,
-          referredSupervisorId: parsed.referredSupervisorId ?? null,
-          supervisorHandoffStatus: parsed.supervisorHandoffStatus ?? null,
-          note: parsed.note ?? null,
+          ...triageEventValues(parsed),
           ...(studentAttendanceId !== undefined && {
             studentAttendanceId: studentAttendanceId ?? null,
           }),
