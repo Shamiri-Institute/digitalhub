@@ -15,6 +15,7 @@ import {
   fellow,
   interventionSession,
   student,
+  supervisor,
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import {
@@ -134,6 +135,13 @@ function caseOwners(casePseudonym: string) {
   });
 }
 
+function initialReferrer(casePseudonym: string) {
+  return db.query.clinicalScreeningInfo.findFirst({
+    where: (c, { eq }) => eq(c.pseudonym, casePseudonym),
+    columns: { initialReferredFromSpecified: true, initialReferredFrom: true },
+  });
+}
+
 async function deleteCase(casePseudonym: string) {
   await db.delete(clinicalScreeningInfo).where(eq(clinicalScreeningInfo.pseudonym, casePseudonym));
   await db.delete(student).where(eq(student.studentName, `${casePseudonym} student`));
@@ -213,12 +221,54 @@ test("a case first raised by a fellow names that fellow", async ({ page, context
   await page.reload();
   await expect(await searchRows(page, casePseudonym)).toBeVisible();
   // No page names who first raised a case; the clinical charts only count them by kind.
-  expect(
-    await db.query.clinicalScreeningInfo.findFirst({
-      where: (c, { eq }) => eq(c.pseudonym, casePseudonym),
-      columns: { initialReferredFromSpecified: true, initialReferredFrom: true },
-    }),
-  ).toEqual({ initialReferredFromSpecified: "fellow", initialReferredFrom: fellowId });
+  expect(await initialReferrer(casePseudonym)).toEqual({
+    initialReferredFromSpecified: "fellow",
+    initialReferredFrom: fellowId,
+  });
+});
+
+test("a clinical lead's case first raised by a supervisor names that supervisor", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const casePseudonym = `e2e-supervisor-contact-${Date.now()}`;
+  const leadHub = await db.query.hub.findFirst({
+    where: (h, { eq }) => eq(h.id, clinicalLead.hubId),
+    columns: { implementerId: true },
+  });
+  required(leadHub, "the clinical lead's hub");
+  const supervisorId = objectId("sup");
+  const supervisorName = `E2E first contact supervisor ${Date.now()}`;
+  await db.insert(supervisor).values({
+    id: supervisorId,
+    supervisorName,
+    hubId: clinicalLead.hubId,
+    implementerId: leadHub.implementerId,
+  });
+  undo(() => db.delete(supervisor).where(eq(supervisor.id, supervisorId)));
+  undo(() => deleteCase(casePseudonym));
+  await signInWithEmail(context, clinicalLead.email);
+  await page.goto(getUrl("/cl/clinical"));
+
+  const dialog = await fillCaseForNewStudent(page, casePseudonym);
+  await chooseInitialContact(page, dialog, "Supervisor");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog.getByText("Select the supervisor who made first contact")).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Select a supervisor..." }).click();
+  await page.getByPlaceholder("Search supervisors...").fill(supervisorName);
+  await page.getByRole("option", { name: supervisorName, exact: true }).click();
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.reload();
+  await expect(await searchRows(page, casePseudonym)).toBeVisible();
+  // No page names who first raised a case; the clinical charts only count them by kind.
+  expect(await initialReferrer(casePseudonym)).toEqual({
+    initialReferredFromSpecified: "supervisor",
+    initialReferredFrom: supervisorId,
+  });
 });
 
 test("a supervisor opens a case for an existing student with a non-numeric admission number", async ({
