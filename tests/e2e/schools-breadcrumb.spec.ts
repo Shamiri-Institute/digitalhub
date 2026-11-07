@@ -46,7 +46,7 @@ test("the school breadcrumb names the hub and switches between the implementer's
 
   await page.goto(schoolUrl);
   await expect(page.getByText(`Hubs/${fixture.hubName}/${fixture.schoolName}`)).toBeVisible();
-  await page.locator("div[aria-haspopup=dialog]", { hasText: fixture.schoolName }).click();
+  await page.getByRole("button", { name: fixture.schoolName, exact: true }).click();
   const options = page.getByRole("option");
   await expect(options).toHaveCount(implementerSchools.length);
   // Each option shows the school, then its hub on a second line.
