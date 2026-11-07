@@ -8,6 +8,7 @@ import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { interventionGroup, interventionGroupReport } from "#/db/schema";
 import { fellowsInCallerScope, requireHubRole } from "#/lib/auth/require-hub-role";
+import { requireEvaluationEditable } from "#/lib/evaluation-edit-window";
 
 export type StudentGroupEvaluationType = {
   id: string;
@@ -121,6 +122,16 @@ export async function editStudentGroupEvaluation(
   const caller = await requireHubRole(ImplementerRole.SUPERVISOR, ImplementerRole.HUB_COORDINATOR);
   try {
     const comments = EditStudentGroupEvaluationSchema.parse(data);
+    const saved = await db.query.interventionGroupReport.findFirst({
+      where: (r, { and, eq, inArray }) =>
+        and(eq(r.id, evaluationId), inArray(r.groupId, groupsInCallerScope(caller))),
+      columns: { createdAt: true },
+    });
+    if (!saved) {
+      throw new Error(`Evaluation ${evaluationId} not found`);
+    }
+    requireEvaluationEditable(saved, new Date());
+
     const updated = await db
       .update(interventionGroupReport)
       .set(comments)
@@ -139,6 +150,6 @@ export async function editStudentGroupEvaluation(
     return { success: true, message: "Evaluation updated successfully" };
   } catch (error) {
     console.error(error);
-    return { success: false, message: "Failed to update evaluation" };
+    return { success: false, message: (error as Error)?.message ?? "Failed to update evaluation" };
   }
 }

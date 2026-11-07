@@ -57,7 +57,7 @@ export default function SchoolTableDropdown({
           </Link>
         </DropdownMenuItem>
         {role === "HUB_COORDINATOR" &&
-          (!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
+          (!schoolRow.droppedOut ? (
             <div>
               <DropdownMenuItem onClick={() => state.openDialog("edit", schoolRow)}>
                 Edit school information
