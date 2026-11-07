@@ -17,7 +17,9 @@ export default function OverallStudentsClinicalStats({
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card key="total-students">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+          <CardTitle as="h2" className="text-sm font-medium">
+            Total Students
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{totalStudents}</div>
@@ -26,7 +28,9 @@ export default function OverallStudentsClinicalStats({
 
       <Card key="group-sessions">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Group Sessions</CardTitle>
+          <CardTitle as="h2" className="text-sm font-medium">
+            Group Sessions
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{groupSessions}</div>
@@ -35,7 +39,9 @@ export default function OverallStudentsClinicalStats({
 
       <Card key="clinical-cases">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Clinical Cases</CardTitle>
+          <CardTitle as="h2" className="text-sm font-medium">
+            Clinical Cases
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{clinicalCases}</div>
@@ -44,7 +50,9 @@ export default function OverallStudentsClinicalStats({
 
       <Card key="clinical-sessions">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Clinical Sessions</CardTitle>
+          <CardTitle as="h2" className="text-sm font-medium">
+            Clinical Sessions
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{clinicalSessions}</div>

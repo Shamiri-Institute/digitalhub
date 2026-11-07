@@ -51,7 +51,8 @@ test("the school panel shows a session cancelled on the tab", async ({ page, con
 
   await page.goto(schoolUrl);
   const panel = page.getByRole("complementary");
-  await expect(panel.getByText(fixture.schoolName, { exact: true })).toBeVisible();
+  await expect(panel.getByRole("heading", { level: 1, name: fixture.schoolName })).toBeAttached();
+  await expect(panel.getByRole("button", { name: fixture.schoolName })).toBeVisible();
   await expect(panel).toContainText(
     `Sessions${fixture.sessionsCount.toLocaleString()}Groups` +
       `${fixture.groupsCount.toLocaleString()}Students${fixture.studentsCount.toLocaleString()}`,

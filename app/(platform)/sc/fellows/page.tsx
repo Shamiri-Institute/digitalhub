@@ -4,6 +4,8 @@ import { loadFellowsData } from "#/app/(platform)/sc/actions";
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
+import PageHeading from "#/components/ui/page-heading";
+import { Separator } from "#/components/ui/separator";
 import FellowSchoolsDatatable from "../../../../components/common/fellow/fellow-schools-datatable";
 
 export default async function FellowsPage() {
@@ -27,7 +29,9 @@ export default async function FellowsPage() {
   ]);
 
   return (
-    <div className="px-6 py-5">
+    <div className="space-y-3 px-6 py-5">
+      <PageHeading title="Fellows" />
+      <Separator />
       <FellowSchoolsDatatable
         fellows={fellows}
         project={project ?? undefined}

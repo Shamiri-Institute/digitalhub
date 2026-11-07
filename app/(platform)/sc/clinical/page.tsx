@@ -5,6 +5,7 @@ import ClinicalTableLoader from "#/app/(platform)/sc/clinical/components/clinica
 import ClinicalTableSection from "#/app/(platform)/sc/clinical/components/clinical-table-section";
 import ReferredCasesLoader from "#/app/(platform)/sc/clinical/components/referred-cases-loader";
 import ReferredCasesSection from "#/app/(platform)/sc/clinical/components/referred-cases-section";
+import PageHeading from "#/components/ui/page-heading";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 
@@ -13,6 +14,7 @@ export default function ClinicalPage() {
     <div className="w-full self-stretch">
       <div className="flex h-full flex-col">
         <div className="container w-full grow space-y-4 py-10">
+          <PageHeading title="Clinical cases" />
           <div className="flex flex-col items-center justify-between space-y-3">
             <Suspense fallback={<ClinicalStatsLoader />}>
               <ClinicalCasesStats />
