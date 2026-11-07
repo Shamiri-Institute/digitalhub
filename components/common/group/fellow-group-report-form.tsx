@@ -51,10 +51,6 @@ import { submitFellowGroupReport } from "#/lib/actions/group";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
-function Required() {
-  return <span className="text-shamiri-light-red">*</span>;
-}
-
 type FieldName = keyof FellowGroupReportFormData;
 
 function ScaleField({
@@ -73,10 +69,8 @@ function ScaleField({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className="space-y-2">
-          <FormLabel className="font-medium text-shamiri-text-dark-grey">
-            {question} <Required />
-          </FormLabel>
+        <FormItem required className="space-y-2">
+          <FormLabel className="font-medium text-shamiri-text-dark-grey">{question}</FormLabel>
           <RadioGroup
             value={field.value === undefined ? "" : String(field.value)}
             onValueChange={(value) => field.onChange(Number(value))}
@@ -114,10 +108,8 @@ function YesNoField({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className="space-y-2">
-          <FormLabel className="font-medium text-shamiri-text-dark-grey">
-            {question} <Required />
-          </FormLabel>
+        <FormItem required className="space-y-2">
+          <FormLabel className="font-medium text-shamiri-text-dark-grey">{question}</FormLabel>
           <RadioGroup
             value={field.value === undefined ? "" : field.value ? "yes" : "no"}
             onValueChange={(value) => field.onChange(value === "yes")}
@@ -161,10 +153,8 @@ function TextField({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className="space-y-2">
-          <FormLabel className="font-medium text-shamiri-text-dark-grey">
-            {question} {required && <Required />}
-          </FormLabel>
+        <FormItem required={required} className="space-y-2">
+          <FormLabel className="font-medium text-shamiri-text-dark-grey">{question}</FormLabel>
           <FormControl>
             <Textarea
               rows={3}
@@ -301,6 +291,7 @@ export default function FellowGroupReportForm({
             </DialogHeader>
 
             <form
+              noValidate
               onSubmit={toastOnError(form.handleSubmit(onSubmit))}
               className="flex min-h-0 flex-1 flex-col"
             >
@@ -345,9 +336,9 @@ export default function FellowGroupReportForm({
                         control={form.control}
                         name="adaptationType"
                         render={({ field }) => (
-                          <FormItem className="space-y-2">
+                          <FormItem required className="space-y-2">
                             <FormLabel className="font-medium text-shamiri-text-dark-grey">
-                              If yes, what type was most common? <Required />
+                              If yes, what type was most common?
                             </FormLabel>
                             <Select value={field.value} onValueChange={field.onChange}>
                               <FormControl>
@@ -448,9 +439,9 @@ export default function FellowGroupReportForm({
                     question="How often did students reference or apply ideas from earlier sessions in later sessions?"
                     options={TRANSFER_OPTIONS}
                   />
-                  <FormItem className="space-y-2">
+                  <FormItem required className="space-y-2">
                     <FormLabel className="font-medium text-shamiri-text-dark-grey">
-                      How often did students engage with home practice activities? <Required />
+                      How often did students engage with home practice activities?
                     </FormLabel>
                     <label
                       htmlFor="homePracticeNotApplicable"
@@ -562,10 +553,9 @@ export default function FellowGroupReportForm({
                     control={form.control}
                     name="supportType"
                     render={({ field }) => (
-                      <FormItem className="space-y-2">
+                      <FormItem required className="space-y-2">
                         <FormLabel className="font-medium text-shamiri-text-dark-grey">
-                          What type of support would have been most helpful during this cycle?{" "}
-                          <Required />
+                          What type of support would have been most helpful during this cycle?
                         </FormLabel>
                         <RadioGroup
                           value={field.value ?? ""}

@@ -12,7 +12,7 @@ export const SessionRatingsSchema = z.object({
   positiveHighlights: z.string().optional(),
   challenges: z.string().optional(),
   recommendations: z.string().optional(),
-  headcount: z.number().optional(),
+  headcount: z.number().int("Enter a whole number").optional(),
 });
 
 export const ScheduleNewSessionSchema = z

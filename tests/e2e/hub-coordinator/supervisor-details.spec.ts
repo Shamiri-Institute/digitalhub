@@ -80,14 +80,19 @@ test("a hub coordinator edits a supervisor in their hub", async ({ page, context
   const row = await searchRows(page, target.supervisorName ?? "");
   await chooseRowAction(page, row, "Edit supervisor information");
   const dialog = page.getByRole("dialog", { name: "Edit supervisor information" });
-  await dialog.getByRole("textbox", { name: "Full name *" }).first().fill(supervisorName);
+  await dialog
+    .getByRole("textbox", { name: "Full name", exact: true })
+    .first()
+    .fill(supervisorName);
   // The form writes this to the login email, so keep the current one in other casing.
-  await dialog.getByRole("textbox", { name: "Email address *" }).fill(targetEmail.toUpperCase());
-  await dialog.getByRole("combobox", { name: "County *", exact: true }).click();
+  await dialog
+    .getByRole("textbox", { name: "Email address", exact: true })
+    .fill(targetEmail.toUpperCase());
+  await dialog.getByRole("combobox", { name: "County", exact: true }).click();
   await page.getByRole("option", { name: "Nairobi", exact: true }).click();
-  await dialog.getByRole("combobox", { name: "Sub-county *" }).click();
+  await dialog.getByRole("combobox", { name: "Sub-county", exact: true }).click();
   await page.getByRole("option", { name: "Dagoretti North" }).click();
-  await dialog.getByRole("textbox", { name: "Full name *" }).last().fill(supervisorName);
+  await dialog.getByRole("textbox", { name: "Full name", exact: true }).last().fill(supervisorName);
   await dialog.getByRole("button", { name: "Update & Save" }).click();
   await expect(dialog).toBeHidden();
 

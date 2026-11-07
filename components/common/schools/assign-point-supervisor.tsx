@@ -83,7 +83,7 @@ function AssignPointSupervisorForm({ supervisors, setOpen, school }: AssignPoint
       </DialogHeader>
       <DialogAlertWidget label={school?.schoolName} />
       <Form {...form}>
-        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+        <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
           <div className="space-y-6">
             <FormField
               control={form.control}

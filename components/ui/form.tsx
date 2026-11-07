@@ -47,10 +47,11 @@ const useFormField = () => {
     throw new Error("useFormField should be used within <FormField>");
   }
 
-  const { id } = itemContext;
+  const { id, required } = itemContext;
 
   return {
     id,
+    required,
     name: fieldContext.name,
     formItemId: `${id}-form-item`,
     formDescriptionId: `${id}-form-item-description`,
@@ -61,35 +62,41 @@ const useFormField = () => {
 
 type FormItemContextValue = {
   id: string;
+  required?: boolean;
 };
 
 const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue);
 
-function FormItem({ className, ...props }: React.ComponentProps<"div">) {
+function FormItem({
+  className,
+  required,
+  ...props
+}: React.ComponentProps<"div"> & { required?: boolean }) {
   const id = React.useId();
 
   return (
-    <FormItemContext.Provider value={{ id }}>
+    <FormItemContext.Provider value={{ id, required }}>
       <div data-slot="form-item" className={cn("space-y-2", className)} {...props} />
     </FormItemContext.Provider>
   );
 }
 
 function FormLabel({ className, ...props }: React.ComponentProps<typeof Label>) {
-  const { error, formItemId } = useFormField();
+  const { error, formItemId, required } = useFormField();
 
   return (
     <Label
       data-slot="form-label"
       className={cn(error && "text-destructive", "text-base", className)}
       htmlFor={formItemId}
+      required={required}
       {...props}
     />
   );
 }
 
 function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+  const { error, formItemId, formDescriptionId, formMessageId, required } = useFormField();
 
   return (
     <Slot
@@ -97,6 +104,7 @@ function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
       id={formItemId}
       aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
       aria-invalid={!!error}
+      aria-required={required || undefined}
       {...props}
     />
   );

@@ -194,6 +194,7 @@ function StudentDetailsFormContent({
       {children}
       <Form {...form}>
         <form
+          noValidate
           onSubmit={toastOnError(
             form.handleSubmit(mode === "edit" ? onSubmit : checkMatchingAdmissions),
           )}
@@ -205,10 +206,8 @@ function StudentDetailsFormContent({
                   control={form.control}
                   name="studentName"
                   render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>
-                        Student name <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required className="col-span-2">
+                      <FormLabel>Student name</FormLabel>
                       <FormControl>
                         <Input {...field} disabled={mode === "view"} />
                       </FormControl>
@@ -233,10 +232,8 @@ function StudentDetailsFormContent({
                   control={form.control}
                   name="gender"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Gender <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required>
+                      <FormLabel>Gender</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
@@ -264,10 +261,8 @@ function StudentDetailsFormContent({
                   control={form.control}
                   name="yearOfBirth"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Year of birth <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required>
+                      <FormLabel>Year of birth</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -286,10 +281,8 @@ function StudentDetailsFormContent({
                   control={form.control}
                   name="admissionNumber"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Admission number <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required>
+                      <FormLabel>Admission number</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -337,10 +330,8 @@ function StudentDetailsFormContent({
                   control={form.control}
                   name="form"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Grade/Form <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required>
+                      <FormLabel>Grade/Form</FormLabel>
                       <FormControl>
                         <Input {...field} type="text" disabled={mode === "view"} />
                       </FormControl>
@@ -352,10 +343,8 @@ function StudentDetailsFormContent({
                   control={form.control}
                   name="stream"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Stream <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required>
+                      <FormLabel>Stream</FormLabel>
                       <FormControl>
                         <Input {...field} disabled={mode === "view"} />
                       </FormControl>

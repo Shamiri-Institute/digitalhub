@@ -77,15 +77,13 @@ function SubmitComplaintForm({ supervisorId, children, setIsOpen }: SubmitCompla
         <DialogTitle className="text-lg font-bold">Submit complaint</DialogTitle>
       </DialogHeader>
       {children}
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
         <FormField
           control={form.control}
           name="complaint"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel>
-                Select complaint <span className="text-shamiri-light-red">*</span>
-              </FormLabel>
+            <FormItem required className="space-y-2">
+              <FormLabel>Select complaint</FormLabel>
               <Select onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>

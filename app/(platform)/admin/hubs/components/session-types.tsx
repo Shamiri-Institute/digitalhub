@@ -169,10 +169,8 @@ export function HubNameField({ storedName }: { storedName?: string }) {
       control={control}
       name="hubName"
       render={({ field }) => (
-        <FormItem>
-          <FormLabel>
-            Hub name <span className="text-shamiri-light-red">*</span>
-          </FormLabel>
+        <FormItem required>
+          <FormLabel>Hub name</FormLabel>
           <FormControl>
             <Input {...field} autoComplete="off" />
           </FormControl>

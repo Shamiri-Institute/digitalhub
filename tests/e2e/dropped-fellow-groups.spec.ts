@@ -108,7 +108,7 @@ test("adding a school leaves dropped-out fellows without groups", async ({
   const dialog = page.getByRole("dialog", { name: "Add new school" });
   await dialog.getByRole("textbox", { name: /^School name/ }).fill(schoolName);
   await dialog.getByRole("spinbutton", { name: /^Expected no. of students/ }).fill("16");
-  await dialog.getByRole("button", { name: "Pick a date" }).click();
+  await dialog.getByRole("button", { name: /^Pre-session date/ }).click();
   // Adding a school leaves out fellows with a session that day. The seed schedules sessions from
   // a month before the day it runs onwards, so a day a year earlier is free for every fellow.
   const picker = page.getByRole("dialog").last();

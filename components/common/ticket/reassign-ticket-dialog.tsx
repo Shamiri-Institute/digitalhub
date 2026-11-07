@@ -151,15 +151,17 @@ export function ReassignTicketDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-6">
+          <form
+            noValidate
+            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+            className="space-y-6"
+          >
             <FormField
               control={form.control}
               name="reassignedTo"
               render={({ fieldState }) => (
-                <FormItem>
-                  <FormLabel htmlFor={RECIPIENT_FIELD_ID}>
-                    Select {searcherLabel} <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel htmlFor={RECIPIENT_FIELD_ID}>Select {searcherLabel}</FormLabel>
                   {renderSearcher(fieldState.invalid)}
                   <FormMessage />
                 </FormItem>
@@ -170,10 +172,8 @@ export function ReassignTicketDialog({
               control={form.control}
               name="reassignmentReason"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Reassignment Reason <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Reassignment Reason</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}

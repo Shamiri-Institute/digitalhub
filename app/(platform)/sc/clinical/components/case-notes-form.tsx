@@ -59,7 +59,10 @@ const riskLevels = ["no", "low", "medium", "high", "severe"] as const;
 const CaseReportSchema = z.object({
   sessionId: stringValidation("Session ID is required"),
   presentingIssues: stringValidation("Presenting issues are required"),
-  orsAssessment: z.string().optional(),
+  orsAssessment: z
+    .string()
+    .refine((value) => Number.isInteger(Number(value)), "Enter a whole number")
+    .optional(),
   riskLevel: z.enum(riskLevels, {
     error: (issue) => (issue.input === undefined ? "Risk level is required" : undefined),
   }),
@@ -256,16 +259,13 @@ function CaseNotesContent({
       )}
       <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
       <Form {...form}>
-        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+        <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
           <FormField
             control={form.control}
             name="sessionId"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Select session
-                  <span className="text-red-500">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Select session</FormLabel>
                 <Select
                   onValueChange={selectSession}
                   value={field.value}
@@ -317,10 +317,9 @@ function CaseNotesContent({
             control={form.control}
             name="presentingIssues"
             render={({ field }) => (
-              <FormItem>
+              <FormItem required>
                 <FormLabel>
                   Situation: What issues did the student present and in what state?
-                  <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
                   <Textarea
@@ -358,11 +357,8 @@ function CaseNotesContent({
             control={form.control}
             name="riskLevel"
             render={({ field: _field }) => (
-              <FormItem>
-                <FormLabel>
-                  Risk Level Assignment
-                  <span className="text-red-500">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Risk Level Assignment</FormLabel>
                 <div className="space-y-2">
                   {riskLevels.map((level) => (
                     <FormField
@@ -418,11 +414,8 @@ function CaseNotesContent({
             control={form.control}
             name="treatmentInterventions"
             render={() => (
-              <FormItem>
-                <FormLabel>
-                  Intervention(s)
-                  <span className="text-red-500">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Intervention(s)</FormLabel>
                 <div className="space-y-2">
                   {treatmentInterventions.map((intervention) => (
                     <FormField
@@ -459,11 +452,8 @@ function CaseNotesContent({
               control={form.control}
               name="otherIntervention"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Other Intervention
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Other Intervention</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -481,10 +471,9 @@ function CaseNotesContent({
             control={form.control}
             name="interventionExplanation"
             render={({ field }) => (
-              <FormItem>
+              <FormItem required>
                 <FormLabel>
                   Intervention: What techniques, approaches and tools did you use?
-                  <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
                   <Textarea
@@ -503,11 +492,8 @@ function CaseNotesContent({
             control={form.control}
             name="studentResponseExplanation"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Student Behavioural and Emotional Responses
-                  <span className="text-red-500">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Student Behavioural and Emotional Responses</FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
@@ -568,11 +554,8 @@ function CaseNotesContent({
               control={form.control}
               name="followUpPlan.explanation"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Explanation
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Explanation</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}

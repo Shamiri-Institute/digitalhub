@@ -8,7 +8,7 @@ import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/schema";
-import { Icons } from "#/components/icons";
+import RatingStarsInput from "#/components/common/rating-stars-input";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -37,7 +37,6 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitWeeklyFellowEvaluation } from "#/lib/actions/fellow";
 import { evaluationEditDeadline, mayEditEvaluation } from "#/lib/evaluation-edit-window";
-import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { project as projectTable, weeklyFellowRatings } from "#/db/schema";
 
@@ -164,15 +163,13 @@ function WeeklyFellowEvaluationForm({
           </DialogFooter>
         </div>
       ) : (
-        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+        <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
           <FormField
             control={form.control}
             name="week"
             render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel>
-                  Select week <span className="text-shamiri-light-red">*</span>
-                </FormLabel>{" "}
+              <FormItem required className="space-y-2">
+                <FormLabel>Select week</FormLabel>{" "}
                 <Select
                   key={new Date().toISOString()}
                   defaultValue={field.value ? format(field.value, "yyyy-MM-dd") : " "}
@@ -232,10 +229,9 @@ function WeeklyFellowEvaluationForm({
               control={form.control}
               name="behaviourRating"
               render={({ field }) => (
-                <FormItem className="flex flex-col space-y-2">
+                <FormItem required className="flex flex-col space-y-2">
                   <FormLabel>
-                    <span>Rate behaviour (1-unacceptable to 5-outstanding)</span>{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    <span>Rate behaviour (1-unacceptable to 5-outstanding)</span>
                   </FormLabel>
                   <RatingStarsInput
                     value={field.value}
@@ -277,10 +273,9 @@ function WeeklyFellowEvaluationForm({
               control={form.control}
               name="programDeliveryRating"
               render={({ field }) => (
-                <FormItem className="flex flex-col space-y-2">
+                <FormItem required className="flex flex-col space-y-2">
                   <FormLabel>
-                    <span>Rate program delivery (1-unacceptable to 5-outstanding)</span>{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    <span>Rate program delivery (1-unacceptable to 5-outstanding)</span>
                   </FormLabel>
                   <RatingStarsInput
                     value={field.value}
@@ -322,10 +317,9 @@ function WeeklyFellowEvaluationForm({
               control={form.control}
               name="dressingAndGroomingRating"
               render={({ field }) => (
-                <FormItem className="flex flex-col space-y-2">
+                <FormItem required className="flex flex-col space-y-2">
                   <FormLabel>
-                    <span>Rate dressing and grooming (1-very bad to 5-very good)</span>{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    <span>Rate dressing and grooming (1-very bad to 5-very good)</span>
                   </FormLabel>
                   <RatingStarsInput
                     value={field.value}
@@ -367,10 +361,9 @@ function WeeklyFellowEvaluationForm({
               control={form.control}
               name="punctualityRating"
               render={({ field }) => (
-                <FormItem className="flex flex-col space-y-2">
+                <FormItem required className="flex flex-col space-y-2">
                   <FormLabel>
-                    <span>Rate session attendance and punctuality (1-very bad to 5-very good)</span>{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    <span>Rate session attendance and punctuality (1-very bad to 5-very good)</span>
                   </FormLabel>
                   <RatingStarsInput
                     value={field.value}
@@ -450,47 +443,5 @@ function WeeklyFellowEvaluationForm({
         </form>
       )}
     </Form>
-  );
-}
-
-function RatingStarsInput({
-  value,
-  onChange,
-  disabled = false,
-}: {
-  value?: number;
-  onChange: (value: number) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-4",
-        disabled ? "pointer-events-none" : "pointer-events-auto",
-      )}
-    >
-      <div className="rating-stars flex flex-row-reverse gap-1 py-2">
-        {Array.from(Array(5).keys()).map((index) => {
-          return (
-            <button
-              type="button"
-              key={index.toString()}
-              className={cn(
-                "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
-                value && value >= 5 - index
-                  ? "text-shamiri-light-orange"
-                  : "text-shamiri-light-grey",
-              )}
-              onClick={() => {
-                onChange(5 - index);
-              }}
-            >
-              <Icons.starRating className="h-full w-full" />
-            </button>
-          );
-        })}
-      </div>
-      <FormMessage />
-    </div>
   );
 }

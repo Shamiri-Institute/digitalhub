@@ -196,15 +196,13 @@ function EditRecordingForm({ recording, fellows, onOpenChange }: EditRecordingDi
       </DialogHeader>
 
       <Form {...form}>
-        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+        <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
           <FormField
             control={form.control}
             name="fellowId"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Fellow <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Fellow</FormLabel>
                 <FormControl>
                   <Combobox
                     items={fellows.map((f) => ({
@@ -232,10 +230,8 @@ function EditRecordingForm({ recording, fellows, onOpenChange }: EditRecordingDi
             control={form.control}
             name="groupId"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Group <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Group</FormLabel>
                 <Select
                   onValueChange={(value) => {
                     field.onChange(value);
@@ -274,10 +270,8 @@ function EditRecordingForm({ recording, fellows, onOpenChange }: EditRecordingDi
             control={form.control}
             name="sessionId"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Session <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Session</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value}
@@ -314,10 +308,8 @@ function EditRecordingForm({ recording, fellows, onOpenChange }: EditRecordingDi
             control={form.control}
             name="originalFileName"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Recording name <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Recording name</FormLabel>
                 <FormControl>
                   <Input
                     {...field}

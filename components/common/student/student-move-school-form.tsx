@@ -110,7 +110,7 @@ function StudentMoveSchoolFormForm({
         <DialogTitle className="text-lg font-bold">Move student to another school</DialogTitle>
       </DialogHeader>
       {children}
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
         <div className="flex items-start gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-sm text-red-base">
           <Icons.info className="mt-0.5 h-5 w-5 shrink-0" />
           <span>
@@ -126,10 +126,8 @@ function StudentMoveSchoolFormForm({
           control={form.control}
           name="schoolId"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Destination school <span className="text-shamiri-light-red">*</span>
-              </FormLabel>
+            <FormItem required>
+              <FormLabel>Destination school</FormLabel>
               <Select
                 onValueChange={(value) => {
                   field.onChange(value);
@@ -165,10 +163,8 @@ function StudentMoveSchoolFormForm({
           control={form.control}
           name="assignedGroupId"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Group / Fellow <span className="text-shamiri-light-red">*</span>
-              </FormLabel>
+            <FormItem required>
+              <FormLabel>Group / Fellow</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 value={field.value}

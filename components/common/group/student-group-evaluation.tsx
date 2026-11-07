@@ -236,6 +236,7 @@ function StudentGroupEvaluationForm({
         </div>
       ) : (
         <form
+          noValidate
           onSubmit={toastOnError(form.handleSubmit(onSubmit))}
           className={cn("space-y-5", mode === "view" ? "form-view-mode" : "")}
         >
@@ -243,10 +244,8 @@ function StudentGroupEvaluationForm({
             control={form.control}
             name="sessionId"
             render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel>
-                  Select session <span className="text-shamiri-light-red">*</span>
-                </FormLabel>{" "}
+              <FormItem required className="space-y-2">
+                <FormLabel>Select session</FormLabel>{" "}
                 <Select
                   defaultValue={field.value}
                   onValueChange={(value) => {
@@ -299,7 +298,9 @@ function StudentGroupEvaluationForm({
                 <div key={input.section} className="flex flex-col space-y-2 py-4">
                   <div>
                     <span className="text-bold text-lg">{input.section}</span>{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    <span aria-hidden="true" className="text-shamiri-light-red">
+                      *
+                    </span>
                   </div>
                   <span>{input.description}</span>
                   <div className="flex flex-col space-y-3 text-sm">
@@ -309,14 +310,14 @@ function StudentGroupEvaluationForm({
                         control={form.control}
                         name={inputField.name as keyof typeof form.formState.defaultValues}
                         render={({ field }) => (
-                          <FormItem className="flex flex-col space-y-2">
+                          <FormItem
+                            required={Boolean(inputField.label)}
+                            className="flex flex-col space-y-2"
+                          >
                             <FormLabel>
                               <span className="text-shamiri-text-dark-grey">
                                 {inputField.label}
-                              </span>{" "}
-                              {inputField.label && (
-                                <span className="text-shamiri-light-red">*</span>
-                              )}
+                              </span>
                             </FormLabel>
                             <RatingStarsInput
                               value={field.value}
@@ -334,6 +335,7 @@ function StudentGroupEvaluationForm({
                         <FormItem>
                           <FormControl>
                             <Textarea
+                              aria-label={`${input.section} comments`}
                               rows={mode === "view" ? 5 : 3}
                               disabled={mode === "view" || editWindowClosed}
                               className="resize-none"

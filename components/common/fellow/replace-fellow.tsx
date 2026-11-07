@@ -87,7 +87,7 @@ function ReplaceFellowForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
         <DialogHeader className="mb-4">
           <DialogTitle className="text-xl">Replace fellow</DialogTitle>
         </DialogHeader>
@@ -104,10 +104,8 @@ function ReplaceFellowForm({
                 control={form.control}
                 name="supervisorId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Select supervisor <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Select supervisor</FormLabel>
                     <Select
                       onValueChange={(val) => {
                         field.onChange(val);
@@ -139,10 +137,8 @@ function ReplaceFellowForm({
                 control={form.control}
                 name="newLeaderId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Select replacement fellow <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Select replacement fellow</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
