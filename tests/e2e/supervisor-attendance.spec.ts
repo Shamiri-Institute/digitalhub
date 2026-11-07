@@ -132,18 +132,16 @@ test("marking supervisors in bulk starts unmarked, not from the supervisor opene
   context,
   undo,
 }) => {
-  const [markedAloneName, markedInBulkName] = ["alone", "in bulk"].map(
-    (marking) => `E2E supervisor marked ${marking} ${Date.now()}`,
-  );
-  const supervisorIds = [objectId("sup"), objectId("sup")];
-  await db.insert(supervisor).values(
-    [markedAloneName, markedInBulkName].map((supervisorName, index) => ({
-      id: supervisorIds[index],
-      supervisorName,
-      hubId: fixture.hubId,
-      implementerId: fixture.implementerId,
-    })),
-  );
+  const markedAloneName = `E2E supervisor marked alone ${Date.now()}`;
+  const markedInBulkName = `E2E supervisor marked in bulk ${Date.now()}`;
+  const newSupervisors = [markedAloneName, markedInBulkName].map((supervisorName) => ({
+    id: objectId("sup"),
+    supervisorName,
+    hubId: fixture.hubId,
+    implementerId: fixture.implementerId,
+  }));
+  const supervisorIds = newSupervisors.map(({ id }) => id);
+  await db.insert(supervisor).values(newSupervisors);
   undo(async () => {
     await db
       .delete(supervisorAttendance)
