@@ -90,14 +90,15 @@ test("a click on a chip opens its menu, and a click beside it selects the day", 
   await expect(page.getByRole("menu")).toBeVisible();
   await page.keyboard.press("Escape");
 
-  // The day buttons sit under the chips; the bottom-right corner of a day is empty.
-  const otherDay = grid.locator("td:not([aria-disabled=true])").nth(9);
-  const otherDayBox = await otherDay.boundingBox();
-  required(otherDayBox, "a day cell on screen");
-  await page.mouse.click(
-    otherDayBox.x + otherDayBox.width - 6,
-    otherDayBox.y + otherDayBox.height - 6,
-  );
+  // The day buttons sit under the chips. A day with no sessions has nothing on top of its button,
+  // and the top-right corner of any day is empty.
+  const emptyDay = grid
+    .locator("td:not([aria-disabled=true])")
+    .filter({ hasNot: page.locator("[aria-haspopup]") })
+    .nth(3);
+  const emptyDayBox = await emptyDay.boundingBox();
+  required(emptyDayBox, "a day without sessions on screen");
+  await page.mouse.click(emptyDayBox.x + emptyDayBox.width - 6, emptyDayBox.y + 6);
   await expect.poll(() => new URL(page.url()).searchParams.get("date")).not.toBe(day);
 });
 
