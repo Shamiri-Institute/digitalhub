@@ -16,6 +16,7 @@ import { fellowGroupReport, interventionGroup, interventionGroupReport } from "#
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import {
   requireFellowsInHub,
+  requireFellowsMayLeadGroups,
   requireHubRole,
   requireSchoolInHub,
 } from "#/lib/auth/require-hub-role";
@@ -31,9 +32,12 @@ async function setArchivedAt(groupId: string, archivedAt: Date | null) {
   );
   const groupToChange = await db.query.interventionGroup.findFirst({
     where: (g, { eq }) => eq(g.id, groupId),
-    columns: { schoolId: true },
+    columns: { schoolId: true, leaderId: true },
   });
   await requireSchoolInHub(groupToChange?.schoolId, callerHubId);
+  if (archivedAt === null && groupToChange) {
+    await requireFellowsMayLeadGroups([groupToChange.leaderId]);
+  }
 
   const [result] = await db
     .update(interventionGroup)
@@ -92,6 +96,7 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
     const { schoolId, fellowId } = CreateGroupSchema.parse(data);
     await requireSchoolInHub(schoolId, callerHubId);
     await requireFellowsInHub([fellowId], callerHubId);
+    await requireFellowsMayLeadGroups([fellowId]);
     const school = await db.query.school.findFirst({
       where: (s, { eq }) => eq(s.id, schoolId),
       with: { hub: { columns: { projectId: true } } },

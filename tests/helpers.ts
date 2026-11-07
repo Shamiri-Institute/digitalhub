@@ -1,7 +1,7 @@
-import type { BrowserContext } from "@playwright/test";
+import { type BrowserContext, expect } from "@playwright/test";
 import { eq, sql } from "drizzle-orm";
 
-import { db } from "#/db/client";
+import { db, pool } from "#/db/client";
 import {
   adminUser,
   clinicalCaseNotes,
@@ -192,4 +192,52 @@ export async function createClinicalCase(owner: { schoolId: string; currentSuper
   }
 
   return { caseId, pseudonym: label, studentName, remove };
+}
+
+/**
+ * Locks one row in a transaction of its own while `act` starts requests that write that row, and
+ * releases it once `waitForWaiting(count)` sees that many of them blocked on the lock, so they reach
+ * the row together instead of one after another.
+ */
+export async function raceOnRow(
+  table: string,
+  rowId: string,
+  act: (waitForWaiting: (count: number) => Promise<void>) => Promise<void>,
+) {
+  const lockHolder = await pool.connect();
+  try {
+    await lockHolder.query("begin");
+    await lockHolder.query(
+      `select 1 from ${lockHolder.escapeIdentifier(table)} where id = $1 for update`,
+      [rowId],
+    );
+    const {
+      rows: [holder],
+    } = await lockHolder.query<{ pid: number }>("select pg_backend_pid() as pid");
+    await act(async (count) => {
+      await expect
+        .poll(async () => {
+          // A request that queues behind another waiting request is blocked by that one, not by
+          // the lock holder, so count the whole queue.
+          const { rows } = await pool.query<{ waiting: number }>(
+            `with recursive waiting(pid) as (
+              select pid from pg_stat_activity where $1 = any(pg_blocking_pids(pid))
+              union
+              select a.pid from pg_stat_activity a join waiting w on w.pid = any(pg_blocking_pids(a.pid))
+            )
+            select count(*)::int as waiting from waiting`,
+            [holder?.pid],
+          );
+          return rows[0]?.waiting;
+        })
+        .toBe(count);
+    });
+  } finally {
+    // A connection whose commit failed is passed to release() so the pool discards it.
+    let commitError: Error | undefined;
+    await lockHolder.query("commit").catch((error: Error) => {
+      commitError = error;
+    });
+    lockHolder.release(commitError);
+  }
 }
