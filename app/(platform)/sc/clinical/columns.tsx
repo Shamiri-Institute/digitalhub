@@ -15,7 +15,7 @@ import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDef<ClinicalCases>[] {
   return [
     {
-      id: "checkbox",
+      id: "expand",
       cell: ({ row }) => {
         return (
           <button
@@ -109,6 +109,7 @@ export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDe
     {
       accessorKey: "age",
       header: "Age",
+      meta: { numeric: true },
     },
     {
       accessorKey: "referralFrom",

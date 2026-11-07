@@ -3,15 +3,14 @@ import CaseUnterminateDialog from "#/app/(platform)/cl/clinical/components/case-
 import { ViewCaseNotes } from "#/components/common/clinical/view-case-notes";
 import { ViewTerminationReasons } from "#/components/common/clinical/view-termination-reasons";
 import { ViewTreatmentPlan } from "#/components/common/clinical/view-treatment-plan";
-import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { cn } from "#/lib/utils";
+import { NestedDialogMenuItem, RowActionsTrigger } from "#/components/common/row-actions-menu";
 
 export default function ClinicalLeadCaseActionsDropdownMenu({
   clinicalCase,
@@ -24,13 +23,7 @@ export default function ClinicalLeadCaseActionsDropdownMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-          </div>
-        </div>
-      </DropdownMenuTrigger>
+      <RowActionsTrigger label={`Actions for ${clinicalCase.pseudonym}`} className="bg-white" />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
@@ -42,14 +35,10 @@ export default function ClinicalLeadCaseActionsDropdownMenu({
             caseNotes={clinicalCase.caseNotes || []}
             pseudonym={clinicalCase.pseudonym}
           >
-            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-              View case notes
-            </div>
+            <NestedDialogMenuItem>View case notes</NestedDialogMenuItem>
           </ViewCaseNotes>
         ) : (
-          <div className="cursor-not-allowed px-2 py-1.5 text-sm text-gray-400">
-            No case notes available
-          </div>
+          <DropdownMenuItem disabled>No case notes available</DropdownMenuItem>
         )}
 
         {hasTreatmentPlan ? (
@@ -57,39 +46,24 @@ export default function ClinicalLeadCaseActionsDropdownMenu({
             treatmentPlan={clinicalCase.followUpTreatmentPlan}
             pseudonym={clinicalCase.pseudonym}
           >
-            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-              View treatment plan
-            </div>
+            <NestedDialogMenuItem>View treatment plan</NestedDialogMenuItem>
           </ViewTreatmentPlan>
         ) : (
-          <div className="cursor-not-allowed px-2 py-1.5 text-sm text-gray-400">
-            No treatment plan available
-          </div>
+          <DropdownMenuItem disabled>No treatment plan available</DropdownMenuItem>
         )}
 
-        <ViewTerminationReasons
-          termination={clinicalCase.termination}
-          pseudonym={clinicalCase.pseudonym}
-          isTerminated={isTerminated}
-        >
-          <div
-            className={cn(
-              "px-2 py-1.5 text-sm",
-              isTerminated
-                ? "cursor-pointer text-shamiri-black"
-                : "cursor-not-allowed text-gray-400",
-            )}
-          >
-            {isTerminated ? "View termination reasons" : "Case not terminated"}
-          </div>
-        </ViewTerminationReasons>
-
         {isTerminated && (
-          <CaseUnterminateDialog caseId={clinicalCase.id} pseudonym={clinicalCase.pseudonym}>
-            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-              Un-terminate case
-            </div>
-          </CaseUnterminateDialog>
+          <>
+            <ViewTerminationReasons
+              termination={clinicalCase.termination}
+              pseudonym={clinicalCase.pseudonym}
+            >
+              <NestedDialogMenuItem>View termination reasons</NestedDialogMenuItem>
+            </ViewTerminationReasons>
+            <CaseUnterminateDialog caseId={clinicalCase.id} pseudonym={clinicalCase.pseudonym}>
+              <NestedDialogMenuItem>Un-terminate case</NestedDialogMenuItem>
+            </CaseUnterminateDialog>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

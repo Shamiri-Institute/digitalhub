@@ -5,7 +5,6 @@ import { useState, useTransition } from "react";
 import { updateClinicalSessionAttendance } from "#/app/(platform)/sc/clinical/action";
 import type { AttendanceRecord } from "#/app/(platform)/sc/clinical/components/columns";
 import { CustomIndicator } from "#/components/common/mark-attendance";
-import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
@@ -13,10 +12,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { toast, toastOnFailure } from "#/components/ui/use-toast";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 
 type AttendanceMark = "attended" | "missed" | "unmarked";
 
@@ -49,19 +48,8 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <div className="absolute inset-0 border-l bg-white">
-            <div className="flex h-full w-full items-center justify-center">
-              <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-            </div>
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          onCloseAutoFocus={(e) => {
-            e.preventDefault();
-          }}
-        >
+        <RowActionsTrigger label={`Actions for ${row.original.session}`} className="bg-white" />
+        <DropdownMenuContent align="end">
           <DropdownMenuLabel>
             <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
           </DropdownMenuLabel>

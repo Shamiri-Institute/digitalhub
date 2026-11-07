@@ -10,7 +10,6 @@ import type {
 import CreateClinicalCaseModal from "#/app/(platform)/sc/triage/components/create-clinical-case-modal";
 import TriageDetailsModal from "#/app/(platform)/sc/triage/components/triage-details-modal";
 import DataTable from "#/components/data-table";
-import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import {
   DropdownMenu,
@@ -18,11 +17,11 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 
 type TriageEventRow = TriageEventForSupervisor & { referredToMe: boolean };
 
@@ -64,13 +63,10 @@ function EventRowMenu({ event }: { event: TriageEventRow }) {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <div className="absolute inset-0 border-l bg-white">
-            <div className="flex h-full w-full items-center justify-center">
-              <Icons.moreHorizontal className="text-shamiri-text-grey h-5 w-5" />
-            </div>
-          </div>
-        </DropdownMenuTrigger>
+        <RowActionsTrigger
+          label={`Actions for ${event.student.studentName ?? event.student.visibleId}`}
+          className="bg-white"
+        />
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>
             <span className="text-shamiri-text-grey text-xs font-medium uppercase">Actions</span>
@@ -191,7 +187,7 @@ function FellowEventSubTable({ events }: { events: TriageEventRow[] }) {
 
 const fellowColumns: ColumnDef<FellowRow>[] = [
   {
-    id: "checkbox",
+    id: "expand",
     cell: ({ row }) =>
       row.original.totalEvents > 0 ? (
         <button
@@ -220,6 +216,7 @@ const fellowColumns: ColumnDef<FellowRow>[] = [
     id: "Total events",
     accessorKey: "totalEvents",
     header: "Total events",
+    meta: { numeric: true },
   },
   {
     id: "Breakdown",
@@ -231,6 +228,7 @@ const fellowColumns: ColumnDef<FellowRow>[] = [
   {
     id: "Referred to others",
     header: "Referred to others",
+    meta: { numeric: true },
     cell: ({ row }) => (
       <span
         className={cn(row.original.referredToOthers > 0 && "text-shamiri-light-red font-medium")}
@@ -242,6 +240,7 @@ const fellowColumns: ColumnDef<FellowRow>[] = [
   {
     id: "Screen completion",
     header: "Screen completion",
+    meta: { numeric: true },
     cell: ({ row }) => {
       const rate = row.original.completionRate;
       return rate !== null ? (

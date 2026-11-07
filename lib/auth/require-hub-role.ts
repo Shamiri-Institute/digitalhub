@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { cache } from "react";
 
-import { db } from "#/db/client";
+import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fellow, hub, interventionGroup, school } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
@@ -73,6 +73,26 @@ export async function requireFellowsInHub(fellowIds: string[], hubId: string) {
           .where(and(inArray(fellow.id, uniqueIds), eq(fellow.hubId, hubId)));
   if (inHub.length !== uniqueIds.length) {
     throw new NotFoundError("Fellow");
+  }
+}
+
+/**
+ * A fellow who has dropped out leads no group, so they cannot be made the leader of one. Call it in
+ * the transaction that writes the group: it share-locks the fellows until that commits, so
+ * dropoutFellow, which locks the fellow to count their groups, cannot drop one out in between.
+ */
+export async function requireFellowsMayLeadGroups(tx: Transaction, fellowIds: string[]) {
+  const leaders =
+    fellowIds.length === 0
+      ? []
+      : await tx
+          .select({ fellowName: fellow.fellowName, droppedOut: fellow.droppedOut })
+          .from(fellow)
+          .where(inArray(fellow.id, fellowIds))
+          .for("share");
+  const droppedOutFellow = leaders.find((leader) => leader.droppedOut === true);
+  if (droppedOutFellow) {
+    throw new Error(`${droppedOutFellow.fellowName} has dropped out, so they cannot lead a group.`);
   }
 }
 

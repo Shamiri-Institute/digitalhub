@@ -46,6 +46,7 @@ export const groupReportColumns = (
   },
   {
     id: "action",
+    header: () => <span className="sr-only">Report</span>,
     cell: ({ row }) => {
       if (!row.original.report) {
         return null;

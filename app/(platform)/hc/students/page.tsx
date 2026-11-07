@@ -116,6 +116,7 @@ export default async function StudentsPage() {
       <HubStudentClinicalDataCharts clinicalStats={clinicalStats} />
 
       <HubStudentDemographicsCharts
+        totalStudents={totalNumberOfStudentsInHub}
         studentsGroupedByAge={studentsGroupedByAge}
         studentsGroupedByGender={studentsGroupedByGender}
         studentsGroupedByForm={studentsGroupedByForm}

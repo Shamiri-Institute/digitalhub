@@ -157,7 +157,12 @@ export async function getEscalationsPerTicket(
   }
 }
 
-function latestEscalationWithTicket(tx: Transaction, ticketId: string) {
+/**
+ * Locks the ticket row for the rest of the transaction, so the checks a change makes on the latest
+ * escalation still hold when it writes, then reads that escalation.
+ */
+async function lockTicketAndReadLatestEscalation(tx: Transaction, ticketId: string) {
+  await tx.select({ id: tickets.id }).from(tickets).where(eq(tickets.id, ticketId)).for("update");
   return tx.query.ticketEscalations.findFirst({
     where: (e, { eq }) => eq(e.ticketId, ticketId),
     orderBy: (e, { desc }) => desc(e.createdAt),
@@ -208,7 +213,7 @@ export async function createEscalation(
     };
 
     await db.transaction(async (tx) => {
-      const latestEscalation = await latestEscalationWithTicket(tx, ticketId);
+      const latestEscalation = await lockTicketAndReadLatestEscalation(tx, ticketId);
 
       if (!latestEscalation) {
         throw new Error("No escalation exists for this ticket");
@@ -241,7 +246,7 @@ export async function resolveTicket(
     const { userId } = await requireAuthRole(...ESCALATION_RECIPIENT_ROLES);
 
     await db.transaction(async (tx) => {
-      const latestEscalation = await latestEscalationWithTicket(tx, ticketId);
+      const latestEscalation = await lockTicketAndReadLatestEscalation(tx, ticketId);
 
       if (!latestEscalation) throw new Error("No escalation exists for this ticket");
 
@@ -284,7 +289,7 @@ export async function reassignTicket(
     }
 
     await db.transaction(async (tx) => {
-      const escalation = await latestEscalationWithTicket(tx, ticketId);
+      const escalation = await lockTicketAndReadLatestEscalation(tx, ticketId);
 
       if (!escalation) throw new Error("No escalation exists for this ticket");
 

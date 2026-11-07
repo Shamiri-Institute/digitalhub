@@ -1,6 +1,6 @@
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import type { ReactNode } from "react";
-import DataTable from "#/components/data-table";
+import DataTable, { isActionColumn } from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 
 export function DatatableSkeleton<TData>({
@@ -29,7 +29,7 @@ export function DatatableSkeleton<TData>({
 export function buildSkeletonColumns<TData>(columns: ColumnDef<TData>[]): ColumnDef<TData>[] {
   return columns.map((column) => {
     const id = (column.id ?? column.header) as string;
-    const renderSkeleton = id !== "checkbox" && id !== "button";
+    const renderSkeleton = !isActionColumn(id);
     return {
       id,
       header: renderSkeleton ? id : "",

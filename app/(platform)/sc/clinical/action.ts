@@ -303,16 +303,7 @@ export async function getClinicalCasesStats() {
 
   stats.totalCases = stats.completedCases + stats.followUpCases + stats.activeCases;
 
-  const activeCasesPercentage = (stats.activeCases / stats.totalCases) * 100;
-  const followUpCasesPercentage = (stats.followUpCases / stats.totalCases) * 100;
-  const completedCasesPercentage = (stats.completedCases / stats.totalCases) * 100;
-
-  return {
-    ...stats,
-    activeCasesPercentage,
-    followUpCasesPercentage,
-    completedCasesPercentage,
-  };
+  return stats;
 }
 
 export async function updateClinicalSessionAttendance(
@@ -750,20 +741,22 @@ export async function terminateClinicalCase(data: {
   sessionId: string;
 }) {
   try {
-    const { actor, clinicalCase } = await requireCaseSessionAccess(data.caseId, data.sessionId);
-    if (clinicalCase.caseStatus === caseStatusOptions.Terminated) {
-      throw new Error("The case is already terminated");
-    }
+    const { actor } = await requireCaseSessionAccess(data.caseId, data.sessionId);
 
     await db.transaction(async (tx) => {
-      requireUpdated(
-        await tx
-          .update(clinicalScreeningInfo)
-          .set({ caseStatus: "Terminated" })
-          .where(eq(clinicalScreeningInfo.id, data.caseId))
-          .returning({ id: clinicalScreeningInfo.id }),
-        "Clinical case",
-      );
+      const [terminated] = await tx
+        .update(clinicalScreeningInfo)
+        .set({ caseStatus: "Terminated" })
+        .where(
+          and(
+            eq(clinicalScreeningInfo.id, data.caseId),
+            ne(clinicalScreeningInfo.caseStatus, caseStatusOptions.Terminated),
+          ),
+        )
+        .returning({ id: clinicalScreeningInfo.id });
+      if (!terminated) {
+        throw new Error("The case is already terminated");
+      }
 
       const termination = requireUpdated(
         await tx
@@ -792,12 +785,9 @@ export async function terminateClinicalCase(data: {
 
 export async function unterminateClinicalCase(data: { caseId: string; reason: string }) {
   try {
-    const { actor, clinicalCase } = await requireCaseAccess(data.caseId);
+    const { actor } = await requireCaseAccess(data.caseId);
     if (actor.role !== ImplementerRole.CLINICAL_LEAD) {
       throw new Error("You are not authorized to un-terminate this case");
-    }
-    if (clinicalCase.caseStatus !== caseStatusOptions.Terminated) {
-      throw new Error("The case is not terminated");
     }
     const reason = data.reason.trim();
     if (!reason) {
@@ -805,6 +795,20 @@ export async function unterminateClinicalCase(data: { caseId: string; reason: st
     }
 
     await db.transaction(async (tx) => {
+      const [reopened] = await tx
+        .update(clinicalScreeningInfo)
+        .set({ caseStatus: "Active" })
+        .where(
+          and(
+            eq(clinicalScreeningInfo.id, data.caseId),
+            eq(clinicalScreeningInfo.caseStatus, caseStatusOptions.Terminated),
+          ),
+        )
+        .returning({ id: clinicalScreeningInfo.id });
+      if (!reopened) {
+        throw new Error("The case is not terminated");
+      }
+
       const [termination] = await tx
         .select({ id: clinicalCaseTermination.id })
         .from(clinicalCaseTermination)
@@ -824,15 +828,6 @@ export async function unterminateClinicalCase(data: { caseId: string; reason: st
         "Reopening",
       );
       await tx.insert(clinicalCaseReview).values({ reopeningId: reopening.id });
-
-      requireUpdated(
-        await tx
-          .update(clinicalScreeningInfo)
-          .set({ caseStatus: "Active" })
-          .where(eq(clinicalScreeningInfo.id, data.caseId))
-          .returning({ id: clinicalScreeningInfo.id }),
-        "Clinical case",
-      );
     });
 
     refresh();
@@ -1175,18 +1170,20 @@ export async function flagClinicalCaseForFollowUp(data: { caseId: string; reason
 
 export async function triggerCaseStatusToFollowup(data: { caseId: string }) {
   try {
-    const { clinicalCase } = await requireCaseAccess(data.caseId);
-    if (clinicalCase.caseStatus !== caseStatusOptions.Active) {
+    await requireCaseAccess(data.caseId);
+    const [movedToFollowUp] = await db
+      .update(clinicalScreeningInfo)
+      .set({ caseStatus: "FollowUp" })
+      .where(
+        and(
+          eq(clinicalScreeningInfo.id, data.caseId),
+          eq(clinicalScreeningInfo.caseStatus, caseStatusOptions.Active),
+        ),
+      )
+      .returning({ id: clinicalScreeningInfo.id });
+    if (!movedToFollowUp) {
       throw new Error("Only an active case can move to follow-up");
     }
-    requireUpdated(
-      await db
-        .update(clinicalScreeningInfo)
-        .set({ caseStatus: "FollowUp" })
-        .where(eq(clinicalScreeningInfo.id, data.caseId))
-        .returning({ id: clinicalScreeningInfo.id }),
-      "Clinical case",
-    );
 
     refresh();
     return { success: true };

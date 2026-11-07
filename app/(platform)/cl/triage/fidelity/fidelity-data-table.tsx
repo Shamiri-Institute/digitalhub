@@ -47,15 +47,18 @@ const columns: ColumnDef<FidelityRow>[] = [
     id: "Sessions",
     accessorKey: "sessionsAttended",
     header: "Sessions",
+    meta: { numeric: true },
   },
   {
     id: "Triage events",
     accessorKey: "triageEvents",
     header: "Triage events",
+    meta: { numeric: true },
   },
   {
     id: "Triage rate",
     header: "Triage rate",
+    meta: { numeric: true },
     cell: ({ row }) => (
       <FlagCell value={row.original.triageRate} flag={row.original.triageRateFlag} />
     ),
@@ -64,10 +67,12 @@ const columns: ColumnDef<FidelityRow>[] = [
     id: "Risk positive",
     accessorKey: "riskPositive",
     header: "Risk positive",
+    meta: { numeric: true },
   },
   {
     id: "Escalation compliance",
     header: "Escalation compliance",
+    meta: { numeric: true },
     cell: ({ row }) => (
       <FlagCell value={row.original.escalationCompliance} flag={row.original.complianceFlag} />
     ),
@@ -75,6 +80,7 @@ const columns: ColumnDef<FidelityRow>[] = [
   {
     id: "Screen completion",
     header: "Screen completion",
+    meta: { numeric: true },
     accessorFn: (row) => `${row.screenCompletionRate}%`,
   },
 ];

@@ -9,6 +9,7 @@ export default function FellowComplaintsDropdownMenu({
 }) {
   return (
     <ViewEditReportDropdown
+      triggerLabel={`Actions for the complaint of ${fellowComplaints.date}`}
       viewLabel="View fellow complaint"
       editLabel="Edit fellow complaint"
       renderDialog={(action, children) => (

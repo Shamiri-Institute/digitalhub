@@ -1,14 +1,13 @@
 import { ImplementerRole } from "#/db/enums";
 import type { GroupTableState, SchoolGroupDataTableData } from "#/components/common/group/columns";
-import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 
 export function GroupsDatatableMenu({
   group,
@@ -19,13 +18,7 @@ export function GroupsDatatableMenu({
 }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="text-shamiri-text-grey h-5 w-5" />
-          </div>
-        </div>
-      </DropdownMenuTrigger>
+      <RowActionsTrigger label={`Actions for ${group.groupName}`} />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
           <span className="text-shamiri-text-grey text-xs font-medium uppercase">Actions</span>

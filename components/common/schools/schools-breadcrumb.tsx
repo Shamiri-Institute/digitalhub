@@ -76,15 +76,13 @@ export default function SchoolsBreadcrumb({
           )}
           <span>/</span>
           <Popover>
-            <PopoverTrigger asChild className="flex cursor-pointer items-center gap-2">
-              <div className="flex items-center gap-2 text-shamiri-text-dark-grey">
-                {selectedSchool?.schoolName}
-                <ChevronsUpDown className="h-3.5 w-3.5 opacity-60" />
-              </div>
+            <PopoverTrigger className="flex cursor-pointer items-center gap-2 text-shamiri-text-dark-grey">
+              {selectedSchool?.schoolName}
+              <ChevronsUpDown className="h-3.5 w-3.5 opacity-60" />
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
               <Command>
-                <span className="px-4 pb-1 pt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
+                <span className="px-4 pb-1 pt-2 text-xs uppercase tracking-widest text-muted-foreground">
                   switch school
                 </span>
                 <CommandSeparator />
@@ -99,7 +97,7 @@ export default function SchoolsBreadcrumb({
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{school.schoolName}</span>
-                        <span className="text-[9px] uppercase tracking-widest text-muted-foreground text-shamiri-new-blue">
+                        <span className="text-xs uppercase tracking-widest text-muted-foreground text-shamiri-new-blue">
                           {school.hub?.hubName ?? "No Hub"}
                         </span>
                       </div>

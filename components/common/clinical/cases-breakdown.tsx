@@ -12,20 +12,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CASE_STATUS_COLORS } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
-const CASE_STATUS_COLORS = {
-  Active: "#0085FF",
-  Terminated: "#00BA34",
-  FollowUp: "#F98600",
-  Referred: "#FF4D4F",
-};
-
 const RISK_STATUS_COLORS = {
-  High: "#FF4D4F",
-  Low: "#F98600",
-  No: "#00BA34",
-  Medium: "#0085FF",
+  No: "var(--color-shamiri-graph-green)",
+  Low: "var(--color-shamiri-graph-yellow)",
+  Medium: "var(--color-shamiri-light-orange)",
+  High: "var(--color-shamiri-light-red)",
 };
 
 export default function CasesBreakdown({
@@ -56,10 +50,11 @@ export default function CasesBreakdown({
       <ChartCard title="Clinical Cases by Case Status">
         {casesByStatus.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307}>
+            <PieChart width={307} height={307} aria-label="Clinical cases by case status">
               <Pie
                 data={casesByStatus.map((entry) => ({
                   ...entry,
+                  name: entry.name === "FollowUp" ? "Follow-up" : entry.name,
                   fill: CASE_STATUS_COLORS[entry.name as keyof typeof CASE_STATUS_COLORS],
                 }))}
                 dataKey="value"
@@ -71,7 +66,7 @@ export default function CasesBreakdown({
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="fill-shamiri-black text-2xl font-semibold leading-8"
                 >
                   {casesByStatus.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
@@ -85,7 +80,7 @@ export default function CasesBreakdown({
       <ChartCard title="Clinical Cases by Risk Status">
         {casesByRiskStatus.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307}>
+            <PieChart width={307} height={307} aria-label="Clinical cases by risk status">
               <Pie
                 data={casesByRiskStatus.map((entry) => ({
                   ...entry,
@@ -100,7 +95,7 @@ export default function CasesBreakdown({
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="fill-shamiri-black text-2xl font-semibold leading-8"
                 >
                   {casesByRiskStatus.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
@@ -114,12 +109,12 @@ export default function CasesBreakdown({
       <ChartCard title="Clinical Sessions">
         {casesBySession.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart width={307} height={307} data={casesBySession}>
+            <BarChart width={307} height={307} data={casesBySession} aria-label="Clinical sessions">
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis />
+              <YAxis allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="total" fill="#0085FF" />
+              <Bar dataKey="total" name="Sessions" fill="var(--color-shamiri-new-blue)" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -128,12 +123,17 @@ export default function CasesBreakdown({
       <ChartCard title="Clinical Cases by Supervisor">
         {casesBySupervisor.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart width={307} height={307} data={casesBySupervisor}>
+            <BarChart
+              width={307}
+              height={307}
+              data={casesBySupervisor}
+              aria-label="Clinical cases by supervisor"
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis />
+              <YAxis allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="total" fill="#0085FF" />
+              <Bar dataKey="total" name="Cases" fill="var(--color-shamiri-new-blue)" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}

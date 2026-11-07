@@ -1,15 +1,15 @@
 "use client";
 
+import { format } from "date-fns";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
-import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import type { PayoutHistoryEntry } from "#/lib/actions/expenses/payout-history";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 
 function formatMpesaNumber(mpesaNumber: string) {
   const formatted = RenderParsedPhoneNumber(mpesaNumber);
@@ -54,13 +54,10 @@ export default function PayoutActionsDropdown({ payout }: { payout: PayoutHistor
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-          </div>
-        </div>
-      </DropdownMenuTrigger>
+      <RowActionsTrigger
+        label={`Actions for the payout of ${format(payout.dateAdded, "dd-MM-yyyy HH:mm:ss")}`}
+        className="bg-white"
+      />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>

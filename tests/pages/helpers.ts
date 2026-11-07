@@ -86,7 +86,7 @@ export async function scheduleUrl(context: BrowserContext, path: string, date: D
  * JavaScript, and text typed into an input before hydration is reset by it. React attaches its
  * props to a DOM node when it hydrates it.
  */
-async function waitForHydration(element: Locator) {
+export async function waitForHydration(element: Locator) {
   await expect
     .poll(() =>
       element.evaluate((node) => Object.keys(node).some((key) => key.startsWith("__reactProps"))),

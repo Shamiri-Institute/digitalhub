@@ -510,7 +510,7 @@ export async function transferStudentToGroup(id: string, groupId: string) {
     const [targetGroup, studentToMove] = await Promise.all([
       db.query.interventionGroup.findFirst({
         where: (g, { eq }) => eq(g.id, groupId),
-        columns: { groupName: true, schoolId: true, leaderId: true },
+        columns: { groupName: true, schoolId: true, leaderId: true, archivedAt: true },
         with: { school: { columns: { hubId: true } } },
       }),
       db.query.student.findFirst({
@@ -527,23 +527,47 @@ export async function transferStudentToGroup(id: string, groupId: string) {
     if (!callerMayUseGroup) {
       throw new Error("Student or group not found");
     }
-
-    const [updated] = await db
-      .update(student)
-      .set({ assignedGroupId: groupId })
-      .where(eq(student.id, id))
-      .returning({ studentName: student.studentName });
-    if (!updated) {
-      throw new Error(`Student ${id} not found`);
+    if (targetGroup.archivedAt) {
+      throw new Error(`Group ${targetGroup.groupName} is archived.`);
     }
+
+    const updated = await db.transaction(async (tx) => {
+      const [previous] = await tx
+        .select({ assignedGroupId: student.assignedGroupId })
+        .from(student)
+        .where(eq(student.id, id))
+        .for("update");
+      const [moved] = await tx
+        .update(student)
+        .set({ assignedGroupId: groupId })
+        .where(eq(student.id, id))
+        .returning({ studentName: student.studentName });
+      if (!previous || !moved) {
+        throw new Error(`Student ${id} not found`);
+      }
+      // The group transfer history is built from this trail, as moveStudentToSchool records it.
+      if (previous.assignedGroupId !== groupId) {
+        await tx.insert(studentGroupTransferTrail).values({
+          studentId: id,
+          currentGroupId: groupId,
+          fromGroupId: previous.assignedGroupId,
+        });
+      }
+      return moved;
+    });
     refresh();
 
     return {
       success: true,
       message: `Successfully transferred ${updated.studentName} to group ${targetGroup.groupName}`,
     };
-  } catch {
-    return { error: "Something went wrong while adding student to the group." };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message:
+        (error as Error)?.message ?? "Something went wrong while adding student to the group.",
+    };
   }
 }
 

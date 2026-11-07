@@ -30,6 +30,7 @@ import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import {
   fellowsInCallerScope,
   requireFellowsInHub,
+  requireFellowsMayLeadGroups,
   requireHubRole,
   requireSchoolInHub,
 } from "#/lib/auth/require-hub-role";
@@ -386,11 +387,14 @@ export async function replaceGroupLeader({
     await requireSchoolInHub(groupToReassign?.schoolId, caller.hubId);
     await requireFellowsInHub([leaderId], caller.hubId);
 
-    const [updated] = await db
-      .update(interventionGroup)
-      .set({ leaderId })
-      .where(eq(interventionGroup.id, groupId))
-      .returning({ groupName: interventionGroup.groupName });
+    const [updated] = await db.transaction(async (tx) => {
+      await requireFellowsMayLeadGroups(tx, [leaderId]);
+      return tx
+        .update(interventionGroup)
+        .set({ leaderId })
+        .where(eq(interventionGroup.id, groupId))
+        .returning({ groupName: interventionGroup.groupName });
+    });
     if (!updated) {
       throw new Error(`Group ${groupId} not found`);
     }
@@ -429,31 +433,44 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
     const { fellowId, mode, dropoutReason } = DropoutFellowSchema.parse(data);
     const { hubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
     await requireFellowsInHub([fellowId], hubId);
-    if (mode === "dropout") {
-      const groups = await db.$count(
-        interventionGroup,
-        and(eq(interventionGroup.leaderId, fellowId), isNull(interventionGroup.archivedAt)),
-      );
-
-      if (groups > 0) {
-        return {
-          success: false,
-          message: `Sorry, could not drop out fellow. Fellow is still assigned to ${groups} active groups. Please assign a new leader or archive the groups.`,
-        };
+    const outcome = await db.transaction(async (tx) => {
+      if (mode === "dropout") {
+        // Locking the fellow waits out any group write that share-locked them as its leader
+        // (requireFellowsMayLeadGroups), so the count below includes that group.
+        await tx
+          .select({ id: fellow.id })
+          .from(fellow)
+          .where(eq(fellow.id, fellowId))
+          .for("update");
+        const activeGroups = await tx.$count(
+          interventionGroup,
+          and(eq(interventionGroup.leaderId, fellowId), isNull(interventionGroup.archivedAt)),
+        );
+        if (activeGroups > 0) {
+          return { activeGroups };
+        }
       }
+      const [updated] = await tx
+        .update(fellow)
+        .set({
+          droppedOut: mode === "dropout",
+          dropOutReason: mode === "dropout" ? dropoutReason : null,
+          droppedOutAt: mode === "dropout" ? new Date() : null,
+        })
+        .where(eq(fellow.id, fellowId))
+        .returning({ fellowName: fellow.fellowName });
+      if (!updated) {
+        throw new Error(`Fellow ${fellowId} not found`);
+      }
+      return { fellowName: updated.fellowName };
+    });
+    if ("activeGroups" in outcome) {
+      return {
+        success: false,
+        message: `Sorry, could not drop out fellow. Fellow is still assigned to ${outcome.activeGroups} active groups. Please assign a new leader or archive the groups.`,
+      };
     }
-    const [result] = await db
-      .update(fellow)
-      .set({
-        droppedOut: mode === "dropout",
-        dropOutReason: mode === "dropout" ? dropoutReason : null,
-        droppedOutAt: mode === "dropout" ? new Date() : null,
-      })
-      .where(eq(fellow.id, fellowId))
-      .returning({ fellowName: fellow.fellowName });
-    if (!result) {
-      throw new Error(`Fellow ${fellowId} not found`);
-    }
+    const result = outcome;
 
     refresh();
     return {

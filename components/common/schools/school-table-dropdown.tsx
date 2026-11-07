@@ -1,14 +1,13 @@
 import type { ImplementerRole } from "#/db/enums";
 import Link from "next/link";
 import type { SchoolsTableData, SchoolTableState } from "#/components/common/schools/columns";
-import { Icons } from "#/components/icons";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 
 export default function SchoolTableDropdown({
@@ -22,19 +21,8 @@ export default function SchoolTableDropdown({
 }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-          </div>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        onCloseAutoFocus={(e) => {
-          e.preventDefault();
-        }}
-      >
+      <RowActionsTrigger label={`Actions for ${schoolRow.schoolName}`} />
+      <DropdownMenuContent align="end">
         <DropdownMenuLabel>
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
@@ -57,7 +45,7 @@ export default function SchoolTableDropdown({
           </Link>
         </DropdownMenuItem>
         {role === "HUB_COORDINATOR" &&
-          (!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
+          (!schoolRow.droppedOut ? (
             <div>
               <DropdownMenuItem onClick={() => state.openDialog("edit", schoolRow)}>
                 Edit school information

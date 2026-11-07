@@ -2,7 +2,6 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import type { FellowClinicalCasesData } from "#/app/(platform)/cl/fellows/actions";
-import FellowsClinicalCasesDropdownActions from "#/components/common/clinical/fellows-cases-dropdown-actions";
 import { Badge } from "#/components/ui/badge";
 
 export const columns: ColumnDef<FellowClinicalCasesData>[] = [
@@ -13,6 +12,7 @@ export const columns: ColumnDef<FellowClinicalCasesData>[] = [
   {
     accessorKey: "averageRating",
     header: "Average Rating",
+    meta: { numeric: true },
   },
   {
     accessorKey: "activeStatus",
@@ -39,6 +39,7 @@ export const columns: ColumnDef<FellowClinicalCasesData>[] = [
   {
     accessorKey: "noOfGroups",
     header: "No. of Groups",
+    meta: { numeric: true },
   },
   {
     accessorKey: "phoneNumber",
@@ -47,11 +48,6 @@ export const columns: ColumnDef<FellowClinicalCasesData>[] = [
   {
     accessorKey: "supervisorName",
     header: "Supervisor",
-  },
-  {
-    id: "button",
-    cell: () => <FellowsClinicalCasesDropdownActions />,
-    enableHiding: false,
   },
 ];
 

@@ -61,6 +61,7 @@ export const columns: ColumnDef<PayoutHistoryEntry>[] = [
   {
     accessorKey: "totalPayoutAmount",
     header: "Total Payout Amount (KES)",
+    meta: { numeric: true },
   },
   {
     id: "button",
@@ -93,5 +94,6 @@ export const subColumns: ColumnDef<OpsHubsPayoutHistoryType["fellowDetails"][num
   {
     accessorKey: "totalAmount",
     header: "Total Amount (KES)",
+    meta: { numeric: true },
   },
 ];

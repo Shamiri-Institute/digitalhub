@@ -68,6 +68,7 @@ export const columns = ({
     {
       accessorKey: "numbersExpected",
       header: "Expected number of students",
+      meta: { numeric: true },
       id: "Expected number of students",
     },
     {

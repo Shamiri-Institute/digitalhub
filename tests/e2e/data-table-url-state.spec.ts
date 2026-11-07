@@ -86,6 +86,52 @@ test("a list keeps its page size with its page across a reload", async ({ page }
   await expect(dataRows(page)).toHaveCount(20);
 });
 
+test("the pager's arrows move one page and mark the page shown", async ({ page }) => {
+  await openFirstSchoolStudents(page);
+  const { status } = pager(page);
+  const pagination = page.getByRole("main").getByRole("navigation", { name: "Pagination" });
+  const previous = pagination.getByRole("button", { name: "Previous page" });
+  const next = pagination.getByRole("button", { name: "Next page" });
+  const currentPage = pagination.locator("[aria-current=page]");
+
+  await goToPage(page, 3);
+  await expect(currentPage).toHaveText("3");
+  // The page shown is marked, not a button that changes the page.
+  await expect(pagination.getByRole("button", { name: "3", exact: true })).toHaveCount(0);
+
+  await next.click();
+  await expect(status).toHaveText(/^4 of /);
+  await expect(currentPage).toHaveText("4");
+  await expect(page).toHaveURL(/\/students\?page=4$/);
+
+  await previous.click();
+  await previous.click();
+  await expect(status).toHaveText(/^2 of /);
+  await expect(currentPage).toHaveText("2");
+
+  await previous.click();
+  await expect(status).toHaveText(/^1 of /);
+  await expect(previous).toBeDisabled();
+  await expect(next).toBeEnabled();
+});
+
+test("a search that matches nothing shows the empty message and no pager", async ({ page }) => {
+  const studentsUrl = await openFirstSchoolStudents(page);
+  const { status, pageNumber, pageSize } = pager(page);
+  await page.goto(studentsUrl);
+  await expect(status).toHaveText(/^1 of /);
+
+  const matches = await searchRows(page, `no-such-student-${Date.now()}`);
+  await expect(matches).toHaveCount(0);
+  await expect(
+    page.getByRole("main").getByRole("cell", { name: "No students found" }),
+  ).toBeVisible();
+  await expect(status).toBeHidden();
+  await expect(pageNumber).toBeHidden();
+  await expect(pageSize).toBeHidden();
+  await expect(page.getByRole("main").getByRole("navigation", { name: "Pagination" })).toBeHidden();
+});
+
 test("a page or size the list does not offer falls back without errors", async ({ page }) => {
   const studentsUrl = await openFirstSchoolStudents(page);
   const { status, pageSize } = pager(page);

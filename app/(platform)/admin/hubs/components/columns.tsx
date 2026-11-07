@@ -15,10 +15,9 @@ const countColumn = (
 ): ColumnDef<AdminHub> => ({
   accessorKey: key,
   id,
-  header: () => <div className="text-right">{id}</div>,
-  cell: ({ row }) => (
-    <div className="text-right tabular-nums">{formatCount(row.original[key])}</div>
-  ),
+  header: id,
+  meta: { numeric: true },
+  cell: ({ row }) => formatCount(row.original[key]),
   enableGlobalFilter: false,
 });
 

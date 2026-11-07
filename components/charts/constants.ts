@@ -16,32 +16,48 @@ export const possibleSessions = [
 
 export const possibleInterventionSessions = ["s0", "s1", "s2", "s3", "s4"];
 
-export const clinicaldataValue = [
-  { name: "Active", value: 0 },
-  { name: "FollowUp", value: 0 },
-  { name: "Terminated", value: 0 },
+/** "s0" is the pre-session; "s3" becomes "S3". Other values pass through. */
+export function sessionLabel(sessionName: string) {
+  if (sessionName === "s0") return "Pre";
+  return /^s\d+$/.test(sessionName) ? sessionName.toUpperCase() : sessionName;
+}
+
+/** Categorical series colours, assigned in this order and never cycled past the end. */
+export const SERIES_COLORS = [
+  "var(--color-shamiri-new-blue)",
+  "var(--color-shamiri-graph-green)",
+  "var(--color-shamiri-graph-yellow)",
+  "var(--color-shamiri-graph-purple)",
+  "var(--color-shamiri-red)",
+  "var(--color-shamiri-dark-blue)",
+  "var(--color-shamiri-light-orange)",
+  "var(--color-shamiri-light-blue)",
 ];
 
-export const clinicalCasesColors = ["#7EA16B", "#FABC2A", "#B0D5EA"];
+/** Colour of a value from a fixed list, so it keeps its colour whatever else is in the data. */
+export function categoryColor(name: string, knownNames: readonly string[]) {
+  const index = knownNames.indexOf(name);
+  return SERIES_COLORS[index === -1 ? knownNames.length : index];
+}
 
-export const studentsGroupByColors = ["#FACC15", "#8B2CE9", "#0085FF", "#585757", "#E92C9D"];
+/**
+ * One blue ramp, light to dark, for series that follow an order (sessions, forms, ages). The
+ * light end fades toward the card surface; the steps pass the dataviz ordinal check for 2-9 series.
+ */
+export function orderedSeriesColor(index: number, count: number) {
+  const darkShare = count < 2 ? 100 : Math.round((index / (count - 1)) * 100);
+  return `color-mix(in oklab, var(--color-shamiri-dark-blue) ${darkShare}%, color-mix(in oklab, var(--color-shamiri-blue) 55%, var(--color-card)))`;
+}
 
-export const generateRandomColor = () => {
-  const baseColor = studentsGroupByColors[Math.floor(Math.random() * studentsGroupByColors.length)];
+export const CASE_STATUS_COLORS = {
+  Active: "var(--color-shamiri-new-blue)",
+  FollowUp: "var(--color-shamiri-light-orange)",
+  Terminated: "var(--color-shamiri-graph-green)",
+  Referred: "var(--color-shamiri-graph-purple)",
+} as const;
 
-  if (!baseColor) {
-    return "#000000";
-  }
-
-  const r = Number.parseInt(baseColor.slice(1, 3), 16);
-  const g = Number.parseInt(baseColor.slice(3, 5), 16);
-  const b = Number.parseInt(baseColor.slice(5, 7), 16);
-
-  const shade = 0.5 + Math.random();
-
-  const newR = Math.min(255, Math.round(r * shade));
-  const newG = Math.min(255, Math.round(g * shade));
-  const newB = Math.min(255, Math.round(b * shade));
-
-  return `#${newR.toString(16).padStart(2, "0")}${newG.toString(16).padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`;
-};
+// ponytail: kept for components/common/clinical/{clinical-stats,students-data-breakdown}.tsx,
+// which are outside this change; move them to SERIES_COLORS and delete both.
+export const clinicalCasesColors = SERIES_COLORS.slice(0, 3);
+export const generateRandomColor = () =>
+  SERIES_COLORS[Math.floor(Math.random() * SERIES_COLORS.length)];

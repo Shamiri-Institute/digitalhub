@@ -48,6 +48,7 @@ export default function AssignFellowSupervisorSelect({
       ) : (
         <Select onValueChange={assignSupervisor} value={shownSupervisorId ?? undefined}>
           <SelectTrigger
+            aria-label="Supervisor"
             className={cn(
               "h-auto gap-1 px-2 py-0.5",
               supervisorId !== null

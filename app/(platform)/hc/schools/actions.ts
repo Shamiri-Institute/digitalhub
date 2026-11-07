@@ -18,7 +18,11 @@ import {
   weeklyHubReport,
 } from "#/db/schema";
 import { fetchSchoolsTableRows } from "#/components/common/schools/queries";
-import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
+import {
+  requireFellowsMayLeadGroups,
+  requireHubRole,
+  requireSchoolInHub,
+} from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { getSchoolInitials } from "#/lib/utils";
 import {
@@ -373,9 +377,6 @@ export async function editSchoolInformation(
         principalName: parsedData.principalName ?? null,
         principalPhone: parsedData.principalPhone ?? null,
         boardingDay: parsedData.boardingDay ?? null,
-        droppedOut: false,
-        dropoutReason: null,
-        droppedOutAt: null,
       })
       .where(eq(school.id, schoolId))
       .returning({ schoolName: school.schoolName });
@@ -419,10 +420,15 @@ export async function assignSchoolPointSupervisor(
     const supervisorInCoordinatorHub = await db.query.supervisor.findFirst({
       where: (s, { and, eq }) =>
         and(eq(s.id, parsedData.assignedSupervisorId), eq(s.hubId, coordinatorHubId)),
-      columns: { id: true },
+      columns: { supervisorName: true, droppedOut: true },
     });
     if (!supervisorInCoordinatorHub) {
       throw new Error("Supervisor not found");
+    }
+    if (supervisorInCoordinatorHub.droppedOut) {
+      throw new Error(
+        `${supervisorInCoordinatorHub.supervisorName} has dropped out, so they cannot be assigned.`,
+      );
     }
 
     const [updated] = await db
@@ -461,7 +467,8 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>) {
     const parsedData = AddSchoolSchema.parse(data);
 
     const fellows = await db.query.fellow.findMany({
-      where: (f, { eq }) => eq(f.hubId, hubId),
+      where: (f, { and, eq, isNull, or }) =>
+        and(eq(f.hubId, hubId), or(isNull(f.droppedOut), eq(f.droppedOut, false))),
       with: { groups: { columns: { id: true, schoolId: true } } },
     });
 
@@ -558,6 +565,10 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>) {
       }
 
       if (interventionGroups.length > 0) {
+        await requireFellowsMayLeadGroups(
+          tx,
+          interventionGroups.map((group) => group.leaderId),
+        );
         await tx.insert(interventionGroup).values(interventionGroups);
       }
 

@@ -4,7 +4,7 @@ import { eq, gte, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowAttendance, hub, payoutStatements } from "#/db/schema";
-import { signableMember, signInWithEmail, required } from "#/tests/helpers";
+import { raceOnRow, signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 /**
@@ -117,10 +117,23 @@ test("an ops user triggers a payout run", async ({ page, context }) => {
   await signInWithEmail(context, ops.email);
   await page.goto(getUrl("/ops/reporting/expenses/payout-history"));
 
-  await page.getByRole("button", { name: "Manually Trigger Payout" }).click();
-  const dialog = page.getByRole("dialog", { name: "Confirm Payout Trigger" });
-  await dialog.getByRole("button", { name: "Confirm Trigger" }).click();
-  await expect(dialog).toBeHidden();
+  // Two tabs confirm a run at once, as a double submission would. The second run must neither
+  // execute the statements again nor re-stamp the attendances the first one processed.
+  const tabs = [page, await context.newPage()];
+  for (const tab of tabs) {
+    await tab.goto(getUrl("/ops/reporting/expenses/payout-history"));
+    await tab.getByRole("button", { name: "Manually Trigger Payout" }).click();
+  }
+  const dialogs = tabs.map((tab) => tab.getByRole("dialog", { name: "Confirm Payout Trigger" }));
+  await raceOnRow("fellow_attendances", fixture.attendanceId, async (waitForWaiting) => {
+    for (const [index, dialog] of dialogs.entries()) {
+      await dialog.getByRole("button", { name: "Confirm Trigger" }).click();
+      await waitForWaiting(index + 1);
+    }
+  });
+  for (const dialog of dialogs) {
+    await expect(dialog).toBeHidden();
+  }
 
   const [executedPayout] = await db
     .select({ executedAt: payoutStatements.executedAt })

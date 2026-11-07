@@ -19,10 +19,15 @@ export async function assignFellowSupervisor({
     const { hubId: coordinatorHubId } = await requireHubRole(ImplementerRole.HUB_COORDINATOR);
     const supervisorInCoordinatorHub = await db.query.supervisor.findFirst({
       where: (s, { and, eq }) => and(eq(s.id, supervisorId), eq(s.hubId, coordinatorHubId)),
-      columns: { supervisorName: true },
+      columns: { supervisorName: true, droppedOut: true },
     });
     if (!supervisorInCoordinatorHub) {
       throw new Error("Supervisor not found");
+    }
+    if (supervisorInCoordinatorHub.droppedOut) {
+      throw new Error(
+        `${supervisorInCoordinatorHub.supervisorName} has dropped out, so they cannot be assigned.`,
+      );
     }
 
     const [updated] = await db
@@ -40,6 +45,8 @@ export async function assignFellowSupervisor({
     };
   } catch (error: unknown) {
     console.error(error);
-    return { error: "Something went wrong assigning a supervisor" };
+    const message = (error as Error)?.message ?? "Something went wrong assigning a supervisor";
+    // The fellows table's select reads `error`, the assign dialog reads `message`.
+    return { success: false, message, error: message };
   }
 }

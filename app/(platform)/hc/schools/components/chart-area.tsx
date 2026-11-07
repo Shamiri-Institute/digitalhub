@@ -16,11 +16,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { categoryColor, sessionLabel } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
-import {
-  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
-  SCHOOL_DROPOUT_REASONS_MAPPING,
-} from "#/lib/app-constants/constants";
+import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import type {
   DropoutReasonsGraphData,
   fetchSchoolDataCompletenessData,
@@ -40,27 +38,30 @@ const ChartArea = memo(function ChartArea({
   sessionRatingsData: SessionRatingAverages[];
 }) {
   return (
-    <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
       <ChartCard title="Session progress" showCardFooter={false}>
         {schoolAttendances?.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart width={307} height={307} data={schoolAttendances}>
+            <BarChart
+              width={307}
+              height={307}
+              data={schoolAttendances}
+              aria-label="Session progress"
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="session_type"
-                tickFormatter={(value: string) => value.replace("s", "")}
-              />
-              <Tooltip />
+              <XAxis dataKey="session_type" tickFormatter={sessionLabel} />
+              <Tooltip labelFormatter={(value) => sessionLabel(String(value))} />
+              <Legend iconType="square" iconSize={8} />
               <Bar
                 dataKey="count_attendance_marked"
                 stackId="a"
-                fill="#0085FF"
+                fill="var(--color-shamiri-new-blue)"
                 name="Attendance marked"
               />
               <Bar
                 dataKey="count_attendance_unmarked"
                 stackId="a"
-                fill="#CCE7FF"
+                fill="var(--color-shamiri-new-lighter-blue)"
                 name="Attendance unmarked"
               />
             </BarChart>
@@ -70,13 +71,11 @@ const ChartArea = memo(function ChartArea({
       <ChartCard title="Drop out reasons" showCardFooter={false}>
         {dropoutData.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307}>
+            <PieChart width={307} height={307} aria-label="Drop out reasons">
               <Pie
                 data={dropoutData.map((reason) => ({
                   ...reason,
-                  fill: SCHOOL_DROPOUT_REASONS_MAPPING[
-                    reason.name as keyof typeof SCHOOL_DROPOUT_REASONS_MAPPING
-                  ],
+                  fill: categoryColor(reason.name, SCHOOL_DROPOUT_REASONS),
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -84,11 +83,10 @@ const ChartArea = memo(function ChartArea({
                 endAngle={450}
                 outerRadius={100}
                 innerRadius={70}
-                fill="#8884d8"
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="fill-shamiri-black text-2xl font-semibold leading-8"
                 >
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
@@ -101,13 +99,14 @@ const ChartArea = memo(function ChartArea({
       <ChartCard title="School information completion" showCardFooter={false}>
         {schoolDataCompletenessData.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={250} height={250}>
+            <PieChart width={250} height={250} aria-label="School information completion">
               <Pie
                 data={schoolDataCompletenessData.map((entry) => ({
                   ...entry,
-                  fill: SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[
-                    entry.name as keyof typeof SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING
-                  ],
+                  fill:
+                    entry.name === "actual"
+                      ? "var(--color-shamiri-new-blue)"
+                      : "var(--color-shamiri-new-light-blue)",
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -118,8 +117,7 @@ const ChartArea = memo(function ChartArea({
               >
                 <Label
                   position="center"
-                  className="text text-2xl font-semibold leading-8"
-                  fill="#fffff"
+                  className="fill-shamiri-black text-2xl font-semibold leading-8"
                 >
                   {`${schoolDataCompletenessData.find((d) => d.name === "actual")?.value}%`}
                 </Label>
@@ -131,15 +129,23 @@ const ChartArea = memo(function ChartArea({
       <ChartCard title="Ratings" showCardFooter={false}>
         {sessionRatingsData?.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart width={307} height={307} data={sessionRatingsData}>
+            <LineChart width={307} height={307} data={sessionRatingsData} aria-label="Ratings">
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session_type" />
-              <YAxis />
-              <Tooltip />
+              <XAxis dataKey="session_type" tickFormatter={sessionLabel} />
+              <YAxis allowDecimals={false} />
+              <Tooltip labelFormatter={(value) => sessionLabel(String(value))} />
               <Legend />
-              <Line dataKey="student_behaviour" stroke="#0085FF" name="Student behaviour" />
-              <Line dataKey="admin_support" stroke="#00BA34" name="Admin support" />
-              <Line dataKey="workload" stroke="#F98600" name="Workload" />
+              <Line
+                dataKey="student_behavior"
+                stroke="var(--color-shamiri-new-blue)"
+                name="Student behaviour"
+              />
+              <Line
+                dataKey="admin_support"
+                stroke="var(--color-shamiri-graph-green)"
+                name="Admin support"
+              />
+              <Line dataKey="workload" stroke="var(--color-shamiri-light-orange)" name="Workload" />
             </LineChart>
           </ResponsiveContainer>
         ) : null}

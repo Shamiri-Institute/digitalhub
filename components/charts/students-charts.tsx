@@ -16,8 +16,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { generateRandomColor, possibleInterventionSessions } from "#/components/charts/constants";
+import {
+  categoryColor,
+  possibleInterventionSessions,
+  sessionLabel,
+} from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
+import { STUDENT_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 
 export default function HubStudentsDetailsCharts({
   studentsAttendanceGroupedBySession,
@@ -64,20 +69,22 @@ export default function HubStudentsDetailsCharts({
     [] as { name: string; value: number }[],
   );
 
-  const randomColors = formatedStudentsDropOutReasons.map(() => generateRandomColor());
-
   return (
-    <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
       <ChartCard title="Attendance" showCardFooter={false}>
         {filteredFormatedSessions?.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart width={307} height={307} data={filteredFormatedSessions}>
+            <BarChart
+              width={307}
+              height={307}
+              data={filteredFormatedSessions}
+              aria-label="Attendance"
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="sessionType" />
-              <YAxis dataKey="attendance" />
-              <Tooltip labelFormatter={(value) => `Session: ${value}`} />
-              <Bar dataKey="attendance" stackId="a" fill="#0085FF" />
-              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" />
+              <XAxis dataKey="sessionType" tickFormatter={sessionLabel} />
+              <YAxis dataKey="attendance" allowDecimals={false} />
+              <Tooltip labelFormatter={(value) => `Session: ${sessionLabel(String(value))}`} />
+              <Bar dataKey="attendance" name="Sessions" fill="var(--color-shamiri-new-blue)" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -85,11 +92,11 @@ export default function HubStudentsDetailsCharts({
       <ChartCard title="Drop-out reasons" showCardFooter={false}>
         {formatedStudentsDropOutReasons.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307}>
+            <PieChart width={307} height={307} aria-label="Drop-out reasons">
               <Pie
-                data={formatedStudentsDropOutReasons.map((reason, index) => ({
+                data={formatedStudentsDropOutReasons.map((reason) => ({
                   ...reason,
-                  fill: randomColors[index],
+                  fill: categoryColor(reason.name, STUDENT_DROPOUT_REASONS),
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -97,11 +104,10 @@ export default function HubStudentsDetailsCharts({
                 endAngle={450}
                 outerRadius={100}
                 innerRadius={70}
-                fill="#8884d8"
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="fill-shamiri-black text-2xl font-semibold leading-8"
                 >
                   {formatedStudentsDropOutReasons.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
@@ -114,11 +120,14 @@ export default function HubStudentsDetailsCharts({
       <ChartCard title="Student information completion" showCardFooter={false}>
         {studentInfoCompletion.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={250} height={250}>
+            <PieChart width={250} height={250} aria-label="Student information completion">
               <Pie
                 data={studentInfoCompletion.map((entry) => ({
                   ...entry,
-                  fill: entry.name === "actual" ? "#0085FF" : "#EFF6FF",
+                  fill:
+                    entry.name === "actual"
+                      ? "var(--color-shamiri-new-blue)"
+                      : "var(--color-shamiri-new-light-blue)",
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -129,7 +138,7 @@ export default function HubStudentsDetailsCharts({
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="fill-shamiri-black text-2xl font-semibold leading-8"
                 >
                   {`${studentInfoCompletion.find((d) => d.name === "actual")?.value ?? 0}%`}
                 </Label>
@@ -142,15 +151,26 @@ export default function HubStudentsDetailsCharts({
       <ChartCard title="Student group ratings" showCardFooter={false}>
         {studentGroupRatings.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart width={307} height={307} data={studentGroupRatings}>
+            <LineChart
+              width={307}
+              height={307}
+              data={studentGroupRatings}
+              aria-label="Student group ratings"
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session" />
-              <YAxis domain={[0, 5]} />
+              <XAxis dataKey="session" tickFormatter={sessionLabel} />
+              <YAxis domain={[0, 5]} allowDecimals={false} />
               <Tooltip
+                labelFormatter={(value) => sessionLabel(String(value))}
                 formatter={(value) => (typeof value === "number" ? value.toFixed(2) : value)}
               />
               <Legend />
-              <Line type="monotone" dataKey="value" name="Avg rating" stroke="#0085FF" />
+              <Line
+                type="monotone"
+                dataKey="value"
+                name="Avg rating"
+                stroke="var(--color-shamiri-new-blue)"
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : null}

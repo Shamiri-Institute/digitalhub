@@ -16,6 +16,7 @@ import { fellowGroupReport, interventionGroup, interventionGroupReport } from "#
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import {
   requireFellowsInHub,
+  requireFellowsMayLeadGroups,
   requireHubRole,
   requireSchoolInHub,
 } from "#/lib/auth/require-hub-role";
@@ -35,15 +36,21 @@ async function setArchivedAt(groupId: string, archivedAt: Date | null) {
   });
   await requireSchoolInHub(groupToChange?.schoolId, callerHubId);
 
-  const [result] = await db
-    .update(interventionGroup)
-    .set({ archivedAt })
-    .where(eq(interventionGroup.id, groupId))
-    .returning({ groupName: interventionGroup.groupName });
-  if (!result) {
-    throw new Error("Record to update not found.");
-  }
-  return result;
+  return db.transaction(async (tx) => {
+    // Writing the group first locks it, so the leader checked is the one it has when it commits.
+    const [result] = await tx
+      .update(interventionGroup)
+      .set({ archivedAt })
+      .where(eq(interventionGroup.id, groupId))
+      .returning({ groupName: interventionGroup.groupName, leaderId: interventionGroup.leaderId });
+    if (!result) {
+      throw new Error("Record to update not found.");
+    }
+    if (archivedAt === null) {
+      await requireFellowsMayLeadGroups(tx, [result.leaderId]);
+    }
+    return { groupName: result.groupName };
+  });
 }
 
 export async function archiveInterventionGroup(groupId: string) {
@@ -106,16 +113,19 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
       throw new Error("School not linked to a project. Cannot create group.");
     }
 
-    const [result] = await db
-      .insert(interventionGroup)
-      .values({
-        id: objectId("group"),
-        leaderId: fellowId,
-        schoolId,
-        projectId,
-        groupName: `${getSchoolInitials(school.schoolName)}_${groupCount + 1}`,
-      })
-      .returning({ groupName: interventionGroup.groupName });
+    const [result] = await db.transaction(async (tx) => {
+      await requireFellowsMayLeadGroups(tx, [fellowId]);
+      return tx
+        .insert(interventionGroup)
+        .values({
+          id: objectId("group"),
+          leaderId: fellowId,
+          schoolId,
+          projectId,
+          groupName: `${getSchoolInitials(school.schoolName)}_${groupCount + 1}`,
+        })
+        .returning({ groupName: interventionGroup.groupName });
+    });
     refresh();
     return {
       success: true,

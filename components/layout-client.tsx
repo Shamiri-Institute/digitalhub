@@ -1,18 +1,23 @@
 "use client";
 
 import {
-  BarChartIcon,
-  CalendarIcon,
-  GraduationCapIcon,
-  Icons,
-  NotificationIcon,
-  PeopleIcon,
-  PeopleIconAlternate,
-  SchoolIcon,
-  SignOutIcon,
-} from "#/components/icons";
-import { Building2, ClipboardList, Menu, ShieldAlert, Users } from "lucide-react";
-import Image from "next/image";
+  Building2,
+  Calendar,
+  ChartColumn,
+  ChevronDown,
+  CircleUser,
+  ClipboardList,
+  GraduationCap,
+  LogOut,
+  type LucideIcon,
+  Menu,
+  School,
+  ShieldAlert,
+  Stethoscope,
+  Ticket,
+  UserRound,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { SessionUser } from "#/lib/auth/session-user";
@@ -35,28 +40,69 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 
+import { roleHome } from "#/lib/auth/role-home";
 import { cn, getInitials } from "#/lib/utils";
-import ArrowDropdown from "#/public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { toastOnError } from "#/components/ui/use-toast";
 
-interface NavigationLinkProps {
-  scheduleActive: boolean;
-  schoolsActive: boolean;
-  supervisorsActive: boolean;
-  fellowsActive: boolean;
-  studentsActive: boolean;
-  clinicalActive: boolean;
-  triageActive: boolean;
-  reportingActive: boolean;
-  popoverOpen: boolean;
-  setPopoverOpen: (open: boolean) => void;
-  hubsActive: boolean;
-  ticketsActive: boolean;
-  usersActive: boolean;
-  surveysActive: boolean;
-  isSuperAdmin: boolean;
-  canManageSurveys: boolean;
+type RoleTab = { segment: string; label: string; icon: LucideIcon; alsoActiveOn?: string };
+
+const scheduleTab: RoleTab = { segment: "schedule", label: "Schedule", icon: Calendar };
+const schoolsTab: RoleTab = { segment: "schools", label: "Schools", icon: School };
+const supervisorsTab: RoleTab = { segment: "supervisors", label: "Supervisors", icon: Users };
+const fellowsTab: RoleTab = { segment: "fellows", label: "Fellows", icon: CircleUser };
+const studentsTab: RoleTab = { segment: "students", label: "Students", icon: GraduationCap };
+const clinicalTab: RoleTab = { segment: "clinical", label: "Clinical cases", icon: Stethoscope };
+const triageTab: RoleTab = { segment: "triage", label: "Triage", icon: ShieldAlert };
+const ticketsTab: RoleTab = { segment: "tickets", label: "Tickets", icon: Ticket };
+const surveysTab: RoleTab = { segment: "surveys", label: "Surveys", icon: ClipboardList };
+
+function roleTabs(mainRoute: string, isSuperAdmin: boolean, canManageSurveys: boolean) {
+  switch (mainRoute) {
+    case "admin":
+      // Hiding the Users and Surveys tabs is cosmetic: their pages and actions check access themselves.
+      return [
+        scheduleTab,
+        { segment: "hubs", label: "Hubs", icon: Building2, alsoActiveOn: "schools" },
+        ticketsTab,
+        ...(isSuperAdmin ? [{ segment: "users", label: "Users", icon: Users }] : []),
+        ...(canManageSurveys ? [surveysTab] : []),
+      ];
+    case "hc":
+      return [
+        scheduleTab,
+        schoolsTab,
+        supervisorsTab,
+        fellowsTab,
+        studentsTab,
+        ticketsTab,
+        surveysTab,
+      ];
+    case "sc":
+      return [scheduleTab, schoolsTab, fellowsTab, studentsTab, clinicalTab, triageTab, ticketsTab];
+    case "fel":
+      return [
+        scheduleTab,
+        schoolsTab,
+        { segment: "portal", label: "Fellow portal", icon: CircleUser },
+        ticketsTab,
+      ];
+    case "cl":
+      return [supervisorsTab, fellowsTab, studentsTab, clinicalTab, triageTab, ticketsTab];
+    case "ct":
+      return [supervisorsTab, fellowsTab, studentsTab, clinicalTab];
+    default:
+      return [];
+  }
+}
+
+// Centres the active tab in the phone tab strip without scrolling the page.
+function revealActiveTab(activeTab: HTMLElement | null) {
+  const tabStrip = activeTab?.parentElement;
+  if (!activeTab || !tabStrip) return;
+  const tabBox = activeTab.getBoundingClientRect();
+  const stripBox = tabStrip.getBoundingClientRect();
+  tabStrip.scrollLeft += tabBox.left - stripBox.left - (stripBox.width - tabBox.width) / 2;
 }
 
 export function LayoutClient({
@@ -79,50 +125,48 @@ export function LayoutClient({
   personnel: ImplementerPersonnel | null;
 }) {
   const pathname = usePathname();
-  const [mainRoute, subRoute] = pathname.slice(1).split("/");
-  const schoolsActive = subRoute?.includes("schools");
-  const scheduleActive = subRoute?.includes("schedule");
-  const supervisorsActive = subRoute?.includes("supervisor");
-  const fellowsActive = subRoute?.includes("fellow");
-  const studentsActive = subRoute?.includes("student");
-  const reportingActive = subRoute?.includes("reporting");
-  const clinicalActive = subRoute?.includes("clinical");
-  const triageActive = subRoute?.includes("triage");
-  const hubsActive = subRoute?.includes("hubs") || subRoute?.includes("schools");
-  const ticketsActive = subRoute?.includes("tickets");
-  const usersActive = subRoute?.includes("users");
-  const surveysActive = subRoute?.includes("survey");
+  const [mainRoute = "", subRoute] = pathname.slice(1).split("/");
 
-  const [popoverOpen, setPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const userName = user?.name ?? "N/A";
-  const userInitials = userName === "N/A" ? "N/A" : getInitials(userName);
+  const displayName = user?.name || user?.email || "";
+  const userInitials = user?.name ? getInitials(user.name) : displayName.charAt(0).toUpperCase();
   const avatarUrl = user?.image ?? null;
+  const homeHref = user?.activeMembership ? roleHome[user.activeMembership.role] : "/";
+  const hasSwitchers = adminProjects !== null || personnel !== null || isAdminUser;
+  const hasReporting = !["fel", "cl", "ct", "admin"].includes(mainRoute);
+  const reportingActive = subRoute === "reporting";
 
-  const renderNavigationLinks = (className?: string) => {
-    return (
-      <div className={className}>
-        {adminProjects && (
-          <ProjectSwitcher
+  const avatar = (
+    <Avatar className="h-8 w-8" aria-hidden>
+      {avatarUrl ? <AvatarImage src={avatarUrl} width={32} height={32} alt="" /> : null}
+      <AvatarFallback>{userInitials}</AvatarFallback>
+    </Avatar>
+  );
+
+  const renderSwitchers = (className: string) => (
+    <div className={className}>
+      {adminProjects && (
+        <ProjectSwitcher
+          loading={loading}
+          setLoading={setLoading}
+          user={user}
+          projects={adminProjects}
+          className="nav-link"
+        />
+      )}
+      {personnel && (
+        <div className="nav-link">
+          <RoleSwitcher
             loading={loading}
             setLoading={setLoading}
             user={user}
-            projects={adminProjects}
-            className="nav-link"
+            implementerMembers={personnel}
           />
-        )}
-        {personnel && (
-          <div className="nav-link">
-            <RoleSwitcher
-              loading={loading}
-              setLoading={setLoading}
-              user={user}
-              implementerMembers={personnel}
-            />
-          </div>
-        )}
+        </div>
+      )}
+      {isAdminUser && (
         <div className="nav-link">
           <MembershipSwitcher
             loading={loading}
@@ -131,48 +175,31 @@ export function LayoutClient({
             isAdminUser={isAdminUser}
           />
         </div>
-        <div className="nav-link hidden w-full lg:flex lg:w-auto">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="flex w-full items-center justify-between space-x-2">
-                <div className="flex items-center space-x-2">
-                  <Avatar className="h-8 w-8">
-                    {avatarUrl ? <AvatarImage src={avatarUrl} width={32} height={32} /> : null}
-                    <AvatarFallback>{userInitials}</AvatarFallback>
-                  </Avatar>
-                  <p>{userName}</p>
-                </div>
-                <Image
-                  unoptimized
-                  priority
-                  src={ArrowDropdown}
-                  alt="Profile arrow drop down icon"
-                />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-40 max-w-none divide-y">
-              {!pathname.startsWith("/ops/") && (
-                <DropdownMenuItem
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    setIsProfileOpen(true);
-                  }}
-                >
-                  <PeopleIcon fill="#969696" />
-                  <span>My Profile</span>
-                </DropdownMenuItem>
-              )}
+      )}
+    </div>
+  );
 
-              <DropdownMenuItem className="flex items-center gap-2" onClick={toastOnError(signOut)}>
-                <SignOutIcon fill="#969696" />
-                <p>Sign out</p>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    );
-  };
+  // The phone menu and the desktop account menu show the same items; only one is visible.
+  const accountMenuItems = (
+    <>
+      {!pathname.startsWith("/ops/") && (
+        <DropdownMenuItem
+          className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
+          onSelect={() => setIsProfileOpen(true)}
+        >
+          <UserRound className="size-4 text-shamiri-text-grey" />
+          My Profile
+        </DropdownMenuItem>
+      )}
+      <DropdownMenuItem
+        className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
+        onSelect={toastOnError(signOut)}
+      >
+        <LogOut className="size-4 text-shamiri-text-grey" />
+        Sign out
+      </DropdownMenuItem>
+    </>
+  );
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -180,7 +207,7 @@ export function LayoutClient({
         <div className="container space-y-4 px-4 pt-2 lg:px-8">
           <div className="flex flex-col items-center justify-between lg:flex-row">
             <div className="flex w-full flex-row items-center justify-between px-3 py-2 lg:py-0">
-              <Link href="#" className="text-shamiri-new-blue text-2xl">
+              <Link href={homeHref} className="text-shamiri-new-blue text-2xl font-semibold">
                 Shamiri Hub
               </Link>
               <div className="relative lg:hidden">
@@ -189,313 +216,109 @@ export function LayoutClient({
                     <Button
                       variant="outline"
                       size="sm"
-                      aria-label="Toggle navigation"
+                      aria-label="Account menu"
                       className="bg-white"
                     >
                       <Menu className="text-muted-foreground h-4 w-4 shrink-0" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[80vw]">
-                    <DropdownMenuLabel>
-                      <div className="flex justify-between px-2">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-8 w-8">
-                            {avatarUrl ? (
-                              <AvatarImage src={avatarUrl} width={32} height={32} />
-                            ) : null}
-                            <AvatarFallback>{userInitials}</AvatarFallback>
-                          </Avatar>
-                          <p className="text-muted-foreground text-base">{userName}</p>
-                        </div>
-                        <div className="nav-link">
-                          <NotificationIcon />
-                        </div>
-                      </div>
+                  <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] max-w-sm">
+                    <DropdownMenuLabel className="flex items-center gap-4 px-4 font-normal">
+                      {avatar}
+                      <span className="text-muted-foreground min-w-0 truncate text-base">
+                        {displayName}
+                      </span>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {renderNavigationLinks("flex flex-col py-2")}
+                    {hasSwitchers && (
+                      <>
+                        {renderSwitchers("flex flex-col py-2")}
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    {accountMenuItems}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             </div>
-            <div className="hidden shrink-0 py-2 lg:flex">
-              {renderNavigationLinks("flex flex-row items-center gap-4")}
+            <div className="hidden shrink-0 items-center gap-4 py-2 lg:flex">
+              {hasSwitchers && renderSwitchers("flex flex-row items-center gap-4")}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="nav-link items-center rounded-md">
+                  {avatar}
+                  <span className="max-w-72 truncate">{displayName}</span>
+                  <ChevronDown className="size-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40 max-w-none">
+                  {accountMenuItems}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-          <div className="no-scrollbar flex items-center gap-8 overflow-x-auto px-2">
-            {mainRoute &&
-              getCurrentUserNavigationLinks(mainRoute, {
-                scheduleActive: scheduleActive ?? false,
-                schoolsActive: schoolsActive ?? false,
-                supervisorsActive: supervisorsActive ?? false,
-                fellowsActive: fellowsActive ?? false,
-                studentsActive: studentsActive ?? false,
-                clinicalActive: clinicalActive ?? false,
-                triageActive: triageActive ?? false,
-                reportingActive: reportingActive ?? false,
-                popoverOpen: popoverOpen,
-                setPopoverOpen: setPopoverOpen,
-                hubsActive: hubsActive ?? false,
-                ticketsActive: ticketsActive ?? false,
-                usersActive: usersActive ?? false,
-                surveysActive: surveysActive ?? false,
-                isSuperAdmin,
-                canManageSurveys,
-              })}
-          </div>
+          <nav
+            aria-label="Main"
+            className="no-scrollbar flex items-center gap-8 overflow-x-auto ps-2 pe-10 mask-r-from-90% lg:mask-none"
+          >
+            {roleTabs(mainRoute, isSuperAdmin, canManageSurveys).map((tab) => {
+              const active = subRoute === tab.segment || subRoute === tab.alsoActiveOn;
+              return (
+                <Link
+                  key={tab.segment}
+                  href={`/${mainRoute}/${tab.segment}`}
+                  ref={active ? revealActiveTab : undefined}
+                  aria-current={active ? "page" : undefined}
+                  className={cn("tab-link", active && "active")}
+                >
+                  <tab.icon className="size-5" />
+                  {tab.label}
+                </Link>
+              );
+            })}
+            {hasReporting && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  ref={reportingActive ? revealActiveTab : undefined}
+                  className={cn("tab-link cursor-pointer", reportingActive && "active")}
+                >
+                  <ChartColumn className="size-5" />
+                  Reporting
+                  <ChevronDown className="size-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${mainRoute}/reporting/expenses/fellows`}>Expenses</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${mainRoute}/reporting/school-reports`}>School Reports</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
+                  </DropdownMenuItem>
+                  {(mainRoute === "sc" || mainRoute === "hc") && (
+                    <DropdownMenuItem asChild>
+                      <Link href={`/${mainRoute}/reporting/monitoring-and-evaluation`}>
+                        Monitoring and Evaluation
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {mainRoute === "sc" && (
+                    <DropdownMenuItem asChild>
+                      <Link href={`/${mainRoute}/reporting/recordings`}>Session Recordings</Link>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </nav>
         </div>
       </header>
       {/* overflow-x-clip (not -hidden): hidden makes <main> a scroll container, which breaks
-          position:sticky for every descendant; clip clips without capturing sticky. */}
-      <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-clip">
+          position:sticky for every descendant; clip clips without capturing sticky.
+          pb-20 lets the last row and the footer scroll clear of the floating Sentry button. */}
+      <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-clip pb-20">
         {children}
       </main>
       <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />
     </div>
   );
-}
-
-function ReportingDropdown({
-  popoverOpen,
-  setPopoverOpen,
-  mainRoute,
-}: {
-  popoverOpen: boolean;
-  setPopoverOpen: (open: boolean) => void;
-  mainRoute: string;
-}) {
-  return (
-    <DropdownMenu open={popoverOpen} onOpenChange={setPopoverOpen}>
-      <DropdownMenuTrigger className="flex cursor-pointer items-center space-x-1">
-        <BarChartIcon />
-        <p>Reporting</p>
-        <Image
-          unoptimized
-          priority
-          src={ArrowDropdown}
-          alt="Drop down Icon"
-          className="cursor-pointer"
-        />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        <DropdownMenuItem asChild>
-          <Link href={`/${mainRoute}/reporting/expenses/fellows`}>Expenses</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href={`/${mainRoute}/reporting/school-reports`}>School Reports</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
-        </DropdownMenuItem>
-        {(mainRoute === "sc" || mainRoute === "hc") && (
-          <DropdownMenuItem asChild>
-            <Link href={`/${mainRoute}/reporting/monitoring-and-evaluation`}>
-              Monitoring and Evaluation
-            </Link>
-          </DropdownMenuItem>
-        )}
-        {mainRoute === "sc" && (
-          <DropdownMenuItem asChild>
-            <Link href={`/${mainRoute}/reporting/recordings`}>Session Recordings</Link>
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function getCurrentUserNavigationLinks(
-  mainRoute: string,
-  {
-    scheduleActive,
-    schoolsActive,
-    supervisorsActive,
-    fellowsActive,
-    studentsActive,
-    clinicalActive,
-    triageActive,
-    reportingActive,
-    popoverOpen,
-    setPopoverOpen,
-    hubsActive,
-    ticketsActive,
-    usersActive,
-    surveysActive,
-    isSuperAdmin,
-    canManageSurveys,
-  }: NavigationLinkProps,
-) {
-  const links = [];
-
-  if (mainRoute === "admin") {
-    links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`} key="admin-schedule">
-        <CalendarIcon />
-        <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
-      </div>,
-      <div
-        className={`tab-link flex items-center gap-2 ${cn(hubsActive && "active")}`}
-        key="admin-hubs"
-      >
-        <Building2 className="h-4 w-4" strokeWidth={3} />
-        <Link href={`/${mainRoute}/hubs`}>Hubs</Link>
-      </div>,
-      <div className={`tab-link ${cn(ticketsActive && "active")}`} key="admin-tickets">
-        <Icons.ticket />
-        <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
-      </div>,
-    );
-    // Hiding the tab is cosmetic: the page and its actions require a super admin themselves.
-    if (isSuperAdmin) {
-      links.push(
-        <div
-          className={`tab-link flex items-center gap-2 ${cn(usersActive && "active")}`}
-          key="admin-users"
-        >
-          <Users className="h-4 w-4" strokeWidth={3} />
-          <Link href={`/${mainRoute}/users`}>Users</Link>
-        </div>,
-      );
-    }
-    // Also cosmetic: the survey pages and actions check survey access themselves.
-    if (canManageSurveys) {
-      links.push(
-        <div className={`tab-link ${cn(surveysActive && "active")}`} key="admin-surveys">
-          <ClipboardList className="h-5 w-5" />
-          <Link href={`/${mainRoute}/surveys`}>Surveys</Link>
-        </div>,
-      );
-    }
-  }
-
-  if (mainRoute === "hc") {
-    links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`} key="hc-schedule">
-        <CalendarIcon />
-        <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
-      </div>,
-      <div className={`tab-link ${cn(schoolsActive && "active")}`} key="hc-schools">
-        <SchoolIcon />
-        <Link href={`/${mainRoute}/schools`}>Schools</Link>
-      </div>,
-      <div className={`tab-link ${cn(supervisorsActive && "active")}`} key="hc-supervisors">
-        <PeopleIcon />
-        <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
-      </div>,
-      <div className={`tab-link ${cn(fellowsActive && "active")}`} key="hc-fellows">
-        <PeopleIconAlternate />
-        <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
-      </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`} key="hc-students">
-        <GraduationCapIcon />
-        <Link href={`/${mainRoute}/students`}>Students</Link>
-      </div>,
-      <div className={`tab-link ${cn(ticketsActive && "active")}`} key="hc-tickets">
-        <Icons.ticket />
-        <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
-      </div>,
-      <div className={`tab-link ${cn(surveysActive && "active")}`} key="hc-surveys">
-        <ClipboardList className="h-5 w-5" />
-        <Link href={`/${mainRoute}/surveys`}>Surveys</Link>
-      </div>,
-    );
-  }
-
-  if (mainRoute === "sc") {
-    links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`} key="sc-schedule">
-        <CalendarIcon />
-        <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
-      </div>,
-      <div className={`tab-link ${cn(schoolsActive && "active")}`} key="sc-schools">
-        <SchoolIcon />
-        <Link href={`/${mainRoute}/schools`}>Schools</Link>
-      </div>,
-      <div className={`tab-link ${cn(fellowsActive && "active")}`} key="sc-fellows">
-        <PeopleIconAlternate />
-        <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
-      </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`} key="sc-students">
-        <GraduationCapIcon />
-        <Link href={`/${mainRoute}/students`}>Students</Link>
-      </div>,
-      <div className={`tab-link ${cn(clinicalActive && "active")}`} key="sc-clinical">
-        <PeopleIcon />
-        <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
-      </div>,
-      <div className={`tab-link ${cn(triageActive && "active")}`} key="sc-triage">
-        <ShieldAlert className="h-5 w-5" />
-        <Link href={`/${mainRoute}/triage`}>Triage</Link>
-      </div>,
-      <div className={`tab-link ${cn(ticketsActive && "active")}`} key="sc-tickets">
-        <Icons.ticket />
-        <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
-      </div>,
-    );
-  }
-
-  if (mainRoute === "fel") {
-    links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`} key="fel-schedule">
-        <CalendarIcon />
-        <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
-      </div>,
-      <div className={`tab-link ${cn(schoolsActive && "active")}`} key="fel-schools">
-        <SchoolIcon />
-        <Link href={`/${mainRoute}/schools`}>Schools</Link>
-      </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`} key="fel-portal">
-        <PeopleIconAlternate />
-        <Link href={`/${mainRoute}/portal`}>Fellow portal</Link>
-      </div>,
-      <div className={`tab-link ${cn(ticketsActive && "active")}`} key="fel-tickets">
-        <Icons.ticket />
-        <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
-      </div>,
-    );
-  }
-
-  if (mainRoute === "cl" || mainRoute === "ct") {
-    links.push(
-      <div key="cl-supervisors" className={`tab-link ${cn(supervisorsActive && "active")}`}>
-        <PeopleIcon />
-        <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
-      </div>,
-      <div key="cl-fellows" className={`tab-link ${cn(fellowsActive && "active")}`}>
-        <PeopleIconAlternate />
-        <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
-      </div>,
-      <div key="cl-students" className={`tab-link ${cn(studentsActive && "active")}`}>
-        <GraduationCapIcon />
-        <Link href={`/${mainRoute}/students`}>Students</Link>
-      </div>,
-      <div key="cl-clinical" className={`tab-link ${cn(clinicalActive && "active")}`}>
-        <PeopleIcon />
-        <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
-      </div>,
-      <div key="cl-triage" className={`tab-link ${cn(triageActive && "active")}`}>
-        <ShieldAlert className="h-5 w-5" />
-        <Link href={`/${mainRoute}/triage`}>Triage</Link>
-      </div>,
-      <div className={`tab-link ${cn(ticketsActive && "active")}`} key="cl-tickets">
-        <Icons.ticket />
-        <Link href={`/${mainRoute}/tickets`}>Tickets</Link>
-      </div>,
-    );
-  }
-
-  // Add reporting to all roles except for fellows AND clinical leads
-  if (mainRoute !== "fel" && mainRoute !== "cl" && mainRoute !== "ct" && mainRoute !== "admin") {
-    links.push(
-      <div className={`tab-link ${reportingActive ? "active" : ""}`} key="report">
-        <ReportingDropdown
-          popoverOpen={popoverOpen}
-          setPopoverOpen={setPopoverOpen}
-          mainRoute={mainRoute ?? ""}
-        />
-      </div>,
-    );
-  }
-
-  return links;
 }

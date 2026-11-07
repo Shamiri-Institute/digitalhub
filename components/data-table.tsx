@@ -64,6 +64,8 @@ declare module "@tanstack/react-table" {
   // oxlint-disable-next-line typescript/no-unused-vars -- the augmentation must repeat ColumnMeta's type parameters
   interface ColumnMeta<TData extends RowData, TValue> {
     headerClassName?: string;
+    /** Counts, amounts, percentages and fractions: right-aligned in tabular figures. */
+    numeric?: boolean;
   }
 }
 
@@ -81,8 +83,14 @@ const defaultColumn = {
     compareCellValues(rowA.getValue(columnId), rowB.getValue(columnId)),
 };
 
-/** The columns that hold a row's controls: expand, select and its actions menu. */
-const isActionColumn = (columnId: string) => ["button", "checkbox", "expand"].includes(columnId);
+/** The columns that hold a row's controls, with the header text a screen reader reads for each. */
+const actionColumnLabels = new Map([
+  ["button", "Actions"],
+  ["checkbox", "Select"],
+  ["expand", "Details"],
+]);
+
+export const isActionColumn = (columnId: string) => actionColumnLabels.has(columnId);
 
 // An action column never sorts, even when its cell reads a value.
 const canSortBy = <TData,>(column: Column<TData>) =>
@@ -101,9 +109,13 @@ function SortToggle<TData>({ column, children }: { column: Column<TData>; childr
       variant="base"
       size="base"
       onClick={() => column.toggleSorting()}
-      className="max-w-full gap-1 font-semibold hover:text-shamiri-text-dark-grey"
+      className={cn(
+        "min-h-6 max-w-full gap-1 text-left font-semibold hover:text-shamiri-text-dark-grey",
+        // The label's right edge lines up with the numbers under it.
+        column.columnDef.meta?.numeric && "flex-row-reverse text-right",
+      )}
     >
-      <span className="truncate">{children}</span>
+      <span>{children}</span>
       <SortIcon className={cn("h-4 w-4 shrink-0", !sortDirection && "opacity-40")} />
     </Button>
   );
@@ -291,6 +303,10 @@ function DataTableContent<TData, TValue>({
     }
   }
 
+  const { pageIndex } = table.getState().pagination;
+  const pageCount = table.getPageCount();
+  const rowCount = table.getRowCount();
+
   return (
     <div className="no-scrollbar overflow-hidden">
       <div
@@ -347,6 +363,7 @@ function DataTableContent<TData, TValue>({
                   table.firstPage();
                 }}
                 placeholder="Search..."
+                aria-label={title ? `Search ${title}` : "Search table"}
                 className="w-64 bg-white pl-10"
               />
             </div>
@@ -373,7 +390,7 @@ function DataTableContent<TData, TValue>({
                         e.preventDefault();
                       }}
                     >
-                      {col.id}
+                      {typeof col.columnDef.header === "string" ? col.columnDef.header : col.id}
                     </DropdownMenuCheckboxItem>
                   ))}
               </DropdownMenuContent>
@@ -412,16 +429,16 @@ function DataTableContent<TData, TValue>({
                     ? null
                     : flexRender(header.column.columnDef.header, header.getContext());
                   const columnSorts = canSortBy(header.column) && !header.isPlaceholder;
+                  const actionColumnLabel = actionColumnLabels.get(header.column.id);
                   return (
                     <TableHead
                       key={header.id}
                       id={header.id}
                       aria-sort={columnSorts ? ariaSort(header.column.getIsSorted()) : undefined}
                       className={cn(
-                        "min-w-[80px] bg-background-secondary/50 px-4! text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
-                        header.column.columnDef.id !== "checkbox" && "truncate",
-                        "py-2",
-                        isActionColumn(header.column.id) ? "action-cell" : null,
+                        "min-w-20 bg-background-secondary/50 px-4! py-2 text-sm font-semibold leading-5 text-shamiri-text-grey",
+                        actionColumnLabel && "action-cell",
+                        header.column.columnDef.meta?.numeric && "text-right",
                         header.column.columnDef.meta?.headerClassName,
                       )}
                     >
@@ -430,6 +447,7 @@ function DataTableContent<TData, TValue>({
                       ) : (
                         headerContent
                       )}
+                      {actionColumnLabel && <span className="sr-only">{actionColumnLabel}</span>}
                     </TableHead>
                   );
                 })}
@@ -448,20 +466,28 @@ function DataTableContent<TData, TValue>({
                     )}
                     data-state={row.getIsSelected() && "Selected"}
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        id={cell.id}
-                        className={cn(
-                          "truncate border-y border-l first:border-l-0",
-                          isActionColumn(cell.column.id)
-                            ? "relative cursor-pointer border-l-0 p-0!"
-                            : "px-4! py-2",
-                        )}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
+                    {row.getVisibleCells().map((cell) => {
+                      const cellValue = cell.getValue();
+                      const cellIsAction = isActionColumn(cell.column.id);
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          id={cell.id}
+                          title={
+                            !cellIsAction && typeof cellValue === "string" ? cellValue : undefined
+                          }
+                          className={cn(
+                            "truncate border-y border-l first:border-l-0",
+                            cellIsAction
+                              ? "relative cursor-pointer border-l-0 p-0!"
+                              : "max-w-64 px-4! py-2",
+                            cell.column.columnDef.meta?.numeric && "text-right tabular-nums",
+                          )}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
                   {row.getIsExpanded() && renderSubComponent ? (
                     <TableRow>
@@ -485,109 +511,101 @@ function DataTableContent<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      {!disablePagination && (
+      {!disablePagination && rowCount > 0 && (
         <div className="flex flex-col gap-4 py-3 px-0.5 lg:flex-row lg:items-center lg:justify-between lg:gap-2">
           <div className="flex flex-col items-center gap-2 lg:flex-row">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="pagination"
-                onClick={() => table.firstPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <Icons.chevronLeft className="h-5 w-5" />
-              </button>
-              {table.getState().pagination.pageIndex > 0 ? (
+            {pageCount > 1 && (
+              <nav aria-label="Pagination" className="flex items-center gap-2">
                 <button
                   type="button"
                   className="pagination"
+                  aria-label="Previous page"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
                 >
-                  <span>{table.getState().pagination.pageIndex}</span>
+                  <Icons.chevronLeft aria-hidden className="h-5 w-5" />
                 </button>
-              ) : null}
-              <button
-                type="button"
-                className="pagination bg-shamiri-new-blue text-white"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span>{table.getState().pagination.pageIndex + 1}</span>
-              </button>
-              {table.getState().pagination.pageIndex + 2 <= table.getPageCount() ? (
+                {table.getCanPreviousPage() && (
+                  <button type="button" className="pagination" onClick={() => table.previousPage()}>
+                    {pageIndex}
+                  </button>
+                )}
+                <span className="pagination" aria-current="page">
+                  {pageIndex + 1}
+                </span>
+                {table.getCanNextPage() && (
+                  <button type="button" className="pagination" onClick={() => table.nextPage()}>
+                    {pageIndex + 2}
+                  </button>
+                )}
                 <button
                   type="button"
                   className="pagination"
+                  aria-label="Next page"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                 >
-                  <span>{table.getState().pagination.pageIndex + 2}</span>
+                  <Icons.chevronRight aria-hidden className="h-5 w-5" />
                 </button>
-              ) : null}
-              <button
-                type="button"
-                className="pagination"
-                onClick={() => table.lastPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <Icons.chevronRight className="h-5 w-5" />
-              </button>
-            </div>
+              </nav>
+            )}
             <div className="flex w-full items-center justify-between gap-2">
               <span className="flex items-center gap-1 text-sm text-shamiri-text-dark-grey">
                 <div>Page</div>
                 <strong>
-                  {table.getState().pagination.pageIndex + 1} of{" "}
-                  {table.getPageCount().toLocaleString()}
+                  {pageIndex + 1} of {pageCount.toLocaleString()}
                 </strong>
               </span>
-              <span className="flex items-center gap-1 pl-4 text-sm text-shamiri-text-dark-grey">
-                Go to page:
-                <input
-                  aria-label="Page number"
-                  type="number"
-                  min="1"
-                  max={table.getPageCount()}
-                  value={typedPageNumber ?? table.getState().pagination.pageIndex + 1}
-                  onChange={(e) => {
-                    setTypedPageNumber(e.target.value);
-                    const pageNumber = Number(e.target.value);
-                    if (
-                      Number.isInteger(pageNumber) &&
-                      pageNumber >= 1 &&
-                      pageNumber <= table.getPageCount()
-                    ) {
-                      table.setPageIndex(pageNumber - 1);
-                    }
+              {pageCount > 1 && (
+                <span className="flex items-center gap-1 pl-4 text-sm text-shamiri-text-dark-grey">
+                  Go to page:
+                  <input
+                    aria-label="Page number"
+                    type="number"
+                    min="1"
+                    max={pageCount}
+                    value={typedPageNumber ?? pageIndex + 1}
+                    onChange={(e) => {
+                      setTypedPageNumber(e.target.value);
+                      const pageNumber = Number(e.target.value);
+                      if (
+                        Number.isInteger(pageNumber) &&
+                        pageNumber >= 1 &&
+                        pageNumber <= pageCount
+                      ) {
+                        table.setPageIndex(pageNumber - 1);
+                      }
+                    }}
+                    onBlur={() => setTypedPageNumber(null)}
+                    className="w-16 rounded border p-1"
+                  />
+                </span>
+              )}
+            </div>
+          </div>
+          {rowCount > Math.min(...PAGE_SIZES) && (
+            <div className="flex">
+              <div className="flex w-32 items-center gap-2 lg:w-auto">
+                <Select
+                  value={table.getState().pagination.pageSize.toString()}
+                  onValueChange={(value) => {
+                    table.setPageSize(Number(value));
                   }}
-                  onBlur={() => setTypedPageNumber(null)}
-                  className="w-16 rounded border p-1"
-                />
-              </span>
+                >
+                  <SelectTrigger aria-label="Rows per page" className="text-sm bg-white">
+                    <SelectValue placeholder="Pick rows" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZES.map((pageSize) => (
+                      <SelectItem key={pageSize} value={pageSize.toString()}>
+                        Show {pageSize}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-          <div className="flex">
-            <div className="flex w-32 items-center gap-2 lg:w-auto">
-              <Select
-                value={table.getState().pagination.pageSize.toString()}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value));
-                }}
-              >
-                <SelectTrigger className="text-sm bg-white">
-                  <SelectValue placeholder="Pick rows" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZES.map((pageSize) => (
-                    <SelectItem key={pageSize} value={pageSize.toString()}>
-                      Show {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          )}
         </div>
       )}
     </div>

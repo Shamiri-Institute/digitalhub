@@ -10,15 +10,13 @@ import ReferClinicalCase, {
 import TreatmentPlanForm from "#/app/(platform)/sc/clinical/components/treatment-plan-form";
 import TriggerFollowupDialog from "#/app/(platform)/sc/clinical/components/trigger-followup-dialog";
 import ViewEditClinicalCaseStudentInfo from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
-import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { cn } from "#/lib/utils";
+import { NestedDialogMenuItem, RowActionsTrigger } from "#/components/common/row-actions-menu";
 
 export default function ClinicalCaseActionsDropdownMenu({
   clinicalCase,
@@ -29,94 +27,53 @@ export default function ClinicalCaseActionsDropdownMenu({
   role?: "CLINICAL_LEAD" | "SUPERVISOR";
   referralOptions?: ReferralOptions;
 }) {
+  const isTerminated = clinicalCase.caseStatus === "Terminated";
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
-          <div className="flex h-full w-full items-center justify-center">
-            <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-          </div>
-        </div>
-      </DropdownMenuTrigger>
+      <RowActionsTrigger label={`Actions for ${clinicalCase.pseudonym}`} className="bg-white" />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ViewEditClinicalCaseStudentInfo clinicalCase={clinicalCase}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-            Edit student information
-          </div>
+          <NestedDialogMenuItem>Edit student information</NestedDialogMenuItem>
         </ViewEditClinicalCaseStudentInfo>
         {role === "SUPERVISOR" && referralOptions && (
           <ReferClinicalCase clinicalCase={clinicalCase} referralOptions={referralOptions}>
-            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">Refer case</div>
+            <NestedDialogMenuItem>Refer case</NestedDialogMenuItem>
           </ReferClinicalCase>
         )}
         <MarkCaseAsSpecial caseId={clinicalCase.id} reason={clinicalCase.flaggedReason}>
-          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
-            Mark as special/ambiguous
-          </div>
+          <NestedDialogMenuItem>Mark as special/ambiguous</NestedDialogMenuItem>
         </MarkCaseAsSpecial>
         <ClinicalCaseSessionsAttendanceHistory clinicalCase={clinicalCase}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-            View attendance history
-          </div>
+          <NestedDialogMenuItem>View attendance history</NestedDialogMenuItem>
         </ClinicalCaseSessionsAttendanceHistory>
         <TreatmentPlanForm clinicalCase={clinicalCase} role={role}>
-          <div
-            className={cn(
-              "px-2 py-1.5 text-sm",
-              clinicalCase.caseStatus === "FollowUp" &&
-                clinicalCase?.treatmentPlanUploaded === false
-                ? "cursor-pointer text-shamiri-black"
-                : "pointer-events-none  cursor-not-allowed text-gray-400",
-            )}
+          <NestedDialogMenuItem
+            disabled={
+              clinicalCase.caseStatus !== "FollowUp" || clinicalCase.treatmentPlanUploaded !== false
+            }
           >
-            Treatment plan {clinicalCase?.treatmentPlanUploaded ? "(Uploaded)" : ""}
-          </div>
+            Treatment plan {clinicalCase.treatmentPlanUploaded ? "(Uploaded)" : ""}
+          </NestedDialogMenuItem>
         </TreatmentPlanForm>
         <CaseNotesForm clinicalCase={clinicalCase} role={role}>
-          <div
-            className={cn(
-              "px-2 py-1.5 text-sm",
-              clinicalCase.caseStatus === "Terminated"
-                ? "pointer-events-none cursor-not-allowed text-gray-400"
-                : "cursor-pointer text-shamiri-black",
-            )}
-          >
-            Case notes
-          </div>
+          <NestedDialogMenuItem disabled={isTerminated}>Case notes</NestedDialogMenuItem>
         </CaseNotesForm>
         <TriggerFollowupDialog caseId={clinicalCase.id}>
-          <div
-            className={cn(
-              "px-2 py-1.5 text-sm",
-              clinicalCase.caseStatus === "FollowUp" || clinicalCase.caseStatus === "Terminated"
-                ? "pointer-events-none cursor-not-allowed text-gray-400"
-                : "cursor-pointer text-shamiri-black",
-            )}
-          >
+          <NestedDialogMenuItem disabled={clinicalCase.caseStatus === "FollowUp" || isTerminated}>
             Follow up
-          </div>
+          </NestedDialogMenuItem>
         </TriggerFollowupDialog>
         <CaseTerminationForm clinicalCase={clinicalCase}>
-          <div
-            className={cn(
-              "px-2 py-1.5 text-sm",
-              clinicalCase.caseStatus === "Terminated"
-                ? "pointer-events-none cursor-not-allowed text-gray-400"
-                : "cursor-pointer text-shamiri-black",
-            )}
-          >
-            Terminate case
-          </div>
+          <NestedDialogMenuItem disabled={isTerminated}>Terminate case</NestedDialogMenuItem>
         </CaseTerminationForm>
-        {role === "CLINICAL_LEAD" && clinicalCase.caseStatus === "Terminated" && (
+        {role === "CLINICAL_LEAD" && isTerminated && (
           <CaseUnterminateDialog caseId={clinicalCase.id} pseudonym={clinicalCase.pseudonym}>
-            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-              Un-terminate case
-            </div>
+            <NestedDialogMenuItem>Un-terminate case</NestedDialogMenuItem>
           </CaseUnterminateDialog>
         )}
       </DropdownMenuContent>

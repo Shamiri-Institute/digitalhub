@@ -26,28 +26,28 @@
   --color-brand-foreground: hsl(var(--brand-foreground));
 
   --color-background-secondary: #f7f7f7;
-  --color-shamiri-light-red: #e92c2c;
+  --color-shamiri-light-red: #cb1515;
   --color-shamiri-light-red-background-base: #ff3b3b;
   --color-shamiri-blue: #0474bc;
-  --color-shamiri-new-blue: #0085ff;
+  --color-shamiri-new-blue: #0069cc;
   --color-shamiri-new-light-blue: #e5f3ff;
   --color-shamiri-new-lighter-blue: #cce7ff;
   --color-shamiri-blue-darker: #045e96;
   --color-shamiri-light-blue: #b0d5ea;
   --color-shamiri-dark-blue: #002244;
-  --color-shamiri-text-grey: #969696;
+  --color-shamiri-text-grey: #686868;
   --color-shamiri-text-dark-grey: #585757;
   --color-shamiri-light-grey: #e8e8e8;
-  --color-shamiri-graph-green: #00ba34;
+  --color-shamiri-graph-green: var(--color-shamiri-green);
   --color-shamiri-graph-yellow: #facc15;
   --color-shamiri-graph-purple: #8b2ce9;
-  --color-shamiri-red: #de5e68;
+  --color-shamiri-red: #cb2a37;
   --color-shamiri-black: #1c1c1c;
   --color-shamiri-light-green: #e5f8eb;
-  --color-shamiri-green: #00ba34;
+  --color-shamiri-green: #008024;
   --color-shamiri-border-green: #ccf1d6;
   --color-shamiri-light-orange: #f98600;
-  --color-shamiri-dark-orange: #b45309;
+  --color-shamiri-dark-orange: #a35700;
   --color-canvas: hsl(var(--canvas));
 
   --color-primary: hsl(var(--primary));
@@ -56,7 +56,7 @@
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
 
-  --color-destructive: hsl(var(--destructive));
+  --color-destructive: var(--color-shamiri-red);
   --color-destructive-foreground: hsl(var(--destructive-foreground));
 
   --color-muted: hsl(var(--muted));
@@ -76,18 +76,18 @@
   --color-active-card-foreground-accent: hsl(var(--active-card-foreground-accent));
 
   --color-grey: rgba(173, 173, 173, 1);
-  --color-grey-c3: rgba(150, 150, 150, 1);
-  --color-grey-border: rgba(232, 232, 232, 1);
+  --color-grey-c3: var(--color-shamiri-text-grey);
+  --color-grey-border: var(--color-shamiri-light-grey);
   --color-grey-bg: rgba(252, 252, 252, 1);
-  --color-green-border: rgba(204, 241, 214, 1);
-  --color-green-bg: rgba(229, 248, 235, 1);
-  --color-green-base: rgba(0, 186, 52, 1);
-  --color-blue-border: rgba(204, 231, 255, 1);
-  --color-blue-bg: rgba(229, 243, 255, 1);
-  --color-blue-base: rgba(0, 133, 255, 1);
+  --color-green-border: var(--color-shamiri-border-green);
+  --color-green-bg: var(--color-shamiri-light-green);
+  --color-green-base: var(--color-shamiri-green);
+  --color-blue-border: var(--color-shamiri-new-lighter-blue);
+  --color-blue-bg: var(--color-shamiri-new-light-blue);
+  --color-blue-base: var(--color-shamiri-new-blue);
   --color-red-border: hsl(359, 85%, 90%);
   --color-red-bg: hsla(0, 100%, 62%, 0.1);
-  --color-red-base: hsla(0, 81%, 54%, 1);
+  --color-red-base: var(--color-shamiri-light-red);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -172,7 +172,7 @@
 
 @utility tab-link {
   border-bottom-width: 3px;
-  @apply flex gap-2 whitespace-nowrap border-transparent py-2 transition ease-in-out;
+  @apply flex items-center gap-2 whitespace-nowrap border-transparent py-2 font-medium transition ease-in-out;
 
   & svg {
     @apply shrink-0 text-shamiri-text-grey transition ease-in-out;
@@ -258,7 +258,7 @@
 }
 
 @utility data-table {
-  @apply border-separate border-spacing-0 rounded border border-grey-border lg:table-fixed;
+  @apply border-separate border-spacing-0 rounded border border-grey-border;
 
   & tbody tr {
     @apply transition ease-in-out;
@@ -384,12 +384,12 @@
 @utility pagination {
   @apply flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border shadow-sm transition ease-in-out hover:bg-shamiri-new-blue hover:text-white;
 
-  &.active {
-    @apply bg-shamiri-new-blue text-white;
+  &[aria-current="page"] {
+    @apply cursor-default bg-shamiri-new-blue text-white;
   }
 
   &:disabled {
-    @apply pointer-events-none shadow-none hover:bg-transparent hover:text-black;
+    @apply pointer-events-none opacity-50 shadow-none hover:bg-transparent hover:text-black;
   }
 }
 
@@ -431,7 +431,6 @@
     --accent: 208, 100%, 95%, 1;
     --accent-foreground: 240 5.9% 10%;
 
-    --destructive: 354 66% 62%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 240 5.9% 90%;
