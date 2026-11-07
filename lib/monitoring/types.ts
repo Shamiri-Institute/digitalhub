@@ -22,6 +22,8 @@ type CartesianView = {
   percent?: boolean;
   /** A reference line, in the same units as the values. */
   goal?: number;
+  /** Series follow an order (sessions), so they share one hue from light to dark. */
+  ordered?: boolean;
 } & (
   | { series: ChartSeries[] }
   /** One series per distinct value of `breakout`, for rows shaped (x, breakout, value). */
@@ -35,7 +37,7 @@ export type CardView =
   | { kind: "table"; columns: TableColumn[] }
   | { kind: "scalar"; value: string }
   | { kind: "progress"; value: string; goal: number }
-  | { kind: "pivot"; row: string; column: string; value: string };
+  | { kind: "pivot"; row: string; rowLabel: string; column: string; value: string };
 
 export type MonitoringCard = {
   metabaseCardId: number;

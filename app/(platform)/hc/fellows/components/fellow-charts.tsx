@@ -21,9 +21,9 @@ import type {
   FellowSessionRatingAverages,
   fetchFellowDataCompletenessData,
 } from "#/app/(platform)/hc/fellows/actions";
-import { generateRandomColor } from "#/components/charts/constants";
+import { categoryColor, sessionLabel } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
-import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/constants";
+import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 
 export default function FellowsCharts({
   attendanceData,
@@ -46,19 +46,26 @@ export default function FellowsCharts({
       attendance: session.count,
     }));
 
-  const randomColors = dropoutData.map(() => generateRandomColor());
   return (
-    <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
       <ChartCard title="Attendances" showCardFooter={false}>
         {formattedAttendanceData?.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart width={307} height={307} data={formattedAttendanceData}>
+            <BarChart
+              width={307}
+              height={307}
+              data={formattedAttendanceData}
+              aria-label="Attendances"
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="sessionType" />
-              <YAxis dataKey="attendance" />
-              <Tooltip labelFormatter={(value) => `Session: ${value}`} />
-              <Bar dataKey="attendance" stackId="a" fill="#0085FF" name="Attendance count" />
-              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" name="Session type" />
+              <XAxis dataKey="sessionType" tickFormatter={sessionLabel} />
+              <YAxis dataKey="attendance" allowDecimals={false} />
+              <Tooltip labelFormatter={(value) => `Session: ${sessionLabel(String(value))}`} />
+              <Bar
+                dataKey="attendance"
+                fill="var(--color-shamiri-new-blue)"
+                name="Attendance count"
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -66,11 +73,11 @@ export default function FellowsCharts({
       <ChartCard title="Drop out reasons" showCardFooter={false}>
         {dropoutData.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307}>
+            <PieChart width={307} height={307} aria-label="Drop out reasons">
               <Pie
-                data={dropoutData.map((reason, index) => ({
+                data={dropoutData.map((reason) => ({
                   ...reason,
-                  fill: randomColors[index],
+                  fill: categoryColor(reason.name, FELLOW_DROP_OUT_REASONS),
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -78,11 +85,10 @@ export default function FellowsCharts({
                 endAngle={450}
                 outerRadius={100}
                 innerRadius={70}
-                fill="#8884d8"
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="fill-shamiri-black text-2xl font-semibold leading-8"
                 >
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
@@ -95,13 +101,14 @@ export default function FellowsCharts({
       <ChartCard title="Fellows information completion" showCardFooter={false}>
         {fellowsDataCompletenessPercentage?.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={250} height={250}>
+            <PieChart width={250} height={250} aria-label="Fellows information completion">
               <Pie
                 data={fellowsDataCompletenessPercentage.map((entry) => ({
                   ...entry,
-                  fill: SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[
-                    entry.name as keyof typeof SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING
-                  ],
+                  fill:
+                    entry.name === "actual"
+                      ? "var(--color-shamiri-new-blue)"
+                      : "var(--color-shamiri-new-light-blue)",
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -112,8 +119,7 @@ export default function FellowsCharts({
               >
                 <Label
                   position="center"
-                  className="text text-2xl font-semibold leading-8"
-                  fill="#fffff"
+                  className="fill-shamiri-black text-2xl font-semibold leading-8"
                 >
                   {`${fellowsDataCompletenessPercentage.find((d) => d.name === "actual")?.value}%`}
                 </Label>
@@ -125,20 +131,32 @@ export default function FellowsCharts({
       <ChartCard title="Ratings" showCardFooter={false}>
         {fellowsSessionRatings?.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart width={307} height={307} data={fellowsSessionRatings}>
+            <LineChart width={307} height={307} data={fellowsSessionRatings} aria-label="Ratings">
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="session_date" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line dataKey="behaviour_rating" stroke="#0085FF" name="Behaviour" />
-              <Line dataKey="program_delivery_rating" stroke="#00BA34" name="Program delivery" />
+              <Line
+                dataKey="behaviour_rating"
+                stroke="var(--color-shamiri-new-blue)"
+                name="Behaviour"
+              />
+              <Line
+                dataKey="program_delivery_rating"
+                stroke="var(--color-shamiri-graph-green)"
+                name="Program delivery"
+              />
               <Line
                 dataKey="dressing_and_grooming_rating"
-                stroke="#F98600"
+                stroke="var(--color-shamiri-light-orange)"
                 name="Dressing and grooming"
               />
-              <Line dataKey="punctuality_rating" stroke="#8884d8" name="Punctuality" />
+              <Line
+                dataKey="punctuality_rating"
+                stroke="var(--color-shamiri-graph-purple)"
+                name="Punctuality"
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : null}
