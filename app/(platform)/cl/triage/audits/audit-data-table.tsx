@@ -112,6 +112,7 @@ const columns: ColumnDef<AuditRow>[] = [
   {
     id: "Hours after session",
     header: "Hours after session",
+    meta: { numeric: true },
     cell: ({ row }) => {
       const hours = row.original.hoursAfterSession;
       return hours !== null ? (

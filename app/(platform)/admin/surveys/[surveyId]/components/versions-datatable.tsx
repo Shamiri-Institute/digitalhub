@@ -43,11 +43,13 @@ const VERSION_COLUMNS: ColumnDef<VersionTableRow>[] = [
   {
     accessorKey: "pageCount",
     header: "Pages",
+    meta: { numeric: true },
     id: "Pages",
   },
   {
     accessorKey: "questionCount",
     header: "Questions",
+    meta: { numeric: true },
     id: "Questions",
   },
   {

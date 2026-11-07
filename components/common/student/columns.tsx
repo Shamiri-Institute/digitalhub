@@ -135,10 +135,12 @@ export const columns = (state: {
   {
     accessorFn: (row) => row.yearOfBirth && `${new Date().getFullYear() - row.yearOfBirth} yrs`,
     header: "Age",
+    meta: { numeric: true },
     id: "Age",
   },
   {
     header: () => wrapColumnHeader("Clinical Sessions"),
+    meta: { numeric: true },
     id: "Clinical Sessions",
     accessorFn: (row) => row.clinicalCases?.reduce((acc, val) => acc + val.sessionsCount, 0),
   },

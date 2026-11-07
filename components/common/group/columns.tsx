@@ -70,6 +70,7 @@ export const columns = (state: GroupTableState): ColumnDef<SchoolGroupDataTableD
     {
       cell: ({ row }) => `${row.original.students.length}/15`,
       header: "No. of students",
+      meta: { numeric: true },
       id: "No. of students",
     },
     {

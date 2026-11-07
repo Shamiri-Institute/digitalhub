@@ -85,6 +85,7 @@ export const recordingColumns = (state: ColumnState): ColumnDef<RecordingTableDa
   {
     accessorKey: "fileSize",
     header: "Size",
+    meta: { numeric: true },
     id: "size",
     cell: ({ row }) => formatFileSize(row.original.fileSize),
   },
@@ -103,6 +104,7 @@ export const recordingColumns = (state: ColumnState): ColumnDef<RecordingTableDa
   {
     accessorKey: "overallScore",
     header: "Score",
+    meta: { numeric: true },
     id: "score",
     cell: ({ row }) => row.original.overallScore ?? "-",
     sortingFn: sortBy((recording) => Number.parseFloat(recording.overallScore ?? "")),

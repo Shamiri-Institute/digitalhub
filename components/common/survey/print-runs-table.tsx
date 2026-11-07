@@ -68,8 +68,9 @@ function printRunColumns(showHub: boolean): ColumnDef<PrintRunRow>[] {
     {
       accessorKey: "copyCount",
       header: "Copies",
+      meta: { numeric: true },
       id: "Copies",
-      cell: ({ row }) => <span className="tabular-nums">{row.original.copyCount}</span>,
+      cell: ({ row }) => row.original.copyCount,
     },
     {
       accessorKey: "status",
