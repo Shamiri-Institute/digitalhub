@@ -42,7 +42,7 @@ export default function ClinicalCaseActionsDropdownMenu({
         </ViewEditClinicalCaseStudentInfo>
         {role === "SUPERVISOR" && referralOptions && (
           <ReferClinicalCase clinicalCase={clinicalCase} referralOptions={referralOptions}>
-            <NestedDialogMenuItem>Refer case</NestedDialogMenuItem>
+            <NestedDialogMenuItem disabled={isTerminated}>Refer case</NestedDialogMenuItem>
           </ReferClinicalCase>
         )}
         <MarkCaseAsSpecial caseId={clinicalCase.id} reason={clinicalCase.flaggedReason}>

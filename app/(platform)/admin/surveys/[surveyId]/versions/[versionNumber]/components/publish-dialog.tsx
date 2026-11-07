@@ -42,15 +42,27 @@ interface PublishDialogProps {
 /** Publishes the saved draft: choose what each copy prints, then confirm. */
 export default function PublishDialog(props: PublishDialogProps) {
   const [open, setOpen] = useState(false);
+  // A publish in flight keeps the dialog open, so a refusal shows where it was asked for.
+  const [publishing, setPublishing] = useState(false);
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (next || !publishing) setOpen(next);
+      }}
+    >
       <DialogTrigger asChild>
         <Button type="button" variant="brand">
           Publish
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <PublishSteps {...props} close={() => setOpen(false)} />
+      <DialogContent closeDisabled={publishing} className="max-w-lg">
+        <PublishSteps
+          {...props}
+          close={() => setOpen(false)}
+          publishing={publishing}
+          setPublishing={setPublishing}
+        />
       </DialogContent>
     </Dialog>
   );
@@ -64,10 +76,15 @@ function PublishSteps({
   locked,
   unsaved,
   close,
-}: PublishDialogProps & { close: () => void }) {
+  publishing,
+  setPublishing,
+}: PublishDialogProps & {
+  close: () => void;
+  publishing: boolean;
+  setPublishing: (publishing: boolean) => void;
+}) {
   const [step, setStep] = useState<"choose" | "confirm">("choose");
   const [prefill, setPrefill] = useState<Prefill>(SurveyVersionPrefill.NONE);
-  const [publishing, setPublishing] = useState(false);
   const [refusal, setRefusal] = useState<string>();
 
   const check = checkPublish(form, locked, prefill);

@@ -115,7 +115,7 @@ export default function ReferClinicalCase({
       } else {
         toast({
           title: "Error",
-          description: "Something went wrong, please try again",
+          description: response.message ?? "Something went wrong, please try again",
           variant: "destructive",
         });
       }

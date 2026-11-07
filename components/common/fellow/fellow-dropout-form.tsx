@@ -1,11 +1,15 @@
 import type { fellow as fellowTable, supervisor } from "#/db/schema";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import { type Dispatch, type SetStateAction, useState, useTransition } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { DropoutConfirmStep, type StepProps } from "#/components/common/dropout-confirm-step";
+import {
+  DropoutConfirmStep,
+  type StepProps,
+  useStepsDialog,
+} from "#/components/common/dropout-confirm-step";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import { DropoutFellowSchema } from "#/components/common/fellow/schema";
 import ArchiveGroup from "#/components/common/group/archive-group";
@@ -51,23 +55,20 @@ type Props = {
 };
 
 export default function FellowDropoutForm({ fellow, isOpen, setIsOpen, supervisors }: Props) {
-  const [step, setStep] = useState<Step>("form");
+  const { onOpenChange, stepProps } = useStepsDialog<Step>("form", setIsOpen);
   const [replaceGroupLeaderDialog, setReplaceGroupLeaderDialog] = useState(false);
   const [archiveGroupDialog, setArchiveGroupDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const activeGroups = fellow.groups?.filter((group) => !group.archivedAt) ?? [];
   // Once every group has a new leader or is archived, the replace step hands over to the confirm.
-  const shownStep = step === "replace" && activeGroups.length === 0 ? "confirm" : step;
-
-  function close() {
-    setStep("form");
-    setIsOpen(false);
-  }
+  const shownStep =
+    stepProps.step === "replace" && activeGroups.length === 0 ? "confirm" : stepProps.step;
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={(open) => (open ? setIsOpen(true) : close())}>
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent
+          closeDisabled={stepProps.isPending}
           className={cn(
             "p-5",
             shownStep === "form" && "text-base font-medium leading-6",
@@ -75,10 +76,9 @@ export default function FellowDropoutForm({ fellow, isOpen, setIsOpen, superviso
           )}
         >
           <FellowDropoutSteps
+            {...stepProps}
             fellow={fellow}
             step={shownStep}
-            setStep={setStep}
-            close={close}
             activeGroups={activeGroups}
             onReplace={(group) => {
               setSelectedGroup(group);
@@ -122,6 +122,8 @@ function FellowDropoutSteps({
   step,
   setStep,
   close,
+  isPending,
+  startTransition,
   activeGroups,
   onReplace,
   onArchive,
@@ -131,7 +133,6 @@ function FellowDropoutSteps({
   onReplace: (group: Group) => void;
   onArchive: (group: Group) => void;
 } & StepProps<Step>) {
-  const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof DropoutFellowSchema>>({
     resolver: zodResolver(DropoutFellowSchema),
     defaultValues: { fellowId: fellow.id, mode: fellow.droppedOut ? "undo" : "dropout" },
@@ -275,6 +276,7 @@ function FellowDropoutSteps({
             )}
             variant="ghost"
             type="button"
+            disabled={isPending}
             onClick={close}
           >
             Cancel

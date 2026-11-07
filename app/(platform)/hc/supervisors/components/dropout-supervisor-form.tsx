@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useState, useTransition } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { DropoutSupervisorSchema } from "#/app/(platform)/hc/schemas";
@@ -30,7 +30,11 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { SUPERVISOR_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
-import { DropoutConfirmStep, type StepProps } from "#/components/common/dropout-confirm-step";
+import {
+  DropoutConfirmStep,
+  type StepProps,
+  useStepsDialog,
+} from "#/components/common/dropout-confirm-step";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type Step = "form" | "confirm";
@@ -47,20 +51,14 @@ export default function DropoutSupervisor({
   dropoutDialog,
   setDropoutDialog,
 }: Props) {
-  const [step, setStep] = useState<Step>("form");
-  function close() {
-    setStep("form");
-    setDropoutDialog(false);
-  }
+  const { onOpenChange, stepProps } = useStepsDialog<Step>("form", setDropoutDialog);
   return (
-    <Dialog open={dropoutDialog} onOpenChange={(open) => (open ? setDropoutDialog(true) : close())}>
-      <DialogContent className={step === "form" ? "p-5 text-base font-medium leading-6" : "p-5"}>
-        <DropoutSupervisorSteps
-          supervisorId={supervisorId}
-          step={step}
-          setStep={setStep}
-          close={close}
-        >
+    <Dialog open={dropoutDialog} onOpenChange={onOpenChange}>
+      <DialogContent
+        closeDisabled={stepProps.isPending}
+        className={stepProps.step === "form" ? "p-5 text-base font-medium leading-6" : "p-5"}
+      >
+        <DropoutSupervisorSteps supervisorId={supervisorId} {...stepProps}>
           {children}
         </DropoutSupervisorSteps>
       </DialogContent>
@@ -74,11 +72,12 @@ function DropoutSupervisorSteps({
   step,
   setStep,
   close,
+  isPending,
+  startTransition,
 }: {
   supervisorId?: string;
   children: React.ReactNode;
 } & StepProps<Step>) {
-  const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState<z.infer<typeof DropoutSupervisorSchema>>();
 
   const form = useForm<z.infer<typeof DropoutSupervisorSchema>>({

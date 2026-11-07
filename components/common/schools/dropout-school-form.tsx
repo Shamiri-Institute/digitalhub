@@ -1,10 +1,14 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { dropoutSchool } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { DropoutConfirmStep, type StepProps } from "#/components/common/dropout-confirm-step";
+import {
+  DropoutConfirmStep,
+  type StepProps,
+  useStepsDialog,
+} from "#/components/common/dropout-confirm-step";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -47,15 +51,14 @@ export function DropoutSchool({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
-  const [step, setStep] = useState<Step>("form");
-  function close() {
-    setStep("form");
-    setOpen(false);
-  }
+  const { onOpenChange, stepProps } = useStepsDialog<Step>("form", setOpen);
   return (
-    <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : close())}>
-      <DialogContent className={step === "form" ? "p-5 text-base font-medium leading-6" : "p-5"}>
-        <DropoutSchoolSteps school={school} step={step} setStep={setStep} close={close} />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        closeDisabled={stepProps.isPending}
+        className={stepProps.step === "form" ? "p-5 text-base font-medium leading-6" : "p-5"}
+      >
+        <DropoutSchoolSteps school={school} {...stepProps} />
       </DialogContent>
     </Dialog>
   );
@@ -66,11 +69,12 @@ function DropoutSchoolSteps({
   step,
   setStep,
   close,
+  isPending,
+  startTransition,
 }: {
   school: SchoolsTableData | null;
 } & StepProps<Step>) {
   const [formData, setFormData] = useState<z.infer<typeof DropoutSchoolSchema>>();
-  const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof DropoutSchoolSchema>>({
     resolver: zodResolver(DropoutSchoolSchema),
     defaultValues: { schoolId: school?.id },

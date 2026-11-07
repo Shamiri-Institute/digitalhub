@@ -15,6 +15,7 @@ import {
   interventionSession,
   type JsonValue,
   student,
+  supervisor,
   triageEvent,
   triageEventAudit,
 } from "#/db/schema";
@@ -58,6 +59,28 @@ function triageEventValues(parsed: TriageEventFormData) {
       : null,
     note: parsed.note ?? null,
   };
+}
+
+/**
+ * Refuses a referral to anyone but a supervisor of the session's hub, the supervisors the triage
+ * form offers. The fellow picks the supervisor, so the action cannot take it on trust.
+ */
+async function requireSupervisorInSessionHub(
+  tx: Transaction | typeof db,
+  referredSupervisorId: string | null,
+  sessionId: string,
+) {
+  if (referredSupervisorId === null) {
+    return;
+  }
+  const [referred] = await tx
+    .select({ id: supervisor.id })
+    .from(supervisor)
+    .innerJoin(interventionSession, eq(interventionSession.hubId, supervisor.hubId))
+    .where(and(eq(supervisor.id, referredSupervisorId), eq(interventionSession.id, sessionId)));
+  if (!referred) {
+    throw new NotFoundError("Supervisor");
+  }
 }
 
 async function getFellowContext() {
@@ -186,6 +209,11 @@ export async function createTriageEvent(
     if (!studentInLedGroup) {
       throw new NotFoundError("Student");
     }
+    await requireSupervisorInSessionHub(
+      db,
+      triageEventValues(parsed).referredSupervisorId,
+      parsed.sessionId,
+    );
 
     const existing = await db.query.triageEvent.findFirst({
       where: (t, { and, eq }) =>
@@ -251,6 +279,7 @@ export async function updateTriageEvent(
       }
 
       const values = triageEventValues(parsed);
+      await requireSupervisorInSessionHub(tx, values.referredSupervisorId, existing.sessionId);
       // A review answers the supervisor the event was routed to. Routed to another, or to none,
       // the event waits for a review again; the audit row keeps the old one.
       const rerouted = values.referredSupervisorId !== existing.referredSupervisorId;

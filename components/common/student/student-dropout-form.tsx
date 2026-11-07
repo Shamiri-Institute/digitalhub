@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useState, useTransition } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { DropoutStudentSchema } from "#/app/(platform)/hc/schemas";
@@ -31,7 +31,11 @@ import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { dropoutStudent } from "#/lib/actions/student";
 import { STUDENT_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
-import { DropoutConfirmStep, type StepProps } from "#/components/common/dropout-confirm-step";
+import {
+  DropoutConfirmStep,
+  type StepProps,
+  useStepsDialog,
+} from "#/components/common/dropout-confirm-step";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type Step = "form" | "confirm";
@@ -43,15 +47,14 @@ type Props = {
 };
 
 export default function StudentDropoutForm({ student, isOpen, setIsOpen, children }: Props) {
-  const [step, setStep] = useState<Step>("form");
-  function close() {
-    setStep("form");
-    setIsOpen(false);
-  }
+  const { onOpenChange, stepProps } = useStepsDialog<Step>("form", setIsOpen);
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => (open ? setIsOpen(true) : close())}>
-      <DialogContent className={step === "form" ? "p-5 text-base font-medium leading-6" : "p-5"}>
-        <StudentDropoutSteps student={student} step={step} setStep={setStep} close={close}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent
+        closeDisabled={stepProps.isPending}
+        className={stepProps.step === "form" ? "p-5 text-base font-medium leading-6" : "p-5"}
+      >
+        <StudentDropoutSteps student={student} {...stepProps}>
           {children}
         </StudentDropoutSteps>
       </DialogContent>
@@ -65,11 +68,12 @@ function StudentDropoutSteps({
   step,
   setStep,
   close,
+  isPending,
+  startTransition,
 }: {
   student: SchoolStudentTableData;
   children: React.ReactNode;
 } & StepProps<Step>) {
-  const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof DropoutStudentSchema>>({
     resolver: zodResolver(DropoutStudentSchema),
     defaultValues: {
@@ -157,6 +161,7 @@ function StudentDropoutSteps({
             )}
             variant="ghost"
             type="button"
+            disabled={isPending}
             onClick={close}
           >
             Cancel

@@ -1,9 +1,14 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "#/tests/fixtures";
-import { and } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { interventionGroup } from "#/db/schema";
+import {
+  clinicalCaseReview,
+  clinicalCaseTermination,
+  clinicalSessionAttendance,
+  interventionGroup,
+} from "#/db/schema";
 import { createClinicalCase, emailForProfile, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
@@ -13,6 +18,7 @@ let referrer: Supervisor;
 let recipient: Supervisor;
 let bystander: Supervisor;
 let referrerSchoolId: string;
+let caseId: string;
 let pseudonym: string;
 let studentName: string;
 
@@ -66,6 +72,7 @@ test.beforeEach(async ({ undo }) => {
     schoolId: referrerSchoolId,
     currentSupervisorId: referrer.profileId,
   });
+  caseId = created.caseId;
   pseudonym = created.pseudonym;
   studentName = created.studentName;
   undo(created.remove);
@@ -79,7 +86,8 @@ function referralCard(page: Page) {
   return referredCases(page).getByRole("listitem").filter({ hasText: studentName });
 }
 
-async function referCaseToRecipient(page: Page) {
+/** Signs in as the referrer and fills the referral to the recipient, short of saving it. */
+async function fillReferralToRecipient(page: Page) {
   await signInWithEmail(page.context(), referrer.email);
   await page.goto(getUrl("/sc/clinical"));
   await chooseRowAction(page, await searchRows(page, pseudonym), "Refer case");
@@ -93,6 +101,11 @@ async function referCaseToRecipient(page: Page) {
   await dialog.getByRole("combobox", { name: "Referral Reason" }).click();
   await page.getByRole("option", { name: "Ethical dilemma" }).click();
   await dialog.getByRole("textbox").fill("E2E referral");
+  return dialog;
+}
+
+async function referCaseToRecipient(page: Page) {
+  const dialog = await fillReferralToRecipient(page);
   await dialog.getByRole("button", { name: "Save Changes" }).click();
   await expect(dialog).toBeHidden();
   await page.context().clearCookies();
@@ -144,5 +157,57 @@ test("a supervisor the case was not referred to does not see the referral", asyn
   await signInWithEmail(page.context(), bystander.email);
   await page.goto(getUrl("/sc/clinical"));
   await expect(referredCases(page)).toBeVisible();
+  await expect(referralCard(page)).toHaveCount(0);
+});
+
+test("a case terminated while it is being referred is not referred", async ({ page, undo }) => {
+  // Terminating a case needs an attended session, and adds a review row the case's removal leaves.
+  await db.insert(clinicalSessionAttendance).values({
+    caseId,
+    session: "S1",
+    supervisorId: referrer.profileId,
+    attendanceStatus: true,
+  });
+  const terminatedCaseId = caseId;
+  undo(() =>
+    db
+      .delete(clinicalCaseReview)
+      .where(
+        inArray(
+          clinicalCaseReview.terminationId,
+          db
+            .select({ id: clinicalCaseTermination.id })
+            .from(clinicalCaseTermination)
+            .where(eq(clinicalCaseTermination.caseId, terminatedCaseId)),
+        ),
+      ),
+  );
+  const referral = await fillReferralToRecipient(page);
+
+  // The referrer terminates the case in another tab before saving the referral.
+  const otherTab = await page.context().newPage();
+  await otherTab.goto(getUrl("/sc/clinical"));
+  await chooseRowAction(otherTab, await searchRows(otherTab, pseudonym), "Terminate case");
+  const termination = otherTab.getByRole("dialog", { name: "Terminate Case" });
+  await termination.getByRole("combobox").filter({ hasText: "Select session" }).click();
+  await otherTab.getByRole("option", { name: /^S1 / }).click();
+  await termination.getByRole("combobox").filter({ hasText: "Student no-show" }).click();
+  await otherTab.getByRole("option", { name: "Student refused to return to sessions" }).click();
+  await termination.getByRole("textbox", { name: /Termination Explanation/ }).fill("e2e");
+  await termination.getByRole("button", { name: "Terminate Case" }).click();
+  await expect(otherTab.getByText("Case terminated successfully").first()).toBeVisible();
+  await otherTab.close();
+
+  await referral.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("A terminated case can't be referred").first()).toBeVisible();
+
+  await page.reload();
+  await (await searchRows(page, pseudonym)).getByRole("cell").last().click();
+  await expect(page.getByRole("menuitem", { name: "Refer case" })).toBeDisabled();
+
+  await page.context().clearCookies();
+  await signInWithEmail(page.context(), recipient.email);
+  await page.goto(getUrl("/sc/clinical"));
+  await expect(page.getByRole("button", { name: "New case", exact: true })).toBeVisible();
   await expect(referralCard(page)).toHaveCount(0);
 });
