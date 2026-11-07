@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { Badge } from "#/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 
 interface TerminationData {
@@ -18,26 +24,18 @@ interface ViewTerminationReasonsProps {
   children: React.ReactNode;
   termination: TerminationData | null;
   pseudonym: string;
-  isTerminated: boolean;
 }
 
 export function ViewTerminationReasons({
   children,
   termination,
   pseudonym,
-  isTerminated,
 }: ViewTerminationReasonsProps) {
   const [open, setOpen] = useState(false);
 
-  if (!isTerminated) {
-    return null;
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <button type="button" onClick={() => setOpen(true)}>
-        {children}
-      </button>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Termination Details - {pseudonym}</DialogTitle>

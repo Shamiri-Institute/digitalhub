@@ -234,7 +234,9 @@ export function SessionDetail({
   return withDropdown ? (
     <div>
       <SessionDropDown state={state} role={role} fellowId={fellowId} supervisorId={supervisorId}>
-        {renderSessionDetails()}
+        <DropdownMenuTrigger className="w-full" asChild>
+          {renderSessionDetails()}
+        </DropdownMenuTrigger>
       </SessionDropDown>
     </div>
   ) : (
@@ -272,9 +274,7 @@ export function SessionDropDown({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="w-full" asChild>
-        {children}
-      </DropdownMenuTrigger>
+      {children}
       <DropdownMenuContent align={"end"}>
         <DropdownMenuLabel>
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>

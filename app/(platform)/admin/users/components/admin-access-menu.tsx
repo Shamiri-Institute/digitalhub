@@ -2,15 +2,10 @@
 
 import { useState } from "react";
 
-import { Icons } from "#/components/icons";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from "#/components/ui/dropdown-menu";
 import type { ImplementerAdmin } from "../queries";
 import AdminAccessDialog from "./admin-access-dialog";
+import { RowActionsTrigger } from "#/components/common/row-actions-menu";
 
 export default function AdminAccessMenu({ admin }: { admin: ImplementerAdmin }) {
   const [showEdit, setShowEdit] = useState(false);
@@ -18,13 +13,7 @@ export default function AdminAccessMenu({ admin }: { admin: ImplementerAdmin }) 
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <div className="absolute inset-0 border-l">
-            <div className="flex h-full w-full items-center justify-center">
-              <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-            </div>
-          </div>
-        </DropdownMenuTrigger>
+        <RowActionsTrigger label={`Actions for ${admin.adminName}`} />
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setShowEdit(true)}>Manage access</DropdownMenuItem>
         </DropdownMenuContent>
