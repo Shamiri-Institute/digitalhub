@@ -21,7 +21,7 @@ async function upsertSupervisorAttendances(
   const [session, supervisorsInHub] = await Promise.all([
     db.query.interventionSession.findFirst({
       where: (s, { eq }) => eq(s.id, sessionId),
-      columns: { projectId: true, hubId: true },
+      columns: { projectId: true, hubId: true, occurred: true },
     }),
     uniqueSupervisorIds.length === 0
       ? []
@@ -37,6 +37,9 @@ async function upsertSupervisorAttendances(
   ]);
   if (!session || session.hubId !== coordinator.hubId) {
     throw new Error(`Intervention session ${sessionId} not found`);
+  }
+  if (!session.occurred) {
+    throw new Error("This session has not occurred yet.");
   }
   if (!session.projectId) {
     throw new Error(

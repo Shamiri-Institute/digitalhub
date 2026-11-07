@@ -420,10 +420,15 @@ export async function assignSchoolPointSupervisor(
     const supervisorInCoordinatorHub = await db.query.supervisor.findFirst({
       where: (s, { and, eq }) =>
         and(eq(s.id, parsedData.assignedSupervisorId), eq(s.hubId, coordinatorHubId)),
-      columns: { id: true },
+      columns: { supervisorName: true, droppedOut: true },
     });
     if (!supervisorInCoordinatorHub) {
       throw new Error("Supervisor not found");
+    }
+    if (supervisorInCoordinatorHub.droppedOut) {
+      throw new Error(
+        `${supervisorInCoordinatorHub.supervisorName} has dropped out, so they cannot be assigned.`,
+      );
     }
 
     const [updated] = await db
