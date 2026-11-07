@@ -76,6 +76,21 @@ export async function requireFellowsInHub(fellowIds: string[], hubId: string) {
   }
 }
 
+/** A fellow who has dropped out leads no group, so they cannot be made the leader of one. */
+export async function requireFellowsMayLeadGroups(fellowIds: string[]) {
+  const [droppedOut] =
+    fellowIds.length === 0
+      ? []
+      : await db
+          .select({ fellowName: fellow.fellowName })
+          .from(fellow)
+          .where(and(inArray(fellow.id, fellowIds), eq(fellow.droppedOut, true)))
+          .limit(1);
+  if (droppedOut) {
+    throw new Error(`${droppedOut.fellowName} has dropped out, so they cannot lead a group.`);
+  }
+}
+
 export function implementerHubsInProject(implementerId: string, projectId: string) {
   return db
     .select({ id: hub.id })

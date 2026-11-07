@@ -30,6 +30,7 @@ import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import {
   fellowsInCallerScope,
   requireFellowsInHub,
+  requireFellowsMayLeadGroups,
   requireHubRole,
   requireSchoolInHub,
 } from "#/lib/auth/require-hub-role";
@@ -385,6 +386,7 @@ export async function replaceGroupLeader({
     });
     await requireSchoolInHub(groupToReassign?.schoolId, caller.hubId);
     await requireFellowsInHub([leaderId], caller.hubId);
+    await requireFellowsMayLeadGroups([leaderId]);
 
     const [updated] = await db
       .update(interventionGroup)

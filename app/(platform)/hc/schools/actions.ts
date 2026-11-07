@@ -461,7 +461,8 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>) {
     const parsedData = AddSchoolSchema.parse(data);
 
     const fellows = await db.query.fellow.findMany({
-      where: (f, { eq }) => eq(f.hubId, hubId),
+      where: (f, { and, eq, isNull, or }) =>
+        and(eq(f.hubId, hubId), or(isNull(f.droppedOut), eq(f.droppedOut, false))),
       with: { groups: { columns: { id: true, schoolId: true } } },
     });
 
