@@ -106,6 +106,7 @@ export default async function SupervisorStudentsPage() {
       <HubStudentClinicalDataCharts clinicalStats={clinicalStats} />
 
       <HubStudentDemographicsCharts
+        totalStudents={totalNumberOfStudentsInHub}
         studentsGroupedByAge={studentsGroupedByAge}
         studentsGroupedByGender={studentsGroupedByGender}
         studentsGroupedByForm={studentsGroupedByForm}

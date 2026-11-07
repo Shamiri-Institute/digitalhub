@@ -275,6 +275,7 @@ export const supervisorsTab: MonitoringTab = {
           view: {
             kind: "pivot",
             row: "supervisorName",
+            rowLabel: "Supervisor",
             column: "hubName",
             value: "supervisors",
           },

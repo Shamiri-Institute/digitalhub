@@ -303,16 +303,7 @@ export async function getClinicalCasesStats() {
 
   stats.totalCases = stats.completedCases + stats.followUpCases + stats.activeCases;
 
-  const activeCasesPercentage = (stats.activeCases / stats.totalCases) * 100;
-  const followUpCasesPercentage = (stats.followUpCases / stats.totalCases) * 100;
-  const completedCasesPercentage = (stats.completedCases / stats.totalCases) * 100;
-
-  return {
-    ...stats,
-    activeCasesPercentage,
-    followUpCasesPercentage,
-    completedCasesPercentage,
-  };
+  return stats;
 }
 
 export async function updateClinicalSessionAttendance(

@@ -350,7 +350,7 @@ async function studentsByAge(filters: MonitoringFilters) {
 
 async function studentsByForm(filters: MonitoringFilters) {
   return db
-    .select({ form: student.form, students: count() })
+    .select({ form: sql<string | null>`'Form ' || ${student.form}`, students: count() })
     .from(student)
     .leftJoin(school, eq(student.schoolId, school.id))
     .leftJoin(hub, eq(school.hubId, hub.id))
@@ -501,9 +501,6 @@ async function studentsAddedPerDay(filters: MonitoringFilters) {
     .orderBy(asc(day));
 }
 
-const attendanceRateDescription =
-  "Creating custom columns to understand attendance rates by school.";
-
 export const studentsTab: MonitoringTab = {
   slug: "students",
   title: "Students",
@@ -621,7 +618,8 @@ export const studentsTab: MonitoringTab = {
         {
           metabaseCardId: 4696,
           title: "Student attendance rate per session",
-          description: attendanceRateDescription,
+          description:
+            "Students marked present out of all marked attendance, per session. Excludes the pre-session.",
           width: 12,
           view: {
             kind: "bar",
@@ -653,7 +651,8 @@ export const studentsTab: MonitoringTab = {
         {
           metabaseCardId: 4726,
           title: "Student attendance rate by session and hub",
-          description: attendanceRateDescription,
+          description:
+            "Students marked present out of all attendance records. Unmarked records count as absent.",
           width: 24,
           view: {
             kind: "bar",
@@ -664,6 +663,7 @@ export const studentsTab: MonitoringTab = {
             yLabel: "Attendance Rate",
             breakout: "sessionName",
             value: "attendanceRate",
+            ordered: true,
           },
           load: attendanceRateBySessionNameAndHub,
         },
@@ -681,11 +681,12 @@ Then continues the pattern by cumulatively including students who attended any p
             x: "hubName",
             xLabel: "Hub",
             yLabel: "Retention Rate",
+            ordered: true,
             series: [
-              { key: "retentionS1", label: "retention_s1" },
-              { key: "retentionS2", label: "retention_s2" },
-              { key: "retentionS3", label: "retention_s3" },
-              { key: "retentionS4", label: "retention_s4" },
+              { key: "retentionS1", label: "S1 retention" },
+              { key: "retentionS2", label: "S2 retention" },
+              { key: "retentionS3", label: "S3 retention" },
+              { key: "retentionS4", label: "S4 retention" },
             ],
           },
           load: retentionPerSessionByHub,
@@ -693,7 +694,7 @@ Then continues the pattern by cumulatively including students who attended any p
         {
           metabaseCardId: 4744,
           title: "Student attendance rate by school",
-          description: attendanceRateDescription,
+          description: "Students marked present out of all marked attendance, per school.",
           width: 24,
           view: {
             kind: "bar",
@@ -803,7 +804,8 @@ Then continues the pattern by cumulatively including students who attended any p
         {
           metabaseCardId: 4634,
           title: "Student attendance data missingness by school",
-          description: attendanceRateDescription,
+          description:
+            "Attendance records with no mark, out of all attendance records, per school.",
           width: 24,
           view: {
             kind: "bar",

@@ -59,7 +59,7 @@ async function LoadedCardBody({
     viewer.role === "supervisor" && scope !== "own-rows"
       ? { ownSupervisorName: viewer.supervisorName, ownRows }
       : undefined;
-  return <MonitoringCardView rows={rows} view={card.view} emphasis={emphasis} />;
+  return <MonitoringCardView title={card.title} rows={rows} view={card.view} emphasis={emphasis} />;
 }
 
 function MonitoringCardPanel({
