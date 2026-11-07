@@ -373,9 +373,6 @@ export async function editSchoolInformation(
         principalName: parsedData.principalName ?? null,
         principalPhone: parsedData.principalPhone ?? null,
         boardingDay: parsedData.boardingDay ?? null,
-        droppedOut: false,
-        dropoutReason: null,
-        droppedOutAt: null,
       })
       .where(eq(school.id, schoolId))
       .returning({ schoolName: school.schoolName });
