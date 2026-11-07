@@ -1,9 +1,10 @@
+import type { BrowserContext, Page } from "@playwright/test";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellow, interventionGroup } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { expect, test } from "#/tests/fixtures";
+import { expect, test, type Undo } from "#/tests/fixtures";
 import { raceOnRow, required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { cellUnder, chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
 
@@ -34,12 +35,11 @@ async function pickHubSchool() {
   return row;
 }
 
-test("a group unarchived while its leader drops out stays archived", async ({
-  page,
-  context,
-  undo,
-}) => {
-  test.slow();
+/**
+ * A new active fellow leading an archived group, with one tab ready to unarchive the group and
+ * another ready to drop the fellow out: both dialogs are open, waiting for their last click.
+ */
+async function prepareUnarchiveAndDropout(page: Page, context: BrowserContext, undo: Undo) {
   const fixture = await pickHubSchool();
   required(fixture, "a hub coordinator with a school");
   const fellowId = objectId("fellow");
@@ -71,28 +71,63 @@ test("a group unarchived while its leader drops out stays archived", async ({
     .getByRole("dialog", { name: "Confirm group unarchive" })
     .getByRole("button", { name: "Unarchive" });
 
-  const otherTab = await context.newPage();
-  await otherTab.goto(getUrl("/hc/fellows"));
-  await chooseRowAction(otherTab, await searchRows(otherTab, fellowName), "Drop-out fellow");
-  const dropout = otherTab.getByRole("dialog").filter({ hasText: "Drop out fellow" });
+  const dropoutTab = await context.newPage();
+  await dropoutTab.goto(getUrl("/hc/fellows"));
+  await chooseRowAction(dropoutTab, await searchRows(dropoutTab, fellowName), "Drop-out fellow");
+  const dropout = dropoutTab.getByRole("dialog").filter({ hasText: "Drop out fellow" });
   await dropout.getByRole("combobox", { name: /^Select reason/ }).click();
-  await otherTab.getByRole("option").first().click();
+  await dropoutTab.getByRole("option").first().click();
   await dropout.getByRole("button", { name: "Submit" }).click();
-  const confirmDropout = otherTab
+  const confirmDropout = dropoutTab
     .getByRole("dialog")
     .filter({ hasText: "Confirm drop out" })
     .getByRole("button", { name: "Confirm" });
 
-  // The unarchive waits on the group row while the fellow drops out, as if the two landed together.
-  await raceOnRow("intervention_groups", groupId, async (waitForWaiting) => {
-    await unarchive.click();
+  return { fellowId, fellowName, groupId, groupName, unarchive, dropoutTab, confirmDropout };
+}
+
+test("a group unarchived while its leader drops out stays archived", async ({
+  page,
+  context,
+  undo,
+}) => {
+  test.slow();
+  const race = await prepareUnarchiveAndDropout(page, context, undo);
+
+  // The unarchive waits on the group row while the fellow drops out.
+  await raceOnRow("intervention_groups", race.groupId, async (waitForWaiting) => {
+    await race.unarchive.click();
     await waitForWaiting(1);
-    await confirmDropout.click();
-    await expect(otherTab.getByText("successfully dropped out").first()).toBeVisible();
+    await race.confirmDropout.click();
+    await expect(race.dropoutTab.getByText("successfully dropped out").first()).toBeVisible();
   });
 
   await expect(page.getByText("has dropped out").first()).toBeVisible();
   await page.reload();
-  const groupRow = await searchRows(page, groupName);
+  const groupRow = await searchRows(page, race.groupName);
   await expect(await cellUnder(page, groupRow, "Active Status")).toHaveText("Inactive");
+});
+
+test("a fellow dropped out while their group is unarchived keeps leading it", async ({
+  page,
+  context,
+  undo,
+}) => {
+  test.slow();
+  const race = await prepareUnarchiveAndDropout(page, context, undo);
+
+  // The unarchive has written the group and waits to check its leader when the dropout lands, so
+  // the dropout has to wait for the unarchive and count the group it reactivated.
+  await raceOnRow("fellows", race.fellowId, async (waitForWaiting) => {
+    await race.unarchive.click();
+    await waitForWaiting(1);
+    await race.confirmDropout.click();
+    await waitForWaiting(2);
+  });
+
+  await expect(page.getByText("Successfully unarchived group").first()).toBeVisible();
+  await expect(race.dropoutTab.getByText(/still assigned to 1 active group/).first()).toBeVisible();
+  await race.dropoutTab.reload();
+  const fellowRow = await searchRows(race.dropoutTab, race.fellowName);
+  await expect(await cellUnder(race.dropoutTab, fellowRow, "Status")).toHaveText("Active");
 });
