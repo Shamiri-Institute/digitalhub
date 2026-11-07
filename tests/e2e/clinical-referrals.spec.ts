@@ -1,9 +1,9 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "#/tests/fixtures";
-import { and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { interventionGroup } from "#/db/schema";
+import { clinicalScreeningInfo, interventionGroup } from "#/db/schema";
 import { createClinicalCase, emailForProfile, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
@@ -79,7 +79,8 @@ function referralCard(page: Page) {
   return referredCases(page).getByRole("listitem").filter({ hasText: studentName });
 }
 
-async function referCaseToRecipient(page: Page) {
+/** Signs in as the referrer and fills the referral to the recipient, short of saving it. */
+async function fillReferralToRecipient(page: Page) {
   await signInWithEmail(page.context(), referrer.email);
   await page.goto(getUrl("/sc/clinical"));
   await chooseRowAction(page, await searchRows(page, pseudonym), "Refer case");
@@ -93,6 +94,11 @@ async function referCaseToRecipient(page: Page) {
   await dialog.getByRole("combobox", { name: "Referral Reason" }).click();
   await page.getByRole("option", { name: "Ethical dilemma" }).click();
   await dialog.getByRole("textbox").fill("E2E referral");
+  return dialog;
+}
+
+async function referCaseToRecipient(page: Page) {
+  const dialog = await fillReferralToRecipient(page);
   await dialog.getByRole("button", { name: "Save Changes" }).click();
   await expect(dialog).toBeHidden();
   await page.context().clearCookies();
@@ -144,5 +150,26 @@ test("a supervisor the case was not referred to does not see the referral", asyn
   await signInWithEmail(page.context(), bystander.email);
   await page.goto(getUrl("/sc/clinical"));
   await expect(referredCases(page)).toBeVisible();
+  await expect(referralCard(page)).toHaveCount(0);
+});
+
+test("a case terminated while it is being referred is not referred", async ({ page }) => {
+  const dialog = await fillReferralToRecipient(page);
+  // The case's clinical lead terminates it while the referrer is filling in the referral.
+  await db
+    .update(clinicalScreeningInfo)
+    .set({ caseStatus: "Terminated" })
+    .where(eq(clinicalScreeningInfo.pseudonym, pseudonym));
+  await dialog.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("A terminated case can't be referred").first()).toBeVisible();
+
+  await page.reload();
+  await (await searchRows(page, pseudonym)).getByRole("cell").last().click();
+  await expect(page.getByRole("menuitem", { name: "Refer case" })).toBeDisabled();
+
+  await page.context().clearCookies();
+  await signInWithEmail(page.context(), recipient.email);
+  await page.goto(getUrl("/sc/clinical"));
+  await expect(page.getByRole("button", { name: "New case", exact: true })).toBeVisible();
   await expect(referralCard(page)).toHaveCount(0);
 });

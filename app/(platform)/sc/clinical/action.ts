@@ -374,12 +374,12 @@ export async function referClinicalCaseToSupervisor(data: {
     });
     if (!recipient) throw new NotFoundError("Supervisor");
 
-    await writeReferral(data, actor, {
+    const referred = await writeReferral(data, actor, {
       role: ImplementerRole.SUPERVISOR,
       id: recipient.id,
     });
     refresh();
-    return { success: true };
+    return referred ? { success: true } : { success: false, message: TERMINATED_CASE_REFERRAL };
   } catch (error) {
     console.error(error);
     return { success: false };
@@ -388,9 +388,11 @@ export async function referClinicalCaseToSupervisor(data: {
 
 type ClinicalActor = Awaited<ReturnType<typeof requireClinicalActor>>;
 
+const TERMINATED_CASE_REFERRAL = "A terminated case can't be referred. Reopen it first.";
+
 /**
  * Opens a referral to one recipient. A new referral replaces any open one, so the case waits on
- * one person at a time.
+ * one person at a time. A terminated case is not referred; the result says whether it was.
  */
 async function writeReferral(
   data: { caseId: string; referralReason: string; referralNotes: string },
@@ -401,25 +403,30 @@ async function writeReferral(
   },
 ) {
   const recipientIsLead = recipient.role === ImplementerRole.CLINICAL_LEAD;
-  await db.transaction(async (tx) => {
-    requireUpdated(
-      await tx
-        .update(clinicalScreeningInfo)
-        .set({
-          referredFrom: referrer.profileId,
-          referredTo: recipientIsLead ? "Clinical Lead" : "Supervisor",
-          referredToSpecified: recipient.id,
-          referredToSupervisorId: recipientIsLead ? null : recipient.id,
-          referredToClinicalLeadId: recipientIsLead ? recipient.id : null,
-          referralNotes: data.referralNotes,
-          referralReason: data.referralReason,
-          referralStatus: "Pending",
-          acceptCase: false,
-        })
-        .where(eq(clinicalScreeningInfo.id, data.caseId))
-        .returning({ id: clinicalScreeningInfo.id }),
-      "Clinical case",
-    );
+  return db.transaction(async (tx) => {
+    const [referred] = await tx
+      .update(clinicalScreeningInfo)
+      .set({
+        referredFrom: referrer.profileId,
+        referredTo: recipientIsLead ? "Clinical Lead" : "Supervisor",
+        referredToSpecified: recipient.id,
+        referredToSupervisorId: recipientIsLead ? null : recipient.id,
+        referredToClinicalLeadId: recipientIsLead ? recipient.id : null,
+        referralNotes: data.referralNotes,
+        referralReason: data.referralReason,
+        referralStatus: "Pending",
+        acceptCase: false,
+      })
+      .where(
+        and(
+          eq(clinicalScreeningInfo.id, data.caseId),
+          ne(clinicalScreeningInfo.caseStatus, caseStatusOptions.Terminated),
+        ),
+      )
+      .returning({ id: clinicalScreeningInfo.id });
+    if (!referred) {
+      return false;
+    }
     await tx.insert(clinicalCaseTransferTrail).values({
       caseId: data.caseId,
       from: referrer.profileId,
@@ -429,6 +436,7 @@ async function writeReferral(
       date: new Date(),
       referralStatus: "Pending",
     });
+    return true;
   });
 }
 
@@ -1016,12 +1024,12 @@ export async function referClinicalCaseToClinicalLead(data: {
     });
     if (!recipient) throw new NotFoundError("Clinical lead");
 
-    await writeReferral(data, actor, {
+    const referred = await writeReferral(data, actor, {
       role: ImplementerRole.CLINICAL_LEAD,
       id: recipient.id,
     });
     refresh();
-    return { success: true };
+    return referred ? { success: true } : { success: false, message: TERMINATED_CASE_REFERRAL };
   } catch (error) {
     console.error(error);
     return { success: false };
