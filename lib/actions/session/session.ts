@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, type SQL } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, or, type SQL } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import type { z } from "zod";
 
@@ -11,7 +11,7 @@ import {
   SessionRatingsSchema,
 } from "#/components/common/session/schema";
 import { db } from "#/db/client";
-import { ImplementerRole } from "#/db/enums";
+import { ImplementerRole, SessionStatus } from "#/db/enums";
 import {
   fellow,
   interventionGroup,
@@ -49,17 +49,25 @@ function requireSessionInCallerHub(session: { hubId: string }, callerHubId: stri
   }
 }
 
+const sessionNotOccurred = eq(interventionSession.occurred, false);
+const sessionNotCancelled = or(
+  isNull(interventionSession.status),
+  ne(interventionSession.status, SessionStatus.Cancelled),
+);
+
+/** `from` refuses the change when another tab moved the session after the caller read it. */
 async function updateSessionOrThrow(
   id: string,
   values: Partial<typeof interventionSession.$inferInsert>,
+  from: SQL | undefined,
 ) {
   const updated = await db
     .update(interventionSession)
     .set(values)
-    .where(eq(interventionSession.id, id))
+    .where(and(eq(interventionSession.id, id), from))
     .returning({ id: interventionSession.id });
   if (updated.length === 0) {
-    throw new Error("Record to update not found.");
+    throw new Error("This session changed since you opened it. Reload the page and try again.");
   }
 }
 
@@ -157,7 +165,11 @@ export async function cancelSession(id: string) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
-    await updateSessionOrThrow(id, { status: "Cancelled" });
+    if (session.occurred) {
+      throw new Error("This session has already occurred, so it cannot be cancelled.");
+    }
+
+    await updateSessionOrThrow(id, { status: "Cancelled" }, sessionNotOccurred);
     refresh();
 
     return {
@@ -188,7 +200,15 @@ export async function rescheduleSession(id: string, data: z.infer<typeof Resched
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
-    await updateSessionOrThrow(id, { sessionDate: parsedData.sessionDate, status: "Rescheduled" });
+    if (session.occurred) {
+      throw new Error("This session has already occurred, so it cannot be rescheduled.");
+    }
+
+    await updateSessionOrThrow(
+      id,
+      { sessionDate: parsedData.sessionDate, status: "Rescheduled" },
+      sessionNotOccurred,
+    );
     refresh();
 
     return {
@@ -327,9 +347,21 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
       );
     }
 
-    await updateSessionOrThrow(parsedData.sessionId, {
-      occurred: parsedData.occurrence === "attended",
-    });
+    if (session.occurred) {
+      throw new Error(
+        "This session has already been marked as occurred. Contact support to change it.",
+      );
+    }
+    const occurred = parsedData.occurrence === "attended";
+    if (occurred && session.status === SessionStatus.Cancelled) {
+      throw new Error("This session has been cancelled, so it cannot be marked as occurred.");
+    }
+
+    await updateSessionOrThrow(
+      parsedData.sessionId,
+      { occurred },
+      and(sessionNotOccurred, occurred ? sessionNotCancelled : undefined),
+    );
     refresh();
 
     return {
