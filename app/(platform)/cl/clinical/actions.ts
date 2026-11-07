@@ -11,6 +11,8 @@ import {
   fetchClinicalCasesList,
   type HubClinicalCases,
 } from "#/lib/actions/clinical/cases";
+import { DISPLAY_DATE } from "#/lib/date-utils";
+import { format } from "date-fns";
 
 export type { CaseNotesResult, HubClinicalCases };
 
@@ -110,7 +112,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
     const formattedSessions = caseInfo.sessions.map((session) => ({
       sessionId: session.id,
       session: session.session,
-      sessionDate: session.date.toLocaleDateString(),
+      sessionDate: format(session.date, DISPLAY_DATE),
       attendanceStatus: session.attendanceStatus,
     }));
 
@@ -118,7 +120,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       id: caseInfo.id,
       school: caseInfo.student?.school?.schoolName,
       pseudonym: caseInfo.pseudonym || "Anonymous",
-      dateAdded: caseInfo.createdAt.toLocaleDateString(),
+      dateAdded: format(caseInfo.createdAt, DISPLAY_DATE),
       caseStatus: caseInfo.caseStatus,
       ...latestRisk(caseInfo.sessions, caseInfo),
       age,

@@ -9,6 +9,7 @@ import type { PayoutHistoryEntry } from "#/lib/actions/expenses/payout-history";
 import { sortBy } from "#/lib/table-view";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+import { DISPLAY_DATE_TIME } from "#/lib/date-utils";
 
 export const columns: ColumnDef<PayoutHistoryEntry>[] = [
   {
@@ -49,7 +50,7 @@ export const columns: ColumnDef<PayoutHistoryEntry>[] = [
     accessorKey: "dateAdded",
     header: "Date Added",
     cell: ({ row }) => {
-      return format(row.original.dateAdded, "dd-MM-yyyy HH:mm:ss");
+      return format(row.original.dateAdded, `${DISPLAY_DATE_TIME}:ss`);
     },
   },
   {

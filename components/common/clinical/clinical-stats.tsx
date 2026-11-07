@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { clinicalCasesColors } from "#/components/charts/constants";
+import { SERIES_COLORS } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
 export default function ClinicalStats({
@@ -48,7 +48,7 @@ export default function ClinicalStats({
               <Pie
                 data={casesByStatus.map((entry, index) => ({
                   ...entry,
-                  fill: clinicalCasesColors[index % clinicalCasesColors.length],
+                  fill: SERIES_COLORS[index % SERIES_COLORS.length],
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -78,7 +78,7 @@ export default function ClinicalStats({
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="#0085FF" />
+              <Bar dataKey="value" fill={SERIES_COLORS[0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -92,7 +92,7 @@ export default function ClinicalStats({
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="#E92C9D" />
+              <Bar dataKey="value" fill={SERIES_COLORS[0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -105,7 +105,7 @@ export default function ClinicalStats({
               <Pie
                 data={casesByInitialContact.map((entry, index) => ({
                   ...entry,
-                  fill: clinicalCasesColors[index % clinicalCasesColors.length],
+                  fill: SERIES_COLORS[index % SERIES_COLORS.length],
                 }))}
                 dataKey="value"
                 nameKey="name"

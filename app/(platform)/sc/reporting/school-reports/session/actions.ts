@@ -4,6 +4,7 @@ import { format } from "date-fns";
 
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type SchoolGroup = {
   id: string;
@@ -107,7 +108,7 @@ export async function loadSessionReport() {
           name: comment.user?.name || "N/A",
           date: comment.createdAt,
         })) || [],
-      date: format(session.session?.sessionDate, "dd/MM/yyyy") || "N/A",
+      date: format(session.session?.sessionDate, DISPLAY_DATE) || "N/A",
     });
 
     schoolGroup.avgStudentBehaviour += session.studentBehaviorRating || 0;

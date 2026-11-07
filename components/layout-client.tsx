@@ -18,6 +18,7 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { SessionUser } from "#/lib/auth/session-user";
@@ -26,7 +27,6 @@ import { useState } from "react";
 import type { AdminProject } from "#/app/(platform)/layout";
 import type { CurrentPersonnel } from "#/app/auth";
 import { MembershipSwitcher } from "#/components/common/membership-switcher";
-import { ProfileDialog } from "#/components/common/profile/profile-dialog";
 import { ProjectSwitcher } from "#/components/common/project-switcher";
 import { RoleSwitcher } from "#/components/common/role-switcher";
 import { Button } from "#/components/ui/button";
@@ -44,6 +44,13 @@ import { roleHome } from "#/lib/auth/role-home";
 import { cn, getInitials } from "#/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { toastOnError } from "#/components/ui/use-toast";
+
+// Loaded when opened: its form pulls in libphonenumber-js and the date picker, which no other part
+// of the shell needs on every page.
+const ProfileDialog = dynamic(
+  () => import("#/components/common/profile/profile-dialog").then((mod) => mod.ProfileDialog),
+  { ssr: false },
+);
 
 type RoleTab = { segment: string; label: string; icon: LucideIcon; alsoActiveOn?: string };
 
@@ -318,7 +325,9 @@ export function LayoutClient({
       <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-clip pb-20">
         {children}
       </main>
-      <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />
+      {isProfileOpen && (
+        <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />
+      )}
     </div>
   );
 }

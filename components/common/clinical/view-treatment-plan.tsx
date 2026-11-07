@@ -9,6 +9,8 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
+import { DISPLAY_DATE } from "#/lib/date-utils";
+import { format } from "date-fns";
 
 interface TreatmentPlan {
   id: string;
@@ -61,7 +63,7 @@ export function ViewTreatmentPlan({ children, treatmentPlan, pseudonym }: ViewTr
                 <div className="mb-2 flex items-start justify-between">
                   <span className="text-sm font-medium">Treatment Plan Details</span>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(treatmentPlan.createdAt).toLocaleDateString()}
+                    {format(new Date(treatmentPlan.createdAt), DISPLAY_DATE)}
                   </span>
                 </div>
                 <Separator className="my-2" />

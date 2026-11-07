@@ -20,6 +20,7 @@ import { toast, toastOnError } from "#/components/ui/use-toast";
 import { restoreHubManager } from "#/lib/actions/admin/hub-managers";
 import type { HubManager } from "../queries";
 import { AddHubManagerDialog, ArchiveHubManagerDialog } from "./hub-manager-dialogs";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type HubScope = { hubId: string; hubName: string; canManage: boolean };
 
@@ -43,7 +44,7 @@ function hubManagerColumns(scope: HubScope): ColumnDef<HubManager>[] {
           <span className="flex items-center gap-2">
             <Badge variant="outline-solid">Archived</Badge>
             <span className="text-sm text-shamiri-text-grey">
-              {format(archivedAt, "d MMM yyyy")}
+              {format(archivedAt, DISPLAY_DATE)}
             </span>
           </span>
         ) : (
@@ -55,7 +56,7 @@ function hubManagerColumns(scope: HubScope): ColumnDef<HubManager>[] {
       id: "Added",
       header: "Added",
       accessorFn: (manager) => manager.createdAt,
-      cell: ({ row }) => format(row.original.createdAt, "d MMM yyyy"),
+      cell: ({ row }) => format(row.original.createdAt, DISPLAY_DATE),
     },
     {
       id: "button",

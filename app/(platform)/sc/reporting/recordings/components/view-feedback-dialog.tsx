@@ -18,6 +18,8 @@ import type { V1FeedbackData, V2FeedbackData } from "./feedback-types";
 import FeedbackV1Content from "./feedback-v1-content";
 import FeedbackV2Content from "./feedback-v2-content";
 import { SAMPLE_FEEDBACK } from "./sample-response";
+import { DISPLAY_DATE } from "#/lib/date-utils";
+import { format } from "date-fns";
 
 interface ViewFeedbackDialogProps {
   recording: SupervisorRecording;
@@ -69,8 +71,8 @@ export default function ViewFeedbackDialog({
 
         <div className="mt-4 space-y-6">
           {process.env.NODE_ENV === "development" && !feedback && (
-            <div className="flex items-center justify-between rounded-lg bg-blue-50 p-3">
-              <span className="text-sm font-medium text-blue-700">
+            <div className="flex items-center justify-between rounded-lg bg-blue-bg p-3">
+              <span className="text-sm font-medium text-shamiri-new-blue">
                 {showSamplePreview ? "Showing sample preview" : "No feedback data available"}
               </span>
               <Button
@@ -128,7 +130,7 @@ export default function ViewFeedbackDialog({
                 <span className="text-muted-foreground">Session Date:</span>
                 <span className="ml-2 font-medium">
                   {recording.sessionDate
-                    ? new Date(recording.sessionDate).toLocaleDateString()
+                    ? format(new Date(recording.sessionDate), DISPLAY_DATE)
                     : "N/A"}
                 </span>
               </div>

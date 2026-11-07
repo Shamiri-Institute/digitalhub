@@ -116,7 +116,7 @@ const columns: ColumnDef<AuditRow>[] = [
     cell: ({ row }) => {
       const hours = row.original.hoursAfterSession;
       return hours !== null ? (
-        <span className={cn(hours > 24 && "font-medium text-yellow-600")}>{hours}h</span>
+        <span className={cn(hours > 24 && "font-medium text-shamiri-dark-orange")}>{hours}h</span>
       ) : (
         <span className="text-shamiri-text-grey">—</span>
       );

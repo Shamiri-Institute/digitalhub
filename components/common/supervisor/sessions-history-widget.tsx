@@ -3,6 +3,7 @@ import { Icons } from "#/components/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
 import { cn, sessionDisplayName } from "#/lib/utils";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type SessionAttendance = {
   attended: boolean | null;
@@ -84,7 +85,7 @@ export default function SessionHistoryWidget({
                 {attendance && (
                   <>
                     <dt className="text-shamiri-text-grey">Date</dt>
-                    <dd>{format(attendance.sessionDate, "dd/MM/yyyy")}</dd>
+                    <dd>{format(attendance.sessionDate, DISPLAY_DATE)}</dd>
                   </>
                 )}
                 {attendance?.attended === false && attendance.absenceReason && (

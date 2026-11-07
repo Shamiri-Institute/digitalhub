@@ -4,6 +4,7 @@ import { format } from "date-fns";
 
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/db/client";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 export async function loadSessionReport() {
   const hubCoordinator = await currentHubCoordinator();
@@ -92,7 +93,7 @@ export async function loadSessionReport() {
             sessionNotes: session.sessionNotes || [],
             sessionComments: session.sessionComments || [],
             schoolName: school.schoolName,
-            date: session.sessionDate ? format(session.sessionDate, "dd/MM/yyyy") : "N/A",
+            date: session.sessionDate ? format(session.sessionDate, DISPLAY_DATE) : "N/A",
           };
         }
 

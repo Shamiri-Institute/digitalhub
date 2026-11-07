@@ -48,12 +48,16 @@ async function TriageStats() {
       <div
         className={cn(
           "rounded-lg border p-4 space-y-1",
-          stats.riskPositiveThisWeek > 0 && "border-yellow-200 bg-yellow-50",
+          stats.riskPositiveThisWeek > 0 &&
+            "border-shamiri-light-orange/30 bg-shamiri-light-orange/10",
         )}
       >
         <p className="text-xs text-shamiri-text-grey">Risk positive this week</p>
         <p
-          className={cn("text-2xl font-bold", stats.riskPositiveThisWeek > 0 && "text-yellow-700")}
+          className={cn(
+            "text-2xl font-bold",
+            stats.riskPositiveThisWeek > 0 && "text-shamiri-dark-orange",
+          )}
         >
           {stats.riskPositiveThisWeek}
         </p>

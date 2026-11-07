@@ -33,7 +33,8 @@ export function buildSkeletonColumns<TData>(columns: ColumnDef<TData>[]): Column
     return {
       id,
       header: renderSkeleton ? id : "",
-      cell: () => (renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null),
+      cell: () =>
+        renderSkeleton ? <Skeleton className="h-5 w-full bg-shamiri-light-grey" /> : null,
     };
   });
 }

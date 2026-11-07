@@ -93,7 +93,7 @@ export default function SchoolsBreadcrumb({
                       key={school.visibleId}
                       value={school.schoolName}
                       onSelect={() => handleSchoolSelect(school.visibleId)}
-                      className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"
+                      className="flex items-center justify-between gap-3 rounded-none border-b border-grey-border px-3 last:border-b-0"
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{school.schoolName}</span>

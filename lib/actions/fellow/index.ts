@@ -36,6 +36,7 @@ import {
 } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { requireEvaluationEditable } from "#/lib/evaluation-edit-window";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 const attendedFlag = (attended: string | undefined) =>
   attended === "attended" ? true : attended === "missed" ? false : null;
@@ -521,7 +522,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
         if (attendance) {
           if (attendance.processedAt !== null) {
             throw new Error(
-              `An error occurred while marking attendance for ${fellowRow.fellowName}. Attendance already processed on ${format(attendance.processedAt, "dd-MM-yyyy.")}`,
+              `An error occurred while marking attendance for ${fellowRow.fellowName}. Attendance already processed on ${format(attendance.processedAt, DISPLAY_DATE)}.`,
             );
           }
 

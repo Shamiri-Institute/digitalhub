@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { sortBy } from "#/lib/table-view";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 // A fellow attendance with the session, group and payout rows the school fellows page and
 // `loadFellowsData` attach.
@@ -94,7 +95,7 @@ const columns: ColumnDef<FellowAttendanceHistoryRow>[] = [
     id: "Date of attendance",
     header: "Date of attendance",
     accessorFn: (row) => {
-      return row.session && format(row.session.sessionDate, "dd-MM-yyyy");
+      return row.session && format(row.session.sessionDate, DISPLAY_DATE);
     },
     sortingFn: sortBy((attendance) => attendance.session?.sessionDate),
   },

@@ -33,7 +33,7 @@ export function SearchCommand({ data }: { data: { id: string; schoolName: string
     <div className="flex-1 shrink-0">
       <button
         type="button"
-        className="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-1.5 hover:bg-secondary hover:shadow-inner"
+        className="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-border bg-white px-4 py-1.5 hover:bg-secondary hover:shadow-inner"
         onClick={() => {
           if (!open) {
             setOpen(true);
@@ -67,7 +67,7 @@ export function SearchCommand({ data }: { data: { id: string; schoolName: string
           </CommandGroup>
           <CommandSeparator />
           <CommandGroup heading="Options">
-            <CommandItem onSelect={handleReset} className="text-red-500">
+            <CommandItem onSelect={handleReset} className="text-shamiri-light-red">
               <Undo2 className="mr-2 h-4 w-4" />
               Reset Selection
             </CommandItem>

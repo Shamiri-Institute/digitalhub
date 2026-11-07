@@ -26,7 +26,7 @@ export default function ViewGeneralPresentingIssues({
       <div className="overflow-x-auto">
         <Table className="w-full table-fixed">
           <TableHeader>
-            <TableRow className="bg-gray-50">
+            <TableRow className="bg-background-secondary">
               <TableHead className="w-[50%] border">General Presenting Issues</TableHead>
               <TableHead className="w-[25%] border text-center">Baseline</TableHead>
               <TableHead className="w-[25%] border text-center">Endline</TableHead>
@@ -34,7 +34,7 @@ export default function ViewGeneralPresentingIssues({
           </TableHeader>
           <TableBody>
             {general_presenting_issues.map((issue) => (
-              <TableRow key={issue.id} className="hover:bg-gray-50">
+              <TableRow key={issue.id} className="hover:bg-background-secondary">
                 <TableCell className="border font-medium">{issue.name}</TableCell>
                 <TableCell className="border text-center">
                   <div className="flex justify-center">

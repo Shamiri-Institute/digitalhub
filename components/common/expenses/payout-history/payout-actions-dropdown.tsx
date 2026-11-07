@@ -10,6 +10,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import type { PayoutHistoryEntry } from "#/lib/actions/expenses/payout-history";
 import { RowActionsTrigger } from "#/components/common/row-actions-menu";
+import { DISPLAY_DATE_TIME } from "#/lib/date-utils";
 
 function formatMpesaNumber(mpesaNumber: string) {
   const formatted = RenderParsedPhoneNumber(mpesaNumber);
@@ -55,7 +56,7 @@ export default function PayoutActionsDropdown({ payout }: { payout: PayoutHistor
   return (
     <DropdownMenu>
       <RowActionsTrigger
-        label={`Actions for the payout of ${format(payout.dateAdded, "dd-MM-yyyy HH:mm:ss")}`}
+        label={`Actions for the payout of ${format(payout.dateAdded, `${DISPLAY_DATE_TIME}:ss`)}`}
         className="bg-white"
       />
       <DropdownMenuContent align="end">

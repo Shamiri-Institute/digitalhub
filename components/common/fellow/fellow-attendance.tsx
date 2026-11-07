@@ -38,6 +38,7 @@ import { Separator } from "#/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { markFellowAttendance, markManyFellowAttendance } from "#/lib/actions/fellow";
 import { sessionDisplayName } from "#/lib/utils";
+import { DISPLAY_DATE_TIME } from "#/lib/date-utils";
 
 type SupervisorData = ScheduleSupervisor;
 
@@ -448,7 +449,7 @@ export const columns = (state: {
               </TooltipTrigger>
               <TooltipContent className="border bg-background-secondary text-foreground drop-shadow-sm">
                 <div className="px-2 py-1 text-sm">
-                  Processed on {format(row.original.processedAt, "dd-MM-yyyy HH:mm a")}
+                  Processed on {format(row.original.processedAt, DISPLAY_DATE_TIME)}
                 </div>
               </TooltipContent>
             </Tooltip>

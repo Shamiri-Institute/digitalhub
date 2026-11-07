@@ -19,7 +19,7 @@ export default function ViewEmergencyPresentingIssues({
     <div className="w-full">
       <Table>
         <TableHeader>
-          <TableRow className="bg-gray-50">
+          <TableRow className="bg-background-secondary">
             <TableHead className="w-[50%] border">Emergency Presenting Issues</TableHead>
             <TableHead className="w-[25%] border text-center">Baseline</TableHead>
             <TableHead className="w-[25%] border text-center">Endline</TableHead>
@@ -27,7 +27,7 @@ export default function ViewEmergencyPresentingIssues({
         </TableHeader>
         <TableBody>
           {emergency_presenting_issues.map((issue) => (
-            <TableRow key={issue.id} className="hover:bg-gray-50">
+            <TableRow key={issue.id} className="hover:bg-background-secondary">
               <TableCell className="border font-medium">{issue.name}</TableCell>
               <TableCell className="border" style={{ textAlign: "center" }}>
                 {emergencyPresentingIssuesBaseline?.[issue.name] !== undefined
