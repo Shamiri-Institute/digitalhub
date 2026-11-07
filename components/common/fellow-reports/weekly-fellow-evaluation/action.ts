@@ -8,6 +8,7 @@ import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { weeklyFellowRatings } from "#/db/schema";
 import { fellowsInCallerScope, requireHubRole } from "#/lib/auth/require-hub-role";
+import { requireEvaluationEditable } from "#/lib/evaluation-edit-window";
 
 /**
  * Updates a weekly fellow evaluation. A supervisor may edit the evaluations of the fellows they
@@ -23,6 +24,16 @@ export const updateWeeklyEvaluation = async (
       ImplementerRole.SUPERVISOR,
       ImplementerRole.HUB_COORDINATOR,
     );
+
+    const saved = await db.query.weeklyFellowRatings.findFirst({
+      where: (r, { and, eq, inArray }) =>
+        and(eq(r.id, evaluationId), inArray(r.fellowId, fellowsInCallerScope(caller))),
+      columns: { createdAt: true },
+    });
+    if (!saved) {
+      throw new Error(`Weekly evaluation ${evaluationId} not found`);
+    }
+    requireEvaluationEditable(saved, new Date());
 
     const updated = await db
       .update(weeklyFellowRatings)
@@ -56,7 +67,7 @@ export const updateWeeklyEvaluation = async (
     console.error(error);
     return {
       success: false,
-      message: "Something went wrong",
+      message: (error as Error)?.message ?? "Something went wrong",
     };
   }
 };

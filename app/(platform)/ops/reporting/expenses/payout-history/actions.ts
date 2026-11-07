@@ -164,22 +164,37 @@ export async function triggerPayoutAction() {
         };
       }
 
-      const updatedPayoutStatements = await tx
-        .update(payoutStatements)
-        .set({ executedAt: currentTime })
-        .where(
-          and(
-            inArray(payoutStatements.fellowAttendanceId, fellowAttendanceIdsToProcess),
-            isNull(payoutStatements.executedAt),
-          ),
-        )
-        .returning({ id: payoutStatements.id });
-
+      // Stamp only the attendances still attended and unprocessed when the row is written: an
+      // unmark or another payout run that committed since the read above leaves its rows out,
+      // and their statements stay unexecuted with them.
       const updatedAttendances = await tx
         .update(fellowAttendance)
         .set({ processedAt: currentTime })
-        .where(inArray(fellowAttendance.id, fellowAttendanceIdsToProcess))
+        .where(
+          and(
+            inArray(fellowAttendance.id, fellowAttendanceIdsToProcess),
+            eq(fellowAttendance.attended, true),
+            isNull(fellowAttendance.processedAt),
+          ),
+        )
         .returning({ id: fellowAttendance.id });
+
+      const updatedPayoutStatements =
+        updatedAttendances.length === 0
+          ? []
+          : await tx
+              .update(payoutStatements)
+              .set({ executedAt: currentTime })
+              .where(
+                and(
+                  inArray(
+                    payoutStatements.fellowAttendanceId,
+                    updatedAttendances.map((attendance) => attendance.id),
+                  ),
+                  isNull(payoutStatements.executedAt),
+                ),
+              )
+              .returning({ id: payoutStatements.id });
 
       const processedCount = updatedAttendances.length;
       const payoutStatementsCount = updatedPayoutStatements.length;
