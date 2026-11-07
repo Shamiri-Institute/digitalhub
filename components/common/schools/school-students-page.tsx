@@ -81,6 +81,8 @@ export default async function SchoolStudentsPage({
             currentGroupId: true,
             fromGroupId: true,
           },
+          // The transfer history dates each group by the transfer before it, so it needs newest first.
+          orderBy: (t, { desc }) => [desc(t.createdAt), desc(t.id)],
           with: {
             fromGroup: {
               columns: { id: true, groupName: true },

@@ -38,7 +38,7 @@ async function pickSchool() {
   return row;
 }
 
-test("moving a student into another group of the school records the transfer", async ({
+test("moving a student between groups of the school records each move, newest first", async ({
   page,
   context,
   undo,
@@ -68,36 +68,47 @@ test("moving a student into another group of the school records the transfer", a
   });
   await signInWithEmail(context, fixture.email);
 
-  await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/groups`));
-  await chooseRowAction(
-    page,
-    await rowWithCell(page, page.getByRole("main"), fixture.targetGroupName),
-    "View students in group",
-  );
-  await page
-    .getByRole("dialog", { name: "Students in group" })
-    .getByRole("button", { name: "Add Student" })
-    .click();
-  const form = page.getByRole("dialog", { name: "Add student to group" });
-  await form.getByLabel("Student name").fill(studentName);
-  await form.getByRole("combobox", { name: /Gender/ }).click();
-  await page.getByRole("option", { name: "Female" }).click();
-  await form.getByLabel("Year of birth").fill("2012");
-  // The same admission number as the student in the other group, so the form offers to move them.
-  await form.getByLabel("Admission number").fill(admissionNumber);
-  await form.getByLabel("Grade/Form").fill("2");
-  await form.getByLabel("Stream").fill("East");
-  await form.getByRole("button", { name: "Submit" }).click();
-  const transfer = page.getByRole("dialog", { name: "Confirm transfer student" });
-  await transfer
-    .getByRole("radio", { name: new RegExp(`Admission no. ${admissionNumber}`) })
-    .click();
-  await transfer.getByRole("button", { name: "Confirm transfer" }).click();
-  await expect(page.getByText(/Successfully transferred/).first()).toBeVisible();
+  const { visibleId } = fixture;
+  // Adding a student with the same admission number to a group offers to move the student there.
+  async function moveIntoGroup(groupName: string) {
+    await page.goto(getUrl(`/hc/schools/${visibleId}/groups`));
+    await chooseRowAction(
+      page,
+      await rowWithCell(page, page.getByRole("main"), groupName),
+      "View students in group",
+    );
+    await page
+      .getByRole("dialog", { name: "Students in group" })
+      .getByRole("button", { name: "Add Student" })
+      .click();
+    const form = page.getByRole("dialog", { name: "Add student to group" });
+    await form.getByLabel("Student name").fill(studentName);
+    await form.getByRole("combobox", { name: /Gender/ }).click();
+    await page.getByRole("option", { name: "Female" }).click();
+    await form.getByLabel("Year of birth").fill("2012");
+    await form.getByLabel("Admission number").fill(admissionNumber);
+    await form.getByLabel("Grade/Form").fill("2");
+    await form.getByLabel("Stream").fill("East");
+    await form.getByRole("button", { name: "Submit" }).click();
+    const transfer = page.getByRole("dialog", { name: "Confirm transfer student" });
+    await transfer
+      .getByRole("radio", { name: new RegExp(`Admission no. ${admissionNumber}`) })
+      .click();
+    await transfer.getByRole("button", { name: "Confirm transfer" }).click();
+    await expect(page.getByText(/Successfully transferred/).first()).toBeVisible();
+  }
+
+  await moveIntoGroup(fixture.targetGroupName);
+  await moveIntoGroup(fixture.sourceGroupName);
 
   await page.goto(getUrl(`/hc/schools/${fixture.visibleId}/students`));
   await chooseRowAction(page, await searchRows(page, studentName), "View group transfer history");
-  const history = page.getByRole("dialog", { name: "View group transfer history" });
-  await expect(history).toContainText(fixture.sourceGroupName);
-  await expect(history).toContainText(fixture.targetGroupName);
+  const history = page
+    .getByRole("dialog", { name: "View group transfer history" })
+    .locator("tbody tr");
+  // Newest first: back in the first group, before that the second, and first of all the first.
+  await expect(history).toHaveCount(3);
+  await expect(history.nth(0)).toContainText(fixture.sourceGroupName);
+  await expect(history.nth(1)).toContainText(fixture.targetGroupName);
+  await expect(history.nth(2)).toContainText(fixture.sourceGroupName);
 });
