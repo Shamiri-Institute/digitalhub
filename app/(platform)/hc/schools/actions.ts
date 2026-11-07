@@ -18,7 +18,11 @@ import {
   weeklyHubReport,
 } from "#/db/schema";
 import { fetchSchoolsTableRows } from "#/components/common/schools/queries";
-import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
+import {
+  requireFellowsMayLeadGroups,
+  requireHubRole,
+  requireSchoolInHub,
+} from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { getSchoolInitials } from "#/lib/utils";
 import {
@@ -416,10 +420,15 @@ export async function assignSchoolPointSupervisor(
     const supervisorInCoordinatorHub = await db.query.supervisor.findFirst({
       where: (s, { and, eq }) =>
         and(eq(s.id, parsedData.assignedSupervisorId), eq(s.hubId, coordinatorHubId)),
-      columns: { id: true },
+      columns: { supervisorName: true, droppedOut: true },
     });
     if (!supervisorInCoordinatorHub) {
       throw new Error("Supervisor not found");
+    }
+    if (supervisorInCoordinatorHub.droppedOut) {
+      throw new Error(
+        `${supervisorInCoordinatorHub.supervisorName} has dropped out, so they cannot be assigned.`,
+      );
     }
 
     const [updated] = await db
@@ -556,6 +565,10 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>) {
       }
 
       if (interventionGroups.length > 0) {
+        await requireFellowsMayLeadGroups(
+          tx,
+          interventionGroups.map((group) => group.leaderId),
+        );
         await tx.insert(interventionGroup).values(interventionGroups);
       }
 
