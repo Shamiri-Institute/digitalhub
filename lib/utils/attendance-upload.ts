@@ -1,5 +1,3 @@
-import { appendToPdf, imagesToPdf } from "#/lib/utils/pdf/images-to-pdf";
-
 const RETRYABLE_STATUSES = new Set([408, 429]);
 
 async function fetchExistingDocument(url: string, attempts = 3): Promise<Response> {
@@ -27,6 +25,7 @@ async function fetchExistingDocument(url: string, attempts = 3): Promise<Respons
 }
 
 export async function createAttendancePdf(fileUrl: string | null, files: File[]): Promise<File> {
+  const { appendToPdf, imagesToPdf } = await import("#/lib/utils/pdf/images-to-pdf");
   let pdfBlob: Blob;
   if (fileUrl) {
     const res = await fetchExistingDocument(fileUrl);
