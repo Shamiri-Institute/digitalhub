@@ -7,11 +7,18 @@ import { sessionDisplayName } from "#/lib/utils";
 import {
   createAdminCopy,
   createClinicalCase,
+  onlySessionAtSchoolThatWeek,
   required,
   signableMember,
   signInWithEmail,
 } from "#/tests/helpers";
-import { chooseRowAction, getUrl, rowWithCell, searchRows } from "#/tests/pages/helpers";
+import {
+  chooseRowAction,
+  getUrl,
+  rowWithCell,
+  scheduleUrl,
+  searchRows,
+} from "#/tests/pages/helpers";
 
 // Each test renders a page, then takes away the caller's access to a row the spec owns, so the
 // dialog's load passes its sign-in check and throws "not found". Revoking the sign-in instead
@@ -133,4 +140,67 @@ test("case notes show a failed load as a failure and keep the sessions locked", 
   await expect(dialog.getByRole("combobox").filter({ hasText: "Select session" })).toBeDisabled();
   await expect(dialog.getByRole("textbox", { name: /Situation/ })).toBeDisabled();
   await expect(dialog.getByRole("button", { name: "Submit" })).toHaveCount(0);
+});
+
+test("the schedule shows a failed load of a session's supervisors as a failure, then retries", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const {
+    rows: [fixture],
+  } = await db.execute<{
+    userId: string;
+    sessionDate: string;
+    schoolName: string;
+    supervisorName: string;
+    projectId: string;
+    otherProjectId: string;
+  }>(sql`
+    select u.id as "userId", i.session_date::text as "sessionDate", s.school_name as "schoolName",
+      sv.supervisor_name as "supervisorName", h.project_id as "projectId",
+      other_hub.project_id as "otherProjectId"
+    from users u
+    join implementer_members m on m.user_id = u.id and m.role = 'ADMIN'
+    join hubs h on h.implementer_id = m.implementer_id
+    join schools s on s.hub_id = h.id and s.archived_at is null
+    join supervisors sv on sv.id = s.assigned_supervisor_id and sv.supervisor_name is not null
+    join intervention_sessions i on i.school_id = s.id and i.occurred
+      and coalesce(i.status::text, '') <> 'Cancelled'
+    join implementer_members other_m on other_m.user_id = u.id and other_m.role = 'ADMIN'
+    join hubs other_hub on other_hub.implementer_id = other_m.implementer_id
+      and other_hub.project_id <> h.project_id
+    where u.archived_at is null and ${onlySessionAtSchoolThatWeek()}
+      and (select count(distinct o.implementer_id) from implementer_members o
+        join hubs oh on oh.implementer_id = o.implementer_id
+        where o.user_id = u.id and o.role = 'ADMIN' and oh.project_id = h.project_id) = 1
+      and (select count(*) from schools o where o.school_name = s.school_name) = 1
+    order by u.email, i.session_date desc, i.id, other_hub.project_id
+    limit 1`);
+  required(fixture, "no admin of hubs in two projects with an occurred session");
+  const admin = await createAdminCopy(fixture.userId, fixture.projectId);
+  undo(admin.remove);
+  await signInWithEmail(context, admin.email);
+
+  await page.goto(
+    await scheduleUrl(context, "/admin/schedule?mode=list", new Date(fixture.sessionDate)),
+  );
+  const sessionRow = page.getByRole("row").filter({ hasText: fixture.schoolName }).first();
+  await expect(sessionRow).toBeVisible();
+  const attendance = page.getByRole("dialog", { name: "View supervisor attendance" });
+  // As the project switcher does from another tab: this page still lists the old project's
+  // session, which the server now hides from the admin.
+  await db
+    .update(user)
+    .set({ activeProjectId: fixture.otherProjectId })
+    .where(eq(user.id, admin.id));
+  await chooseRowAction(page, sessionRow, "View supervisor attendance");
+  await expect(
+    page.getByText("Could not load this session's supervisors and fellows").first(),
+  ).toBeVisible();
+  await expect(attendance).toHaveCount(0);
+
+  await db.update(user).set({ activeProjectId: fixture.projectId }).where(eq(user.id, admin.id));
+  await chooseRowAction(page, sessionRow, "View supervisor attendance");
+  await expect(attendance).toContainText(fixture.supervisorName);
 });

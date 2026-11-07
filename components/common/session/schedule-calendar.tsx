@@ -52,6 +52,7 @@ import SupervisorAttendance from "#/components/common/supervisor/supervisor-atte
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogPortal, DialogTrigger } from "#/components/ui/dialog";
+import { toast } from "#/components/ui/use-toast";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { fetchSessionSupervisors } from "#/lib/actions/session/session";
 import {
@@ -403,14 +404,23 @@ function CalendarView({
       return;
     }
     requestedSessionId.current = sessionId;
-    const keep = (supervisors: ScheduleSupervisor[]) => {
-      if (requestedSessionId.current === sessionId) {
-        setSessionSupervisors({ sessionId, supervisors });
-      }
-    };
     fetchSessionSupervisors(sessionId)
-      .then(keep)
-      .catch(() => keep([]));
+      .then((supervisors) => {
+        if (requestedSessionId.current === sessionId) {
+          setSessionSupervisors({ sessionId, supervisors });
+        }
+      })
+      .catch(() => {
+        if (requestedSessionId.current !== sessionId) return;
+        // Not an empty list: the dialogs would read it as a session with no supervisors or
+        // fellows. Forgetting the request lets the next open try again.
+        requestedSessionId.current = null;
+        setDialog((current) => (current?.sessionId === sessionId ? null : current));
+        toast({
+          variant: "destructive",
+          description: "Could not load this session's supervisors and fellows. Please try again.",
+        });
+      });
   };
 
   const onDialogOpenChange = (open: SetStateAction<boolean>) => {
