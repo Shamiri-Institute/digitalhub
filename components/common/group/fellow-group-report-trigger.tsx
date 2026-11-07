@@ -7,8 +7,7 @@ import FellowGroupReportForm from "#/components/common/group/fellow-group-report
 import FellowGroupReportView from "#/components/common/group/fellow-group-report-view";
 import { Button } from "#/components/ui/button";
 import type { fellowGroupReport } from "#/db/schema";
-
-const SUBSTANTIVE_SESSIONS_REQUIRED = 4;
+import { GROUP_REPORT_SESSIONS_REQUIRED } from "#/lib/fellow-group-report";
 
 export default function FellowGroupReportTrigger({
   groupId,
@@ -56,7 +55,7 @@ export default function FellowGroupReportTrigger({
     );
   }
 
-  if (occurredSubstantiveCount < SUBSTANTIVE_SESSIONS_REQUIRED) {
+  if (occurredSubstantiveCount < GROUP_REPORT_SESSIONS_REQUIRED) {
     return null;
   }
 

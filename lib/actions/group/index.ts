@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { z } from "zod";
 import { refresh } from "next/cache";
 
@@ -12,7 +12,13 @@ import {
 } from "#/components/common/group/schema";
 import { db, isUniqueViolation } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { fellowGroupReport, interventionGroup, interventionGroupReport } from "#/db/schema";
+import {
+  fellowGroupReport,
+  interventionGroup,
+  interventionGroupReport,
+  interventionSession,
+  sessionName,
+} from "#/db/schema";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
 import {
   requireFellowsInHub,
@@ -22,6 +28,10 @@ import {
 } from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { requireEvaluationEditable } from "#/lib/evaluation-edit-window";
+import {
+  GROUP_REPORT_SESSION_NAMES,
+  GROUP_REPORT_SESSIONS_REQUIRED,
+} from "#/lib/fellow-group-report";
 import { getSchoolInitials } from "#/lib/utils";
 
 /** Throws when the row was already deleted or belongs to another hub's school. */
@@ -240,10 +250,30 @@ export async function submitFellowGroupReport(data: z.infer<typeof FellowGroupRe
 
     const group = await db.query.interventionGroup.findFirst({
       where: (g, { and, eq }) => and(eq(g.id, parsed.groupId), eq(g.leaderId, fellowId)),
-      columns: { id: true, groupName: true },
+      columns: { id: true, groupName: true, schoolId: true },
     });
     if (!group) {
       throw new Error("No InterventionGroup found");
+    }
+    const heldSessions = await db.$count(
+      interventionSession,
+      and(
+        eq(interventionSession.schoolId, group.schoolId),
+        eq(interventionSession.occurred, true),
+        inArray(
+          interventionSession.sessionId,
+          db
+            .select({ id: sessionName.id })
+            .from(sessionName)
+            .where(inArray(sessionName.sessionName, GROUP_REPORT_SESSION_NAMES)),
+        ),
+      ),
+    );
+    if (heldSessions < GROUP_REPORT_SESSIONS_REQUIRED) {
+      return {
+        success: false,
+        message: "The group report opens once the group has held its fourth session.",
+      };
     }
 
     await db.insert(fellowGroupReport).values({
