@@ -388,7 +388,8 @@ export async function referClinicalCaseToSupervisor(data: {
 
 type ClinicalActor = Awaited<ReturnType<typeof requireClinicalActor>>;
 
-const TERMINATED_CASE_REFERRAL = "A terminated case can't be referred. Ask a clinical lead to reopen it.";
+const TERMINATED_CASE_REFERRAL =
+  "A terminated case can't be referred. Ask a clinical lead to reopen it.";
 
 /**
  * Opens a referral to one recipient. A new referral replaces any open one, so the case waits on
