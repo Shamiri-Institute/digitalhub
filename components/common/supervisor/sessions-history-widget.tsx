@@ -1,89 +1,106 @@
 import { format } from "date-fns";
-import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import { Icons } from "#/components/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
 import { cn, sessionDisplayName } from "#/lib/utils";
+
+type SessionAttendance = {
+  attended: boolean | null;
+  sessionType: string | null;
+  sessionOccurred: boolean;
+  absenceReason: string | null;
+  absenceComments: string | null;
+  sessionDate: Date;
+};
+
+const CHIP_STATUS = {
+  attended: {
+    label: "Attended",
+    Icon: Icons.checkCircle,
+    tone: "border-green-border bg-green-bg text-green-base",
+  },
+  missed: {
+    label: "Missed",
+    Icon: Icons.crossCircleFilled,
+    tone: "border-red-border bg-red-bg text-red-base",
+  },
+  unmarked: {
+    label: "Not marked",
+    Icon: Icons.helpCircle,
+    tone: "border-blue-border bg-blue-bg text-blue-base",
+  },
+  notYetOccurred: {
+    label: "Not yet occurred",
+    Icon: Icons.helpCircle,
+    tone: "border-blue-border bg-blue-bg text-blue-base",
+  },
+  notScheduled: {
+    label: "Not scheduled",
+    Icon: Icons.minusCircle,
+    tone: "border-shamiri-text-dark-grey/30 bg-white text-shamiri-text-dark-grey",
+  },
+};
+
+function chipStatus(attendance: SessionAttendance | undefined) {
+  if (attendance === undefined) return CHIP_STATUS.notScheduled;
+  if (attendance.attended === true) return CHIP_STATUS.attended;
+  if (attendance.attended === false) return CHIP_STATUS.missed;
+  return attendance.sessionOccurred ? CHIP_STATUS.unmarked : CHIP_STATUS.notYetOccurred;
+}
 
 export default function SessionHistoryWidget({
   attendedSessions,
 }: {
-  attendedSessions: {
-    attended: boolean | null;
-    sessionType: string | null;
-    sessionOccurred: boolean;
-    absenceReason: string | null;
-    absenceComments: string | null;
-    sessionDate: Date;
-  }[];
+  attendedSessions: SessionAttendance[];
 }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {SESSION_TYPES.filter((session) => session.type === "INTERVENTION").map((session) => {
-        const match = attendedSessions.find((attendance) => {
-          return attendance.sessionType === session.name;
-        });
+        const attendance = attendedSessions.find(
+          (attendedSession) => attendedSession.sessionType === session.name,
+        );
+        const sessionLabel = sessionDisplayName(session.name);
+        const { label, Icon, tone } = chipStatus(attendance);
 
         return (
-          <Tooltip key={session.name}>
-            <TooltipTrigger asChild={true}>
-              <div
-                className={cn(
-                  "select-none rounded-lg border px-1.5 py-0.5",
-                  {
-                    "border-green-border": match?.attended === true,
-                    "border-shamiri-text-dark-grey/30": match === undefined,
-                    "border-blue-border": match?.attended === null,
-                    "border-red-border": match?.attended === false,
-                  },
-                  {
-                    "bg-green-bg": match?.attended === true,
-                    "bg-white": match === undefined,
-                    "bg-blue-bg": match?.attended === null,
-                    "bg-red-bg": match?.attended === false,
-                  },
+          <Popover key={session.name}>
+            <PopoverTrigger
+              aria-label={`${sessionLabel}: ${label}`}
+              className={cn(
+                "flex select-none items-center gap-1 rounded-lg border px-1.5 py-0.5 text-[0.825rem] font-semibold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue focus-visible:ring-offset-2",
+                tone,
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} aria-hidden={true} />
+              {sessionLabel}
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              className="w-auto max-w-64 p-3 text-sm text-shamiri-black"
+            >
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                <dt className="text-shamiri-text-grey">Status</dt>
+                <dd>{label}</dd>
+                {attendance && (
+                  <>
+                    <dt className="text-shamiri-text-grey">Date</dt>
+                    <dd>{format(attendance.sessionDate, "dd/MM/yyyy")}</dd>
+                  </>
                 )}
-              >
-                <div
-                  className={cn("flex gap-1 text-[0.825rem] font-semibold", {
-                    "text-green-base": match?.attended === true,
-                    "text-shamiri-text-dark-grey": match === undefined,
-                    "text-blue-base": match?.attended === null,
-                    "text-red-base": match?.attended === false,
-                  })}
-                >
-                  {sessionDisplayName(session.name)}
-                </div>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent align="start" className="border bg-white text-shamiri-black shadow-sm">
-              {match?.sessionOccurred ? (
-                <div className="grid grid-cols-2 gap-1">
-                  <span className="opacity-70">Date: </span>
-                  <span>{format(match.sessionDate, "dd/MM/yyyy")}</span>
-                  <span className="opacity-70">Status: </span>
-                  <span>
-                    {match.attended === true
-                      ? "Attended"
-                      : match.attended === false
-                        ? "Missed"
-                        : "Unmarked"}
-                  </span>
-                </div>
-              ) : (
-                "Session has not occurred yet."
+                {attendance?.attended === false && attendance.absenceReason && (
+                  <>
+                    <dt className="text-shamiri-text-grey">Reason</dt>
+                    <dd>{attendance.absenceReason}</dd>
+                  </>
+                )}
+              </dl>
+              {attendance?.attended === false && attendance.absenceComments && (
+                <p className="mt-2 whitespace-pre-wrap rounded border bg-background-secondary px-2 py-1 text-shamiri-text-grey">
+                  {attendance.absenceComments}
+                </p>
               )}
-              {match && match.attended === false && (
-                <div className="grid grid-cols-2 gap-1 pt-[4px]">
-                  <span className="opacity-70">Reason:</span>
-                  <span>{match.absenceReason}</span>
-                  {match.absenceComments !== null && (
-                    <span className="col-span-2 max-w-52 whitespace-pre-wrap rounded border bg-background-secondary px-2 py-1 text-shamiri-text-grey">
-                      {match.absenceComments}
-                    </span>
-                  )}
-                </div>
-              )}
-            </TooltipContent>
-          </Tooltip>
+            </PopoverContent>
+          </Popover>
         );
       })}
     </div>
