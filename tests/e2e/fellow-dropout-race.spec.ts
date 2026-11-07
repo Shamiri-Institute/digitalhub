@@ -34,7 +34,7 @@ async function pickHubSchool() {
   return row;
 }
 
-test("a fellow dropped out while their group is unarchived is refused, not left leading it", async ({
+test("a group unarchived while its leader drops out stays archived", async ({
   page,
   context,
   undo,
@@ -82,22 +82,17 @@ test("a fellow dropped out while their group is unarchived is refused, not left 
     .getByRole("dialog")
     .filter({ hasText: "Confirm drop out" })
     .getByRole("button", { name: "Confirm" });
-  const dropoutAnswer = otherTab.getByText(/successfully dropped out|still assigned/).first();
 
-  await raceOnRow("intervention_groups", groupId, async (waitForWaiting, countWaiting) => {
+  // The unarchive waits on the group row while the fellow drops out, as if the two landed together.
+  await raceOnRow("intervention_groups", groupId, async (waitForWaiting) => {
     await unarchive.click();
     await waitForWaiting(1);
     await confirmDropout.click();
-    // The dropout either waits for the unarchive to finish with the fellow, or, when nothing makes
-    // it wait, finishes first. Release the unarchive once it has done one or the other.
-    await expect
-      .poll(async () => (await countWaiting()) === 2 || (await dropoutAnswer.isVisible()))
-      .toBe(true);
+    await expect(otherTab.getByText("successfully dropped out").first()).toBeVisible();
   });
 
-  await expect(page.getByText("Successfully unarchived group").first()).toBeVisible();
-  await expect(dropoutAnswer).toHaveText(/still assigned to 1 active group/);
-  await otherTab.reload();
-  const fellowRow = await searchRows(otherTab, fellowName);
-  await expect(await cellUnder(otherTab, fellowRow, "Status")).toHaveText("Active");
+  await expect(page.getByText("has dropped out").first()).toBeVisible();
+  await page.reload();
+  const groupRow = await searchRows(page, groupName);
+  await expect(await cellUnder(page, groupRow, "Active Status")).toHaveText("Inactive");
 });

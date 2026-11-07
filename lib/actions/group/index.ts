@@ -32,23 +32,24 @@ async function setArchivedAt(groupId: string, archivedAt: Date | null) {
   );
   const groupToChange = await db.query.interventionGroup.findFirst({
     where: (g, { eq }) => eq(g.id, groupId),
-    columns: { schoolId: true, leaderId: true },
+    columns: { schoolId: true },
   });
   await requireSchoolInHub(groupToChange?.schoolId, callerHubId);
 
   return db.transaction(async (tx) => {
-    if (archivedAt === null && groupToChange) {
-      await requireFellowsMayLeadGroups(tx, [groupToChange.leaderId]);
-    }
+    // Writing the group first locks it, so the leader checked is the one it has when it commits.
     const [result] = await tx
       .update(interventionGroup)
       .set({ archivedAt })
       .where(eq(interventionGroup.id, groupId))
-      .returning({ groupName: interventionGroup.groupName });
+      .returning({ groupName: interventionGroup.groupName, leaderId: interventionGroup.leaderId });
     if (!result) {
       throw new Error("Record to update not found.");
     }
-    return result;
+    if (archivedAt === null) {
+      await requireFellowsMayLeadGroups(tx, [result.leaderId]);
+    }
+    return { groupName: result.groupName };
   });
 }
 
