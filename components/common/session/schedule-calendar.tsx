@@ -83,6 +83,8 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
   /** Sessions in the range the URL names; null until the server knows the viewer's time zone. */
   sessions: Promise<Session[]> | null;
   timeZone: string | null;
+  /** The view when the URL names none; the server picks it from the device. */
+  defaultMode: Mode;
   /** Schools and session types for "Schedule a session" (hub coordinators and supervisors). */
   schools?: School[];
   supervisors?: ScheduleSupervisor[];
@@ -97,13 +99,18 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
-  const { sessions, timeZone: serverTimeZone, schools, ...calendarStateProps } = props;
+  const { sessions, timeZone: serverTimeZone, defaultMode, schools, ...calendarStateProps } = props;
   const { locale } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const browserTimeZone = useViewerTimeZoneCookie(serverTimeZone);
   const timeZone = serverTimeZone ?? browserTimeZone;
-  const urlView = parseScheduleView((name) => searchParams.get(name), props.role, timeZone);
+  const urlView = parseScheduleView(
+    (name) => searchParams.get(name),
+    props.role,
+    timeZone,
+    defaultMode,
+  );
   const [view, setOptimisticView] = useOptimistic(urlView);
   const [navigating, startNavigation] = useTransition();
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
@@ -112,7 +119,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   function navigate(next: Partial<ScheduleView>, history: "push" | "replace") {
     const search = scheduleSearch({ ...view, ...next });
     const params = new URLSearchParams(search);
-    const target = parseScheduleView((name) => params.get(name), props.role, timeZone);
+    const target = parseScheduleView((name) => params.get(name), props.role, timeZone, defaultMode);
     if (history === "replace" && !navigating && sameRange(target, view)) {
       window.history.replaceState(null, "", search);
       return;
@@ -222,7 +229,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
           <div className="flex items-start justify-between gap-6 lg:items-center">
             <h3 className="text-2xl font-semibold leading-8">{title}</h3>

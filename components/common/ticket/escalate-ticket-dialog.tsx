@@ -101,17 +101,19 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-6">
+          <form
+            noValidate
+            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+            className="space-y-6"
+          >
             <div className="flex flex-col">
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="escalate"
                   render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>
-                        Escalate <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required className="col-span-2">
+                      <FormLabel>Escalate</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
@@ -137,10 +139,8 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
                     control={form.control}
                     name="escalationReason"
                     render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>
-                          Escalation Reason <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                      <FormItem required className="col-span-2">
+                        <FormLabel>Escalation Reason</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}

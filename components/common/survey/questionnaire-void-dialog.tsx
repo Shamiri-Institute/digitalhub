@@ -67,7 +67,7 @@ function VoidForm({ copy, onDone }: { copy: Copy; onDone: () => void }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
         <DialogHeader>
           <DialogTitle>Void {copy.serial}?</DialogTitle>
           <DialogDescription>

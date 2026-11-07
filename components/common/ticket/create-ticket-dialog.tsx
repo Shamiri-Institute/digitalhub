@@ -88,7 +88,7 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+          <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             <DialogHeader className="mb-4">
               <DialogTitle className="text-xl">Create new ticket</DialogTitle>
             </DialogHeader>
@@ -97,10 +97,8 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
                 control={form.control}
                 name="subject"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Subject <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Subject</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter ticket subject" />
                     </FormControl>
@@ -112,10 +110,8 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
                 control={form.control}
                 name="description"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Description <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea {...field} placeholder="Describe the issue" />
                     </FormControl>
@@ -129,10 +125,8 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
                   control={form.control}
                   name="category"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Category <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required>
+                      <FormLabel>Category</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>

@@ -77,7 +77,7 @@ export default function HubSettingsForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={toastOnError(form.handleSubmit(setPending))}>
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(setPending))}>
         <SettingsSection title="Hub details" description={HUB_DETAILS_DESCRIPTION}>
           <div className="max-w-md">
             <HubNameField storedName={hub.hubName} />

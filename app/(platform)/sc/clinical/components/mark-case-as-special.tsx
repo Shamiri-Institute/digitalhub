@@ -77,6 +77,7 @@ export default function MarkCaseAsSpecial({
       <DialogContent className="gap-0 p-0">
         <Form {...form}>
           <form
+            noValidate
             id="modifyFlagAction"
             onSubmit={toastOnError(
               form.handleSubmit(onSubmit, (errors) => {

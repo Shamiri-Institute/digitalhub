@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import TabToggleNavigation, { type TabType } from "#/components/common/tabs/tab-navigation";
+import PageHeading from "#/components/ui/page-heading";
 
 export default function RenderReportingTabs() {
   const pathname = usePathname();
@@ -37,8 +38,18 @@ export default function RenderReportingTabs() {
     { name: "Fellows", href: "/hc/reporting/expenses/fellows" },
     { name: "Payout history", href: "/hc/reporting/expenses/payout-history" },
   ];
+  // The Reporting tab is a menu, so the page names its section here.
+  const sectionTitle = isFellowReports
+    ? "Fellow reports"
+    : isSchoolReports
+      ? "School reports"
+      : isExpenses
+        ? "Expenses"
+        : "Monitoring and evaluation";
+
   return (
     <>
+      <PageHeading title={sectionTitle} />
       {isFellowReports && <TabToggleNavigation options={fellowReportOptions} />}
       {isSchoolReports && <TabToggleNavigation options={schoolReportOptions} />}
       {isExpenses && <TabToggleNavigation options={expensesReportOptions} />}

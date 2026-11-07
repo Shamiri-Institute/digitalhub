@@ -37,7 +37,7 @@ export default function HubBreadcrumb({
         <button
           type="button"
           aria-label="Back"
-          className="arrow-button shrink-0 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue/60"
+          className="arrow-button shrink-0 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue"
           onClick={() => router.back()}
         >
           <Icons.arrowLeft className="h-4 w-4" />
@@ -45,7 +45,7 @@ export default function HubBreadcrumb({
         <div className="flex min-w-0 items-center gap-2">
           <Link
             href="/admin/hubs"
-            className="shrink-0 rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue/60 hover:text-shamiri-new-blue"
+            className="shrink-0 rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue hover:text-shamiri-new-blue"
           >
             Hubs
           </Link>
@@ -54,7 +54,7 @@ export default function HubBreadcrumb({
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="flex min-w-0 cursor-pointer items-center gap-2 rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue/60 font-semibold text-foreground"
+                className="flex min-w-0 cursor-pointer items-center gap-2 rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue font-semibold text-foreground"
               >
                 <span className="max-w-64 truncate">{currentHub.hubName}</span>
                 <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
@@ -144,7 +144,7 @@ function SiblingLink({
     <Link
       href={href(hub.id)}
       aria-label={`${label}: ${hub.hubName}`}
-      className="arrow-button rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue/60"
+      className="arrow-button rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue"
     >
       {children}
     </Link>

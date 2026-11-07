@@ -163,6 +163,7 @@ function SessionRatingsForm({
       ) : (
         <Form {...form}>
           <form
+            noValidate
             onSubmit={toastOnError(form.handleSubmit(onSubmit))}
             className={cn("space-y-5", mode === "view" ? "form-view-mode" : "")}
           >
@@ -171,11 +172,8 @@ function SessionRatingsForm({
                 control={form.control}
                 name="ratingId"
                 render={({ field }) => (
-                  <FormItem className="space-y-2 mt-4">
-                    <FormLabel>
-                      Select session {mode === "view" && " report"}
-                      <span className="ml-1 text-shamiri-light-red">*</span>
-                    </FormLabel>{" "}
+                  <FormItem required className="space-y-2 mt-4">
+                    <FormLabel>Select session {mode === "view" && " report"}</FormLabel>{" "}
                     <Select
                       defaultValue={field.value}
                       onValueChange={(value) => {
@@ -271,11 +269,8 @@ function SessionRatingsForm({
                   control={form.control}
                   name="studentBehaviorRating"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col space-y-2">
-                      <FormLabel>
-                        Student behaviour (1-unacceptable to 5-outstanding){" "}
-                        <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required className="flex flex-col space-y-2">
+                      <FormLabel>Student behaviour (1-unacceptable to 5-outstanding)</FormLabel>
                       <RatingStarsInput
                         value={field.value}
                         onChange={field.onChange}
@@ -288,11 +283,8 @@ function SessionRatingsForm({
                   control={form.control}
                   name="adminSupportRating"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col space-y-2">
-                      <FormLabel>
-                        Admin support (1-unacceptable to 5-outstanding){" "}
-                        <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required className="flex flex-col space-y-2">
+                      <FormLabel>Admin support (1-unacceptable to 5-outstanding)</FormLabel>
                       <RatingStarsInput
                         value={field.value}
                         onChange={field.onChange}
@@ -305,11 +297,8 @@ function SessionRatingsForm({
                   control={form.control}
                   name="workloadRating"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col space-y-2">
-                      <FormLabel>
-                        Workload (1-unacceptable to 5-outstanding){" "}
-                        <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
+                    <FormItem required className="flex flex-col space-y-2">
+                      <FormLabel>Workload (1-unacceptable to 5-outstanding)</FormLabel>
                       <RatingStarsInput
                         value={field.value}
                         onChange={field.onChange}

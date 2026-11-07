@@ -125,15 +125,13 @@ function DropoutSchoolSteps({
         <DialogTitle>Drop out school</DialogTitle>
       </DialogHeader>
       <DialogAlertWidget label={school?.schoolName} />
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
         <FormField
           control={form.control}
           name="dropoutReason"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel>
-                Select reason <span className="text-shamiri-light-red">*</span>
-              </FormLabel>
+            <FormItem required className="space-y-2">
+              <FormLabel>Select reason</FormLabel>
               <Select onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>

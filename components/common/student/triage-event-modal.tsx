@@ -186,6 +186,7 @@ function TriageEventForm({
       </DialogHeader>
       <Form {...form}>
         <form
+          noValidate
           onSubmit={readOnly ? (e) => e.preventDefault() : form.handleSubmit(onSubmit)}
           className="space-y-4"
         >

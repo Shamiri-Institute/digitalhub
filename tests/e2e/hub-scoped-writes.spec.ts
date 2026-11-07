@@ -156,7 +156,7 @@ test("a hub coordinator drops out a student in their hub", async ({ page, contex
     "Drop-out student",
   );
   const dialog = page.getByRole("dialog", { name: "Drop out student" });
-  await dialog.getByRole("combobox", { name: "Select reason *" }).click();
+  await dialog.getByRole("combobox", { name: "Select reason", exact: true }).click();
   await page.getByRole("option").first().click();
   await dialog.getByRole("button", { name: "Submit" }).click();
   const confirm = page.getByRole("dialog", { name: "Confirm drop out" });

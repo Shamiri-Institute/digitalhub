@@ -139,16 +139,17 @@ export default function ReferClinicalCase({
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <Form {...form}>
-            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+            <form
+              noValidate
+              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="referTo"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center">
-                      Refer to
-                      <span className="ml-1 text-red-500">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel className="flex items-center">Refer to</FormLabel>
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
@@ -186,11 +187,8 @@ export default function ReferClinicalCase({
                   control={form.control}
                   name="supervisorId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center">
-                        Select Supervisor
-                        <span className="ml-1 text-red-500">*</span>
-                      </FormLabel>
+                    <FormItem required>
+                      <FormLabel className="flex items-center">Select Supervisor</FormLabel>
                       <FormControl>
                         <Combobox
                           items={supervisorsInHub.map((supervisor) => ({
@@ -214,11 +212,8 @@ export default function ReferClinicalCase({
                   control={form.control}
                   name="clinicalLeadId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center">
-                        Select Clinical Lead
-                        <span className="ml-1 text-red-500">*</span>
-                      </FormLabel>
+                    <FormItem required>
+                      <FormLabel className="flex items-center">Select Clinical Lead</FormLabel>
                       <FormControl>
                         <Combobox
                           items={clinicalLeads.map((lead) => ({
@@ -241,11 +236,8 @@ export default function ReferClinicalCase({
                 control={form.control}
                 name="referralReason"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center">
-                      Referral Reason
-                      <span className="ml-1 text-red-500">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel className="flex items-center">Referral Reason</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}

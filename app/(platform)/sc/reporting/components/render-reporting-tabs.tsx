@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import TabToggleNavigation, { type TabType } from "#/components/common/tabs/tab-navigation";
+import PageHeading from "#/components/ui/page-heading";
 
 export default function RenderSCReportingTabs() {
   const pathname = usePathname();
@@ -39,17 +40,25 @@ export default function RenderSCReportingTabs() {
     { name: "Payout history", href: "/sc/reporting/expenses/payout-history" },
   ];
 
-  if (isRecordings) {
-    return null;
-  }
+  const isExpenses =
+    !isFellowReports && !isSchoolReports && !isMonitoringEvaluation && !isRecordings;
+  // The Reporting tab is a menu, so the page names its section here.
+  const sectionTitle = isRecordings
+    ? "Session recordings"
+    : isMonitoringEvaluation
+      ? "Monitoring and evaluation"
+      : isFellowReports
+        ? "Fellow reports"
+        : isSchoolReports
+          ? "School reports"
+          : "Expenses";
 
   return (
     <>
+      <PageHeading title={sectionTitle} />
       {isFellowReports && <TabToggleNavigation options={fellowReportOptions} />}
       {isSchoolReports && <TabToggleNavigation options={schoolReportOptions} />}
-      {!isFellowReports && !isSchoolReports && !isMonitoringEvaluation && (
-        <TabToggleNavigation options={expensesReportOptions} />
-      )}
+      {isExpenses && <TabToggleNavigation options={expensesReportOptions} />}
     </>
   );
 }

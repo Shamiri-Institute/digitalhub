@@ -319,15 +319,17 @@ export default function UploadRecordingDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+          <form
+            noValidate
+            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="fellowId"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Fellow <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Fellow</FormLabel>
                   <FormControl>
                     <Combobox
                       items={fellows.map((fellow) => ({
@@ -355,10 +357,8 @@ export default function UploadRecordingDialog({
               control={form.control}
               name="groupId"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Group <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Group</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value);
@@ -397,10 +397,8 @@ export default function UploadRecordingDialog({
               control={form.control}
               name="sessionId"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Session <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Session</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value);
@@ -451,9 +449,7 @@ export default function UploadRecordingDialog({
               <>
                 <Separator />
                 <div className="space-y-2">
-                  <FormLabel>
-                    Audio File <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+                  <FormLabel required>Audio File</FormLabel>
                   {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- drag-and-drop target; the wrapped file input stays keyboard accessible */}
                   <label
                     onDrop={handleDrop}

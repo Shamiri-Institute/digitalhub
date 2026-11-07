@@ -44,6 +44,7 @@ export default function SchoolsBreadcrumb({
       <div className="flex items-center gap-x-5 text-shamiri-text-dark-grey">
         <button
           type="button"
+          aria-label="Back"
           className="flex cursor-pointer items-center justify-center rounded-lg border p-3 hover:text-shamiri-new-blue hover:drop-shadow-sm active:scale-95"
           onClick={() => {
             router.back();
@@ -51,7 +52,7 @@ export default function SchoolsBreadcrumb({
         >
           <Icons.arrowLeft className="h-4 w-4" />
         </button>
-        <div className="flex items-center gap-2 text-gray-400">
+        <div className="flex items-center gap-2 text-shamiri-text-grey">
           <Link
             href={
               role === "HUB_COORDINATOR"
@@ -120,6 +121,7 @@ export default function SchoolsBreadcrumb({
       <div className="hidden lg:flex">
         <button
           type="button"
+          aria-label="Previous school"
           disabled={schoolIndex === 0}
           className={cn(
             "arrow-button rounded-l-lg",
@@ -135,6 +137,7 @@ export default function SchoolsBreadcrumb({
         </button>
         <button
           type="button"
+          aria-label="Next school"
           disabled={schoolIndex === schools.length - 1}
           className={cn(
             "arrow-button rounded-r-lg",

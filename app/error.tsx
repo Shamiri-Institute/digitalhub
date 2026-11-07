@@ -11,9 +11,11 @@ import { signOut } from "#/lib/auth-client";
 export default function AppError({
   error,
   reset,
+  retry,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
+  retry: () => void;
 }) {
   // effect: reports the caught render error to Sentry or the console once per error instance
   React.useEffect(() => {
@@ -51,11 +53,9 @@ export default function AppError({
           </p>
         </div>
         <div className="flex flex-col space-y-3 bg-gray-50 px-4 py-8 sm:px-16">
-          <Button onClick={() => reset()} variant="outline">
-            Try again
-          </Button>
-          <Button onClick={toastOnError(handleRedirectToLogin)} variant="brand">
-            Go to login
+          <Button onClick={retry}>Try again</Button>
+          <Button onClick={toastOnError(handleRedirectToLogin)} variant="outline">
+            Sign out and clear saved data
           </Button>
         </div>
       </div>

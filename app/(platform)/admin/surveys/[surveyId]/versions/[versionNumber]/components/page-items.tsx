@@ -181,7 +181,7 @@ export default function PageItems({
                 <button
                   type="button"
                   onClick={() => dispatch({ type: "select", selection: { item: item.id } })}
-                  className="flex min-w-0 grow flex-col items-start gap-0.5 rounded-lg px-4 py-3 text-left focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue/60"
+                  className="flex min-w-0 grow flex-col items-start gap-0.5 rounded-lg px-4 py-3 text-left focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue"
                 >
                   <span className="flex w-full items-center gap-2 text-xs text-shamiri-text-grey">
                     {ITEM_KIND_LABELS[item.kind]}

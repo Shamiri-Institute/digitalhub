@@ -4,12 +4,14 @@ import {
 } from "#/app/(platform)/ct/clinical/actions";
 import CasesBreakdown from "#/components/common/clinical/cases-breakdown";
 import AllHubClinicalCasesTable from "#/components/common/clinical/hub-clinical-cases-table";
+import PageHeading from "#/components/ui/page-heading";
 
 export default async function ClinicalPage() {
   const cases = await getClinicalCasesInHub();
   const casesData = await getAllClinicalCasesData();
   return (
     <div className="flex flex-col gap-4">
+      <PageHeading title="Clinical cases" />
       <CasesBreakdown
         casesByStatus={casesData.casesByStatus}
         casesByRiskStatus={casesData.casesByRiskStatus}

@@ -67,7 +67,7 @@ function CreateSurveyForm({ onDone }: { onDone: () => void }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
         <DialogHeader>
           <DialogTitle className="text-xl">New survey</DialogTitle>
           <DialogDescription>It starts with an empty draft, version 1.</DialogDescription>
@@ -77,10 +77,8 @@ function CreateSurveyForm({ onDone }: { onDone: () => void }) {
             control={form.control}
             name="title"
             render={({ field }) => (
-              <FormItem className="col-span-2">
-                <FormLabel>
-                  Title <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required className="col-span-2">
+                <FormLabel>Title</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -92,10 +90,8 @@ function CreateSurveyForm({ onDone }: { onDone: () => void }) {
             control={form.control}
             name="code"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Code <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Code</FormLabel>
                 <FormControl>
                   <Input {...field} className="uppercase" />
                 </FormControl>
