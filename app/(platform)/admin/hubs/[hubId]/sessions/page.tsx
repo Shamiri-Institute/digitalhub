@@ -28,6 +28,7 @@ export default async function HubSessionsPage({
       aria-label={`${hub.hubName} session schedule`}
       sessions={schedule.sessions}
       timeZone={schedule.timeZone}
+      defaultMode={schedule.defaultMode}
       fellowRatings={fellowRatings.map((rating) => ({
         ...rating,
         averageRating: Number(rating.averageRating),

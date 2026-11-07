@@ -59,6 +59,7 @@ export default async function SupervisorSchedulePage({
           aria-label="Session schedule"
           sessions={schedule.sessions}
           timeZone={schedule.timeZone}
+          defaultMode={schedule.defaultMode}
           schools={schools}
           supervisors={supervisors}
           fellowRatings={fellowRatings.map((rating) => ({

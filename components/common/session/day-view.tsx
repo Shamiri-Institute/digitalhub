@@ -129,24 +129,25 @@ function DayCalendarCell({
   return (
     <td {...cellProps}>
       <div
-        {...buttonProps}
-        ref={ref}
-        className={cn("h-full w-full", {
-          selected: isSelected,
-          disabled: isDisabled,
-          unavailable: isUnavailable,
-        })}
+        className={cn(
+          "relative h-full w-full lg:h-[85px] xl:h-[112px]",
+          "border-t border-grey-border",
+          {
+            "border-t-0": rowIdx === 0,
+          },
+        )}
       >
+        {/* Behind the chips, not around them: buttons cannot nest. */}
         <div
-          className={cn(
-            "flex flex-col gap-[8px] overflow-y-auto",
-            "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
-            "h-full lg:h-[85px] xl:h-[112px]",
-            "w-full",
-            "border-t border-grey-border",
-            { "border-t-0": rowIdx === 0 },
-          )}
-        >
+          {...buttonProps}
+          ref={ref}
+          className={cn("absolute inset-0", {
+            selected: isSelected,
+            disabled: isDisabled,
+            unavailable: isUnavailable,
+          })}
+        />
+        <div className="pointer-events-none relative flex h-full w-full flex-col gap-[8px] overflow-y-auto px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]">
           <SessionList
             sessions={sessions}
             role={role}
