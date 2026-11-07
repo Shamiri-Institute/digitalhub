@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.10.1](https://github.com/Shamiri-Institute/digitalhub/compare/v2.10.0...v2.10.1) (2026-11-07)
+
+### Bug Fixes
+
+- **charts:** draw hub and monitoring charts with tokens and readable labels ([#1044](https://github.com/Shamiri-Institute/digitalhub/issues/1044)) ([a647e4b](https://github.com/Shamiri-Institute/digitalhub/commit/a647e4b6151f60ddd5ae7d423ea23f59762e33ce))
+- guard session, triage and ticket state changes on the server ([#1036](https://github.com/Shamiri-Institute/digitalhub/issues/1036)) ([445e2a3](https://github.com/Shamiri-Institute/digitalhub/commit/445e2a351fea179f9402b8b2ae15f0ba96cf2982))
+- keep dropped-out fellows off groups and close clinical case and ticket races ([#1037](https://github.com/Shamiri-Institute/digitalhub/issues/1037)) ([3fb6006](https://github.com/Shamiri-Institute/digitalhub/commit/3fb600639ef57b311c7831582424ba379a13b056))
+- lock report-page evaluation edits, stop double payout stamps, keep school dropouts on edit ([#1042](https://github.com/Shamiri-Institute/digitalhub/issues/1042)) ([6d2cea7](https://github.com/Shamiri-Institute/digitalhub/commit/6d2cea7d6d4ed1542a07b74733a22f799dc15783))
+- **ui:** meet WCAG AA contrast in tokens and add non-colour attendance chip cues ([#1039](https://github.com/Shamiri-Institute/digitalhub/issues/1039)) ([65fa2cb](https://github.com/Shamiri-Institute/digitalhub/commit/65fa2cb8012a3047dfa7eedfbd8575c6ae5196a5))
+- **ui:** open row action menus and their dialogs from the keyboard ([#1041](https://github.com/Shamiri-Institute/digitalhub/issues/1041)) ([eb5485d](https://github.com/Shamiri-Institute/digitalhub/commit/eb5485df84e3002d1401a93cfa353616eaf5aa9c))
+- **ui:** reach sign-out on phones and by keyboard in the app shell ([#1038](https://github.com/Shamiri-Institute/digitalhub/issues/1038)) ([26cad9a](https://github.com/Shamiri-Institute/digitalhub/commit/26cad9a77dcbfd60de8152626cac266d98ca0159))
+- **ui:** size data-table columns to content and fix the pager ([#1040](https://github.com/Shamiri-Institute/digitalhub/issues/1040)) ([2fd4899](https://github.com/Shamiri-Institute/digitalhub/commit/2fd48993448010f5cf3dc94c660c3e5ca6b898e0))
+
 ## [2.10.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.9.0...v2.10.0) (2026-11-06)
 
 ### Features
