@@ -88,8 +88,9 @@ function roleTabs(mainRoute: string, isSuperAdmin: boolean, canManageSurveys: bo
         ticketsTab,
       ];
     case "cl":
-    case "ct":
       return [supervisorsTab, fellowsTab, studentsTab, clinicalTab, triageTab, ticketsTab];
+    case "ct":
+      return [supervisorsTab, fellowsTab, studentsTab, clinicalTab];
     default:
       return [];
   }
