@@ -45,6 +45,7 @@ export default async function FellowSchedulePage({
           aria-label="Session schedule"
           sessions={schedule.sessions}
           timeZone={schedule.timeZone}
+          defaultMode={schedule.defaultMode}
           role={role}
           fellowId={fellow?.profile.id}
         />

@@ -42,9 +42,11 @@ export function parseScheduleView(
   get: (name: string) => string | null,
   role: ImplementerRole,
   timeZone: string,
+  defaultMode: Mode = "month",
 ): ScheduleView {
   const requestedMode = get("mode") as Mode | null;
-  const mode = requestedMode && modesFor(role).includes(requestedMode) ? requestedMode : "month";
+  const mode =
+    requestedMode && modesFor(role).includes(requestedMode) ? requestedMode : defaultMode;
   const requestedSpan = get("span") as Span | null;
   const span: Span =
     mode === "list"

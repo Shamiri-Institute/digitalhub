@@ -1,6 +1,8 @@
 import "server-only";
 
 import { and, eq, gte, lt, sql } from "drizzle-orm";
+import { headers } from "next/headers";
+import { userAgent } from "next/server";
 import {
   currentAdminUser,
   currentFellow,
@@ -12,7 +14,7 @@ import { ImplementerRole } from "#/db/enums";
 import { hub, interventionSession } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
-import { parseScheduleView, scheduleRange } from "#/lib/schedule-view";
+import { type Mode, parseScheduleView, scheduleRange } from "#/lib/schedule-view";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
 
 export type ScheduleSearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -64,12 +66,22 @@ export async function loadScheduleSessions(
   role: ImplementerRole,
   onlyHubId?: string,
 ) {
-  const [timeZone, scope] = await Promise.all([
+  const [timeZone, scope, requestHeaders] = await Promise.all([
     viewerTimeZone(),
     onlyHubId ? { hubIds: [onlyHubId] } : sessionScope(role),
+    headers(),
   ]);
+  // On a phone the month grid's fixed-width days push most sessions off-screen.
+  const defaultMode: Mode =
+    userAgent({ headers: requestHeaders }).device.type === "mobile" ? "list" : "month";
   if (!timeZone)
-    return { timeZone, sessions: null, hubIds: scope.hubIds, sessionsWhere: sql`false` };
+    return {
+      timeZone,
+      defaultMode,
+      sessions: null,
+      hubIds: scope.hubIds,
+      sessionsWhere: sql`false`,
+    };
   const params = await searchParams;
   const view = parseScheduleView(
     (name) => {
@@ -78,10 +90,12 @@ export async function loadScheduleSessions(
     },
     role,
     timeZone,
+    defaultMode,
   );
   const range = scheduleRange(view, timeZone);
   return {
     timeZone,
+    defaultMode,
     sessions: fetchInterventionSessions(range, scope),
     hubIds: scope.hubIds,
     sessionsWhere: sql`${gte(interventionSession.sessionDate, range.start)} and ${lt(interventionSession.sessionDate, range.end)}`,
