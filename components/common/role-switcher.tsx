@@ -86,7 +86,7 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
         <Button
           variant="outline"
           aria-expanded={open}
-          className="-mt-1 w-full min-w-[300px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
+          className="-mt-1 w-full lg:min-w-[300px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
           disabled={loading || !activeMembership}
         >
           <div className="flex flex-col items-start">
@@ -115,7 +115,7 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
-          <span className="px-4 pb-1 pt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
+          <span className="px-4 pb-1 pt-2 text-xs uppercase tracking-widest text-muted-foreground">
             select member to impersonate
           </span>
           <CommandSeparator />
@@ -168,11 +168,11 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
               >
                 <div className="flex flex-col">
                   <div className="flex flex-col">
-                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
+                    <span className="text-xs uppercase tracking-widest text-muted-foreground">
                       <span className="text-shamiri-new-blue">{member.role.replace("_", " ")}</span>
                     </span>
                     <span className="font-medium">{member.label}</span>
-                    <span className="min-h-[10px] text-[8px] uppercase tracking-widest text-muted-foreground">
+                    <span className="min-h-4 text-xs uppercase tracking-widest text-muted-foreground">
                       {member.hub ? `${member.hub}` : ""}
                     </span>
                   </div>

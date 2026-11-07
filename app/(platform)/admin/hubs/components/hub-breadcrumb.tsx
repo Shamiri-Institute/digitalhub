@@ -75,7 +75,7 @@ export default function HubBreadcrumb({
                   selected.click();
                 }}
               >
-                <span className="px-4 pb-1 pt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
+                <span className="px-4 pb-1 pt-2 text-xs uppercase tracking-widest text-muted-foreground">
                   switch hub
                 </span>
                 <CommandSeparator />

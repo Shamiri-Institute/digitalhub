@@ -183,6 +183,10 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
       session.user.activeMembership.role === ImplementerRole.CLINICAL_LEAD);
 
   const isFellow = session?.user?.activeMembership?.role === ImplementerRole.FELLOW;
+  const hubName =
+    personnelProfile &&
+    (("assignedHub" in personnelProfile && personnelProfile.assignedHub?.hubName) ||
+      ("hub" in personnelProfile && personnelProfile.hub?.hubName));
 
   return (
     <Form {...form}>
@@ -193,14 +197,16 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
           </DialogTitle>
         </DialogHeader>
         <div className="flex items-center gap-2 pt-4">
-          <div className="relative h-7 w-7 shrink-0">
-            <Image
-              src={session?.user?.image || "/placeholder.png"}
-              alt="Profile"
-              fill
-              className="h-7 w-7 rounded-full border object-cover"
-            />
-          </div>
+          {session?.user?.image && (
+            <div className="relative h-7 w-7 shrink-0">
+              <Image
+                src={session.user.image}
+                alt=""
+                fill
+                className="h-7 w-7 rounded-full border object-cover"
+              />
+            </div>
+          )}
           <p className="text-wrap text-[20px] font-semibold text-gray-600">
             <span>
               {personnelProfile &&
@@ -216,15 +222,12 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                           ? personnelProfile.name
                           : session?.user?.name)}
             </span>
-            <span className="text-[20px] font-semibold text-gray-600">
-              {" "}
-              -{" "}
-              <span className="capitalize">
-                {personnelProfile &&
-                  (("assignedHub" in personnelProfile && personnelProfile.assignedHub?.hubName) ||
-                    ("hub" in personnelProfile && personnelProfile.hub?.hubName))}
+            {hubName && (
+              <span className="text-[20px] font-semibold text-gray-600">
+                {" "}
+                - <span className="capitalize">{hubName}</span>
               </span>
-            </span>
+            )}
           </p>
         </div>
         <div className="space-y-6">
