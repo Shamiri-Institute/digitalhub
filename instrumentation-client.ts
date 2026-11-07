@@ -14,16 +14,16 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
 
   replaysSessionSampleRate: 0.1,
-
-  integrations: [
-    Sentry.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
-    Sentry.feedbackIntegration({
-      colorScheme: "system",
-    }),
-  ],
 });
+
+// Replay and the "Report a Bug" widget are most of the SDK's bytes, so they load after the page.
+if (Sentry.isEnabled()) {
+  window.addEventListener("load", () => {
+    void import("@sentry/nextjs").then(({ replayIntegration, feedbackIntegration }) => {
+      Sentry.addIntegration(replayIntegration({ maskAllText: true, blockAllMedia: true }));
+      Sentry.addIntegration(feedbackIntegration({ colorScheme: "system" }));
+    });
+  });
+}
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
