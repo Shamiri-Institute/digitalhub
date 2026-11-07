@@ -8,7 +8,7 @@ import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { fellow, interventionGroup, school } from "#/db/schema";
 import { selectSchoolGroups } from "#/lib/actions/schedule-data";
-import { countsTowardGroupReport } from "#/lib/fellow-group-report";
+import { heldGroupReportSessionCount } from "#/lib/fellow-group-report";
 
 export default async function GroupsPage(props: { params: Promise<{ visibleId: string }> }) {
   const params = await props.params;
@@ -91,8 +91,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
     throw new Error(`School ${visibleId} not found`);
   }
 
-  const occurredSubstantiveCount =
-    schoolRow.interventionSessions.filter(countsTowardGroupReport).length;
+  const occurredSubstantiveCount = heldGroupReportSessionCount(schoolRow.interventionSessions);
 
   return (
     <div className="flex flex-col gap-4">

@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, countDistinct, eq, inArray } from "drizzle-orm";
 import type { z } from "zod";
 import { refresh } from "next/cache";
 
@@ -255,21 +255,24 @@ export async function submitFellowGroupReport(data: z.infer<typeof FellowGroupRe
     if (!group) {
       throw new Error("No InterventionGroup found");
     }
-    const heldSessions = await db.$count(
-      interventionSession,
-      and(
-        eq(interventionSession.schoolId, group.schoolId),
-        eq(interventionSession.occurred, true),
-        inArray(
-          interventionSession.sessionId,
-          db
-            .select({ id: sessionName.id })
-            .from(sessionName)
-            .where(inArray(sessionName.sessionName, GROUP_REPORT_SESSION_NAMES)),
+    // Each session name once, should a school ever hold two sessions of one name.
+    const [held] = await db
+      .select({ heldSessionCount: countDistinct(interventionSession.sessionId) })
+      .from(interventionSession)
+      .where(
+        and(
+          eq(interventionSession.schoolId, group.schoolId),
+          eq(interventionSession.occurred, true),
+          inArray(
+            interventionSession.sessionId,
+            db
+              .select({ id: sessionName.id })
+              .from(sessionName)
+              .where(inArray(sessionName.sessionName, GROUP_REPORT_SESSION_NAMES)),
+          ),
         ),
-      ),
-    );
-    if (heldSessions < GROUP_REPORT_SESSIONS_REQUIRED) {
+      );
+    if ((held?.heldSessionCount ?? 0) < GROUP_REPORT_SESSIONS_REQUIRED) {
       return {
         success: false,
         message: "The group report opens once the group has held its fourth session.",
