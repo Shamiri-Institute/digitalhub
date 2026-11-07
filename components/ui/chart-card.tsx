@@ -17,7 +17,9 @@ export default function ChartCard({
   return (
     <Card>
       <CardHeader className="border-b border-dashed px-4 py-[14px] text-lg">
-        <CardTitle className="font-semibold leading-6 text-shamiri-black">{title}</CardTitle>
+        <CardTitle as="h2" className="font-semibold leading-6 text-shamiri-black">
+          {title}
+        </CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       {/* Recharts colours legend text with the series colour inline; keep it in text ink. */}

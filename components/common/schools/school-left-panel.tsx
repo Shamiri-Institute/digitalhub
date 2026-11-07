@@ -45,6 +45,8 @@ export default function SchoolLeftPanel({
 
   return (
     <div className="h-auto w-full space-y-6 px-0 py-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-r lg:border-solid lg:border-shamiri-light-grey lg:px-6 lg:py-4">
+      {/* The visible name sits inside the accordion's button, where a heading cannot go. */}
+      <h1 className="sr-only">{school.schoolName}</h1>
       <Accordion type="single" defaultValue={open ? "default" : ""} collapsible={!open}>
         <AccordionItem value="default">
           <AccordionTrigger
@@ -55,9 +57,9 @@ export default function SchoolLeftPanel({
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-shamiri-new-light-blue text-lg font-semibold text-shamiri-new-blue lg:h-16 lg:w-16 lg:p-[18px] lg:text-xl">
                 {getSchoolInitials(school.schoolName)}
               </div>
-              <h2 className="text-xl font-semibold text-black lg:text-left lg:text-[28px]">
+              <span className="text-xl font-semibold text-black lg:text-left lg:text-[28px]">
                 {school.schoolName}
-              </h2>
+              </span>
             </div>
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-5 pt-6">
