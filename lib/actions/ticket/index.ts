@@ -36,7 +36,6 @@ import {
   REASSIGNMENT_INITIATOR_ROLES,
   type ReassignmentInitiatorRole,
   ROLE_NAME_CONFIG,
-  type TicketCategory,
   type TicketEscalation,
   type TicketEscalationStatus,
   type TicketFilters,
@@ -182,7 +181,6 @@ async function setTicketStatus(
 export async function createEscalation(
   ticketId: string,
   escalationReason: string,
-  ticketCategory: TicketCategory,
 ): Promise<ActionResponse> {
   try {
     const {
@@ -192,7 +190,12 @@ export async function createEscalation(
     } = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
 
     if (!isEscalationInitiatorRole(role)) throw new Error("The role cannot create escalations");
-    const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](ticketCategory);
+    const ticket = await db.query.tickets.findFirst({
+      where: (t, { eq }) => eq(t.id, ticketId),
+      columns: { category: true },
+    });
+    if (!ticket) throw new Error("Ticket not found");
+    const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](ticket.category);
 
     const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
     const escalationRecipientId = await handler({ userId, implementerId: activeImplementerId });

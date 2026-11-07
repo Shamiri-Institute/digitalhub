@@ -64,7 +64,7 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
     if (!ticket?.id) return;
 
     if (data.escalate === "yes") {
-      const result = await createEscalation(ticket.id, data.escalationReason, ticket.category);
+      const result = await createEscalation(ticket.id, data.escalationReason);
       if (!result.success) {
         toast({
           variant: "destructive",
