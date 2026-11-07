@@ -121,12 +121,13 @@ function MarkAttendanceContent({
 
   function getDefaultValues(sessionId?: string) {
     const defaultSession = sessionId || selectableSessions.at(-1)?.id;
-    const defaultAttendance = attendances.find((attendance) => {
-      return attendance.sessionId === defaultSession;
-    });
+    // Callers keep the row opened last in state, and it need not be one of the selected rows.
+    const defaultAttendance = bulkMode
+      ? undefined
+      : attendances.find((attendance) => attendance.sessionId === defaultSession);
     return {
       sessionId: defaultSession,
-      id,
+      id: bulkMode ? undefined : id,
       attended: defaultAttendance ? getAttendanceStatus(defaultAttendance) : "unmarked",
       absenceReason: defaultAttendance?.absenceReason ?? undefined,
       comments: defaultAttendance?.comments ?? undefined,

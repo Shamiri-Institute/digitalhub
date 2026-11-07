@@ -1,8 +1,10 @@
-import { expect, type Page, test } from "@playwright/test";
-import { and, eq, sql } from "drizzle-orm";
+import type { Page } from "@playwright/test";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { supervisorAttendance } from "#/db/schema";
+import { supervisor, supervisorAttendance } from "#/db/schema";
+import { objectId } from "#/lib/crypto";
+import { expect, test } from "#/tests/fixtures";
 import {
   onlySessionAtSchoolThatWeek,
   signableMember,
@@ -19,6 +21,8 @@ type Fixture = {
   schoolName: string;
   supervisorId: string;
   supervisorName: string;
+  hubId: string;
+  implementerId: string;
   email: string;
 };
 let fixture: Fixture;
@@ -28,7 +32,8 @@ async function pickLoneOccurredSessionWithUnmarkedSupervisor() {
     rows: [row],
   } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
     select i.id as "sessionId", i.session_date as "sessionDate", s.school_name as "schoolName",
-      sv.id as "supervisorId", sv.supervisor_name as "supervisorName", u.email
+      sv.id as "supervisorId", sv.supervisor_name as "supervisorName", sv.hub_id as "hubId",
+      sv.implementer_id as "implementerId", u.email
     from hub_coordinators hc
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
     join users u on u.id = m.user_id
@@ -120,4 +125,54 @@ test("a hub coordinator marks a supervisor attended, then missed in bulk", async
   await openSupervisorAttendance(page);
   await expect(await searchRows(page, fixture.supervisorName)).toContainText("Missed");
   expect(await storedAttendances()).toEqual([{ attended: false }]);
+});
+
+test("marking supervisors in bulk starts unmarked, not from the supervisor opened last", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const [markedAloneName, markedInBulkName] = ["alone", "in bulk"].map(
+    (marking) => `E2E supervisor marked ${marking} ${Date.now()}`,
+  );
+  const supervisorIds = [objectId("sup"), objectId("sup")];
+  await db.insert(supervisor).values(
+    [markedAloneName, markedInBulkName].map((supervisorName, index) => ({
+      id: supervisorIds[index],
+      supervisorName,
+      hubId: fixture.hubId,
+      implementerId: fixture.implementerId,
+    })),
+  );
+  undo(async () => {
+    await db
+      .delete(supervisorAttendance)
+      .where(inArray(supervisorAttendance.supervisorId, supervisorIds));
+    await db.delete(supervisor).where(inArray(supervisor.id, supervisorIds));
+  });
+  await signInWithEmail(context, fixture.email);
+
+  await openSupervisorAttendance(page);
+  await chooseRowAction(page, await searchRows(page, markedAloneName), "Mark attendance");
+  const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
+  await mark.getByRole("radio", { name: "Missed" }).click();
+  await mark.getByRole("combobox", { name: "Select reason for above" }).click();
+  await page.getByRole("option").first().click();
+  await mark.getByRole("button", { name: "Submit" }).click();
+  await expect(mark).toBeHidden();
+
+  // Opening the marked supervisor's mark shows it; cancelling leaves that row behind the table.
+  const sessionDialog = await openSupervisorAttendance(page);
+  await chooseRowAction(page, await searchRows(page, markedAloneName), "Mark attendance");
+  await expect(mark.getByRole("radio", { name: "Missed" })).toBeChecked();
+  await mark.getByRole("button", { name: "Cancel" }).click();
+  await expect(mark).toBeHidden();
+
+  const markedInBulkRow = await searchRows(page, markedInBulkName);
+  await markedInBulkRow.getByRole("checkbox", { name: "Select row" }).check();
+  await sessionDialog.getByRole("button", { name: "Mark supervisor attendance" }).click();
+  const bulkMark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
+  await expect(bulkMark).toContainText("1 supervisors");
+  await expect(bulkMark.getByRole("radio", { name: "Unmarked" })).toBeChecked();
+  await expect(bulkMark.getByRole("combobox", { name: "Select reason for above" })).toBeHidden();
 });
