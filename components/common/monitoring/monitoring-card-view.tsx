@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
 import {
   formatCell,
@@ -8,9 +9,21 @@ import {
   type SupervisorEmphasis,
   YOU_SUFFIX,
 } from "#/components/common/monitoring/card-cells";
-import { CartesianChart, PieCard } from "#/components/common/monitoring/monitoring-charts";
 import DataTable from "#/components/data-table";
+import { Skeleton } from "#/components/ui/skeleton";
 import type { CardCell, CardRow, CardView, TableColumn } from "#/lib/monitoring/types";
+
+// Recharts draws nothing until the browser measures its container, so the charts load after
+// the page and keep recharts out of the JS before `load`; tables still render on the server.
+const chartSkeleton = () => <Skeleton className="h-80 w-full" />;
+const CartesianChart = dynamic(
+  () => import("#/components/common/monitoring/monitoring-charts").then((m) => m.CartesianChart),
+  { ssr: false, loading: chartSkeleton },
+);
+const PieCard = dynamic(
+  () => import("#/components/common/monitoring/monitoring-charts").then((m) => m.PieCard),
+  { ssr: false, loading: chartSkeleton },
+);
 
 type CellRenderer = NonNullable<ColumnDef<CardRow, CardCell>["cell"]>;
 const textCell: CellRenderer = ({ getValue }) => formatCell(getValue());
