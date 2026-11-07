@@ -18,7 +18,11 @@ import {
   weeklyHubReport,
 } from "#/db/schema";
 import { fetchSchoolsTableRows } from "#/components/common/schools/queries";
-import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
+import {
+  requireFellowsMayLeadGroups,
+  requireHubRole,
+  requireSchoolInHub,
+} from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { getSchoolInitials } from "#/lib/utils";
 import {
@@ -556,6 +560,10 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>) {
       }
 
       if (interventionGroups.length > 0) {
+        await requireFellowsMayLeadGroups(
+          tx,
+          interventionGroups.map((group) => group.leaderId),
+        );
         await tx.insert(interventionGroup).values(interventionGroups);
       }
 

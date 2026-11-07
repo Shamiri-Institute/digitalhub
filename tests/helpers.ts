@@ -196,13 +196,17 @@ export async function createClinicalCase(owner: { schoolId: string; currentSuper
 
 /**
  * Locks one row in a transaction of its own while `act` starts requests that write that row, and
- * releases it once `waitForWaiting(count)` sees that many of them blocked on the lock, so they reach
- * the row together instead of one after another.
+ * releases it once `act` returns, so the requests reach the row together instead of one after
+ * another. `waitForWaiting(count)` waits until that many requests are blocked on the lock;
+ * `countWaiting()` reads how many are, for an `act` that waits on something else too.
  */
 export async function raceOnRow(
   table: string,
   rowId: string | number,
-  act: (waitForWaiting: (count: number) => Promise<void>) => Promise<void>,
+  act: (
+    waitForWaiting: (count: number) => Promise<void>,
+    countWaiting: () => Promise<number>,
+  ) => Promise<void>,
 ) {
   const lockHolder = await pool.connect();
   try {
@@ -214,24 +218,23 @@ export async function raceOnRow(
     const {
       rows: [holder],
     } = await lockHolder.query<{ pid: number }>("select pg_backend_pid() as pid");
+    async function countWaiting() {
+      // A request that queues behind another waiting request is blocked by that one, not by the
+      // lock holder, so count the whole queue.
+      const { rows } = await pool.query<{ waiting: number }>(
+        `with recursive waiting(pid) as (
+          select pid from pg_stat_activity where $1 = any(pg_blocking_pids(pid))
+          union
+          select a.pid from pg_stat_activity a join waiting w on w.pid = any(pg_blocking_pids(a.pid))
+        )
+        select count(*)::int as waiting from waiting`,
+        [holder?.pid],
+      );
+      return rows[0]?.waiting ?? 0;
+    }
     await act(async (count) => {
-      await expect
-        .poll(async () => {
-          // A request that queues behind another waiting request is blocked by that one, not by
-          // the lock holder, so count the whole queue.
-          const { rows } = await pool.query<{ waiting: number }>(
-            `with recursive waiting(pid) as (
-              select pid from pg_stat_activity where $1 = any(pg_blocking_pids(pid))
-              union
-              select a.pid from pg_stat_activity a join waiting w on w.pid = any(pg_blocking_pids(a.pid))
-            )
-            select count(*)::int as waiting from waiting`,
-            [holder?.pid],
-          );
-          return rows[0]?.waiting;
-        })
-        .toBe(count);
-    });
+      await expect.poll(countWaiting).toBe(count);
+    }, countWaiting);
   } finally {
     // A connection whose commit failed is passed to release() so the pool discards it.
     let commitError: Error | undefined;

@@ -35,19 +35,21 @@ async function setArchivedAt(groupId: string, archivedAt: Date | null) {
     columns: { schoolId: true, leaderId: true },
   });
   await requireSchoolInHub(groupToChange?.schoolId, callerHubId);
-  if (archivedAt === null && groupToChange) {
-    await requireFellowsMayLeadGroups([groupToChange.leaderId]);
-  }
 
-  const [result] = await db
-    .update(interventionGroup)
-    .set({ archivedAt })
-    .where(eq(interventionGroup.id, groupId))
-    .returning({ groupName: interventionGroup.groupName });
-  if (!result) {
-    throw new Error("Record to update not found.");
-  }
-  return result;
+  return db.transaction(async (tx) => {
+    if (archivedAt === null && groupToChange) {
+      await requireFellowsMayLeadGroups(tx, [groupToChange.leaderId]);
+    }
+    const [result] = await tx
+      .update(interventionGroup)
+      .set({ archivedAt })
+      .where(eq(interventionGroup.id, groupId))
+      .returning({ groupName: interventionGroup.groupName });
+    if (!result) {
+      throw new Error("Record to update not found.");
+    }
+    return result;
+  });
 }
 
 export async function archiveInterventionGroup(groupId: string) {
@@ -96,7 +98,6 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
     const { schoolId, fellowId } = CreateGroupSchema.parse(data);
     await requireSchoolInHub(schoolId, callerHubId);
     await requireFellowsInHub([fellowId], callerHubId);
-    await requireFellowsMayLeadGroups([fellowId]);
     const school = await db.query.school.findFirst({
       where: (s, { eq }) => eq(s.id, schoolId),
       with: { hub: { columns: { projectId: true } } },
@@ -111,16 +112,19 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
       throw new Error("School not linked to a project. Cannot create group.");
     }
 
-    const [result] = await db
-      .insert(interventionGroup)
-      .values({
-        id: objectId("group"),
-        leaderId: fellowId,
-        schoolId,
-        projectId,
-        groupName: `${getSchoolInitials(school.schoolName)}_${groupCount + 1}`,
-      })
-      .returning({ groupName: interventionGroup.groupName });
+    const [result] = await db.transaction(async (tx) => {
+      await requireFellowsMayLeadGroups(tx, [fellowId]);
+      return tx
+        .insert(interventionGroup)
+        .values({
+          id: objectId("group"),
+          leaderId: fellowId,
+          schoolId,
+          projectId,
+          groupName: `${getSchoolInitials(school.schoolName)}_${groupCount + 1}`,
+        })
+        .returning({ groupName: interventionGroup.groupName });
+    });
     refresh();
     return {
       success: true,
