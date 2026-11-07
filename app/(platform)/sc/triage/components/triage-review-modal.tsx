@@ -24,8 +24,11 @@ export default function TriageReviewModal({
     if (!note.trim()) return;
     setSubmitting(true);
     try {
-      await markTriageReviewed(triageEventId, note.trim());
-      toast({ description: "Marked as reviewed — no case needed." });
+      const response = await markTriageReviewed(triageEventId, note.trim());
+      toast({
+        variant: response.success ? undefined : "destructive",
+        description: response.message,
+      });
       setNote("");
       onClose();
     } catch {

@@ -33,16 +33,50 @@ export async function getTriageAuditTrail() {
     limit: 200,
   });
 
+  // The audit rows store supervisor and reviewer ids; the trail shows their names.
+  const recorded = audits.flatMap((audit) => [audit.beforeData, audit.afterData]).map(asRecord);
+  const supervisorIds = idsOf(recorded, "referredSupervisorId");
+  const reviewerIds = idsOf(recorded, "reviewedById");
+  const [supervisors, reviewers] = await Promise.all([
+    supervisorIds.length === 0
+      ? []
+      : db.query.supervisor.findMany({
+          where: (s, { inArray }) => inArray(s.id, supervisorIds),
+          columns: { id: true, supervisorName: true },
+        }),
+    reviewerIds.length === 0
+      ? []
+      : db.query.user.findMany({
+          where: (u, { inArray }) => inArray(u.id, reviewerIds),
+          columns: { id: true, name: true },
+        }),
+  ]);
+  const supervisorNames = new Map(supervisors.map((s) => [s.id, s.supervisorName]));
+  const reviewerNames = new Map(reviewers.map((r) => [r.id, r.name]));
+  function withNames(data: unknown) {
+    const { referredSupervisorId, reviewedById, ...fields } = asRecord(data);
+    return {
+      ...fields,
+      ...(typeof referredSupervisorId === "string" && {
+        referredSupervisor: supervisorNames.get(referredSupervisorId) ?? "Unknown supervisor",
+      }),
+      ...(typeof reviewedById === "string" && {
+        reviewedBy: reviewerNames.get(reviewedById) ?? "Unknown",
+      }),
+    };
+  }
+
   return audits.map((audit) => {
     const sessionDate = audit.triageEvent.session?.sessionDate;
     const hoursAfterSession = sessionDate
       ? Math.round((audit.createdAt.getTime() - new Date(sessionDate).getTime()) / 3_600_000)
       : null;
 
-    const before = (audit.beforeData ?? {}) as Record<string, unknown>;
-    const after = (audit.afterData ?? {}) as Record<string, unknown>;
+    const before: Record<string, unknown> = withNames(audit.beforeData);
+    const after: Record<string, unknown> = withNames(audit.afterData);
+    // The before side stores an empty field as null and the after side leaves it out.
     const changedFields = Object.keys({ ...before, ...after }).filter(
-      (key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]),
+      (key) => JSON.stringify(before[key] ?? null) !== JSON.stringify(after[key] ?? null),
     );
 
     return {
@@ -59,4 +93,16 @@ export async function getTriageAuditTrail() {
       after,
     };
   });
+}
+
+function asRecord(data: unknown) {
+  return (data ?? {}) as Record<string, unknown>;
+}
+
+function idsOf(recorded: Record<string, unknown>[], key: string) {
+  return [
+    ...new Set(
+      recorded.map((data) => data[key]).filter((id): id is string => typeof id === "string"),
+    ),
+  ];
 }
