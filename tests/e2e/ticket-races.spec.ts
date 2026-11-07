@@ -94,6 +94,7 @@ test("escalating and resolving a ticket at once lets only the first one through"
   const row = await searchRows(page, subject);
   // The table lowercases the status through CSS.
   await expect(row).toContainText(/escalated/i);
-  await chooseRowAction(page, row, "View ticket");
-  await expect(page.getByRole("menuitem", { name: "View resolution" })).toHaveCount(0);
+  // The ticket's menu offers "View resolution" only after a status request it makes on opening, so
+  // the database is the reliable place to see that the refused resolution was not stored.
+  expect(await db.$count(ticketResolutions, eq(ticketResolutions.ticketId, ticket.id))).toBe(0);
 });

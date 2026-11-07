@@ -109,9 +109,13 @@ test("adding a school leaves dropped-out fellows without groups", async ({
   await dialog.getByRole("textbox", { name: /^School name/ }).fill(schoolName);
   await dialog.getByRole("spinbutton", { name: /^Expected no. of students/ }).fill("16");
   await dialog.getByRole("button", { name: "Pick a date" }).click();
-  await page
-    .getByRole("dialog")
-    .last()
+  // Adding a school leaves out fellows with a session that day. The seed schedules sessions from
+  // a month before the day it runs onwards, so a day a year earlier is free for every fellow.
+  const picker = page.getByRole("dialog").last();
+  await picker
+    .getByRole("combobox", { name: "Choose the Year" })
+    .selectOption(String(new Date().getFullYear() - 1));
+  await picker
     .getByRole("gridcell")
     .getByRole("button")
     .filter({ hasText: /^15$/ })
@@ -120,12 +124,8 @@ test("adding a school leaves dropped-out fellows without groups", async ({
   await dialog.getByRole("button", { name: "Add School", exact: true }).click();
   await expect(dialog).toBeHidden();
 
-  const created = await db.query.school.findFirst({
-    where: (s, { eq }) => eq(s.schoolName, schoolName),
-    columns: { visibleId: true },
-  });
-  required(created, "the school the dialog added");
-  await page.goto(getUrl(`/hc/schools/${created.visibleId}/groups`));
+  await chooseRowAction(page, await searchRows(page, schoolName), "View school");
+  await page.getByRole("radio", { name: "Select Groups", exact: true }).click();
   // Sixteen students make one group, which goes to an active fellow.
   const groups = dataRows(page);
   await expect(groups).toHaveCount(1);

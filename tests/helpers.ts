@@ -233,7 +233,11 @@ export async function raceOnRow(
         .toBe(count);
     });
   } finally {
-    await lockHolder.query("commit");
-    lockHolder.release();
+    // A connection whose commit failed is passed to release() so the pool discards it.
+    let commitError: Error | undefined;
+    await lockHolder.query("commit").catch((error: Error) => {
+      commitError = error;
+    });
+    lockHolder.release(commitError);
   }
 }
