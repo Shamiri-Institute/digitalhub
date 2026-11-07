@@ -1,9 +1,10 @@
 import type { Locator, Page } from "@playwright/test";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import {
   fellow,
+  interventionGroup,
   interventionSession,
   school,
   schoolDropoutHistory,
@@ -16,13 +17,20 @@ import { expect, test, type Undo } from "#/tests/fixtures";
 import { raceOnRow, required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell, searchRows } from "#/tests/pages/helpers";
 
-type Coordinator = { email: string; hubId: string; implementerId: string; sessionNameId: string };
+type Coordinator = {
+  email: string;
+  hubId: string;
+  implementerId: string;
+  projectId: string;
+  sessionNameId: string;
+};
 
 async function pickCoordinator() {
   const {
     rows: [row],
   } = await db.execute<Coordinator>(sql`
     select u.email, h.id as "hubId", h.implementer_id as "implementerId",
+      h.project_id as "projectId",
       (select n.id from session_names n where n.hub_id = h.id and n.session_type = 'INTERVENTION'
         order by n.id limit 1) as "sessionNameId"
     from hub_coordinators hc
@@ -279,5 +287,96 @@ test("the session occurrence dialog stays open until the occurrence is saved", a
   await expectOpenUntilWritten(page, mark, mark.getByRole("button", { name: "Confirm" }), {
     table: "intervention_sessions",
     id: sessionId,
+  });
+});
+
+/**
+ * A group at a new school of the coordinator's hub, led by the first of a new supervisor's two
+ * fellows, and the removal of all of them queued.
+ */
+async function createGroup(coordinator: Coordinator, undo: Undo) {
+  const { schoolId, visibleId } = await createSchool(coordinator, undo);
+  const stamp = Date.now();
+  const supervisorId = objectId("sup");
+  const supervisorName = `E2E pending group supervisor ${stamp}`;
+  await db.insert(supervisor).values({
+    id: supervisorId,
+    supervisorName,
+    hubId: coordinator.hubId,
+    implementerId: coordinator.implementerId,
+  });
+  const [leader, replacement] = ["leader", "replacement"].map((role) => ({
+    id: objectId("fellow"),
+    fellowName: `E2E pending ${role} ${stamp}`,
+    hubId: coordinator.hubId,
+    implementerId: coordinator.implementerId,
+    supervisorId,
+    droppedOut: false,
+  }));
+  required(leader, "the leader");
+  required(replacement, "the replacement");
+  await db.insert(fellow).values([leader, replacement]);
+  const groupId = objectId("group");
+  const groupName = `E2E pending group ${stamp}`;
+  await db.insert(interventionGroup).values({
+    id: groupId,
+    groupName,
+    schoolId,
+    leaderId: leader.id,
+    projectId: coordinator.projectId,
+  });
+  undo(async () => {
+    await db.delete(interventionGroup).where(eq(interventionGroup.id, groupId));
+    await db.delete(fellow).where(inArray(fellow.id, [leader.id, replacement.id]));
+    await db.delete(supervisor).where(eq(supervisor.id, supervisorId));
+  });
+  return { visibleId, groupId, groupName, supervisorName, replacementName: replacement.fellowName };
+}
+
+test("a group's archive dialog stays open until the archive is saved", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const coordinator = await pickCoordinator();
+  const group = await createGroup(coordinator, undo);
+  await signInWithEmail(context, coordinator.email);
+
+  await page.goto(getUrl(`/hc/schools/${group.visibleId}/groups`));
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, page.getByRole("main"), group.groupName),
+    "Archive group",
+  );
+  const archive = page.getByRole("dialog", { name: "Confirm group archive" });
+  await expectOpenUntilWritten(page, archive, archive.getByRole("button", { name: "Confirm" }), {
+    table: "intervention_groups",
+    id: group.groupId,
+  });
+});
+
+test("a group's replace-leader dialog stays open until the replacement is saved", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const coordinator = await pickCoordinator();
+  const group = await createGroup(coordinator, undo);
+  await signInWithEmail(context, coordinator.email);
+
+  await page.goto(getUrl(`/hc/schools/${group.visibleId}/groups`));
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, page.getByRole("main"), group.groupName),
+    "Replace fellow",
+  );
+  const replace = page.getByRole("dialog", { name: "Replace fellow" });
+  await replace.getByRole("combobox", { name: /^Select supervisor/ }).click();
+  await page.getByRole("option", { name: group.supervisorName, exact: true }).click();
+  await replace.getByRole("combobox", { name: /^Select replacement fellow/ }).click();
+  await page.getByRole("option", { name: group.replacementName, exact: true }).click();
+  await expectOpenUntilWritten(page, replace, replace.getByRole("button", { name: /^Replace/ }), {
+    table: "intervention_groups",
+    id: group.groupId,
   });
 });
