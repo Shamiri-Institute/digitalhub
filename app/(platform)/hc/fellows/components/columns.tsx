@@ -104,6 +104,7 @@ export const columns = (
     {
       accessorKey: "groupCount",
       header: "No. of groups",
+      meta: { numeric: true },
       id: "No. of groups",
     },
     {

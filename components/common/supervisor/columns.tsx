@@ -146,6 +146,7 @@ export const columns = (state: SupervisorTableState): ColumnDef<SupervisorsData>
   },
   {
     header: "No. of fellows",
+    meta: { numeric: true },
     id: "No. of fellows",
     cell: ({ row }) => {
       const activeFellows = row.original.fellows.filter((fellow) => !fellow.droppedOut);

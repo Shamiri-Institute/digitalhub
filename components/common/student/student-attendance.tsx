@@ -665,11 +665,13 @@ const columns = (state: {
   },
   {
     header: "Age",
+    meta: { numeric: true },
     id: "Age",
     accessorFn: (row) => row.yearOfBirth && `${new Date().getFullYear() - row.yearOfBirth} yrs`,
   },
   {
     header: "Clinical cases",
+    meta: { numeric: true },
     id: "Clinical cases",
     accessorFn: (row) => {
       return row.clinicalCasesCount;

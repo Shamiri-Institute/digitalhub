@@ -31,10 +31,12 @@ const columns: ColumnDef<HandoffRow>[] = [
     id: "Total escalations",
     accessorKey: "total",
     header: "Total escalations",
+    meta: { numeric: true },
   },
   {
     id: "Warm handoff",
     header: "Warm handoff",
+    meta: { numeric: true },
     cell: ({ row }) => (
       <CountPctCell count={row.original.warmHandoff} pct={row.original.warmHandoffPct} />
     ),
@@ -42,6 +44,7 @@ const columns: ColumnDef<HandoffRow>[] = [
   {
     id: "Supervisor notified",
     header: "Supervisor notified",
+    meta: { numeric: true },
     cell: ({ row }) => (
       <CountPctCell count={row.original.notified} pct={row.original.notifiedPct} />
     ),
@@ -49,6 +52,7 @@ const columns: ColumnDef<HandoffRow>[] = [
   {
     id: "Could not reach",
     header: "Could not reach",
+    meta: { numeric: true },
     cell: ({ row }) => (
       <CountPctCell
         count={row.original.couldNotReach}
@@ -60,6 +64,7 @@ const columns: ColumnDef<HandoffRow>[] = [
   {
     id: "Student refused",
     header: "Student refused",
+    meta: { numeric: true },
     cell: ({ row }) => <CountPctCell count={row.original.refused} pct={row.original.refusedPct} />,
   },
 ];

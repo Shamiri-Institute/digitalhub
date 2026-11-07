@@ -191,7 +191,7 @@ function FellowEventSubTable({ events }: { events: TriageEventRow[] }) {
 
 const fellowColumns: ColumnDef<FellowRow>[] = [
   {
-    id: "checkbox",
+    id: "expand",
     cell: ({ row }) =>
       row.original.totalEvents > 0 ? (
         <button
@@ -220,6 +220,7 @@ const fellowColumns: ColumnDef<FellowRow>[] = [
     id: "Total events",
     accessorKey: "totalEvents",
     header: "Total events",
+    meta: { numeric: true },
   },
   {
     id: "Breakdown",
@@ -231,6 +232,7 @@ const fellowColumns: ColumnDef<FellowRow>[] = [
   {
     id: "Referred to others",
     header: "Referred to others",
+    meta: { numeric: true },
     cell: ({ row }) => (
       <span
         className={cn(row.original.referredToOthers > 0 && "text-shamiri-light-red font-medium")}
@@ -242,6 +244,7 @@ const fellowColumns: ColumnDef<FellowRow>[] = [
   {
     id: "Screen completion",
     header: "Screen completion",
+    meta: { numeric: true },
     cell: ({ row }) => {
       const rate = row.original.completionRate;
       return rate !== null ? (

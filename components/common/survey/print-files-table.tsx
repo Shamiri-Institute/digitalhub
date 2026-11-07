@@ -41,8 +41,9 @@ const PRINT_FILE_COLUMNS: ColumnDef<PrintFileRow>[] = [
   {
     accessorKey: "copyCount",
     header: "Copies",
+    meta: { numeric: true },
     id: "Copies",
-    cell: ({ row }) => <span className="tabular-nums">{row.original.copyCount}</span>,
+    cell: ({ row }) => row.original.copyCount,
   },
   {
     accessorKey: "status",

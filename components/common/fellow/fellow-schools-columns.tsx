@@ -37,7 +37,7 @@ export const fellowSchoolsColumns = ({
   };
 }): ColumnDef<FellowsData>[] => [
   {
-    id: "checkbox",
+    id: "expand",
     cell: ({ row }) => {
       return (
         <button
@@ -96,6 +96,7 @@ export const fellowSchoolsColumns = ({
   {
     id: "Sessions Attended",
     header: "Sessions Attended",
+    meta: { numeric: true },
     cell: ({ row }) => {
       const attendedSessions = row.original.attendances.filter((attendance) => attendance.attended);
       const groupSessions = row.original.groups.reduce((total, group) => {
@@ -211,6 +212,7 @@ export const subColumns = ({
   {
     accessorKey: "numberOfStudents",
     header: "Number of Students",
+    meta: { numeric: true },
     accessorFn: ({ students }) => {
       return students.length;
     },
@@ -251,9 +253,11 @@ export const studentsTableColumns: ColumnDef<
   {
     accessorKey: "age",
     header: "Age",
+    meta: { numeric: true },
   },
   {
     accessorKey: "numClinicalCases",
     header: "Clinical Cases",
+    meta: { numeric: true },
   },
 ];
