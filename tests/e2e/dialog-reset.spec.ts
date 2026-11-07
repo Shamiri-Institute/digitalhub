@@ -588,8 +588,9 @@ test("my profile shows the saved sub-county and clears it when the county change
 }) => {
   const {
     rows: [fixture],
-  } = await db.execute<{ email: string; subCounty: string }>(sql`
-    select u.email, s.sub_county as "subCounty" from supervisors s
+  } = await db.execute<{ email: string; displayName: string; subCounty: string }>(sql`
+    select u.email, coalesce(nullif(u.name, ''), u.email) as "displayName",
+      s.sub_county as "subCounty" from supervisors s
     join implementer_members m on m.identifier = s.id and m.role = 'SUPERVISOR'
     join users u on u.id = m.user_id
     where s.sub_county is not null and s.county is not null and ${signableMember()}
@@ -598,7 +599,8 @@ test("my profile shows the saved sub-county and clears it when the county change
   required(fixture, "no supervisor with a sub-county");
   await signInWithEmail(context, fixture.email);
   await page.goto(getUrl("/sc/schedule"));
-  await page.getByAltText("Profile arrow drop down icon").click();
+  const accountMenu = page.getByRole("button", { name: fixture.displayName, exact: true });
+  await accountMenu.click();
   await page.getByRole("menuitem", { name: "My Profile" }).click();
   const dialog = page.getByRole("dialog", { name: "Edit profile" });
   const subCounty = dialog.getByRole("combobox", { name: "Sub-county" });
@@ -606,7 +608,7 @@ test("my profile shows the saved sub-county and clears it when the county change
   await expectCountyChangeClearsSubCounty(page, dialog);
 
   await closeDialog(page, dialog);
-  await page.getByAltText("Profile arrow drop down icon").click();
+  await accountMenu.click();
   await page.getByRole("menuitem", { name: "My Profile" }).click();
   await expect(subCounty).toHaveText(fixture.subCounty);
 });
