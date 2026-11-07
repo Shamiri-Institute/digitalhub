@@ -1,9 +1,14 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "#/tests/fixtures";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { clinicalScreeningInfo, interventionGroup } from "#/db/schema";
+import {
+  clinicalCaseReview,
+  clinicalCaseTermination,
+  clinicalSessionAttendance,
+  interventionGroup,
+} from "#/db/schema";
 import { createClinicalCase, emailForProfile, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
@@ -13,6 +18,7 @@ let referrer: Supervisor;
 let recipient: Supervisor;
 let bystander: Supervisor;
 let referrerSchoolId: string;
+let caseId: string;
 let pseudonym: string;
 let studentName: string;
 
@@ -66,6 +72,7 @@ test.beforeEach(async ({ undo }) => {
     schoolId: referrerSchoolId,
     currentSupervisorId: referrer.profileId,
   });
+  caseId = created.caseId;
   pseudonym = created.pseudonym;
   studentName = created.studentName;
   undo(created.remove);
@@ -153,14 +160,45 @@ test("a supervisor the case was not referred to does not see the referral", asyn
   await expect(referralCard(page)).toHaveCount(0);
 });
 
-test("a case terminated while it is being referred is not referred", async ({ page }) => {
-  const dialog = await fillReferralToRecipient(page);
-  // The case's clinical lead terminates it while the referrer is filling in the referral.
-  await db
-    .update(clinicalScreeningInfo)
-    .set({ caseStatus: "Terminated" })
-    .where(eq(clinicalScreeningInfo.pseudonym, pseudonym));
-  await dialog.getByRole("button", { name: "Save Changes" }).click();
+test("a case terminated while it is being referred is not referred", async ({ page, undo }) => {
+  // Terminating a case needs an attended session, and adds a review row the case's removal leaves.
+  await db.insert(clinicalSessionAttendance).values({
+    caseId,
+    session: "S1",
+    supervisorId: referrer.profileId,
+    attendanceStatus: true,
+  });
+  const terminatedCaseId = caseId;
+  undo(() =>
+    db
+      .delete(clinicalCaseReview)
+      .where(
+        inArray(
+          clinicalCaseReview.terminationId,
+          db
+            .select({ id: clinicalCaseTermination.id })
+            .from(clinicalCaseTermination)
+            .where(eq(clinicalCaseTermination.caseId, terminatedCaseId)),
+        ),
+      ),
+  );
+  const referral = await fillReferralToRecipient(page);
+
+  // The referrer terminates the case in another tab before saving the referral.
+  const otherTab = await page.context().newPage();
+  await otherTab.goto(getUrl("/sc/clinical"));
+  await chooseRowAction(otherTab, await searchRows(otherTab, pseudonym), "Terminate case");
+  const termination = otherTab.getByRole("dialog", { name: "Terminate Case" });
+  await termination.getByRole("combobox").filter({ hasText: "Select session" }).click();
+  await otherTab.getByRole("option", { name: /^S1 / }).click();
+  await termination.getByRole("combobox").filter({ hasText: "Student no-show" }).click();
+  await otherTab.getByRole("option", { name: "Student refused to return to sessions" }).click();
+  await termination.getByRole("textbox", { name: /Termination Explanation/ }).fill("e2e");
+  await termination.getByRole("button", { name: "Terminate Case" }).click();
+  await expect(otherTab.getByText("Case terminated successfully").first()).toBeVisible();
+  await otherTab.close();
+
+  await referral.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByText("A terminated case can't be referred").first()).toBeVisible();
 
   await page.reload();

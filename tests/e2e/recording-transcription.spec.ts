@@ -9,7 +9,7 @@ import { interventionSession, sessionRecording } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { deleteObject } from "#/lib/s3/s3.service";
 import { sessionDisplayName } from "#/lib/utils";
-import { required, signInWithEmail } from "#/tests/helpers";
+import { raceOnRow, required, signInWithEmail } from "#/tests/helpers";
 import { cellUnder, chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
 
 // Uploads a recording through the UI to the local S3 (scripts/local-s3.sh), then runs the cron
@@ -95,7 +95,10 @@ async function uploadedRow(page: Page) {
     .filter({ has: page.getByRole("cell", { name: "67.0 KB", exact: true }) });
 }
 
-test("a supervisor uploads a session recording", async ({ context, page }) => {
+test("a supervisor uploads a session recording, and the dialog stays open until it is saved", async ({
+  context,
+  page,
+}) => {
   await signInWithEmail(context, target.email);
   await page.goto(getUrl("/sc/reporting/recordings"));
 
@@ -122,7 +125,16 @@ test("a supervisor uploads a session recording", async ({ context, page }) => {
     })
     .click();
   await dialog.getByLabel("Audio file").setInputFiles("tests/e2e/fixtures/session-recording.mp3");
-  await dialog.getByRole("button", { name: "Upload", exact: true }).click();
+  // Recording the upload checks the session row, so locking it holds the upload in flight, past
+  // the file's PUT to S3: closing then would hide the outcome of a save that still happens.
+  await raceOnRow("intervention_sessions", target.sessionId, async (waitForWaiting) => {
+    await dialog.getByRole("button", { name: "Upload", exact: true }).click();
+    await waitForWaiting(1);
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveAttribute("data-state", "open");
+    await expect(dialog.getByRole("button", { name: "Close" })).toBeDisabled();
+    await expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  });
   await expect(dialog).toBeHidden({ timeout: 120_000 });
 
   await page.reload();

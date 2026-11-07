@@ -112,14 +112,19 @@ test("a fellow's drop-out dialog stays open until the drop-out is saved", async 
 
   await page.goto(getUrl("/hc/fellows"));
   await chooseRowAction(page, await searchRows(page, fellowName), "Drop-out fellow");
-  const confirm = await submitDropoutReason(
+  const confirmDialog = await submitDropoutReason(
     page,
     page.getByRole("dialog").filter({ hasText: "Drop out fellow" }),
   );
-  await expectOpenUntilWritten(page, confirm, confirm.getByRole("button", { name: "Confirm" }), {
-    table: "fellows",
-    id: fellowId,
-  });
+  await expectOpenUntilWritten(
+    page,
+    confirmDialog,
+    confirmDialog.getByRole("button", { name: "Confirm" }),
+    {
+      table: "fellows",
+      id: fellowId,
+    },
+  );
   await expect(page.getByText("successfully dropped out").first()).toBeVisible();
 });
 
@@ -148,14 +153,19 @@ test("a student's drop-out dialog stays open until the drop-out is saved", async
     await searchRows(page, studentName, page.getByRole("main")),
     "Drop-out student",
   );
-  const confirm = await submitDropoutReason(
+  const confirmDialog = await submitDropoutReason(
     page,
     page.getByRole("dialog", { name: "Drop out student" }),
   );
-  await expectOpenUntilWritten(page, confirm, confirm.getByRole("button", { name: "Confirm" }), {
-    table: "students",
-    id: studentId,
-  });
+  await expectOpenUntilWritten(
+    page,
+    confirmDialog,
+    confirmDialog.getByRole("button", { name: "Confirm" }),
+    {
+      table: "students",
+      id: studentId,
+    },
+  );
 });
 
 test("a school's drop-out and undo dialogs stay open until each is saved", async ({
@@ -169,14 +179,19 @@ test("a school's drop-out and undo dialogs stay open until each is saved", async
 
   await page.goto(getUrl("/hc/schools"));
   await chooseRowAction(page, await searchRows(page, schoolName), "Dropout school");
-  const confirm = await submitDropoutReason(
+  const confirmDialog = await submitDropoutReason(
     page,
     page.getByRole("dialog", { name: "Drop out school" }),
   );
-  await expectOpenUntilWritten(page, confirm, confirm.getByRole("button", { name: "Confirm" }), {
-    table: "schools",
-    id: schoolId,
-  });
+  await expectOpenUntilWritten(
+    page,
+    confirmDialog,
+    confirmDialog.getByRole("button", { name: "Confirm" }),
+    {
+      table: "schools",
+      id: schoolId,
+    },
+  );
 
   await page.reload();
   await chooseRowAction(page, await searchRows(page, schoolName), "Undo dropout");
@@ -208,14 +223,19 @@ test("a supervisor's drop-out dialog stays open until the drop-out is saved", as
 
   await page.goto(getUrl("/hc/supervisors"));
   await chooseRowAction(page, await searchRows(page, supervisorName), "Drop out supervisor");
-  const confirm = await submitDropoutReason(
+  const confirmDialog = await submitDropoutReason(
     page,
     page.getByRole("dialog").filter({ hasText: "Drop out supervisor" }),
   );
-  await expectOpenUntilWritten(page, confirm, confirm.getByRole("button", { name: "Confirm" }), {
-    table: "supervisors",
-    id: supervisorId,
-  });
+  await expectOpenUntilWritten(
+    page,
+    confirmDialog,
+    confirmDialog.getByRole("button", { name: "Confirm" }),
+    {
+      table: "supervisors",
+      id: supervisorId,
+    },
+  );
 });
 
 test("the session occurrence dialog stays open until the occurrence is saved", async ({
