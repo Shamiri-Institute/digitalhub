@@ -310,8 +310,17 @@ export default function UploadRecordingDialog({
   const canUploadFile = fellowId && groupId && sessionId && !duplicateExists && !checkingDuplicate;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        // An upload in flight still saves the recording, so the dialog stays until it does.
+        if (!next && !isSubmitting) handleClose();
+      }}
+    >
+      <DialogContent
+        closeDisabled={isSubmitting}
+        className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]"
+      >
         <DialogHeader>
           <DialogTitle>Upload recording</DialogTitle>
           <DialogDescription>Enter session details and upload the audio file.</DialogDescription>

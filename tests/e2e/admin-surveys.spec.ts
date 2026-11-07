@@ -10,7 +10,7 @@ import { careAdminEmail, researchAdminEmail } from "#/db/seed/fixtures";
 import { objectId } from "#/lib/crypto";
 import type { SurveyForm } from "#/lib/survey/form";
 import { expect, test } from "#/tests/fixtures";
-import { createAdminCopy, signInWithEmail } from "#/tests/helpers";
+import { createAdminCopy, raceOnRow, signInWithEmail } from "#/tests/helpers";
 import {
   createPrintSchool,
   createPublishedSurvey as createSurveyFixture,
@@ -706,6 +706,31 @@ test("bold words and a centred paragraph show in the print preview after a save"
   // Centred between the A4 sheet's 24 pt margins.
   expect(((left ?? 0) + (right ?? 0)) / 2).toBeCloseTo(595.28 / 2, 0);
   await expect(page.getByRole("button", { name: /Answer every question/ })).toBeVisible();
+});
+
+test("the publish dialog stays open until the publish is saved", async ({ page, context }) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const draft = await createDraftSurvey(scope, userId, PRINT_FORM);
+  const [version] = await db
+    .select({ id: surveyVersion.id })
+    .from(surveyVersion)
+    .where(eq(surveyVersion.surveyId, draft.id));
+  if (!version) throw new Error("the draft has no version");
+  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
+
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Continue" }).click();
+  // The publish waits on the version row, so Escape and the close button meet a publish in flight.
+  await raceOnRow("survey_versions", version.id, async (waitForWaiting) => {
+    await dialog.getByRole("button", { name: "Publish v1" }).click();
+    await waitForWaiting(1);
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveAttribute("data-state", "open");
+    await expect(dialog.getByRole("button", { name: "Close" })).toBeDisabled();
+  });
+  await expect(page.getByText("Published v1. The survey is now active.").first()).toBeVisible();
+  await expect(dialog).toBeHidden();
 });
 
 test("publishing a draft with a prefill freezes it with a sample PDF of every page", async ({

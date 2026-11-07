@@ -2,7 +2,7 @@
 
 import { format, isBefore } from "date-fns";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useState, useTransition } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema";
@@ -23,7 +23,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
 import { markSessionOccurrence } from "#/lib/actions/session/session";
 import { sessionDisplayName } from "#/lib/utils";
-import type { StepProps } from "#/components/common/dropout-confirm-step";
+import { type StepProps, useStepsDialog } from "#/components/common/dropout-confirm-step";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type Step = "form" | "confirm";
@@ -37,15 +37,14 @@ type Props = {
 };
 
 export function MarkSessionOccurrence({ isOpen, setIsOpen, ...props }: Props) {
-  const [step, setStep] = useState<Step>("form");
-  function close() {
-    setStep("form");
-    setIsOpen(false);
-  }
+  const { onOpenChange, stepProps } = useStepsDialog<Step>("form", setIsOpen);
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => (open ? setIsOpen(true) : close())}>
-      <DialogContent className={step === "form" ? "w-2/5 max-w-none" : "w-1/3 max-w-none"}>
-        <MarkSessionOccurrenceSteps {...props} step={step} setStep={setStep} close={close} />
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent
+        closeDisabled={stepProps.isPending}
+        className={stepProps.step === "form" ? "w-2/5 max-w-none" : "w-1/3 max-w-none"}
+      >
+        <MarkSessionOccurrenceSteps {...props} {...stepProps} />
       </DialogContent>
     </Dialog>
   );
@@ -59,8 +58,9 @@ function MarkSessionOccurrenceSteps({
   step,
   setStep,
   close,
+  isPending,
+  startTransition,
 }: Omit<Props, "isOpen" | "setIsOpen"> & StepProps<Step>) {
-  const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof MarkSessionOccurrenceSchema>>({
     resolver: zodResolver(MarkSessionOccurrenceSchema),
     defaultValues: {
@@ -135,9 +135,8 @@ function MarkSessionOccurrenceSteps({
             className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
             variant="ghost"
             type="button"
-            onClick={() => {
-              close();
-            }}
+            disabled={isPending}
+            onClick={close}
           >
             Cancel
           </Button>
