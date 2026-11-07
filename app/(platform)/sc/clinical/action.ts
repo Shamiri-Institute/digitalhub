@@ -31,6 +31,8 @@ import {
 } from "#/db/schema";
 import { latestRisk } from "#/lib/actions/clinical/cases";
 import { objectId } from "#/lib/crypto";
+import { DISPLAY_DATE } from "#/lib/date-utils";
+import { format } from "date-fns";
 
 export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
 export type SchoolsInHubData = Awaited<ReturnType<typeof getSchoolsInHub>>;
@@ -224,7 +226,7 @@ export async function getClinicalCases() {
     const formattedSessions = caseInfo.sessions.map((session) => ({
       sessionId: session.id,
       session: session.session,
-      sessionDate: session.date.toLocaleDateString(),
+      sessionDate: format(session.date, DISPLAY_DATE),
       attendanceStatus: session.attendanceStatus,
     }));
 
@@ -232,7 +234,7 @@ export async function getClinicalCases() {
       id: caseInfo.id,
       school: caseInfo.student?.school?.schoolName,
       pseudonym: caseInfo.pseudonym || "Anonymous",
-      dateAdded: caseInfo.createdAt.toLocaleDateString(),
+      dateAdded: format(caseInfo.createdAt, DISPLAY_DATE),
       caseStatus: caseInfo.caseStatus,
       ...latestRisk(caseInfo.sessions, caseInfo),
       age,

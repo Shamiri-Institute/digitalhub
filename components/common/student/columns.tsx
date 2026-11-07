@@ -20,6 +20,7 @@ import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { sortBy } from "#/lib/table-view";
 import { wrapColumnHeader } from "#/lib/utils";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type GroupSummary = Pick<typeof interventionGroup.$inferSelect, "id" | "groupName"> & {
   leader: Pick<typeof fellow.$inferSelect, "id" | "fellowName">;
@@ -193,7 +194,7 @@ export const columns = (state: {
   {
     header: () => wrapColumnHeader("Date added"),
     id: "Date added",
-    accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
+    accessorFn: (row) => format(row.createdAt, DISPLAY_DATE),
     sortingFn: sortBy((student) => student.createdAt),
   },
   {

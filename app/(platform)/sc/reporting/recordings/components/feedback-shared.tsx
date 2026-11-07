@@ -6,12 +6,12 @@ import { cn } from "#/lib/utils";
 import type { SafetyFlag } from "./feedback-types";
 
 export function getScoreColor(score: string | number | undefined): string {
-  if (!score) return "bg-gray-100 text-gray-800";
+  if (!score) return "bg-muted text-shamiri-black";
   const numScore = typeof score === "string" ? Number.parseFloat(score) : score;
-  if (Number.isNaN(numScore)) return "bg-gray-100 text-gray-800";
+  if (Number.isNaN(numScore)) return "bg-muted text-shamiri-black";
 
   if (numScore >= 6) return "bg-green-bg text-green-base border-green-border";
-  if (numScore >= 3) return "bg-yellow-bg text-yellow-700 border-yellow-border";
+  if (numScore >= 3) return "bg-yellow-bg text-shamiri-dark-orange border-yellow-border";
   return "bg-red-bg text-red-base border-red-border";
 }
 
@@ -73,14 +73,17 @@ export function SafetyFlagsSection({ flags }: { flags: SafetyFlag[] }) {
           <div
             // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; idx disambiguates duplicate type+severity combos
             key={`${flag.type}-${flag.severity ?? ""}-${idx}`}
-            className="rounded-md border border-red-200 bg-red-50 p-4"
+            className="rounded-md border border-red-border bg-red-bg p-4"
           >
             <div className="mb-2 flex items-center justify-between">
-              <span className="font-semibold text-red-700 capitalize">
+              <span className="font-semibold text-shamiri-light-red capitalize">
                 {flag.type} {flag.severity && `- ${flag.severity} severity`}
               </span>
               {flag.requires_follow_up && (
-                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
+                <Badge
+                  variant="outline"
+                  className="bg-shamiri-light-orange/10 text-shamiri-dark-orange border-shamiri-light-orange/40"
+                >
                   Follow-up Required
                 </Badge>
               )}
@@ -92,7 +95,7 @@ export function SafetyFlagsSection({ flags }: { flags: SafetyFlag[] }) {
               <p className="text-xs text-muted-foreground">Timestamp: {flag.timestamp_reference}</p>
             )}
             {flag.context_analysis && (
-              <div className="mt-2 pt-2 border-t border-red-200">
+              <div className="mt-2 pt-2 border-t border-red-border">
                 <p className="text-xs text-muted-foreground">
                   <MarkdownText>{flag.context_analysis}</MarkdownText>
                 </p>

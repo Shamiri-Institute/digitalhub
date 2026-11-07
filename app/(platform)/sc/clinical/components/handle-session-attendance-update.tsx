@@ -94,7 +94,7 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
                   aria-label="Attended"
                   value="attended"
                   id="mark_attended"
-                  className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
+                  className="custom-radio border-border data-[state=checked]:border-shamiri-green"
                 />
               </div>
               <div className="relative">
@@ -103,7 +103,7 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
                   aria-label="Missed"
                   value="missed"
                   id="mark_missed"
-                  className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-red"
+                  className="custom-radio border-border data-[state=checked]:border-shamiri-red"
                 />
               </div>
               <div className="relative">
@@ -112,7 +112,7 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
                   aria-label="Unmarked"
                   value="unmarked"
                   id="unmarked"
-                  className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-new-blue"
+                  className="custom-radio border-border data-[state=checked]:border-shamiri-new-blue"
                 />
               </div>
             </RadioGroup>

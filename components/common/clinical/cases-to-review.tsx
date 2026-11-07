@@ -7,6 +7,7 @@ import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { toastOnFailure, useToast } from "#/components/ui/use-toast";
+import { DISPLAY_DATE_TIME } from "#/lib/date-utils";
 
 export function CasesToReview({ reviews }: { reviews: CaseToReview[] }) {
   return (
@@ -42,7 +43,7 @@ function CaseReviewCard({ review }: { review: CaseToReview }) {
       };
   const changeDetails = [
     reviewedChange.changedBy && `By ${reviewedChange.changedBy}`,
-    format(review.createdAt, "d MMM yyyy, HH:mm"),
+    format(review.createdAt, DISPLAY_DATE_TIME),
   ].filter(Boolean);
 
   const markReviewed = () =>

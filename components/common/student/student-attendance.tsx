@@ -525,23 +525,23 @@ const NO_STUDENTS: StudentAttendanceData[] = [];
 const TRIAGE_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
   SUPPORTED: {
     label: "Triaged",
-    className: "bg-gray-100 text-gray-600 border-gray-200",
+    className: "bg-muted text-shamiri-text-dark-grey border-grey-border",
   },
   REFERRED: {
     label: "Escalated",
-    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    className: "bg-shamiri-light-orange/10 text-shamiri-dark-orange border-shamiri-light-orange/30",
   },
   ESCALATED: {
     label: "Escalated",
-    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    className: "bg-shamiri-light-orange/10 text-shamiri-dark-orange border-shamiri-light-orange/30",
   },
   REFUSED: {
     label: "Refused referral",
-    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    className: "bg-shamiri-light-orange/10 text-shamiri-dark-orange border-shamiri-light-orange/30",
   },
   INTERRUPTED: {
     label: "Interrupted",
-    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    className: "bg-shamiri-light-orange/10 text-shamiri-dark-orange border-shamiri-light-orange/30",
   },
 };
 

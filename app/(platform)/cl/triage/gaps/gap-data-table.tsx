@@ -58,7 +58,7 @@ const columns: ColumnDef<EscalationGap>[] = [
         <span
           className={cn(
             "font-medium",
-            days > 7 && "text-red-700",
+            days > 7 && "text-shamiri-light-red",
             days > 3 && days <= 7 && "text-red-base",
           )}
         >

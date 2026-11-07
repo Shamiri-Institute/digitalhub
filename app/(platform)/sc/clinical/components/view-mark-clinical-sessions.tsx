@@ -107,7 +107,7 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
     <div className="w-full space-y-4">
       <Table>
         <TableHeader>
-          <TableRow className="bg-gray-50">
+          <TableRow className="bg-background-secondary">
             <TableHead className="border">Session</TableHead>
             <TableHead className="border">Date</TableHead>
             <TableHead className="w-[140px] border">Attendance</TableHead>
@@ -122,7 +122,7 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
               return currentcase.caseStatus === "FollowUp";
             },
           ).map((sessionType) => (
-            <TableRow key={sessionType.key} className="hover:bg-gray-50">
+            <TableRow key={sessionType.key} className="hover:bg-background-secondary">
               <TableCell className="border font-medium">{sessionType.value}</TableCell>
               <TableCell className="border">
                 <Popover>
@@ -176,14 +176,14 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
                     <button
                       type="button"
                       onClick={toastOnError(() => handleAttendance(sessionType.key, true))}
-                      className="flex items-center justify-center border-r p-3 text-green-600 transition-colors hover:bg-green-50"
+                      className="flex items-center justify-center border-r p-3 text-shamiri-green transition-colors hover:bg-green-bg"
                     >
                       <Check className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
                       onClick={toastOnError(() => handleAttendance(sessionType.key, false))}
-                      className="flex items-center justify-center p-3 text-red-600 transition-colors hover:bg-red-50"
+                      className="flex items-center justify-center p-3 text-shamiri-light-red transition-colors hover:bg-red-bg"
                     >
                       <X className="h-4 w-4" />
                     </button>

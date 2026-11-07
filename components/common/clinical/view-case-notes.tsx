@@ -9,6 +9,8 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
+import { DISPLAY_DATE } from "#/lib/date-utils";
+import { format } from "date-fns";
 
 interface CaseNote {
   id: string;
@@ -59,7 +61,7 @@ export function ViewCaseNotes({ children, caseNotes, pseudonym }: ViewCaseNotesP
                       Presenting Issues: {note.presentingIssues}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(note.createdAt).toLocaleDateString()}
+                      {format(new Date(note.createdAt), DISPLAY_DATE)}
                     </span>
                   </div>
                   <Separator className="my-2" />

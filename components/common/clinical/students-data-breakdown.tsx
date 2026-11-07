@@ -15,7 +15,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { generateRandomColor } from "#/components/charts/constants";
+import { SERIES_COLORS } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
 export default function StudentsDataBreakdown({
@@ -32,7 +32,7 @@ export default function StudentsDataBreakdown({
     value: number;
   }[];
 }) {
-  const randomColors = dropoutData.map(() => generateRandomColor());
+  const dropoutColors = dropoutData.map((_, index) => SERIES_COLORS[index % SERIES_COLORS.length]);
 
   return (
     <div className="grid grid-cols-1 gap-5 py-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -44,7 +44,7 @@ export default function StudentsDataBreakdown({
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="#0085FF" />
+              <Bar dataKey="value" fill={SERIES_COLORS[0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -55,7 +55,7 @@ export default function StudentsDataBreakdown({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={dropoutData.map((entry, index) => ({ ...entry, fill: randomColors[index] }))}
+                data={dropoutData.map((entry, index) => ({ ...entry, fill: dropoutColors[index] }))}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -83,7 +83,10 @@ export default function StudentsDataBreakdown({
               <Pie
                 data={completionData.map((entry) => ({
                   ...entry,
-                  fill: entry.name === "actual" ? "#0085FF" : "#EFF6FF",
+                  fill:
+                    entry.name === "actual"
+                      ? SERIES_COLORS[0]
+                      : "var(--color-shamiri-new-light-blue)",
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -114,7 +117,7 @@ export default function StudentsDataBreakdown({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="value" stroke="#0085FF" />
+              <Line type="monotone" dataKey="value" stroke={SERIES_COLORS[0]} />
             </LineChart>
           </ResponsiveContainer>
         ) : null}

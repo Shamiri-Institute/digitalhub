@@ -86,7 +86,7 @@ export default function HubBreadcrumb({
                       key={h.id}
                       value={h.hubName}
                       asChild
-                      className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"
+                      className="flex items-center justify-between gap-3 rounded-none border-b border-grey-border px-3 last:border-b-0"
                     >
                       <Link href={hubPath(h.id)}>
                         <span className="font-medium">{h.hubName}</span>

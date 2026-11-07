@@ -203,10 +203,6 @@
   &.tab-link svg {
     @apply text-shamiri-new-blue;
   }
-
-  &.pagination {
-    @apply bg-shamiri-new-blue text-white;
-  }
 }
 
 @utility schedule-table {
@@ -461,40 +457,33 @@
   }
 
   label {
-    @apply text-gray-800;
+    @apply text-shamiri-black;
   }
 }
 
-/* adjustments for react-aria */
-/* TODO: make more specific to avoid collisions with non react-aria tables */
+/* The react-aria calendar grid (month, week and day views) */
 @layer base {
-  tbody > td[role="gridcell"] {
+  .schedule-table td[role="gridcell"] {
     padding: 0;
   }
 
-  tbody > tr:last-child {
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    border-color: #e8e8e8;
+  .schedule-table tbody > tr:last-child {
+    border-bottom: 1px solid var(--color-grey-border);
   }
 
-  tbody td[role="gridcell"]:last-child {
-    border-right-width: 1px;
-    border-right-style: solid;
-    border-color: #e8e8e8;
+  .schedule-table td[role="gridcell"]:last-child {
+    border-right: 1px solid var(--color-grey-border);
   }
 
-  tbody > tr:last-child > td[role="gridcell"] {
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    border-color: #e8e8e8;
+  .schedule-table tbody > tr:last-child > td[role="gridcell"] {
+    border-bottom: 1px solid var(--color-grey-border);
   }
 
-  tbody > tr:last-child > td[role="gridcell"]:last-child {
+  .schedule-table tbody > tr:last-child > td[role="gridcell"]:last-child {
     border-bottom-right-radius: 7px;
   }
 
-  tbody > tr:last-child > td[role="gridcell"]:first-child {
+  .schedule-table tbody > tr:last-child > td[role="gridcell"]:first-child {
     border-bottom-left-radius: 7px;
   }
 }

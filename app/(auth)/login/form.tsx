@@ -93,7 +93,9 @@ export function LoginForm() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-gray-50 px-2 text-muted-foreground">Or continue with email</span>
+              <span className="bg-background-secondary px-2 text-muted-foreground">
+                Or continue with email
+              </span>
             </div>
           </div>
 
@@ -133,8 +135,8 @@ export function LoginForm() {
             </Button>
           </form>
 
-          <div className="rounded-md bg-yellow-50 p-3 text-center">
-            <p className="text-xs text-yellow-800">
+          <div className="rounded-md bg-shamiri-light-orange/10 p-3 text-center">
+            <p className="text-xs text-shamiri-dark-orange">
               Development mode - Email login is only available in non-production environments
             </p>
           </div>

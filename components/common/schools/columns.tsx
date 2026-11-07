@@ -9,6 +9,7 @@ import SchoolTableDropdown from "#/components/common/schools/school-table-dropdo
 import { Badge } from "#/components/ui/badge";
 import { sortBy } from "#/lib/table-view";
 import { sessionDisplayName } from "#/lib/utils";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 export type SchoolsTableData = Awaited<ReturnType<typeof fetchSchoolsTableRows>>[number];
 
@@ -136,7 +137,7 @@ export const columns = ({
     {
       header: "Date added",
       id: "Date added",
-      accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
+      accessorFn: (row) => format(row.createdAt, DISPLAY_DATE),
       sortingFn: sortBy((school) => school.createdAt),
     },
     {

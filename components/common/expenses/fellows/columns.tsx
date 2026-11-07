@@ -10,6 +10,7 @@ import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 export const columns: ColumnDef<HubFellowsAttendancesType | SupervisorFellowsAttendancesType>[] = [
   {
@@ -126,7 +127,7 @@ export const subColumns: ColumnDef<
     header: "Date of attendance",
     cell: ({ row }) => {
       return row.original.dateOfAttendance
-        ? format(row.original.dateOfAttendance, "dd-MM-yyyy")
+        ? format(row.original.dateOfAttendance, DISPLAY_DATE)
         : null;
     },
   },
@@ -134,7 +135,7 @@ export const subColumns: ColumnDef<
     accessorKey: "dateMarked",
     header: "Date marked",
     cell: ({ row }) => {
-      return format(row.original.dateMarked, "dd-MM-yyyy");
+      return format(row.original.dateMarked, DISPLAY_DATE);
     },
   },
   {

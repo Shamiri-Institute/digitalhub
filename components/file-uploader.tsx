@@ -68,11 +68,11 @@ export function FileUploaderWithDrop({
         }}
         className={clsx(
           "mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-3",
-          isDragOver ? "border-secondary" : "border-gray-200",
+          isDragOver ? "border-secondary" : "border-grey-border",
         )}
       >
         <div className=" flex w-full items-center space-x-6">
-          <div className="cursor-pointer rounded-lg border border-gray-200 p-2">
+          <div className="cursor-pointer rounded-lg border border-grey-border p-2">
             <span className="text-normal cursor-pointer text-center">{"Select Files"}</span>
           </div>
 
@@ -82,9 +82,9 @@ export function FileUploaderWithDrop({
             <input type="file" aria-label="File" accept={accept} hidden onChange={handleUpload} />
           </div>
         </div>
-        <div className="mt-3 flex w-full border-t border-gray-500 ">
+        <div className="mt-3 flex w-full border-t border-shamiri-text-grey ">
           {files?.length !== 0 && (
-            <div className="text-normal flex items-center space-y-1 pt-2 text-center text-gray-700">
+            <div className="text-normal flex items-center space-y-1 pt-2 text-center text-shamiri-text-dark-grey">
               {files.map((file: File) => (
                 <div key={file.name} className="flex items-center space-x-2">
                   <Icons.check className="h-4 w-4" />

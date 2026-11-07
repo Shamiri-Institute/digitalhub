@@ -88,7 +88,7 @@ export function MembershipSwitcher({
                   void handleMembershipChange(membership);
                   setOpen(false);
                 }}
-                className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"
+                className="flex items-center justify-between gap-3 rounded-none border-b border-grey-border px-3 last:border-b-0"
               >
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">

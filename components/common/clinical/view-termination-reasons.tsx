@@ -10,6 +10,8 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
+import { DISPLAY_DATE } from "#/lib/date-utils";
+import { format } from "date-fns";
 
 interface TerminationData {
   id: string;
@@ -56,7 +58,7 @@ export function ViewTerminationReasons({
 
               <div>
                 <p className="text-sm font-medium">Additional Information</p>
-                <div className="mt-1 rounded-md bg-gray-50 p-3">
+                <div className="mt-1 rounded-md bg-background-secondary p-3">
                   <p className="whitespace-pre-wrap text-sm">
                     {termination.terminationReasonExplanation}
                   </p>
@@ -66,9 +68,9 @@ export function ViewTerminationReasons({
               <Separator />
 
               <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Date Created: {new Date(termination.createdAt).toLocaleDateString()}</span>
+                <span>Date Created: {format(new Date(termination.createdAt), DISPLAY_DATE)}</span>
                 <span>
-                  Termination Date: {new Date(termination.terminationDate).toLocaleDateString()}
+                  Termination Date: {format(new Date(termination.terminationDate), DISPLAY_DATE)}
                 </span>
               </div>
             </div>

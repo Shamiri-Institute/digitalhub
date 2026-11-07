@@ -55,9 +55,3 @@ export const CASE_STATUS_COLORS = {
   Terminated: "var(--color-shamiri-graph-green)",
   Referred: "var(--color-shamiri-graph-purple)",
 } as const;
-
-// ponytail: kept for components/common/clinical/{clinical-stats,students-data-breakdown}.tsx,
-// which are outside this change; move them to SERIES_COLORS and delete both.
-export const clinicalCasesColors = SERIES_COLORS.slice(0, 3);
-export const generateRandomColor = () =>
-  SERIES_COLORS[Math.floor(Math.random() * SERIES_COLORS.length)];

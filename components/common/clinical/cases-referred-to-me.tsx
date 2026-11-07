@@ -12,6 +12,7 @@ import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { toastOnFailure, useToast } from "#/components/ui/use-toast";
 import { riskStatusOptions } from "#/db/enums";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 const riskBadgeVariant = {
   [riskStatusOptions.High]: "destructive",
@@ -44,7 +45,7 @@ function ReferredCaseCard({ referredCase }: { referredCase: CaseReferredToMe }) 
   const referralDetails = [
     referredCase.student.school?.schoolName,
     referrerName && `Referred by ${referrerName}`,
-    referredAt && format(referredAt, "d MMM yyyy"),
+    referredAt && format(referredAt, DISPLAY_DATE),
   ].filter(Boolean);
 
   const answer = (decision: "accept" | "reject") =>
