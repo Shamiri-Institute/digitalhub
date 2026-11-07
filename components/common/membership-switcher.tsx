@@ -73,7 +73,7 @@ export function MembershipSwitcher({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
-          <span className="px-4 pb-1 pt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
+          <span className="px-4 pb-1 pt-2 text-xs uppercase tracking-widest text-muted-foreground">
             switch implementer
           </span>
           <CommandSeparator />
@@ -94,7 +94,7 @@ export function MembershipSwitcher({
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{membership.implementerName}</span>
                   </div>
-                  <span className="text-[9px] uppercase tracking-widest text-muted-foreground text-shamiri-new-blue">
+                  <span className="text-xs uppercase tracking-widest text-muted-foreground text-shamiri-new-blue">
                     {membership.role.replace("_", " ")}
                   </span>
                 </div>
