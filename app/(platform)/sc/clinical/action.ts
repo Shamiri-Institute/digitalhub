@@ -480,6 +480,58 @@ export async function getSchoolsInHub() {
   };
 }
 
+/**
+ * The fellow or supervisor a new case's initial contact names, from the lists the add-case form
+ * offers: a supervisor of the caller's hub, or a fellow of any hub in its project.
+ */
+async function initialReferrerId(
+  data: { initialContact: string; fellowId?: string; supervisorId?: string },
+  callerHubId: string,
+) {
+  switch (data.initialContact) {
+    case "student":
+    case "teacher":
+      return null;
+    case "fellow": {
+      const { fellowId } = data;
+      const callerProjectIds = db
+        .select({ projectId: hub.projectId })
+        .from(hub)
+        .where(eq(hub.id, callerHubId));
+      const projectHubIds = db
+        .select({ id: hub.id })
+        .from(hub)
+        .where(inArray(hub.projectId, callerProjectIds));
+      const referrer =
+        fellowId &&
+        (await db.query.fellow.findFirst({
+          where: (f, { and, eq, inArray }) =>
+            and(eq(f.id, fellowId), inArray(f.hubId, projectHubIds)),
+          columns: { id: true },
+        }));
+      if (!referrer) {
+        throw new Error("Select the fellow who made first contact");
+      }
+      return referrer.id;
+    }
+    case "supervisor": {
+      const { supervisorId } = data;
+      const referrer =
+        supervisorId &&
+        (await db.query.supervisor.findFirst({
+          where: (s, { and, eq }) => and(eq(s.id, supervisorId), eq(s.hubId, callerHubId)),
+          columns: { id: true },
+        }));
+      if (!referrer) {
+        throw new Error("Select the supervisor who made first contact");
+      }
+      return referrer.id;
+    }
+    default:
+      throw new Error(`Unknown initial contact: ${data.initialContact}`);
+  }
+}
+
 export async function createStudentClinicalCase(data: {
   studentId?: string;
   schoolId: string;
@@ -525,6 +577,7 @@ export async function createStudentClinicalCase(data: {
     if (!flaggedSession) {
       throw new Error("Session not found in the selected school");
     }
+    const initialReferredFrom = await initialReferrerId(data, hubId);
     if (data.studentId) {
       const { studentId } = data;
       const existing = await db.query.student.findFirst({
@@ -576,7 +629,7 @@ export async function createStudentClinicalCase(data: {
         currentSupervisorId: actor.role === ImplementerRole.SUPERVISOR ? actor.profileId : null,
         pseudonym: data.pseudonym,
         initialReferredFromSpecified: data.initialContact,
-        initialReferredFrom: data.fellowId ?? data.supervisorId,
+        initialReferredFrom,
         flagged: false,
         riskStatus: "No",
         caseStatus: "Active",

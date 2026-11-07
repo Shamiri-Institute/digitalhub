@@ -1,7 +1,7 @@
 "use server";
 
-import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { and, eq } from "drizzle-orm";
+import { refresh, revalidatePath } from "next/cache";
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
 import { clinicalScreeningInfo, fellow, triageEvent } from "#/db/schema";
@@ -167,20 +167,28 @@ export async function markTriageReviewed(triageEventId: string, note: string) {
   const supervisor = await currentSupervisor();
   if (!supervisor?.profile?.id || !supervisor.session.user.id) throw new Error("Unauthorised");
 
-  const event = await db.query.triageEvent.findFirst({
-    where: (t, { eq }) => eq(t.id, triageEventId),
-  });
-  if (!event) throw new Error("Triage event not found.");
-  if (event.referredSupervisorId !== supervisor.profile.id) throw new Error("Forbidden");
-
-  await db
+  // Only the supervisor the event is referred to reviews it, and the fellow can route it to
+  // another supervisor while this one is writing the review.
+  const [reviewed] = await db
     .update(triageEvent)
     .set({
       reviewedById: supervisor.session.user.id,
       reviewedAt: new Date(),
       reviewNote: note,
     })
-    .where(eq(triageEvent.id, triageEventId));
-
-  revalidatePath("/sc/triage");
+    .where(
+      and(
+        eq(triageEvent.id, triageEventId),
+        eq(triageEvent.referredSupervisorId, supervisor.profile.id),
+      ),
+    )
+    .returning({ id: triageEvent.id });
+  refresh();
+  if (!reviewed) {
+    return {
+      success: false,
+      message: "This referral is no longer yours to review: the fellow has routed it elsewhere.",
+    };
+  }
+  return { success: true, message: "Marked as reviewed — no case needed." };
 }

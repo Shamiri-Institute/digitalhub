@@ -9,9 +9,12 @@ const FIELD_LABELS: Record<string, string> = {
   riskScreenOutcome: "Risk screen outcome",
   riskNotCompletedReason: "Not-completed reason",
   actionTaken: "Action taken",
-  referredSupervisorId: "Referred supervisor",
+  referredSupervisor: "Referred supervisor",
   supervisorHandoffStatus: "Handoff status",
   note: "Note",
+  reviewedBy: "Reviewed by",
+  reviewedAt: "Reviewed on",
+  reviewNote: "Review note",
 };
 
 const VALUE_LABELS: Record<string, string> = {
@@ -33,8 +36,17 @@ const VALUE_LABELS: Record<string, string> = {
   STUDENT_REFUSED_NOTIFIED: "Student refused (notified)",
 };
 
-function formatValue(val: unknown): string {
+function formatValue(field: string, val: unknown): string {
   if (val === null || val === undefined) return "—";
+  if (field === "reviewedAt" && typeof val === "string") {
+    return new Date(val).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
   const str = typeof val === "string" ? val : JSON.stringify(val);
   return VALUE_LABELS[str] ?? str;
 }
@@ -55,9 +67,11 @@ function DiffCell({
       {changedFields.map((field) => (
         <div key={field} className="text-xs">
           <span className="font-medium">{FIELD_LABELS[field] ?? field}: </span>
-          <span className="line-through text-shamiri-light-red">{formatValue(before[field])}</span>
+          <span className="line-through text-shamiri-light-red">
+            {formatValue(field, before[field])}
+          </span>
           <span className="mx-1 text-shamiri-text-grey">→</span>
-          <span className="text-green-base">{formatValue(after[field])}</span>
+          <span className="text-green-base">{formatValue(field, after[field])}</span>
         </div>
       ))}
     </div>
