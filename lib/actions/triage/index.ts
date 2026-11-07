@@ -238,28 +238,27 @@ export async function updateTriageEvent(
       return { success: false, message: "Triage event ID is required for update." };
     }
 
-    const existing = await db.query.triageEvent.findFirst({
-      where: (t, { eq }) => eq(t.id, data.id),
-    });
-    // A fellow edits only the events they documented; another fellow's event reads as missing.
-    if (!existing || existing.fellowId !== fellowId) {
-      throw new Error("Triage event not found.");
-    }
-
-    const beforeData: JsonObject = {
-      riskScreenOutcome: existing.riskScreenOutcome,
-      riskNotCompletedReason: existing.riskNotCompletedReason,
-      actionTaken: existing.actionTaken,
-      referredSupervisorId: existing.referredSupervisorId ?? undefined,
-      supervisorHandoffStatus: existing.supervisorHandoffStatus,
-      note: existing.note,
-    };
-
     const event = await db.transaction(async (tx) => {
+      // Locked, so a supervisor's review lands either before the edit reads it or after it.
+      const [existing] = await tx
+        .select()
+        .from(triageEvent)
+        .where(eq(triageEvent.id, data.id))
+        .for("update");
+      // A fellow edits only the events they documented; another fellow's event reads as missing.
+      if (!existing || existing.fellowId !== fellowId) {
+        throw new Error("Triage event not found.");
+      }
+
+      const values = triageEventValues(parsed);
+      // A review answers the supervisor the event was routed to. Routed to another, or to none,
+      // the event waits for a review again; the audit row keeps the old one.
+      const rerouted = values.referredSupervisorId !== existing.referredSupervisorId;
       const [updated] = await tx
         .update(triageEvent)
         .set({
-          ...triageEventValues(parsed),
+          ...values,
+          ...(rerouted && { reviewedById: null, reviewedAt: null, reviewNote: null }),
           ...(studentAttendanceId !== undefined && {
             studentAttendanceId: studentAttendanceId ?? null,
           }),
@@ -277,7 +276,20 @@ export async function updateTriageEvent(
       await tx.insert(triageEventAudit).values({
         triageEventId: data.id,
         editedById: userId,
-        beforeData,
+        beforeData: {
+          riskScreenOutcome: existing.riskScreenOutcome,
+          riskNotCompletedReason: existing.riskNotCompletedReason,
+          actionTaken: existing.actionTaken,
+          referredSupervisorId: existing.referredSupervisorId ?? undefined,
+          supervisorHandoffStatus: existing.supervisorHandoffStatus,
+          note: existing.note,
+          ...(rerouted &&
+            existing.reviewedAt && {
+              reviewedById: existing.reviewedById,
+              reviewedAt: existing.reviewedAt.toISOString(),
+              reviewNote: existing.reviewNote,
+            }),
+        },
         afterData: {
           riskScreenOutcome: updated.riskScreenOutcome ?? undefined,
           riskNotCompletedReason: updated.riskNotCompletedReason ?? undefined,

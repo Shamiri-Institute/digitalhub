@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
@@ -173,14 +173,22 @@ export async function markTriageReviewed(triageEventId: string, note: string) {
   if (!event) throw new Error("Triage event not found.");
   if (event.referredSupervisorId !== supervisor.profile.id) throw new Error("Forbidden");
 
-  await db
+  // The fellow can route the event to another supervisor between the read and this write.
+  const [reviewed] = await db
     .update(triageEvent)
     .set({
       reviewedById: supervisor.session.user.id,
       reviewedAt: new Date(),
       reviewNote: note,
     })
-    .where(eq(triageEvent.id, triageEventId));
+    .where(
+      and(
+        eq(triageEvent.id, triageEventId),
+        eq(triageEvent.referredSupervisorId, supervisor.profile.id),
+      ),
+    )
+    .returning({ id: triageEvent.id });
+  if (!reviewed) throw new Error("This triage event is no longer referred to you.");
 
   revalidatePath("/sc/triage");
 }
