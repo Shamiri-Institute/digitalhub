@@ -207,7 +207,7 @@ export function LayoutClient({
         <div className="container space-y-4 px-4 pt-2 lg:px-8">
           <div className="flex flex-col items-center justify-between lg:flex-row">
             <div className="flex w-full flex-row items-center justify-between px-3 py-2 lg:py-0">
-              <Link href={homeHref} className="text-shamiri-new-blue text-2xl">
+              <Link href={homeHref} className="text-shamiri-new-blue text-2xl font-semibold">
                 Shamiri Hub
               </Link>
               <div className="relative lg:hidden">

@@ -172,7 +172,7 @@
 
 @utility tab-link {
   border-bottom-width: 3px;
-  @apply flex items-center gap-2 whitespace-nowrap border-transparent py-2 transition ease-in-out;
+  @apply flex items-center gap-2 whitespace-nowrap border-transparent py-2 font-medium transition ease-in-out;
 
   & svg {
     @apply shrink-0 text-shamiri-text-grey transition ease-in-out;
