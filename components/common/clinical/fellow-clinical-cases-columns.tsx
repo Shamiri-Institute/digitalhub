@@ -13,6 +13,7 @@ export const columns: ColumnDef<FellowClinicalCasesData>[] = [
   {
     accessorKey: "averageRating",
     header: "Average Rating",
+    meta: { numeric: true },
   },
   {
     accessorKey: "activeStatus",
@@ -39,6 +40,7 @@ export const columns: ColumnDef<FellowClinicalCasesData>[] = [
   {
     accessorKey: "noOfGroups",
     header: "No. of Groups",
+    meta: { numeric: true },
   },
   {
     accessorKey: "phoneNumber",

@@ -143,6 +143,7 @@ const columns: ColumnDef<RequiresActionEvent>[] = [
   {
     id: "Days waiting",
     header: "Days waiting",
+    meta: { numeric: true },
     cell: ({ row }) => (
       <span className={cn("font-medium", row.original.daysSince > 3 && "text-red-base")}>
         {row.original.daysSince}d

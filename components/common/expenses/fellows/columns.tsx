@@ -73,10 +73,12 @@ export const columns: ColumnDef<HubFellowsAttendancesType | SupervisorFellowsAtt
   {
     accessorKey: "paidAmount",
     header: "Paid Amount (KES)",
+    meta: { numeric: true },
   },
   {
     accessorKey: "totalAmount",
     header: "Total Amount (KES)",
+    meta: { numeric: true },
   },
 ];
 
@@ -154,6 +156,7 @@ export const subColumns: ColumnDef<
   {
     accessorKey: "amount",
     header: "Amount (KES)",
+    meta: { numeric: true },
   },
   {
     id: "status",

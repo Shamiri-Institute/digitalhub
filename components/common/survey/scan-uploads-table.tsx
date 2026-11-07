@@ -47,8 +47,9 @@ function scanUploadColumns(showHub: boolean): ColumnDef<ScanUploadRow>[] {
     {
       accessorKey: "byteSize",
       header: "Size",
+      meta: { numeric: true },
       id: "Size",
-      cell: ({ row }) => <span className="tabular-nums">{formatBytes(row.original.byteSize)}</span>,
+      cell: ({ row }) => formatBytes(row.original.byteSize),
     },
     {
       accessorKey: "status",

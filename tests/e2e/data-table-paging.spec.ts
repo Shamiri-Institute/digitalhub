@@ -87,8 +87,13 @@ test("saving a row on page 2 keeps the table on page 2", async ({ page, context,
   await page.reload();
   await expect(pageStatus).toHaveText(/^2 of /);
   await expect(dataRows(page).filter({ hasText: savedName })).toBeVisible();
+  const currentPage = main
+    .getByRole("navigation", { name: "Pagination" })
+    .locator("[aria-current=page]");
+  await expect(currentPage).toHaveText("2");
 
   await main.getByRole("button", { name: "1", exact: true }).click();
   await expect(pageStatus).toHaveText(/^1 of /);
   await expect(pageNumber).toHaveValue("1");
+  await expect(currentPage).toHaveText("1");
 });

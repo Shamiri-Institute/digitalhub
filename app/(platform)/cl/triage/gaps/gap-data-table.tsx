@@ -51,6 +51,7 @@ const columns: ColumnDef<EscalationGap>[] = [
   {
     id: "Days elapsed",
     header: "Days elapsed",
+    meta: { numeric: true },
     cell: ({ row }) => {
       const days = row.original.daysSince;
       return (

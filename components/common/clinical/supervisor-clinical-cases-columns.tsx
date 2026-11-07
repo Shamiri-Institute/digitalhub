@@ -23,14 +23,17 @@ export const columns: ColumnDef<SupervisorClinicalCasesData>[] = [
   {
     accessorKey: "noOfClinicalCases",
     header: "No. of Clinical Cases",
+    meta: { numeric: true },
   },
   {
     accessorKey: "noOfTreatmentPlans",
     header: "No. of Treatment Plans",
+    meta: { numeric: true },
   },
   {
     accessorKey: "noOfCaseNotes",
     header: "No. of Case Notes",
+    meta: { numeric: true },
   },
 ];
 

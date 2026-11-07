@@ -258,7 +258,7 @@
 }
 
 @utility data-table {
-  @apply border-separate border-spacing-0 rounded border border-grey-border lg:table-fixed;
+  @apply border-separate border-spacing-0 rounded border border-grey-border;
 
   & tbody tr {
     @apply transition ease-in-out;
@@ -384,12 +384,12 @@
 @utility pagination {
   @apply flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border shadow-sm transition ease-in-out hover:bg-shamiri-new-blue hover:text-white;
 
-  &.active {
-    @apply bg-shamiri-new-blue text-white;
+  &[aria-current="page"] {
+    @apply cursor-default bg-shamiri-new-blue text-white;
   }
 
   &:disabled {
-    @apply pointer-events-none shadow-none hover:bg-transparent hover:text-black;
+    @apply pointer-events-none opacity-50 shadow-none hover:bg-transparent hover:text-black;
   }
 }
 

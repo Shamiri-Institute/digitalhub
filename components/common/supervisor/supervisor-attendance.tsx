@@ -409,6 +409,7 @@ const columns = (state: {
   {
     accessorKey: "fellows",
     header: "No. of fellows",
+    meta: { numeric: true },
     id: "fellows",
   },
   {
