@@ -26,6 +26,8 @@ export default function ArchiveGroup({
   onOpenChange: Dispatch<SetStateAction<boolean>>;
 }) {
   const [isPending, startTransition] = useTransition();
+  // An archive in flight keeps the dialog open until it finishes.
+  const close = () => !isPending && onOpenChange(false);
 
   const onSubmit = () => {
     startTransition(() =>
@@ -46,8 +48,8 @@ export default function ArchiveGroup({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-5 text-base font-medium leading-6">
+    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : close())}>
+      <DialogContent closeDisabled={isPending} className="p-5 text-base font-medium leading-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Confirm group archive</DialogTitle>
         </DialogHeader>
@@ -69,9 +71,8 @@ export default function ArchiveGroup({
               className="text-shamiri-light-red"
               type={"button"}
               variant="ghost"
-              onClick={() => {
-                onOpenChange(false);
-              }}
+              disabled={isPending}
+              onClick={close}
             >
               Cancel
             </Button>

@@ -52,6 +52,7 @@ import SupervisorAttendance from "#/components/common/supervisor/supervisor-atte
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogPortal, DialogTrigger } from "#/components/ui/dialog";
+import { toast } from "#/components/ui/use-toast";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { fetchSessionSupervisors } from "#/lib/actions/session/session";
 import {
@@ -390,7 +391,9 @@ function CalendarView({
     sessionId: string;
     supervisors: ScheduleSupervisor[];
   } | null>(null);
-  const requestedSessionId = useRef<string | null>(null);
+  // The latest supervisors load. Server actions run one at a time, so an older load of the same
+  // session can settle after a newer one starts; only the latest may keep or fail the result.
+  const supervisorsRequest = useRef<{ sessionId: string } | null>(null);
   const session = (dialog && sessions.find((s) => s.id === dialog.sessionId)) ?? null;
 
   const openDialog: SessionDialogOpener = (kind, { id: sessionId }) => {
@@ -399,18 +402,28 @@ function CalendarView({
         ? { kind, sessionId, opening: startStudentAttendanceOpening(sessionId, role) }
         : { kind, sessionId },
     );
-    if (role !== ImplementerRole.ADMIN || requestedSessionId.current === sessionId) {
+    if (role !== ImplementerRole.ADMIN || supervisorsRequest.current?.sessionId === sessionId) {
       return;
     }
-    requestedSessionId.current = sessionId;
-    const keep = (supervisors: ScheduleSupervisor[]) => {
-      if (requestedSessionId.current === sessionId) {
-        setSessionSupervisors({ sessionId, supervisors });
-      }
-    };
+    const request = { sessionId };
+    supervisorsRequest.current = request;
     fetchSessionSupervisors(sessionId)
-      .then(keep)
-      .catch(() => keep([]));
+      .then((supervisors) => {
+        if (supervisorsRequest.current === request) {
+          setSessionSupervisors({ sessionId, supervisors });
+        }
+      })
+      .catch(() => {
+        if (supervisorsRequest.current !== request) return;
+        // Not an empty list: the dialogs would read it as a session with no supervisors or
+        // fellows. Forgetting the request lets the next open try again.
+        supervisorsRequest.current = null;
+        setDialog((current) => (current?.sessionId === sessionId ? null : current));
+        toast({
+          variant: "destructive",
+          description: "Could not load this session's supervisors and fellows. Please try again.",
+        });
+      });
   };
 
   const onDialogOpenChange = (open: SetStateAction<boolean>) => {

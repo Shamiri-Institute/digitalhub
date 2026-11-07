@@ -1,6 +1,6 @@
 import type { fellow, supervisor } from "#/db/schema";
 import type React from "react";
-import { type Dispatch, type SetStateAction } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { ReplaceGroupLeaderSchema } from "#/components/common/fellow/schema";
@@ -44,10 +44,17 @@ type ReplaceFellowProps = {
 };
 
 export default function ReplaceFellow(props: ReplaceFellowProps) {
+  // A replacement in flight keeps the dialog open until it is saved.
+  const [replacing, setReplacing] = useState(false);
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="w-2/5 max-w-none">
-        <ReplaceFellowForm {...props} />
+    <Dialog
+      open={props.open}
+      onOpenChange={(open) => {
+        if (open || !replacing) props.onOpenChange(open);
+      }}
+    >
+      <DialogContent closeDisabled={replacing} className="w-2/5 max-w-none">
+        <ReplaceFellowForm {...props} replacing={replacing} setReplacing={setReplacing} />
       </DialogContent>
     </Dialog>
   );
@@ -59,7 +66,9 @@ function ReplaceFellowForm({
   onOpenChange,
   children,
   supervisors,
-}: ReplaceFellowProps) {
+  replacing,
+  setReplacing,
+}: ReplaceFellowProps & { replacing: boolean; setReplacing: (replacing: boolean) => void }) {
   const form = useForm<z.infer<typeof ReplaceGroupLeaderSchema>>({
     resolver: zodResolver(ReplaceGroupLeaderSchema),
     defaultValues: { leaderId: fellowId, groupId },
@@ -67,22 +76,28 @@ function ReplaceFellowForm({
   const supervisorWatcher = form.watch("supervisorId");
 
   const onSubmit = async (data: z.infer<typeof ReplaceGroupLeaderSchema>) => {
-    const response = await replaceGroupLeader({
-      leaderId: data.newLeaderId,
-      groupId,
-    });
-
-    if (!response.success) {
-      toast({
-        variant: "destructive",
-        description: response.message ?? "Something went wrong during submission, please try again",
+    setReplacing(true);
+    try {
+      const response = await replaceGroupLeader({
+        leaderId: data.newLeaderId,
+        groupId,
       });
-      return;
+
+      if (!response.success) {
+        toast({
+          variant: "destructive",
+          description:
+            response.message ?? "Something went wrong during submission, please try again",
+        });
+        return;
+      }
+      toast({
+        description: response.message,
+      });
+      onOpenChange(false);
+    } finally {
+      setReplacing(false);
     }
-    toast({
-      description: response.message,
-    });
-    onOpenChange(false);
   };
 
   return (
@@ -186,6 +201,7 @@ function ReplaceFellowForm({
             variant="ghost"
             type="button"
             className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            disabled={replacing}
             onClick={() => {
               onOpenChange(false);
             }}

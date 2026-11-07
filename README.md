@@ -213,7 +213,7 @@ For uploads in development, run a local S3 server with [SeaweedFS](https://githu
 scripts/local-s3.sh   # S3 on http://localhost:8333, buckets "recordings" and "survey-print-files"
 ```
 
-`tests/e2e/recording-transcription.spec.ts` uploads, transcribes and reads back a recording. It calls Gemini, so it needs credentials, costs a few cents a run, and never runs in CI.
+`tests/e2e/recording-transcription.spec.ts` uploads, transcribes and reads back a recording. Its upload test runs wherever the local S3 server is configured, CI included. Its transcription test calls Gemini, so it needs credentials, costs a few cents a run, and never runs in CI.
 
 ---
 
