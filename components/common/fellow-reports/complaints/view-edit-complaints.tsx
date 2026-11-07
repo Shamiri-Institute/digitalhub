@@ -100,7 +100,11 @@ export default function ViewEditFellowComplaints({
           </div>
 
           <Form {...form}>
-            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+            <form
+              noValidate
+              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="complaint"

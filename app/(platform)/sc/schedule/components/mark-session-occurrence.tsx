@@ -161,7 +161,7 @@ function MarkSessionOccurrenceSteps({
       </DialogHeader>
       {children}
       {previousUnmarkedSessions.length === 0 ? (
-        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+        <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
           <FormField
             control={form.control}
             name="occurrence"

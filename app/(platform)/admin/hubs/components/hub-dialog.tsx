@@ -200,6 +200,7 @@ function CreateHubForm({ onDone }: { onDone: () => void }) {
   return (
     <Form {...form}>
       <form
+        noValidate
         className="flex flex-col"
         onSubmit={toastOnError(form.handleSubmit(setPending, onInvalid))}
       >

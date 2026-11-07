@@ -114,16 +114,17 @@ export default function CaseTerminationForm({
         </DialogHeader>
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+          <form
+            noValidate
+            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="sessionId"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Termination Session
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Termination Session</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -147,11 +148,8 @@ export default function CaseTerminationForm({
               control={form.control}
               name="terminationReason"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Termination Reason
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Termination Reason</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -175,11 +173,8 @@ export default function CaseTerminationForm({
               control={form.control}
               name="terminationExplanation"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Termination Explanation
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>Termination Explanation</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}

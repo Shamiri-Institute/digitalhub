@@ -124,7 +124,7 @@ export default function ViewEditQualitativeFeedback({
         <Separator />
         <p className="text-shamiri-black"> Notes</p>
         <Form {...form}>
-          <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+          <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
             {canAddNotes && (
               <FormField
                 control={form.control}

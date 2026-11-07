@@ -161,7 +161,7 @@ export function ScheduleNewSession({
         <DialogTitle className="pb-4 text-xl font-bold">Schedule a session</DialogTitle>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+        <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
           <FormField
             control={form.control}
             name="sessionId"
@@ -209,10 +209,8 @@ export function ScheduleNewSession({
               control={form.control}
               name="schoolId"
               render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>
-                    Select school <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+                <FormItem required className="space-y-2">
+                  <FormLabel>Select school</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -237,10 +235,8 @@ export function ScheduleNewSession({
               control={form.control}
               name="venue"
               render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>
-                    Enter venue <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+                <FormItem required className="space-y-2">
+                  <FormLabel>Enter venue</FormLabel>
                   <FormControl>
                     <Input {...field} type="text" />
                   </FormControl>
@@ -256,9 +252,7 @@ export function ScheduleNewSession({
               name="sessionDate"
               render={({ field }) => (
                 <div>
-                  <FormLabel>
-                    Date <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+                  <FormLabel required>Date</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button

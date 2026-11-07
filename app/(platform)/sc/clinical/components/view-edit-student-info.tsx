@@ -41,7 +41,10 @@ const EditStudentSchema = z.object({
   gender: stringValidation("Gender is required"),
   shamiriId: stringValidation("Shamiri ID is required"),
   admissionNumber: stringValidation("Admission number is required"),
-  classForm: stringValidation("Grade/Form is required"),
+  classForm: stringValidation("Grade/Form is required").refine(
+    (value) => Number.isInteger(Number(value)),
+    "Enter a whole number",
+  ),
   stream: stringValidation("Stream is required"),
   group: stringValidation("Group is required"),
   caseId: stringValidation("Case ID is required"),
@@ -113,7 +116,11 @@ export default function ViewEditClinicalCaseStudentInfo({
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <Form {...form}>
-            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+            <form
+              noValidate
+              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="studentName"
@@ -163,20 +170,20 @@ export default function ViewEditClinicalCaseStudentInfo({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Gender</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {GENDER_OPTIONS.map((g) => (
-                              <SelectItem key={g} value={g}>
-                                {g}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
+                        </FormControl>
+                        <SelectContent>
+                          {GENDER_OPTIONS.map((g) => (
+                            <SelectItem key={g} value={g}>
+                              {g}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -88,7 +88,7 @@ function AdminAccessForm({ admin, onDone }: { admin?: ImplementerAdmin; onDone: 
 
   return (
     <Form {...form}>
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
         <DialogHeader>
           <DialogTitle className="text-xl">
             {admin ? "Manage user access" : "Add a new user"}
@@ -99,10 +99,8 @@ function AdminAccessForm({ admin, onDone }: { admin?: ImplementerAdmin; onDone: 
             control={form.control}
             name="adminName"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Full name <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Full name</FormLabel>
                 <FormControl>
                   <Input {...field} disabled={admin !== undefined} />
                 </FormControl>
@@ -114,10 +112,8 @@ function AdminAccessForm({ admin, onDone }: { admin?: ImplementerAdmin; onDone: 
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Email address <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Email address</FormLabel>
                 <FormControl>
                   <Input {...field} type="email" disabled={admin !== undefined} />
                 </FormControl>

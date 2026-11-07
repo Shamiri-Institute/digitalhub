@@ -102,16 +102,17 @@ export default function ViewEditWeeklyFellowEvaluation({
         </DialogHeader>
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <Form {...form}>
-            <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+            <form
+              noValidate
+              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="behaviourRating"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Rate behaviour (1-unacceptable, 5-outstanding){" "}
-                      <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Rate behaviour (1-unacceptable, 5-outstanding)</FormLabel>
                     <FormControl>
                       <DataTableRatingStars rating={field.value} />
                     </FormControl>
@@ -141,11 +142,8 @@ export default function ViewEditWeeklyFellowEvaluation({
                 control={form.control}
                 name="programDeliveryRating"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Rate program delivery (1-unacceptable, 5-outstanding){" "}
-                      <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Rate program delivery (1-unacceptable, 5-outstanding)</FormLabel>
                     <FormControl>
                       <DataTableRatingStars rating={field.value} />
                     </FormControl>
@@ -175,11 +173,8 @@ export default function ViewEditWeeklyFellowEvaluation({
                 control={form.control}
                 name="dressingAndGroomingRating"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Rate dressing & grooming (1-very bad, 5-very good){" "}
-                      <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
+                  <FormItem required>
+                    <FormLabel>Rate dressing & grooming (1-very bad, 5-very good)</FormLabel>
                     <FormControl>
                       <DataTableRatingStars rating={field.value} />
                     </FormControl>
@@ -209,10 +204,9 @@ export default function ViewEditWeeklyFellowEvaluation({
                 control={form.control}
                 name="punctualityRating"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem required>
                     <FormLabel>
-                      Rate Session attendance & punctuality (1-very bad, 5-very good){" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Rate Session attendance & punctuality (1-very bad, 5-very good)
                     </FormLabel>
                     <FormControl>
                       <DataTableRatingStars rating={field.value} />

@@ -105,16 +105,14 @@ export function RescheduleSessionForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="sessionDate"
             render={({ field }) => (
               <div>
-                <FormLabel>
-                  Date <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+                <FormLabel required>Date</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button

@@ -56,7 +56,11 @@ export default function StudentArchiveForm({
             <DialogTitle className="text-lg font-bold">Archive student</DialogTitle>
           </DialogHeader>
           {children}
-          <form onSubmit={toastOnError(form.handleSubmit(() => onSubmit()))} className="space-y-5">
+          <form
+            noValidate
+            onSubmit={toastOnError(form.handleSubmit(() => onSubmit()))}
+            className="space-y-5"
+          >
             <p className="text-sm text-shamiri-text-grey">
               This student will be deactivated and removed from active lists, but their records will
               remain in the system. Only an administrator or support team member can restore them.

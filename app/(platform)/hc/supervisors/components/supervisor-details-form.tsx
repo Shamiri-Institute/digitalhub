@@ -120,7 +120,7 @@ function SupervisorDetailsFormForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
         <DialogHeader>
           <DialogTitle className="text-xl">
             {isViewMode ? "View supervisor information" : "Edit supervisor information"}
@@ -151,10 +151,8 @@ function SupervisorDetailsFormForm({
                 control={form.control}
                 name="supervisorName"
                 render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>
-                      Full name {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={!isViewMode} className="col-span-2">
+                    <FormLabel>Full name</FormLabel>
                     <FormControl>
                       <Input {...field} disabled={isViewMode} readOnly={isViewMode} />
                     </FormControl>
@@ -166,11 +164,8 @@ function SupervisorDetailsFormForm({
                 control={form.control}
                 name="cellNumber"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Phone number{" "}
-                      {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={!isViewMode}>
+                    <FormLabel>Phone number</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -197,11 +192,8 @@ function SupervisorDetailsFormForm({
                 control={form.control}
                 name="personalEmail"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Email address{" "}
-                      {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={!isViewMode}>
+                    <FormLabel>Email address</FormLabel>
                     <FormControl>
                       <Input {...field} disabled={isViewMode} readOnly={isViewMode} type="email" />
                     </FormControl>
@@ -213,10 +205,8 @@ function SupervisorDetailsFormForm({
                 control={form.control}
                 name="idNumber"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      National ID {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={!isViewMode}>
+                    <FormLabel>National ID</FormLabel>
                     <FormControl>
                       <Input {...field} disabled={isViewMode} readOnly={isViewMode} type="text" />
                     </FormControl>
@@ -228,10 +218,8 @@ function SupervisorDetailsFormForm({
                 control={form.control}
                 name="gender"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Gender {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={!isViewMode}>
+                    <FormLabel>Gender</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -259,11 +247,8 @@ function SupervisorDetailsFormForm({
                 control={form.control}
                 name="dateOfBirth"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Date of birth{" "}
-                      {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={!isViewMode}>
+                    <FormLabel>Date of birth</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -302,10 +287,8 @@ function SupervisorDetailsFormForm({
                 control={form.control}
                 name="county"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      County {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={!isViewMode}>
+                    <FormLabel>County</FormLabel>
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
@@ -340,10 +323,8 @@ function SupervisorDetailsFormForm({
                 control={form.control}
                 name="subCounty"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Sub-county {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={!isViewMode}>
+                    <FormLabel>Sub-county</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -389,10 +370,8 @@ function SupervisorDetailsFormForm({
                 control={form.control}
                 name="mpesaName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Full name {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={!isViewMode}>
+                    <FormLabel>Full name</FormLabel>
                     <FormControl>
                       <Input {...field} disabled={isViewMode} readOnly={isViewMode} type="text" />
                     </FormControl>
@@ -404,11 +383,8 @@ function SupervisorDetailsFormForm({
                 control={form.control}
                 name="mpesaNumber"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      M-Pesa number{" "}
-                      {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={!isViewMode}>
+                    <FormLabel>M-Pesa number</FormLabel>
                     <FormControl>
                       <Input
                         {...field}

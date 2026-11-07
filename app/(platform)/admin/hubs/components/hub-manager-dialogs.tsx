@@ -105,7 +105,7 @@ function AddHubManagerForm({ hubId, onDone }: { hubId: string; onDone: () => voi
 
   return (
     <Form {...form}>
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))}>
         <DialogHeader>
           <DialogTitle className="text-xl">Add hub manager</DialogTitle>
           <DialogDescription>They can sign in as soon as they are added.</DialogDescription>
@@ -117,10 +117,8 @@ function AddHubManagerForm({ hubId, onDone }: { hubId: string; onDone: () => voi
               control={form.control}
               name={name}
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {label} <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
+                <FormItem required>
+                  <FormLabel>{label}</FormLabel>
                   <FormControl>
                     <Input {...field} type={type} />
                   </FormControl>
@@ -133,10 +131,8 @@ function AddHubManagerForm({ hubId, onDone }: { hubId: string; onDone: () => voi
             control={form.control}
             name="gender"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Gender <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Gender</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value ?? ""}>
                   <FormControl>
                     <SelectTrigger>
@@ -159,10 +155,8 @@ function AddHubManagerForm({ hubId, onDone }: { hubId: string; onDone: () => voi
             control={form.control}
             name="county"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  County <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>County</FormLabel>
                 <Select
                   onValueChange={(county) => {
                     field.onChange(county);
@@ -191,10 +185,8 @@ function AddHubManagerForm({ hubId, onDone }: { hubId: string; onDone: () => voi
             control={form.control}
             name="subCounty"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Sub-county <span className="text-shamiri-light-red">*</span>
-                </FormLabel>
+              <FormItem required>
+                <FormLabel>Sub-county</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value}

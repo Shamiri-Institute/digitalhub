@@ -105,6 +105,7 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
   return (
     <Form {...form}>
       <form
+        noValidate
         onSubmit={toastOnError(form.handleSubmit(onSubmit))}
         className={cn(mode === "view" ? "form-view-mode" : "")}
       >
@@ -145,11 +146,8 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 name="fellowName"
                 disabled={mode === "view"}
                 render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>
-                      Full name{" "}
-                      {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={mode !== "view"} className="col-span-2">
+                    <FormLabel>Full name</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -162,11 +160,8 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 name="cellNumber"
                 disabled={mode === "view"}
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Phone number{" "}
-                      {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={mode !== "view"}>
+                    <FormLabel>Phone number</FormLabel>
                     <FormControl>
                       <Input {...field} type="tel" />
                     </FormControl>
@@ -179,11 +174,8 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 name="fellowEmail"
                 disabled={mode === "view"}
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Email address{" "}
-                      {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={mode !== "view"}>
+                    <FormLabel>Email address</FormLabel>
                     <FormControl>
                       <Input {...field} type="tel" />
                     </FormControl>
@@ -196,11 +188,8 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 name="idNumber"
                 disabled={mode === "view"}
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      National ID{" "}
-                      {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={mode !== "view"}>
+                    <FormLabel>National ID</FormLabel>
                     <FormControl>
                       <Input {...field} type="tel" />
                     </FormControl>
@@ -212,10 +201,8 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 control={form.control}
                 name="gender"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Gender {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={mode !== "view"}>
+                    <FormLabel>Gender</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -243,11 +230,8 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 control={form.control}
                 name="dateOfBirth"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Date of birth{" "}
-                      {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={mode !== "view"}>
+                    <FormLabel>Date of birth</FormLabel>
                     {mode !== "view" ? (
                       <Popover>
                         <PopoverTrigger asChild>
@@ -297,10 +281,8 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 control={form.control}
                 name="county"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      County {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={mode !== "view"}>
+                    <FormLabel>County</FormLabel>
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
@@ -335,11 +317,8 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 control={form.control}
                 name="subCounty"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Sub-county{" "}
-                      {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={mode !== "view"}>
+                    <FormLabel>Sub-county</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -386,11 +365,8 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 name="mpesaName"
                 disabled={mode === "view"}
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Full name{" "}
-                      {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={mode !== "view"}>
+                    <FormLabel>Full name</FormLabel>
                     <FormControl>
                       <Input {...field} type="tel" />
                     </FormControl>
@@ -403,11 +379,8 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 name="mpesaNumber"
                 disabled={mode === "view"}
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      M-Pesa number{" "}
-                      {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
-                    </FormLabel>
+                  <FormItem required={mode !== "view"}>
+                    <FormLabel>M-Pesa number</FormLabel>
                     <FormControl>
                       <Input {...field} type="tel" />
                     </FormControl>

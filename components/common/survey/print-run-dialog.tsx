@@ -394,6 +394,7 @@ function PrintRunForm({
   return (
     <Form {...form}>
       <form
+        noValidate
         onSubmit={toastOnError(form.handleSubmit(onContinue))}
         className="flex min-h-0 flex-col gap-4"
       >

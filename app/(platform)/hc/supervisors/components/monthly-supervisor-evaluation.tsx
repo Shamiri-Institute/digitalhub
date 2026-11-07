@@ -316,15 +316,13 @@ function MonthlySupervisorEvaluationForm({
         </DialogTitle>
       </DialogHeader>
       {children}
-      <form onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
         <FormField
           control={form.control}
           name="month"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel>
-                Select month {!isViewMode && <span className="text-shamiri-light-red">*</span>}
-              </FormLabel>
+            <FormItem required={!isViewMode} className="space-y-2">
+              <FormLabel>Select month</FormLabel>
               <Select
                 value={field.value ? format(field.value, "yyyy-MM-dd") : undefined}
                 onValueChange={(value) => {
@@ -388,8 +386,7 @@ function MonthlySupervisorEvaluationForm({
             return (
               <div key={input.section} className="flex flex-col space-y-2 py-4">
                 <div>
-                  <span className="text-bold text-lg">{input.section}</span>{" "}
-                  {!isViewMode && <span className="text-shamiri-light-red">*</span>}
+                  <span className="text-bold text-lg">{input.section}</span>
                 </div>
                 <div className="flex flex-col space-y-3 text-sm">
                   {input.fields.map((inputField) => (
@@ -398,10 +395,9 @@ function MonthlySupervisorEvaluationForm({
                       control={form.control}
                       name={inputField.name as keyof typeof form.formState.defaultValues}
                       render={({ field }) => (
-                        <FormItem className="flex flex-col space-y-2">
+                        <FormItem required={!isViewMode} className="flex flex-col space-y-2">
                           <FormLabel>
-                            <span>{inputField.label}</span>{" "}
-                            {!isViewMode && <span className="text-shamiri-light-red">*</span>}
+                            <span>{inputField.label}</span>
                           </FormLabel>
                           <span className="text-shamiri-text-grey">{inputField.description}</span>
                           <RatingStarsInput
@@ -528,6 +524,7 @@ function RatingStarsInput({
               onClick={() => {
                 onChange(5 - index);
               }}
+              aria-label={`${5 - index} out of 5`}
             >
               <Icons.starRating className="h-full w-full" />
             </button>

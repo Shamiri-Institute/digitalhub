@@ -75,11 +75,12 @@ export default function CaseUnterminateDialog({
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="reopen-reason">
-              Reason for reopening <span className="text-red-500">*</span>
+            <Label htmlFor="reopen-reason" required>
+              Reason for reopening
             </Label>
             <Textarea
               id="reopen-reason"
+              aria-required
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               rows={3}
