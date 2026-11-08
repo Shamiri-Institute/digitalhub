@@ -294,7 +294,11 @@ test("the session occurrence dialog stays open until the occurrence is saved", a
  * A group at a new school of the coordinator's hub, led by the first of a new supervisor's two
  * fellows, and the removal of all of them queued.
  */
-async function createGroup(coordinator: Coordinator, undo: Undo) {
+async function createGroup(
+  coordinator: Coordinator,
+  undo: Undo,
+  { archived }: { archived: boolean } = { archived: false },
+) {
   const { schoolId, visibleId } = await createSchool(coordinator, undo);
   const stamp = Date.now();
   const supervisorId = objectId("sup");
@@ -324,6 +328,7 @@ async function createGroup(coordinator: Coordinator, undo: Undo) {
     schoolId,
     leaderId: leader.id,
     projectId: coordinator.projectId,
+    archivedAt: archived ? new Date() : null,
   });
   undo(async () => {
     await db.delete(interventionGroup).where(eq(interventionGroup.id, groupId));
@@ -353,6 +358,30 @@ test("a group's archive dialog stays open until the archive is saved", async ({
     table: "intervention_groups",
     id: group.groupId,
   });
+});
+
+test("a group's unarchive dialog stays open until the unarchive is saved", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const coordinator = await pickCoordinator();
+  const group = await createGroup(coordinator, undo, { archived: true });
+  await signInWithEmail(context, coordinator.email);
+
+  await page.goto(getUrl(`/hc/schools/${group.visibleId}/groups`));
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, page.getByRole("main"), group.groupName),
+    "Unarchive group",
+  );
+  const unarchive = page.getByRole("dialog", { name: "Confirm group unarchive" });
+  await expectOpenUntilWritten(
+    page,
+    unarchive,
+    unarchive.getByRole("button", { name: "Unarchive" }),
+    { table: "intervention_groups", id: group.groupId },
+  );
 });
 
 test("a group's replace-leader dialog stays open until the replacement is saved", async ({
