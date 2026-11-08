@@ -7,7 +7,7 @@ import { objectId } from "#/lib/crypto";
 import { TIME_ZONE_COOKIE } from "#/lib/schedule-view";
 import { sessionDisplayName } from "#/lib/utils";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { signableMember, signInWithEmail, required } from "#/tests/helpers";
+import { expectOpenUntilWritten, signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { chooseRowAction, getUrl } from "#/tests/pages/helpers";
 
 const timeZone = "Africa/Nairobi";
@@ -153,4 +153,48 @@ test("a session marked as occurred in another tab is not cancelled", async ({
 
   await page.reload();
   await expect(sessionRow).toContainText("Attended");
+});
+
+test("the cancel dialog stays open until the cancellation is saved", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixture = await createPastSession(undo);
+  await signInWithEmail(context, fixture.email);
+
+  await openListView(page, fixture.localDate);
+  await chooseRowAction(page, sessionRowOf(page, fixture), "Cancel session");
+  const dialog = page.getByRole("dialog", { name: "Cancel session" });
+  await expectOpenUntilWritten(page, dialog, dialog.getByRole("button", { name: "Confirm" }), {
+    table: "intervention_sessions",
+    id: fixture.sessionId,
+  });
+
+  await page.reload();
+  await expect(sessionRowOf(page, fixture)).toContainText("Cancelled");
+});
+
+test("the reschedule dialog stays open until the new time is saved", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixture = await createPastSession(undo);
+  await signInWithEmail(context, fixture.email);
+
+  await openListView(page, fixture.localDate);
+  await chooseRowAction(page, sessionRowOf(page, fixture), "Reschedule session");
+  const dialog = page.getByRole("dialog", { name: "Reschedule session" });
+  await dialog.getByRole("button", { name: "9:00 AM" }).click();
+  const timePicker = page.getByRole("dialog").filter({ hasText: "Pick a start time" });
+  await timePicker.getByRole("spinbutton").first().fill("11");
+  await timePicker.getByRole("button", { name: "Save", exact: true }).click();
+  await expectOpenUntilWritten(page, dialog, dialog.getByRole("button", { name: "Save Changes" }), {
+    table: "intervention_sessions",
+    id: fixture.sessionId,
+  });
+
+  await page.reload();
+  await expect(sessionRowOf(page, fixture)).toContainText("11:00");
 });
