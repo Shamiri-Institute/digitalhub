@@ -127,7 +127,7 @@ export const columns = ({
           }
           return (
             <Badge variant="destructive">
-              {`${sessions[sessions.length - 1]?.sessionType?.toUpperCase()} - Not submitted`}
+              {`${sessionDisplayName(recent?.session?.sessionName)} - Not submitted`}
             </Badge>
           );
         }

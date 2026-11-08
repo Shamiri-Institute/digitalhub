@@ -3,9 +3,16 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { interventionSession, school } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
+import { sessionDisplayName } from "#/lib/utils";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail } from "#/tests/helpers";
-import { scheduleUrl, waitForHydration } from "#/tests/pages/helpers";
+import {
+  cellUnder,
+  getUrl,
+  scheduleUrl,
+  searchRows,
+  waitForHydration,
+} from "#/tests/pages/helpers";
 
 type Fixture = {
   email: string;
@@ -83,4 +90,31 @@ test("a session scheduled in the app stores its session name as its type", async
     .from(interventionSession)
     .where(eq(interventionSession.schoolId, schoolId));
   expect(stored).toEqual([{ sessionType: fixture.sessionName }]);
+});
+
+test("the schools table names a school's latest held session that has no report", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixture = await pickCoordinator();
+  const { schoolId, schoolName } = await createSchool(fixture.hubId, undo);
+  // A held session without the legacy copy of its name, as "Schedule a session" saved them.
+  const sessionDate = new Date(Date.now() - 24 * 3600 * 1000);
+  await db.insert(interventionSession).values({
+    id: objectId("isess"),
+    sessionId: fixture.sessionNameId,
+    sessionDate,
+    yearOfImplementation: sessionDate.getFullYear(),
+    schoolId,
+    hubId: fixture.hubId,
+    occurred: true,
+  });
+  await signInWithEmail(context, fixture.email);
+
+  await page.goto(getUrl("/hc/schools"));
+  const row = await searchRows(page, schoolName);
+  await expect(await cellUnder(page, row, "Report submission")).toHaveText(
+    `${sessionDisplayName(fixture.sessionName)} - Not submitted`,
+  );
 });
