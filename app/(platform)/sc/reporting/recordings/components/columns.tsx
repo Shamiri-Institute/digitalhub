@@ -96,6 +96,7 @@ export const recordingColumns = (state: ColumnState): ColumnDef<RecordingTableDa
     cell: ({ row }) => (
       <RecordingStatusBadge
         status={row.original.status}
+        queuedForTranscription={row.original.transcriptionStatus !== null}
         hasGaps={row.original.transcriptionGapCount > 0}
         errorMessage={row.original.errorMessage}
       />
