@@ -242,6 +242,15 @@ export default function FellowGroupReportForm({
     setCurrentSection(active);
   };
 
+  // The form lives outside DialogContent because closing asks first when answers are unsaved, so
+  // every close goes through here to start the next open at the first section with no answers.
+  const close = () => {
+    setShowDiscard(false);
+    setCurrentSection(0);
+    form.reset();
+    onOpenChange(false);
+  };
+
   const requestClose = () => {
     if (form.formState.isSubmitting) {
       return;
@@ -250,7 +259,7 @@ export default function FellowGroupReportForm({
       setShowDiscard(true);
       return;
     }
-    onOpenChange(false);
+    close();
   };
 
   const onSubmit = async (data: FellowGroupReportFormData) => {
@@ -263,8 +272,7 @@ export default function FellowGroupReportForm({
       return;
     }
     toast({ description: response.message });
-    form.reset();
-    onOpenChange(false);
+    close();
   };
 
   return (
@@ -617,15 +625,7 @@ export default function FellowGroupReportForm({
             <Button type="button" variant="ghost" onClick={() => setShowDiscard(false)}>
               Continue editing
             </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => {
-                setShowDiscard(false);
-                form.reset();
-                onOpenChange(false);
-              }}
-            >
+            <Button type="button" variant="destructive" onClick={close}>
               Close anyway
             </Button>
           </DialogFooter>
