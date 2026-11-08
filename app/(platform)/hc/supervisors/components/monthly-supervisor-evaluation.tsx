@@ -39,6 +39,7 @@ import { evaluationEditDeadline, mayEditEvaluation } from "#/lib/evaluation-edit
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { monthlySupervisorEvaluation, project as projectTable } from "#/db/schema";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type MonthlySupervisorEvaluationType = typeof monthlySupervisorEvaluation.$inferSelect;
 
@@ -355,7 +356,7 @@ function MonthlySupervisorEvaluationForm({
             <div className="flex items-center gap-2">
               <span>
                 Update ratings by{" "}
-                {format(evaluationEditDeadline(existingEvaluation.createdAt), "dd-MM-yyyy")} (
+                {format(evaluationEditDeadline(existingEvaluation.createdAt), DISPLAY_DATE)} (
                 <CountdownTimer
                   deadline={evaluationEditDeadline(existingEvaluation.createdAt)}
                   onExpire={setNow}

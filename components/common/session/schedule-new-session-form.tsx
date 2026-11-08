@@ -36,6 +36,7 @@ import { cn, handleMinutesChange } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import type { school, sessionName } from "#/db/schema";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 export function ScheduleNewSession({
   toggleDialog,
@@ -263,7 +264,7 @@ export function ScheduleNewSession({
                         )}
                       >
                         <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {field.value ? format(field.value, "dd/MM/yyyy") : <span>Pick a date</span>}
+                        {field.value ? format(field.value, DISPLAY_DATE) : <span>Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">

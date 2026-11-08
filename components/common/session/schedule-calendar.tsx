@@ -233,7 +233,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
           <div className="flex items-start justify-between gap-6 lg:items-center">
-            <h3 className="text-2xl font-semibold leading-8">{title}</h3>
+            <h2 className="text-2xl font-semibold leading-8">{title}</h2>
             <NavigationButtons prevProps={prevButtonProps} nextProps={nextButtonProps} />
           </div>
           <div className="flex lg:mx-2">

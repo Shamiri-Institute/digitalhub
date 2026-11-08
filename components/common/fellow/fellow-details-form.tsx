@@ -42,6 +42,7 @@ import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type FellowDetailsFormProps = {
   fellow?: MainFellowTableData & FellowPersonalDetails;
@@ -244,7 +245,7 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                           >
                             <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
                             {field.value ? (
-                              format(field.value, "dd/MM/yyyy")
+                              format(field.value, DISPLAY_DATE)
                             ) : (
                               <span>Pick a date</span>
                             )}
@@ -265,7 +266,7 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                         <Input
                           value={
                             field.value !== undefined
-                              ? format(field.value, "dd-MM-yyyy")
+                              ? format(field.value, DISPLAY_DATE)
                               : undefined
                           }
                           type="text"

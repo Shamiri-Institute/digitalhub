@@ -54,7 +54,7 @@ test.describe("supervisor schedule mode from the URL", () => {
 
   test("the visible dates are in the URL, so a reload keeps them", async ({ page }) => {
     await page.goto(getUrl("/sc/schedule?mode=week"));
-    const title = page.getByRole("heading", { level: 3 });
+    const title = page.getByRole("heading", { level: 2 });
     const thisWeek = await title.innerText();
 
     await page.getByRole("button", { name: "Next", exact: true }).click();

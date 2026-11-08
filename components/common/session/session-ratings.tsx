@@ -44,6 +44,7 @@ import { evaluationEditDeadline, mayEditEvaluation } from "#/lib/evaluation-edit
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { interventionSessionRating } from "#/db/schema";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type InterventionSessionRating = typeof interventionSessionRating.$inferSelect;
 
@@ -374,7 +375,7 @@ function SessionRatingsForm({
                       <div className="flex items-center gap-2">
                         <span>
                           Update ratings by{" "}
-                          {format(evaluationEditDeadline(existingRating.createdAt), "dd-MM-yyyy")} (
+                          {format(evaluationEditDeadline(existingRating.createdAt), DISPLAY_DATE)} (
                           <CountdownTimer
                             deadline={evaluationEditDeadline(existingRating.createdAt)}
                             onExpire={setNow}
