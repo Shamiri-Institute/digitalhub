@@ -129,6 +129,9 @@ export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSc
     await db.insert(interventionSession).values({
       id: objectId("isess"),
       sessionId: parsedData.sessionId,
+      // Several reports still group and label sessions by this copy of the session's name, as
+      // the sessions a new school is given carry it.
+      sessionType: hubSessionType.sessionName,
       sessionDate: parsedData.sessionDate,
       yearOfImplementation: parsedData.sessionDate.getFullYear() || new Date().getFullYear(),
       schoolId: parsedData.schoolId !== "" ? parsedData.schoolId : undefined,
