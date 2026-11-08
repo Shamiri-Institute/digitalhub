@@ -6,10 +6,12 @@ import { z } from "zod";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -48,7 +50,23 @@ interface EscalateTicketDialogProps {
 }
 
 export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTicketDialogProps) {
+  if (!ticket) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">Escalate Ticket</DialogTitle>
+        </DialogHeader>
+        <EscalateTicketForm ticketId={ticket.id} close={() => onOpenChange(false)} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EscalateTicketForm({ ticketId, close }: { ticketId: string; close: () => void }) {
   const router = useRouter();
+  const { isSaving, save } = useDialogSave();
 
   const form = useForm<EscalateTicketFormData>({
     resolver: zodResolver(EscalateTicketSchema),
@@ -60,120 +78,94 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
 
   const escalateValue = form.watch("escalate");
 
-  const onSubmit = async (data: EscalateTicketFormData) => {
-    if (!ticket?.id) return;
+  const onSubmit = (data: EscalateTicketFormData) => {
+    save(async () => {
+      if (data.escalate === "yes") {
+        const result = await createEscalation(ticketId, data.escalationReason);
+        if (!result.success) {
+          toast({
+            variant: "destructive",
+            description: result.message ?? "Failed to escalate ticket",
+          });
+          return;
+        }
 
-    if (data.escalate === "yes") {
-      const result = await createEscalation(ticket.id, data.escalationReason);
-      if (!result.success) {
         toast({
-          variant: "destructive",
-          description: result.message ?? "Failed to escalate ticket",
+          description: "Ticket escalated successfully",
         });
-        return;
       }
 
-      toast({
-        description: "Ticket escalated successfully",
-      });
-    }
-
-    router.refresh();
-    onOpenChange(false);
-    form.reset();
+      router.refresh();
+      close();
+    });
   };
 
-  if (!ticket) return null;
-
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        if (!open) {
-          form.reset();
-        }
-        onOpenChange(open);
-      }}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Escalate Ticket</DialogTitle>
-        </DialogHeader>
+    <Form {...form}>
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-6">
+        <div className="flex flex-col">
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="escalate"
+              render={({ field }) => (
+                <FormItem required className="col-span-2">
+                  <FormLabel>Escalate</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select option" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="no">No</SelectItem>
+                      <SelectItem value="yes">Yes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <Form {...form}>
-          <form
-            noValidate
-            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-            className="space-y-6"
-          >
-            <div className="flex flex-col">
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="escalate"
-                  render={({ field }) => (
-                    <FormItem required className="col-span-2">
-                      <FormLabel>Escalate</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="no">No</SelectItem>
-                          <SelectItem value="yes">Yes</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {escalateValue === "yes" && (
-                  <FormField
-                    control={form.control}
-                    name="escalationReason"
-                    render={({ field }) => (
-                      <FormItem required className="col-span-2">
-                        <FormLabel>Escalation Reason</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            placeholder="Explain why this ticket needs to be escalated"
-                            className="min-h-[100px]"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            {escalateValue === "yes" && (
+              <FormField
+                control={form.control}
+                name="escalationReason"
+                render={({ field }) => (
+                  <FormItem required className="col-span-2">
+                    <FormLabel>Escalation Reason</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Explain why this ticket needs to be escalated"
+                        className="min-h-[100px]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-            </div>
+              />
+            )}
+          </div>
+        </div>
 
-            <Separator />
+        <Separator />
 
-            <DialogFooter className="flex justify-end gap-2">
-              <Button variant="ghost" type="button" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="brand"
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
-                Escalate Ticket
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+        <DialogFooter className="flex justify-end gap-2">
+          <DialogClose asChild>
+            <Button variant="ghost" type="button">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button variant="brand" type="submit" disabled={isSaving} loading={isSaving}>
+            Escalate Ticket
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }
