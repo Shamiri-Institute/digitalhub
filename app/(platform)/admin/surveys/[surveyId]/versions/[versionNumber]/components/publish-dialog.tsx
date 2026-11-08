@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import { Label } from "#/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
@@ -42,27 +43,15 @@ interface PublishDialogProps {
 /** Publishes the saved draft: choose what each copy prints, then confirm. */
 export default function PublishDialog(props: PublishDialogProps) {
   const [open, setOpen] = useState(false);
-  // A publish in flight keeps the dialog open, so a refusal shows where it was asked for.
-  const [publishing, setPublishing] = useState(false);
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (next || !publishing) setOpen(next);
-      }}
-    >
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button type="button" variant="brand">
           Publish
         </Button>
       </DialogTrigger>
-      <DialogContent closeDisabled={publishing} className="max-w-lg">
-        <PublishSteps
-          {...props}
-          close={() => setOpen(false)}
-          publishing={publishing}
-          setPublishing={setPublishing}
-        />
+      <DialogContent className="max-w-lg">
+        <PublishSteps {...props} close={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );
@@ -76,13 +65,9 @@ function PublishSteps({
   locked,
   unsaved,
   close,
-  publishing,
-  setPublishing,
-}: PublishDialogProps & {
-  close: () => void;
-  publishing: boolean;
-  setPublishing: (publishing: boolean) => void;
-}) {
+}: PublishDialogProps & { close: () => void }) {
+  // A publish in flight keeps the dialog open, so a refusal shows where it was asked for.
+  const { isSaving: publishing, save } = useDialogSave();
   const [step, setStep] = useState<"choose" | "confirm">("choose");
   const [prefill, setPrefill] = useState<Prefill>(SurveyVersionPrefill.NONE);
   const [refusal, setRefusal] = useState<string>();
@@ -98,21 +83,20 @@ function PublishSteps({
         ]),
       ];
 
-  const handlePublish = async () => {
-    setPublishing(true);
-    try {
-      const response = await publishVersion({ versionId, revision, prefill });
-      if (response.success) {
-        toast({ description: response.message });
-        close();
-        return;
+  const handlePublish = () => {
+    save(async () => {
+      try {
+        const response = await publishVersion({ versionId, revision, prefill });
+        if (response.success) {
+          toast({ description: response.message });
+          close();
+          return;
+        }
+        setRefusal(response.message);
+      } catch {
+        setRefusal("Sorry, could not publish. Reload to see whether it was published.");
       }
-      setRefusal(response.message);
-    } catch {
-      setRefusal("Sorry, could not publish. Reload to see whether it was published.");
-    } finally {
-      setPublishing(false);
-    }
+    });
   };
 
   if (step === "confirm") {
@@ -148,7 +132,7 @@ function PublishSteps({
             variant="brand"
             loading={publishing}
             disabled={publishing || refusal !== undefined}
-            onClick={() => void handlePublish()}
+            onClick={handlePublish}
           >
             Publish v{versionNumber}
           </Button>

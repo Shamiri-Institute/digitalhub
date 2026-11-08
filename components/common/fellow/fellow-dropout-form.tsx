@@ -20,6 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -37,7 +38,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { dropoutFellow } from "#/lib/actions/fellow";
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
@@ -68,7 +69,6 @@ export default function FellowDropoutForm({ fellow, isOpen, setIsOpen, superviso
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent
-          closeDisabled={stepProps.isPending}
           className={cn(
             "p-5",
             shownStep === "form" && "text-base font-medium leading-6",
@@ -122,8 +122,6 @@ function FellowDropoutSteps({
   step,
   setStep,
   close,
-  isPending,
-  startTransition,
   activeGroups,
   onReplace,
   onArchive,
@@ -133,6 +131,7 @@ function FellowDropoutSteps({
   onReplace: (group: Group) => void;
   onArchive: (group: Group) => void;
 } & StepProps<Step>) {
+  const { isSaving, save } = useDialogSave();
   const form = useForm<z.infer<typeof DropoutFellowSchema>>({
     resolver: zodResolver(DropoutFellowSchema),
     defaultValues: { fellowId: fellow.id, mode: fellow.droppedOut ? "undo" : "dropout" },
@@ -143,18 +142,16 @@ function FellowDropoutSteps({
       setStep("replace");
       return;
     }
-    startTransition(() =>
-      toastOnFailure(async () => {
-        const response = await dropoutFellow(form.getValues());
-        toast({
-          variant: response.success ? undefined : "destructive",
-          description: response.success
-            ? response.message
-            : (response.message ?? "Something went wrong, please try again"),
-        });
-        close();
-      }),
-    );
+    save(async () => {
+      const response = await dropoutFellow(form.getValues());
+      toast({
+        variant: response.success ? undefined : "destructive",
+        description: response.success
+          ? response.message
+          : (response.message ?? "Something went wrong, please try again"),
+      });
+      close();
+    });
   }
 
   const onSubmit = () => {
@@ -181,7 +178,7 @@ function FellowDropoutSteps({
 
   if (step === "confirm") {
     return (
-      <DropoutConfirmStep isPending={isPending} onCancel={close} onConfirm={confirmSubmit}>
+      <DropoutConfirmStep onCancel={close} onConfirm={confirmSubmit}>
         {alertWidget}
       </DropoutConfirmStep>
     );
@@ -276,7 +273,7 @@ function FellowDropoutSteps({
             )}
             variant="ghost"
             type="button"
-            disabled={isPending}
+            disabled={isSaving}
             onClick={close}
           >
             Cancel
@@ -284,8 +281,8 @@ function FellowDropoutSteps({
           <Button
             variant={fellow.droppedOut ? "brand" : "destructive"}
             type="submit"
-            disabled={isPending}
-            loading={isPending}
+            disabled={isSaving}
+            loading={isSaving}
           >
             {fellow.droppedOut ? "Undo" : "Submit"}
           </Button>

@@ -22,6 +22,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -85,7 +86,6 @@ export function PrintCopiesProvider({
   const [isOpen, setIsOpen] = useState(false);
   // Kept after closing, so the content stays through the close animation.
   const [printing, setPrinting] = useState<PrintRequest | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
   // Every request confirmed on this page, by version, hub and request key, with its run id. A
   // create whose reply was lost may have made its run, so asking for that request again, even
   // after closing the dialog, must reuse the id.
@@ -100,9 +100,7 @@ export function PrintCopiesProvider({
     setPrinting((shown) => ({ version, hubsRequest, opening: (shown?.opening ?? 0) + 1 }));
     setIsOpen(true);
   };
-  // A create in flight would finish behind a closed dialog, and the next request could make a
-  // second run before its reply. The action's maxDuration bounds how long that lasts.
-  const close = () => !isCreating && setIsOpen(false);
+  const close = () => setIsOpen(false);
   const printRunIdFor = (requestKey: string) => {
     const known = runIdsByRequest.current.get(requestKey);
     if (known) return known;
@@ -115,11 +113,8 @@ export function PrintCopiesProvider({
     <PrintCopiesContext value={runsPath ? openFor : null}>
       {children}
       {runsPath && (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && close()}>
-          <DialogContent
-            closeDisabled={isCreating}
-            className="flex max-h-[90vh] flex-col lg:w-[40rem] lg:max-w-[calc(100vw-2rem)]"
-          >
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="flex max-h-[90vh] flex-col lg:w-[40rem] lg:max-w-[calc(100vw-2rem)]">
             {printing && (
               <Suspense
                 key={printing.opening}
@@ -137,8 +132,6 @@ export function PrintCopiesProvider({
                   runsPath={runsPath}
                   onClose={close}
                   printRunIdFor={printRunIdFor}
-                  isCreating={isCreating}
-                  onCreatingChange={setIsCreating}
                 />
               </Suspense>
             )}
@@ -154,8 +147,6 @@ type PrintRunFormProps = {
   runsPath: string;
   /** The run id for a request key, the same each time the key is asked for. */
   printRunIdFor: (requestKey: string) => string;
-  isCreating: boolean;
-  onCreatingChange: (isCreating: boolean) => void;
 };
 
 function PrintRunHubs({
@@ -268,9 +259,8 @@ function PrintRunForm({
   runsPath,
   onCancel,
   printRunIdFor,
-  isCreating,
-  onCreatingChange,
 }: PrintRunFormProps & { hubs: PrintableHubs; onCancel: () => void }) {
+  const { isSaving: isCreating, save } = useDialogSave();
   const router = useRouter();
   const [pending, setPending] = useState<PendingRun | null>(null);
   // Here rather than in each school's row, which unmounts while the confirm step shows.
@@ -331,10 +321,9 @@ function PrintRunForm({
     });
   };
 
-  const onCreate = toastOnError(async () => {
+  const onCreate = () => {
     if (!pending) return;
-    onCreatingChange(true);
-    try {
+    save(async () => {
       const response = await createPrintRun({
         printRunId: pending.printRunId,
         versionId: version.id,
@@ -347,10 +336,8 @@ function PrintRunForm({
       }
       toast({ description: response.message });
       router.push(`${runsPath}/${pending.printRunId}`);
-    } finally {
-      onCreatingChange(false);
-    }
-  });
+    });
+  };
 
   if (pending) {
     return (

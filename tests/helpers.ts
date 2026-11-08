@@ -1,4 +1,4 @@
-import { type BrowserContext, expect } from "@playwright/test";
+import { type BrowserContext, expect, type Locator, type Page } from "@playwright/test";
 import { eq, sql } from "drizzle-orm";
 
 import { db, pool } from "#/db/client";
@@ -240,4 +240,27 @@ export async function raceOnRow(
     });
     lockHolder.release(commitError);
   }
+}
+
+/**
+ * Confirms the dialog's write while its row is locked, so the write waits on the lock, and checks
+ * that Escape, a click outside, the close button and Cancel leave the dialog open until the write
+ * lands.
+ */
+export async function expectOpenUntilWritten(
+  page: Page,
+  dialog: Locator,
+  confirm: Locator,
+  lockedRow: { table: string; id: string },
+) {
+  await raceOnRow(lockedRow.table, lockedRow.id, async (waitForWaiting) => {
+    await confirm.click();
+    await waitForWaiting(1);
+    await page.keyboard.press("Escape");
+    await page.mouse.click(1, 1);
+    await expect(dialog).toHaveAttribute("data-state", "open");
+    await expect(dialog.getByRole("button", { name: "Close" })).toBeDisabled();
+    await expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  });
+  await expect(dialog).toBeHidden();
 }

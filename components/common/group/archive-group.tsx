@@ -1,17 +1,19 @@
 import { InfoIcon } from "lucide-react";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useTransition } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnFailure } from "#/components/ui/use-toast";
+import { toast } from "#/components/ui/use-toast";
 import { archiveInterventionGroup } from "#/lib/actions/group";
 
 export default function ArchiveGroup({
@@ -25,69 +27,79 @@ export default function ArchiveGroup({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
 }) {
-  const [isPending, startTransition] = useTransition();
-  // An archive in flight keeps the dialog open until it finishes.
-  const close = () => !isPending && onOpenChange(false);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="p-5 text-base font-medium leading-6">
+        <ArchiveGroupConfirm groupId={groupId} close={() => onOpenChange(false)}>
+          {children}
+        </ArchiveGroupConfirm>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ArchiveGroupConfirm({
+  groupId,
+  children,
+  close,
+}: {
+  groupId: string;
+  children: React.ReactNode;
+  close: () => void;
+}) {
+  const { isSaving, save } = useDialogSave();
 
   const onSubmit = () => {
-    startTransition(() =>
-      toastOnFailure(async () => {
-        const response = await archiveInterventionGroup(groupId);
-        if (!response.success) {
-          toast({
-            description: response.message ?? "Something went wrong, please try again",
-          });
-          return;
-        }
+    save(async () => {
+      const response = await archiveInterventionGroup(groupId);
+      if (!response.success) {
         toast({
-          description: response.message,
+          description: response.message ?? "Something went wrong, please try again",
         });
-        onOpenChange(false);
-      }),
-    );
+        return;
+      }
+      toast({
+        description: response.message,
+      });
+      close();
+    });
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : close())}>
-      <DialogContent closeDisabled={isPending} className="p-5 text-base font-medium leading-6">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Confirm group archive</DialogTitle>
-        </DialogHeader>
-        {children}
-        <div className="space-y-4">
-          <h3>Are you sure?</h3>
-          <Alert variant="destructive">
-            <AlertTitle className="flex gap-2">
-              <InfoIcon className="h-4 w-4 shrink-0" />
-              Once this change has been made it is irreversible and will need you to contact support
-              in order to modify. Please be sure of your action before you confirm.
-            </AlertTitle>
-          </Alert>
-        </div>
-        <Separator />
-        <div className="space-y-5">
-          <DialogFooter className="flex justify-end">
-            <Button
-              className="text-shamiri-light-red"
-              type={"button"}
-              variant="ghost"
-              disabled={isPending}
-              onClick={close}
-            >
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-xl font-bold">Confirm group archive</DialogTitle>
+      </DialogHeader>
+      {children}
+      <div className="space-y-4">
+        <h3>Are you sure?</h3>
+        <Alert variant="destructive">
+          <AlertTitle className="flex gap-2">
+            <InfoIcon className="h-4 w-4 shrink-0" />
+            Once this change has been made it is irreversible and will need you to contact support
+            in order to modify. Please be sure of your action before you confirm.
+          </AlertTitle>
+        </Alert>
+      </div>
+      <Separator />
+      <div className="space-y-5">
+        <DialogFooter className="flex justify-end">
+          <DialogClose asChild>
+            <Button className="text-shamiri-light-red" type="button" variant="ghost">
               Cancel
             </Button>
-            <Button
-              type="submit"
-              variant="destructive"
-              disabled={isPending}
-              loading={isPending}
-              onClick={onSubmit}
-            >
-              Confirm
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </DialogClose>
+          <Button
+            type="submit"
+            variant="destructive"
+            disabled={isSaving}
+            loading={isSaving}
+            onClick={onSubmit}
+          >
+            Confirm
+          </Button>
+        </DialogFooter>
+      </div>
+    </>
   );
 }
