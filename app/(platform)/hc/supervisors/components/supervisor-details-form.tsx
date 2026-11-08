@@ -42,6 +42,7 @@ import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import { EditSupervisorSchema } from "../../schemas";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type SupervisorDetailsFormProps = {
   supervisor: SupervisorsData | null;
@@ -261,7 +262,7 @@ function SupervisorDetailsFormForm({
                         >
                           <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
                           {field.value ? (
-                            format(field.value, "dd/MM/yyyy")
+                            format(field.value, DISPLAY_DATE)
                           ) : (
                             <span>Pick a date</span>
                           )}

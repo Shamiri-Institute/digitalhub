@@ -25,6 +25,7 @@ import { markSessionOccurrence } from "#/lib/actions/session/session";
 import { sessionDisplayName } from "#/lib/utils";
 import { type StepProps, useStepsDialog } from "#/components/common/dropout-confirm-step";
 import { zodResolver } from "#/lib/zod-resolver";
+import { DISPLAY_DATE_TIME } from "#/lib/date-utils";
 
 type Step = "form" | "confirm";
 type Props = {
@@ -231,7 +232,7 @@ function MarkSessionOccurrenceSteps({
                 <span>{sessionDisplayName(session.session?.sessionName)}</span>
                 <span>- {session.school?.schoolName ?? session.venue} -</span>
                 <span className="text-muted-foreground">
-                  {format(session.sessionDate, "dd/MM/yyyy - h:mm a")}
+                  {format(session.sessionDate, DISPLAY_DATE_TIME)}
                 </span>
               </div>
             ))}

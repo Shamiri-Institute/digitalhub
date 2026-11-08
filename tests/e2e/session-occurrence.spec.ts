@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
+import { DISPLAY_DATE_TIME } from "#/lib/date-utils";
 
 type Fixture = {
   email: string;
@@ -56,7 +57,7 @@ test("the school sessions page lists earlier unmarked sessions before marking on
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("Unmarked sessions found")).toBeVisible();
   await expect(
-    dialog.getByText(format(new Date(fixture.earlierSessionDate), "dd/MM/yyyy - h:mm a")),
+    dialog.getByText(format(new Date(fixture.earlierSessionDate), DISPLAY_DATE_TIME)),
   ).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Submit" })).toHaveCount(0);
 });

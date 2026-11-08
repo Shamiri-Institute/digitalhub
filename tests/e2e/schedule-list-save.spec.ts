@@ -81,7 +81,7 @@ test("marking a session in the list view keeps the visible range", async ({
   await page.getByLabel("Select list view").click();
   await expect(page).toHaveURL(/mode=list/);
 
-  const title = page.getByRole("heading", { level: 3 });
+  const title = page.getByRole("heading", { level: 2 });
   const sessionRow = page
     .getByRole("row")
     .filter({ hasText: fixture.schoolName })

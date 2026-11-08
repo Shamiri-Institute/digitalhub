@@ -39,6 +39,7 @@ import { submitWeeklyFellowEvaluation } from "#/lib/actions/fellow";
 import { evaluationEditDeadline, mayEditEvaluation } from "#/lib/evaluation-edit-window";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { project as projectTable, weeklyFellowRatings } from "#/db/schema";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type WeeklyFellowRatings = typeof weeklyFellowRatings.$inferSelect;
 
@@ -213,7 +214,7 @@ function WeeklyFellowEvaluationForm({
               <div className="flex items-center gap-2">
                 <span>
                   Update ratings by{" "}
-                  {format(evaluationEditDeadline(existingEvaluation.createdAt), "dd-MM-yyyy")} (
+                  {format(evaluationEditDeadline(existingEvaluation.createdAt), DISPLAY_DATE)} (
                   <CountdownTimer
                     deadline={evaluationEditDeadline(existingEvaluation.createdAt)}
                     onExpire={setNow}

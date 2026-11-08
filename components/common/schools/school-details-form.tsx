@@ -47,6 +47,7 @@ import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import { AddSchoolSchema, EditSchoolSchema } from "../../../app/(platform)/hc/schemas";
 import { addSchool, editSchoolInformation } from "../../../app/(platform)/hc/schools/actions";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type FormData = z.infer<typeof AddSchoolSchema>;
 
@@ -409,7 +410,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
                             >
                               <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
                               {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
+                                format(field.value, DISPLAY_DATE)
                               ) : (
                                 <span>Pick a date</span>
                               )}

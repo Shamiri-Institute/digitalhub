@@ -36,6 +36,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { zodResolver } from "#/lib/zod-resolver";
 import { WeeklyHubTeamMeetingSchema } from "../../schemas";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 function generateWeekFieldValues() {
   const numWeeks = 4;
@@ -48,7 +49,7 @@ function generateWeekFieldValues() {
     const week = startOfWeek(date, { weekStartsOn: 1 });
     selectValues.push(
       <SelectItem key={i} value={format(week, "yyyy-MM-dd")}>
-        Week {numWeeks - i + 1} - {format(week, "dd/MM/yyyy")}
+        Week {numWeeks - i + 1} - {format(week, DISPLAY_DATE)}
       </SelectItem>,
     );
   }

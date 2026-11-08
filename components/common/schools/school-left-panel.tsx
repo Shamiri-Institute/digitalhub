@@ -19,6 +19,7 @@ import { cn, getSchoolInitials } from "#/lib/utils";
 import LocationIcon from "#/public/icons/location-pin-icon.svg";
 import MailIcon from "#/public/icons/mail-icon.svg";
 import PhoneIcon from "#/public/icons/telephone-icon.svg";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 export default function SchoolLeftPanel({
   open = false,
@@ -273,7 +274,7 @@ export default function SchoolLeftPanel({
                               )}
                             </div>
                             <span className="text-gray-400">
-                              {format(history.createdAt, "dd-MM-yyyy")}
+                              {format(history.createdAt, DISPLAY_DATE)}
                             </span>
                           </div>
                         );

@@ -40,6 +40,7 @@ import { submitGroupEvaluation } from "#/lib/actions/group";
 import { evaluationEditDeadline, mayEditEvaluation } from "#/lib/evaluation-edit-window";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
+import { DISPLAY_DATE } from "#/lib/date-utils";
 
 type FormInput = {
   section: string;
@@ -281,7 +282,7 @@ function StudentGroupEvaluationForm({
               <div className="flex items-center gap-2">
                 <span>
                   Update ratings by{" "}
-                  {format(evaluationEditDeadline(existingEvaluation.createdAt), "dd-MM-yyyy")} (
+                  {format(evaluationEditDeadline(existingEvaluation.createdAt), DISPLAY_DATE)} (
                   <CountdownTimer
                     deadline={evaluationEditDeadline(existingEvaluation.createdAt)}
                     onExpire={setNow}
