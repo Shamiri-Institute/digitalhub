@@ -3,8 +3,8 @@ import { rankItem } from "@tanstack/match-sorter-utils";
 import {
   type Column,
   type ColumnDef,
+  type ColumnDefTemplate,
   type FilterFn,
-  flexRender,
   functionalUpdate,
   getCoreRowModel,
   getFilteredRowModel,
@@ -82,6 +82,16 @@ const defaultColumn = {
   sortingFn: <TData,>(rowA: Row<TData>, rowB: Row<TData>, columnId: string) =>
     compareCellValues(rowA.getValue(columnId), rowB.getValue(columnId)),
 };
+
+// flexRender mounts a function template as a component. Tables that build their columns during
+// render pass new functions each time, so every cell remounted and a row's menu button lost focus
+// when its dialog closed. Called as plain functions, templates cannot use hooks.
+function renderTemplate<TProps extends object>(
+  template: ColumnDefTemplate<TProps> | undefined,
+  props: TProps,
+): ReactNode {
+  return typeof template === "function" ? (template(props) as ReactNode) : template;
+}
 
 /** The columns that hold a row's controls, with the header text a screen reader reads for each. */
 const actionColumnLabels = new Map([
@@ -427,7 +437,7 @@ function DataTableContent<TData, TValue>({
                 {headerGroup.headers.map((header) => {
                   const headerContent = header.isPlaceholder
                     ? null
-                    : flexRender(header.column.columnDef.header, header.getContext());
+                    : renderTemplate(header.column.columnDef.header, header.getContext());
                   const columnSorts = canSortBy(header.column) && !header.isPlaceholder;
                   const actionColumnLabel = actionColumnLabels.get(header.column.id);
                   return (
@@ -484,7 +494,7 @@ function DataTableContent<TData, TValue>({
                             cell.column.columnDef.meta?.numeric && "text-right tabular-nums",
                           )}
                         >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          {renderTemplate(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       );
                     })}

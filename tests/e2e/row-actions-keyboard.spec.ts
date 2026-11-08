@@ -56,6 +56,7 @@ test("a hub coordinator opens a school's actions and its edit dialog with the ke
   await expect.poll(() => dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
 });
 
 test("a supervisor opens a dialog nested in a clinical case's actions with the keyboard", async ({
