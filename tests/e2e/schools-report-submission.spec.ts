@@ -3,12 +3,11 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { interventionSession, school } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { sessionDisplayName } from "#/lib/utils";
 import { expect, test } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { cellUnder, getUrl, searchRows } from "#/tests/pages/helpers";
 
-async function pickCoordinatorWithClinicalSession() {
+async function pickCoordinatorWithClinicalSessionType() {
   const {
     rows: [row],
   } = await db.execute<{
@@ -35,7 +34,7 @@ test("the schools table names a school's latest held session that has no report"
   context,
   undo,
 }) => {
-  const fixture = await pickCoordinatorWithClinicalSession();
+  const fixture = await pickCoordinatorWithClinicalSessionType();
   const schoolId = objectId("sch");
   const schoolName = `E2E report submission school ${schoolId}`;
   await db
@@ -61,6 +60,6 @@ test("the schools table names a school's latest held session that has no report"
   await page.goto(getUrl("/hc/schools"));
   const row = await searchRows(page, schoolName);
   await expect(await cellUnder(page, row, "Report submission")).toHaveText(
-    `${sessionDisplayName(fixture.sessionName)} - Not submitted`,
+    `${fixture.sessionName.toUpperCase()} - Not submitted`,
   );
 });
