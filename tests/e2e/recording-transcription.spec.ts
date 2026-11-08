@@ -138,7 +138,9 @@ test("a supervisor uploads a session recording, and the dialog stays open until 
   await expect(dialog).toBeHidden({ timeout: 120_000 });
 
   await page.reload();
-  await expect(await cellUnder(page, await uploadedRow(page), "Status")).toHaveText("Pending");
+  await expect(await cellUnder(page, await uploadedRow(page), "Status")).toHaveText(
+    transcribingSupervisorId ? "Pending" : "Uploaded",
+  );
 });
 
 test("an uploaded recording is transcribed and its transcript can be read", async ({

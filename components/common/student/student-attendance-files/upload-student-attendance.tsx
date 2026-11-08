@@ -81,6 +81,8 @@ export default function UploadStudentAttendanceDocument({
     }
 
     setUploading(true);
+    // Photos can still be added while this upload runs; only these go into the document.
+    const documentPhotos = photos;
 
     try {
       const filters = { sessionId, groupId };
@@ -104,7 +106,7 @@ export default function UploadStudentAttendanceDocument({
 
       const pdfFile = await createAttendancePdf(
         existingPdfUrl,
-        photos.map(({ file }) => file),
+        documentPhotos.map(({ file }) => file),
       );
       const { key, token } = await uploadToS3(pdfFile, {
         bucket: "student-attendance",
@@ -126,8 +128,8 @@ export default function UploadStudentAttendanceDocument({
 
       if (result.success) {
         onUploadSuccess?.();
-        photos.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
-        setPhotos([]);
+        documentPhotos.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
+        setPhotos((current) => current.filter((photo) => !documentPhotos.includes(photo)));
         toast({ title: "File uploaded successfully" });
       } else {
         toast({

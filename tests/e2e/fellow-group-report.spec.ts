@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { fellowGroupReport, interventionGroup, interventionSession, school } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { expect, test } from "#/tests/fixtures";
+import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
@@ -26,11 +26,8 @@ async function pickFellow() {
   return row;
 }
 
-test("a group's report opens and saves once its school has held four sessions scheduled in the app", async ({
-  page,
-  context,
-  undo,
-}) => {
+/** A new school and group led by the fellow, and a way to hold its s1-s4 sessions. */
+async function createReportGroup(undo: Undo) {
   const fixture = await pickFellow();
   required(fixture, "a fellow whose hub has the s1-s4 session names");
   const { hubId, projectId } = fixture;
@@ -78,10 +75,19 @@ test("a group's report opens and saves once its school has held four sessions sc
       occurred: true,
     });
   }
+  return { email: fixture.email, visibleId, holdSession };
+}
+
+test("a group's report opens and saves once its school has held four sessions scheduled in the app", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const { email, visibleId, holdSession } = await createReportGroup(undo);
   await holdSession("s1", 28);
   await holdSession("s2", 21);
   await holdSession("s3", 14);
-  await signInWithEmail(context, fixture.email);
+  await signInWithEmail(context, email);
 
   const reportButton = page.getByRole("button", { name: "Complete Group Report" });
   await page.goto(getUrl(`/fel/schools/${visibleId}/group`));
@@ -108,4 +114,29 @@ test("a group's report opens and saves once its school has held four sessions sc
 
   await page.reload();
   await expect(page.getByRole("button", { name: "View report" })).toBeVisible();
+});
+
+test("the group report opens at its first section after it was closed further down", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const { email, visibleId, holdSession } = await createReportGroup(undo);
+  await holdSession("s1", 28);
+  await holdSession("s2", 21);
+  await holdSession("s3", 14);
+  await holdSession("s4", 7);
+  await signInWithEmail(context, email);
+
+  await page.goto(getUrl(`/fel/schools/${visibleId}/group`));
+  const reportButton = page.getByRole("button", { name: "Complete Group Report" });
+  const report = page.getByRole("dialog", { name: "Group Report" });
+  await reportButton.click();
+  await report.getByText("Section 9 — Supervision and Support").scrollIntoViewIfNeeded();
+  await expect(report).not.toContainText("Section 1 of 9");
+  await report.getByRole("button", { name: "Cancel" }).click();
+  await expect(report).toBeHidden();
+
+  await reportButton.click();
+  await expect(report).toContainText("Section 1 of 9");
 });
