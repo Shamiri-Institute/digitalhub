@@ -24,7 +24,7 @@ env:
   S3_SURVEY_PRINT_FILES_BUCKET: survey-print-files
   S3_SURVEY_PRINT_FILES_REGION: af-south-1
   AWS_ENDPOINT_URL_S3: http://localhost:8333
-  S3_STUDENT_ATTENDANCE_BUCKET: mock-s3-attendance-bucket
+  S3_STUDENT_ATTENDANCE_BUCKET: student-attendance
   S3_STUDENT_ATTENDANCE_REGION: af-south-1
   S3_SURVEY_SCANS_BUCKET: survey-scans
   S3_SURVEY_SCANS_REGION: af-south-1
