@@ -50,7 +50,7 @@ test("a recording no transcription was queued for shows as uploaded, a queued on
   const group = await pickSupervisedGroup();
   // One held session per recording, since a group has one recording per session.
   const recordings = [11, 22].map((kilobytes, index) => {
-    const sessionDate = new Date(Date.UTC(2020, 0, 6 + index, 9));
+    const sessionDate = new Date(Date.UTC(2019, 0, 6 + index, 9));
     return {
       session: {
         id: objectId("isess"),
@@ -70,7 +70,6 @@ test("a recording no transcription was queued for shows as uploaded, a queued on
   const recordingIds = recordings.map(({ recordingId }) => recordingId);
   await db.insert(interventionSession).values(recordings.map(({ session }) => session));
   undo(async () => {
-    await db.delete(transcription).where(inArray(transcription.recordingId, recordingIds));
     await db.delete(sessionRecording).where(inArray(sessionRecording.id, recordingIds));
     await db.delete(interventionSession).where(inArray(interventionSession.id, sessionIds));
   });

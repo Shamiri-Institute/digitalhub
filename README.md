@@ -210,7 +210,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/tran
 For uploads in development, run a local S3 server with [SeaweedFS](https://github.com/seaweedfs/seaweedfs). Put its `weed` binary on your `PATH`: `brew install seaweedfs` with Homebrew, or download `weed` for your platform from the [releases page](https://github.com/seaweedfs/seaweedfs/releases). Then put the values from the header of `scripts/local-s3.sh` in `.env.development.local`. CI runs the same script.
 
 ```bash
-scripts/local-s3.sh   # S3 on http://localhost:8333, buckets "recordings" and "survey-print-files"
+scripts/local-s3.sh   # S3 on http://localhost:8333, buckets "recordings", "survey-print-files", "survey-scans" and "student-attendance"
 ```
 
 `tests/e2e/recording-transcription.spec.ts` uploads, transcribes and reads back a recording. Its upload test runs wherever the local S3 server is configured, CI included. Its transcription test calls Gemini, so it needs credentials, costs a few cents a run, and never runs in CI.
