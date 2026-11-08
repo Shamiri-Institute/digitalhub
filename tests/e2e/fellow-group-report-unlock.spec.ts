@@ -62,7 +62,7 @@ test("a group's report opens and saves once its school has held four sessions sc
     columns: { id: true, sessionName: true },
     orderBy: (n, { asc }) => asc(n.sessionName),
   });
-  // Held sessions as "Schedule a session" saves them: no legacy session_type.
+  // Held sessions without the legacy session_type, which the unlock does not read.
   async function holdSession(name: string, daysAgo: number) {
     const sessionNameId = sessionNames.find((n) => n.sessionName === name)?.id;
     required(sessionNameId, `the hub's ${name} session name`);

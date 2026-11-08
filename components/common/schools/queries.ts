@@ -34,7 +34,7 @@ export async function fetchSchoolsTableRows(hubId: string) {
         columns: { supervisorName: true, cellNumber: true, supervisorEmail: true },
       },
       interventionSessions: {
-        columns: { sessionDate: true, occurred: true, sessionType: true },
+        columns: { sessionDate: true, occurred: true },
         with: { session: { columns: { sessionName: true } } },
         extras: (session) => ({
           sessionRatingsCount: countOf(interventionSessionRating.sessionId, session.id).as(
