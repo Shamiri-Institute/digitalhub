@@ -22,16 +22,19 @@ export function sessionLabel(sessionName: string) {
   return /^s\d+$/.test(sessionName) ? sessionName.toUpperCase() : sessionName;
 }
 
-/** Categorical series colours, assigned in this order and never cycled past the end. */
+/**
+ * Categorical series colours, assigned in this order and never cycled past the end. The order keeps
+ * neighbouring colours, and the first and last slices of a donut, apart for colour-blind readers.
+ */
 export const SERIES_COLORS = [
   "var(--color-shamiri-new-blue)",
   "var(--color-shamiri-graph-green)",
-  "var(--color-shamiri-graph-yellow)",
   "var(--color-shamiri-graph-purple)",
   "var(--color-shamiri-red)",
-  "var(--color-shamiri-dark-blue)",
   "var(--color-shamiri-light-orange)",
-  "var(--color-shamiri-light-blue)",
+  "var(--color-shamiri-dark-orange)",
+  "var(--color-shamiri-graph-yellow)",
+  "var(--color-shamiri-graph-light-blue)",
 ];
 
 /** Colour of a value from a fixed list, so it keeps its colour whatever else is in the data. */
