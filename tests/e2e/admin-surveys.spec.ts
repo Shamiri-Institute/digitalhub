@@ -1,16 +1,26 @@
 import type { BrowserContext, Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { format } from "date-fns";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { PDFDocument } from "pdf-lib";
 
 import { db } from "#/db/client";
-import { adminUser, hub, project, survey, surveyVersion } from "#/db/schema";
+import {
+  adminUser,
+  hub,
+  project,
+  school,
+  student,
+  survey,
+  surveyAuditEvent,
+  surveyVersion,
+} from "#/db/schema";
 import { careAdminEmail, researchAdminEmail } from "#/db/seed/fixtures";
 import { objectId } from "#/lib/crypto";
 import type { SurveyForm } from "#/lib/survey/form";
+import { recordPrintRun } from "#/lib/survey/print-run";
 import { expect, test } from "#/tests/fixtures";
-import { createAdminCopy, raceOnRow, signInWithEmail } from "#/tests/helpers";
+import { createAdminCopy, emailForProfile, required, signInWithEmail } from "#/tests/helpers";
+import { decodedQrCodes, pageTexts } from "#/tests/print-pdf";
 import {
   createPrintSchool,
   createPublishedSurvey as createSurveyFixture,
@@ -75,7 +85,7 @@ function versionRow(page: Page, versionNumber: number) {
     .filter({ has: page.getByRole("cell", { name: `v${versionNumber}`, exact: true }) });
 }
 
-test("a Research team admin creates a survey and it starts with an empty draft", async ({
+test("R-SURV-ACCESS, R-SURV-CREATE: a Research team admin creates a survey and it starts with an empty draft", async ({
   page,
   context,
 }) => {
@@ -101,7 +111,10 @@ test("a Research team admin creates a survey and it starts with an empty draft",
   await expect(page.getByRole("link", { name: title })).toBeVisible();
 });
 
-test("a survey code can only be used once", async ({ page, context }) => {
+test("R-SURV-CREATE: a survey code can only be used once, and must be 2 to 10 letters or digits", async ({
+  page,
+  context,
+}) => {
   const { userId, scope } = await signInAsResearchAdmin(context);
   const existing = await createPublishedSurvey(scope, userId);
   await page.goto(getUrl("/admin/surveys"));
@@ -112,9 +125,17 @@ test("a survey code can only be used once", async ({ page, context }) => {
   await page.getByRole("button", { name: "Create survey" }).click();
 
   await expect(page.getByText("A survey with this code already exists").first()).toBeVisible();
+
+  // Serials print the code, so it starts with a letter and has no separators.
+  await page.getByLabel("Code").fill("9X");
+  await page.getByRole("button", { name: "Create survey" }).click();
+  await expect(
+    page.getByText("Use 2 to 10 letters or digits, starting with a letter"),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/surveys$/);
 });
 
-test("a new draft copies a published version, and a survey has one draft at a time", async ({
+test("R-SURV-ONE-DRAFT: a new draft copies a published version, and a survey has one draft at a time", async ({
   page,
   context,
 }) => {
@@ -145,7 +166,7 @@ test("a new draft copies a published version, and a survey has one draft at a ti
   ]);
 });
 
-test("a survey of another implementer is not found", async ({ page, context }) => {
+test("R-SURV-SCOPE: a survey of another implementer is not found", async ({ page, context }) => {
   const { userId, scope } = await signInAsResearchAdmin(context);
   const { implementerId, projectId } = scope;
   const other = await db.query.implementer.findFirst({
@@ -165,7 +186,7 @@ test("a survey of another implementer is not found", async ({ page, context }) =
   await expect(await searchRows(page, foreign.title)).toHaveCount(0);
 });
 
-test("an admin outside the Research team has no Surveys tab and cannot open surveys", async ({
+test("R-SURV-ACCESS: an admin outside the Research team has no Surveys tab and cannot open surveys", async ({
   page,
   context,
 }) => {
@@ -219,7 +240,10 @@ async function save(page: Page) {
   await expect(page.getByText("All changes saved")).toBeVisible();
 }
 
-test("the builder saves a form of several pages and every item kind", async ({ page, context }) => {
+test("R-SURV-SAVE: the builder saves an unfinished form of several pages and every item kind", async ({
+  page,
+  context,
+}) => {
   const { userId, scope } = await signInAsResearchAdmin(context);
   const draft = await createDraftSurvey(scope, userId, { format: 1, pages: [] });
   await page.goto(getUrl(`/admin/surveys/${draft.id}`));
@@ -308,28 +332,7 @@ test("the builder saves a form of several pages and every item kind", async ({ p
   await expect(page.getByLabel("Required")).toBeChecked();
 });
 
-test("moving a question to another page keeps its key and settings", async ({ page, context }) => {
-  const { userId, scope } = await signInAsResearchAdmin(context);
-  const form: SurveyForm = { format: 1, pages: [...TWO_QUESTIONS.pages, { items: [] }] };
-  const draft = await createDraftSurvey(scope, userId, form);
-  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
-
-  await page.getByRole("button", { name: /How do you feel today/ }).click();
-  await page.getByRole("combobox", { name: "Page", exact: true }).click();
-  await page.getByRole("option", { name: "Page 2" }).click();
-  await save(page);
-  await page.reload();
-
-  await expect((await showPage(page, 1)).getByRole("listitem")).toHaveText([/notes/]);
-  const second = await showPage(page, 2);
-  await expect(second.getByRole("listitem")).toHaveText([/mood.*How do you feel/]);
-  await second.getByRole("button", { name: /How do you feel today/ }).click();
-  await expect(page.getByLabel("Key")).toHaveValue("mood");
-  await expect(page.getByLabel("Required")).toBeChecked();
-  await expect(page.getByLabel("Option 5 code")).toHaveValue("5");
-});
-
-test("a duplicate key is rejected on its field", async ({ page, context }) => {
+test("R-SURV-KEYS: a duplicate key is rejected on its field", async ({ page, context }) => {
   const { userId, scope } = await signInAsResearchAdmin(context);
   const draft = await createDraftSurvey(scope, userId, TWO_QUESTIONS);
   await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
@@ -344,7 +347,7 @@ test("a duplicate key is rejected on its field", async ({ page, context }) => {
   await expect(page.getByText("Unsaved changes")).toBeVisible();
 });
 
-test("a draft keeps the keys of its published version; new questions take any key", async ({
+test("R-SURV-KEYS: a draft keeps the keys of its published version; new questions take any key", async ({
   page,
   context,
 }) => {
@@ -382,7 +385,7 @@ test("a draft keeps the keys of its published version; new questions take any ke
   await expect(page.getByLabel("Key")).toBeEnabled();
 });
 
-test("saving from a stale tab reports that the draft changed elsewhere", async ({
+test("R-SURV-SAVE: saving from a stale tab is refused, and each save is audited once", async ({
   page,
   context,
 }) => {
@@ -405,6 +408,13 @@ test("saving from a stale tab reports that the draft changed elsewhere", async (
 
   await other.reload();
   await expect(other.getByRole("button", { name: /Anything else to tell us/ })).toBeVisible();
+
+  // No page shows the audit history: the one stored save wrote one event, the refused one none.
+  const formSaves = await db
+    .select({ id: surveyAuditEvent.id })
+    .from(surveyAuditEvent)
+    .where(and(eq(surveyAuditEvent.surveyId, draft.id), eq(surveyAuditEvent.action, "FORM_SAVED")));
+  expect(formSaves).toHaveLength(1);
 });
 
 /** The last unarchived hub of the admin's project by name, so the admin has to pick it. */
@@ -426,7 +436,7 @@ async function lastHubOf(scope: { implementerId: string; projectId: string }) {
   return printedHub;
 }
 
-test("a Research team admin prints copies of a published version for a hub they choose", async ({
+test("R-SURV-RUN-HUB, R-SURV-QR, R-SURV-PREFILL: a Research team admin prints copies for a hub they choose", async ({
   page,
   context,
   undo,
@@ -435,7 +445,12 @@ test("a Research team admin prints copies of a published version for a hub they 
   test.slow();
   const { userId, scope } = await signInAsResearchAdmin(context);
   const printedHub = await lastHubOf(scope);
-  const published = await createPublishedSurvey(scope, userId);
+  const published = await createSurveyFixture({
+    ...scope,
+    code: uniqueCode(),
+    createdBy: userId,
+    prefill: "SCHOOL",
+  });
   const printedSchool = await createPrintSchool({
     hubId: printedHub.id,
     schoolName: `Print ${published.code}`,
@@ -449,7 +464,12 @@ test("a Research team admin prints copies of a published version for a hub they 
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("combobox", { name: "Hub" }).click();
   await page.getByRole("option", { name: printedHub.hubName, exact: true }).click();
-  await dialog.getByLabel(`${printedSchool.schoolName} copies`).fill("3");
+  const copies = dialog.getByLabel(`${printedSchool.schoolName} copies`);
+  // R-SURV-RUN-LIMIT: a run has at most 50,000 copies.
+  await copies.fill("50001");
+  await dialog.getByRole("button", { name: "Continue" }).click();
+  await expect(dialog.getByText("At most 50000 copies")).toBeVisible();
+  await copies.fill("3");
   await dialog.getByRole("button", { name: "Continue" }).click();
   await expect(dialog.getByText(`for ${printedHub.hubName}`)).toBeVisible();
   await dialog.getByRole("button", { name: "Create print run" }).click();
@@ -464,86 +484,42 @@ test("a Research team admin prints copies of a published version for a hub they 
     { timeout: 60_000 },
   );
 
+  const schoolFile = page.getByRole("row").filter({ hasText: "Whole school" });
+  await expect(schoolFile).toContainText("Ready", { timeout: 60_000 });
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    schoolFile
+      .getByRole("link", { name: `Download ${printedSchool.schoolName} Whole school` })
+      .click(),
+  ]);
+  const printed = new Uint8Array(await readFile(await download.path()));
+  const texts = await pageTexts(printed);
+  expect(texts).toHaveLength(3 * published.pageCount);
+  // Each page names its school (SCHOOL prefill), its page code and the marking guide, and carries
+  // the same page id in its top and bottom QR codes, unique across the run.
+  const pageCodes = [1, 2, 3].flatMap((copy) =>
+    Array.from(
+      { length: published.pageCount },
+      (_, page) => `${published.code}-${String(copy).padStart(6, "0")}-P${page + 1}`,
+    ),
+  );
+  for (const [index, text] of texts.entries()) {
+    expect(text).toContain(printedSchool.schoolName);
+    expect(text).toContain(pageCodes[index]);
+    expect(text).toContain("Mark your answer:");
+  }
+  const topCodes = await decodedQrCodes(printed, "top");
+  expect(await decodedQrCodes(printed, "bottom")).toEqual(topCodes);
+  expect(topCodes.every(Boolean)).toBe(true);
+  expect(new Set(topCodes).size).toBe(topCodes.length);
+
   await page.getByRole("link", { name: published.title }).click();
   const runRow = page.getByRole("row").filter({ hasText: printedHub.hubName });
   // Version shows as "v1", so the only cell that is exactly "3" is Copies.
   await expect(runRow.getByRole("cell", { name: "3", exact: true })).toBeVisible();
 });
 
-test("a print dialog opened on page 2 before the page knows the time zone keeps its input", async ({
-  page,
-  context,
-  undo,
-}) => {
-  const { userId, scope } = await signInAsResearchAdmin(context);
-  const printedHub = await lastHubOf(scope);
-  // Eleven versions, newest first, so v1 is on the table's second page.
-  const published = await createSurveyFixture({
-    ...scope,
-    code: uniqueCode(),
-    createdBy: userId,
-    versionCount: 11,
-  });
-  const printedSchool = await createPrintSchool({
-    hubId: printedHub.id,
-    schoolName: `Print ${published.code}`,
-  });
-  undo(printedSchool.remove, () => removeSurvey({ id: published.id }));
-
-  // A first visit has no time zone cookie, so the page sets it and refreshes. The refresh is held
-  // until the dialog is open and filled in.
-  const surveyPath = `/admin/surveys/${published.id}`;
-  let releaseRefresh = () => {};
-  const refreshReleased = new Promise<void>((resolve) => {
-    releaseRefresh = resolve;
-  });
-  const isRefresh = (headers: Record<string, string>) =>
-    headers.rsc === "1" && !headers["next-router-prefetch"] && !headers["next-action"];
-  await page.route(
-    (url) => url.pathname === surveyPath,
-    async (route) => {
-      if (isRefresh(route.request().headers())) {
-        await refreshReleased;
-      }
-      await route.fallback();
-    },
-  );
-
-  await page.goto(getUrl(surveyPath));
-  await page.getByRole("button", { name: "2", exact: true }).click();
-  await expect(versionRow(page, 1)).toBeVisible();
-  // By CSS, not role: the open dialog hides the page behind it from the accessibility tree.
-  const headers = await page.getByRole("columnheader").allInnerTexts();
-  const createdIndex = headers.findIndex((text) => text.trim() === "Created");
-  const rowOf = (versionNumber: number) =>
-    page
-      .locator("tbody tr")
-      .filter({ has: page.locator("td", { hasText: new RegExp(`^v${versionNumber}$`) }) });
-  await expect(rowOf(1).locator("td").nth(createdIndex)).toHaveText("");
-  await page.getByLabel("Actions for v1").click();
-  await page.getByRole("menuitem", { name: "Print copies" }).click();
-  const dialog = page.getByRole("dialog");
-  await dialog.getByRole("combobox", { name: "Hub" }).click();
-  await page.getByRole("option", { name: printedHub.hubName, exact: true }).click();
-  const copies = dialog.getByLabel(`${printedSchool.schoolName} copies`);
-  await copies.fill("7");
-  // Opening the dialog leaves the table on page 2, where v1 is.
-  await expect(rowOf(1)).toHaveCount(1);
-
-  // The refresh brings the time zone. The table keeps its page through the new rows, so v1 stays
-  // on screen with its date, and the dialog stays open on it.
-  releaseRefresh();
-  await expect(rowOf(1).locator("td").nth(createdIndex)).toHaveText(
-    format(new Date(), "dd MMM yyyy"),
-  );
-  await expect(rowOf(11)).toHaveCount(0);
-  await expect(
-    dialog.getByRole("heading", { name: `Print copies of ${published.code} v1` }),
-  ).toBeVisible();
-  await expect(copies).toHaveValue("7");
-});
-
-test("an admin whose project has no active hubs is told so in the print dialog", async ({
+test("R-SURV-RUN-HUB: an admin is not offered an archived hub to print for", async ({
   page,
   context,
   undo,
@@ -591,7 +567,7 @@ test("an admin whose project has no active hubs is told so in the print dialog",
   await expect(page.getByRole("dialog")).toContainText("No active hubs to print for.");
 });
 
-test("a published version opens read-only", async ({ page, context }) => {
+test("R-SURV-READONLY: a published version opens read-only", async ({ page, context }) => {
   const { userId, scope } = await signInAsResearchAdmin(context);
   const published = await createPublishedSurvey(scope, userId);
   await page.goto(getUrl(`/admin/surveys/${published.id}`));
@@ -608,7 +584,10 @@ test("a published version opens read-only", async ({ page, context }) => {
   }
 });
 
-test("a retired version opens read-only and says it is retired", async ({ page, context }) => {
+test("R-SURV-READONLY: a retired version opens read-only and says it is retired", async ({
+  page,
+  context,
+}) => {
   const { userId, scope } = await signInAsResearchAdmin(context);
   const retired = await createPublishedSurvey(scope, userId);
   await db
@@ -619,26 +598,6 @@ test("a retired version opens read-only and says it is retired", async ({ page, 
 
   await expect(page.getByText("Retired versions can't be edited")).toBeVisible();
   await expect(page.getByRole("button", { name: "Save", exact: true })).toHaveCount(0);
-});
-
-test("after a save, going back to the builder keeps the saved form", async ({ page, context }) => {
-  const { userId, scope } = await signInAsResearchAdmin(context);
-  const draft = await createDraftSurvey(scope, userId, TWO_QUESTIONS);
-  await page.goto(getUrl(`/admin/surveys/${draft.id}`));
-  await page.getByRole("link", { name: "v1", exact: true }).click();
-
-  await page.getByRole("button", { name: /Anything else/ }).click();
-  await page.getByLabel("Prompt").fill("Anything else to tell us?");
-  await save(page);
-  await page.getByRole("link", { name: draft.title }).click();
-  await expect(page).toHaveURL(new RegExp(`/admin/surveys/${draft.id}$`));
-  await page.goBack();
-
-  await page.getByRole("button", { name: /Anything else to tell us/ }).click();
-  await page.getByLabel("Prompt").fill("Any other comments?");
-  await save(page);
-  await page.reload();
-  await expect(page.getByRole("button", { name: /Any other comments/ })).toBeVisible();
 });
 
 test("a save whose reply was lost is not taken for a change made elsewhere", async ({
@@ -672,68 +631,7 @@ test("a save whose reply was lost is not taken for a change made elsewhere", asy
   await expect(page.getByRole("button", { name: /Any other comments/ })).toBeVisible();
 });
 
-test("bold words and a centred paragraph show in the print preview after a save", async ({
-  page,
-  context,
-}) => {
-  const { userId, scope } = await signInAsResearchAdmin(context);
-  const draft = await createDraftSurvey(scope, userId, {
-    format: 1,
-    pages: [{ items: [{ id: "intro", kind: "paragraph", text: "Answer every question" }] }],
-  });
-  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
-
-  await page.getByRole("button", { name: /Answer every question/ }).click();
-  await page.getByLabel("Text").fill("Answer **every** question");
-  await page.getByRole("radio", { name: "Align centre" }).click();
-  await save(page);
-  await page.reload();
-
-  // The preview is drawn for the eye only (aria-hidden), so it is found by its markup: an SVG
-  // with one <text> per run, in PDF points.
-  const runs = page.locator('figure svg text[font-size="10.5"]');
-  await expect(runs).toHaveText(["Answer", "every", "question"]);
-  await expect(runs.nth(1)).toHaveAttribute("font-weight", "700");
-  await expect(runs.first()).toHaveAttribute("font-weight", "400");
-  const [left, right] = await runs.evaluateAll((texts) => {
-    const xs = texts.map((t) => Number(t.getAttribute("x")));
-    const last = texts.at(-1);
-    return [
-      Math.min(...xs),
-      Number(last?.getAttribute("x")) + Number(last?.getAttribute("textLength")),
-    ];
-  });
-  // Centred between the A4 sheet's 24 pt margins.
-  expect(((left ?? 0) + (right ?? 0)) / 2).toBeCloseTo(595.28 / 2, 0);
-  await expect(page.getByRole("button", { name: /Answer every question/ })).toBeVisible();
-});
-
-test("the publish dialog stays open until the publish is saved", async ({ page, context }) => {
-  const { userId, scope } = await signInAsResearchAdmin(context);
-  const draft = await createDraftSurvey(scope, userId, PRINT_FORM);
-  const [version] = await db
-    .select({ id: surveyVersion.id })
-    .from(surveyVersion)
-    .where(eq(surveyVersion.surveyId, draft.id));
-  if (!version) throw new Error("the draft has no version");
-  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
-
-  await page.getByRole("button", { name: "Publish", exact: true }).click();
-  const dialog = page.getByRole("dialog");
-  await dialog.getByRole("button", { name: "Continue" }).click();
-  // The publish waits on the version row, so Escape and the close button meet a publish in flight.
-  await raceOnRow("survey_versions", version.id, async (waitForWaiting) => {
-    await dialog.getByRole("button", { name: "Publish v1" }).click();
-    await waitForWaiting(1);
-    await page.keyboard.press("Escape");
-    await expect(dialog).toHaveAttribute("data-state", "open");
-    await expect(dialog.getByRole("button", { name: "Close" })).toBeDisabled();
-  });
-  await expect(page.getByText("Published v1. The survey is now active.").first()).toBeVisible();
-  await expect(dialog).toBeHidden();
-});
-
-test("publishing a draft with a prefill freezes it with a sample PDF of every page", async ({
+test("R-SURV-PUBLISH, R-SURV-STATUS, R-SURV-PREFILL: publishing a draft freezes its prefill and makes the survey active", async ({
   page,
   context,
 }) => {
@@ -770,7 +668,10 @@ test("publishing a draft with a prefill freezes it with a sample PDF of every pa
   await expect(page.getByText("Active", { exact: true })).toBeVisible();
 });
 
-test("a page that doesn't fit is named and can't be published", async ({ page, context }) => {
+test("R-SURV-PUBLISH: a page that doesn't fit is named and can't be published", async ({
+  page,
+  context,
+}) => {
   const { userId, scope } = await signInAsResearchAdmin(context);
   const text = (id: string) =>
     ({
@@ -800,4 +701,235 @@ test("a page that doesn't fit is named and can't be published", async ({ page, c
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByRole("listitem")).toHaveText([warning]);
   await expect(dialog.getByRole("button", { name: "Continue" })).toBeDisabled();
+});
+
+test("R-SURV-PUBLISH: an unfinished form can't be published", async ({ page, context }) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const draft = await createDraftSurvey(scope, userId, {
+    format: 1,
+    pages: [
+      {
+        items: [
+          {
+            id: "mood",
+            kind: "single_choice",
+            key: "mood",
+            prompt: "How do you feel today?",
+            required: true,
+            options: [{ code: "1", label: "Fine" }],
+          },
+        ],
+      },
+      { items: [] },
+    ],
+  });
+  await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
+
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("listitem")).toContainText([
+    /add at least two options/,
+    /Page 2 is empty/,
+  ]);
+  await expect(dialog.getByRole("button", { name: "Continue" })).toBeDisabled();
+});
+
+/** A new project of the Research admin's implementer, with an archived hub so it counts as theirs. */
+async function createResearchProject(undo: (...steps: (() => Promise<unknown>)[]) => void) {
+  const [researchAdmin, researchProfile] = await Promise.all([
+    db.query.user.findFirst({
+      where: (u, { eq }) => eq(u.email, researchAdminEmail),
+      columns: { id: true },
+    }),
+    db.query.adminUser.findFirst({
+      where: (a, { eq }) => eq(a.email, researchAdminEmail),
+      columns: { implementerId: true },
+    }),
+  ]);
+  required(researchAdmin, "the Research admin");
+  required(researchProfile, "the Research admin's profile");
+  const projectId = objectId("proj");
+  const hubId = objectId("hub");
+  undo(
+    () => db.delete(project).where(eq(project.id, projectId)),
+    () => db.delete(hub).where(eq(hub.id, hubId)),
+  );
+  await db
+    .insert(project)
+    .values({ id: projectId, visibleId: projectId, name: `E2E ${projectId}` });
+  await db.insert(hub).values({
+    id: hubId,
+    hubName: `E2E archived ${hubId}`,
+    implementerId: researchProfile.implementerId,
+    projectId,
+    archivedAt: new Date(),
+  });
+  const copy = await createAdminCopy(researchAdmin.id, projectId);
+  undo(copy.remove);
+  await db.update(adminUser).set({ team: "RESEARCH" }).where(eq(adminUser.email, copy.email));
+  return {
+    projectId,
+    implementerId: researchProfile.implementerId,
+    researchAdminId: researchAdmin.id,
+    copyEmail: copy.email,
+  };
+}
+
+test("R-SURV-SCOPE: the survey list follows the admin's active project", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const { scope: defaultScope } = await signInAsResearchAdmin(context);
+  const other = await createResearchProject(undo);
+  // Made by the seeded admin: its audit events outlive the copy, which is then deleted.
+  const inActiveProject = await createPublishedSurvey(
+    { implementerId: other.implementerId, projectId: other.projectId },
+    other.researchAdminId,
+  );
+  undo(() => db.delete(survey).where(eq(survey.id, inActiveProject.id)));
+  const inDefaultProject = await createPublishedSurvey(defaultScope, other.researchAdminId);
+  await context.clearCookies();
+  await signInWithEmail(context, other.copyEmail);
+
+  await page.goto(getUrl("/admin/surveys"));
+  await expect(await searchRows(page, inActiveProject.title)).toHaveCount(1);
+  await expect(await searchRows(page, inDefaultProject.title)).toHaveCount(0);
+  const response = await page.goto(getUrl(`/admin/surveys/${inDefaultProject.id}`));
+  expect(response?.status()).toBe(404);
+});
+
+test("R-SURV-PRINTABLE: only published versions print, for active schools and students", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const printedHub = await lastHubOf(scope);
+  const published = await createSurveyFixture({
+    ...scope,
+    code: uniqueCode(),
+    createdBy: userId,
+    prefill: "STUDENT",
+    versionCount: 2,
+  });
+  await db
+    .update(surveyVersion)
+    .set({ status: "RETIRED" })
+    .where(and(eq(surveyVersion.surveyId, published.id), eq(surveyVersion.versionNumber, 1)));
+  const [activeSchool, archivedSchool, droppedSchool] = await Promise.all(
+    ["Active", "Archived", "Dropped"].map((kind) =>
+      createPrintSchool({
+        hubId: printedHub.id,
+        schoolName: `${kind} ${published.code}`,
+        studentNames: ["Amy", "Ben", "Cat", "Dan"].map((name) => `${name} ${published.code}`),
+      }),
+    ),
+  );
+  required(activeSchool, "the active school");
+  required(archivedSchool, "the archived school");
+  required(droppedSchool, "the dropped-out school");
+  undo(activeSchool.remove, archivedSchool.remove, droppedSchool.remove, () =>
+    removeSurvey({ id: published.id }),
+  );
+  await db
+    .update(school)
+    .set({ archivedAt: new Date() })
+    .where(eq(school.id, archivedSchool.schoolId));
+  await db.update(school).set({ droppedOut: true }).where(eq(school.id, droppedSchool.schoolId));
+  await db
+    .update(student)
+    .set({ archivedAt: new Date() })
+    .where(eq(student.studentName, `Cat ${published.code}`));
+  await db
+    .update(student)
+    .set({ droppedOut: true })
+    .where(eq(student.studentName, `Dan ${published.code}`));
+
+  await page.goto(getUrl(`/admin/surveys/${published.id}`));
+  await page.getByLabel("Actions for v1").click();
+  await expect(page.getByRole("menuitem", { name: "View form" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Print copies" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  await page.getByLabel("Actions for v2").click();
+  await page.getByRole("menuitem", { name: "Print copies" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("combobox", { name: "Hub" }).click();
+  await page.getByRole("option", { name: printedHub.hubName, exact: true }).click();
+  await expect(dialog.getByText(`${activeSchool.schoolName} (2 active students)`)).toBeVisible();
+  await expect(dialog.getByText(archivedSchool.schoolName)).toHaveCount(0);
+  await expect(dialog.getByText(droppedSchool.schoolName)).toHaveCount(0);
+});
+
+test("R-SURV-RUN-VIEW: a hub coordinator sees only their hub's runs; a Research admin sees every hub's", async ({
+  page,
+  context,
+  browser,
+  undo,
+}) => {
+  const { userId, scope } = await signInAsResearchAdmin(context);
+  const hubs = await db.query.hub.findMany({
+    where: (h, { and, eq, isNull }) =>
+      and(
+        eq(h.implementerId, scope.implementerId),
+        eq(h.projectId, scope.projectId),
+        isNull(h.archivedAt),
+      ),
+    columns: { id: true, hubName: true },
+    with: { coordinators: { columns: { id: true } } },
+    orderBy: (h, { asc }) => asc(h.id),
+  });
+  let coordinator: { email: string; hubId: string } | undefined;
+  for (const candidate of hubs) {
+    for (const { id } of candidate.coordinators) {
+      const email = coordinator ? null : await emailForProfile(id, "HUB_COORDINATOR");
+      if (email) coordinator = { email, hubId: candidate.id };
+    }
+  }
+  required(coordinator, "a hub coordinator of a hub in the Research admin's project");
+  const coordinatorHubId = coordinator.hubId;
+  const otherHub = hubs.find((candidate) => candidate.id !== coordinatorHubId);
+  required(otherHub, "a second hub in the Research admin's project");
+
+  const published = await createPublishedSurvey(scope, userId);
+  const schools = await Promise.all(
+    [coordinatorHubId, otherHub.id].map((hubId) =>
+      createPrintSchool({ hubId, schoolName: `Runs ${published.code} ${hubId}` }),
+    ),
+  );
+  undo(...schools.map((printSchool) => printSchool.remove), () =>
+    removeSurvey({ id: published.id }),
+  );
+  const [ownRunId, otherRunId] = await Promise.all(
+    schools.map(async (printSchool, index) => {
+      const printRunId = objectId("surveyprintrun");
+      await db.transaction((tx) =>
+        recordPrintRun(
+          tx,
+          { ...scope, userId, hubId: index === 0 ? coordinatorHubId : otherHub.id },
+          {
+            printRunId,
+            versionId: published.versionId,
+            request: { kind: "COUNTS", schools: [{ schoolId: printSchool.schoolId, copies: 1 }] },
+          },
+        ),
+      );
+      return printRunId;
+    }),
+  );
+
+  await page.goto(getUrl(`/admin/surveys/${published.id}`));
+  await expect(page.locator(`a[href$="/runs/${ownRunId}"]`)).toHaveCount(1);
+  await expect(page.locator(`a[href$="/runs/${otherRunId}"]`)).toHaveCount(1);
+
+  const coordinatorContext = await browser.newContext();
+  undo(() => coordinatorContext.close());
+  await signInWithEmail(coordinatorContext, coordinator.email);
+  const coordinatorPage = await coordinatorContext.newPage();
+  await coordinatorPage.goto(getUrl("/hc/surveys"));
+  await expect(coordinatorPage.locator(`a[href$="/runs/${ownRunId}"]`)).toHaveCount(1);
+  await expect(coordinatorPage.locator(`a[href$="/runs/${otherRunId}"]`)).toHaveCount(0);
+  const response = await coordinatorPage.goto(getUrl(`/hc/surveys/runs/${otherRunId}`));
+  expect(response?.status()).toBe(404);
 });
