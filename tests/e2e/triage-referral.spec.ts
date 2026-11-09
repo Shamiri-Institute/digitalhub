@@ -6,7 +6,7 @@ import { student, supervisor, triageEvent, triageEventAudit, user } from "#/db/s
 import { objectId } from "#/lib/crypto";
 import { sessionDisplayName } from "#/lib/utils";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { signableMember, signInWithEmail, required } from "#/tests/helpers";
+import { expectOpenUntilWritten, signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -236,11 +236,20 @@ async function seedReferral(
     supervisorHandoffStatus: "WARM_HANDOFF",
     ...(review && { reviewedAt: new Date(), ...review }),
   });
-  undo(async () => {
-    await db.delete(triageEventAudit).where(eq(triageEventAudit.triageEventId, triageEventId));
-    await db.delete(triageEvent).where(eq(triageEvent.id, triageEventId));
-    await db.delete(student).where(eq(student.id, studentId));
-  });
+  // A test that fails mid-write leaves the write to land after it; locking the event first waits
+  // for that write and the audit row it adds.
+  undo(() =>
+    db.transaction(async (tx) => {
+      await tx
+        .select({ id: triageEvent.id })
+        .from(triageEvent)
+        .where(eq(triageEvent.id, triageEventId))
+        .for("update");
+      await tx.delete(triageEventAudit).where(eq(triageEventAudit.triageEventId, triageEventId));
+      await tx.delete(triageEvent).where(eq(triageEvent.id, triageEventId));
+      await tx.delete(student).where(eq(student.id, studentId));
+    }),
+  );
   return { studentName, admissionNumber, triageEventId };
 }
 
@@ -389,4 +398,35 @@ test("the audit trail lists a re-route between two supervisors with the same nam
   await expect(page.getByRole("row").filter({ hasText: editor.name })).toContainText(
     `Referred supervisor: ${sharedName}→${sharedName}`,
   );
+});
+
+test("the review dialog stays open until the review is saved", async ({ page, context, undo }) => {
+  test.slow();
+  const fixture = await pickReroute();
+  required(fixture, "a fellow's group with an occurred session, two supervisors and a lead");
+  const { studentName, triageEventId } = await seedReferral(fixture, undo);
+
+  await signInWithEmail(context, fixture.reviewerEmail);
+  await page.goto(getUrl("/sc/triage"));
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, requiresActionSection(page), studentName),
+    "Mark reviewed",
+  );
+  const review = page.getByRole("dialog", { name: "Mark reviewed — no clinical case needed" });
+  await review.getByRole("textbox").fill("Assessed the student");
+  await expectOpenUntilWritten(
+    page,
+    review,
+    review.getByRole("button", { name: "Confirm review" }),
+    {
+      table: "triage_events",
+      id: triageEventId,
+    },
+  );
+
+  await page.reload();
+  await expect(
+    requiresActionSection(page).getByRole("cell", { name: studentName, exact: true }),
+  ).toHaveCount(0);
 });
