@@ -36,8 +36,11 @@ export const CLINICAL_SESSION_TYPES = [
 export default function ViewMarkClinicalSessions({ currentcase }: { currentcase: ClinicalCases }) {
   const [attendance, setAttendance] = useState<Record<string, boolean | null>>(() => {
     const initialState: Record<string, boolean | null> = {};
+    // A label attended once stays attended; a missed one can be held again on another day.
     currentcase?.clinicalSessionAttendance?.forEach((record) => {
-      initialState[record.session] = record.attendanceStatus;
+      if (initialState[record.session] !== true) {
+        initialState[record.session] = record.attendanceStatus;
+      }
     });
     return initialState;
   });
@@ -153,41 +156,38 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
                 </Popover>
               </TableCell>
               <TableCell className="w-[140px] border p-0">
-                {attendance[sessionType.key] !== null &&
-                attendance[sessionType.key] !== undefined ? (
+                {attendance[sessionType.key] === true ? (
                   <div className="p-2">
-                    <Badge
-                      variant={attendance[sessionType.key] ? "shamiri-green" : "destructive"}
-                      className="w-20 justify-center"
-                    >
-                      {attendance[sessionType.key] ? (
-                        <>
-                          <Check className="mr-1 h-3 w-3" /> Attended
-                        </>
-                      ) : (
-                        <>
-                          <X className="mr-1 h-3 w-3" /> Missed
-                        </>
-                      )}
+                    <Badge variant="shamiri-green" className="w-20 justify-center">
+                      <Check className="mr-1 h-3 w-3" /> Attended
                     </Badge>
                   </div>
                 ) : (
-                  <div className="grid h-full grid-cols-2">
-                    <button
-                      type="button"
-                      onClick={toastOnError(() => handleAttendance(sessionType.key, true))}
-                      className="flex items-center justify-center border-r p-3 text-shamiri-green transition-colors hover:bg-green-bg"
-                    >
-                      <Check className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={toastOnError(() => handleAttendance(sessionType.key, false))}
-                      className="flex items-center justify-center p-3 text-shamiri-light-red transition-colors hover:bg-red-bg"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <>
+                    {attendance[sessionType.key] === false && (
+                      <div className="px-2 pt-2">
+                        <Badge variant="destructive" className="w-20 justify-center">
+                          <X className="mr-1 h-3 w-3" /> Missed
+                        </Badge>
+                      </div>
+                    )}
+                    <div className="grid h-full grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={toastOnError(() => handleAttendance(sessionType.key, true))}
+                        className="flex items-center justify-center border-r p-3 text-shamiri-green transition-colors hover:bg-green-bg"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={toastOnError(() => handleAttendance(sessionType.key, false))}
+                        className="flex items-center justify-center p-3 text-shamiri-light-red transition-colors hover:bg-red-bg"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </>
                 )}
               </TableCell>
             </TableRow>
