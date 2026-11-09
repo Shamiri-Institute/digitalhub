@@ -2,13 +2,13 @@ import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
+import { operationsAdminEmail } from "#/db/seed/fixtures";
 import { emailForProfile, signInWithEmail, required } from "#/tests/helpers";
-import { pickUser } from "#/tests/platform-routes";
 import { expandRow, getUrl, searchRows } from "#/tests/pages/helpers";
 
 type Viewer = { path: string; email: string; fellowName: string; payouts: number };
 
-const viewers: Partial<Record<"sc" | "ops", Viewer>> = {};
+const viewers: Partial<Record<"sc" | "admin", Viewer>> = {};
 
 async function pickUniquelyNamedFellowsWithPayouts() {
   const { rows } = await db.execute<{
@@ -41,14 +41,17 @@ test.beforeAll(async () => {
       if (email) viewers.sc = { path: "/sc/reporting/expenses/fellows", email, ...fellow };
     }
   }
-  const [opsFellow] = fellows;
-  if (opsFellow) {
-    const { email } = await pickUser("OPERATIONS");
-    viewers.ops = { path: "/ops/reporting/expenses/fellows", email, ...opsFellow };
+  const [adminFellow] = fellows;
+  if (adminFellow) {
+    viewers.admin = {
+      path: "/admin/reporting/expenses/fellows",
+      email: operationsAdminEmail,
+      ...adminFellow,
+    };
   }
 });
 
-for (const role of ["sc", "ops"] as const) {
+for (const role of ["sc", "admin"] as const) {
   test(`${role}: the expanded payout rows have no action menu`, async ({ page, context }) => {
     const viewer = viewers[role];
     required(viewer, `no ${role} viewer of a fellow's payouts`);

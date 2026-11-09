@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { triggerPayoutAction } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
+import { triggerPayoutAction } from "#/app/(platform)/admin/reporting/expenses/payout-history/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -33,9 +33,6 @@ export default function TriggerPayout() {
           variant: "destructive",
         });
       }
-    } catch (error) {
-      setLoading(false);
-      console.error(error);
     } finally {
       setLoading(false);
     }

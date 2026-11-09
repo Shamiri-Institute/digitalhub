@@ -1,12 +1,12 @@
 import { db } from "#/db/client";
-import type { SurveyScope } from "#/lib/auth/admin-access";
+import type { AdminScope } from "#/lib/auth/admin-access";
 import { SurveyVersionStatus } from "#/db/enums";
 import { lockedQuestions } from "#/lib/survey/check-form";
 import { summarizeForm } from "#/lib/survey/form";
 import type { Layout } from "#/lib/survey/layout";
 
 /** The surveys of an implementer in a project, newest first, with their latest version. */
-export async function fetchSurveys({ implementerId, projectId }: SurveyScope) {
+export async function fetchSurveys({ implementerId, projectId }: AdminScope) {
   const surveys = await db.query.survey.findMany({
     where: (s, { and, eq }) => and(eq(s.implementerId, implementerId), eq(s.projectId, projectId)),
     columns: {
@@ -36,7 +36,7 @@ export type SurveyListItem = Awaited<ReturnType<typeof fetchSurveys>>[number];
  */
 export async function fetchSurveyWithVersions(
   surveyId: string,
-  { implementerId, projectId }: SurveyScope,
+  { implementerId, projectId }: AdminScope,
 ) {
   const found = await db.query.survey.findFirst({
     where: (s, { and, eq }) =>
@@ -85,7 +85,7 @@ export type SurveyVersionRow = SurveyWithVersions["versions"][number];
 export async function fetchVersionForBuilder(
   surveyId: string,
   versionNumber: number,
-  { implementerId, projectId }: SurveyScope,
+  { implementerId, projectId }: AdminScope,
 ) {
   const found = await db.query.survey.findFirst({
     where: (s, { and, eq }) =>

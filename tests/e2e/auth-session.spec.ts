@@ -22,7 +22,7 @@ const pagesThatLoadTheProfile: Array<[Role, string]> = [
   ["SUPERVISOR", "/sc/fellows"],
   ["FELLOW", "/fel/portal"],
   ["HUB_COORDINATOR", "/hc/schools"],
-  ["OPERATIONS", "/ops/reporting/expenses/payout-history"],
+  ["ADMIN", "/admin/schedule"],
 ];
 
 for (const [role, route] of pagesThatLoadTheProfile) {
