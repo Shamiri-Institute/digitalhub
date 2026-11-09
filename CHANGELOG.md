@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.11.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.10.1...v2.11.0) (2026-11-09)
+
+### Features
+
+- **admin:** add the Operations admin team ([#1031](https://github.com/Shamiri-Institute/digitalhub/issues/1031)) ([f9e8c9d](https://github.com/Shamiri-Institute/digitalhub/commit/f9e8c9d4e8889d268f167ebaf5dbb0e18a803dee))
+- **admin:** move ops users onto the Operations team and payouts into admin ([#1032](https://github.com/Shamiri-Institute/digitalhub/issues/1032)) ([f29ff99](https://github.com/Shamiri-Institute/digitalhub/commit/f29ff99a3bd0e6ee1e1ede8cbbac3b3f86de9f06))
+
+### Bug Fixes
+
+- **a11y:** name the remaining unnamed buttons and strengthen weak focus rings ([#1050](https://github.com/Shamiri-Institute/digitalhub/issues/1050)) ([58488e5](https://github.com/Shamiri-Institute/digitalhub/commit/58488e51f0c8af25736c5e6d4418f4bb68a5614e))
+- blank bulk attendance, required case referrer, re-routed triage reviews ([#1051](https://github.com/Shamiri-Institute/digitalhub/issues/1051)) ([8db8d93](https://github.com/Shamiri-Institute/digitalhub/commit/8db8d938d3331d9e5f88cea7dc1579fbaa0bb1ef))
+- **charts:** brand-aligned categorical palette (ENG-2692) ([#1058](https://github.com/Shamiri-Institute/digitalhub/issues/1058)) ([b603b63](https://github.com/Shamiri-Institute/digitalhub/commit/b603b636fd13ed7e7c4df963da29bddf67860ac0))
+- dialogs stay open mid-write, no referral of terminated cases, triage referrals stay in the session hub ([#1053](https://github.com/Shamiri-Institute/digitalhub/issues/1053)) ([9ebc3fc](https://github.com/Shamiri-Institute/digitalhub/commit/9ebc3fcc3e7e599cb9a809140bc29ae8f9d9e2e3))
+- **forms:** show every Zod error inline and announce required fields ([#1047](https://github.com/Shamiri-Institute/digitalhub/issues/1047)) ([7789430](https://github.com/Shamiri-Institute/digitalhub/commit/7789430be560ab0a53cc8640fc80c0e9da37d1a0))
+- group report opens after four held sessions, group dialogs stay open mid-write, failed supervisor loads show as failures ([#1054](https://github.com/Shamiri-Institute/digitalhub/issues/1054)) ([55f3b17](https://github.com/Shamiri-Institute/digitalhub/commit/55f3b17acea68935a6d96667552b09fbedf18b17))
+- keep a dialog open while its save runs, in DialogContent; guard the session and ticket dialogs ([#1059](https://github.com/Shamiri-Institute/digitalhub/issues/1059)) ([6f3061f](https://github.com/Shamiri-Institute/digitalhub/commit/6f3061f14ad422f99ed3f11ed8911dfeb0184e45))
+- keep attendance photos added mid-upload, reopen the group report at its start, keep unarchive open mid-save, label untranscribed recordings ([#1057](https://github.com/Shamiri-Institute/digitalhub/issues/1057)) ([d2ac5d7](https://github.com/Shamiri-Institute/digitalhub/commit/d2ac5d7b20a48a1391b3c969bfbec831e6af95b2))
+- **schedule:** open the list on phones and reach calendar chips by keyboard ([#1048](https://github.com/Shamiri-Institute/digitalhub/issues/1048)) ([3ad4ee5](https://github.com/Shamiri-Institute/digitalhub/commit/3ad4ee557d4e19e37e5dbd3b31fc27ca65a0d206))
+- schools table names the latest held session; backfill session_type on intervention sessions ([#1055](https://github.com/Shamiri-Institute/digitalhub/issues/1055)) ([abbb84f](https://github.com/Shamiri-Institute/digitalhub/commit/abbb84ff77e1f4c09506dda63a7dced4d83c3ffe))
+- serialize fellow dropout with group writes, guard supervisor assignments, record student group transfers ([#1046](https://github.com/Shamiri-Institute/digitalhub/issues/1046)) ([b157da8](https://github.com/Shamiri-Institute/digitalhub/commit/b157da80989405f2f1a9c86c9bdb482160a3178b))
+- **ui:** give every platform page one h1 ([#1049](https://github.com/Shamiri-Institute/digitalhub/issues/1049)) ([b418590](https://github.com/Shamiri-Institute/digitalhub/commit/b418590a312c9d17d0cf6808307d08febd2c4f66))
+- **ui:** keep the app shell on errors and 404s, reduce overlay motion, return dialog focus ([#1045](https://github.com/Shamiri-Institute/digitalhub/issues/1045)) ([275b4a4](https://github.com/Shamiri-Institute/digitalhub/commit/275b4a4c5e150aea6a7ca921745646143ef9efc6))
+- **ui:** one date format in forms, schedule title h2, select respects reduced motion (ENG-2678) ([#1056](https://github.com/Shamiri-Institute/digitalhub/issues/1056)) ([c362ba2](https://github.com/Shamiri-Institute/digitalhub/commit/c362ba2b91894e505565763939c0c8b2951d17e5))
+
 ## [2.10.1](https://github.com/Shamiri-Institute/digitalhub/compare/v2.10.0...v2.10.1) (2026-11-07)
 
 ### Bug Fixes
