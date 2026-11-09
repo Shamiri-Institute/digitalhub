@@ -90,7 +90,7 @@ test("a school dropped out in another tab stays dropped when its details are sav
   await expect(await cellUnder(page, row, "Active status")).toHaveText("Inactive");
 });
 
-test("a school dropped out without a dropout date is offered Undo dropout, not Edit", async ({
+test("a school dropped out without a dropout date stays dropped out and offers no edit", async ({
   page,
   context,
   undo,
@@ -105,6 +105,8 @@ test("a school dropped out without a dropout date is offered Undo dropout, not E
   await signInWithEmail(context, coordinator.email);
 
   await openSchools(page);
-  await chooseRowAction(page, await searchRows(page, schoolName), "Undo dropout");
-  await expect(page.getByRole("dialog")).toBeVisible();
+  const row = await searchRows(page, schoolName);
+  await expect(await cellUnder(page, row, "Active status")).toHaveText("Inactive");
+  await row.getByRole("button", { name: `Actions for ${schoolName}` }).click();
+  await expect(page.getByRole("menuitem")).toHaveText(["View school", "Undo dropout"]);
 });

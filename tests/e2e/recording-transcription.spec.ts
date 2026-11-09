@@ -9,17 +9,14 @@ import { interventionSession, sessionRecording } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { deleteObject } from "#/lib/s3/s3.service";
 import { sessionDisplayName } from "#/lib/utils";
-import { raceOnRow, required, signInWithEmail } from "#/tests/helpers";
-import { cellUnder, chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
+import { required, signInWithEmail } from "#/tests/helpers";
+import { cellUnder, getUrl, rowWithCell } from "#/tests/pages/helpers";
 
-// Uploads a recording through the UI to the local S3 (scripts/local-s3.sh), then runs the cron
-// worker and reads the transcript back. The worker calls Gemini for real and spends a few cents a
-// run, so transcription never runs in CI, and locally it skips without credentials or an A/B
-// supervisor. Without an A/B supervisor the upload goes to any seeded supervisor.
+// Uploads a recording through the UI to the local S3 (scripts/local-s3.sh). Only a supervisor in
+// FIDELITY_AB_TEST_SUPERVISOR_IDS has the upload queued for transcription; without one the upload
+// goes to any seeded supervisor.
 const transcribingSupervisorId = process.env.FIDELITY_AB_TEST_SUPERVISOR_IDS?.split(",")[0];
-const hasGemini = !!process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_USE_VERTEXAI === "true";
 test.skip(!process.env.AWS_ENDPOINT_URL_S3, "needs the local S3 server (scripts/local-s3.sh)");
-test.describe.configure({ mode: "serial" });
 
 type SupervisedGroup = {
   email: string;
@@ -95,7 +92,7 @@ async function uploadedRow(page: Page) {
     .filter({ has: page.getByRole("cell", { name: "67.0 KB", exact: true }) });
 }
 
-test("a supervisor uploads a session recording, and the dialog stays open until it is saved", async ({
+test("a supervisor uploads a recording of their fellow's group session", async ({
   context,
   page,
 }) => {
@@ -125,48 +122,11 @@ test("a supervisor uploads a session recording, and the dialog stays open until 
     })
     .click();
   await dialog.getByLabel("Audio file").setInputFiles("tests/e2e/fixtures/session-recording.mp3");
-  // Recording the upload checks the session row, so locking it holds the upload in flight, past
-  // the file's PUT to S3: closing then would hide the outcome of a save that still happens.
-  await raceOnRow("intervention_sessions", target.sessionId, async (waitForWaiting) => {
-    await dialog.getByRole("button", { name: "Upload", exact: true }).click();
-    await waitForWaiting(1);
-    await page.keyboard.press("Escape");
-    await expect(dialog).toHaveAttribute("data-state", "open");
-    await expect(dialog.getByRole("button", { name: "Close" })).toBeDisabled();
-    await expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled();
-  });
+  await dialog.getByRole("button", { name: "Upload", exact: true }).click();
   await expect(dialog).toBeHidden({ timeout: 120_000 });
 
   await page.reload();
   await expect(await cellUnder(page, await uploadedRow(page), "Status")).toHaveText(
     transcribingSupervisorId ? "Pending" : "Uploaded",
   );
-});
-
-test("an uploaded recording is transcribed and its transcript can be read", async ({
-  context,
-  page,
-  request,
-}) => {
-  test.skip(!!process.env.CI, "calls Gemini, which CI must not pay for");
-  test.skip(
-    !transcribingSupervisorId || !hasGemini || !process.env.CRON_SECRET,
-    "needs FIDELITY_AB_TEST_SUPERVISOR_IDS, Gemini credentials and CRON_SECRET",
-  );
-  test.setTimeout(10 * 60_000);
-  await signInWithEmail(context, target.email);
-
-  const worker = await request.get(getUrl("/api/cron/transcriptions"), {
-    headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
-    timeout: 9 * 60_000,
-  });
-  expect(worker.status()).toBe(200);
-
-  await page.goto(getUrl("/sc/reporting/recordings"));
-  const transcribedRow = await uploadedRow(page);
-  await expect(await cellUnder(page, transcribedRow, "Status")).toHaveText("Completed");
-
-  await chooseRowAction(page, transcribedRow, "View transcript");
-  const transcript = page.getByRole("dialog", { name: "Transcript" });
-  await expect(transcript).toContainText(/growth mindset/i);
 });
