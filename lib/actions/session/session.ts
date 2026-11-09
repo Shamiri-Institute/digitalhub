@@ -250,10 +250,9 @@ export async function submitQualitativeFeedback({
 
 export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSchema>) {
   try {
-    const { identifier: supervisorId } = await requireAuthRole(ImplementerRole.SUPERVISOR);
-    if (!supervisorId) {
-      return { success: false, message: "Supervisor not found" };
-    }
+    const { profileId: supervisorId, hubId: supervisorHubId } = await requireHubRole(
+      ImplementerRole.SUPERVISOR,
+    );
 
     const {
       studentBehaviorRating,
@@ -267,6 +266,7 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
     } = SessionRatingsSchema.parse(data);
 
     const session = await findSessionWithSchoolOrThrow(sessionId);
+    requireSessionInCallerHub(session, supervisorHubId);
 
     if (session.school?.assignedSupervisorId !== supervisorId) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
