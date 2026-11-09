@@ -95,13 +95,6 @@ export interface CreateTicketPayload {
 
 export type CreateTicketInput = Omit<CreateTicketPayload, "createdById">;
 
-export interface CreateTicketEscalationPayload {
-  ticketId: string;
-  escalatedById: string;
-  escalatedToId: string;
-  escalationReason: string;
-}
-
 export interface TicketFilters {
   status?: TicketStatus;
   page?: number;
@@ -121,9 +114,6 @@ export interface FullTicket {
 
 export interface TicketEscalation {
   id: string;
-  ticketId: string;
-  escalatedById: string;
-  escalatedToId: string;
   escalationReason: string;
   createdAt: Date;
   escalatedByName: string;
@@ -142,8 +132,6 @@ export interface TicketEscalationStatus {
 
 export interface TicketResolution {
   id: string;
-  ticketId: string;
-  resolvedById: string;
   resolvedByRole: string | null;
   resolutionReason: string;
   createdAt: Date;
@@ -171,24 +159,12 @@ export const CreateTicketReassignmentSchema = z.object({
   ),
 });
 
-export interface BaseTicketReassignment {
-  ticketId: string;
-  reassignedFrom: string;
-  reassignedTo: string;
-  reassignmentReason: string;
-  escalationId: string;
-}
-export type CreateTicketReassignmentPayload = BaseTicketReassignment;
-export type CreateTicketReassignmentInput = Omit<
-  CreateTicketReassignmentPayload,
-  "reassignedFrom" | "escalationId"
->;
+export type CreateTicketReassignmentInput = z.infer<typeof CreateTicketReassignmentSchema>;
 
-export interface FullTicketReassignment extends BaseTicketReassignment {
+export interface FullTicketReassignment {
   id: string;
-  archivedAt: Date | null;
+  reassignmentReason: string;
   createdAt: Date;
-  updatedAt: Date;
   reassignedFromName: string;
   reassignedToName: string;
   reassignedFromRole: ReassignmentInitiatorRole | null;

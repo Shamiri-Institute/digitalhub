@@ -1,8 +1,8 @@
 import type { Page } from "@playwright/test";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { ticketEscalations, ticketResolutions, tickets } from "#/db/schema";
+import { ticketEvents, tickets } from "#/db/schema";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { raceOnRow, required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
@@ -38,6 +38,7 @@ async function createEscalatedTicket(fixture: Fixture, undo: Undo, subject: stri
       subject,
       description: "Raised by the ticket specs.",
       category: "TECH",
+      holderId: fixture.supervisorUserId,
       status: "ESCALATED",
     })
     .returning({ id: tickets.id });
@@ -51,16 +52,16 @@ async function createEscalatedTicket(fixture: Fixture, undo: Undo, subject: stri
         .from(tickets)
         .where(eq(tickets.id, ticket.id))
         .for("update");
-      await tx.delete(ticketResolutions).where(eq(ticketResolutions.ticketId, ticket.id));
-      await tx.delete(ticketEscalations).where(eq(ticketEscalations.ticketId, ticket.id));
+      await tx.delete(ticketEvents).where(eq(ticketEvents.ticketId, ticket.id));
       await tx.delete(tickets).where(eq(tickets.id, ticket.id));
     }),
   );
-  await db.insert(ticketEscalations).values({
+  await db.insert(ticketEvents).values({
     ticketId: ticket.id,
-    escalatedById: fixture.fellowUserId,
-    escalatedToId: fixture.supervisorUserId,
-    escalationReason: "Raised by the ticket specs.",
+    kind: "CREATED",
+    actorId: fixture.fellowUserId,
+    assigneeId: fixture.supervisorUserId,
+    reason: "Raised by the ticket specs.",
   });
   return ticket;
 }
@@ -114,5 +115,10 @@ test("escalating and resolving a ticket at once lets only the first one through"
   await expect(row).toContainText(/escalated/i);
   // The ticket's menu offers "View resolution" only after a status request it makes on opening, so
   // the database is the reliable place to see that the refused resolution was not stored.
-  expect(await db.$count(ticketResolutions, eq(ticketResolutions.ticketId, ticket.id))).toBe(0);
+  expect(
+    await db.$count(
+      ticketEvents,
+      and(eq(ticketEvents.ticketId, ticket.id), eq(ticketEvents.kind, "RESOLVED")),
+    ),
+  ).toBe(0);
 });

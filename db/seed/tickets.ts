@@ -1,6 +1,6 @@
 import { db } from "#/db/client";
 import type { TicketCategory, TicketPriorityLevel } from "#/db/enums";
-import { ticketEscalations, tickets } from "#/db/schema";
+import { ticketEvents, tickets } from "#/db/schema";
 
 interface SeedTicket {
   category: TicketCategory;
@@ -209,16 +209,18 @@ export async function createTickets() {
             description: ticket.description,
             category: ticket.category,
             priority: ticket.priority,
+            holderId: supervisor.id,
             status: "ESCALATED",
           })
           .returning({ id: tickets.id });
         if (!created) throw new Error(`Ticket "${ticket.subject}" was not created`);
 
-        await tx.insert(ticketEscalations).values({
+        await tx.insert(ticketEvents).values({
           ticketId: created.id,
-          escalatedById: fellow.id,
-          escalatedToId: supervisor.id,
-          escalationReason: ticket.description,
+          kind: "CREATED",
+          actorId: fellow.id,
+          assigneeId: supervisor.id,
+          reason: ticket.description,
         });
       });
     }

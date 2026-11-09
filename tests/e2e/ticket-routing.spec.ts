@@ -2,14 +2,7 @@ import type { BrowserContext, Page } from "@playwright/test";
 import { eq, inArray, like, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import {
-  adminUser,
-  hubCoordinator,
-  ticketEscalations,
-  ticketReassignments,
-  ticketResolutions,
-  tickets,
-} from "#/db/schema";
+import { adminUser, hubCoordinator, ticketEvents, tickets } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
 import { createAdminCopy, required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { cellUnder, chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
@@ -76,9 +69,7 @@ test.afterAll(async () => {
     .select({ id: tickets.id })
     .from(tickets)
     .where(like(tickets.subject, `${subjectPrefix}%`));
-  await db.delete(ticketReassignments).where(inArray(ticketReassignments.ticketId, created));
-  await db.delete(ticketResolutions).where(inArray(ticketResolutions.ticketId, created));
-  await db.delete(ticketEscalations).where(inArray(ticketEscalations.ticketId, created));
+  await db.delete(ticketEvents).where(inArray(ticketEvents.ticketId, created));
   await db.delete(tickets).where(like(tickets.subject, `${subjectPrefix}%`));
 });
 
