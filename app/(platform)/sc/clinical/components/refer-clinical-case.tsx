@@ -12,11 +12,13 @@ import { Button } from "#/components/ui/button";
 import { Combobox } from "#/components/ui/combobox";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -64,14 +66,39 @@ export type ReferralOptions = {
 export default function ReferClinicalCase({
   children,
   clinicalCase,
-  referralOptions: { supervisorsInHub, clinicalLeads },
+  referralOptions,
 }: {
   children: React.ReactNode;
   clinicalCase: ClinicalCases;
   referralOptions: ReferralOptions;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
+        <ReferClinicalCaseForm
+          clinicalCase={clinicalCase}
+          referralOptions={referralOptions}
+          close={() => setDialogOpen(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReferClinicalCaseForm({
+  clinicalCase,
+  referralOptions: { supervisorsInHub, clinicalLeads },
+  close,
+}: {
+  clinicalCase: ClinicalCases;
+  referralOptions: ReferralOptions;
+  close: () => void;
+}) {
   const [selectedReferTo, setSelectedReferTo] = useState<string>("");
+  const { isSaving, save } = useDialogSave();
 
   const form = useForm<ComplaintFormValues>({
     resolver: zodResolver(ReferClinicalCaseSchema),
@@ -84,217 +111,212 @@ export default function ReferClinicalCase({
     },
   });
 
-  const onSubmit = async (data: ComplaintFormValues) => {
-    try {
-      let response: { success: boolean; message?: string };
-      if (data.referTo === "Clinical Lead") {
-        response = await referClinicalCaseToClinicalLead({
-          caseId: clinicalCase.id,
-          recipientClinicalLeadId: data.clinicalLeadId ?? "",
-          referralNotes: data.message,
-          referralReason: data.referralReason,
-        });
-      } else if (data.referTo === "Supervisor") {
-        response = await referClinicalCaseToSupervisor({
-          caseId: clinicalCase.id,
-          recipientSupervisorId: data.supervisorId ?? "",
-          referralNotes: data.message,
-          referralReason: data.referralReason,
-        });
-      } else {
-        response = { success: false, message: "Invalid referral type" };
-      }
+  const onSubmit = (data: ComplaintFormValues) => {
+    save(async () => {
+      try {
+        let response: { success: boolean; message?: string };
+        if (data.referTo === "Clinical Lead") {
+          response = await referClinicalCaseToClinicalLead({
+            caseId: clinicalCase.id,
+            recipientClinicalLeadId: data.clinicalLeadId ?? "",
+            referralNotes: data.message,
+            referralReason: data.referralReason,
+          });
+        } else if (data.referTo === "Supervisor") {
+          response = await referClinicalCaseToSupervisor({
+            caseId: clinicalCase.id,
+            recipientSupervisorId: data.supervisorId ?? "",
+            referralNotes: data.message,
+            referralReason: data.referralReason,
+          });
+        } else {
+          response = { success: false, message: "Invalid referral type" };
+        }
 
-      if (response.success) {
-        toast({
-          title: "Success",
-          description: "Clinical case referred successfully",
-        });
-        setDialogOpen(false);
-        form.reset();
-      } else {
+        if (response.success) {
+          toast({
+            title: "Success",
+            description: "Clinical case referred successfully",
+          });
+          close();
+        } else {
+          toast({
+            title: "Error",
+            description: response.message ?? "Something went wrong, please try again",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error(error);
         toast({
           title: "Error",
-          description: response.message ?? "Something went wrong, please try again",
+          description: "Something went wrong",
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: "Something went wrong",
-        variant: "destructive",
-      });
-    }
+    });
   };
 
   return (
-    <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
-        <DialogHeader className="bg-white">
-          <DialogTitle>Refer clinical case</DialogTitle>
-        </DialogHeader>
-        <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
-        <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
-          <Form {...form}>
-            <form
-              noValidate
-              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-              className="space-y-4"
-            >
-              <FormField
-                control={form.control}
-                name="referTo"
-                render={({ field }) => (
-                  <FormItem required>
-                    <FormLabel className="flex items-center">Refer to</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setSelectedReferTo(value);
-                        form.setValue("referralReason", "");
-                        if (value !== "Supervisor") {
-                          form.setValue("supervisorId", "");
-                        }
-                        if (value !== "Clinical Lead") {
-                          form.setValue("clinicalLeadId", "");
-                        }
-                      }}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.keys(REFERRAL_OPTIONS).map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {selectedReferTo === "Supervisor" && (
-                <FormField
-                  control={form.control}
-                  name="supervisorId"
-                  render={({ field }) => (
-                    <FormItem required>
-                      <FormLabel className="flex items-center">Select Supervisor</FormLabel>
-                      <FormControl>
-                        <Combobox
-                          items={supervisorsInHub.map((supervisor) => ({
-                            id: supervisor.id,
-                            label: supervisor.name || "Unknown",
-                          }))}
-                          activeItemId={field.value || ""}
-                          onSelectItem={field.onChange}
-                          placeholder="Select a supervisor..."
-                          inputPlaceholder="Search supervisors..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {selectedReferTo === "Clinical Lead" && (
-                <FormField
-                  control={form.control}
-                  name="clinicalLeadId"
-                  render={({ field }) => (
-                    <FormItem required>
-                      <FormLabel className="flex items-center">Select Clinical Lead</FormLabel>
-                      <FormControl>
-                        <Combobox
-                          items={clinicalLeads.map((lead) => ({
-                            id: lead.id,
-                            label: lead.name || "Unknown",
-                          }))}
-                          activeItemId={field.value || ""}
-                          onSelectItem={field.onChange}
-                          placeholder="Select a clinical lead..."
-                          inputPlaceholder="Search clinical leads..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              <FormField
-                control={form.control}
-                name="referralReason"
-                render={({ field }) => (
-                  <FormItem required>
-                    <FormLabel className="flex items-center">Referral Reason</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={!selectedReferTo}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {selectedReferTo &&
-                          REFERRAL_OPTIONS[selectedReferTo as keyof typeof REFERRAL_OPTIONS].map(
-                            (reason) => (
-                              <SelectItem key={reason} value={reason}>
-                                {reason}
-                              </SelectItem>
-                            ),
-                          )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="message"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Message</FormLabel>
+    <>
+      <DialogHeader className="bg-white">
+        <DialogTitle>Refer clinical case</DialogTitle>
+      </DialogHeader>
+      <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
+      <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
+        <Form {...form}>
+          <form
+            noValidate
+            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="referTo"
+              render={({ field }) => (
+                <FormItem required>
+                  <FormLabel className="flex items-center">Refer to</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setSelectedReferTo(value);
+                      form.setValue("referralReason", "");
+                      if (value !== "Supervisor") {
+                        form.setValue("supervisorId", "");
+                      }
+                      if (value !== "Clinical Lead") {
+                        form.setValue("clinicalLeadId", "");
+                      }
+                    }}
+                    value={field.value}
+                  >
                     <FormControl>
-                      <Textarea {...field} className="min-h-[150px]" />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.keys(REFERRAL_OPTIONS).map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {selectedReferTo === "Supervisor" && (
+              <FormField
+                control={form.control}
+                name="supervisorId"
+                render={({ field }) => (
+                  <FormItem required>
+                    <FormLabel className="flex items-center">Select Supervisor</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        items={supervisorsInHub.map((supervisor) => ({
+                          id: supervisor.id,
+                          label: supervisor.name || "Unknown",
+                        }))}
+                        activeItemId={field.value || ""}
+                        onSelectItem={field.onChange}
+                        placeholder="Select a supervisor..."
+                        inputPlaceholder="Search supervisors..."
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            )}
 
-              <DialogFooter>
-                <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
+            {selectedReferTo === "Clinical Lead" && (
+              <FormField
+                control={form.control}
+                name="clinicalLeadId"
+                render={({ field }) => (
+                  <FormItem required>
+                    <FormLabel className="flex items-center">Select Clinical Lead</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        items={clinicalLeads.map((lead) => ({
+                          id: lead.id,
+                          label: lead.name || "Unknown",
+                        }))}
+                        activeItemId={field.value || ""}
+                        onSelectItem={field.onChange}
+                        placeholder="Select a clinical lead..."
+                        inputPlaceholder="Search clinical leads..."
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormField
+              control={form.control}
+              name="referralReason"
+              render={({ field }) => (
+                <FormItem required>
+                  <FormLabel className="flex items-center">Referral Reason</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={!selectedReferTo}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedReferTo &&
+                        REFERRAL_OPTIONS[selectedReferTo as keyof typeof REFERRAL_OPTIONS].map(
+                          (reason) => (
+                            <SelectItem key={reason} value={reason}>
+                              {reason}
+                            </SelectItem>
+                          ),
+                        )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="message"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Message</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} className="min-h-[150px]" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="ghost" type="button">
                   Cancel
                 </Button>
-                <Button
-                  variant="brand"
-                  type="submit"
-                  loading={form.formState.isSubmitting}
-                  disabled={form.formState.isSubmitting}
-                >
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </div>
-      </DialogContent>
-    </Dialog>
+              </DialogClose>
+              <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </div>
+    </>
   );
 }

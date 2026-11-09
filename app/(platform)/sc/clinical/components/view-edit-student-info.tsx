@@ -12,6 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -62,6 +64,24 @@ export default function ViewEditClinicalCaseStudentInfo({
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
+  return (
+    <Dialog open={open} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
+        <EditStudentInfoFields clinicalCase={clinicalCase} close={() => setDialogOpen(false)} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditStudentInfoFields({
+  clinicalCase,
+  close,
+}: {
+  clinicalCase: ClinicalCases;
+  close: () => void;
+}) {
+  const { isSaving, save } = useDialogSave();
   const form = useForm<EditStudentInfoFormValues>({
     resolver: zodResolver(EditStudentSchema),
     defaultValues: {
@@ -79,181 +99,83 @@ export default function ViewEditClinicalCaseStudentInfo({
     },
   });
 
-  const onSubmit = async (data: EditStudentInfoFormValues) => {
-    try {
-      const response = await updateStudentInfo(data);
+  const onSubmit = (data: EditStudentInfoFormValues) => {
+    save(async () => {
+      try {
+        const response = await updateStudentInfo(data);
 
-      if (response.success) {
-        toast({
-          title: "Success",
-          description: response.message,
-        });
-        setDialogOpen(false);
-      } else {
+        if (response.success) {
+          toast({
+            title: "Success",
+            description: response.message,
+          });
+          close();
+        } else {
+          toast({
+            title: "Error",
+            description: response.message,
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error(error);
         toast({
           title: "Error",
-          description: response.message,
+          description: "Something went wrong",
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: "Something went wrong",
-        variant: "destructive",
-      });
-    }
+    });
   };
 
   return (
-    <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
-        <DialogHeader className="bg-white">
-          <DialogTitle>View/edit student information</DialogTitle>
-        </DialogHeader>
-        <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
-        <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
-          <Form {...form}>
-            <form
-              noValidate
-              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-              className="space-y-4"
-            >
+    <>
+      <DialogHeader className="bg-white">
+        <DialogTitle>View/edit student information</DialogTitle>
+      </DialogHeader>
+      <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
+      <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
+        <Form {...form}>
+          <form
+            noValidate
+            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="studentName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Student Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="pseudonym"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pseudonym</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="studentName"
+                name="school"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Student Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="pseudonym"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Pseudonym</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="school"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>School</FormLabel>
-                      <FormControl>
-                        <Input {...field} disabled className="bg-gray-100" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="gender"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Gender</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {GENDER_OPTIONS.map((g) => (
-                            <SelectItem key={g} value={g}>
-                              {g}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex gap-4">
-                <FormField
-                  control={form.control}
-                  name="shamiriId"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Shamiri ID</FormLabel>
-                      <FormControl>
-                        <Input {...field} disabled className="bg-gray-100" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="admissionNumber"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>School Admission Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="classForm"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Grade/Form</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="number" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="stream"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Stream</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="group"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Group</FormLabel>
+                    <FormLabel>School</FormLabel>
                     <FormControl>
                       <Input {...field} disabled className="bg-gray-100" />
                     </FormControl>
@@ -262,23 +184,117 @@ export default function ViewEditClinicalCaseStudentInfo({
                 )}
               />
 
-              <DialogFooter>
-                <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {GENDER_OPTIONS.map((g) => (
+                          <SelectItem key={g} value={g}>
+                            {g}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <FormField
+                control={form.control}
+                name="shamiriId"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Shamiri ID</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled className="bg-gray-100" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="admissionNumber"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>School Admission Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="classForm"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Grade/Form</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="number" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="stream"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Stream</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="group"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Group</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled className="bg-gray-100" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="ghost" type="button">
                   Cancel
                 </Button>
-                <Button
-                  variant="brand"
-                  type="submit"
-                  loading={form.formState.isSubmitting}
-                  disabled={form.formState.isSubmitting}
-                >
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </div>
-      </DialogContent>
-    </Dialog>
+              </DialogClose>
+              <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </div>
+    </>
   );
 }
