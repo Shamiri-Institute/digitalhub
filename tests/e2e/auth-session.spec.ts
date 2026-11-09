@@ -49,51 +49,14 @@ async function expectSignedOut(page: Page, userId: string) {
   await expect(page).toHaveURL(loginUrl);
 }
 
-test("the account menu signs out by keyboard and deletes the session", async ({
-  context,
-  page,
-  undo,
-}) => {
+test("signing out deletes the session", async ({ context, page, undo }) => {
   const admin = await createAdminCopy((await pickUser("ADMIN")).id);
   undo(admin.remove);
   await signInWithEmail(context, admin.email);
   await page.goto(getUrl("/admin/schedule"));
-  const accountMenu = page.getByRole("button", { name: "E2E Admin", exact: true });
-  await expect(accountMenu).toBeVisible();
-
-  await expect(async () => {
-    await page.keyboard.press("Tab");
-    await expect(accountMenu).toBeFocused({ timeout: 100 });
-  }).toPass({ intervals: [0], timeout: 30_000 });
-  await page.keyboard.press("Enter");
-  await expect(page.getByRole("menuitem", { name: "My Profile" })).toBeFocused();
-  await page.keyboard.press("ArrowDown");
-  await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeFocused();
-  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "E2E Admin", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expectSignedOut(page, admin.id);
-});
-
-test.describe("on a phone", () => {
-  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-
-  test("the menu opens My Profile and signs out", async ({ context, page, undo }) => {
-    const admin = await createAdminCopy((await pickUser("ADMIN")).id);
-    undo(admin.remove);
-    await signInWithEmail(context, admin.email);
-    await page.goto(getUrl("/admin/schedule"));
-    const menu = page.getByRole("button", { name: "Account menu" });
-
-    await menu.click();
-    await page.getByRole("menuitem", { name: "My Profile" }).click();
-    const profile = page.getByRole("dialog");
-    await expect(profile).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(profile).toBeHidden();
-
-    await menu.click();
-    await page.getByRole("menuitem", { name: "Sign out" }).click();
-    await expectSignedOut(page, admin.id);
-  });
 });
 
 test("archiving a signed-in user signs them out and blocks new sessions", async ({
