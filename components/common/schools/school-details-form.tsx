@@ -87,14 +87,19 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
     defaultValues: {
       numbersExpected: school?.numbersExpected ?? undefined,
       schoolEmail: school?.schoolEmail ?? "",
-      schoolDemographics: school?.schoolDemographics as
+      // A school saved without these has null, which the optional enums refuse.
+      schoolDemographics: (school?.schoolDemographics ?? undefined) as
         | (typeof SCHOOL_DEMOGRAPHICS)[number]
         | undefined,
-      schoolCounty: school?.schoolCounty as (typeof KENYAN_COUNTIES)[number]["name"] | undefined,
+      schoolCounty: (school?.schoolCounty ?? undefined) as
+        | (typeof KENYAN_COUNTIES)[number]["name"]
+        | undefined,
       schoolSubCounty: school?.schoolSubCounty ?? undefined,
       schoolName: school?.schoolName ?? "",
-      boardingDay: school?.boardingDay as (typeof BOARDING_DAY_TYPES)[number] | undefined,
-      schoolType: school?.schoolType as (typeof SCHOOL_TYPES)[number] | undefined,
+      boardingDay: (school?.boardingDay ?? undefined) as
+        | (typeof BOARDING_DAY_TYPES)[number]
+        | undefined,
+      schoolType: (school?.schoolType ?? undefined) as (typeof SCHOOL_TYPES)[number] | undefined,
       pointPersonPhone: school?.pointPersonPhone ?? undefined,
       pointPersonEmail: school?.pointPersonEmail ?? undefined,
       pointPersonName: school?.pointPersonName ?? undefined,
