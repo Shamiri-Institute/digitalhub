@@ -18,10 +18,13 @@ import {
   survey,
   surveyPrintFile,
   surveyPrintRun,
+  surveyAnswer,
   surveyQuestionnaire,
   surveyQuestionnairePage,
+  surveyScanPage,
   surveyUpload,
   surveyVersion,
+  surveyVersionField,
   fellow,
   fellowAttendance,
   fellowComplaints,
@@ -305,6 +308,16 @@ export const surveyVersionRelations = relations(surveyVersion, ({ one, many }) =
     relationName: "SurveyVersion_basedOnVersion",
   }),
   printRuns: many(surveyPrintRun, { relationName: "SurveyPrintRun_version" }),
+  fields: many(surveyVersionField, { relationName: "SurveyVersionField_version" }),
+}));
+
+export const surveyVersionFieldRelations = relations(surveyVersionField, ({ one, many }) => ({
+  version: one(surveyVersion, {
+    fields: [surveyVersionField.versionId],
+    references: [surveyVersion.id],
+    relationName: "SurveyVersionField_version",
+  }),
+  answers: many(surveyAnswer, { relationName: "SurveyAnswer_versionField" }),
 }));
 
 export const surveyPrintRunRelations = relations(surveyPrintRun, ({ one, many }) => ({
@@ -340,7 +353,7 @@ export const surveyPrintFileRelations = relations(surveyPrintFile, ({ one }) => 
   }),
 }));
 
-export const surveyUploadRelations = relations(surveyUpload, ({ one }) => ({
+export const surveyUploadRelations = relations(surveyUpload, ({ one, many }) => ({
   hub: one(hub, {
     fields: [surveyUpload.hubId],
     references: [hub.id],
@@ -350,6 +363,50 @@ export const surveyUploadRelations = relations(surveyUpload, ({ one }) => ({
     fields: [surveyUpload.uploadedBy],
     references: [user.id],
     relationName: "SurveyUpload_uploadedByUser",
+  }),
+  scanPages: many(surveyScanPage, { relationName: "SurveyScanPage_upload" }),
+}));
+
+export const surveyScanPageRelations = relations(surveyScanPage, ({ one, many }) => ({
+  upload: one(surveyUpload, {
+    fields: [surveyScanPage.uploadId],
+    references: [surveyUpload.id],
+    relationName: "SurveyScanPage_upload",
+  }),
+  questionnairePage: one(surveyQuestionnairePage, {
+    fields: [surveyScanPage.questionnairePageId],
+    references: [surveyQuestionnairePage.id],
+    relationName: "SurveyScanPage_questionnairePage",
+  }),
+  duplicateOf: one(surveyScanPage, {
+    fields: [surveyScanPage.duplicateOfId],
+    references: [surveyScanPage.id],
+    relationName: "SurveyScanPage_duplicateOf",
+  }),
+  duplicates: many(surveyScanPage, { relationName: "SurveyScanPage_duplicateOf" }),
+  answers: many(surveyAnswer, { relationName: "SurveyAnswer_scanPage" }),
+}));
+
+export const surveyAnswerRelations = relations(surveyAnswer, ({ one }) => ({
+  questionnaire: one(surveyQuestionnaire, {
+    fields: [surveyAnswer.questionnaireId],
+    references: [surveyQuestionnaire.id],
+    relationName: "SurveyAnswer_questionnaire",
+  }),
+  versionField: one(surveyVersionField, {
+    fields: [surveyAnswer.versionId, surveyAnswer.field],
+    references: [surveyVersionField.versionId, surveyVersionField.field],
+    relationName: "SurveyAnswer_versionField",
+  }),
+  scanPage: one(surveyScanPage, {
+    fields: [surveyAnswer.scanPageId],
+    references: [surveyScanPage.id],
+    relationName: "SurveyAnswer_scanPage",
+  }),
+  reviewedByUser: one(user, {
+    fields: [surveyAnswer.reviewedBy],
+    references: [user.id],
+    relationName: "SurveyAnswer_reviewedByUser",
   }),
 }));
 
@@ -375,15 +432,20 @@ export const surveyQuestionnaireRelations = relations(surveyQuestionnaire, ({ on
     relationName: "SurveyQuestionnaire_student",
   }),
   pages: many(surveyQuestionnairePage, { relationName: "SurveyQuestionnairePage_questionnaire" }),
+  answers: many(surveyAnswer, { relationName: "SurveyAnswer_questionnaire" }),
 }));
 
-export const surveyQuestionnairePageRelations = relations(surveyQuestionnairePage, ({ one }) => ({
-  questionnaire: one(surveyQuestionnaire, {
-    fields: [surveyQuestionnairePage.questionnaireId],
-    references: [surveyQuestionnaire.id],
-    relationName: "SurveyQuestionnairePage_questionnaire",
+export const surveyQuestionnairePageRelations = relations(
+  surveyQuestionnairePage,
+  ({ one, many }) => ({
+    questionnaire: one(surveyQuestionnaire, {
+      fields: [surveyQuestionnairePage.questionnaireId],
+      references: [surveyQuestionnaire.id],
+      relationName: "SurveyQuestionnairePage_questionnaire",
+    }),
+    scans: many(surveyScanPage, { relationName: "SurveyScanPage_questionnairePage" }),
   }),
-}));
+);
 
 export const fellowRelations = relations(fellow, ({ one, many }) => ({
   studentAttendances: many(studentAttendance, { relationName: "StudentAttendance_fellow" }),
