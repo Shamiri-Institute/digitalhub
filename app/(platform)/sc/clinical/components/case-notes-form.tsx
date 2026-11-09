@@ -19,6 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -136,6 +138,7 @@ function CaseNotesContent({
   onClose: () => void;
 }) {
   const notes = notesLoad.status === "loaded" ? notesLoad.notes : null;
+  const { isSaving, save } = useDialogSave();
 
   const form = useForm<CaseReportFormValues>({
     resolver: zodResolver(CaseReportSchema),
@@ -194,8 +197,8 @@ function CaseNotesContent({
     }
   };
 
-  const onSubmit = async (data: CaseReportFormValues) => {
-    try {
+  const onSubmit = (data: CaseReportFormValues) => {
+    save(async () => {
       const response = await createClinicalCaseNotes({
         caseId: clinicalCase.id,
         sessionId: data.sessionId,
@@ -222,12 +225,7 @@ function CaseNotesContent({
           variant: "destructive",
         });
       }
-    } catch {
-      toast({
-        title: "Something went wrong, please try again",
-        variant: "destructive",
-      });
-    }
+    });
   };
 
   const showNecessaryConditions = form.watch("riskLevel") !== "no";
@@ -572,16 +570,13 @@ function CaseNotesContent({
           </div>
 
           <div className="flex justify-end space-x-4">
-            <Button variant="ghost" type="button" onClick={onClose}>
-              {fieldsLocked ? "Close" : "Cancel"}
-            </Button>
+            <DialogClose asChild>
+              <Button variant="ghost" type="button">
+                {fieldsLocked ? "Close" : "Cancel"}
+              </Button>
+            </DialogClose>
             {!fieldsLocked && (
-              <Button
-                variant="brand"
-                type="submit"
-                loading={form.formState.isSubmitting}
-                disabled={form.formState.isSubmitting}
-              >
+              <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
                 Submit
               </Button>
             )}

@@ -13,6 +13,8 @@ import {
   DialogHeader,
   DialogTrigger,
   DialogTitle,
+  DialogClose,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -75,6 +77,31 @@ export default function TreatmentPlanForm({
   role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
+        <TreatmentPlanFields
+          clinicalCase={clinicalCase}
+          role={role}
+          close={() => setDialogOpen(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TreatmentPlanFields({
+  clinicalCase,
+  role,
+  close,
+}: {
+  clinicalCase: ClinicalCases;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
+  close: () => void;
+}) {
+  const { isSaving, save } = useDialogSave();
   const [showOtherInput, setShowOtherInput] = useState(false);
 
   const form = useForm<TreatmentPlanFormValues>({
@@ -89,8 +116,8 @@ export default function TreatmentPlanForm({
     },
   });
 
-  const onSubmit = async (data: TreatmentPlanFormValues) => {
-    try {
+  const onSubmit = (data: TreatmentPlanFormValues) => {
+    save(async () => {
       const responese = await createTreatmentPlan({
         caseId: clinicalCase.id,
         role,
@@ -111,166 +138,150 @@ export default function TreatmentPlanForm({
           variant: "destructive",
         });
       }
-      setDialogOpen(false);
-      form.reset();
-    } catch {
-      toast({
-        title: "Something went wrong, please try again",
-        variant: "destructive",
-      });
-    }
+      close();
+    });
   };
 
   return (
-    <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
-        <DialogHeader className="bg-white">
-          <DialogTitle>Treatment Plan</DialogTitle>
-        </DialogHeader>
-        <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
-        <Form {...form}>
-          <form
-            noValidate
-            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="currentOrsScore"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Current ORS Score</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="plannedSessions"
-              render={({ field }) => (
-                <FormItem required>
-                  <FormLabel>Planned Sessions</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="sessionFrequency"
-              render={({ field }) => (
-                <FormItem required>
-                  <FormLabel>Session Frequency</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select frequency" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="once_week">Once a week</SelectItem>
-                      <SelectItem value="twice_week">Twice a week</SelectItem>
-                      <SelectItem value="biweekly">Once every two weeks</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="treatmentInterventions"
-              render={() => (
-                <FormItem required>
-                  <FormLabel>Planned Treatment Interventions</FormLabel>
-                  <div className="space-y-2">
-                    {treatmentInterventions.map((intervention) => (
-                      <FormField
-                        key={intervention}
-                        control={form.control}
-                        name="treatmentInterventions"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(intervention)}
-                                onCheckedChange={(checked) => {
-                                  const value = intervention;
-                                  if (value === "Other") {
-                                    setShowOtherInput(checked === true);
-                                  }
-                                  return checked === true
-                                    ? field.onChange([...field.value, value])
-                                    : field.onChange(field.value?.filter((val) => val !== value));
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal">{intervention}</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {showOtherInput && (
-              <FormField
-                control={form.control}
-                name="otherIntervention"
-                render={({ field }) => (
-                  <FormItem required>
-                    <FormLabel>Other Intervention</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <>
+      <DialogHeader className="bg-white">
+        <DialogTitle>Treatment Plan</DialogTitle>
+      </DialogHeader>
+      <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
+      <Form {...form}>
+        <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="currentOrsScore"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Current ORS Score</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
+          />
 
+          <FormField
+            control={form.control}
+            name="plannedSessions"
+            render={({ field }) => (
+              <FormItem required>
+                <FormLabel>Planned Sessions</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="sessionFrequency"
+            render={({ field }) => (
+              <FormItem required>
+                <FormLabel>Session Frequency</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select frequency" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="once_week">Once a week</SelectItem>
+                    <SelectItem value="twice_week">Twice a week</SelectItem>
+                    <SelectItem value="biweekly">Once every two weeks</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="treatmentInterventions"
+            render={() => (
+              <FormItem required>
+                <FormLabel>Planned Treatment Interventions</FormLabel>
+                <div className="space-y-2">
+                  {treatmentInterventions.map((intervention) => (
+                    <FormField
+                      key={intervention}
+                      control={form.control}
+                      name="treatmentInterventions"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(intervention)}
+                              onCheckedChange={(checked) => {
+                                const value = intervention;
+                                if (value === "Other") {
+                                  setShowOtherInput(checked === true);
+                                }
+                                return checked === true
+                                  ? field.onChange([...field.value, value])
+                                  : field.onChange(field.value?.filter((val) => val !== value));
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">{intervention}</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {showOtherInput && (
             <FormField
               control={form.control}
-              name="interventionExplanation"
+              name="otherIntervention"
               render={({ field }) => (
                 <FormItem required>
-                  <FormLabel>Treatment Intervention Explanation</FormLabel>
+                  <FormLabel>Other Intervention</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={4} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          )}
 
-            <div className="flex justify-end space-x-4">
-              <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
+          <FormField
+            control={form.control}
+            name="interventionExplanation"
+            render={({ field }) => (
+              <FormItem required>
+                <FormLabel>Treatment Intervention Explanation</FormLabel>
+                <FormControl>
+                  <Textarea {...field} rows={4} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end space-x-4">
+            <DialogClose asChild>
+              <Button variant="ghost" type="button">
                 Cancel
               </Button>
-              <Button
-                variant="brand"
-                type="submit"
-                loading={form.formState.isSubmitting}
-                disabled={form.formState.isSubmitting}
-              >
-                Submit
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            </DialogClose>
+            <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+              Submit
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </>
   );
 }

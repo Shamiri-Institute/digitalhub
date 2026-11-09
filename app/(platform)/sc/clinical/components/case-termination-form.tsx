@@ -9,10 +9,12 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTrigger,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -61,6 +63,28 @@ export default function CaseTerminationForm({
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
+  return (
+    <Dialog open={open} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="z-10 max-w-[500px] bg-white p-5">
+        <DialogHeader className="bg-white">
+          <DialogTitle>Terminate Case</DialogTitle>
+        </DialogHeader>
+        <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
+        <CaseTerminationFields clinicalCase={clinicalCase} close={() => setDialogOpen(false)} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CaseTerminationFields({
+  clinicalCase,
+  close,
+}: {
+  clinicalCase: ClinicalCases;
+  close: () => void;
+}) {
+  const { isSaving, save } = useDialogSave();
   const form = useForm<CaseTerminationFormValues>({
     resolver: zodResolver(CaseTerminationSchema),
     defaultValues: {
@@ -70,8 +94,8 @@ export default function CaseTerminationForm({
     },
   });
 
-  const onSubmit = async (data: CaseTerminationFormValues) => {
-    try {
+  const onSubmit = (data: CaseTerminationFormValues) => {
+    save(async () => {
       const response = await terminateClinicalCase({
         caseId: clinicalCase.id,
         sessionId: data.sessionId,
@@ -89,120 +113,88 @@ export default function CaseTerminationForm({
           variant: "destructive",
         });
       }
-      setDialogOpen(false);
-      form.reset();
-    } catch {
-      toast({
-        title: "Something went wrong, please try again",
-        variant: "destructive",
-      });
-    }
+      close();
+    });
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (nextOpen) form.reset();
-        setDialogOpen(nextOpen);
-      }}
-    >
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="z-10 max-w-[500px] bg-white p-5">
-        <DialogHeader className="bg-white">
-          <DialogTitle>Terminate Case</DialogTitle>
-        </DialogHeader>
-        <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
-        <Form {...form}>
-          <form
-            noValidate
-            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="sessionId"
-              render={({ field }) => (
-                <FormItem required>
-                  <FormLabel>Termination Session</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select session" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {clinicalCase.clinicalSessionAttendance?.map((session) => (
-                        <SelectItem key={session.id} value={session.id}>
-                          {session.session} - {format(new Date(session.date), "dd MMM yyyy")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <Form {...form}>
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="sessionId"
+          render={({ field }) => (
+            <FormItem required>
+              <FormLabel>Termination Session</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select session" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {clinicalCase.clinicalSessionAttendance?.map((session) => (
+                    <SelectItem key={session.id} value={session.id}>
+                      {session.session} - {format(new Date(session.date), "dd MMM yyyy")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            <FormField
-              control={form.control}
-              name="terminationReason"
-              render={({ field }) => (
-                <FormItem required>
-                  <FormLabel>Termination Reason</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select termination reason" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {terminationReasons.map((reason) => (
-                        <SelectItem key={reason} value={reason}>
-                          {reason}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <FormField
+          control={form.control}
+          name="terminationReason"
+          render={({ field }) => (
+            <FormItem required>
+              <FormLabel>Termination Reason</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select termination reason" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {terminationReasons.map((reason) => (
+                    <SelectItem key={reason} value={reason}>
+                      {reason}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            <FormField
-              control={form.control}
-              name="terminationExplanation"
-              render={({ field }) => (
-                <FormItem required>
-                  <FormLabel>Termination Explanation</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      rows={4}
-                      placeholder="Explain the reason for termination..."
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <FormField
+          control={form.control}
+          name="terminationExplanation"
+          render={({ field }) => (
+            <FormItem required>
+              <FormLabel>Termination Explanation</FormLabel>
+              <FormControl>
+                <Textarea {...field} rows={4} placeholder="Explain the reason for termination..." />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            <div className="flex justify-end space-x-4">
-              <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="brand"
-                type="submit"
-                loading={form.formState.isSubmitting}
-                disabled={form.formState.isSubmitting}
-              >
-                Terminate Case
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+        <div className="flex justify-end space-x-4">
+          <DialogClose asChild>
+            <Button variant="ghost" type="button">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+            Terminate Case
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

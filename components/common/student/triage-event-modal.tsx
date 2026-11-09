@@ -11,10 +11,12 @@ import {
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -109,6 +111,7 @@ function TriageEventForm({
   readOnly = false,
   onSuccess,
 }: TriageEventModalProps) {
+  const { isSaving, save } = useDialogSave();
   const form = useForm<TriageEventFormData>({
     resolver: zodResolver(TriageEventSchema),
     defaultValues: existingEvent
@@ -143,25 +146,27 @@ function TriageEventForm({
   const showSupervisorSelect = triageActionNeedsSupervisor(actionTaken);
   const forceEscalated = riskScreenOutcome === "ANY_YES";
 
-  const onSubmit = async (data: z.infer<typeof TriageEventSchema>) => {
+  const onSubmit = (data: z.infer<typeof TriageEventSchema>) => {
     if (loadingExistingEvent) return;
-    const result = existingEvent
-      ? await updateTriageEvent(
-          { ...data, id: existingEvent.id },
-          existingEvent.studentAttendanceId ?? undefined,
-        )
-      : await createTriageEvent(data);
+    save(async () => {
+      const result = existingEvent
+        ? await updateTriageEvent(
+            { ...data, id: existingEvent.id },
+            existingEvent.studentAttendanceId ?? undefined,
+          )
+        : await createTriageEvent(data);
 
-    if (!result.success) {
-      toast({
-        variant: "destructive",
-        description: result.message,
-      });
-      return;
-    }
-    toast({ description: result.message });
-    onClose();
-    onSuccess?.();
+      if (!result.success) {
+        toast({
+          variant: "destructive",
+          description: result.message,
+        });
+        return;
+      }
+      toast({ description: result.message });
+      onClose();
+      onSuccess?.();
+    });
   };
 
   return (
@@ -384,28 +389,24 @@ function TriageEventForm({
           />
           <DialogFooter className="flex justify-end gap-2 pt-2">
             {readOnly ? (
-              <Button type="button" variant="outline" onClick={onClose}>
-                Close
-              </Button>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">
+                  Close
+                </Button>
+              </DialogClose>
             ) : (
               <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-shamiri-new-blue hover:bg-blue-bg"
-                  onClick={onClose}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={form.formState.isSubmitting || loadingExistingEvent}
-                >
-                  {loadingExistingEvent
-                    ? "Loading…"
-                    : form.formState.isSubmitting
-                      ? "Saving…"
-                      : "Save triage"}
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-shamiri-new-blue hover:bg-blue-bg"
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button type="submit" disabled={isSaving || loadingExistingEvent}>
+                  {loadingExistingEvent ? "Loading…" : isSaving ? "Saving…" : "Save triage"}
                 </Button>
               </>
             )}
