@@ -11,7 +11,8 @@ import { sortBy } from "#/lib/table-view";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 
-export const columns: ColumnDef<HubClinicalCases>[] = [
+/** `mayReopen` offers "Un-terminate case": clinical leads reopen cases, the clinical team only reads. */
+export const columns = ({ mayReopen }: { mayReopen: boolean }): ColumnDef<HubClinicalCases>[] => [
   {
     id: "expand",
     cell: ({ row }) => {
@@ -114,7 +115,9 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
   {
     id: "button",
     cell: ({ row }) => {
-      return <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} />;
+      return (
+        <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} mayReopen={mayReopen} />
+      );
     },
     enableHiding: false,
   },
