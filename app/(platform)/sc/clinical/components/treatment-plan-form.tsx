@@ -118,34 +118,27 @@ function TreatmentPlanFields({
 
   const onSubmit = (data: TreatmentPlanFormValues) => {
     save(async () => {
-      try {
-        const responese = await createTreatmentPlan({
-          caseId: clinicalCase.id,
-          role,
-          currentOrsScore: data.currentOrsScore ? Number.parseInt(data.currentOrsScore, 10) : 0,
-          plannedSessions: Number.parseInt(data.plannedSessions, 10),
-          sessionFrequency: data.sessionFrequency,
-          treatmentInterventions: data.treatmentInterventions,
-          otherIntervention: data.otherIntervention,
-          interventionExplanation: data.interventionExplanation,
+      const responese = await createTreatmentPlan({
+        caseId: clinicalCase.id,
+        role,
+        currentOrsScore: data.currentOrsScore ? Number.parseInt(data.currentOrsScore, 10) : 0,
+        plannedSessions: Number.parseInt(data.plannedSessions, 10),
+        sessionFrequency: data.sessionFrequency,
+        treatmentInterventions: data.treatmentInterventions,
+        otherIntervention: data.otherIntervention,
+        interventionExplanation: data.interventionExplanation,
+      });
+      if (responese.success) {
+        toast({
+          title: "Treatment plan updated successfully",
         });
-        if (responese.success) {
-          toast({
-            title: "Treatment plan updated successfully",
-          });
-        } else {
-          toast({
-            title: "Something went wrong, please try again",
-            variant: "destructive",
-          });
-        }
-        close();
-      } catch {
+      } else {
         toast({
           title: "Something went wrong, please try again",
           variant: "destructive",
         });
       }
+      close();
     });
   };
 

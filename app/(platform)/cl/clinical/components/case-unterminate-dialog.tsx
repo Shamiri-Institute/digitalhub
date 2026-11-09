@@ -48,18 +48,11 @@ function CaseUnterminateForm({ caseId, close }: { caseId: string; close: () => v
 
   const onConfirmSubmit = () => {
     save(async () => {
-      try {
-        const response = await unterminateClinicalCase({ caseId, reason });
-        if (response.success) {
-          toast({ title: "Case un-terminated successfully" });
-          close();
-        } else {
-          toast({
-            title: "Something went wrong, please try again",
-            variant: "destructive",
-          });
-        }
-      } catch {
+      const response = await unterminateClinicalCase({ caseId, reason });
+      if (response.success) {
+        toast({ title: "Case un-terminated successfully" });
+        close();
+      } else {
         toast({
           title: "Something went wrong, please try again",
           variant: "destructive",

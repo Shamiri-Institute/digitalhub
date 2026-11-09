@@ -199,34 +199,27 @@ function CaseNotesContent({
 
   const onSubmit = (data: CaseReportFormValues) => {
     save(async () => {
-      try {
-        const response = await createClinicalCaseNotes({
-          caseId: clinicalCase.id,
-          sessionId: data.sessionId,
-          followUpPlanExplanation: data.followUpPlan.explanation,
-          followUpPlan: data.followUpPlan.isGroupSession ? "GROUP" : "INDIVIDUAL",
-          orsAssessment: data.orsAssessment ? Number.parseInt(data.orsAssessment, 10) : 0,
-          interventionExplanation: data.interventionExplanation,
-          studentResponseExplanation: data.studentResponseExplanation,
-          presentingIssues: data.presentingIssues,
-          riskLevel: data.riskLevel,
-          necessaryConditions: data.necessaryConditions || "",
-          treatmentInterventions: data.treatmentInterventions,
-          otherIntervention: data.otherIntervention || "",
-          role,
+      const response = await createClinicalCaseNotes({
+        caseId: clinicalCase.id,
+        sessionId: data.sessionId,
+        followUpPlanExplanation: data.followUpPlan.explanation,
+        followUpPlan: data.followUpPlan.isGroupSession ? "GROUP" : "INDIVIDUAL",
+        orsAssessment: data.orsAssessment ? Number.parseInt(data.orsAssessment, 10) : 0,
+        interventionExplanation: data.interventionExplanation,
+        studentResponseExplanation: data.studentResponseExplanation,
+        presentingIssues: data.presentingIssues,
+        riskLevel: data.riskLevel,
+        necessaryConditions: data.necessaryConditions || "",
+        treatmentInterventions: data.treatmentInterventions,
+        otherIntervention: data.otherIntervention || "",
+        role,
+      });
+      if (response.success) {
+        toast({
+          title: "Case report updated successfully",
         });
-        if (response.success) {
-          toast({
-            title: "Case report updated successfully",
-          });
-          onClose();
-        } else {
-          toast({
-            title: "Something went wrong, please try again",
-            variant: "destructive",
-          });
-        }
-      } catch {
+        onClose();
+      } else {
         toast({
           title: "Something went wrong, please try again",
           variant: "destructive",

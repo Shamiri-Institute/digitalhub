@@ -96,31 +96,24 @@ function CaseTerminationFields({
 
   const onSubmit = (data: CaseTerminationFormValues) => {
     save(async () => {
-      try {
-        const response = await terminateClinicalCase({
-          caseId: clinicalCase.id,
-          sessionId: data.sessionId,
-          terminationReason: data.terminationReason,
-          terminationReasonExplanation: data.terminationExplanation,
-        });
+      const response = await terminateClinicalCase({
+        caseId: clinicalCase.id,
+        sessionId: data.sessionId,
+        terminationReason: data.terminationReason,
+        terminationReasonExplanation: data.terminationExplanation,
+      });
 
-        if (response.success) {
-          toast({
-            title: "Case terminated successfully",
-          });
-        } else {
-          toast({
-            title: "Something went wrong, please try again",
-            variant: "destructive",
-          });
-        }
-        close();
-      } catch {
+      if (response.success) {
+        toast({
+          title: "Case terminated successfully",
+        });
+      } else {
         toast({
           title: "Something went wrong, please try again",
           variant: "destructive",
         });
       }
+      close();
     });
   };
 
