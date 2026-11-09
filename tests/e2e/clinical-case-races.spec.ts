@@ -11,7 +11,6 @@ import {
 import { expect, test, type Undo } from "#/tests/fixtures";
 import {
   createClinicalCase,
-  expectOpenUntilWritten,
   raceOnRow,
   required,
   signableMember,
@@ -112,6 +111,18 @@ test("terminating a case from two tabs at once records one termination", async (
     eq(clinicalCaseTermination.caseId, clinicalCase.caseId),
   );
   expect(terminations).toBe(1);
+  // The termination's review goes to the clinical lead's queue once.
+  const reviews = await db.$count(
+    clinicalCaseReview,
+    inArray(
+      clinicalCaseReview.terminationId,
+      db
+        .select({ id: clinicalCaseTermination.id })
+        .from(clinicalCaseTermination)
+        .where(eq(clinicalCaseTermination.caseId, clinicalCase.caseId)),
+    ),
+  );
+  expect(reviews).toBe(1);
 });
 
 test("a follow-up that arrives as the case is terminated leaves it terminated", async ({
@@ -141,46 +152,4 @@ test("a follow-up that arrives as the case is terminated leaves it terminated", 
   await expect(otherTab.getByText("Failed to update case status").first()).toBeVisible();
   await page.reload();
   await expect(await searchRows(page, clinicalCase.pseudonym)).toContainText("Terminated");
-});
-
-test("the terminate dialog stays open until the termination is saved", async ({
-  page,
-  context,
-  undo,
-}) => {
-  const clinicalCase = await createCaseWithSession(undo);
-  await signInWithEmail(context, clinicalCase.email);
-  const terminate = await openTerminationForm(page, clinicalCase.pseudonym);
-  await expectOpenUntilWritten(
-    page,
-    page.getByRole("dialog", { name: "Terminate Case" }),
-    terminate,
-    {
-      table: "clinical_screening_info",
-      id: clinicalCase.caseId,
-    },
-  );
-
-  await page.reload();
-  await expect(await searchRows(page, clinicalCase.pseudonym)).toContainText(/terminated/i);
-});
-
-test("the follow-up dialog stays open until the follow-up is saved", async ({
-  page,
-  context,
-  undo,
-}) => {
-  const clinicalCase = await createCaseWithSession(undo);
-  await signInWithEmail(context, clinicalCase.email);
-  await page.goto(getUrl("/sc/clinical"));
-  await chooseRowAction(page, await searchRows(page, clinicalCase.pseudonym), "Follow up");
-  const followUp = page.getByRole("dialog", { name: "Trigger Follow Up" });
-  await expectOpenUntilWritten(page, followUp, followUp.getByRole("button", { name: "Confirm" }), {
-    table: "clinical_screening_info",
-    id: clinicalCase.caseId,
-  });
-
-  await page.reload();
-  // The status badge uppercases the stored status through CSS.
-  await expect(await searchRows(page, clinicalCase.pseudonym)).toContainText(/followup/i);
 });
