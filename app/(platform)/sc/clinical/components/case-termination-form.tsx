@@ -133,11 +133,13 @@ function CaseTerminationFields({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {clinicalCase.clinicalSessionAttendance?.map((session) => (
-                    <SelectItem key={session.id} value={session.id}>
-                      {session.session} - {format(new Date(session.date), "dd MMM yyyy")}
-                    </SelectItem>
-                  ))}
+                  {clinicalCase.clinicalSessionAttendance
+                    ?.filter((session) => session.attendanceStatus === true)
+                    .map((session) => (
+                      <SelectItem key={session.id} value={session.id}>
+                        {session.session} - {format(new Date(session.date), "dd MMM yyyy")}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               <FormMessage />
