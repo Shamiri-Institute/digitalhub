@@ -35,7 +35,7 @@ function useDialogSave() {
 }
 
 function DialogClose({ disabled, ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  const { isSaving } = useDialogSave();
+  const isSaving = use(DialogSaveContext)?.isSaving ?? false;
   return <DialogPrimitive.Close disabled={disabled || isSaving} {...props} />;
 }
 

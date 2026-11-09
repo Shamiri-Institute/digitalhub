@@ -13,6 +13,10 @@ import {
 } from "#/tests/helpers";
 import { cellUnder, chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
 
+// Every test signs in as the same supervisor, and the new ticket test locks that supervisor's user
+// row, which a sign-in or another test's write naming them would queue behind, so they take turns.
+test.describe.configure({ mode: "serial" });
+
 type Fixture = { supervisorEmail: string; supervisorUserId: string; fellowUserId: string };
 
 // A supervisor, a fellow they supervise, and a hub coordinator of the supervisor's hub to escalate to.

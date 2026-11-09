@@ -61,7 +61,7 @@ function CancelSessionConfirm({
         toast({
           variant: "destructive",
           description:
-            response.message ?? "Something went wrong while trying to reschedule session.",
+            response.message ?? "Something went wrong while trying to cancel the session.",
         });
         return;
       }
