@@ -5,6 +5,7 @@ import { currentAdminUser } from "#/app/auth";
 import { db } from "#/db/client";
 import { AdminTeam, ImplementerRole } from "#/db/enums";
 import { hub, implementerMember } from "#/db/schema";
+import { getActiveProjectId } from "#/lib/active-project-id";
 import { ForbiddenRoleError, requireAuthRole } from "#/lib/auth/require-auth-role";
 
 /**
@@ -33,24 +34,30 @@ export function canManageSurveys(admin: { isSuperAdmin: boolean; team: AdminTeam
   return admin.isSuperAdmin || admin.team === AdminTeam.RESEARCH;
 }
 
-/** Surveys belong to an implementer and a project; an admin works in one of each at a time. */
-export type SurveyScope = { userId: string; implementerId: string; projectId: string };
+export function canManagePayouts(admin: { isSuperAdmin: boolean; team: AdminTeam | null }) {
+  return admin.isSuperAdmin || admin.team === AdminTeam.OPERATIONS;
+}
 
-/**
- * The signed-in admin's survey scope: their implementer and active project. Null when they cannot
- * manage surveys or have no active project; any other role is redirected to its own home. Pages
- * and server actions both go through here, so survey access is checked one way, and the session
- * is read once per request.
- */
-export const surveyScope = cache(async (): Promise<SurveyScope | null> => {
+export type AdminScope = { userId: string; implementerId: string; projectId: string };
+
+// Pages and actions share the cached wrappers below, so the session is read once per request.
+async function teamScope(
+  mayAccess: (admin: { isSuperAdmin: boolean; team: AdminTeam | null }) => boolean,
+) {
   const admin = await currentAdminUser();
   const userId = admin?.session.user.id;
-  const projectId = admin?.session.user.activeProjectId;
-  if (!admin || !userId || !projectId || !canManageSurveys(admin.profile)) {
+  if (!admin || !userId || !mayAccess(admin.profile)) {
     return null;
   }
-  return { userId, implementerId: admin.profile.implementerId, projectId };
-});
+  return {
+    userId,
+    implementerId: admin.profile.implementerId,
+    projectId: await getActiveProjectId(),
+  } satisfies AdminScope;
+}
+
+export const surveyScope = cache(() => teamScope(canManageSurveys));
+export const payoutScope = cache(() => teamScope(canManagePayouts));
 
 /** For server actions: the survey scope, or a ForbiddenRoleError the action reports. */
 export async function requireSurveyScope() {
@@ -58,6 +65,16 @@ export async function requireSurveyScope() {
   if (!scope) {
     throw new ForbiddenRoleError(
       "Forbidden: surveys are managed by super admins and the Research team",
+    );
+  }
+  return scope;
+}
+
+export async function requirePayoutScope() {
+  const scope = await payoutScope();
+  if (!scope) {
+    throw new ForbiddenRoleError(
+      "Forbidden: payouts are managed by super admins and the Operations team",
     );
   }
   return scope;

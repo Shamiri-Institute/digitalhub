@@ -103,7 +103,7 @@ function versionFieldsOf(versionId: string, layout: Layout) {
   );
 }
 
-// drizzle/0054_backfill_survey_version_fields.sql maps the same layout kinds for versions published
+// drizzle/0056_backfill_survey_version_fields.sql maps the same layout kinds for versions published
 // before this table; tests/unit/survey-scan-results.test.ts checks that the two agree.
 function fieldKindOf(responseField: ResponseField): SurveyFieldKind {
   switch (responseField.kind) {

@@ -1,9 +1,8 @@
 "use server";
 
 import { and, asc, desc, eq, inArray, isNotNull, isNull, max, or, sql } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 
-import { currentOpsUser } from "#/app/auth";
 import { db } from "#/db/client";
 import {
   fellow,
@@ -13,28 +12,23 @@ import {
   payoutStatements,
   supervisor,
 } from "#/db/schema";
-import { getActiveProjectId } from "#/lib/active-project-id";
+import { requirePayoutScope } from "#/lib/auth/admin-access";
 import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 
-export type OpsHubsPayoutHistoryType = Awaited<ReturnType<typeof loadOpsHubsPayoutHistory>>[number];
-export type FellowPayoutDetail = OpsHubsPayoutHistoryType["fellowDetails"][number];
+export type ImplementerPayoutHistoryType = Awaited<
+  ReturnType<typeof loadImplementerPayoutHistory>
+>[number];
+export type FellowPayoutDetail = ImplementerPayoutHistoryType["fellowDetails"][number];
 
-export async function loadOpsHubsPayoutHistory() {
-  const opsUser = await currentOpsUser();
-
-  if (!opsUser) {
-    throw new Error("Unauthorised user");
-  }
-
-  const opsHubIds = implementerHubsInProject(
-    opsUser.profile.implementerId,
-    await getActiveProjectId(),
-  );
+export async function loadImplementerPayoutHistory() {
+  const { implementerId: adminImplementerId, projectId: adminProjectId } =
+    await requirePayoutScope();
+  const implementerHubIds = implementerHubsInProject(adminImplementerId, adminProjectId);
   const projectFellowAttendanceIds = db
     .select({ id: fellowAttendance.id })
     .from(fellowAttendance)
     .innerJoin(fellow, eq(fellow.id, fellowAttendance.fellowId))
-    .where(inArray(fellow.hubId, opsHubIds));
+    .where(inArray(fellow.hubId, implementerHubIds));
   const nextPayoutDate = sql`lead(${payoutStatements.executedAt}) over (order by ${payoutStatements.executedAt})`;
   const [payoutDates, details] = await Promise.all([
     db
@@ -72,7 +66,7 @@ export async function loadOpsHubsPayoutHistory() {
       .innerJoin(fellow, eq(fellow.id, fellowAttendance.fellowId))
       .innerJoin(hub, eq(hub.id, fellow.hubId))
       .innerJoin(supervisor, eq(supervisor.id, fellow.supervisorId))
-      .where(and(isNotNull(payoutStatements.executedAt), inArray(hub.id, opsHubIds)))
+      .where(and(isNotNull(payoutStatements.executedAt), inArray(hub.id, implementerHubIds)))
       .groupBy(
         payoutStatements.executedAt,
         fellow.id,
@@ -100,16 +94,9 @@ export async function loadOpsHubsPayoutHistory() {
 }
 
 export async function triggerPayoutAction() {
-  const opsUser = await currentOpsUser();
-
-  if (!opsUser) {
-    throw new Error("Unauthorised user");
-  }
-
-  const opsHubIds = implementerHubsInProject(
-    opsUser.profile.implementerId,
-    await getActiveProjectId(),
-  );
+  const { implementerId: adminImplementerId, projectId: adminProjectId } =
+    await requirePayoutScope();
+  const implementerHubIds = implementerHubsInProject(adminImplementerId, adminProjectId);
   const currentTime = new Date();
 
   try {
@@ -124,7 +111,7 @@ export async function triggerPayoutAction() {
         .where(
           and(
             or(eq(fellow.droppedOut, false), isNull(fellow.droppedOut)),
-            inArray(fellow.hubId, opsHubIds),
+            inArray(fellow.hubId, implementerHubIds),
           ),
         );
 
@@ -211,7 +198,7 @@ export async function triggerPayoutAction() {
         message: `Successfully processed ${processedCount} attendances and ${payoutStatementsCount} payout statements`,
       };
     });
-    revalidatePath("/ops/reporting/expenses/payout-history");
+    refresh();
     return result;
   } catch (error) {
     console.error("Error in triggerPayoutAction:", error);
@@ -223,16 +210,12 @@ export async function triggerPayoutAction() {
 }
 
 export async function confirmPayoutAction(executedAt: Date) {
-  const opsUser = await currentOpsUser();
-
-  if (!opsUser) {
-    throw new Error("Unauthorised user");
-  }
-
-  const opsHubIds = implementerHubsInProject(
-    opsUser.profile.implementerId,
-    await getActiveProjectId(),
-  );
+  const {
+    userId: confirmingUserId,
+    implementerId: adminImplementerId,
+    projectId: adminProjectId,
+  } = await requirePayoutScope();
+  const implementerHubIds = implementerHubsInProject(adminImplementerId, adminProjectId);
   const currentTime = new Date();
 
   try {
@@ -241,7 +224,7 @@ export async function confirmPayoutAction(executedAt: Date) {
         .select({ id: fellowAttendance.id })
         .from(fellowAttendance)
         .innerJoin(fellow, eq(fellow.id, fellowAttendance.fellowId))
-        .where(inArray(fellow.hubId, opsHubIds));
+        .where(inArray(fellow.hubId, implementerHubIds));
       const executedPayouts = await tx
         .select({ id: payoutStatements.id })
         .from(payoutStatements)
@@ -264,7 +247,7 @@ export async function confirmPayoutAction(executedAt: Date) {
         .update(payoutStatements)
         .set({
           confirmedAt: currentTime,
-          confirmedBy: opsUser.session.user.id,
+          confirmedBy: confirmingUserId,
         })
         .where(
           inArray(
@@ -279,7 +262,7 @@ export async function confirmPayoutAction(executedAt: Date) {
         message: `Successfully confirmed ${updatedPayouts.length} payouts`,
       };
     });
-    revalidatePath("/ops/reporting/expenses/payout-history");
+    refresh();
     return result;
   } catch (error) {
     console.error("Error in confirmPayoutAction:", error);

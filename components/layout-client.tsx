@@ -45,6 +45,8 @@ import { cn, getInitials } from "#/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { toastOnError } from "#/components/ui/use-toast";
 
+export type AdminTabs = { users: boolean; surveys: boolean; payouts: boolean };
+
 // Loaded when opened: its form pulls in libphonenumber-js and the date picker, which no other part
 // of the shell needs on every page.
 const ProfileDialog = dynamic(
@@ -64,16 +66,19 @@ const triageTab: RoleTab = { segment: "triage", label: "Triage", icon: ShieldAle
 const ticketsTab: RoleTab = { segment: "tickets", label: "Tickets", icon: Ticket };
 const surveysTab: RoleTab = { segment: "surveys", label: "Surveys", icon: ClipboardList };
 
-function roleTabs(mainRoute: string, isSuperAdmin: boolean, canManageSurveys: boolean) {
+function roleTabs(mainRoute: string, adminTabs: AdminTabs) {
   switch (mainRoute) {
     case "admin":
-      // Hiding the Users and Surveys tabs is cosmetic: their pages and actions check access themselves.
+      // Hiding the Users, Surveys and Reporting tabs is cosmetic: their pages and actions check access themselves.
       return [
         scheduleTab,
         { segment: "hubs", label: "Hubs", icon: Building2, alsoActiveOn: "schools" },
         ticketsTab,
-        ...(isSuperAdmin ? [{ segment: "users", label: "Users", icon: Users }] : []),
-        ...(canManageSurveys ? [surveysTab] : []),
+        ...(adminTabs.users ? [{ segment: "users", label: "Users", icon: Users }] : []),
+        ...(adminTabs.surveys ? [surveysTab] : []),
+        ...(adminTabs.payouts
+          ? [{ segment: "reporting", label: "Reporting", icon: ChartColumn }]
+          : []),
       ];
     case "hc":
       return [
@@ -117,8 +122,7 @@ export function LayoutClient({
   user,
   profile,
   isAdminUser,
-  isSuperAdmin,
-  canManageSurveys,
+  adminTabs,
   adminProjects,
   personnel,
 }: {
@@ -126,8 +130,7 @@ export function LayoutClient({
   user: SessionUser | null;
   profile: CurrentPersonnel | null;
   isAdminUser: boolean;
-  isSuperAdmin: boolean;
-  canManageSurveys: boolean;
+  adminTabs: AdminTabs;
   adminProjects: AdminProject[] | null;
   personnel: ImplementerPersonnel | null;
 }) {
@@ -189,15 +192,13 @@ export function LayoutClient({
   // The phone menu and the desktop account menu show the same items; only one is visible.
   const accountMenuItems = (
     <>
-      {!pathname.startsWith("/ops/") && (
-        <DropdownMenuItem
-          className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
-          onSelect={() => setIsProfileOpen(true)}
-        >
-          <UserRound className="size-4 text-shamiri-text-grey" />
-          My Profile
-        </DropdownMenuItem>
-      )}
+      <DropdownMenuItem
+        className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
+        onSelect={() => setIsProfileOpen(true)}
+      >
+        <UserRound className="size-4 text-shamiri-text-grey" />
+        My Profile
+      </DropdownMenuItem>
       <DropdownMenuItem
         className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
         onSelect={toastOnError(signOut)}
@@ -266,7 +267,7 @@ export function LayoutClient({
             aria-label="Main"
             className="no-scrollbar flex items-center gap-8 overflow-x-auto ps-2 pe-10 mask-r-from-90% lg:mask-none"
           >
-            {roleTabs(mainRoute, isSuperAdmin, canManageSurveys).map((tab) => {
+            {roleTabs(mainRoute, adminTabs).map((tab) => {
               const active = subRoute === tab.segment || subRoute === tab.alsoActiveOn;
               return (
                 <Link

@@ -1,5 +1,5 @@
 // @vitest-environment node
-// The tables scan results are stored in (drizzle/0052 to 0054): the answer fields a published version
+// The tables scan results are stored in (drizzle/0054 to 0056): the answer fields a published version
 // prints, the scanned pages and the answers. No screen writes them yet, so these tests write them
 // against the database and expect what the constraints and triggers allow or refuse.
 import { createHash } from "node:crypto";
@@ -128,7 +128,7 @@ function fieldsOf(versionId: string, tx: Transaction | typeof db = db) {
 }
 
 const BACKFILL = readFileSync(
-  path.join(__dirname, "../../drizzle/0054_backfill_survey_version_fields.sql"),
+  path.join(__dirname, "../../drizzle/0056_backfill_survey_version_fields.sql"),
   "utf8",
 );
 

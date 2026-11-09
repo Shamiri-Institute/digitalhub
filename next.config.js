@@ -129,8 +129,8 @@ const nextConfig = {
         permanent: false,
       },
       {
-        source: "/ops",
-        destination: "/ops/reporting",
+        source: "/ops/:path*",
+        destination: "/admin/:path*",
         permanent: false,
       },
       {

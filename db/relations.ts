@@ -40,7 +40,6 @@ import {
   interventionSessionNote,
   interventionSessionRating,
   monthlySupervisorEvaluation,
-  opsUser,
   overallFellowEvaluation,
   payoutStatements,
   project,
@@ -570,7 +569,6 @@ export const hubRelations = relations(hub, ({ one, many }) => ({
   sessions: many(sessionName, { relationName: "SessionName_hub" }),
   clinicalLeads: many(clinicalLead, { relationName: "ClinicalLead_assignedHub" }),
   clinicalTeam: many(clinicalTeam, { relationName: "ClinicalTeam_assignedHub" }),
-  opsUser: many(opsUser, { relationName: "OpsUser_assignedHub" }),
 }));
 
 export const hubCoordinatorRelations = relations(hubCoordinator, ({ one, many }) => ({
@@ -605,7 +603,6 @@ export const implementerRelations = relations(implementer, ({ many }) => ({
   hubCoordinators: many(hubCoordinator, { relationName: "HubCoordinator_implementer" }),
   clinicalLeads: many(clinicalLead, { relationName: "ClinicalLead_implementer" }),
   clinicalTeam: many(clinicalTeam, { relationName: "ClinicalTeam_implementer" }),
-  opsUser: many(opsUser, { relationName: "OpsUser_implementer" }),
   admins: many(adminUser, { relationName: "AdminUser_implementer" }),
 }));
 
@@ -764,19 +761,6 @@ export const monthlySupervisorEvaluationRelations = relations(
     }),
   }),
 );
-
-export const opsUserRelations = relations(opsUser, ({ one }) => ({
-  implementer: one(implementer, {
-    fields: [opsUser.implementerId],
-    references: [implementer.id],
-    relationName: "OpsUser_implementer",
-  }),
-  assignedHub: one(hub, {
-    fields: [opsUser.assignedHubId],
-    references: [hub.id],
-    relationName: "OpsUser_assignedHub",
-  }),
-}));
 
 export const overallFellowEvaluationRelations = relations(overallFellowEvaluation, ({ one }) => ({
   supervisor: one(supervisor, {

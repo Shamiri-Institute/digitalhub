@@ -3,7 +3,7 @@ import { and, eq, sql, TransactionRollbackError } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { db, pool, type Transaction } from "#/db/client";
-import { fellow, implementerMember, opsUser } from "#/db/schema";
+import { adminUser, fellow, implementerMember } from "#/db/schema";
 
 afterAll(() => pool.end());
 
@@ -23,7 +23,7 @@ async function commitError(write: (tx: Transaction) => Promise<unknown>) {
   return null;
 }
 
-async function memberOfRole(role: "FELLOW" | "OPERATIONS") {
+async function memberOfRole(role: "FELLOW" | "ADMIN") {
   const membership = await db.query.implementerMember.findFirst({
     where: (m, { and, eq, isNotNull }) => and(eq(m.role, role), isNotNull(m.identifier)),
     orderBy: (m, { asc }) => asc(m.id),
@@ -43,7 +43,6 @@ describe("implementer_members.identifier", () => {
         when 'FELLOW' then exists (select 1 from fellows p where p.id = m.identifier)
         when 'CLINICAL_LEAD' then exists (select 1 from clinical_leads p where p.id = m.identifier)
         when 'CLINICAL_TEAM' then exists (select 1 from clinical_teams p where p.id = m.identifier)
-        when 'OPERATIONS' then exists (select 1 from ops_users p where p.id = m.identifier)
       end`);
     expect(result.rows[0]?.count).toBe(0);
   });
@@ -81,11 +80,11 @@ describe("implementer_members.identifier", () => {
   });
 
   it("rejects deleting a profile that a membership points at", async () => {
-    const member = await memberOfRole("OPERATIONS");
+    const member = await memberOfRole("ADMIN");
     const error = await commitError((tx) =>
-      tx.delete(opsUser).where(eq(opsUser.id, member.identifier)),
+      tx.delete(adminUser).where(eq(adminUser.id, member.identifier)),
     );
-    expect(error).toMatch(/is the identifier of a OPERATIONS membership/);
+    expect(error).toMatch(/is the identifier of a ADMIN membership/);
   });
 
   it("accepts renaming a profile together with its memberships", async () => {
