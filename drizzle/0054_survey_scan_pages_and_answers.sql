@@ -21,8 +21,8 @@ CREATE TABLE "survey_answers" (
 	"reviewed_at" timestamp with time zone,
 	CONSTRAINT "survey_answers_confidence_check" CHECK ("survey_answers"."confidence" IS NULL OR "survey_answers"."confidence" BETWEEN 0 AND 1),
 	CONSTRAINT "survey_answers_pipeline_check" CHECK ("survey_answers"."source" <> 'PIPELINE' OR ("survey_answers"."scan_page_id" IS NOT NULL AND "survey_answers"."confidence" IS NOT NULL)),
-	CONSTRAINT "survey_answers_manual_check" CHECK ("survey_answers"."source" <> 'MANUAL' OR ("survey_answers"."recognized_value" IS NULL AND "survey_answers"."confidence" IS NULL)),
-	CONSTRAINT "survey_answers_reviewed_check" CHECK (("survey_answers"."review_status" IN ('VERIFIED', 'CORRECTED')) = ("survey_answers"."reviewed_by" IS NOT NULL AND "survey_answers"."reviewed_at" IS NOT NULL))
+	CONSTRAINT "survey_answers_manual_check" CHECK ("survey_answers"."source" <> 'MANUAL' OR ("survey_answers"."recognized_value" IS NULL AND "survey_answers"."confidence" IS NULL AND "survey_answers"."review_status" IN ('VERIFIED', 'CORRECTED'))),
+	CONSTRAINT "survey_answers_reviewed_check" CHECK (("survey_answers"."review_status" IN ('VERIFIED', 'CORRECTED')) = ("survey_answers"."reviewed_by" IS NOT NULL) AND ("survey_answers"."reviewed_by" IS NULL) = ("survey_answers"."reviewed_at" IS NULL))
 );
 --> statement-breakpoint
 CREATE TABLE "survey_scan_pages" (
@@ -35,9 +35,14 @@ CREATE TABLE "survey_scan_pages" (
 	"questionnaire_page_id" text,
 	"status" "survey_scan_page_status" NOT NULL,
 	"duplicate_of_id" text,
+	CONSTRAINT "survey_scan_pages_id_questionnaire_page_id_key" UNIQUE("id","questionnaire_page_id"),
 	CONSTRAINT "survey_scan_pages_page_index_check" CHECK ("survey_scan_pages"."page_index" >= 0),
 	CONSTRAINT "survey_scan_pages_duplicate_check" CHECK (("survey_scan_pages"."status" = 'DUPLICATE') = ("survey_scan_pages"."duplicate_of_id" IS NOT NULL)),
-	CONSTRAINT "survey_scan_pages_identified_check" CHECK (("survey_scan_pages"."status" = 'UNIDENTIFIED') = ("survey_scan_pages"."questionnaire_page_id" IS NULL))
+	CONSTRAINT "survey_scan_pages_identified_check" CHECK (CASE "survey_scan_pages"."status"
+        WHEN 'UNIDENTIFIED' THEN "survey_scan_pages"."questionnaire_page_id" IS NULL
+        WHEN 'REJECTED' THEN TRUE
+        ELSE "survey_scan_pages"."questionnaire_page_id" IS NOT NULL
+      END)
 );
 --> statement-breakpoint
 CREATE TABLE "survey_version_fields" (
@@ -55,7 +60,7 @@ ALTER TABLE "survey_answers" ADD CONSTRAINT "survey_answers_scan_page_id_fkey" F
 ALTER TABLE "survey_answers" ADD CONSTRAINT "survey_answers_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE restrict;--> statement-breakpoint
 ALTER TABLE "survey_scan_pages" ADD CONSTRAINT "survey_scan_pages_upload_id_fkey" FOREIGN KEY ("upload_id") REFERENCES "public"."survey_uploads"("id") ON DELETE cascade ON UPDATE restrict;--> statement-breakpoint
 ALTER TABLE "survey_scan_pages" ADD CONSTRAINT "survey_scan_pages_questionnaire_page_id_fkey" FOREIGN KEY ("questionnaire_page_id") REFERENCES "public"."survey_questionnaire_pages"("id") ON DELETE restrict ON UPDATE restrict;--> statement-breakpoint
-ALTER TABLE "survey_scan_pages" ADD CONSTRAINT "survey_scan_pages_duplicate_of_id_fkey" FOREIGN KEY ("duplicate_of_id") REFERENCES "public"."survey_scan_pages"("id") ON DELETE no action ON UPDATE restrict;--> statement-breakpoint
+ALTER TABLE "survey_scan_pages" ADD CONSTRAINT "survey_scan_pages_duplicate_of_id_fkey" FOREIGN KEY ("duplicate_of_id","questionnaire_page_id") REFERENCES "public"."survey_scan_pages"("id","questionnaire_page_id") ON DELETE restrict ON UPDATE restrict;--> statement-breakpoint
 ALTER TABLE "survey_version_fields" ADD CONSTRAINT "survey_version_fields_version_id_fkey" FOREIGN KEY ("version_id") REFERENCES "public"."survey_versions"("id") ON DELETE cascade ON UPDATE restrict;--> statement-breakpoint
 CREATE UNIQUE INDEX "survey_answers_questionnaire_id_version_id_field_key" ON "survey_answers" USING btree ("questionnaire_id","version_id","field");--> statement-breakpoint
 CREATE INDEX "survey_answers_version_id_field_idx" ON "survey_answers" USING btree ("version_id","field");--> statement-breakpoint
@@ -64,4 +69,4 @@ CREATE INDEX "survey_answers_reviewed_by_idx" ON "survey_answers" USING btree ("
 CREATE UNIQUE INDEX "survey_scan_pages_upload_id_page_index_key" ON "survey_scan_pages" USING btree ("upload_id","page_index");--> statement-breakpoint
 CREATE UNIQUE INDEX "survey_scan_pages_one_match_per_page_key" ON "survey_scan_pages" USING btree ("questionnaire_page_id") WHERE "survey_scan_pages"."status" = 'MATCHED';--> statement-breakpoint
 CREATE INDEX "survey_scan_pages_questionnaire_page_id_idx" ON "survey_scan_pages" USING btree ("questionnaire_page_id");--> statement-breakpoint
-CREATE INDEX "survey_scan_pages_duplicate_of_id_idx" ON "survey_scan_pages" USING btree ("duplicate_of_id");
+CREATE INDEX "survey_scan_pages_duplicate_of_id_questionnaire_page_id_idx" ON "survey_scan_pages" USING btree ("duplicate_of_id","questionnaire_page_id");

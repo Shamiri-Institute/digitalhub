@@ -37,22 +37,22 @@ let testSchoolId: string;
 const createdCodes: string[] = [];
 
 beforeAll(async () => {
-  const [found] = await db
+  const [defaultHub] = await db
     .select({ hubId: hub.id, implementerId: hub.implementerId, projectId: hub.projectId })
     .from(hub)
     .innerJoin(project, eq(project.id, hub.projectId))
     .where(and(eq(project.isDefault, true), isNull(hub.archivedAt)))
     .orderBy(asc(hub.id))
     .limit(1);
-  const member = found
+  const member = defaultHub
     ? await db.query.implementerMember.findFirst({
         where: (m, { and, eq }) =>
-          and(eq(m.implementerId, found.implementerId), eq(m.role, "ADMIN")),
+          and(eq(m.implementerId, defaultHub.implementerId), eq(m.role, "ADMIN")),
         orderBy: (m, { asc }) => asc(m.id),
       })
     : undefined;
-  if (!found || !member) throw new Error("Seed the database first");
-  scope = { ...found, userId: member.userId };
+  if (!defaultHub || !member) throw new Error("Seed the database first");
+  scope = { ...defaultHub, userId: member.userId };
   testSchoolId = objectId("school");
   await db.insert(school).values({
     id: testSchoolId,
@@ -132,6 +132,40 @@ const BACKFILL = readFileSync(
   "utf8",
 );
 
+/** PRINT_FORM published inside `tx` as versions were before this table: with no field rows. */
+async function publishWithoutFields(tx: Transaction) {
+  const publishable = checkPublish(PRINT_FORM, [], "NONE");
+  if (!publishable.ok) throw new Error("PRINT_FORM can't be published");
+  const [created] = await tx
+    .insert(survey)
+    .values({
+      implementerId: scope.implementerId,
+      projectId: scope.projectId,
+      code: `B${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      title: "Published without fields",
+      createdBy: scope.userId,
+    })
+    .returning({ id: survey.id });
+  if (!created) throw new Error("No survey");
+  const [version] = await tx
+    .insert(surveyVersion)
+    .values({ surveyId: created.id, versionNumber: 1, createdBy: scope.userId, form: PRINT_FORM })
+    .returning({ id: surveyVersion.id });
+  if (!version) throw new Error("No version");
+  await tx
+    .update(surveyVersion)
+    .set({
+      status: "PUBLISHED",
+      prefill: "NONE",
+      layout: publishable.layout,
+      layoutEngineVersion: 2,
+      publishedAt: new Date(),
+      publishedBy: scope.userId,
+    })
+    .where(eq(surveyVersion.id, version.id));
+  return { surveyId: created.id, versionId: version.id };
+}
+
 describe("version fields", () => {
   it("are written when a version is published, one per field it prints", async () => {
     const published = await publishPrintForm();
@@ -139,65 +173,44 @@ describe("version fields", () => {
   });
 
   it("are filled for versions published before the table existed, as publishing writes them", async () => {
-    const publishable = checkPublish(PRINT_FORM, [], "NONE");
-    if (!publishable.ok) throw new Error("PRINT_FORM can't be published");
     let backfilled: Awaited<ReturnType<typeof fieldsOf>> = [];
     let backfilledAgain: typeof backfilled = [];
     let draftFieldCount = -1;
     const backfillError = await errorOf(async (tx) => {
-      const [created] = await tx
-        .insert(survey)
-        .values({
-          implementerId: scope.implementerId,
-          projectId: scope.projectId,
-          code: `B${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-          title: "Backfill test",
-          createdBy: scope.userId,
-        })
-        .returning({ id: survey.id });
-      if (!created) throw new Error("No survey");
-      const [published] = await tx
-        .insert(surveyVersion)
-        .values({
-          surveyId: created.id,
-          versionNumber: 1,
-          createdBy: scope.userId,
-          form: PRINT_FORM,
-        })
-        .returning({ id: surveyVersion.id });
-      if (!published) throw new Error("No version");
-      // Published as before this table: the version and its layout, and no field rows.
-      await tx
-        .update(surveyVersion)
-        .set({
-          status: "PUBLISHED",
-          prefill: "NONE",
-          layout: publishable.layout,
-          layoutEngineVersion: 2,
-          publishedAt: new Date(),
-          publishedBy: scope.userId,
-        })
-        .where(eq(surveyVersion.id, published.id));
+      const { surveyId, versionId } = await publishWithoutFields(tx);
       const [draft] = await tx
         .insert(surveyVersion)
-        .values({
-          surveyId: created.id,
-          versionNumber: 2,
-          createdBy: scope.userId,
-          form: PRINT_FORM,
-        })
+        .values({ surveyId, versionNumber: 2, createdBy: scope.userId, form: PRINT_FORM })
         .returning({ id: surveyVersion.id });
       if (!draft) throw new Error("No draft");
       await tx.execute(sql.raw(BACKFILL));
-      backfilled = await fieldsOf(published.id, tx);
+      backfilled = await fieldsOf(versionId, tx);
       await tx.execute(sql.raw(BACKFILL));
-      backfilledAgain = await fieldsOf(published.id, tx);
+      backfilledAgain = await fieldsOf(versionId, tx);
       draftFieldCount = (await fieldsOf(draft.id, tx)).length;
     });
     expect(backfillError).toBeNull();
     expect(backfilled).toEqual(PRINT_FORM_FIELDS);
     expect(backfilledAgain).toEqual(PRINT_FORM_FIELDS);
     expect(draftFieldCount).toBe(0);
+  });
+
+  it("are only fields the version's layout prints, on the page it prints them", async () => {
+    const fieldError = (versionField: { field: string; pageNumber: number }) =>
+      errorOf(async (tx) => {
+        const { versionId } = await publishWithoutFields(tx);
+        await tx
+          .insert(surveyVersionField)
+          .values({ versionId, kind: "SINGLE_CHOICE", ...versionField });
+      });
+
+    expect(await fieldError({ field: "mood", pageNumber: 1 })).toBeNull();
+    expect((await fieldError({ field: "mood", pageNumber: 2 }))?.constraint).toBe(
+      "survey_version_fields_in_layout",
+    );
+    expect((await fieldError({ field: "never_printed", pageNumber: 1 }))?.constraint).toBe(
+      "survey_version_fields_in_layout",
+    );
   });
 
   it("are frozen with their version, and deleted only with it", async () => {
@@ -232,14 +245,14 @@ describe("version fields", () => {
             .values({ versionId: draft.id, field: "mood", pageNumber: 1, kind: "SINGLE_CHOICE" }),
         )
       )?.constraint,
-    ).toBe("survey_version_fields_guard");
+    ).toBe("survey_version_fields_in_layout");
 
     await db.delete(survey).where(eq(survey.id, published.id));
     expect(await fieldsOf(published.versionId)).toEqual([]);
   });
 });
 
-/** A one-copy run of `versionId`, issued in `tx`, with the copy's first page and an upload. */
+/** A one-copy run of `versionId`, issued in `tx`, with the copy's first two pages and an upload. */
 async function copyWithScan(tx: Transaction, versionId: string) {
   const issued = await recordPrintRun(tx, scope, {
     printRunId: objectId("surveyprintrun"),
@@ -257,16 +270,21 @@ async function copyWithScan(tx: Transaction, versionId: string) {
     .from(surveyQuestionnaire)
     .where(eq(surveyQuestionnaire.printRunId, issued.printRunId));
   if (!copy) throw new Error("No copy");
-  const [firstPage] = await tx
+  const [firstPage, secondPage] = await tx
     .select({ id: surveyQuestionnairePage.id })
     .from(surveyQuestionnairePage)
-    .where(
-      and(
-        eq(surveyQuestionnairePage.questionnaireId, copy.id),
-        eq(surveyQuestionnairePage.pageNumber, 1),
-      ),
-    );
-  if (!firstPage) throw new Error("No page");
+    .where(eq(surveyQuestionnairePage.questionnaireId, copy.id))
+    .orderBy(asc(surveyQuestionnairePage.pageNumber));
+  if (!firstPage || !secondPage) throw new Error("No pages");
+  return {
+    questionnaireId: copy.id,
+    questionnairePageId: firstPage.id,
+    secondQuestionnairePageId: secondPage.id,
+    uploadId: await createUpload(tx),
+  };
+}
+
+async function createUpload(tx: Transaction) {
   const uploadId = objectId("surveyupload");
   await tx.insert(surveyUpload).values({
     id: uploadId,
@@ -280,7 +298,7 @@ async function copyWithScan(tx: Transaction, versionId: string) {
     status: "UPLOADED",
     uploadedAt: new Date(),
   });
-  return { questionnaireId: copy.id, questionnairePageId: firstPage.id, uploadId };
+  return uploadId;
 }
 
 function scanOf(uploadId: string, pageIndex: number) {
@@ -311,9 +329,59 @@ describe("scanned pages", () => {
     expect(await scanError("DUPLICATE")).toBeNull();
   });
 
+  it("are duplicates only of a scan of the same page", async () => {
+    const published = await publishPrintForm();
+    const duplicateError = (duplicatePage: "same" | "other") =>
+      errorOf(async (tx) => {
+        const { questionnairePageId, secondQuestionnairePageId, uploadId } = await copyWithScan(
+          tx,
+          published.versionId,
+        );
+        const [matched] = await tx
+          .insert(surveyScanPage)
+          .values({ ...scanOf(uploadId, 0), questionnairePageId, status: "MATCHED" })
+          .returning({ id: surveyScanPage.id });
+        await tx.insert(surveyScanPage).values({
+          ...scanOf(uploadId, 1),
+          questionnairePageId:
+            duplicatePage === "same" ? questionnairePageId : secondQuestionnairePageId,
+          status: "DUPLICATE",
+          duplicateOfId: matched?.id,
+        });
+      });
+
+    expect(await duplicateError("same")).toBeNull();
+    expect((await duplicateError("other"))?.constraint).toBe(
+      "survey_scan_pages_duplicate_of_id_fkey",
+    );
+  });
+
+  it("go with their upload, unless another upload's scan duplicates one of them", async () => {
+    const published = await publishPrintForm();
+    const deleteError = (duplicateUpload: "same" | "later") =>
+      errorOf(async (tx) => {
+        const { questionnairePageId, uploadId } = await copyWithScan(tx, published.versionId);
+        const [matched] = await tx
+          .insert(surveyScanPage)
+          .values({ ...scanOf(uploadId, 0), questionnairePageId, status: "MATCHED" })
+          .returning({ id: surveyScanPage.id });
+        const laterUploadId = duplicateUpload === "later" ? await createUpload(tx) : uploadId;
+        await tx.insert(surveyScanPage).values({
+          ...scanOf(laterUploadId, 1),
+          questionnairePageId,
+          status: "DUPLICATE",
+          duplicateOfId: matched?.id,
+        });
+        await tx.delete(surveyUpload).where(eq(surveyUpload.id, uploadId));
+      });
+
+    expect(await deleteError("same")).toBeNull();
+    expect((await deleteError("later"))?.constraint).toBe("survey_scan_pages_duplicate_of_id_fkey");
+  });
+
   it("are stored once per page of an upload, and say what they matched", async () => {
     const published = await publishPrintForm();
-    const scanError = (values: Partial<typeof surveyScanPage.$inferInsert>, pageIndex = 0) =>
+    const scanError = (scanOverrides: Partial<typeof surveyScanPage.$inferInsert>, pageIndex = 0) =>
       errorOf(async (tx) => {
         const { questionnairePageId, uploadId } = await copyWithScan(tx, published.versionId);
         await tx.insert(surveyScanPage).values({ ...scanOf(uploadId, 0), status: "UNIDENTIFIED" });
@@ -322,7 +390,7 @@ describe("scanned pages", () => {
           imageS3Key: `pages/${uploadId}/second.png`,
           questionnairePageId,
           status: "MATCHED",
-          ...values,
+          ...scanOverrides,
         });
       });
 
@@ -334,6 +402,11 @@ describe("scanned pages", () => {
     expect((await scanError({ status: "DUPLICATE" }, 1))?.constraint).toBe(
       "survey_scan_pages_duplicate_check",
     );
+    expect((await scanError({ questionnairePageId: null }, 1))?.constraint).toBe(
+      "survey_scan_pages_identified_check",
+    );
+    // A page that is no printed page's, such as a cover sheet.
+    expect(await scanError({ status: "REJECTED", questionnairePageId: null }, 1)).toBeNull();
   });
 });
 
@@ -341,7 +414,7 @@ describe("answers", () => {
   it("are only for a field their copy's version prints", async () => {
     const published = await publishPrintForm();
     const other = await publishPrintForm();
-    const answerError = (values: { field: string; versionId?: string }) =>
+    const answerError = (answerOverrides: { field: string; versionId?: string }) =>
       errorOf(async (tx) => {
         const { questionnaireId, questionnairePageId, uploadId } = await copyWithScan(
           tx,
@@ -353,8 +426,8 @@ describe("answers", () => {
           .returning({ id: surveyScanPage.id });
         await tx.insert(surveyAnswer).values({
           questionnaireId,
-          versionId: values.versionId ?? published.versionId,
-          field: values.field,
+          versionId: answerOverrides.versionId ?? published.versionId,
+          field: answerOverrides.field,
           scanPageId: scan?.id,
           recognizedValue: "3",
           confidence: 0.97,
@@ -375,7 +448,10 @@ describe("answers", () => {
 
   it("are one per copy and field, and say where they came from and who reviewed them", async () => {
     const published = await publishPrintForm();
-    const answerError = (values: Partial<typeof surveyAnswer.$inferInsert>, twice = false) =>
+    const answerError = (
+      answerOverrides: Partial<typeof surveyAnswer.$inferInsert>,
+      twice = false,
+    ) =>
       errorOf(async (tx) => {
         const { questionnaireId, questionnairePageId, uploadId } = await copyWithScan(
           tx,
@@ -395,7 +471,7 @@ describe("answers", () => {
           value: "3",
           source: "PIPELINE" as const,
           reviewStatus: "AUTO_ACCEPTED" as const,
-          ...values,
+          ...answerOverrides,
         };
         await tx.insert(surveyAnswer).values(twice ? [answer, answer] : [answer]);
       });
@@ -412,6 +488,19 @@ describe("answers", () => {
     expect((await answerError({ reviewStatus: "VERIFIED" }))?.constraint).toBe(
       "survey_answers_reviewed_check",
     );
+    expect((await answerError({ reviewedBy: scope.userId }))?.constraint).toBe(
+      "survey_answers_reviewed_check",
+    );
+    const typedIn = { source: "MANUAL" as const, recognizedValue: null, confidence: null };
+    expect((await answerError(typedIn))?.constraint).toBe("survey_answers_manual_check");
+    expect(
+      await answerError({
+        ...typedIn,
+        reviewStatus: "CORRECTED",
+        reviewedBy: scope.userId,
+        reviewedAt: new Date(),
+      }),
+    ).toBeNull();
     expect(
       await answerError({
         reviewStatus: "CORRECTED",

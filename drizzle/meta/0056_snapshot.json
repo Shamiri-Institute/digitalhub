@@ -1,6 +1,6 @@
 {
-  "id": "92beb9ef-95ea-4bad-83ce-f1366f73bd96",
-  "prevId": "4beb70b7-9470-4e56-bacf-a85a9502f85d",
+  "id": "35954bef-f049-42cd-8285-a0ddcba21025",
+  "prevId": "d9428ba3-1b31-47f4-a38e-bc062d6abc79",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -9305,11 +9305,11 @@
         },
         "survey_answers_manual_check": {
           "name": "survey_answers_manual_check",
-          "value": "\"survey_answers\".\"source\" <> 'MANUAL' OR (\"survey_answers\".\"recognized_value\" IS NULL AND \"survey_answers\".\"confidence\" IS NULL)"
+          "value": "\"survey_answers\".\"source\" <> 'MANUAL' OR (\"survey_answers\".\"recognized_value\" IS NULL AND \"survey_answers\".\"confidence\" IS NULL AND \"survey_answers\".\"review_status\" IN ('VERIFIED', 'CORRECTED'))"
         },
         "survey_answers_reviewed_check": {
           "name": "survey_answers_reviewed_check",
-          "value": "(\"survey_answers\".\"review_status\" IN ('VERIFIED', 'CORRECTED')) = (\"survey_answers\".\"reviewed_by\" IS NOT NULL AND \"survey_answers\".\"reviewed_at\" IS NOT NULL)"
+          "value": "(\"survey_answers\".\"review_status\" IN ('VERIFIED', 'CORRECTED')) = (\"survey_answers\".\"reviewed_by\" IS NOT NULL) AND (\"survey_answers\".\"reviewed_by\" IS NULL) = (\"survey_answers\".\"reviewed_at\" IS NULL)"
         }
       },
       "isRLSEnabled": false
@@ -10458,11 +10458,17 @@
           "method": "btree",
           "concurrently": false
         },
-        "survey_scan_pages_duplicate_of_id_idx": {
-          "name": "survey_scan_pages_duplicate_of_id_idx",
+        "survey_scan_pages_duplicate_of_id_questionnaire_page_id_idx": {
+          "name": "survey_scan_pages_duplicate_of_id_questionnaire_page_id_idx",
           "columns": [
             {
               "expression": "duplicate_of_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "questionnaire_page_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -10496,15 +10502,21 @@
         "survey_scan_pages_duplicate_of_id_fkey": {
           "name": "survey_scan_pages_duplicate_of_id_fkey",
           "tableFrom": "survey_scan_pages",
-          "columnsFrom": ["duplicate_of_id"],
+          "columnsFrom": ["duplicate_of_id", "questionnaire_page_id"],
           "tableTo": "survey_scan_pages",
-          "columnsTo": ["id"],
+          "columnsTo": ["id", "questionnaire_page_id"],
           "onUpdate": "restrict",
-          "onDelete": "no action"
+          "onDelete": "restrict"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "survey_scan_pages_id_questionnaire_page_id_key": {
+          "name": "survey_scan_pages_id_questionnaire_page_id_key",
+          "columns": ["id", "questionnaire_page_id"],
+          "nullsNotDistinct": false
+        }
+      },
       "policies": {},
       "checkConstraints": {
         "survey_scan_pages_page_index_check": {
@@ -10517,7 +10529,7 @@
         },
         "survey_scan_pages_identified_check": {
           "name": "survey_scan_pages_identified_check",
-          "value": "(\"survey_scan_pages\".\"status\" = 'UNIDENTIFIED') = (\"survey_scan_pages\".\"questionnaire_page_id\" IS NULL)"
+          "value": "CASE \"survey_scan_pages\".\"status\"\n        WHEN 'UNIDENTIFIED' THEN \"survey_scan_pages\".\"questionnaire_page_id\" IS NULL\n        WHEN 'REJECTED' THEN TRUE\n        ELSE \"survey_scan_pages\".\"questionnaire_page_id\" IS NOT NULL\n      END"
         }
       },
       "isRLSEnabled": false

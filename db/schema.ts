@@ -3279,7 +3279,8 @@ export const surveyVersionField = pgTable(
 );
 
 // One page image cut from an upload. At most one scan of a printed page is MATCHED; a later scan of
-// it is a DUPLICATE pointing at that one.
+// it is a DUPLICATE pointing at a scan of the same page. A REJECTED scan may have no page: a cover
+// sheet, a blank, another form.
 export const surveyScanPage = pgTable(
   "survey_scan_pages",
   {
@@ -3309,7 +3310,15 @@ export const surveyScanPage = pgTable(
       .where(sql`${table.status} = 'MATCHED'`),
     // For the foreign key: a partial index doesn't serve it.
     index("survey_scan_pages_questionnaire_page_id_idx").on(table.questionnairePageId),
-    index("survey_scan_pages_duplicate_of_id_idx").on(table.duplicateOfId),
+    // What a duplicate points at, so it can only be a scan of its own page.
+    unique("survey_scan_pages_id_questionnaire_page_id_key").on(
+      table.id,
+      table.questionnairePageId,
+    ),
+    index("survey_scan_pages_duplicate_of_id_questionnaire_page_id_idx").on(
+      table.duplicateOfId,
+      table.questionnairePageId,
+    ),
     check("survey_scan_pages_page_index_check", sql`${table.pageIndex} >= 0`),
     check(
       "survey_scan_pages_duplicate_check",
@@ -3317,7 +3326,11 @@ export const surveyScanPage = pgTable(
     ),
     check(
       "survey_scan_pages_identified_check",
-      sql`(${table.status} = 'UNIDENTIFIED') = (${table.questionnairePageId} IS NULL)`,
+      sql`CASE ${table.status}
+        WHEN 'UNIDENTIFIED' THEN ${table.questionnairePageId} IS NULL
+        WHEN 'REJECTED' THEN TRUE
+        ELSE ${table.questionnairePageId} IS NOT NULL
+      END`,
     ),
     foreignKey({
       columns: [table.uploadId],
@@ -3334,15 +3347,15 @@ export const surveyScanPage = pgTable(
     })
       .onUpdate("restrict")
       .onDelete("restrict"),
-    // No action rather than restrict, which is checked at the end of the statement, so deleting an
-    // upload deletes a scan and its duplicates together.
+    // An upload whose scan another upload's scan duplicates can't be deleted until that duplicate
+    // is resolved.
     foreignKey({
-      columns: [table.duplicateOfId],
-      foreignColumns: [table.id],
+      columns: [table.duplicateOfId, table.questionnairePageId],
+      foreignColumns: [table.id, table.questionnairePageId],
       name: "survey_scan_pages_duplicate_of_id_fkey",
     })
       .onUpdate("restrict")
-      .onDelete("no action"),
+      .onDelete("restrict"),
   ],
 );
 
@@ -3401,13 +3414,14 @@ export const surveyAnswer = pgTable(
       "survey_answers_pipeline_check",
       sql`${table.source} <> 'PIPELINE' OR (${table.scanPageId} IS NOT NULL AND ${table.confidence} IS NOT NULL)`,
     ),
+    // A typed-in answer is a reviewer's, so it is reviewed by them.
     check(
       "survey_answers_manual_check",
-      sql`${table.source} <> 'MANUAL' OR (${table.recognizedValue} IS NULL AND ${table.confidence} IS NULL)`,
+      sql`${table.source} <> 'MANUAL' OR (${table.recognizedValue} IS NULL AND ${table.confidence} IS NULL AND ${table.reviewStatus} IN ('VERIFIED', 'CORRECTED'))`,
     ),
     check(
       "survey_answers_reviewed_check",
-      sql`(${table.reviewStatus} IN ('VERIFIED', 'CORRECTED')) = (${table.reviewedBy} IS NOT NULL AND ${table.reviewedAt} IS NOT NULL)`,
+      sql`(${table.reviewStatus} IN ('VERIFIED', 'CORRECTED')) = (${table.reviewedBy} IS NOT NULL) AND (${table.reviewedBy} IS NULL) = (${table.reviewedAt} IS NULL)`,
     ),
     foreignKey({
       columns: [table.questionnaireId, table.versionId],
