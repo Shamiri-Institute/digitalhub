@@ -8,11 +8,13 @@ import { Button } from "#/components/ui/button";
 import { Combobox } from "#/components/ui/combobox";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -85,6 +87,23 @@ export default function UploadRecordingDialog({
   onOpenChange,
   fellows,
 }: UploadRecordingDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
+        <UploadRecordingForm fellows={fellows} close={() => onOpenChange(false)} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function UploadRecordingForm({
+  fellows,
+  close,
+}: {
+  fellows: SupervisorFellow[];
+  close: () => void;
+}) {
+  const { isSaving: isUploading, save } = useDialogSave();
   const form = useForm<RecordingUploadFormData>({
     resolver: zodResolver(RecordingUploadSchema),
     defaultValues: {
@@ -109,13 +128,12 @@ export default function UploadRecordingDialog({
 
   const [audioFile, setAudioFile] = useState<AudioFileState>({ status: "empty" });
   const { uploadToS3, files: s3Uploads } = useS3Upload();
-  const { isSubmitting } = form.formState;
-  const fileInputDisabled = isSubmitting || audioFile.status === "validating";
+  const fileInputDisabled = isUploading || audioFile.status === "validating";
 
   const readyFile = audioFile.status === "ready" ? audioFile.file : null;
   const readyFileUpload = s3Uploads.findLast((upload) => upload.file === readyFile);
   const uploadProgress =
-    isSubmitting && readyFileUpload ? Math.min(Math.round(readyFileUpload.progress * 0.8), 80) : 0;
+    isUploading && readyFileUpload ? Math.min(Math.round(readyFileUpload.progress * 0.8), 80) : 0;
 
   const fellowId = form.watch("fellowId");
   const groupId = form.watch("groupId");
@@ -245,7 +263,7 @@ export default function UploadRecordingDialog({
     }
   };
 
-  const onSubmit = async (data: RecordingUploadFormData) => {
+  const onSubmit = (data: RecordingUploadFormData) => {
     if (audioFile.status !== "ready") {
       setAudioFile({ status: "invalid", error: "Please select a file" });
       return;
@@ -261,284 +279,267 @@ export default function UploadRecordingDialog({
       return;
     }
 
-    try {
-      const { key, token } = await uploadToS3(file, {
-        bucket: "recordings",
-        groupId: data.groupId,
-        sessionId: data.sessionId,
-      });
-
-      if (!key || !token) {
-        throw new Error("Upload failed - no key returned");
-      }
-
-      const result = await createSessionRecording({
-        fellowId: data.fellowId,
-        schoolId: data.schoolId,
-        groupId: data.groupId,
-        sessionId: data.sessionId,
-        originalFileName: file.name,
-        s3Key: key,
-        token,
-      });
-
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: "Recording uploaded successfully",
+    save(async () => {
+      try {
+        const { key, token } = await uploadToS3(file, {
+          bucket: "recordings",
+          groupId: data.groupId,
+          sessionId: data.sessionId,
         });
-        handleClose();
-      } else {
-        throw new Error(result.message);
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload recording",
-        variant: "destructive",
-      });
-    }
-  };
 
-  const handleClose = () => {
-    form.reset();
-    clearFile();
-    onOpenChange(false);
+        if (!key || !token) {
+          throw new Error("Upload failed - no key returned");
+        }
+
+        const result = await createSessionRecording({
+          fellowId: data.fellowId,
+          schoolId: data.schoolId,
+          groupId: data.groupId,
+          sessionId: data.sessionId,
+          originalFileName: file.name,
+          s3Key: key,
+          token,
+        });
+
+        if (result.success) {
+          toast({
+            title: "Success",
+            description: "Recording uploaded successfully",
+          });
+          close();
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+        toast({
+          title: "Upload failed",
+          description: error instanceof Error ? error.message : "Failed to upload recording",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   const canUploadFile = fellowId && groupId && sessionId && !duplicateExists && !checkingDuplicate;
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        // An upload in flight still saves the recording, so the dialog stays until it does.
-        if (!next && !isSubmitting) handleClose();
-      }}
-    >
-      <DialogContent
-        closeDisabled={isSubmitting}
-        className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]"
-      >
-        <DialogHeader>
-          <DialogTitle>Upload recording</DialogTitle>
-          <DialogDescription>Enter session details and upload the audio file.</DialogDescription>
-          <Separator />
-        </DialogHeader>
+    <>
+      <DialogHeader>
+        <DialogTitle>Upload recording</DialogTitle>
+        <DialogDescription>Enter session details and upload the audio file.</DialogDescription>
+        <Separator />
+      </DialogHeader>
 
-        <Form {...form}>
-          <form
-            noValidate
-            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="fellowId"
-              render={({ field }) => (
-                <FormItem required>
-                  <FormLabel>Fellow</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      items={fellows.map((fellow) => ({
-                        id: fellow.id,
-                        label: fellow.fellowName ?? "Unknown",
-                      }))}
-                      activeItemId={field.value}
-                      onSelectItem={(value) => {
-                        if (value === field.value) return;
-                        field.onChange(value);
-                        selectFellow(value);
-                      }}
-                      placeholder="Select a fellow"
-                      inputPlaceholder="Search fellows..."
-                      disabled={isSubmitting}
-                      className="w-full"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="groupId"
-              render={({ field }) => (
-                <FormItem required>
-                  <FormLabel>Group</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
+      <Form {...form}>
+        <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="fellowId"
+            render={({ field }) => (
+              <FormItem required>
+                <FormLabel>Fellow</FormLabel>
+                <FormControl>
+                  <Combobox
+                    items={fellows.map((fellow) => ({
+                      id: fellow.id,
+                      label: fellow.fellowName ?? "Unknown",
+                    }))}
+                    activeItemId={field.value}
+                    onSelectItem={(value) => {
+                      if (value === field.value) return;
                       field.onChange(value);
-                      selectGroup(value);
+                      selectFellow(value);
                     }}
-                    value={field.value}
-                    disabled={!fellowId || loadingGroups || isSubmitting}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            !fellowId
-                              ? "Select fellow first"
-                              : loadingGroups
-                                ? "Loading..."
-                                : "Select group"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {groups.map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.groupName} ({group.school.schoolName})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="sessionId"
-              render={({ field }) => (
-                <FormItem required>
-                  <FormLabel>Session</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      selectSession(value);
-                    }}
-                    value={field.value}
-                    disabled={!groupId || loadingSessions || isSubmitting}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            !groupId
-                              ? "Select group first"
-                              : loadingSessions
-                                ? "Loading..."
-                                : "Select a session"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {sessions.map((session) => (
-                        <SelectItem key={session.id} value={session.id}>
-                          {sessionDisplayName(session.sessionName ?? undefined)} -{" "}
-                          {format(new Date(session.sessionDate), "dd MMM yyyy")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <input type="hidden" {...form.register("schoolId")} />
-
-            {duplicateExists && (
-              <div className="rounded-lg border border-red-border bg-red-bg p-3 text-sm text-red-base">
-                <div className="flex items-center gap-2">
-                  <Icons.alertCircle className="h-4 w-4" />
-                  <span>A recording already exists for this session</span>
-                </div>
-              </div>
-            )}
-
-            {canUploadFile && (
-              <>
-                <Separator />
-                <div className="space-y-2">
-                  <FormLabel required>Audio File</FormLabel>
-                  {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- drag-and-drop target; the wrapped file input stays keyboard accessible */}
-                  <label
-                    onDrop={handleDrop}
-                    onDragOver={(e) => e.preventDefault()}
-                    className={cn(
-                      "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
-                      fileInputDisabled
-                        ? "cursor-not-allowed border-gray-200 bg-gray-50"
-                        : "border-gray-300 hover:border-shamiri-new-blue",
-                      audioFile.status === "invalid" && "border-red-border",
-                    )}
-                  >
-                    {audioFile.status === "ready" ? (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Icons.check className="h-4 w-4 text-shamiri-green" />
-                        <span>{audioFile.file.name}</span>
-                        <span className="text-gray-500">({formatBytes(audioFile.file.size)})</span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-2 text-center">
-                        <Icons.uploadCloudIcon className="h-8 w-8 text-gray-400" />
-                        <div className="text-sm">
-                          <span className="font-medium text-shamiri-new-blue">Click to upload</span>
-                          {" or drag and drop"}
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {ALLOWED_EXTENSIONS.join(", ")} (max 500MB)
-                        </span>
-                      </div>
-                    )}
-                    <input
-                      aria-label="Audio file"
-                      type="file"
-                      accept={ALLOWED_EXTENSIONS.join(",")}
-                      onChange={handleFileInputChange}
-                      disabled={fileInputDisabled}
-                      className="hidden"
-                    />
-                  </label>
-                  {audioFile.status === "invalid" && (
-                    <p className="text-sm text-red-base">{audioFile.error}</p>
-                  )}
-                  {audioFile.status === "validating" && (
-                    <p className="text-sm text-gray-500">Validating file...</p>
-                  )}
-                </div>
-              </>
-            )}
-
-            {isSubmitting && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Uploading...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                  <div
-                    className="h-full bg-shamiri-new-blue transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
+                    placeholder="Select a fellow"
+                    inputPlaceholder="Search fellows..."
+                    disabled={isUploading}
+                    className="w-full"
                   />
-                </div>
-              </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
+          />
 
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={handleClose} disabled={isSubmitting}>
+          <FormField
+            control={form.control}
+            name="groupId"
+            render={({ field }) => (
+              <FormItem required>
+                <FormLabel>Group</FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    selectGroup(value);
+                  }}
+                  value={field.value}
+                  disabled={!fellowId || loadingGroups || isUploading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          !fellowId
+                            ? "Select fellow first"
+                            : loadingGroups
+                              ? "Loading..."
+                              : "Select group"
+                        }
+                      />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {groups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.groupName} ({group.school.schoolName})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="sessionId"
+            render={({ field }) => (
+              <FormItem required>
+                <FormLabel>Session</FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    selectSession(value);
+                  }}
+                  value={field.value}
+                  disabled={!groupId || loadingSessions || isUploading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          !groupId
+                            ? "Select group first"
+                            : loadingSessions
+                              ? "Loading..."
+                              : "Select a session"
+                        }
+                      />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {sessions.map((session) => (
+                      <SelectItem key={session.id} value={session.id}>
+                        {sessionDisplayName(session.sessionName ?? undefined)} -{" "}
+                        {format(new Date(session.sessionDate), "dd MMM yyyy")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <input type="hidden" {...form.register("schoolId")} />
+
+          {duplicateExists && (
+            <div className="rounded-lg border border-red-border bg-red-bg p-3 text-sm text-red-base">
+              <div className="flex items-center gap-2">
+                <Icons.alertCircle className="h-4 w-4" />
+                <span>A recording already exists for this session</span>
+              </div>
+            </div>
+          )}
+
+          {canUploadFile && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <FormLabel required>Audio File</FormLabel>
+                {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- drag-and-drop target; the wrapped file input stays keyboard accessible */}
+                <label
+                  onDrop={handleDrop}
+                  onDragOver={(e) => e.preventDefault()}
+                  className={cn(
+                    "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
+                    fileInputDisabled
+                      ? "cursor-not-allowed border-gray-200 bg-gray-50"
+                      : "border-gray-300 hover:border-shamiri-new-blue",
+                    audioFile.status === "invalid" && "border-red-border",
+                  )}
+                >
+                  {audioFile.status === "ready" ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icons.check className="h-4 w-4 text-shamiri-green" />
+                      <span>{audioFile.file.name}</span>
+                      <span className="text-gray-500">({formatBytes(audioFile.file.size)})</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-center">
+                      <Icons.uploadCloudIcon className="h-8 w-8 text-gray-400" />
+                      <div className="text-sm">
+                        <span className="font-medium text-shamiri-new-blue">Click to upload</span>
+                        {" or drag and drop"}
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {ALLOWED_EXTENSIONS.join(", ")} (max 500MB)
+                      </span>
+                    </div>
+                  )}
+                  <input
+                    aria-label="Audio file"
+                    type="file"
+                    accept={ALLOWED_EXTENSIONS.join(",")}
+                    onChange={handleFileInputChange}
+                    disabled={fileInputDisabled}
+                    className="hidden"
+                  />
+                </label>
+                {audioFile.status === "invalid" && (
+                  <p className="text-sm text-red-base">{audioFile.error}</p>
+                )}
+                {audioFile.status === "validating" && (
+                  <p className="text-sm text-gray-500">Validating file...</p>
+                )}
+              </div>
+            </>
+          )}
+
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>Uploading...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                <div
+                  className="h-full bg-shamiri-new-blue transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="ghost">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="brand"
-                disabled={audioFile.status !== "ready" || isSubmitting || duplicateExists}
-                loading={isSubmitting}
-              >
-                {isSubmitting ? "Uploading..." : "Upload"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            </DialogClose>
+            <Button
+              type="submit"
+              variant="brand"
+              disabled={audioFile.status !== "ready" || isUploading || duplicateExists}
+              loading={isUploading}
+            >
+              {isUploading ? "Uploading..." : "Upload"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </Form>
+    </>
   );
 }

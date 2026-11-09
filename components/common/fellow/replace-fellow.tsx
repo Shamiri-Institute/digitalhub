@@ -1,16 +1,18 @@
 import type { fellow, supervisor } from "#/db/schema";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { ReplaceGroupLeaderSchema } from "#/components/common/fellow/schema";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -44,17 +46,10 @@ type ReplaceFellowProps = {
 };
 
 export default function ReplaceFellow(props: ReplaceFellowProps) {
-  // A replacement in flight keeps the dialog open until it is saved.
-  const [replacing, setReplacing] = useState(false);
   return (
-    <Dialog
-      open={props.open}
-      onOpenChange={(open) => {
-        if (open || !replacing) props.onOpenChange(open);
-      }}
-    >
-      <DialogContent closeDisabled={replacing} className="w-2/5 max-w-none">
-        <ReplaceFellowForm {...props} replacing={replacing} setReplacing={setReplacing} />
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent className="w-2/5 max-w-none">
+        <ReplaceFellowForm {...props} />
       </DialogContent>
     </Dialog>
   );
@@ -66,18 +61,16 @@ function ReplaceFellowForm({
   onOpenChange,
   children,
   supervisors,
-  replacing,
-  setReplacing,
-}: ReplaceFellowProps & { replacing: boolean; setReplacing: (replacing: boolean) => void }) {
+}: ReplaceFellowProps) {
+  const { isSaving, save } = useDialogSave();
   const form = useForm<z.infer<typeof ReplaceGroupLeaderSchema>>({
     resolver: zodResolver(ReplaceGroupLeaderSchema),
     defaultValues: { leaderId: fellowId, groupId },
   });
   const supervisorWatcher = form.watch("supervisorId");
 
-  const onSubmit = async (data: z.infer<typeof ReplaceGroupLeaderSchema>) => {
-    setReplacing(true);
-    try {
+  const onSubmit = (data: z.infer<typeof ReplaceGroupLeaderSchema>) => {
+    save(async () => {
       const response = await replaceGroupLeader({
         leaderId: data.newLeaderId,
         groupId,
@@ -95,9 +88,7 @@ function ReplaceFellowForm({
         description: response.message,
       });
       onOpenChange(false);
-    } finally {
-      setReplacing(false);
-    }
+    });
   };
 
   return (
@@ -197,23 +188,16 @@ function ReplaceFellowForm({
         </div>
         <Separator className="my-6" />
         <DialogFooter className="flex justify-end gap-2">
-          <Button
-            variant="ghost"
-            type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-            disabled={replacing}
-            onClick={() => {
-              onOpenChange(false);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="brand"
-            type="submit"
-            disabled={form.formState.isSubmitting}
-            loading={form.formState.isSubmitting}
-          >
+          <DialogClose asChild>
+            <Button
+              variant="ghost"
+              type="button"
+              className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            >
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button variant="brand" type="submit" disabled={isSaving} loading={isSaving}>
             Replace
           </Button>
         </DialogFooter>

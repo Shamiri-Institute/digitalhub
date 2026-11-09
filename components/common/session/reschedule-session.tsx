@@ -10,10 +10,12 @@ import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogPortal,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import { Form, FormControl, FormField, FormLabel, FormMessage } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
@@ -72,6 +74,7 @@ export function RescheduleSessionForm({
   const [minutes, setMinutes] = useState(format(session.sessionDate, "mm"));
   const [time, setTime] = useState(format(session.sessionDate, "aa"));
   const [timePicker, setTimePicker] = useState(false);
+  const { isSaving, save } = useDialogSave();
 
   const form = useForm<z.infer<typeof RescheduleSessionSchema>>({
     resolver: zodResolver(RescheduleSessionSchema),
@@ -81,27 +84,29 @@ export function RescheduleSessionForm({
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof RescheduleSessionSchema>) => {
+  const onSubmit = (data: z.infer<typeof RescheduleSessionSchema>) => {
     const combinedDateTime = new Date(
       `${format(new Date(data.sessionDate), "yyyy-MM-dd")}T${new Date(`1970-01-01 ${data.sessionStartTime}`).toTimeString().slice(0, 5)}:00`,
     );
     data.sessionDate = new Date(combinedDateTime);
 
-    const response = await rescheduleSession(session.id, data);
-    if (!response.success) {
-      onOpenChange(false);
-      toast({
-        variant: "destructive",
-        description:
-          response.message ?? "Something went wrong while trying to reschedule the session.",
-      });
-      return;
-    }
+    save(async () => {
+      const response = await rescheduleSession(session.id, data);
+      if (!response.success) {
+        onOpenChange(false);
+        toast({
+          variant: "destructive",
+          description:
+            response.message ?? "Something went wrong while trying to reschedule the session.",
+        });
+        return;
+      }
 
-    toast({
-      description: response.message,
+      toast({
+        description: response.message,
+      });
+      onOpenChange(false);
     });
-    onOpenChange(false);
   };
 
   return (
@@ -254,21 +259,16 @@ export function RescheduleSessionForm({
         <Separator />
 
         <div className="flex justify-end gap-6">
-          <Button
-            variant="ghost"
-            type="button"
-            className="text-shamiri-new-blue hover:text-shamiri-blue"
-            onClick={() => {
-              onOpenChange(false);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="brand"
-            loading={form.formState.isSubmitting}
-            disabled={form.formState.isSubmitting}
-          >
+          <DialogClose asChild>
+            <Button
+              variant="ghost"
+              type="button"
+              className="text-shamiri-new-blue hover:text-shamiri-blue"
+            >
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button variant="brand" loading={isSaving} disabled={isSaving}>
             Save Changes
           </Button>
         </div>

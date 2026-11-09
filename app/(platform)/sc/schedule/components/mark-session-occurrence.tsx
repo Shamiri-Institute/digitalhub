@@ -16,11 +16,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "#/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { markSessionOccurrence } from "#/lib/actions/session/session";
 import { sessionDisplayName } from "#/lib/utils";
 import { type StepProps, useStepsDialog } from "#/components/common/dropout-confirm-step";
@@ -42,7 +43,6 @@ export function MarkSessionOccurrence({ isOpen, setIsOpen, ...props }: Props) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        closeDisabled={stepProps.isPending}
         className={stepProps.step === "form" ? "w-2/5 max-w-none" : "w-1/3 max-w-none"}
       >
         <MarkSessionOccurrenceSteps {...props} {...stepProps} />
@@ -59,9 +59,8 @@ function MarkSessionOccurrenceSteps({
   step,
   setStep,
   close,
-  isPending,
-  startTransition,
 }: Omit<Props, "isOpen" | "setIsOpen"> & StepProps<Step>) {
+  const { isSaving, save } = useDialogSave();
   const form = useForm<z.infer<typeof MarkSessionOccurrenceSchema>>({
     resolver: zodResolver(MarkSessionOccurrenceSchema),
     defaultValues: {
@@ -92,24 +91,22 @@ function MarkSessionOccurrenceSteps({
   };
 
   const onConfirmSubmit = () => {
-    startTransition(() =>
-      toastOnFailure(async () => {
-        const response = await markSessionOccurrence(form.getValues());
+    save(async () => {
+      const response = await markSessionOccurrence(form.getValues());
 
-        if (!response.success) {
-          toast({
-            variant: "destructive",
-            description:
-              response.message ?? "Something went wrong during submission, please try again",
-          });
-          return;
-        }
-        close();
+      if (!response.success) {
         toast({
-          description: response.message,
+          variant: "destructive",
+          description:
+            response.message ?? "Something went wrong during submission, please try again",
         });
-      }),
-    );
+        return;
+      }
+      close();
+      toast({
+        description: response.message,
+      });
+    });
   };
 
   if (step === "confirm") {
@@ -136,15 +133,15 @@ function MarkSessionOccurrenceSteps({
             className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
             variant="ghost"
             type="button"
-            disabled={isPending}
+            disabled={isSaving}
             onClick={close}
           >
             Cancel
           </Button>
           <Button
             variant="destructive"
-            disabled={isPending}
-            loading={isPending}
+            disabled={isSaving}
+            loading={isSaving}
             onClick={onConfirmSubmit}
           >
             Confirm

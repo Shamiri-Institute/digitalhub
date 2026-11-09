@@ -8,10 +8,12 @@ import { UserSearcher } from "#/components/common/users/user-searcher";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -48,6 +50,12 @@ interface ReassignTicketDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function searcherLabelOf(role: ReassignmentInitiatorRole) {
+  if (role === "ADMIN") return "Admin";
+  if (role === "HUB_COORDINATOR") return "Hub Coordinator";
+  return "Clinical Lead";
+}
+
 export function ReassignTicketDialog({
   ticket,
   hubId,
@@ -55,7 +63,40 @@ export function ReassignTicketDialog({
   open,
   onOpenChange,
 }: ReassignTicketDialogProps) {
+  if (!ticket) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">
+            Reassign Ticket to {searcherLabelOf(role)}
+          </DialogTitle>
+        </DialogHeader>
+        <ReassignTicketForm
+          ticketId={ticket.id}
+          hubId={hubId}
+          role={role}
+          close={() => onOpenChange(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReassignTicketForm({
+  ticketId,
+  hubId,
+  role,
+  close,
+}: {
+  ticketId: string;
+  hubId?: string;
+  role: ReassignmentInitiatorRole;
+  close: () => void;
+}) {
   const router = useRouter();
+  const { isSaving, save } = useDialogSave();
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
 
   const form = useForm<ReassignFormData>({
@@ -63,45 +104,35 @@ export function ReassignTicketDialog({
     defaultValues: { reassignedTo: "", reassignmentReason: "" },
   });
 
-  const isAdmin = role === "ADMIN";
-  const isHubCoordinator = role === "HUB_COORDINATOR";
-  const searcherLabel = isAdmin ? "Admin" : isHubCoordinator ? "Hub Coordinator" : "Clinical Lead";
-  const hubMissing = !isAdmin && !hubId;
+  const searcherLabel = searcherLabelOf(role);
+  const hubMissing = role !== "ADMIN" && !hubId;
 
-  const resetForm = () => {
-    form.reset();
-    setSelectedUser(null);
-  };
-
-  const onSubmit = async (data: ReassignFormData) => {
-    if (!ticket?.id) return;
-
-    const result = await reassignTicket({
-      ticketId: ticket.id,
-      reassignedTo: data.reassignedTo,
-      reassignmentReason: data.reassignmentReason,
-    });
-
-    if (!result.success) {
-      toast({
-        variant: "destructive",
-        description: result.message ?? "Failed to reassign ticket",
+  const onSubmit = (data: ReassignFormData) => {
+    save(async () => {
+      const result = await reassignTicket({
+        ticketId,
+        reassignedTo: data.reassignedTo,
+        reassignmentReason: data.reassignmentReason,
       });
-      return;
-    }
 
-    const recipientName = selectedUser?.name ?? null;
-    toast({
-      description: recipientName
-        ? `Ticket reassigned to "${recipientName}"`
-        : (result.message ?? "Ticket reassigned successfully"),
+      if (!result.success) {
+        toast({
+          variant: "destructive",
+          description: result.message ?? "Failed to reassign ticket",
+        });
+        return;
+      }
+
+      const recipientName = selectedUser?.name ?? null;
+      toast({
+        description: recipientName
+          ? `Ticket reassigned to "${recipientName}"`
+          : (result.message ?? "Ticket reassigned successfully"),
+      });
+      router.refresh();
+      close();
     });
-    router.refresh();
-    onOpenChange(false);
-    resetForm();
   };
-
-  if (!ticket) return null;
 
   const renderSearcher = (invalid: boolean) => {
     if (hubMissing) {
@@ -129,87 +160,64 @@ export function ReassignTicketDialog({
         invalid={invalid}
         hubId={hubId}
         onSelect={handleSelect}
-        disabled={form.formState.isSubmitting}
+        disabled={isSaving}
         selectedLabel={selectedUser?.name}
       />
     );
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) resetForm();
-        onOpenChange(next);
-      }}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            Reassign Ticket to {searcherLabel}
-          </DialogTitle>
-        </DialogHeader>
+    <Form {...form}>
+      <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="reassignedTo"
+          render={({ fieldState }) => (
+            <FormItem required>
+              <FormLabel htmlFor={RECIPIENT_FIELD_ID}>Select {searcherLabel}</FormLabel>
+              {renderSearcher(fieldState.invalid)}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <Form {...form}>
-          <form
-            noValidate
-            onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-            className="space-y-6"
+        <FormField
+          control={form.control}
+          name="reassignmentReason"
+          render={({ field }) => (
+            <FormItem required>
+              <FormLabel>Reassignment Reason</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  placeholder="Explain why this ticket is being reassigned"
+                  className="min-h-[100px]"
+                  disabled={isSaving}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Separator />
+
+        <DialogFooter className="flex justify-end gap-2">
+          <DialogClose asChild>
+            <Button variant="ghost" type="button">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            variant="brand"
+            type="submit"
+            disabled={hubMissing || isSaving}
+            loading={isSaving}
           >
-            <FormField
-              control={form.control}
-              name="reassignedTo"
-              render={({ fieldState }) => (
-                <FormItem required>
-                  <FormLabel htmlFor={RECIPIENT_FIELD_ID}>Select {searcherLabel}</FormLabel>
-                  {renderSearcher(fieldState.invalid)}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="reassignmentReason"
-              render={({ field }) => (
-                <FormItem required>
-                  <FormLabel>Reassignment Reason</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Explain why this ticket is being reassigned"
-                      className="min-h-[100px]"
-                      disabled={form.formState.isSubmitting}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Separator />
-
-            <DialogFooter className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={() => onOpenChange(false)}
-                disabled={form.formState.isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="brand"
-                type="submit"
-                disabled={hubMissing || form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
-                Reassign Ticket
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            Reassign Ticket
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }

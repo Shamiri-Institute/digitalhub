@@ -16,6 +16,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -34,7 +35,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { zodResolver } from "#/lib/zod-resolver";
 import { DropoutSchoolSchema } from "../../../app/(platform)/hc/schemas";
@@ -55,7 +56,6 @@ export function DropoutSchool({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        closeDisabled={stepProps.isPending}
         className={stepProps.step === "form" ? "p-5 text-base font-medium leading-6" : "p-5"}
       >
         <DropoutSchoolSteps school={school} {...stepProps} />
@@ -69,11 +69,10 @@ function DropoutSchoolSteps({
   step,
   setStep,
   close,
-  isPending,
-  startTransition,
 }: {
   school: SchoolsTableData | null;
 } & StepProps<Step>) {
+  const { save } = useDialogSave();
   const [formData, setFormData] = useState<z.infer<typeof DropoutSchoolSchema>>();
   const form = useForm<z.infer<typeof DropoutSchoolSchema>>({
     resolver: zodResolver(DropoutSchoolSchema),
@@ -82,22 +81,20 @@ function DropoutSchoolSteps({
 
   function confirmSubmit() {
     if (!formData) return;
-    startTransition(() =>
-      toastOnFailure(async () => {
-        const response = await dropoutSchool(formData.schoolId, formData.dropoutReason);
-        if (!response.success) {
-          toast({
-            description: response.message ?? "Something went wrong, please try again",
-          });
-          return;
-        }
-
+    save(async () => {
+      const response = await dropoutSchool(formData.schoolId, formData.dropoutReason);
+      if (!response.success) {
         toast({
-          description: response.message,
+          description: response.message ?? "Something went wrong, please try again",
         });
-        close();
-      }),
-    );
+        return;
+      }
+
+      toast({
+        description: response.message,
+      });
+      close();
+    });
   }
 
   const onSubmit = (data: z.infer<typeof DropoutSchoolSchema>) => {
@@ -111,7 +108,6 @@ function DropoutSchoolSteps({
   if (step === "confirm") {
     return (
       <DropoutConfirmStep
-        isPending={isPending}
         onCancel={() => {
           form.reset({ schoolId: school?.id });
           setStep("form");

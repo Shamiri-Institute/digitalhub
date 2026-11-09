@@ -10,6 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -27,7 +28,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { dropoutStudent } from "#/lib/actions/student";
 import { STUDENT_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
@@ -51,7 +52,6 @@ export default function StudentDropoutForm({ student, isOpen, setIsOpen, childre
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        closeDisabled={stepProps.isPending}
         className={stepProps.step === "form" ? "p-5 text-base font-medium leading-6" : "p-5"}
       >
         <StudentDropoutSteps student={student} {...stepProps}>
@@ -68,12 +68,11 @@ function StudentDropoutSteps({
   step,
   setStep,
   close,
-  isPending,
-  startTransition,
 }: {
   student: SchoolStudentTableData;
   children: React.ReactNode;
 } & StepProps<Step>) {
+  const { isSaving, save } = useDialogSave();
   const form = useForm<z.infer<typeof DropoutStudentSchema>>({
     resolver: zodResolver(DropoutStudentSchema),
     defaultValues: {
@@ -83,21 +82,19 @@ function StudentDropoutSteps({
   });
 
   function confirmSubmit() {
-    startTransition(() =>
-      toastOnFailure(async () => {
-        const response = await dropoutStudent(form.getValues());
-        if (!response.success) {
-          toast({
-            description: response.message ?? "Something went wrong, please try again",
-          });
-          return;
-        }
+    save(async () => {
+      const response = await dropoutStudent(form.getValues());
+      if (!response.success) {
         toast({
-          description: response.message,
+          description: response.message ?? "Something went wrong, please try again",
         });
-        close();
-      }),
-    );
+        return;
+      }
+      toast({
+        description: response.message,
+      });
+      close();
+    });
   }
 
   const onSubmit = () => {
@@ -110,7 +107,7 @@ function StudentDropoutSteps({
 
   if (step === "confirm") {
     return (
-      <DropoutConfirmStep isPending={isPending} onCancel={close} onConfirm={confirmSubmit}>
+      <DropoutConfirmStep onCancel={close} onConfirm={confirmSubmit}>
         {children}
       </DropoutConfirmStep>
     );
@@ -161,7 +158,7 @@ function StudentDropoutSteps({
             )}
             variant="ghost"
             type="button"
-            disabled={isPending}
+            disabled={isSaving}
             onClick={close}
           >
             Cancel
@@ -169,8 +166,8 @@ function StudentDropoutSteps({
           <Button
             variant={student.droppedOut ? "brand" : "destructive"}
             type="submit"
-            disabled={isPending}
-            loading={isPending}
+            disabled={isSaving}
+            loading={isSaving}
           >
             {student.droppedOut ? "Undo" : "Submit"}
           </Button>

@@ -1,11 +1,21 @@
 import type { Page } from "@playwright/test";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { ticketEscalations, ticketResolutions, tickets } from "#/db/schema";
-import { expect, test } from "#/tests/fixtures";
-import { raceOnRow, required, signableMember, signInWithEmail } from "#/tests/helpers";
-import { chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
+import { ticketEscalations, ticketResolutions, tickets, user } from "#/db/schema";
+import { expect, test, type Undo } from "#/tests/fixtures";
+import {
+  expectOpenUntilWritten,
+  raceOnRow,
+  required,
+  signableMember,
+  signInWithEmail,
+} from "#/tests/helpers";
+import { cellUnder, chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
+
+// Every test signs in as the same supervisor, and the new ticket test locks that supervisor's user
+// row, which a sign-in or another test's write naming them would queue behind, so they take turns.
+test.describe.configure({ mode: "serial" });
 
 type Fixture = { supervisorEmail: string; supervisorUserId: string; fellowUserId: string };
 
@@ -29,6 +39,42 @@ async function pickSupervisor() {
   return row;
 }
 
+/** A ticket the fellow raised and escalated to the supervisor, who can escalate or resolve it. */
+async function createEscalatedTicket(fixture: Fixture, undo: Undo, subject: string) {
+  const [ticket] = await db
+    .insert(tickets)
+    .values({
+      createdById: fixture.fellowUserId,
+      subject,
+      description: "Raised by the ticket specs.",
+      category: "TECH",
+      status: "ESCALATED",
+    })
+    .returning({ id: tickets.id });
+  required(ticket, "the escalated ticket");
+  // A test that fails mid-write leaves the write to land after it; locking the ticket first waits
+  // for that write and the row it adds.
+  undo(() =>
+    db.transaction(async (tx) => {
+      await tx
+        .select({ id: tickets.id })
+        .from(tickets)
+        .where(eq(tickets.id, ticket.id))
+        .for("update");
+      await tx.delete(ticketResolutions).where(eq(ticketResolutions.ticketId, ticket.id));
+      await tx.delete(ticketEscalations).where(eq(ticketEscalations.ticketId, ticket.id));
+      await tx.delete(tickets).where(eq(tickets.id, ticket.id));
+    }),
+  );
+  await db.insert(ticketEscalations).values({
+    ticketId: ticket.id,
+    escalatedById: fixture.fellowUserId,
+    escalatedToId: fixture.supervisorUserId,
+    escalationReason: "Raised by the ticket specs.",
+  });
+  return ticket;
+}
+
 async function openTicketAction(page: Page, subject: string, action: string) {
   await page.goto(getUrl("/sc/tickets"));
   await chooseRowAction(page, await searchRows(page, subject), action);
@@ -47,28 +93,7 @@ test("escalating and resolving a ticket at once lets only the first one through"
   const fixture = await pickSupervisor();
   required(fixture, "a supervisor with a fellow and a hub coordinator");
   const subject = `E2E ticket race ${Date.now()}`;
-  const [ticket] = await db
-    .insert(tickets)
-    .values({
-      createdById: fixture.fellowUserId,
-      subject,
-      description: "Raised by the escalate and resolve race.",
-      category: "TECH",
-      status: "ESCALATED",
-    })
-    .returning({ id: tickets.id });
-  required(ticket, "the race's ticket");
-  undo(async () => {
-    await db.delete(ticketResolutions).where(eq(ticketResolutions.ticketId, ticket.id));
-    await db.delete(ticketEscalations).where(eq(ticketEscalations.ticketId, ticket.id));
-    await db.delete(tickets).where(eq(tickets.id, ticket.id));
-  });
-  await db.insert(ticketEscalations).values({
-    ticketId: ticket.id,
-    escalatedById: fixture.fellowUserId,
-    escalatedToId: fixture.supervisorUserId,
-    escalationReason: "Raised by the escalate and resolve race.",
-  });
+  const ticket = await createEscalatedTicket(fixture, undo, subject);
 
   await signInWithEmail(context, fixture.supervisorEmail);
   const escalate = await openTicketAction(page, subject, "Escalate ticket");
@@ -97,4 +122,100 @@ test("escalating and resolving a ticket at once lets only the first one through"
   // The ticket's menu offers "View resolution" only after a status request it makes on opening, so
   // the database is the reliable place to see that the refused resolution was not stored.
   expect(await db.$count(ticketResolutions, eq(ticketResolutions.ticketId, ticket.id))).toBe(0);
+});
+
+test("the resolve dialog stays open until the resolution is saved", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixture = await pickSupervisor();
+  required(fixture, "a supervisor with a fellow and a hub coordinator");
+  const subject = `E2E ticket resolve dialog ${Date.now()}`;
+  const ticket = await createEscalatedTicket(fixture, undo, subject);
+  await signInWithEmail(context, fixture.supervisorEmail);
+
+  const resolve = await openTicketAction(page, subject, "Resolve ticket");
+  await resolve.getByPlaceholder("Explain how this ticket was resolved").fill("Sorted out.");
+  await expectOpenUntilWritten(
+    page,
+    resolve,
+    resolve.getByRole("button", { name: "Resolve Ticket" }),
+    {
+      table: "tickets",
+      id: ticket.id,
+    },
+  );
+  await page.reload();
+  await expect(await searchRows(page, subject)).toContainText(/resolved/i);
+});
+
+test("the escalate dialog stays open until the escalation is saved", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixture = await pickSupervisor();
+  required(fixture, "a supervisor with a fellow and a hub coordinator");
+  const subject = `E2E ticket escalate dialog ${Date.now()}`;
+  const ticket = await createEscalatedTicket(fixture, undo, subject);
+  await signInWithEmail(context, fixture.supervisorEmail);
+
+  const escalate = await openTicketAction(page, subject, "Escalate ticket");
+  await escalate
+    .getByPlaceholder("Explain why this ticket needs to be escalated")
+    .fill("Needs the hub coordinator.");
+  await expectOpenUntilWritten(
+    page,
+    escalate,
+    escalate.getByRole("button", { name: "Escalate Ticket" }),
+    { table: "tickets", id: ticket.id },
+  );
+  await page.reload();
+  await expect(await cellUnder(page, await searchRows(page, subject), "Current Tier")).toHaveText(
+    "hub coordinator",
+  );
+});
+
+test("the new ticket dialog stays open until the ticket is saved", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixture = await pickSupervisor();
+  required(fixture, "a supervisor with a fellow and a hub coordinator");
+  const subject = `E2E new ticket dialog ${Date.now()}`;
+  // A test that fails mid-write leaves the insert to land after it; locking the creator's user row
+  // first waits for that insert.
+  undo(() =>
+    db.transaction(async (tx) => {
+      await tx
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.id, fixture.supervisorUserId))
+        .for("update");
+      const created = tx
+        .select({ id: tickets.id })
+        .from(tickets)
+        .where(eq(tickets.subject, subject));
+      await tx.delete(ticketEscalations).where(inArray(ticketEscalations.ticketId, created));
+      await tx.delete(tickets).where(eq(tickets.subject, subject));
+    }),
+  );
+  await signInWithEmail(context, fixture.supervisorEmail);
+
+  await page.goto(getUrl("/sc/tickets"));
+  await page.getByRole("button", { name: "New ticket" }).click();
+  const dialog = page.getByRole("dialog", { name: "Create new ticket" });
+  await dialog.getByPlaceholder("Enter ticket subject").fill(subject);
+  await dialog.getByPlaceholder("Describe the issue").fill("Raised by the new ticket dialog spec.");
+  await dialog.getByRole("combobox").first().click();
+  await page.getByRole("option", { name: "TECH" }).click();
+  // The new ticket names its creator, so locking the creator's user row holds its insert.
+  await expectOpenUntilWritten(page, dialog, dialog.getByRole("button", { name: "Submit" }), {
+    table: "users",
+    id: fixture.supervisorUserId,
+  });
+  await page.reload();
+  await expect(await searchRows(page, subject)).toBeVisible();
 });

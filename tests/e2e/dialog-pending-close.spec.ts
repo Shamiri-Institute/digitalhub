@@ -14,7 +14,7 @@ import {
 import { objectId } from "#/lib/crypto";
 import { sessionDisplayName } from "#/lib/utils";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { raceOnRow, required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { expectOpenUntilWritten, required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell, searchRows } from "#/tests/pages/helpers";
 
 type Coordinator = {
@@ -69,27 +69,6 @@ async function createSchool(
     }),
   );
   return { schoolId, visibleId, schoolName };
-}
-
-/**
- * Confirms the dialog's write while its row is locked, so the write waits on the lock, and checks
- * that Escape, the close button and Cancel leave the dialog open until the write lands.
- */
-async function expectOpenUntilWritten(
-  page: Page,
-  dialog: Locator,
-  confirm: Locator,
-  lockedRow: { table: string; id: string },
-) {
-  await raceOnRow(lockedRow.table, lockedRow.id, async (waitForWaiting) => {
-    await confirm.click();
-    await waitForWaiting(1);
-    await page.keyboard.press("Escape");
-    await expect(dialog).toHaveAttribute("data-state", "open");
-    await expect(dialog.getByRole("button", { name: "Close" })).toBeDisabled();
-    await expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled();
-  });
-  await expect(dialog).toBeHidden();
 }
 
 /** Picks the first dropout reason in the dialog's form, submits it and returns the confirm. */

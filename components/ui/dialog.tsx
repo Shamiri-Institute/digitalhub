@@ -3,8 +3,9 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import type * as React from "react";
-import { useRef } from "react";
+import { createContext, use, useRef, useTransition } from "react";
 
+import { toastOnFailure } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 
 const Dialog = DialogPrimitive.Root;
@@ -13,7 +14,30 @@ const DialogTrigger = DialogPrimitive.Trigger;
 
 const DialogPortal = DialogPrimitive.Portal;
 
-const DialogClose = DialogPrimitive.Close;
+type DialogSave = {
+  isSaving: boolean;
+  save: (work: () => Promise<unknown>) => void;
+};
+
+const DialogSaveContext = createContext<DialogSave | null>(null);
+
+/**
+ * The save of a form inside `DialogContent`. `save` runs the work in a transition and toasts a
+ * failure. Until the work settles the dialog cannot be closed: Escape, a click outside, the close
+ * button and `DialogClose` all do nothing, because closing would hide the outcome of a write that
+ * still lands, and reopening could send it again. The work closes the dialog itself once it
+ * succeeds.
+ */
+function useDialogSave() {
+  const dialogSave = use(DialogSaveContext);
+  if (!dialogSave) throw new Error("useDialogSave is only available inside DialogContent");
+  return dialogSave;
+}
+
+function DialogClose({ disabled, ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  const isSaving = use(DialogSaveContext)?.isSaving ?? false;
+  return <DialogPrimitive.Close disabled={disabled || isSaving} {...props} />;
+}
 
 function DialogOverlay({
   className,
@@ -34,12 +58,15 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
-  closeDisabled = false,
   onOpenAutoFocus,
   onCloseAutoFocus,
+  onEscapeKeyDown,
+  onInteractOutside,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & { closeDisabled?: boolean }) {
+}: React.ComponentProps<typeof DialogPrimitive.Content>) {
   const openerRef = useRef<HTMLElement | null>(null);
+  const [isSaving, startSaving] = useTransition();
+  const save = (work: () => Promise<unknown>) => startSaving(() => toastOnFailure(work));
   return (
     <DialogPortal>
       <DialogOverlay>
@@ -67,11 +94,19 @@ function DialogContent({
               if (document.activeElement === document.body) opener?.focus();
             });
           }}
+          onEscapeKeyDown={(event) => {
+            if (isSaving) event.preventDefault();
+            onEscapeKeyDown?.(event);
+          }}
+          onInteractOutside={(event) => {
+            if (isSaving) event.preventDefault();
+            onInteractOutside?.(event);
+          }}
           {...props}
         >
-          {children}
+          <DialogSaveContext value={{ isSaving, save }}>{children}</DialogSaveContext>
           <DialogPrimitive.Close
-            disabled={closeDisabled}
+            disabled={isSaving}
             className="absolute right-2 top-2 rounded-sm p-2 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-30 data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
           >
             <X className="h-4 w-4" />
@@ -127,4 +162,5 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
+  useDialogSave,
 };

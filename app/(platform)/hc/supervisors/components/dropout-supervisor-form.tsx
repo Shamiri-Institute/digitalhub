@@ -10,6 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -28,7 +29,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { SUPERVISOR_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import {
   DropoutConfirmStep,
@@ -55,7 +56,6 @@ export default function DropoutSupervisor({
   return (
     <Dialog open={dropoutDialog} onOpenChange={onOpenChange}>
       <DialogContent
-        closeDisabled={stepProps.isPending}
         className={stepProps.step === "form" ? "p-5 text-base font-medium leading-6" : "p-5"}
       >
         <DropoutSupervisorSteps supervisorId={supervisorId} {...stepProps}>
@@ -72,12 +72,11 @@ function DropoutSupervisorSteps({
   step,
   setStep,
   close,
-  isPending,
-  startTransition,
 }: {
   supervisorId?: string;
   children: React.ReactNode;
 } & StepProps<Step>) {
+  const { save } = useDialogSave();
   const [formData, setFormData] = useState<z.infer<typeof DropoutSupervisorSchema>>();
 
   const form = useForm<z.infer<typeof DropoutSupervisorSchema>>({
@@ -87,22 +86,20 @@ function DropoutSupervisorSteps({
 
   function confirmSubmit() {
     if (!formData) return;
-    startTransition(() =>
-      toastOnFailure(async () => {
-        const response = await dropoutSupervisor(formData.supervisorId, formData.dropoutReason);
-        if (!response.success) {
-          toast({
-            description: response.message ?? "Something went wrong, please try again",
-          });
-          return;
-        }
-
+    save(async () => {
+      const response = await dropoutSupervisor(formData.supervisorId, formData.dropoutReason);
+      if (!response.success) {
         toast({
-          description: response.message,
+          description: response.message ?? "Something went wrong, please try again",
         });
-        close();
-      }),
-    );
+        return;
+      }
+
+      toast({
+        description: response.message,
+      });
+      close();
+    });
   }
 
   const onSubmit = (data: z.infer<typeof DropoutSupervisorSchema>) => {
@@ -112,7 +109,7 @@ function DropoutSupervisorSteps({
 
   if (step === "confirm") {
     return (
-      <DropoutConfirmStep isPending={isPending} onCancel={close} onConfirm={confirmSubmit}>
+      <DropoutConfirmStep onCancel={close} onConfirm={confirmSubmit}>
         {children}
       </DropoutConfirmStep>
     );
