@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { ticketEscalations, ticketResolutions, tickets } from "#/db/schema";
+import { ticketEscalations, ticketResolutions, tickets, user } from "#/db/schema";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import {
   expectOpenUntilWritten,
@@ -48,11 +48,20 @@ async function createEscalatedTicket(fixture: Fixture, undo: Undo, subject: stri
     })
     .returning({ id: tickets.id });
   required(ticket, "the escalated ticket");
-  undo(async () => {
-    await db.delete(ticketResolutions).where(eq(ticketResolutions.ticketId, ticket.id));
-    await db.delete(ticketEscalations).where(eq(ticketEscalations.ticketId, ticket.id));
-    await db.delete(tickets).where(eq(tickets.id, ticket.id));
-  });
+  // A test that fails mid-write leaves the write to land after it; locking the ticket first waits
+  // for that write and the row it adds.
+  undo(() =>
+    db.transaction(async (tx) => {
+      await tx
+        .select({ id: tickets.id })
+        .from(tickets)
+        .where(eq(tickets.id, ticket.id))
+        .for("update");
+      await tx.delete(ticketResolutions).where(eq(ticketResolutions.ticketId, ticket.id));
+      await tx.delete(ticketEscalations).where(eq(ticketEscalations.ticketId, ticket.id));
+      await tx.delete(tickets).where(eq(tickets.id, ticket.id));
+    }),
+  );
   await db.insert(ticketEscalations).values({
     ticketId: ticket.id,
     escalatedById: fixture.fellowUserId,
@@ -172,11 +181,23 @@ test("the new ticket dialog stays open until the ticket is saved", async ({
   const fixture = await pickSupervisor();
   required(fixture, "a supervisor with a fellow and a hub coordinator");
   const subject = `E2E new ticket dialog ${Date.now()}`;
-  undo(async () => {
-    const created = db.select({ id: tickets.id }).from(tickets).where(eq(tickets.subject, subject));
-    await db.delete(ticketEscalations).where(inArray(ticketEscalations.ticketId, created));
-    await db.delete(tickets).where(eq(tickets.subject, subject));
-  });
+  // A test that fails mid-write leaves the insert to land after it; locking the creator's user row
+  // first waits for that insert.
+  undo(() =>
+    db.transaction(async (tx) => {
+      await tx
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.id, fixture.supervisorUserId))
+        .for("update");
+      const created = tx
+        .select({ id: tickets.id })
+        .from(tickets)
+        .where(eq(tickets.subject, subject));
+      await tx.delete(ticketEscalations).where(inArray(ticketEscalations.ticketId, created));
+      await tx.delete(tickets).where(eq(tickets.subject, subject));
+    }),
+  );
   await signInWithEmail(context, fixture.supervisorEmail);
 
   await page.goto(getUrl("/sc/tickets"));
