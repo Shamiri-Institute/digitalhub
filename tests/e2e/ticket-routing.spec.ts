@@ -119,7 +119,8 @@ async function ticketMenu(page: Page, path: string, subject: string) {
 async function act(page: Page, path: string, subject: string, action: string, reason: string) {
   const menu = await ticketMenu(page, path, subject);
   await menu.getByText(action, { exact: true }).click();
-  const dialog = page.getByRole("dialog");
+  // "Resolve ticket" opens "Resolve Ticket", "Reassign ticket" opens "Reassign Ticket to …".
+  const dialog = page.getByRole("dialog", { name: new RegExp(`^${action}`, "i") });
   if (action !== "Reassign ticket") {
     await dialog.getByRole("combobox").click();
     await page.getByRole("option", { name: "Yes" }).click();
