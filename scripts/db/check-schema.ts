@@ -1,9 +1,8 @@
 // 1. Every foreign key needs an index on its referencing columns; a partial index does not count
 // 2. A migration that drops a column or table sets lock_timeout, so a busy table fails the
 //    deploy instead of queueing all traffic behind the lock.
-// 3. Each migration's journal time is later than the one before. The migrator applies only
-//    migrations newer than the last one a database ran, so an earlier time (as after merging a
-//    branch whose migrations were renumbered) is skipped there without an error.
+// 3. Each migration's journal time is later than the one before: the migrator skips, without an
+//    error, a migration older than the last one a database ran.
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 

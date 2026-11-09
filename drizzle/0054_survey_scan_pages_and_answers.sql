@@ -1,6 +1,5 @@
--- The foreign keys below lock busy tables (users, survey_versions) until the migration run commits,
--- as drizzle runs it in one transaction; this timeout holds for the rest of that run. Fail the
--- deploy rather than queue their writes behind a lock held elsewhere.
+-- The foreign keys lock busy tables (users, survey_versions) until drizzle's one transaction for the
+-- whole run commits: fail the deploy rather than queue their writes behind a lock held elsewhere.
 SET LOCAL lock_timeout = '5s';--> statement-breakpoint
 CREATE TYPE "public"."survey_answer_review_status" AS ENUM('AUTO_ACCEPTED', 'NEEDS_REVIEW', 'VERIFIED', 'CORRECTED');--> statement-breakpoint
 CREATE TYPE "public"."survey_answer_source" AS ENUM('PIPELINE', 'MANUAL');--> statement-breakpoint

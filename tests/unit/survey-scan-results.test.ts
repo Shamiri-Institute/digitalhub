@@ -1,7 +1,4 @@
 // @vitest-environment node
-// The tables scan results are stored in (drizzle/0054 to 0056): the answer fields a published version
-// prints, the scanned pages and the answers. No screen writes them yet, so these tests write them
-// against the database and expect what the constraints and triggers allow or refuse.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -73,7 +70,6 @@ beforeAll(async () => {
   });
 });
 
-// The surveys go first, taking their versions, fields, runs, copies and pages with them.
 afterAll(async () => {
   if (createdCodes.length > 0) {
     await db.delete(survey).where(inArray(survey.code, createdCodes));
@@ -120,7 +116,6 @@ const FIELD_KINDS_OF_LAYOUT_KIND: Record<ResponseField["kind"], SurveyFieldKind[
   signature: ["SIGNATURE"],
 };
 
-/** What PRINT_FORM prints: its questions, a field per grid row, on the pages they print on. */
 const PRINT_FORM_FIELDS = [
   { field: "age", pageNumber: 2, kind: "DIGITS" },
   { field: "dob", pageNumber: 2, kind: "DATE" },
@@ -153,10 +148,7 @@ const BACKFILL = readFileSync(
   "utf8",
 );
 
-/**
- * PRINT_FORM published inside `tx` by a direct update, as code other than storePublished would.
- * `beforeFieldRows` publishes it as versions were before this table, with no field rows.
- */
+/** `beforeFieldRows` publishes it as versions were before field rows existed. */
 async function publishDirectly(
   tx: Transaction,
   {
@@ -363,7 +355,6 @@ describe("version fields", () => {
   });
 });
 
-/** A one-copy run of `versionId`, issued in `tx`, with the copy's first two pages and an upload. */
 async function copyWithScan(tx: Transaction, versionId: string) {
   const issued = await recordPrintRun(tx, scope, {
     printRunId: objectId("surveyprintrun"),

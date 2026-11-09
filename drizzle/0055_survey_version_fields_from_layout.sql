@@ -1,8 +1,6 @@
--- A version's answer fields are the ones its stored layout prints, written by the database when it
--- is published, so every published version has them, whichever code published it. The backfill
--- (0056) writes them for versions published before. survey_layout_fields is the one place layout
--- field kinds are mapped: a kind it doesn't map comes out null and fails the publish rather than
--- storing a guess, so a new layout kind needs a migration that replaces it.
+-- The database writes a version's answer fields when it is published, so every published version has
+-- them, whichever code published it. A layout kind survey_layout_fields doesn't map comes out null
+-- and fails the publish rather than storing a guess, so a new kind needs a migration replacing it.
 CREATE FUNCTION survey_layout_fields(layout jsonb)
 RETURNS TABLE (field text, page_number integer, kind survey_field_kind) AS $$
   SELECT
@@ -35,9 +33,8 @@ FOR EACH ROW
 WHEN (OLD.status = 'DRAFT' AND NEW.status = 'PUBLISHED' AND NEW.layout IS NOT NULL)
 EXECUTE FUNCTION survey_versions_store_fields();--> statement-breakpoint
 
--- A field row is one its version's layout prints, on that page and of that kind; only a published
--- version has a layout (survey_versions_publish_check). Each
--- version's layout is read once per statement, as in survey_questionnaire_pages_in_layout (0042).
+-- Only a published version has a layout (survey_versions_publish_check). Each version's layout is
+-- read once per statement, as in survey_questionnaire_pages_in_layout (0042).
 CREATE FUNCTION survey_version_fields_in_layout() RETURNS trigger AS $$
 DECLARE
   bad record;
@@ -72,8 +69,8 @@ AFTER INSERT ON survey_version_fields
 REFERENCING NEW TABLE AS new_fields
 FOR EACH STATEMENT EXECUTE FUNCTION survey_version_fields_in_layout();--> statement-breakpoint
 
--- Field rows are frozen with their version (0028): never changed, and deleted only with it. When
--- the version row is already gone, the delete is the cascade from deleting it.
+-- Frozen with their version (0028). When the version row is already gone, the delete is the cascade
+-- from deleting it.
 CREATE FUNCTION survey_version_fields_guard() RETURNS trigger AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN

@@ -308,10 +308,7 @@ export const SurveyQuestionnaireStatus = {
 export type SurveyQuestionnaireStatus =
   (typeof SurveyQuestionnaireStatus)[keyof typeof SurveyQuestionnaireStatus];
 
-/**
- * How a printed answer field is read off the page. A choice's single or multiple answer is part
- * of its kind; each grid row is a SINGLE_CHOICE.
- */
+/** How a printed answer field is read off the page. Each grid row is a SINGLE_CHOICE. */
 export const SurveyFieldKind = {
   SINGLE_CHOICE: "SINGLE_CHOICE",
   MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
@@ -322,10 +319,6 @@ export const SurveyFieldKind = {
 } as const;
 export type SurveyFieldKind = (typeof SurveyFieldKind)[keyof typeof SurveyFieldKind];
 
-/**
- * What a scanned page turned out to be: the one scan MATCHED to a printed page, a later DUPLICATE
- * of it, UNIDENTIFIED when no printed page could be found for it, or REJECTED.
- */
 export const SurveyScanPageStatus = {
   MATCHED: "MATCHED",
   UNIDENTIFIED: "UNIDENTIFIED",

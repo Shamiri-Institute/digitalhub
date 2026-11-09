@@ -1,6 +1,4 @@
--- The answer fields of versions published before survey_version_fields existed, read from their
--- stored layouts as publishing reads them (0055). Versions that already have fields are left as
--- they are, so running it again changes nothing.
+-- Versions published before survey_version_fields existed. Running it again changes nothing.
 INSERT INTO survey_version_fields (version_id, field, page_number, kind)
 SELECT v.id, l.field, l.page_number, l.kind
 FROM survey_versions v

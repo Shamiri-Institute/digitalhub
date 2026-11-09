@@ -3254,9 +3254,8 @@ export const surveyQuestionnairePage = pgTable(
   ],
 );
 
-// One answer field a published version prints: a question's key, or `key.row` for a grid row. Written
-// from the stored layout by the database when the version is published (0055), and frozen with it,
-// so an answer can only be for a field its copy's version prints.
+// One answer field a published version prints: a question's key, or `key.row` for a grid row. The
+// database writes them from the stored layout when the version is published (0055).
 export const surveyVersionField = pgTable(
   "survey_version_fields",
   {
@@ -3278,9 +3277,8 @@ export const surveyVersionField = pgTable(
   ],
 );
 
-// One page image cut from an upload. At most one scan of a printed page is MATCHED; a later scan of
-// it is a DUPLICATE pointing at a scan of the same page. A REJECTED scan may have no page: a cover
-// sheet, a blank, another form.
+// One page image cut from an upload. A REJECTED scan may have no printed page: a cover sheet, a
+// blank, another form.
 export const surveyScanPage = pgTable(
   "survey_scan_pages",
   {
@@ -3296,7 +3294,6 @@ export const surveyScanPage = pgTable(
       .$defaultFn(() => new Date())
       .$onUpdate(() => new Date()),
     uploadId: text("upload_id").notNull(),
-    // The page's place in the uploaded file, from 0.
     pageIndex: integer("page_index").notNull(),
     imageS3Key: text("image_s3_key").notNull(),
     questionnairePageId: text("questionnaire_page_id"),
@@ -3340,7 +3337,6 @@ export const surveyScanPage = pgTable(
     })
       .onUpdate("restrict")
       .onDelete("cascade"),
-    // Restrict: a printed page that has come back is kept.
     foreignKey({
       columns: [table.questionnairePageId],
       foreignColumns: [surveyQuestionnairePage.id],
@@ -3360,9 +3356,8 @@ export const surveyScanPage = pgTable(
   ],
 );
 
-// The answer to one field of one copy. The (questionnaire_id, version_id) key ties it to its copy's
-// version, and (version_id, field) to a field that version prints. Restrict throughout: an answer
-// is collected data, so what it belongs to can't be deleted from under it.
+// The answer to one field of one copy. Restrict throughout: an answer is collected data, so what it
+// belongs to can't be deleted from under it.
 export const surveyAnswer = pgTable(
   "survey_answers",
   {
@@ -3385,7 +3380,6 @@ export const surveyAnswer = pgTable(
     recognizedValue: jsonb("recognized_value").$type<JsonValue>(),
     confidence: doublePrecision(),
     cropS3Key: text("crop_s3_key"),
-    // The answer as it stands; null when the field was left blank.
     value: jsonb().$type<JsonValue>(),
     source: surveyAnswerSourceEnum().notNull(),
     reviewStatus: surveyAnswerReviewStatusEnum("review_status").notNull(),
@@ -3407,7 +3401,7 @@ export const surveyAnswer = pgTable(
     index("survey_answers_version_id_field_idx").on(table.versionId, table.field),
     index("survey_answers_scan_page_id_idx").on(table.scanPageId),
     index("survey_answers_reviewed_by_idx").on(table.reviewedBy),
-    // A blank is SQL null, never JSON null.
+    // A blank answer is SQL null, never JSON null.
     check(
       "survey_answers_no_json_null_check",
       sql`jsonb_typeof(${table.value}) IS DISTINCT FROM 'null' AND jsonb_typeof(${table.recognizedValue}) IS DISTINCT FROM 'null'`,
