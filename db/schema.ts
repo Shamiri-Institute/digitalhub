@@ -3255,8 +3255,8 @@ export const surveyQuestionnairePage = pgTable(
 );
 
 // One answer field a published version prints: a question's key, or `key.row` for a grid row. Written
-// with the version by storePublished, and frozen with it (guard trigger), so an answer can only be
-// for a field its copy's version prints.
+// from the stored layout by the database when the version is published (0055), and frozen with it,
+// so an answer can only be for a field its copy's version prints.
 export const surveyVersionField = pgTable(
   "survey_version_fields",
   {
@@ -3324,6 +3324,7 @@ export const surveyScanPage = pgTable(
       "survey_scan_pages_duplicate_check",
       sql`(${table.status} = 'DUPLICATE') = (${table.duplicateOfId} IS NOT NULL)`,
     ),
+    check("survey_scan_pages_not_own_duplicate_check", sql`${table.duplicateOfId} <> ${table.id}`),
     check(
       "survey_scan_pages_identified_check",
       sql`CASE ${table.status}
@@ -3382,7 +3383,7 @@ export const surveyAnswer = pgTable(
     scanPageId: text("scan_page_id"),
     // What the pipeline read, kept beside `value` so a reviewer sees both.
     recognizedValue: jsonb("recognized_value").$type<JsonValue>(),
-    confidence: real(),
+    confidence: doublePrecision(),
     cropS3Key: text("crop_s3_key"),
     // The answer as it stands; null when the field was left blank.
     value: jsonb().$type<JsonValue>(),
@@ -3406,6 +3407,11 @@ export const surveyAnswer = pgTable(
     index("survey_answers_version_id_field_idx").on(table.versionId, table.field),
     index("survey_answers_scan_page_id_idx").on(table.scanPageId),
     index("survey_answers_reviewed_by_idx").on(table.reviewedBy),
+    // A blank is SQL null, never JSON null.
+    check(
+      "survey_answers_no_json_null_check",
+      sql`jsonb_typeof(${table.value}) IS DISTINCT FROM 'null' AND jsonb_typeof(${table.recognizedValue}) IS DISTINCT FROM 'null'`,
+    ),
     check(
       "survey_answers_confidence_check",
       sql`${table.confidence} IS NULL OR ${table.confidence} BETWEEN 0 AND 1`,

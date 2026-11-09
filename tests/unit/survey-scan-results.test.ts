@@ -6,7 +6,16 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { and, asc, eq, inArray, isNull, sql, TransactionRollbackError } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  inArray,
+  isNull,
+  type SQL,
+  sql,
+  TransactionRollbackError,
+} from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -25,9 +34,11 @@ import {
   surveyVersion,
   surveyVersionField,
 } from "#/db/schema";
+import type { SurveyFieldKind } from "#/db/enums";
 import type { HubSurveyScope } from "#/lib/auth/survey-access";
 import { objectId } from "#/lib/crypto";
 import { issuePrintFile, recordPrintRun } from "#/lib/survey/print-run";
+import { type Layout, LAYOUT_ENGINE_VERSION, type ResponseField } from "#/lib/survey/layout";
 import { checkPublish } from "#/lib/survey/publish";
 import { createPublishedSurvey } from "#/tests/survey-fixtures";
 import { PRINT_FORM } from "./fixtures/survey-print-form";
@@ -99,6 +110,16 @@ async function errorOf(write: (tx: Transaction) => Promise<unknown>) {
   return null;
 }
 
+// survey_layout_fields (0055) maps each layout field kind to these. A new layout kind fails
+// typecheck here until it is listed, and the test below until a migration maps it.
+const FIELD_KINDS_OF_LAYOUT_KIND: Record<ResponseField["kind"], SurveyFieldKind[]> = {
+  choice: ["SINGLE_CHOICE", "MULTIPLE_CHOICE"],
+  digits: ["DIGITS"],
+  date: ["DATE"],
+  text: ["TEXT"],
+  signature: ["SIGNATURE"],
+};
+
 /** What PRINT_FORM prints: its questions, a field per grid row, on the pages they print on. */
 const PRINT_FORM_FIELDS = [
   { field: "age", pageNumber: 2, kind: "DIGITS" },
@@ -132,8 +153,17 @@ const BACKFILL = readFileSync(
   "utf8",
 );
 
-/** PRINT_FORM published inside `tx` as versions were before this table: with no field rows. */
-async function publishWithoutFields(tx: Transaction) {
+/**
+ * PRINT_FORM published inside `tx` by a direct update, as code other than storePublished would.
+ * `beforeFieldRows` publishes it as versions were before this table, with no field rows.
+ */
+async function publishDirectly(
+  tx: Transaction,
+  {
+    beforeFieldRows = false,
+    changeLayout = (layout) => layout,
+  }: { beforeFieldRows?: boolean; changeLayout?: (layout: Layout) => Layout } = {},
+) {
   const publishable = checkPublish(PRINT_FORM, [], "NONE");
   if (!publishable.ok) throw new Error("PRINT_FORM can't be published");
   const [created] = await tx
@@ -152,17 +182,24 @@ async function publishWithoutFields(tx: Transaction) {
     .values({ surveyId: created.id, versionNumber: 1, createdBy: scope.userId, form: PRINT_FORM })
     .returning({ id: surveyVersion.id });
   if (!version) throw new Error("No version");
+  // Replica mode skips this transaction's triggers, so the publish writes no field rows.
+  if (beforeFieldRows) {
+    await tx.execute(sql`SET LOCAL session_replication_role = replica`);
+  }
   await tx
     .update(surveyVersion)
     .set({
       status: "PUBLISHED",
       prefill: "NONE",
-      layout: publishable.layout,
-      layoutEngineVersion: 2,
+      layout: changeLayout(publishable.layout),
+      layoutEngineVersion: LAYOUT_ENGINE_VERSION,
       publishedAt: new Date(),
       publishedBy: scope.userId,
     })
     .where(eq(surveyVersion.id, version.id));
+  if (beforeFieldRows) {
+    await tx.execute(sql`SET LOCAL session_replication_role = DEFAULT`);
+  }
   return { surveyId: created.id, versionId: version.id };
 }
 
@@ -172,12 +209,22 @@ describe("version fields", () => {
     expect(await fieldsOf(published.versionId)).toEqual(PRINT_FORM_FIELDS);
   });
 
+  it("are written however a version is published, not only by storePublished", async () => {
+    let publishedFields: Awaited<ReturnType<typeof fieldsOf>> = [];
+    const publishError = await errorOf(async (tx) => {
+      const { versionId } = await publishDirectly(tx);
+      publishedFields = await fieldsOf(versionId, tx);
+    });
+    expect(publishError).toBeNull();
+    expect(publishedFields).toEqual(PRINT_FORM_FIELDS);
+  });
+
   it("are filled for versions published before the table existed, as publishing writes them", async () => {
     let backfilled: Awaited<ReturnType<typeof fieldsOf>> = [];
     let backfilledAgain: typeof backfilled = [];
     let draftFieldCount = -1;
     const backfillError = await errorOf(async (tx) => {
-      const { surveyId, versionId } = await publishWithoutFields(tx);
+      const { surveyId, versionId } = await publishDirectly(tx, { beforeFieldRows: true });
       const [draft] = await tx
         .insert(surveyVersion)
         .values({ surveyId, versionNumber: 2, createdBy: scope.userId, form: PRINT_FORM })
@@ -195,21 +242,85 @@ describe("version fields", () => {
     expect(draftFieldCount).toBe(0);
   });
 
-  it("are only fields the version's layout prints, on the page it prints them", async () => {
-    const fieldError = (versionField: { field: string; pageNumber: number }) =>
+  it("are only fields the layout prints, on its page and of its kind", async () => {
+    const fieldError = (versionField: Omit<typeof surveyVersionField.$inferInsert, "versionId">) =>
       errorOf(async (tx) => {
-        const { versionId } = await publishWithoutFields(tx);
-        await tx
-          .insert(surveyVersionField)
-          .values({ versionId, kind: "SINGLE_CHOICE", ...versionField });
+        const { versionId } = await publishDirectly(tx, { beforeFieldRows: true });
+        await tx.insert(surveyVersionField).values({ versionId, ...versionField });
       });
+    const mood = { field: "mood", pageNumber: 1, kind: "SINGLE_CHOICE" } as const;
 
-    expect(await fieldError({ field: "mood", pageNumber: 1 })).toBeNull();
-    expect((await fieldError({ field: "mood", pageNumber: 2 }))?.constraint).toBe(
+    expect(await fieldError(mood)).toBeNull();
+    expect((await fieldError({ ...mood, pageNumber: 2 }))?.constraint).toBe(
       "survey_version_fields_in_layout",
     );
-    expect((await fieldError({ field: "never_printed", pageNumber: 1 }))?.constraint).toBe(
+    expect((await fieldError({ ...mood, kind: "TEXT" }))?.constraint).toBe(
       "survey_version_fields_in_layout",
+    );
+    expect((await fieldError({ ...mood, field: "never_printed" }))?.constraint).toBe(
+      "survey_version_fields_in_layout",
+    );
+  });
+
+  it("refuse a layout that prints a field twice", async () => {
+    const publishError = await errorOf((tx) =>
+      publishDirectly(tx, {
+        changeLayout: (layout) => ({
+          ...layout,
+          pages: layout.pages.map((page, index) =>
+            index === 1
+              ? { ...page, fields: [...page.fields, ...(layout.pages[0]?.fields ?? [])] }
+              : page,
+          ),
+        }),
+      }),
+    );
+    expect(publishError?.constraint).toBe("survey_version_fields_pkey");
+  });
+
+  it("refuse to publish a layout field kind they don't map, rather than guess one", async () => {
+    const publishError = await errorOf((tx) =>
+      publishDirectly(tx, {
+        changeLayout: (layout) =>
+          // A kind the layout engine has no such field for, so only JSON can carry it.
+          JSON.parse(
+            JSON.stringify(layout).replace('"kind":"digits"', '"kind":"rating"'),
+          ) as Layout,
+      }),
+    );
+    expect(publishError?.code).toBe("23502");
+    expect(publishError?.column).toBe("kind");
+  });
+
+  it("map every kind a layout field can be", async () => {
+    const expected = Object.entries(FIELD_KINDS_OF_LAYOUT_KIND).flatMap(
+      ([layoutKind, fieldKinds]) =>
+        fieldKinds.map((fieldKind, index) => ({
+          field: `${layoutKind}_${index}`,
+          layoutKind,
+          multiple: fieldKind === "MULTIPLE_CHOICE",
+          kind: fieldKind,
+        })),
+    );
+    const layout = {
+      pages: [
+        {
+          number: 1,
+          fields: expected.map(({ field, layoutKind, multiple }) => ({
+            field,
+            kind: layoutKind,
+            multiple,
+          })),
+        },
+      ],
+    };
+    const { rows: mappedLayoutFields } = await db.execute<{ field: string; kind: string | null }>(
+      sql`SELECT field, kind FROM survey_layout_fields(${JSON.stringify(layout)}::jsonb) ORDER BY field`,
+    );
+    expect(mappedLayoutFields).toEqual(
+      expected
+        .map(({ field, kind }) => ({ field, kind }))
+        .toSorted((a, b) => a.field.localeCompare(b.field)),
     );
   });
 
@@ -354,6 +465,18 @@ describe("scanned pages", () => {
     expect((await duplicateError("other"))?.constraint).toBe(
       "survey_scan_pages_duplicate_of_id_fkey",
     );
+    const ownDuplicateError = await errorOf(async (tx) => {
+      const { questionnairePageId, uploadId } = await copyWithScan(tx, published.versionId);
+      const scanId = objectId("surveyscanpage");
+      await tx.insert(surveyScanPage).values({
+        ...scanOf(uploadId, 0),
+        id: scanId,
+        questionnairePageId,
+        status: "DUPLICATE",
+        duplicateOfId: scanId,
+      });
+    });
+    expect(ownDuplicateError?.constraint).toBe("survey_scan_pages_not_own_duplicate_check");
   });
 
   it("go with their upload, unless another upload's scan duplicates one of them", async () => {
@@ -413,7 +536,7 @@ describe("scanned pages", () => {
 describe("answers", () => {
   it("are only for a field their copy's version prints", async () => {
     const published = await publishPrintForm();
-    const other = await publishPrintForm();
+    const otherPublishedSurvey = await publishPrintForm();
     const answerError = (answerOverrides: { field: string; versionId?: string }) =>
       errorOf(async (tx) => {
         const { questionnaireId, questionnairePageId, uploadId } = await copyWithScan(
@@ -441,15 +564,16 @@ describe("answers", () => {
     expect((await answerError({ field: "not_printed" }))?.constraint).toBe(
       "survey_answers_version_id_field_fkey",
     );
-    expect((await answerError({ field: "mood", versionId: other.versionId }))?.constraint).toBe(
-      "survey_answers_questionnaire_id_version_id_fkey",
-    );
+    expect(
+      (await answerError({ field: "mood", versionId: otherPublishedSurvey.versionId }))?.constraint,
+    ).toBe("survey_answers_questionnaire_id_version_id_fkey");
   });
 
   it("are one per copy and field, and say where they came from and who reviewed them", async () => {
     const published = await publishPrintForm();
+    type AnswerRow = typeof surveyAnswer.$inferInsert;
     const answerError = (
-      answerOverrides: Partial<typeof surveyAnswer.$inferInsert>,
+      answerOverrides: { [Column in keyof AnswerRow]?: AnswerRow[Column] | SQL },
       twice = false,
     ) =>
       errorOf(async (tx) => {
@@ -511,6 +635,13 @@ describe("answers", () => {
     ).toBeNull();
     expect((await answerError({ confidence: 1.5 }))?.constraint).toBe(
       "survey_answers_confidence_check",
+    );
+    expect(await answerError({ value: null })).toBeNull();
+    expect((await answerError({ value: sql`'null'::jsonb` }))?.constraint).toBe(
+      "survey_answers_no_json_null_check",
+    );
+    expect((await answerError({ recognizedValue: sql`'null'::jsonb` }))?.constraint).toBe(
+      "survey_answers_no_json_null_check",
     );
   });
 });

@@ -1,6 +1,6 @@
 {
-  "id": "d9428ba3-1b31-47f4-a38e-bc062d6abc79",
-  "prevId": "1ccff5a1-9460-4a04-9ef7-0bfcfde784af",
+  "id": "f9825b0f-f7ca-43ba-9845-2cb2c3630aea",
+  "prevId": "bbf87dce-c04f-4f93-ab51-dd51cc79ee8e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -9123,7 +9123,7 @@
         },
         "confidence": {
           "name": "confidence",
-          "type": "real",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
@@ -9295,6 +9295,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "survey_answers_no_json_null_check": {
+          "name": "survey_answers_no_json_null_check",
+          "value": "jsonb_typeof(\"survey_answers\".\"value\") IS DISTINCT FROM 'null' AND jsonb_typeof(\"survey_answers\".\"recognized_value\") IS DISTINCT FROM 'null'"
+        },
         "survey_answers_confidence_check": {
           "name": "survey_answers_confidence_check",
           "value": "\"survey_answers\".\"confidence\" IS NULL OR \"survey_answers\".\"confidence\" BETWEEN 0 AND 1"
@@ -10526,6 +10530,10 @@
         "survey_scan_pages_duplicate_check": {
           "name": "survey_scan_pages_duplicate_check",
           "value": "(\"survey_scan_pages\".\"status\" = 'DUPLICATE') = (\"survey_scan_pages\".\"duplicate_of_id\" IS NOT NULL)"
+        },
+        "survey_scan_pages_not_own_duplicate_check": {
+          "name": "survey_scan_pages_not_own_duplicate_check",
+          "value": "\"survey_scan_pages\".\"duplicate_of_id\" <> \"survey_scan_pages\".\"id\""
         },
         "survey_scan_pages_identified_check": {
           "name": "survey_scan_pages_identified_check",

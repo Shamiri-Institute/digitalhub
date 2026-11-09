@@ -1,3 +1,7 @@
+-- The foreign keys below lock busy tables (users, survey_versions) until the migration run commits,
+-- as drizzle runs it in one transaction; this timeout holds for the rest of that run. Fail the
+-- deploy rather than queue their writes behind a lock held elsewhere.
+SET LOCAL lock_timeout = '5s';--> statement-breakpoint
 CREATE TYPE "public"."survey_answer_review_status" AS ENUM('AUTO_ACCEPTED', 'NEEDS_REVIEW', 'VERIFIED', 'CORRECTED');--> statement-breakpoint
 CREATE TYPE "public"."survey_answer_source" AS ENUM('PIPELINE', 'MANUAL');--> statement-breakpoint
 CREATE TYPE "public"."survey_field_kind" AS ENUM('SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'DIGITS', 'DATE', 'TEXT', 'SIGNATURE');--> statement-breakpoint
@@ -11,7 +15,7 @@ CREATE TABLE "survey_answers" (
 	"field" text NOT NULL,
 	"scan_page_id" text,
 	"recognized_value" jsonb,
-	"confidence" real,
+	"confidence" double precision,
 	"crop_s3_key" text,
 	"value" jsonb,
 	"source" "survey_answer_source" NOT NULL,
@@ -19,6 +23,7 @@ CREATE TABLE "survey_answers" (
 	"flags" text[] DEFAULT '{}'::text[] NOT NULL,
 	"reviewed_by" text,
 	"reviewed_at" timestamp with time zone,
+	CONSTRAINT "survey_answers_no_json_null_check" CHECK (jsonb_typeof("survey_answers"."value") IS DISTINCT FROM 'null' AND jsonb_typeof("survey_answers"."recognized_value") IS DISTINCT FROM 'null'),
 	CONSTRAINT "survey_answers_confidence_check" CHECK ("survey_answers"."confidence" IS NULL OR "survey_answers"."confidence" BETWEEN 0 AND 1),
 	CONSTRAINT "survey_answers_pipeline_check" CHECK ("survey_answers"."source" <> 'PIPELINE' OR ("survey_answers"."scan_page_id" IS NOT NULL AND "survey_answers"."confidence" IS NOT NULL)),
 	CONSTRAINT "survey_answers_manual_check" CHECK ("survey_answers"."source" <> 'MANUAL' OR ("survey_answers"."recognized_value" IS NULL AND "survey_answers"."confidence" IS NULL AND "survey_answers"."review_status" IN ('VERIFIED', 'CORRECTED'))),
@@ -38,6 +43,7 @@ CREATE TABLE "survey_scan_pages" (
 	CONSTRAINT "survey_scan_pages_id_questionnaire_page_id_key" UNIQUE("id","questionnaire_page_id"),
 	CONSTRAINT "survey_scan_pages_page_index_check" CHECK ("survey_scan_pages"."page_index" >= 0),
 	CONSTRAINT "survey_scan_pages_duplicate_check" CHECK (("survey_scan_pages"."status" = 'DUPLICATE') = ("survey_scan_pages"."duplicate_of_id" IS NOT NULL)),
+	CONSTRAINT "survey_scan_pages_not_own_duplicate_check" CHECK ("survey_scan_pages"."duplicate_of_id" <> "survey_scan_pages"."id"),
 	CONSTRAINT "survey_scan_pages_identified_check" CHECK (CASE "survey_scan_pages"."status"
         WHEN 'UNIDENTIFIED' THEN "survey_scan_pages"."questionnaire_page_id" IS NULL
         WHEN 'REJECTED' THEN TRUE
