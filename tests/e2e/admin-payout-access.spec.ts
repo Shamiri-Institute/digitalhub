@@ -8,7 +8,10 @@ const fellowsPage = "/admin/reporting/expenses/fellows";
 const payoutHistoryPage = "/admin/reporting/expenses/payout-history";
 
 for (const email of [operationsAdminEmail, superAdminEmail]) {
-  test(`${email} opens the payout pages from the Reporting tab`, async ({ page, context }) => {
+  test(`R-pay-who: ${email} opens the payout pages from the Reporting tab`, async ({
+    page,
+    context,
+  }) => {
     await signInWithEmail(context, email);
     await page.goto(getUrl("/admin/schedule"));
     await page.getByRole("link", { name: "Reporting", exact: true }).click();
@@ -19,7 +22,7 @@ for (const email of [operationsAdminEmail, superAdminEmail]) {
   });
 }
 
-test("an admin outside the Operations team has no Reporting tab and cannot open payouts", async ({
+test("R-pay-who: an admin outside the Operations team has no Reporting tab and cannot open payouts", async ({
   page,
   context,
 }) => {

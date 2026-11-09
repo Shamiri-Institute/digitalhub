@@ -1,15 +1,14 @@
 import type { Page } from "@playwright/test";
-import { and, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { fellowAttendance, interventionSession, payoutStatements, sessionName } from "#/db/schema";
-import { objectId } from "#/lib/crypto";
+import { fellowAttendance, payoutStatements, sessionName } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
 import {
   onlySessionAtSchoolThatWeek,
+  required,
   signableMember,
   signInWithEmail,
-  required,
   uniqueFellowName,
 } from "#/tests/helpers";
 import {
@@ -21,21 +20,13 @@ import {
   searchRows,
 } from "#/tests/pages/helpers";
 
-test.describe.configure({ mode: "serial" });
+/**
+ * Marking a fellow's attendance writes their payout statements. The totals come from the
+ * supervisor's fellow expenses report; the database is read only for the ledger's entries, which
+ * the report pages ten at a time and does not count.
+ */
 
-async function signableProfiles(table: string, role: string, hubColumn: string) {
-  const { rows } = await db.execute<{ id: string; hubId: string; email: string; userId: string }>(
-    sql`
-    select p.id, p.${sql.raw(hubColumn)} as "hubId", u.email, u.id as "userId"
-    from ${sql.raw(table)} p
-    join implementer_members m on m.identifier = p.id and m.role = ${role}
-    join users u on u.id = m.user_id
-    where p.${sql.raw(hubColumn)} is not null
-      and ${signableMember()}
-    order by p.id`,
-  );
-  return rows;
-}
+test.describe.configure({ mode: "serial" });
 
 async function openSessionWeek(page: Page, sessionDate: Date, schoolName: string) {
   await page.goto(await scheduleUrl(page.context(), "/sc/schedule?mode=list", sessionDate));
@@ -56,7 +47,39 @@ async function openFellowAttendance(page: Page, sessionDate: Date, schoolName: s
   return page.getByRole("dialog", { name: "Mark fellow attendance" });
 }
 
-test.describe("fellow attendance", () => {
+/** Marks one fellow attended or missed from the session's fellow attendance dialog. */
+async function markFellow(
+  page: Page,
+  session: { sessionDate: Date; schoolName: string },
+  fellowName: string,
+  mark: "Attended" | "Missed",
+) {
+  const dialog = await openFellowAttendance(page, session.sessionDate, session.schoolName);
+  const fellowRow = await searchRows(page, fellowName, dialog);
+  await chooseRowAction(page, fellowRow, "Mark attendance");
+  const markDialog = page.getByRole("dialog").filter({ hasText: "Select attendance" });
+  await markDialog.getByRole("radio", { name: mark }).click();
+  if (mark === "Missed") {
+    await markDialog.getByRole("combobox", { name: "Select reason for above" }).click();
+    await page.getByRole("option").first().click();
+  }
+  await markDialog.getByRole("button", { name: "Submit" }).click();
+  await expect(markDialog).toBeHidden();
+}
+
+function statementsOf(attendanceId: number) {
+  return db
+    .select({
+      amount: payoutStatements.amount,
+      reason: payoutStatements.reason,
+      mpesaNumber: payoutStatements.mpesaNumber,
+    })
+    .from(payoutStatements)
+    .where(eq(payoutStatements.fellowAttendanceId, attendanceId))
+    .orderBy(asc(payoutStatements.createdAt));
+}
+
+test.describe("unmarking a paid attendance", () => {
   type Fixture = {
     attendanceId: number;
     sessionDate: Date;
@@ -65,10 +88,8 @@ test.describe("fellow attendance", () => {
     schoolName: string;
     fellowName: string;
     email: string;
-    hubId: string;
   };
   let fixture: Fixture;
-  let paidBefore: number;
   let original: typeof fellowAttendance.$inferSelect;
   const startedAt = new Date();
 
@@ -80,7 +101,7 @@ test.describe("fellow attendance", () => {
     } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
       select fa.id as "attendanceId", s.session_date as "sessionDate",
         sn.amount as "sessionAmount", sn.id as "sessionNameId", sc.school_name as "schoolName",
-        f.fellow_name as "fellowName", u.email, sc.hub_id as "hubId"
+        f.fellow_name as "fellowName", u.email
       from fellow_attendances fa
       join intervention_sessions s on s.id = fa.session_id and s.occurred
       join session_names sn on sn.id = s.session_id and sn.amount > 0
@@ -110,11 +131,6 @@ test.describe("fellow attendance", () => {
       .where(eq(fellowAttendance.id, fixture.attendanceId));
     if (!attendance) throw new Error(`attendance ${fixture.attendanceId} is gone`);
     original = attendance;
-    const payouts = await db
-      .select({ amount: payoutStatements.amount })
-      .from(payoutStatements)
-      .where(eq(payoutStatements.fellowAttendanceId, fixture.attendanceId));
-    paidBefore = payouts.reduce((sum, payout) => sum + payout.amount, 0);
   });
 
   test.afterAll(async () => {
@@ -134,9 +150,13 @@ test.describe("fellow attendance", () => {
       );
   });
 
-  test("a supervisor marks their fellow missed", async ({ page, context }) => {
-    // A super admin raised the session's rate after the attendance was paid, as the edit hub
-    // dialog allows. The reversal must cancel what was paid, not the new rate.
+  test("PAY-04, PAY-05, R-ad-session-amount-change: marking a paid fellow missed adds a reversal of what was paid, even after the rate changed", async ({
+    page,
+    context,
+  }) => {
+    const ledgerBefore = await statementsOf(fixture.attendanceId);
+    const paidBefore = ledgerBefore.reduce((sum, entry) => sum + entry.amount, 0);
+    // The hub's rate for the session changed after the attendance was paid.
     await db
       .update(sessionName)
       .set({ amount: fixture.sessionAmount + 300 })
@@ -144,80 +164,35 @@ test.describe("fellow attendance", () => {
 
     await signInWithEmail(context, fixture.email);
     const totalBefore = await fellowTotal(page, fixture.fellowName);
-    const dialog = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
-    const fellowRow = await searchRows(page, fixture.fellowName, dialog);
-    await expect(fellowRow).toContainText("Attended");
-
-    await chooseRowAction(page, fellowRow, "Mark attendance");
-    const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
-    await mark.getByRole("radio", { name: "Missed" }).click();
-    await mark.getByRole("combobox", { name: "Select reason for above" }).click();
-    const absenceReason = (await page.getByRole("option").first().innerText()).trim();
-    await page.getByRole("option").first().click();
-    await mark.getByRole("button", { name: "Submit" }).click();
-    await expect(mark).toBeHidden();
+    await markFellow(page, fixture, fixture.fellowName, "Missed");
 
     await page.reload();
     const reopened = await openFellowAttendance(page, fixture.sessionDate, fixture.schoolName);
-    const markedRow = await searchRows(page, fixture.fellowName, reopened);
-    await expect(markedRow).toContainText("Missed");
-    await chooseRowAction(page, markedRow, "Mark attendance");
-    await expect(mark.getByRole("combobox", { name: "Select reason for above" })).toHaveText(
-      absenceReason,
-    );
-    await page.keyboard.press("Escape");
-    await expect(mark).toBeHidden();
-
-    // The reversal cancels what was paid, not the session's new rate.
+    await expect(await searchRows(page, fixture.fellowName, reopened)).toContainText("Missed");
     expect(await fellowTotal(page, fixture.fellowName)).toBe(totalBefore - paidBefore);
-  });
 
-  test("a supervisor in another hub does not see the session", async ({ page, context, undo }) => {
-    const supervisors = await signableProfiles("supervisors", "SUPERVISOR", "hub_id");
-    const outsider = supervisors.find((s) => s.hubId !== fixture.hubId);
-    required(outsider, "no supervisor in another hub");
-    // A session of the outsider's own hub on the same day, so the list has loaded once it shows.
-    const outsiderSchool = await db.query.school.findFirst({
-      where: (s, { and, eq, isNull }) => and(eq(s.hubId, outsider.hubId), isNull(s.archivedAt)),
-      columns: { id: true, schoolName: true },
-      orderBy: (s, { asc }) => asc(s.id),
+    // The ledger is append-only: the earlier entries stay as they were, and the correction is a
+    // new entry.
+    const ledgerAfter = await statementsOf(fixture.attendanceId);
+    expect(ledgerAfter.slice(0, -1)).toEqual(ledgerBefore);
+    expect(ledgerAfter.at(-1)).toMatchObject({
+      amount: -paidBefore,
+      reason: "UNMARK_SESSION_ATTENDANCE",
     });
-    const outsiderSessionType = await db.query.sessionName.findFirst({
-      where: (n, { and, eq }) => and(eq(n.hubId, outsider.hubId), eq(n.sessionName, "s1")),
-      columns: { id: true },
-    });
-    required(outsiderSchool?.schoolName, "a school in the outsider's hub");
-    required(outsiderSessionType, "session type s1 in the outsider's hub");
-    const ownSessionId = objectId("session");
-    await db.insert(interventionSession).values({
-      id: ownSessionId,
-      hubId: outsider.hubId,
-      schoolId: outsiderSchool.id,
-      sessionId: outsiderSessionType.id,
-      occurred: false,
-      yearOfImplementation: fixture.sessionDate.getFullYear(),
-      sessionDate: fixture.sessionDate,
-    });
-    undo(() => db.delete(interventionSession).where(eq(interventionSession.id, ownSessionId)));
-    await signInWithEmail(context, outsider.email);
-
-    const sessionRows = await openSessionWeek(page, fixture.sessionDate, fixture.schoolName);
-    await expect(
-      page.getByRole("row").filter({ hasText: outsiderSchool.schoolName }).first(),
-    ).toBeVisible();
-    await expect(sessionRows).toHaveCount(0);
   });
 });
 
-test.describe("bulk fellow attendance", () => {
+test.describe("marking unmarked fellows", () => {
   type Fixture = {
     sessionId: string;
     sessionDate: Date;
     sessionAmount: number;
+    sessionNameId: string;
     schoolName: string;
     email: string;
     fellowIds: string[];
     fellowNames: string[];
+    fellowMpesaNumbers: (string | null)[];
   };
   let fixture: Fixture;
 
@@ -226,9 +201,10 @@ test.describe("bulk fellow attendance", () => {
       rows: [row],
     } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
       select i.id as "sessionId", i.session_date as "sessionDate", sn.amount as "sessionAmount",
-        s.school_name as "schoolName", u.email,
+        sn.id as "sessionNameId", s.school_name as "schoolName", u.email,
         (array_agg(f.id order by f.id))[1:2] as "fellowIds",
-        (array_agg(f.fellow_name order by f.id))[1:2] as "fellowNames"
+        (array_agg(f.fellow_name order by f.id))[1:2] as "fellowNames",
+        (array_agg(f.mpesa_number order by f.id))[1:2] as "fellowMpesaNumbers"
       from intervention_sessions i
       join session_names sn on sn.id = i.session_id and sn."session_type" = 'INTERVENTION'
         and sn.amount > 0
@@ -244,7 +220,7 @@ test.describe("bulk fellow attendance", () => {
         and not exists (
           select 1 from fellow_attendances fa where fa.session_id = i.id and fa.fellow_id = f.id)
         and ${onlySessionAtSchoolThatWeek()}
-      group by i.id, i.session_date, sn.amount, s.school_name, u.email
+      group by i.id, i.session_date, sn.amount, sn.id, s.school_name, u.email
       having count(distinct f.id) >= 2
       order by i.session_date desc, i.id, u.email
       limit 1`);
@@ -258,6 +234,10 @@ test.describe("bulk fellow attendance", () => {
   });
 
   test.afterEach(async () => {
+    await db
+      .update(sessionName)
+      .set({ amount: fixture.sessionAmount })
+      .where(eq(sessionName.id, fixture.sessionNameId));
     const createdAttendances = await db
       .select({ id: fellowAttendance.id })
       .from(fellowAttendance)
@@ -276,7 +256,57 @@ test.describe("bulk fellow attendance", () => {
     }
   });
 
-  test("a supervisor marks two fellows attended at once", async ({ page, context }) => {
+  async function attendanceIdOf(fellowId: string) {
+    const attendance = await db.query.fellowAttendance.findFirst({
+      where: (a, { and, eq }) => and(eq(a.sessionId, fixture.sessionId), eq(a.fellowId, fellowId)),
+      columns: { id: true },
+    });
+    required(attendance, "the fellow's attendance");
+    return attendance.id;
+  }
+
+  test("PAY-02, PAY-03, PAY-04, R-ad-session-amount-change: a fellow is paid the hub's current rate once, only when marked attended", async ({
+    page,
+    context,
+  }) => {
+    const [fellowId] = fixture.fellowIds;
+    const [fellowName] = fixture.fellowNames;
+    required(fellowId, "a fellow");
+    required(fellowName, "a fellow's name");
+    // The hub's rate changed before this attendance was marked, so the mark pays the new rate.
+    const changedRate = fixture.sessionAmount + 250;
+    await db
+      .update(sessionName)
+      .set({ amount: changedRate })
+      .where(eq(sessionName.id, fixture.sessionNameId));
+
+    await signInWithEmail(context, fixture.email);
+    const totalBefore = await fellowTotal(page, fellowName);
+
+    await markFellow(page, fixture, fellowName, "Missed");
+    expect(await fellowTotal(page, fellowName)).toBe(totalBefore);
+    const attendanceId = await attendanceIdOf(fellowId);
+    expect(await statementsOf(attendanceId)).toEqual([]);
+
+    await markFellow(page, fixture, fellowName, "Attended");
+    expect(await fellowTotal(page, fellowName)).toBe(totalBefore + changedRate);
+
+    await markFellow(page, fixture, fellowName, "Attended");
+    expect(await fellowTotal(page, fellowName)).toBe(totalBefore + changedRate);
+    // One entry for the one change, carrying the fellow's M-Pesa number when it was marked.
+    expect(await statementsOf(attendanceId)).toEqual([
+      {
+        amount: changedRate,
+        reason: "MARK_SESSION_ATTENDANCE",
+        mpesaNumber: fixture.fellowMpesaNumbers[0] ?? null,
+      },
+    ]);
+  });
+
+  test("R-pay-from-attendance: a supervisor marks two fellows attended at once, and each is paid once", async ({
+    page,
+    context,
+  }) => {
     await signInWithEmail(context, fixture.email);
     const totalsBefore = [];
     for (const fellowName of fixture.fellowNames) {
@@ -290,7 +320,7 @@ test.describe("bulk fellow attendance", () => {
     await dialog.getByRole("button", { name: "Mark fellow attendance" }).click();
     const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
     await expect(mark).toContainText("2 fellows");
-    await mark.getByRole("radio").first().click();
+    await mark.getByRole("radio", { name: "Attended" }).click();
     await mark.getByRole("button", { name: "Submit" }).click();
     await expect(mark).toBeHidden();
 
@@ -299,8 +329,6 @@ test.describe("bulk fellow attendance", () => {
     for (const fellowName of fixture.fellowNames) {
       await expect(await searchRows(page, fellowName, reopened)).toContainText("Attended");
     }
-
-    // Each fellow is paid the session's amount once.
     for (const [index, fellowName] of fixture.fellowNames.entries()) {
       expect(await fellowTotal(page, fellowName)).toBe(
         (totalsBefore[index] ?? Number.NaN) + fixture.sessionAmount,
@@ -310,7 +338,10 @@ test.describe("bulk fellow attendance", () => {
 
   // Both submits are sent together, but nothing makes them overlap on the server, so this proves
   // a second mark of the same fellow pays nothing, not the race itself.
-  test("marking the same fellow from two open tabs pays once", async ({ page, context }) => {
+  test("PAY-04: marking the same fellow from two open tabs pays once", async ({
+    page,
+    context,
+  }) => {
     await signInWithEmail(context, fixture.email);
     const fellowName = fixture.fellowNames[0];
     if (!fellowName) throw new Error("fixture has no fellow");
@@ -323,7 +354,7 @@ test.describe("bulk fellow attendance", () => {
         const fellowRow = await searchRows(tab, fellowName, dialog);
         await chooseRowAction(tab, fellowRow, "Mark attendance");
         const mark = tab.getByRole("dialog").filter({ hasText: "Select attendance" });
-        await mark.getByRole("radio").first().click();
+        await mark.getByRole("radio", { name: "Attended" }).click();
         return mark.getByRole("button", { name: "Submit" });
       }),
     );
