@@ -189,10 +189,6 @@ async function readHandovers(
   });
 }
 
-/**
- * Locks the ticket row for the rest of the transaction, so the checks a change makes on its status
- * and holder still hold when it writes.
- */
 async function lockTicket(tx: Transaction, ticketId: string) {
   const [ticket] = await tx
     .select({ status: tickets.status, holderId: tickets.holderId })
