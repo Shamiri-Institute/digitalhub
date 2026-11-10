@@ -1,14 +1,71 @@
 "use client";
 
-import { Menu } from "@base-ui/react/menu";
+import type { Menu as MenuParts } from "@base-ui/react/menu";
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
 import { Check } from "lucide-react";
-import type * as React from "react";
+import { type ComponentProps, createContext, type ReactElement, type ReactNode, use } from "react";
 
+import { afterPage, type StandIn, useStandIn } from "#/components/deferred";
 import { cn } from "#/lib/utils";
 
-const DropdownMenu = Menu.Root;
+// Base UI's Menu adds about 22 KB gzipped to a page, and every table page draws menus (row
+// actions, Edit columns) that most visits never open. Each menu draws its trigger until the code
+// has loaded after the page, then hands the trigger to Base UI.
+const [useMenuCode, loadMenuCode] = afterPage(() =>
+  import("@base-ui/react/menu").then((mod) => mod.Menu),
+);
 
-const DropdownMenuTrigger = Menu.Trigger;
+const MenuCode = createContext<({ Menu: typeof MenuParts | null } & StandIn) | null>(null);
+
+function useMenuCodeContext() {
+  const context = use(MenuCode);
+  if (!context) throw new Error("Menu parts must be inside <DropdownMenu>");
+  return context;
+}
+
+// Items render only inside an open popup, and a popup opens only once the code has loaded.
+function useLoadedMenu() {
+  const { Menu } = useMenuCodeContext();
+  if (!Menu) throw new Error("A menu item rendered before the menu's code loaded");
+  return Menu;
+}
+
+function DropdownMenu(props: Omit<MenuParts.Root.Props, "children"> & { children?: ReactNode }) {
+  const Menu = useMenuCode();
+  const standIn = useStandIn(loadMenuCode);
+  return (
+    <MenuCode value={{ Menu, ...standIn }}>
+      {Menu ? <Menu.Root {...props} /> : props.children}
+    </MenuCode>
+  );
+}
+
+// Only what a plain button also takes, so the stand-in draws the same element.
+type TriggerProps = Omit<ComponentProps<"button">, "ref"> & { render?: ReactElement };
+
+function DropdownMenuTrigger(props: TriggerProps) {
+  const { Menu, standInHandlers, takeOver } = useMenuCodeContext();
+  if (!Menu) return <StandInTrigger {...props} handlers={standInHandlers} />;
+  return <Menu.Trigger {...props} ref={takeOver} />;
+}
+
+// The closed trigger as Base UI draws it, so nothing moves when the real one takes over.
+function StandInTrigger({
+  render,
+  handlers,
+  ...props
+}: TriggerProps & { handlers: StandIn["standInHandlers"] }) {
+  return useRender({
+    defaultTagName: "button",
+    render,
+    props: mergeProps<"button">(
+      { type: "button", "aria-haspopup": "menu", "aria-expanded": false },
+      props,
+      handlers,
+    ),
+  });
+}
 
 function DropdownMenuContent({
   className,
@@ -16,7 +73,9 @@ function DropdownMenuContent({
   align,
   sideOffset = 4,
   ...props
-}: Menu.Popup.Props & Pick<Menu.Positioner.Props, "side" | "align" | "sideOffset">) {
+}: MenuParts.Popup.Props & Pick<MenuParts.Positioner.Props, "side" | "align" | "sideOffset">) {
+  const { Menu } = useMenuCodeContext();
+  if (!Menu) return null;
   return (
     <Menu.Portal>
       <Menu.Positioner side={side} align={align} sideOffset={sideOffset} className="z-50">
@@ -36,19 +95,22 @@ function DropdownMenuContent({
 const itemClass =
   "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50";
 
-function DropdownMenuItem({ className, ...props }: Menu.Item.Props) {
+function DropdownMenuItem({ className, ...props }: MenuParts.Item.Props) {
+  const Menu = useLoadedMenu();
   return (
     <Menu.Item data-slot="dropdown-menu-item" className={cn(itemClass, className)} {...props} />
   );
 }
 
-function DropdownMenuLinkItem({ className, ...props }: Menu.LinkItem.Props) {
+function DropdownMenuLinkItem({ className, ...props }: MenuParts.LinkItem.Props) {
+  const Menu = useLoadedMenu();
   return (
     <Menu.LinkItem data-slot="dropdown-menu-item" className={cn(itemClass, className)} {...props} />
   );
 }
 
-function DropdownMenuCheckboxItem({ className, children, ...props }: Menu.CheckboxItem.Props) {
+function DropdownMenuCheckboxItem({ className, children, ...props }: MenuParts.CheckboxItem.Props) {
+  const Menu = useLoadedMenu();
   return (
     <Menu.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
@@ -65,7 +127,7 @@ function DropdownMenuCheckboxItem({ className, children, ...props }: Menu.Checkb
   );
 }
 
-function DropdownMenuLabel({ className, ...props }: React.ComponentProps<"div">) {
+function DropdownMenuLabel({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="dropdown-menu-label"
@@ -75,7 +137,8 @@ function DropdownMenuLabel({ className, ...props }: React.ComponentProps<"div">)
   );
 }
 
-function DropdownMenuSeparator({ className, ...props }: Menu.Separator.Props) {
+function DropdownMenuSeparator({ className, ...props }: MenuParts.Separator.Props) {
+  const Menu = useLoadedMenu();
   return (
     <Menu.Separator
       data-slot="dropdown-menu-separator"

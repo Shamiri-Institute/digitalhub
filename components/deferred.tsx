@@ -1,21 +1,56 @@
 "use client";
 
+import { mergeProps } from "@base-ui/react/merge-props";
 import {
   type ComponentType,
   cloneElement,
   type ReactElement,
   type Ref,
   useEffect,
-  useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 
-type Trigger = ReactElement<{
-  ref?: Ref<HTMLElement>;
-  onClick?: (event: never) => void;
-  onFocus?: (event: never) => void;
-  onBlur?: (event: never) => void;
-}>;
+/**
+ * Code that loads after the page instead of with it. `useLoaded()` gives null until the code has
+ * arrived and starts fetching it once a component that needs it has mounted; `load()` fetches it
+ * now, and tries again after a failed fetch.
+ */
+export function afterPage<T>(fetchCode: () => Promise<T>) {
+  let loaded: T | null = null;
+  let loading: Promise<T> | null = null;
+  const listeners = new Set<() => void>();
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  };
+  const load = () => {
+    loading ??= fetchCode().then(
+      (code) => {
+        loaded = code;
+        for (const listener of listeners) listener();
+        return code;
+      },
+      (error: unknown) => {
+        loading = null;
+        throw error;
+      },
+    );
+    return loading;
+  };
+  function useLoaded() {
+    // effect: fetches the code once the page is interactive, off its critical path
+    useEffect(() => {
+      void load();
+    }, []);
+    return useSyncExternalStore(
+      subscribe,
+      () => loaded,
+      () => null,
+    );
+  }
+  return [useLoaded, load] as const;
+}
 
 function setRef(ref: Ref<HTMLElement> | undefined, node: HTMLElement | null) {
   if (typeof ref === "function") ref(node);
@@ -23,65 +58,76 @@ function setRef(ref: Ref<HTMLElement> | undefined, node: HTMLElement | null) {
 }
 
 /**
- * A menu or popover whose code loads after the page instead of with it. Until it arrives, its
- * `trigger` renders on its own, looking the same; then the real component takes the trigger over.
- * A press before then opens it as soon as it arrives, and a focused trigger stays focused.
+ * A trigger drawn on its own while its component's code loads, then replaced by the real one. A
+ * press on the stand-in opens the real trigger once it arrives, and a focused stand-in hands its
+ * focus over. One stable object per trigger, so the real trigger's ref never changes.
  */
-export function deferred<P extends { trigger: ReactElement }>(
-  load: () => Promise<ComponentType<P>>,
-) {
-  let loaded: ComponentType<P> | null = null;
-  let loading: Promise<ComponentType<P>> | null = null;
-  const start = () => {
-    loading ??= load().then((component) => (loaded = component));
-    return loading;
-  };
-
-  return function Deferred(props: P) {
-    const [Component, setComponent] = useState(() => loaded);
-    const pressedEarly = useRef(false);
-    const focusedEarly = useRef(false);
-    const triggerElement = props.trigger as Trigger;
-    const triggerProps = triggerElement.props;
-
-    // effect: fetches the component's code once the page is interactive, off its critical path
-    useEffect(() => {
-      if (!Component) void start().then((component) => setComponent(() => component));
-    }, [Component]);
-
-    if (!Component) {
-      return cloneElement(triggerElement, {
-        onClick: (event: never) => {
-          triggerProps.onClick?.(event);
-          pressedEarly.current = true;
+export function useStandIn(load: () => Promise<unknown>) {
+  const [standIn] = useState(() => {
+    let pressedEarly = false;
+    let focusedEarly = false;
+    return {
+      standInHandlers: {
+        onClick: () => {
+          pressedEarly = true;
+          void load();
         },
-        onFocus: (event: never) => {
-          triggerProps.onFocus?.(event);
-          focusedEarly.current = true;
+        onFocus: () => {
+          focusedEarly = true;
         },
-        onBlur: (event: never) => {
-          triggerProps.onBlur?.(event);
-          focusedEarly.current = false;
+        onBlur: () => {
+          focusedEarly = false;
         },
-      });
-    }
-
-    const trigger = cloneElement(triggerElement, {
-      ref: (node: HTMLElement | null) => {
-        setRef(triggerProps.ref, node);
+      },
+      takeOver: (node: HTMLElement | null) => {
         if (!node) return;
-        if (focusedEarly.current) {
-          focusedEarly.current = false;
+        if (focusedEarly) {
+          focusedEarly = false;
           node.focus();
         }
-        if (pressedEarly.current) {
-          pressedEarly.current = false;
-          // A click from script has detail 0, which Base UI reads as a keyboard open, so the first
-          // item is focused, as it is when a keyboard opens the real trigger.
+        if (pressedEarly) {
+          pressedEarly = false;
+          // A click from script has detail 0, which Base UI reads as a keyboard open, so the
+          // first item is focused, as it is when a keyboard opens the real trigger.
           queueMicrotask(() => node.click());
         }
       },
-    });
-    return <Component {...props} trigger={trigger} />;
+    };
+  });
+  return standIn;
+}
+
+export type StandIn = ReturnType<typeof useStandIn>;
+
+type Trigger = ReactElement<{ ref?: Ref<HTMLElement> }>;
+
+/**
+ * A menu or popover whose code loads after the page instead of with it. It takes its trigger as a
+ * prop and draws it as a stand-in until the component arrives.
+ */
+export function deferred<P extends { trigger: ReactElement }>(
+  fetchComponent: () => Promise<ComponentType<P>>,
+) {
+  const [useComponent, load] = afterPage(fetchComponent);
+
+  return function Deferred(props: P) {
+    const Component = useComponent();
+    const { standInHandlers, takeOver } = useStandIn(load);
+    const trigger = props.trigger as Trigger;
+
+    if (!Component) {
+      return cloneElement(trigger, mergeProps(trigger.props, standInHandlers));
+    }
+    return (
+      <Component
+        {...props}
+        trigger={cloneElement(trigger, {
+          ref: (node: HTMLElement | null) => {
+            setRef(trigger.props.ref, node);
+            takeOver(node);
+          },
+        })}
+      />
+    );
   };
 }

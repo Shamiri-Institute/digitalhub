@@ -29,6 +29,7 @@ import {
   roleSwitcherTrigger,
 } from "#/components/common/switcher-triggers";
 import { deferred } from "#/components/deferred";
+import { AccountMenu, PhoneMenu, ReportingMenu } from "#/components/header-menus";
 import { Button } from "#/components/ui/button";
 import type { ImplementerPersonnel } from "#/lib/actions/fetch-personnel";
 
@@ -46,14 +47,8 @@ const ProfileDialog = dynamic(
   { ssr: false },
 );
 
-// The header's menus and switchers load after the page; their triggers are drawn until then.
-const AccountMenu = deferred(() =>
-  import("#/components/header-menus").then((mod) => mod.AccountMenu),
-);
-const PhoneMenu = deferred(() => import("#/components/header-menus").then((mod) => mod.PhoneMenu));
-const ReportingMenu = deferred(() =>
-  import("#/components/header-menus").then((mod) => mod.ReportingMenu),
-);
+// The switchers pull in cmdk and Base UI's Popover, so they load after the page; their triggers
+// are drawn until then. Menus defer their own code (components/ui/dropdown-menu.tsx).
 const ProjectSwitcher = deferred(() =>
   import("#/components/common/project-switcher").then((mod) => mod.ProjectSwitcher),
 );

@@ -16,9 +16,6 @@ import {
 import { toastOnError } from "#/components/ui/use-toast";
 import { signOut } from "#/lib/auth-client";
 
-// The header's menus. They load after the page (see components/deferred.tsx): Base UI's Menu is
-// about 60 KB gzipped, and the header draws their triggers until then.
-
 function AccountItems({ onOpenProfile }: { onOpenProfile: () => void }) {
   return (
     <>
