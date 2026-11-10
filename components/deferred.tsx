@@ -66,12 +66,16 @@ export function useStandIn(load: () => Promise<unknown>) {
   const [standIn] = useState(() => {
     let pressedEarly = false;
     let focusedEarly = false;
+    const press = () => {
+      pressedEarly = true;
+      void load();
+    };
     return {
       standInHandlers: {
-        onClick: () => {
-          pressedEarly = true;
-          void load();
-        },
+        // A press counts from pointerdown: if the real trigger takes over before pointerup, the
+        // browser fires no click on either button.
+        onPointerDown: press,
+        onClick: press,
         onFocus: () => {
           focusedEarly = true;
         },
