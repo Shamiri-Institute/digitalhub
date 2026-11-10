@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.11.1](https://github.com/Shamiri-Institute/digitalhub/compare/v2.11.0...v2.11.1) (2026-11-10)
+
+### Bug Fixes
+
+- keep the clinical case and triage dialogs open until saved ([#1061](https://github.com/Shamiri-Institute/digitalhub/issues/1061)) ([25932f7](https://github.com/Shamiri-Institute/digitalhub/commit/25932f7422f0b7f505606f7ee2653ed91670440e))
+- **profile:** keep fellow profiles view-only and the name read-only ([#1069](https://github.com/Shamiri-Institute/digitalhub/issues/1069)) ([18b57e4](https://github.com/Shamiri-Institute/digitalhub/commit/18b57e444cef7cb5c4178c1bdb89b1577915153e))
+- **sc:** scope a supervisor's fellows to the supervisor's hub ([#1068](https://github.com/Shamiri-Institute/digitalhub/issues/1068)) ([58ee005](https://github.com/Shamiri-Institute/digitalhub/commit/58ee005cbfd85239b49a0988bf9128e998dc96af))
+- **session:** check the caller's hub when saving session ratings ([#1067](https://github.com/Shamiri-Institute/digitalhub/issues/1067)) ([e2ee780](https://github.com/Shamiri-Institute/digitalhub/commit/e2ee7805579a1fe9cdc12fafdbe9029c63b69a1e))
+
 ## [2.11.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.10.1...v2.11.0) (2026-11-09)
 
 ### Features
