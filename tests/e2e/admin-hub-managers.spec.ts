@@ -79,17 +79,22 @@ test("a super admin adds a hub manager, archives them and restores them", async 
     await dialog.getByLabel("Email address").fill(managerEmail.toUpperCase());
     await dialog.getByLabel("Phone number").fill("0712345678");
     await dialog.getByLabel("ID number").fill("12345678");
+    // Each list animates closed after a pick; the next list's options are read once it has gone.
+    const openList = page.getByRole("listbox");
     await dialog.getByLabel("Gender").click();
     await page.getByRole("option", { name: "Female" }).click();
+    await expect(openList).toHaveCount(0);
     await dialog.getByLabel(/^County/).click();
     // The 47 counties scroll inside the list instead of running off the screen.
-    const countyList = await page.getByRole("listbox").boundingBox();
+    await expect(openList).toBeVisible();
+    const countyList = await openList.boundingBox();
     const viewport = page.viewportSize();
     if (!countyList || !viewport) throw new Error("The county list is not on screen");
     expect(countyList.y + countyList.height).toBeLessThanOrEqual(viewport.height);
-    await page.getByRole("option").first().click();
+    await openList.getByRole("option").first().click();
+    await expect(openList).toHaveCount(0);
     await dialog.getByLabel("Sub-county").click();
-    await page.getByRole("option").first().click();
+    await openList.getByRole("option").first().click();
     await dialog.getByRole("button", { name: "Add hub manager" }).click();
     return dialog;
   };

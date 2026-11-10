@@ -374,7 +374,7 @@ test("clearing an amount leaves it empty, and typing a value clears the error", 
   await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl("/admin/hubs"));
   await page.getByRole("button", { name: "Add hub" }).click();
-  const dialog = page.getByRole("dialog");
+  const dialog = page.getByRole("dialog", { name: "Add a new hub" });
   await dialog.getByLabel("Hub name").fill(`${HUB_PREFIX} Empty amount`);
   await dialog.getByRole("button", { name: "Intervention sessions" }).click();
 
