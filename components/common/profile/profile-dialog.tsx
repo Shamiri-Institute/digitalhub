@@ -40,7 +40,6 @@ import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import {
   updateClinicalLeadProfile,
-  updateFellowProfile,
   updateHubCoordinatorProfile,
   updateSupervisorProfile,
 } from "#/lib/actions/profile";
@@ -144,9 +143,6 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
         break;
       case ImplementerRole.HUB_COORDINATOR:
         response = await updateHubCoordinatorProfile(data);
-        break;
-      case ImplementerRole.FELLOW:
-        response = await updateFellowProfile(data);
         break;
       case ImplementerRole.CLINICAL_LEAD:
         response = await updateClinicalLeadProfile(data);

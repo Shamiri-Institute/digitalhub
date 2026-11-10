@@ -64,7 +64,7 @@ test("a fellow views their own details but cannot edit them", async ({ page, con
   await signInWithEmail(context, signedInFellow.fellowEmail);
 
   await page.goto(getUrl("/fel/schedule"), { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: signedInFellow.fellowName }).click();
+  await page.getByRole("button", { name: signedInFellow.fellowName, exact: true }).click();
   await page.getByRole("menuitem", { name: "My Profile" }).click();
   const profile = page.getByRole("dialog", { name: "View profile" });
   await expect(profile.getByRole("textbox").first()).toHaveValue(signedInFellow.fellowName);
