@@ -23,6 +23,7 @@ and the tests that cover the change pass. Use npm only.
 - `Select` reads each value's label from the `SelectItem`s written inline in its children, so keep them inline. `onValueChange` receives only picked values, as a string.
 - `useDialogSave` keeps a dialog open while its save runs; the guard lives in the `Dialog` root.
 - `toast()` works from anywhere; the toast UI loads after the page.
+- Base UI loads a component's whole namespace when any part is used, so the header's menus and switchers load after the page through `deferred()` in `components/deferred.tsx`: they take their trigger as a prop, the header draws it until the code arrives, and an early press opens the menu once it does.
 - Style with Tailwind classes merged through `cn()`. The design tokens (`primary`, `muted-foreground`, `destructive-bg`, `info-border`, ...) are the `@theme` colors in `app/globals.css`, documented in `DESIGN.md`; Tailwind's default palette is switched off. No arbitrary colours, no inline `style`, no new CSS files.
 - Forms use React Hook Form with Zod.
 

@@ -1,11 +1,11 @@
 "use client";
 
+import type * as React from "react";
 import type { ImplementerRole } from "#/db/enums";
-import { Check, ChevronsUpDown, Filter } from "lucide-react";
+import { Check, Filter } from "lucide-react";
 import { useState } from "react";
 import { selectPersonnel } from "#/app/actions";
 import { signOut } from "#/lib/auth-client";
-import { Button } from "#/components/ui/button";
 import { toast } from "#/components/ui/use-toast";
 import {
   Command,
@@ -21,25 +21,22 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { Button } from "#/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import type { ImplementerPersonnel } from "#/lib/actions/fetch-personnel";
-import type { SessionUser } from "#/lib/auth/session-user";
 import type { Personnel } from "#/lib/types/personnel";
 import { cn } from "#/lib/utils";
 
 interface RoleSwitcherProps {
-  loading: boolean;
+  trigger: React.ReactElement;
   setLoading: (loading: boolean) => void;
-  user: SessionUser | null;
   implementerMembers: ImplementerPersonnel;
 }
 
 // Development-only impersonation helper; the layout loads personnel only in development.
-export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: RoleSwitcherProps) {
+export function RoleSwitcher({ trigger, setLoading, implementerMembers }: RoleSwitcherProps) {
   const [open, setOpen] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<Set<ImplementerRole>>(new Set());
-
-  const activeMembership = user?.activeMembership ?? null;
 
   const handleRoleChange = async (member: Personnel) => {
     setLoading(true);
@@ -82,39 +79,7 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button
-            variant="outline"
-            aria-expanded={open}
-            className="w-full lg:min-w-[300px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
-            disabled={loading || !activeMembership}
-          >
-            <div className="flex flex-col items-start">
-              <span className="text-base font-medium">
-                {activeMembership ? (
-                  <div className="flex flex-row items-baseline gap-3">
-                    <span className="font-medium">
-                      {
-                        implementerMembers.personnel.find(
-                          (member) => member.id === implementerMembers.activePersonnelId,
-                        )?.label
-                      }
-                    </span>
-                    <span className="text-xs uppercase tracking-widest text-primary">
-                      {" - "}
-                      {activeMembership.role.replace("_", " ")}
-                    </span>
-                  </div>
-                ) : (
-                  "Select member"
-                )}
-              </span>
-            </div>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        }
-      />
+      <PopoverTrigger render={trigger} />
       <PopoverContent className="w-full p-0" align="start">
         <Command>
           <span className="px-4 pb-1 pt-2 text-xs uppercase tracking-widest text-muted-foreground">

@@ -1,8 +1,8 @@
 "use client";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import type * as React from "react";
+import { Check } from "lucide-react";
 import { useState } from "react";
-import { Button } from "#/components/ui/button";
 import { toast } from "#/components/ui/use-toast";
 import {
   Command,
@@ -18,12 +18,12 @@ import type { JWTMembership, SessionUser } from "#/lib/auth/session-user";
 import { cn } from "#/lib/utils";
 
 export function MembershipSwitcher({
-  loading,
+  trigger,
   setLoading,
   user,
   isAdminUser,
 }: {
-  loading: boolean;
+  trigger: React.ReactElement;
   setLoading: (loading: boolean) => void;
   user: SessionUser | null;
   isAdminUser: boolean;
@@ -56,23 +56,7 @@ export function MembershipSwitcher({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button
-            variant="outline"
-            aria-expanded={open}
-            className="w-full min-w-[200px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
-            disabled={loading || !activeMembership}
-          >
-            <div className="flex flex-col items-start">
-              <span className="text-base font-medium">
-                {activeMembership ? activeMembership.implementerName : "Select implementer..."}
-              </span>
-            </div>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        }
-      />
+      <PopoverTrigger render={trigger} />
       <PopoverContent className="w-full p-0" align="start">
         <Command>
           <span className="px-4 pb-1 pt-2 text-xs uppercase tracking-widest text-muted-foreground">
