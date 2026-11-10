@@ -170,7 +170,7 @@ test("only the holder escalates or resolves, and a resolution is shown to the cr
   );
 });
 
-test("a hub coordinator reassigns once per escalation to an active coordinator of the hub", async ({
+test("a hub coordinator reassigns to an active coordinator of the hub, who may pass it on again", async ({
   page,
   context,
 }) => {
@@ -195,8 +195,9 @@ test("a hub coordinator reassigns once per escalation to an active coordinator o
 
   await signIn(context, hub.otherCoordinatorEmail);
   await expect(await currentTier(page, "/hc/tickets", subject)).toHaveText("hub coordinator");
+  // Reassigns are not limited, so a wrong one can be passed on, and the history stays in reach.
   const menu = await ticketMenu(page, "/hc/tickets", subject);
-  await expect(menu.getByText("Reassign ticket")).toHaveCount(0);
+  await expect(menu.getByText("Reassign ticket")).toBeVisible();
   await expect(menu.getByText("View reassignment")).toBeVisible();
   await menu.getByText("View reassignment").click();
   await expect(page.getByRole("dialog")).toContainText("On leave.");

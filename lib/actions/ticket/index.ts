@@ -195,17 +195,6 @@ async function lockTicket(tx: Transaction, ticketId: string) {
   return ticket;
 }
 
-// Each escalation may be reassigned once, so its holder is reassigned when the last handover was one.
-async function holderWasReassigned(cursor: Transaction | typeof db, ticketId: string) {
-  const lastHandover = await cursor.query.ticketEvents.findFirst({
-    where: (e, { and, eq, inArray }) =>
-      and(eq(e.ticketId, ticketId), inArray(e.kind, ["CREATED", "ESCALATED", "REASSIGNED"])),
-    orderBy: (e, { desc }) => [desc(e.createdAt), desc(e.id)],
-    columns: { kind: true },
-  });
-  return lastHandover?.kind === "REASSIGNED";
-}
-
 /** Writes the event and moves the ticket to its new status, and to the event's assignee if any. */
 async function recordTicketEvent(
   tx: Transaction,
@@ -326,10 +315,6 @@ export async function reassignTicket(
 
       if (ticket.holderId !== userId) {
         throw new Error("Only the current escalation recipient can reassign this ticket");
-      }
-
-      if (await holderWasReassigned(tx, ticketId)) {
-        throw new Error("This ticket has already been reassigned");
       }
 
       await assertReassignmentEligible(tx, { role, implementerId, identifier }, reassignedTo);
@@ -468,15 +453,13 @@ export async function getTicketEscalationStatus(
       };
     }
 
-    const canReassign = !(await holderWasReassigned(db, ticketId));
-
     if (role === ImplementerRole.ADMIN) {
       return {
         success: true,
         message: "You can resolve or reassign this ticket as you are the current recipient",
         data: {
           canEscalate: false,
-          canReassign,
+          canReassign: true,
           canResolve: true,
           hasReassignment,
           hasResolution,
@@ -489,7 +472,7 @@ export async function getTicketEscalationStatus(
       message: "You can act on this ticket as you are the current escalation recipient",
       data: {
         canEscalate: true,
-        canReassign,
+        canReassign: true,
         canResolve: true,
         hasReassignment,
         hasResolution,
