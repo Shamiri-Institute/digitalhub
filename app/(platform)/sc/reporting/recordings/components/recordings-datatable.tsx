@@ -1,5 +1,6 @@
 "use client";
 
+import { deferredDialog } from "#/components/deferred";
 import { useState } from "react";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -7,10 +8,20 @@ import { Button } from "#/components/ui/button";
 import { loadRecordingTranscript, type RecordingTranscript } from "../actions";
 import type { SupervisorFellow } from "../page";
 import { type RecordingDialogKind, type RecordingTableData, recordingColumns } from "./columns";
-import EditRecordingDialog from "./edit-recording-dialog";
-import UploadRecordingDialog from "./upload-recording-dialog";
-import ViewFeedbackDialog from "./view-feedback-dialog";
-import ViewTranscriptDialog from "./view-transcript-dialog";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const EditRecordingDialog = deferredDialog(() =>
+  import("./edit-recording-dialog").then((mod) => mod.default),
+);
+const UploadRecordingDialog = deferredDialog(() =>
+  import("./upload-recording-dialog").then((mod) => mod.default),
+);
+const ViewFeedbackDialog = deferredDialog(() =>
+  import("./view-feedback-dialog").then((mod) => mod.default),
+);
+const ViewTranscriptDialog = deferredDialog(() =>
+  import("./view-transcript-dialog").then((mod) => mod.default),
+);
 
 type OpenRecordingDialog =
   | { kind: "upload" }

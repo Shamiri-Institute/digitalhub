@@ -103,6 +103,18 @@ export function useStandIn(load: () => Promise<unknown>) {
 
 export type StandIn = ReturnType<typeof useStandIn>;
 
+/**
+ * A dialog whose code loads after the page. Closed, a dialog draws nothing, so until the code
+ * arrives this renders nothing; one opened before then shows once it does.
+ */
+export function deferredDialog<P extends object>(fetchDialog: () => Promise<ComponentType<P>>) {
+  const [useDialog] = afterPage(fetchDialog);
+  return function DeferredDialog(props: P) {
+    const Dialog = useDialog();
+    return Dialog ? <Dialog {...props} /> : null;
+  };
+}
+
 type Trigger = ReactElement<{ ref?: Ref<HTMLElement> }>;
 
 /**

@@ -1,26 +1,43 @@
 "use client";
 
+import { deferredDialog } from "#/components/deferred";
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole } from "#/db/enums";
 import { type SetStateAction, useState } from "react";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
-import FellowAttendance from "#/components/common/fellow/fellow-attendance";
-import CancelSession from "#/components/common/session/cancel-session";
 import { columns, type SessionData } from "#/components/common/session/columns";
-import RescheduleSession from "#/components/common/session/reschedule-session";
 import {
   SessionDetail,
   type SessionDialogKind,
   type SessionDialogOpener,
 } from "#/components/common/session/session-list";
-import SessionRatings from "#/components/common/session/session-ratings";
 import StudentAttendance, {
   startStudentAttendanceOpening,
   type StudentAttendanceOpening,
 } from "#/components/common/student/student-attendance";
-import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
-import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import DataTable from "#/components/data-table";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const FellowAttendance = deferredDialog(() =>
+  import("#/components/common/fellow/fellow-attendance").then((mod) => mod.default),
+);
+const CancelSession = deferredDialog(() =>
+  import("#/components/common/session/cancel-session").then((mod) => mod.default),
+);
+const RescheduleSession = deferredDialog(() =>
+  import("#/components/common/session/reschedule-session").then((mod) => mod.default),
+);
+const SessionRatings = deferredDialog(() =>
+  import("#/components/common/session/session-ratings").then((mod) => mod.default),
+);
+const AttendanceDocumentDialog = deferredDialog(() =>
+  import("#/components/common/student/student-attendance-files/attendance-document-dialog").then(
+    (mod) => mod.default,
+  ),
+);
+const SupervisorAttendance = deferredDialog(() =>
+  import("#/components/common/supervisor/supervisor-attendance").then((mod) => mod.default),
+);
 
 type OpenSessionDialog =
   | { kind: Exclude<SessionDialogKind, "studentAttendance">; sessionId: string }

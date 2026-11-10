@@ -1,5 +1,6 @@
 "use client";
 
+import { deferredDialog } from "#/components/deferred";
 import {
   type CalendarDate,
   createCalendar,
@@ -33,22 +34,15 @@ import {
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { type CalendarState, useCalendarState } from "react-stately";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
-import FellowAttendance from "#/components/common/fellow/fellow-attendance";
-import CancelSession from "#/components/common/session/cancel-session";
-import RescheduleSession from "#/components/common/session/reschedule-session";
-import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
 import {
   SessionDetail,
   type SessionDialogKind,
   type SessionDialogOpener,
 } from "#/components/common/session/session-list";
-import SessionRatings from "#/components/common/session/session-ratings";
-import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
 import StudentAttendance, {
   startStudentAttendanceOpening,
   type StudentAttendanceOpening,
 } from "#/components/common/student/student-attendance";
-import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
@@ -72,6 +66,33 @@ import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import { TableView } from "./table-view";
 import { WeekView } from "./week-view";
 import type { school, sessionName } from "#/db/schema";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const FellowAttendance = deferredDialog(() =>
+  import("#/components/common/fellow/fellow-attendance").then((mod) => mod.default),
+);
+const CancelSession = deferredDialog(() =>
+  import("#/components/common/session/cancel-session").then((mod) => mod.default),
+);
+const RescheduleSession = deferredDialog(() =>
+  import("#/components/common/session/reschedule-session").then((mod) => mod.default),
+);
+const ScheduleNewSession = deferredDialog(() =>
+  import("#/components/common/session/schedule-new-session-form").then(
+    (mod) => mod.ScheduleNewSession,
+  ),
+);
+const SessionRatings = deferredDialog(() =>
+  import("#/components/common/session/session-ratings").then((mod) => mod.default),
+);
+const AttendanceDocumentDialog = deferredDialog(() =>
+  import("#/components/common/student/student-attendance-files/attendance-document-dialog").then(
+    (mod) => mod.default,
+  ),
+);
+const SupervisorAttendance = deferredDialog(() =>
+  import("#/components/common/supervisor/supervisor-attendance").then((mod) => mod.default),
+);
 
 type School = Pick<typeof school.$inferSelect, "id" | "schoolName">;
 type SessionName = Pick<typeof sessionName.$inferSelect, "id" | "sessionType" | "sessionLabel">;

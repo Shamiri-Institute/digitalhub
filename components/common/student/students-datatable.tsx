@@ -1,24 +1,43 @@
 "use client";
 
+import { deferredDialog } from "#/components/deferred";
 import type { TransferSchool } from "#/components/common/schools/school-students-page";
 import { ImplementerRole } from "#/db/enums";
 import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { MarkAttendance } from "#/components/common/mark-attendance";
-import { AddReportingNote } from "#/components/common/student/add-reporting-note";
-import AttendanceHistory from "#/components/common/student/attendance-history";
 import {
   columns,
   type SchoolStudentTableData,
   type StudentDialogKind,
 } from "#/components/common/student/columns";
-import GroupTransferHistory from "#/components/common/student/group-transfer-history";
-import StudentArchiveForm from "#/components/common/student/student-archive-form";
-import StudentDetailsForm from "#/components/common/student/student-details-form";
-import StudentDropoutForm from "#/components/common/student/student-dropout-form";
-import StudentMoveSchoolForm from "#/components/common/student/student-move-school-form";
 import DataTable from "#/components/data-table";
 import { markStudentAttendance } from "#/lib/actions/student";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const MarkAttendance = deferredDialog(() =>
+  import("#/components/common/mark-attendance").then((mod) => mod.MarkAttendance),
+);
+const AddReportingNote = deferredDialog(() =>
+  import("#/components/common/student/add-reporting-note").then((mod) => mod.AddReportingNote),
+);
+const AttendanceHistory = deferredDialog(() =>
+  import("#/components/common/student/attendance-history").then((mod) => mod.default),
+);
+const GroupTransferHistory = deferredDialog(() =>
+  import("#/components/common/student/group-transfer-history").then((mod) => mod.default),
+);
+const StudentArchiveForm = deferredDialog(() =>
+  import("#/components/common/student/student-archive-form").then((mod) => mod.default),
+);
+const StudentDetailsForm = deferredDialog(() =>
+  import("#/components/common/student/student-details-form").then((mod) => mod.default),
+);
+const StudentDropoutForm = deferredDialog(() =>
+  import("#/components/common/student/student-dropout-form").then((mod) => mod.default),
+);
+const StudentMoveSchoolForm = deferredDialog(() =>
+  import("#/components/common/student/student-move-school-form").then((mod) => mod.default),
+);
 
 // Marking attendance from the attendance history keeps the history open underneath.
 type OpenStudentDialog = {

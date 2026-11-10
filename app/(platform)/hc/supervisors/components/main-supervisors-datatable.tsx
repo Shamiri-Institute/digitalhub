@@ -1,5 +1,6 @@
 "use client";
 
+import { deferredDialog } from "#/components/deferred";
 import { ImplementerRole } from "#/db/enums";
 import type { project as projectTable } from "#/db/schema";
 import parsePhoneNumberFromString from "libphonenumber-js";
@@ -10,13 +11,33 @@ import {
   type SupervisorDialogKind,
   type SupervisorsData,
 } from "#/app/(platform)/hc/supervisors/components/columns";
-import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
-import MonthlySupervisorEvaluation from "#/app/(platform)/hc/supervisors/components/monthly-supervisor-evaluation";
-import SubmitComplaint from "#/app/(platform)/hc/supervisors/components/submit-complaint";
-import SupervisorDetailsForm from "#/app/(platform)/hc/supervisors/components/supervisor-details-form";
-import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const SupervisorDetailsForm = deferredDialog(() =>
+  import("#/app/(platform)/hc/supervisors/components/supervisor-details-form").then(
+    (mod) => mod.default,
+  ),
+);
+const DropoutSupervisor = deferredDialog(() =>
+  import("#/app/(platform)/hc/supervisors/components/dropout-supervisor-form").then(
+    (mod) => mod.default,
+  ),
+);
+const UndropSupervisor = deferredDialog(() =>
+  import("#/app/(platform)/hc/supervisors/components/undrop-supervisor-form").then(
+    (mod) => mod.default,
+  ),
+);
+const SubmitComplaint = deferredDialog(() =>
+  import("#/app/(platform)/hc/supervisors/components/submit-complaint").then((mod) => mod.default),
+);
+const MonthlySupervisorEvaluation = deferredDialog(() =>
+  import("#/app/(platform)/hc/supervisors/components/monthly-supervisor-evaluation").then(
+    (mod) => mod.default,
+  ),
+);
 
 type OpenSupervisorDialog = { kind: SupervisorDialogKind; supervisorId: string };
 

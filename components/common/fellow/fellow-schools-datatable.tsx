@@ -1,4 +1,5 @@
 "use client";
+import { deferredDialog } from "#/components/deferred";
 import {
   type FellowPersonalDetails,
   loadFellowPersonalDetails,
@@ -8,14 +9,7 @@ import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import AttendanceHistory from "#/components/common/fellow/attendance-history";
-import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import type { FellowGroupData } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
-import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
-import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
-import { MarkAttendance } from "#/components/common/mark-attendance";
-import StudentsInGroup from "#/components/common/student/students-in-group";
-import SubmitComplaint from "#/components/common/submit-complaint";
 import DataTable from "#/components/data-table";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
@@ -31,6 +25,29 @@ import {
   subColumns,
 } from "./fellow-schools-columns";
 import type { project as projectTable } from "#/db/schema";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const AttendanceHistory = deferredDialog(() =>
+  import("#/components/common/fellow/attendance-history").then((mod) => mod.default),
+);
+const FellowDetailsForm = deferredDialog(() =>
+  import("#/components/common/fellow/fellow-details-form").then((mod) => mod.default),
+);
+const WeeklyFellowEvaluation = deferredDialog(() =>
+  import("#/components/common/fellow/weekly-fellow-evaluation").then((mod) => mod.default),
+);
+const StudentGroupEvaluation = deferredDialog(() =>
+  import("#/components/common/group/student-group-evaluation").then((mod) => mod.default),
+);
+const StudentsInGroup = deferredDialog(() =>
+  import("#/components/common/student/students-in-group").then((mod) => mod.default),
+);
+const SubmitComplaint = deferredDialog(() =>
+  import("#/components/common/submit-complaint").then((mod) => mod.default),
+);
+const MarkAttendance = deferredDialog(() =>
+  import("#/components/common/mark-attendance").then((mod) => mod.MarkAttendance),
+);
 
 type OpenFellowDialog =
   | { kind: "add" }

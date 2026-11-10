@@ -1,22 +1,35 @@
 "use client";
 
+import { deferredDialog } from "#/components/deferred";
 import { ImplementerRole } from "#/db/enums";
 import type { VisibilityState } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
 import {
   columns,
   type SchoolDialogKind,
   type SchoolsTableData,
 } from "#/components/common/schools/columns";
-import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
-import SchoolDetailsForm from "#/components/common/schools/school-details-form";
-import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
 import SchoolsDataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
 import type { supervisor } from "#/db/schema";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const AssignPointSupervisor = deferredDialog(() =>
+  import("#/components/common/schools/assign-point-supervisor").then((mod) => mod.default),
+);
+const DropoutSchool = deferredDialog(() =>
+  import("#/components/common/schools/dropout-school-form").then((mod) => mod.DropoutSchool),
+);
+const SchoolDetailsForm = deferredDialog(() =>
+  import("#/components/common/schools/school-details-form").then((mod) => mod.default),
+);
+const UndoDropoutSchool = deferredDialog(() =>
+  import("#/components/common/schools/undo-dropout-school-form").then(
+    (mod) => mod.UndoDropoutSchool,
+  ),
+);
 
 const schoolsCSVHeaders = [
   "school_name",

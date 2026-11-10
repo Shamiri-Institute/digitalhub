@@ -1,5 +1,6 @@
 "use client";
 
+import { deferredDialog } from "#/components/deferred";
 import type { fellow, supervisor, weeklyFellowRatings } from "#/db/schema";
 import {
   type FellowPersonalDetails,
@@ -16,14 +17,24 @@ import {
   type MainFellowTableData,
 } from "#/app/(platform)/hc/fellows/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
-import FellowDropoutForm from "#/components/common/fellow/fellow-dropout-form";
-import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
-import SubmitComplaint from "#/components/common/submit-complaint";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { toastOnError } from "#/components/ui/use-toast";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const FellowDetailsForm = deferredDialog(() =>
+  import("#/components/common/fellow/fellow-details-form").then((mod) => mod.default),
+);
+const FellowDropoutForm = deferredDialog(() =>
+  import("#/components/common/fellow/fellow-dropout-form").then((mod) => mod.default),
+);
+const WeeklyFellowEvaluation = deferredDialog(() =>
+  import("#/components/common/fellow/weekly-fellow-evaluation").then((mod) => mod.default),
+);
+const SubmitComplaint = deferredDialog(() =>
+  import("#/components/common/submit-complaint").then((mod) => mod.default),
+);
 
 type OpenMainFellowDialog =
   | { kind: "add" }
