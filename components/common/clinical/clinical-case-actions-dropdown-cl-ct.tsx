@@ -14,8 +14,10 @@ import { NestedDialogMenuItem, RowActionsTrigger } from "#/components/common/row
 
 export default function ClinicalLeadCaseActionsDropdownMenu({
   clinicalCase,
+  mayReopen,
 }: {
   clinicalCase: HubClinicalCases;
+  mayReopen: boolean;
 }) {
   const isTerminated = clinicalCase.caseStatus === "Terminated";
   const hasNotes = clinicalCase.caseNotes && clinicalCase.caseNotes.length > 0;
@@ -60,9 +62,11 @@ export default function ClinicalLeadCaseActionsDropdownMenu({
             >
               <NestedDialogMenuItem>View termination reasons</NestedDialogMenuItem>
             </ViewTerminationReasons>
-            <CaseUnterminateDialog caseId={clinicalCase.id} pseudonym={clinicalCase.pseudonym}>
-              <NestedDialogMenuItem>Un-terminate case</NestedDialogMenuItem>
-            </CaseUnterminateDialog>
+            {mayReopen && (
+              <CaseUnterminateDialog caseId={clinicalCase.id} pseudonym={clinicalCase.pseudonym}>
+                <NestedDialogMenuItem>Un-terminate case</NestedDialogMenuItem>
+              </CaseUnterminateDialog>
+            )}
           </>
         )}
       </DropdownMenuContent>

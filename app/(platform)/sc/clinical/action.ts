@@ -805,7 +805,10 @@ export async function terminateClinicalCase(data: {
   sessionId: string;
 }) {
   try {
-    const { actor } = await requireCaseSessionAccess(data.caseId, data.sessionId);
+    const { actor, caseSession } = await requireCaseSessionAccess(data.caseId, data.sessionId);
+    if (caseSession.attendanceStatus !== true) {
+      throw new Error("A case is terminated at a session the student attended");
+    }
 
     await db.transaction(async (tx) => {
       const [terminated] = await tx
