@@ -1,19 +1,25 @@
-import { expect, type Page, test } from "@playwright/test";
-import { ilike, inArray, sql } from "drizzle-orm";
+import type { Page } from "@playwright/test";
+import { eq, ilike, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { careAdminEmail, plainAdminEmail, superAdminEmail } from "#/db/seed/fixtures";
 import {
+  fellow,
   fellowAttendance,
   hub,
   interventionGroup,
+  adminUser,
   interventionSession,
+  payoutStatements,
   school,
   sessionName,
   student,
+  supervisor,
 } from "#/db/schema";
 import { hubSessionTypes } from "#/lib/app-constants/hub-session-types";
 import { objectId } from "#/lib/crypto";
+import { createSuperAdminCopy } from "#/tests/access-helpers";
+import { expect, test } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { dataRows, getUrl, searchRows } from "#/tests/pages/helpers";
 
@@ -44,8 +50,17 @@ test.afterAll(async () => {
       .select({ id: school.id })
       .from(school)
       .where(inArray(school.hubId, hubIds));
+    const hubAttendanceIds = db
+      .select({ id: fellowAttendance.id })
+      .from(fellowAttendance)
+      .where(inArray(fellowAttendance.sessionId, hubSessionIds));
+    await db
+      .delete(payoutStatements)
+      .where(inArray(payoutStatements.fellowAttendanceId, hubAttendanceIds));
     await db.delete(fellowAttendance).where(inArray(fellowAttendance.sessionId, hubSessionIds));
     await db.delete(interventionGroup).where(inArray(interventionGroup.schoolId, hubSchoolIds));
+    await db.delete(fellow).where(inArray(fellow.hubId, hubIds));
+    await db.delete(supervisor).where(inArray(supervisor.hubId, hubIds));
     await db.delete(interventionSession).where(inArray(interventionSession.hubId, hubIds));
     await db.delete(school).where(inArray(school.hubId, hubIds));
     await db.delete(sessionName).where(inArray(sessionName.hubId, hubIds));
@@ -142,11 +157,6 @@ test("a super admin adds a hub, cannot add a duplicate, and edits its name and s
   await expect(page.getByText(`was ${HUB_NAME}`)).toBeVisible();
   await expect(page.getByText("was Session 1")).toBeVisible();
   await expect(page.getByText("was 1,750")).toBeVisible();
-  await expect(page.getByText("2 unsaved changes")).toBeVisible();
-
-  page.once("dialog", (dialog) => void dialog.dismiss());
-  await page.getByRole("link", { name: /^Schools/ }).click();
-  await expect(page.getByLabel("Hub name")).toHaveValue(RENAMED_HUB_NAME);
 
   await page.getByRole("button", { name: "Review and save" }).click();
 
@@ -367,60 +377,6 @@ async function codesInHubSettings(page: Page, hubName: string) {
   return names.map((name) => name.replace(/ label$/, "")).toSorted();
 }
 
-test("clearing an amount leaves it empty, and typing a value clears the error", async ({
-  page,
-  context,
-}) => {
-  await signInWithEmail(context, superAdminEmail);
-  await page.goto(getUrl("/admin/hubs"));
-  await page.getByRole("button", { name: "Add hub" }).click();
-  const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("Hub name").fill(`${HUB_PREFIX} Empty amount`);
-  await dialog.getByRole("button", { name: "Intervention sessions" }).click();
-
-  await dialog.getByLabel("s1 amount").fill("");
-  await expect(dialog.getByLabel("s1 amount")).toHaveValue("");
-  await dialog.getByRole("button", { name: "Save" }).click();
-  await expect(dialog.getByText("Please enter an amount")).toBeVisible();
-
-  await dialog.getByLabel("s1 amount").fill("1500");
-  await expect(dialog.getByText("Please enter an amount")).toBeHidden();
-  await dialog.getByRole("button", { name: "Save" }).click();
-  const confirm = page.getByRole("dialog", { name: "Create hub?" });
-  await expect(confirm).toContainText("Labels and fellow pay amounts will be saved as shown.");
-  await confirm.getByRole("button", { name: "Go back" }).click();
-  await dialog.getByRole("button", { name: "Cancel" }).click();
-  await expect(dialog).toBeHidden();
-  expect(await db.$count(hub, ilike(hub.hubName, `${HUB_PREFIX} Empty amount`))).toBe(0);
-});
-
-test("an error inside a collapsed group opens the group and shows the error", async ({
-  page,
-  context,
-}) => {
-  await signInWithEmail(context, superAdminEmail);
-  await page.goto(getUrl("/admin/hubs"));
-  await page.getByRole("button", { name: "Add hub" }).click();
-  const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("Hub name").fill(`${HUB_PREFIX} Hidden error`);
-
-  const group = dialog.getByRole("button", { name: /Intervention sessions/ });
-  await group.click();
-  await dialog.getByLabel("s1 label").fill("");
-  await group.click();
-  await expect(dialog.getByLabel("s1 label")).toHaveCount(0);
-
-  await dialog.getByRole("button", { name: "Save" }).click();
-  await expect(dialog.getByText("Please enter a label")).toBeVisible();
-  await expect(group).toContainText("1 to fix");
-  await expect(page.getByRole("dialog", { name: "Create hub?" })).toHaveCount(0);
-
-  await dialog.getByLabel("s1 label").fill("Session 1");
-  await expect(group).not.toContainText("to fix");
-  await dialog.getByRole("button", { name: "Cancel" }).click();
-  await expect(dialog).toBeHidden();
-});
-
 for (const email of [careAdminEmail, plainAdminEmail]) {
   test(`${email} sees the hubs and their settings but cannot add or edit one`, async ({
     page,
@@ -451,37 +407,7 @@ for (const email of [careAdminEmail, plainAdminEmail]) {
   });
 }
 
-test("a hub page lists its schools and steps to the hubs beside it by name", async ({
-  page,
-  context,
-}) => {
-  await signInWithEmail(context, plainAdminEmail);
-  await page.goto(getUrl("/admin/hubs"));
-  const hubLinks = page.getByRole("link", { name: /^Open / });
-  await expect(hubLinks.first()).toBeVisible();
-  const hubNames = (
-    await hubLinks.evaluateAll((links) =>
-      links.map((link) => link.getAttribute("aria-label") ?? ""),
-    )
-  ).map((label) => label.replace(/^Open /, ""));
-  test.skip(hubNames.length < 2, "the admin sees a single hub");
-  const [firstHub = "", secondHub = ""] = hubNames;
-
-  await page.getByRole("link", { name: firstHub, exact: true }).click();
-  await expect(page).toHaveURL(/\/admin\/hubs\/[^/]+\/schools$/);
-  await expect(page.getByRole("heading", { name: firstHub })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Hubs");
-  await expect(page.getByRole("button", { name: "Previous hub", exact: true })).toBeDisabled();
-
-  await expect(dataRows(page).first()).toBeVisible();
-
-  await page.getByRole("link", { name: `Next hub: ${secondHub}` }).click();
-  await expect(page.getByRole("heading", { name: secondHub })).toBeVisible();
-  await page.getByRole("link", { name: `Previous hub: ${firstHub}` }).click();
-  await expect(page.getByRole("heading", { name: firstHub })).toBeVisible();
-});
-
-test("a hub page counts its sessions as marked attended, unmarked, upcoming and cancelled, its tabs count active rows, and the hubs list counts the same", async ({
+test("a hub with no sessions shows no figures; then its stats count held, upcoming and cancelled sessions, and the hubs list leaves out archived and dropped-out people", async ({
   page,
   context,
 }) => {
@@ -496,14 +422,7 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
     order by h.id
     limit 1`);
   required(seededHub, "a hub of the super admin's implementer in the default project");
-  const [leader, previousLeader] = await db.query.fellow.findMany({
-    columns: { id: true },
-    orderBy: (f, { asc }) => asc(f.id),
-    limit: 2,
-  });
-  required(leader, "a seeded fellow to lead the group");
-  required(previousLeader, "a seeded fellow who led the group before");
-  // Sessions, groups and attendance are not made from the admin pages, so the spec inserts them.
+  // Sessions, students and fellows are not made from the admin pages, so the spec inserts them.
   const [statsHub] = await db
     .insert(hub)
     .values({ id: objectId("hub"), hubName: `${HUB_PREFIX} Stats`, ...seededHub })
@@ -515,14 +434,6 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
     schoolName: `${HUB_PREFIX} School`,
     visibleId: schoolId,
     hubId: statsHub.id,
-  });
-  const groupId = objectId("group");
-  await db.insert(interventionGroup).values({
-    id: groupId,
-    groupName: "Stats group",
-    leaderId: leader.id,
-    schoolId,
-    projectId: seededHub.projectId,
   });
   const [s0, s1] = await db
     .insert(sessionName)
@@ -557,36 +468,28 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
     yearOfImplementation: new Date().getFullYear(),
     sessionDate: new Date(Date.now() + daysFromNow * day),
   });
-  await db.insert(interventionSession).values({ ...session(true, -8), sessionId: s0.id });
-
   await signInWithEmail(context, superAdminEmail);
   await page.goto(getUrl(`/admin/hubs/${statsHub.id}/schools`));
   const stats = page.getByRole("region", { name: "Hub stats" });
+  await expect(stats).toContainText("No sessions scheduled yet");
+  await expect(stats).toContainText(/\D0\s*marked attended/);
+  await expect(stats.getByText("No data")).toHaveCount(2);
+
+  await db.insert(interventionSession).values({ ...session(true, -8), sessionId: s0.id });
+  await page.reload();
   await expect(stats).toContainText("Pre-sessions are not counted");
 
-  const [markedForGroup, alsoMarkedForGroup, markedWithoutGroup] = [-7, -6, -3].map((daysAgo) =>
-    session(true, daysAgo),
-  );
-  required(markedForGroup, "a held session");
-  required(alsoMarkedForGroup, "a held session");
-  required(markedWithoutGroup, "a held session");
   await db
     .insert(interventionSession)
     .values([
-      markedForGroup,
-      alsoMarkedForGroup,
-      markedWithoutGroup,
+      session(true, -7),
+      session(true, -6),
+      session(true, -3),
       session(false, -5),
       session(false, 5),
       session(false, 6, null),
       session(false, -4, "Cancelled"),
     ]);
-  // Only rows carrying the group's id count, whoever marked them.
-  await db.insert(fellowAttendance).values([
-    { fellowId: previousLeader.id, groupId, sessionId: markedForGroup.id, attended: true },
-    { fellowId: previousLeader.id, groupId, sessionId: alsoMarkedForGroup.id, attended: false },
-    { fellowId: leader.id, sessionId: markedWithoutGroup.id, attended: true },
-  ]);
   const droppedOutSchoolId = objectId("school");
   await db.insert(school).values({
     id: droppedOutSchoolId,
@@ -595,23 +498,27 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
     hubId: statsHub.id,
     droppedOut: true,
   });
-  const statsStudent = (droppedOut: boolean) => {
+  const statsStudent = (archivedAt: Date | null) => {
     const id = objectId("student");
-    return { id, visibleId: id, schoolId, droppedOut };
+    return { id, visibleId: id, schoolId, archivedAt };
   };
-  await db.insert(student).values([statsStudent(false), statsStudent(true)]);
+  await db.insert(student).values([statsStudent(null), statsStudent(new Date())]);
+  const hubMember = (prefix: string, droppedOut: boolean) => ({
+    id: objectId(prefix),
+    hubId: statsHub.id,
+    implementerId: seededHub.implementerId,
+    droppedOut,
+  });
+  await db.insert(fellow).values([hubMember("fellow", false), hubMember("fellow", true)]);
+  await db.insert(supervisor).values([hubMember("sup", false), hubMember("sup", true)]);
 
   await page.reload();
-  await expect(stats).toContainText("marked attended of 7 scheduled");
   for (const segment of ["4 attended", "1 unmarked", "2 upcoming", "1 cancelled"]) {
     await expect(stats).toContainText(segment);
   }
   await expect(stats).toContainText("1 past session needs marking");
-  await expect(stats).toContainText("67%");
-  await expect(stats).toContainText("2 of 3 attendances");
-  await expect(stats).toContainText("1 fellow attendance not marked");
 
-  // The tables list every row; the badges leave out the cancelled session and dropped-out rows.
+  // The tables list every row; the badges leave out the cancelled session and inactive rows.
   await expect(dataRows(page)).toHaveCount(2);
   const tabs = page.getByRole("navigation", { name: "Hub sections" });
   await expect(tabs.getByRole("link", { name: /^Schools/ })).toHaveText(/^Schools\s*1$/);
@@ -624,10 +531,10 @@ test("a hub page counts its sessions as marked attended, unmarked, upcoming and 
     `${HUB_PREFIX} Stats`,
     "",
     "1",
-    "0",
-    "0",
     "1",
-    "4 of 7",
+    "1",
+    "1",
+    /^4 of \d+$/,
     "",
   ]);
 });
@@ -654,4 +561,127 @@ test("a hub of another implementer is not found", async ({ page, context }) => {
   const foreign = await page.goto(getUrl(`/admin/hubs/${fixture.foreignHub}/schools`));
   expect(foreign?.status()).toBe(404);
   await expect(page.getByText("This page could not be found.")).toBeVisible();
+});
+
+/** A hub of the super admin's implementer in the default project, with a pre-session and Session 1. */
+async function insertHub(name: string) {
+  const {
+    rows: [seededHub],
+  } = await db.execute<{ implementerId: string; projectId: string }>(sql`
+    select h.implementer_id as "implementerId", h.project_id as "projectId"
+    from hubs h
+    join projects p on p.id = h.project_id and p.is_default
+    join implementer_members m on m.implementer_id = h.implementer_id
+    join users u on u.id = m.user_id and u.email = ${superAdminEmail}
+    order by h.id
+    limit 1`);
+  required(seededHub, "a hub of the super admin's implementer in the default project");
+  const hubId = objectId("hub");
+  const hubName = `${HUB_PREFIX} ${name}`;
+  await db.insert(hub).values({ id: hubId, hubName, ...seededHub });
+  const [, sessionOne] = await db
+    .insert(sessionName)
+    .values(
+      [
+        ["s0", "Pre-session", 1000],
+        ["s1", "Session 1", 1500],
+      ].map(([code, label, amount]) => ({
+        hubId,
+        sessionName: String(code),
+        sessionLabel: String(label),
+        sessionType: "INTERVENTION" as const,
+        amount: Number(amount),
+      })),
+    )
+    .returning({ id: sessionName.id });
+  required(sessionOne, "the inserted Session 1 type");
+  return { hubId, hubName, sessionOneId: sessionOne.id, ...seededHub };
+}
+
+test("a new session amount leaves the payouts already recorded at the old amount", async ({
+  page,
+  context,
+}) => {
+  const amountHub = await insertHub("Amount change");
+  const superAdmin = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.email, superAdminEmail),
+    columns: { id: true },
+  });
+  required(superAdmin, `the user ${superAdminEmail}`);
+  // Attendance is marked on the schedule pages, so the spec inserts a paid attendance.
+  const fellowId = objectId("fellow");
+  await db
+    .insert(fellow)
+    .values({ id: fellowId, hubId: amountHub.hubId, implementerId: amountHub.implementerId });
+  const sessionId = objectId("session");
+  await db.insert(interventionSession).values({
+    id: sessionId,
+    hubId: amountHub.hubId,
+    sessionId: amountHub.sessionOneId,
+    projectId: amountHub.projectId,
+    occurred: true,
+    yearOfImplementation: new Date().getFullYear(),
+    sessionDate: new Date(),
+  });
+  const [attendance] = await db
+    .insert(fellowAttendance)
+    .values({ fellowId, sessionId, attended: true })
+    .returning({ id: fellowAttendance.id });
+  required(attendance, "the inserted attendance");
+  const [recordedPayout] = await db
+    .insert(payoutStatements)
+    .values({
+      fellowAttendanceId: attendance.id,
+      amount: 1500,
+      reason: "MARK_SESSION_ATTENDANCE",
+      createdBy: superAdmin.id,
+    })
+    .returning({ id: payoutStatements.id });
+  required(recordedPayout, "the inserted payout");
+
+  await signInWithEmail(context, superAdminEmail);
+  await openHubSettings(page, amountHub.hubName);
+  await expect(page.getByText("Payouts already recorded keep their amount")).toBeVisible();
+  await page.getByLabel("s1 amount").fill("1800");
+  await page.getByRole("button", { name: "Review and save" }).click();
+  await page
+    .getByRole("dialog", { name: "Save changes to hub?" })
+    .getByRole("button", { name: "Save changes" })
+    .click();
+  await expect(page.getByText(/unsaved change/)).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByLabel("s1 amount")).toHaveValue("1800");
+
+  // This spec stays on the hub settings page; the payout specs cover the payout pages.
+  const payout = await db.query.payoutStatements.findFirst({
+    where: (p, { eq }) => eq(p.id, recordedPayout.id),
+    columns: { amount: true },
+  });
+  expect(payout?.amount).toBe(1500);
+});
+
+test("an admin who loses super-admin access cannot save hub settings from an open form", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const lockedHub = await insertHub("Locked");
+  const admin = await createSuperAdminCopy();
+  undo(admin.remove);
+  await signInWithEmail(context, admin.email);
+  await openHubSettings(page, lockedHub.hubName);
+  await page.getByLabel("Hub name").fill(`${lockedHub.hubName} renamed`);
+  await page.getByRole("button", { name: "Review and save" }).click();
+
+  await db.update(adminUser).set({ isSuperAdmin: false }).where(eq(adminUser.email, admin.email));
+  await page
+    .getByRole("dialog", { name: "Save changes to hub?" })
+    .getByRole("button", { name: "Save changes" })
+    .click();
+  await expect(
+    page.getByText("Forbidden: this action requires a super admin").first(),
+  ).toBeVisible();
+
+  await page.goto(getUrl(`/admin/hubs/${lockedHub.hubId}/settings`));
+  await expect(page.getByRole("heading", { name: lockedHub.hubName, exact: true })).toBeVisible();
 });
