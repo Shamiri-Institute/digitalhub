@@ -91,7 +91,7 @@ function DialogContent({
         <DialogPrimitive.Popup
           data-slot="dialog-content"
           className={cn(
-            "relative grid w-full max-w-lg gap-4 bg-background p-6 shadow-xl transition-[opacity,scale] duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-safe:data-ending-style:scale-95 motion-safe:data-starting-style:scale-95 sm:rounded-xl",
+            "relative grid w-full max-w-lg gap-4 bg-background p-6 shadow-xl transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 sm:rounded-xl",
             className,
           )}
           initialFocus={(openType) => {

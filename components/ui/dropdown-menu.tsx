@@ -82,7 +82,7 @@ function DropdownMenuContent({
         <Menu.Popup
           data-slot="dropdown-menu-content"
           className={cn(
-            "min-w-32 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden transition-[opacity,scale] duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-safe:data-ending-style:scale-95 motion-safe:data-starting-style:scale-95",
+            "min-w-32 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden transition-opacity duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0",
             className,
           )}
           {...props}
