@@ -13,7 +13,6 @@ import {
 import { db } from "#/db/client";
 import { ImplementerRole, SessionStatus } from "#/db/enums";
 import {
-  fellow,
   interventionGroup,
   interventionSession,
   interventionSessionRating,
@@ -24,7 +23,11 @@ import {
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { clinicalCasesCountExtras, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
 import { NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
-import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
+import {
+  requireHubRole,
+  requireSchoolInHub,
+  supervisedFellowIds,
+} from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { requireEvaluationEditable } from "#/lib/evaluation-edit-window";
 
@@ -427,10 +430,7 @@ async function requireSessionVisibleToCaller(sessionId: string) {
   requireSessionInCallerHub(session, hubId);
   const callerGroups =
     role === ImplementerRole.SUPERVISOR
-      ? inArray(
-          interventionGroup.leaderId,
-          db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, profileId)),
-        )
+      ? inArray(interventionGroup.leaderId, supervisedFellowIds(profileId))
       : undefined;
   return { membership, callerGroups, sessionHubId };
 }

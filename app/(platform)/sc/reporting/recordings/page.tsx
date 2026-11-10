@@ -4,11 +4,15 @@ import { db } from "#/db/client";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import { loadSupervisorRecordings } from "./actions";
 import RecordingsDatatable from "./components/recordings-datatable";
+import { supervisedFellowIds } from "#/lib/auth/require-hub-role";
 
 async function loadSupervisorFellows(supervisorId: string) {
   return db.query.fellow.findMany({
-    where: (f, { and, eq, isNull, or }) =>
-      and(eq(f.supervisorId, supervisorId), or(eq(f.droppedOut, false), isNull(f.droppedOut))),
+    where: (f, { and, eq, inArray, isNull, or }) =>
+      and(
+        inArray(f.id, supervisedFellowIds(supervisorId)),
+        or(eq(f.droppedOut, false), isNull(f.droppedOut)),
+      ),
     columns: { id: true, fellowName: true },
     orderBy: (f, { asc }) => asc(f.fellowName),
   });

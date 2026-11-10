@@ -2,6 +2,7 @@
 
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
+import { supervisedFellowIds } from "#/lib/auth/require-hub-role";
 
 export type SupervisorFellowsAttendancesType = Awaited<
   ReturnType<typeof loadSupervisorFellowAttendance>
@@ -16,7 +17,7 @@ export async function loadSupervisorFellowAttendance() {
 
   const supervisorId = currentSupervisorData.profile.id;
   const fellows = await db.query.fellow.findMany({
-    where: (f, { eq }) => eq(f.supervisorId, supervisorId),
+    where: (f, { inArray }) => inArray(f.id, supervisedFellowIds(supervisorId)),
     with: {
       hub: { columns: { hubName: true } },
       supervisor: { columns: { supervisorName: true } },
