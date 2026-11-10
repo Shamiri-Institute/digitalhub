@@ -44,7 +44,7 @@ async function requireStudentAccess(studentId: string, ...roles: StudentRole[]) 
   const caller = await requireHubRole(...roles);
   const targetStudent = await db.query.student.findFirst({
     where: (s, { eq }) => eq(s.id, studentId),
-    columns: { id: true, schoolId: true },
+    columns: { id: true, schoolId: true, admissionNumber: true },
     with: {
       school: { columns: { hubId: true } },
       assignedGroup: { columns: { leaderId: true } },
@@ -119,7 +119,14 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
       if (!id) {
         throw new Error("Student id is required to edit a student");
       }
-      await requireStudentAccess(id, ...STUDENT_WRITE_ROLES);
+      const { student: studentToEdit } = await requireStudentAccess(id, ...STUDENT_WRITE_ROLES);
+      if (
+        caller.role !== ImplementerRole.HUB_COORDINATOR &&
+        studentToEdit.admissionNumber &&
+        admissionNumber !== studentToEdit.admissionNumber
+      ) {
+        throw new Error("Only a hub coordinator can change a student's admission number.");
+      }
       const updated = await db
         .update(student)
         .set({

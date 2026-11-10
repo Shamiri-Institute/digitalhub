@@ -1,8 +1,9 @@
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { student, studentGroupTransferTrail } from "#/db/schema";
+import { interventionGroup, student, studentGroupTransferTrail } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
+import { createStudentSchool } from "#/tests/delivery-student-helpers";
 import { expect, test } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell, searchRows } from "#/tests/pages/helpers";
@@ -111,4 +112,55 @@ test("moving a student between groups of the school records each move, newest fi
   await expect(history.nth(0)).toContainText(fixture.sourceGroupName);
   await expect(history.nth(1)).toContainText(fixture.targetGroupName);
   await expect(history.nth(2)).toContainText(fixture.sourceGroupName);
+});
+
+test("a student is not moved into a group archived while the move was being confirmed", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const school = await createStudentSchool(undo);
+  const { studentId, studentName } = await school.addStudent();
+  const stored = await db.query.student.findFirst({
+    where: (s, { eq }) => eq(s.id, studentId),
+    columns: { admissionNumber: true },
+  });
+  required(stored?.admissionNumber, "the new student's admission number");
+  await signInWithEmail(context, school.coordinatorEmail);
+
+  await page.goto(getUrl(`/hc/schools/${school.visibleId}/groups`));
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, page.getByRole("main"), school.otherGroupName),
+    "View students in group",
+  );
+  await page
+    .getByRole("dialog", { name: "Students in group" })
+    .getByRole("button", { name: "Add Student" })
+    .click();
+  const form = page.getByRole("dialog", { name: "Add student to group" });
+  await form.getByLabel("Student name").fill(studentName);
+  await form.getByRole("combobox", { name: /Gender/ }).click();
+  await page.getByRole("option", { name: "Female" }).click();
+  await form.getByLabel("Year of birth").fill(String(new Date().getFullYear() - 14));
+  await form.getByLabel("Admission number").fill(stored.admissionNumber);
+  await form.getByLabel("Grade/Form").fill("2");
+  await form.getByLabel("Stream").fill("B");
+  await form.getByRole("button", { name: "Submit" }).click();
+  const transfer = page.getByRole("dialog", { name: "Confirm transfer student" });
+  await transfer
+    .getByRole("radio", { name: new RegExp(`Admission no. ${stored.admissionNumber}`) })
+    .click();
+  await db
+    .update(interventionGroup)
+    .set({ archivedAt: new Date() })
+    .where(eq(interventionGroup.id, school.otherGroupId));
+  await transfer.getByRole("button", { name: "Confirm transfer" }).click();
+  await expect(page.getByText(`Group ${school.otherGroupName} is archived.`).first()).toBeVisible();
+
+  await page.goto(getUrl(`/hc/schools/${school.visibleId}/students`));
+  await chooseRowAction(page, await searchRows(page, studentName), "View group transfer history");
+  await expect(
+    page.getByRole("dialog", { name: "View group transfer history" }).locator("tbody"),
+  ).not.toContainText(school.otherGroupName);
 });

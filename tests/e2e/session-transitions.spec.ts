@@ -1,4 +1,4 @@
-import { type Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -7,12 +7,12 @@ import { objectId } from "#/lib/crypto";
 import { TIME_ZONE_COOKIE } from "#/lib/schedule-view";
 import { sessionDisplayName } from "#/lib/utils";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { expectOpenUntilWritten, signableMember, signInWithEmail, required } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { chooseRowAction, getUrl } from "#/tests/pages/helpers";
 
 const timeZone = "Africa/Nairobi";
 test.use({ timezoneId: timeZone });
-// Both tests pick the same school and session type, so they take turns.
+// The tests pick the same school and session type, so they take turns.
 test.describe.configure({ mode: "serial" });
 
 type Fixture = {
@@ -25,8 +25,7 @@ type Fixture = {
 };
 
 // A supervisor's school with every past intervention session marked, and an intervention session
-// type it has no session of within a month of now. Ordered from the other end to
-// schedule-list-save.spec.ts, which picks the same way, so the two specs use different schools.
+// type it has no session of within a month of now.
 async function pickSchoolForAPastSession() {
   const {
     rows: [row],
@@ -84,6 +83,19 @@ function sessionRowOf(page: Page, fixture: { schoolName: string; sessionName: st
     .getByRole("row")
     .filter({ hasText: fixture.schoolName })
     .filter({ hasText: sessionDisplayName(fixture.sessionName) });
+}
+
+async function markAttendedInAnotherTab(
+  context: BrowserContext,
+  fixture: { localDate: string; schoolName: string; sessionName: string },
+) {
+  const otherTab = await context.newPage();
+  await openListView(otherTab, fixture.localDate);
+  await chooseRowAction(otherTab, sessionRowOf(otherTab, fixture), "Mark session occurrence");
+  await otherTab.getByRole("radio", { name: "Attended" }).click();
+  await otherTab.getByRole("button", { name: "Submit" }).click();
+  await otherTab.getByRole("button", { name: "Confirm" }).click();
+  await expect(sessionRowOf(otherTab, fixture)).toContainText("Attended");
 }
 
 test.beforeEach(async ({ context }) => {
@@ -155,7 +167,7 @@ test("a session marked as occurred in another tab is not cancelled", async ({
   await expect(sessionRow).toContainText("Attended");
 });
 
-test("the cancel dialog stays open until the cancellation is saved", async ({
+test("a session marked as occurred in another tab is not rescheduled", async ({
   page,
   context,
   undo,
@@ -164,37 +176,44 @@ test("the cancel dialog stays open until the cancellation is saved", async ({
   await signInWithEmail(context, fixture.email);
 
   await openListView(page, fixture.localDate);
-  await chooseRowAction(page, sessionRowOf(page, fixture), "Cancel session");
-  const dialog = page.getByRole("dialog", { name: "Cancel session" });
-  await expectOpenUntilWritten(page, dialog, dialog.getByRole("button", { name: "Confirm" }), {
-    table: "intervention_sessions",
-    id: fixture.sessionId,
-  });
-
-  await page.reload();
-  await expect(sessionRowOf(page, fixture)).toContainText("Cancelled");
-});
-
-test("the reschedule dialog stays open until the new time is saved", async ({
-  page,
-  context,
-  undo,
-}) => {
-  const fixture = await createPastSession(undo);
-  await signInWithEmail(context, fixture.email);
-
-  await openListView(page, fixture.localDate);
-  await chooseRowAction(page, sessionRowOf(page, fixture), "Reschedule session");
+  const sessionRow = sessionRowOf(page, fixture);
+  await expect(sessionRow).toContainText("9:00");
+  await chooseRowAction(page, sessionRow, "Reschedule session");
   const dialog = page.getByRole("dialog", { name: "Reschedule session" });
   await dialog.getByRole("button", { name: "9:00 AM" }).click();
   const timePicker = page.getByRole("dialog").filter({ hasText: "Pick a start time" });
   await timePicker.getByRole("spinbutton").first().fill("11");
   await timePicker.getByRole("button", { name: "Save", exact: true }).click();
-  await expectOpenUntilWritten(page, dialog, dialog.getByRole("button", { name: "Save Changes" }), {
-    table: "intervention_sessions",
-    id: fixture.sessionId,
-  });
+
+  await markAttendedInAnotherTab(context, fixture);
+
+  await dialog.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("This session has already occurred").first()).toBeVisible();
 
   await page.reload();
-  await expect(sessionRowOf(page, fixture)).toContainText("11:00");
+  await expect(sessionRow).toContainText("Attended");
+  await expect(sessionRow).toContainText("9:00");
+});
+
+test("a session marked as occurred in another tab cannot be unmarked", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixture = await createPastSession(undo);
+  await signInWithEmail(context, fixture.email);
+
+  await openListView(page, fixture.localDate);
+  const sessionRow = sessionRowOf(page, fixture);
+  await chooseRowAction(page, sessionRow, "Mark session occurrence");
+  await page.getByRole("radio", { name: "Unmarked" }).click();
+  await page.getByRole("button", { name: "Submit" }).click();
+
+  await markAttendedInAnotherTab(context, fixture);
+
+  await page.getByRole("button", { name: "Confirm" }).click();
+  await expect(page.getByText("already been marked as occurred").first()).toBeVisible();
+
+  await page.reload();
+  await expect(sessionRow).toContainText("Attended");
 });

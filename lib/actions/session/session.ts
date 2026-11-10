@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, isNull, ne, or, type SQL } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, ne, or, type SQL } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import type { z } from "zod";
 
@@ -509,6 +509,10 @@ export async function countSessionGroupAttendance(sessionId: string, fellowId: s
   }
   return db.$count(
     studentAttendance,
-    and(eq(studentAttendance.sessionId, sessionId), eq(studentAttendance.fellowId, fellowId)),
+    and(
+      eq(studentAttendance.sessionId, sessionId),
+      eq(studentAttendance.fellowId, fellowId),
+      isNotNull(studentAttendance.attended),
+    ),
   );
 }

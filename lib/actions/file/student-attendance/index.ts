@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, isNull, or, type SQL } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, or, type SQL } from "drizzle-orm";
 
 import { getCurrentUserSession } from "#/app/auth";
 import { db, isSerializationFailure } from "#/db/client";
@@ -210,6 +210,7 @@ export async function createAttendanceDocument(
         and(
           eq(studentAttendance.sessionId, payload.sessionId),
           eq(studentAttendance.groupId, payload.groupId),
+          isNotNull(studentAttendance.attended),
         ),
       ),
       verifyUploadedObject(payload.link, "student-attendance"),

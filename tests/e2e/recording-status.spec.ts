@@ -102,3 +102,60 @@ test("a recording no transcription was queued for shows as uploaded, a queued on
   await expect(await cellUnder(page, rowOfSize("11.0 KB"), "Status")).toHaveText("Uploaded");
   await expect(await cellUnder(page, rowOfSize("22.0 KB"), "Status")).toHaveText("Pending");
 });
+
+test("a supervisor outside the fidelity A/B test sees no score and cannot retry a failed transcription", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const group = await pickSupervisedGroup();
+  const abTestSupervisorIds = (process.env.FIDELITY_AB_TEST_SUPERVISOR_IDS ?? "").split(",");
+  test.skip(abTestSupervisorIds.includes(group.supervisorId), "the supervisor is in the A/B test");
+  const sessionDate = new Date(Date.UTC(2019, 0, 9, 9));
+  const sessionId = objectId("isess");
+  const recordingId = objectId("rec");
+  await db.insert(interventionSession).values({
+    id: sessionId,
+    schoolId: group.schoolId,
+    hubId: group.hubId,
+    projectId: group.projectId,
+    sessionId: group.sessionNameId,
+    occurred: true,
+    yearOfImplementation: sessionDate.getFullYear(),
+    sessionDate,
+  });
+  undo(async () => {
+    await db.delete(sessionRecording).where(inArray(sessionRecording.id, [recordingId]));
+    await db.delete(interventionSession).where(inArray(interventionSession.id, [sessionId]));
+  });
+  await db.insert(sessionRecording).values({
+    id: recordingId,
+    fileName: `${recordingId}.mp3`,
+    originalFileName: `E2E scored ${recordingId}.mp3`,
+    s3Key: `e2e/${recordingId}.mp3`,
+    contentType: "audio/mpeg",
+    fileSize: 33 * 1024,
+    fellowId: group.fellowId,
+    schoolId: group.schoolId,
+    groupId: group.groupId,
+    sessionId,
+    uploadedBy: group.userId,
+    supervisorId: group.supervisorId,
+    overallScore: "4.5",
+  });
+  await db
+    .insert(transcription)
+    .values({ recordingId, status: "FAILED", errorMessage: "E2E failure" });
+  await signInWithEmail(context, group.email);
+
+  await page.goto(getUrl("/sc/reporting/recordings"));
+  const recordingRow = (await rowWithCell(page, page.getByRole("main"), group.groupName)).filter({
+    has: page.getByRole("cell", { name: "33.0 KB", exact: true }),
+  });
+  await expect(await cellUnder(page, recordingRow, "Score")).toHaveText("-");
+  await recordingRow
+    .getByRole("button", { name: `Actions for E2E scored ${recordingId}.mp3` })
+    .click();
+  await expect(page.getByRole("menuitem", { name: "Edit" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Retry transcription" })).toHaveCount(0);
+});
