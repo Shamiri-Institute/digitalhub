@@ -14,6 +14,7 @@ type Hub = {
   supervisorEmail: string;
   bystanderEmail: string;
   coordinatorEmail: string;
+  coordinatorName: string;
   otherCoordinatorId: string;
   otherCoordinatorName: string;
   otherCoordinatorEmail: string;
@@ -30,7 +31,7 @@ test.beforeAll(async () => {
     rows: [row],
   } = await db.execute<Hub>(sql`
     select su.email as "supervisorEmail", bu.email as "bystanderEmail",
-      hu.email as "coordinatorEmail", hc2.id as "otherCoordinatorId",
+      hu.email as "coordinatorEmail", hc.coordinator_name as "coordinatorName", hc2.id as "otherCoordinatorId",
       hc2.coordinator_name as "otherCoordinatorName", h2u.email as "otherCoordinatorEmail",
       lu.email as "leadEmail", am.user_id as "adminUserId"
     from supervisors sv
@@ -42,6 +43,7 @@ test.beforeAll(async () => {
       and ${signableMember("bm")}
     join users bu on bu.id = bm.user_id
     join hub_coordinators hc on hc.assigned_hub_id = sv.hub_id and hc.archived_at is null
+      and hc.coordinator_name is not null
     join implementer_members hm on hm.identifier = hc.id and hm.role = 'HUB_COORDINATOR'
       and ${signableMember("hm")}
     join users hu on hu.id = hm.user_id
@@ -183,6 +185,13 @@ test("a hub coordinator reassigns once per escalation to an active coordinator o
   await page.getByRole("option", { name: new RegExp(hub.otherCoordinatorName) }).click();
   await reassign.getByRole("button", { name: /Reassign/ }).click();
   await expect(reassign).toBeHidden();
+
+  // The earlier holder keeps the ticket, and the history names both holders.
+  const earlierMenu = await ticketMenu(page, "/hc/tickets", subject);
+  await earlierMenu.getByText("View reassignment").click();
+  const handover = page.getByRole("dialog", { name: "Reassignment History" });
+  await expect(handover).toContainText(hub.coordinatorName);
+  await expect(handover).toContainText(hub.otherCoordinatorName);
 
   await signIn(context, hub.otherCoordinatorEmail);
   await expect(await currentTier(page, "/hc/tickets", subject)).toHaveText("hub coordinator");
