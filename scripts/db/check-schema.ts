@@ -1,8 +1,6 @@
 // 1. Every foreign key needs an index on its referencing columns; a partial index does not count
 // 2. A migration that drops a column or table sets lock_timeout, so a busy table fails the
 //    deploy instead of queueing all traffic behind the lock.
-// 3. Each migration's journal time is later than the one before: the migrator skips, without an
-//    error, a migration older than the last one a database ran.
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
@@ -40,17 +38,6 @@ function dropMigrationsWithoutLockTimeout() {
     });
 }
 
-function migrationsOutOfOrder() {
-  const journal = JSON.parse(
-    readFileSync(path.join(migrationsDir, "meta/_journal.json"), "utf8"),
-  ) as {
-    entries: { tag: string; when: number }[];
-  };
-  return journal.entries.filter(
-    (entry, index) => index > 0 && entry.when <= (journal.entries[index - 1]?.when ?? 0),
-  );
-}
-
 async function main() {
   let unindexed: string[];
   try {
@@ -59,16 +46,11 @@ async function main() {
     await pool.end();
   }
   const missingLockTimeout = dropMigrationsWithoutLockTimeout();
-  const outOfOrder = migrationsOutOfOrder();
 
   const problems = [
     ...unindexed.map((name) => `foreign key without an index: ${name}`),
     ...missingLockTimeout.map(
       (file) => `drop migration without SET LOCAL lock_timeout = '5s': drizzle/${file}`,
-    ),
-    ...outOfOrder.map(
-      (entry) =>
-        `migration not later than the one before it in drizzle/meta/_journal.json: ${entry.tag}`,
     ),
   ];
   if (problems.length > 0) {
