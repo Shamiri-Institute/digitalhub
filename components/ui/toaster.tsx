@@ -14,6 +14,7 @@ function ToastList() {
       <Toast.Root
         key={toast.id}
         toast={toast}
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- overrides Base UI's role="dialog" on the toast; an <output> would get that role too
         role="status"
         className={cn(
           "pointer-events-auto relative flex w-full items-start gap-3 rounded-lg border bg-white p-4 pr-10 text-foreground shadow-md transition-[opacity,translate] duration-200 data-ending-style:opacity-0 data-limited:hidden data-starting-style:translate-y-2 data-starting-style:opacity-0",
