@@ -61,7 +61,7 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
           timeZone={timeZone}
         />
         <section className="space-y-3 pt-6">
-          <h2 className="text-lg font-semibold">Print runs</h2>
+          <h2 className="text-lg font-bold text-primary">Print runs</h2>
           <PrintRunsTable runs={runs} runsPath={runsPath} showHub timeZone={timeZone} />
         </section>
         <ViewerTimeZoneCookie serverTimeZone={timeZone} />

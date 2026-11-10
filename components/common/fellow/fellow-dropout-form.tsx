@@ -230,9 +230,9 @@ function FellowDropoutSteps({
     <Form {...form}>
       <DialogHeader>
         {fellow.droppedOut ? (
-          <h2 className="text-lg font-bold">Undo student drop out?</h2>
+          <h2 className="text-lg font-bold text-primary">Undo student drop out?</h2>
         ) : (
-          <h2 className="text-lg font-bold">Drop out fellow</h2>
+          <h2 className="text-lg font-bold text-primary">Drop out fellow</h2>
         )}
       </DialogHeader>
       {alertWidget}

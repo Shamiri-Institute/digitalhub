@@ -153,7 +153,9 @@ export async function MonitoringDashboard({
         if (visibleCards.length === 0) return null;
         return (
           <section key={section.heading ?? sectionIndex} className="flex flex-col gap-4">
-            {section.heading && <h2 className="text-lg font-semibold">{section.heading}</h2>}
+            {section.heading && (
+              <h2 className="text-lg font-bold text-primary">{section.heading}</h2>
+            )}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-24">
               {visibleCards.map((card) => (
                 <MonitoringCardPanel

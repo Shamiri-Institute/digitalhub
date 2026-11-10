@@ -16,7 +16,7 @@ export default function ClinicalLeadCases({
 }) {
   return (
     <div className="mt-4">
-      <h2 className="text-lg font-medium">My Cases ({clinicalLeadCases.length})</h2>
+      <h2 className="text-lg font-bold text-primary">My Cases ({clinicalLeadCases.length})</h2>
       <DataTable
         urlState={{ prefix: "myCases" }}
         data={clinicalLeadCases}

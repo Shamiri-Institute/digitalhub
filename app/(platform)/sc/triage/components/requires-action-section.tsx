@@ -9,7 +9,7 @@ export default function RequiresActionSection({ events }: { events: TriageEventF
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <h2 className="text-base font-semibold">Requires my action</h2>
+        <h2 className="text-lg font-bold text-primary">Requires my action</h2>
         {actionEvents.length > 0 && (
           <span className="rounded-full bg-destructive-bg px-2 py-0.5 text-xs font-semibold text-destructive">
             {actionEvents.length}

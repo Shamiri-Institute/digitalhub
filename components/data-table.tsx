@@ -321,7 +321,7 @@ function DataTableContent<TData, TValue>({
         <div className={title ? "min-w-0 flex-1" : "shrink-0"}>
           {title && (
             <div className="min-w-0">
-              <h3 className="truncate text-xl font-semibold">{title}</h3>
+              <h3 className="truncate text-lg font-bold text-primary">{title}</h3>
               {description && (
                 <p className="truncate text-sm text-muted-foreground" title={description}>
                   {description}
@@ -435,7 +435,7 @@ function DataTableContent<TData, TValue>({
                       id={header.id}
                       aria-sort={columnSorts ? ariaSort(header.column.getIsSorted()) : undefined}
                       className={cn(
-                        "min-w-20 bg-muted/50 px-4! py-2 text-sm font-semibold leading-5 text-muted-foreground",
+                        "min-w-20 bg-muted px-4! py-2.5 text-[13px] font-semibold leading-5 text-muted-foreground",
                         actionColumnLabel && "action-cell",
                         header.column.columnDef.meta?.numeric && "text-right",
                         header.column.columnDef.meta?.headerClassName,
@@ -460,7 +460,7 @@ function DataTableContent<TData, TValue>({
                   <TableRow
                     id={row.id}
                     className={cn(
-                      "text-sm font-medium leading-5 text-muted-foreground transition ease-in-out hover:bg-primary/5 data-[state=Selected]:bg-primary/5",
+                      "text-sm leading-5 text-foreground transition-colors hover:bg-muted/60 data-[state=Selected]:bg-info-bg",
                       isSubComponent ? "bg-muted/50" : "",
                     )}
                     data-state={row.getIsSelected() && "Selected"}
@@ -476,10 +476,8 @@ function DataTableContent<TData, TValue>({
                             !cellIsAction && typeof cellValue === "string" ? cellValue : undefined
                           }
                           className={cn(
-                            "truncate border-y border-l first:border-l-0",
-                            cellIsAction
-                              ? "relative cursor-pointer border-l-0 p-0!"
-                              : "max-w-64 px-4! py-2",
+                            "truncate border-t",
+                            cellIsAction ? "relative cursor-pointer p-0!" : "max-w-64 px-4! py-2.5",
                             cell.column.columnDef.meta?.numeric && "text-right tabular-nums",
                           )}
                         >
@@ -573,7 +571,7 @@ function DataTableContent<TData, TValue>({
                       }
                     }}
                     onBlur={() => setTypedPageNumber(null)}
-                    className="w-16 rounded border p-1"
+                    className="h-8 w-16 rounded-md border border-input bg-white px-2 text-sm text-foreground"
                   />
                 </span>
               )}

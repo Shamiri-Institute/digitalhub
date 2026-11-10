@@ -25,8 +25,13 @@ async function TriageStats() {
           stats.unactionedCount > 0 && "border-destructive-border bg-destructive-bg",
         )}
       >
-        <p className="text-xs text-muted-foreground">Requires my action</p>
-        <p className={cn("text-2xl font-bold", stats.unactionedCount > 0 && "text-destructive")}>
+        <p className="text-sm text-muted-foreground">Requires my action</p>
+        <p
+          className={cn(
+            "text-3xl font-bold tabular-nums text-primary",
+            stats.unactionedCount > 0 && "text-destructive",
+          )}
+        >
           {stats.unactionedCount}
         </p>
       </div>
@@ -36,14 +41,19 @@ async function TriageStats() {
           stats.overdueCount > 0 && "border-destructive-border bg-destructive-bg",
         )}
       >
-        <p className="text-xs text-muted-foreground">Overdue (&gt;3 days)</p>
-        <p className={cn("text-2xl font-bold", stats.overdueCount > 0 && "text-destructive")}>
+        <p className="text-sm text-muted-foreground">Overdue (&gt;3 days)</p>
+        <p
+          className={cn(
+            "text-3xl font-bold tabular-nums text-primary",
+            stats.overdueCount > 0 && "text-destructive",
+          )}
+        >
           {stats.overdueCount}
         </p>
       </div>
       <div className="rounded-lg border p-4 space-y-1">
-        <p className="text-xs text-muted-foreground">Triage events this week</p>
-        <p className="text-2xl font-bold">{stats.triageThisWeek}</p>
+        <p className="text-sm text-muted-foreground">Triage events this week</p>
+        <p className="text-3xl font-bold tabular-nums text-primary">{stats.triageThisWeek}</p>
       </div>
       <div
         className={cn(
@@ -51,8 +61,13 @@ async function TriageStats() {
           stats.riskPositiveThisWeek > 0 && "border-warning-border bg-warning-bg",
         )}
       >
-        <p className="text-xs text-muted-foreground">Risk positive this week</p>
-        <p className={cn("text-2xl font-bold", stats.riskPositiveThisWeek > 0 && "text-warning")}>
+        <p className="text-sm text-muted-foreground">Risk positive this week</p>
+        <p
+          className={cn(
+            "text-3xl font-bold tabular-nums text-primary",
+            stats.riskPositiveThisWeek > 0 && "text-warning",
+          )}
+        >
           {stats.riskPositiveThisWeek}
         </p>
       </div>

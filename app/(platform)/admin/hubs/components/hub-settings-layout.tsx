@@ -15,7 +15,7 @@ export function SettingsSection({
       className="grid gap-4 border-b py-8 first:pt-2 last:border-b-0 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10"
     >
       <div className="space-y-1">
-        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+        <h3 className="text-lg font-bold text-primary">{title}</h3>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
       <div className="min-w-0 space-y-6">{children}</div>
