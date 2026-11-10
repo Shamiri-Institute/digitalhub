@@ -7,7 +7,6 @@ import { db, isSerializationFailure } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
   attendanceDocuments,
-  fellow,
   hub,
   hubCoordinator,
   interventionGroup,
@@ -28,6 +27,7 @@ import {
   NO_ATTENDANCE_DOCUMENT_MESSAGE,
   type StudentAttendanceDocsFilters,
 } from "./types";
+import { supervisedFellowIds } from "#/lib/auth/require-hub-role";
 
 export type { AttendanceS3KeyParams } from "#/lib/s3/s3.types";
 export type {
@@ -69,10 +69,7 @@ function buildAttendanceScopeFilter(
     case ImplementerRole.SUPERVISOR:
       return (
         or(
-          inArray(
-            interventionGroup.leaderId,
-            db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, identifier)),
-          ),
+          inArray(interventionGroup.leaderId, supervisedFellowIds(identifier)),
           inArray(
             interventionGroup.schoolId,
             db
