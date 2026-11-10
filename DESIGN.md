@@ -184,7 +184,8 @@ things that float over the page have a shadow: menus and popovers (`shadow-md`, 
 dialogs (`shadow-xl`, no border, over a navy scrim at 40%).
 
 Menus, popovers and selects fade in over 100ms, dialogs over 150ms. They fade without scaling or
-sliding: an item that moves while it is being pressed loses the click.
+sliding, and accordion sections open at once: an item that moves while it is being pressed loses
+the click.
 
 ## Shapes
 
