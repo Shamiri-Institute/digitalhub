@@ -21,9 +21,10 @@ type Fixture = {
   sessionNameId: string;
 };
 
-// A supervisor's school and an intervention session name it has no session of, so the spec's own
-// held session is the only one of its date on the school's sessions page.
+// A supervisor's school with no session within a day of the spec's own, so that session is the
+// only one of its date on the school's sessions page.
 async function createRatedSession(heldDaysAgo: number, ratedAt: Date, undo: Undo) {
+  const sessionDate = new Date(Date.now() - heldDaysAgo * DAY_MS);
   const {
     rows: [fixture],
   } = await db.execute<Fixture>(sql`
@@ -35,12 +36,12 @@ async function createRatedSession(heldDaysAgo: number, ratedAt: Date, undo: Undo
     join session_names n on n.hub_id = s.hub_id and n.session_type = 'INTERVENTION'
     where s.archived_at is null and ${signableMember()}
       and not exists (select 1 from intervention_sessions i
-        where i.school_id = s.id and i.session_id = n.id)
+        where i.school_id = s.id
+          and i.session_date between ${new Date(sessionDate.getTime() - DAY_MS)}
+            and ${new Date(sessionDate.getTime() + DAY_MS)})
     order by u.email desc, s.visible_id desc, n.session_name desc
     limit 1`);
   required(fixture, "a supervisor's school missing an intervention session");
-  // Each test holds its session on its own day, so its row is the only one of that date.
-  const sessionDate = new Date(Date.now() - heldDaysAgo * DAY_MS);
   const sessionId = objectId("isess");
   await db.insert(interventionSession).values({
     id: sessionId,
