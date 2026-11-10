@@ -1,9 +1,10 @@
 "use server";
 
 import { and, asc, desc, eq, exists, inArray, isNull, or, sql } from "drizzle-orm";
+import { refresh } from "next/cache";
 
 import { db, type Transaction } from "#/db/client";
-import { ImplementerRole, type TicketStatus } from "#/db/enums";
+import { ImplementerRole, type TicketEventKind, type TicketStatus } from "#/db/enums";
 import {
   adminUser,
   clinicalLead,
@@ -75,6 +76,7 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
       });
     });
 
+    refresh();
     return { success: true, message: "Successfully created ticket" };
   } catch (error: unknown) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
@@ -83,9 +85,11 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
 
 export async function getAllTickets(filters: TicketFilters): Promise<ActionResponse<FullTicket[]>> {
   try {
-    const { userId, implementerId } = await requireAuthRole(...Object.values(ImplementerRole));
+    const { userId: callerUserId, implementerId } = await requireAuthRole(
+      ...Object.values(ImplementerRole),
+    );
 
-    const tickets = await fetchTicketsForUser(userId, implementerId, filters);
+    const tickets = await fetchTicketsForUser(callerUserId, implementerId, filters);
 
     const response: ActionResponse<FullTicket[]> = {
       success: true,
@@ -99,7 +103,6 @@ export async function getAllTickets(filters: TicketFilters): Promise<ActionRespo
   }
 }
 
-/** The view permission: the user raised the ticket, or acted on it or was handed it at some point. */
 function canViewTicket(userId: string) {
   return or(
     eq(tickets.createdById, userId),
@@ -129,16 +132,18 @@ export async function getEscalationsPerTicket(
   ticketId: string,
 ): Promise<ActionResponse<TicketEscalation[]>> {
   try {
-    const { userId, implementerId } = await requireAuthRole(...Object.values(ImplementerRole));
+    const { userId: callerUserId, implementerId } = await requireAuthRole(
+      ...Object.values(ImplementerRole),
+    );
 
-    const authorized = await findViewableTicket(ticketId, userId);
-    if (!authorized) throw new Error("Not authorized to view this ticket's escalations");
+    const viewableTicket = await findViewableTicket(ticketId, callerUserId);
+    if (!viewableTicket) throw new Error("Not authorized to view this ticket's escalations");
 
     const escalations = await readHandovers(ticketId, ["CREATED", "ESCALATED"]);
     if (escalations.length === 0) throw new Error("No escalations were found for this ticket");
 
     const nameMap = await getUserNamesAndRolesById(
-      Array.from(new Set(escalations.flatMap((e) => [e.actorId, e.assigneeId]))),
+      escalations.flatMap((e) => [e.actorId, e.assigneeId]),
       implementerId,
     );
 
@@ -170,7 +175,10 @@ export async function getEscalationsPerTicket(
 }
 
 /** Events that hand the ticket to someone, which always carry an assignee and a reason. */
-async function readHandovers(ticketId: string, kinds: ("CREATED" | "ESCALATED" | "REASSIGNED")[]) {
+async function readHandovers(
+  ticketId: string,
+  kinds: Extract<TicketEventKind, "CREATED" | "ESCALATED" | "REASSIGNED">[],
+) {
   const events = await db.query.ticketEvents.findMany({
     where: (e, { and, eq, inArray }) => and(eq(e.ticketId, ticketId), inArray(e.kind, kinds)),
     orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
@@ -195,7 +203,6 @@ async function lockTicket(tx: Transaction, ticketId: string) {
   return ticket;
 }
 
-/** Writes the event and moves the ticket to its new status, and to the event's assignee if any. */
 async function recordTicketEvent(
   tx: Transaction,
   event: typeof ticketEvents.$inferInsert,
@@ -214,7 +221,7 @@ export async function createEscalation(
 ): Promise<ActionResponse> {
   try {
     const {
-      userId,
+      userId: callerUserId,
       role,
       implementerId: activeImplementerId,
     } = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
@@ -228,16 +235,19 @@ export async function createEscalation(
     const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](ticket.category);
 
     const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
-    const escalationRecipientId = await handler({ userId, implementerId: activeImplementerId });
+    const escalationRecipientId = await handler({
+      userId: callerUserId,
+      implementerId: activeImplementerId,
+    });
 
     await db.transaction(async (tx) => {
-      const ticket = await lockTicket(tx, ticketId);
+      const lockedTicket = await lockTicket(tx, ticketId);
 
-      if (ticket.status === "RESOLVED") {
+      if (lockedTicket.status === "RESOLVED") {
         throw new Error("Cannot escalate a resolved ticket");
       }
 
-      if (ticket.holderId !== userId) {
+      if (lockedTicket.holderId !== callerUserId) {
         throw new Error("You are not the current escalation recipient of this ticket");
       }
 
@@ -246,7 +256,7 @@ export async function createEscalation(
         {
           ticketId,
           kind: "ESCALATED",
-          actorId: userId,
+          actorId: callerUserId,
           assigneeId: escalationRecipientId,
           reason: escalationReason,
         },
@@ -254,6 +264,7 @@ export async function createEscalation(
       );
     });
 
+    refresh();
     return { success: true, message: "Escalation created successfully" };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
@@ -265,26 +276,27 @@ export async function resolveTicket(
   resolutionReason: string,
 ): Promise<ActionResponse> {
   try {
-    const { userId } = await requireAuthRole(...ESCALATION_RECIPIENT_ROLES);
+    const { userId: callerUserId } = await requireAuthRole(...ESCALATION_RECIPIENT_ROLES);
 
     await db.transaction(async (tx) => {
-      const ticket = await lockTicket(tx, ticketId);
+      const lockedTicket = await lockTicket(tx, ticketId);
 
-      if (ticket.status === "RESOLVED") {
+      if (lockedTicket.status === "RESOLVED") {
         throw new Error("Ticket is already resolved");
       }
 
-      if (ticket.holderId !== userId) {
+      if (lockedTicket.holderId !== callerUserId) {
         throw new Error("Only the current escalation recipient can resolve this ticket");
       }
 
       await recordTicketEvent(
         tx,
-        { ticketId, kind: "RESOLVED", actorId: userId, reason: resolutionReason },
+        { ticketId, kind: "RESOLVED", actorId: callerUserId, reason: resolutionReason },
         "RESOLVED",
       );
     });
 
+    refresh();
     return { success: true, message: "Ticket resolved successfully" };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
@@ -295,25 +307,28 @@ export async function reassignTicket(
   payload: CreateTicketReassignmentInput,
 ): Promise<ActionResponse> {
   try {
-    const { userId, role, implementerId, identifier } = await requireAuthRole(
-      ...REASSIGNMENT_INITIATOR_ROLES,
-    );
+    const {
+      userId: callerUserId,
+      role,
+      implementerId,
+      identifier,
+    } = await requireAuthRole(...REASSIGNMENT_INITIATOR_ROLES);
 
     const { ticketId, reassignedTo, reassignmentReason } =
       CreateTicketReassignmentSchema.parse(payload);
 
-    if (reassignedTo === userId) {
+    if (reassignedTo === callerUserId) {
       throw new Error("You cannot reassign a ticket to yourself");
     }
 
     await db.transaction(async (tx) => {
-      const ticket = await lockTicket(tx, ticketId);
+      const lockedTicket = await lockTicket(tx, ticketId);
 
-      if (ticket.status !== "ESCALATED") {
+      if (lockedTicket.status !== "ESCALATED") {
         throw new Error("This ticket is not escalated and cannot be reassigned");
       }
 
-      if (ticket.holderId !== userId) {
+      if (lockedTicket.holderId !== callerUserId) {
         throw new Error("Only the current escalation recipient can reassign this ticket");
       }
 
@@ -324,7 +339,7 @@ export async function reassignTicket(
         {
           ticketId,
           kind: "REASSIGNED",
-          actorId: userId,
+          actorId: callerUserId,
           assigneeId: reassignedTo,
           reason: reassignmentReason,
         },
@@ -332,6 +347,7 @@ export async function reassignTicket(
       );
     });
 
+    refresh();
     return { success: true, message: "Ticket reassigned successfully" };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
@@ -407,9 +423,9 @@ export async function getTicketEscalationStatus(
   ticketId: string,
 ): Promise<ActionResponse<TicketEscalationStatus>> {
   try {
-    const { userId, role } = await requireAuthRole(...Object.values(ImplementerRole));
+    const { userId: callerUserId, role } = await requireAuthRole(...Object.values(ImplementerRole));
 
-    const ticket = await findViewableTicket(ticketId, userId);
+    const ticket = await findViewableTicket(ticketId, callerUserId);
     if (!ticket) throw new Error("Ticket not found");
 
     const pastKinds = await db
@@ -423,57 +439,15 @@ export async function getTicketEscalationStatus(
       );
     const hasReassignment = pastKinds.some((e) => e.kind === "REASSIGNED");
     const hasResolution = pastKinds.some((e) => e.kind === "RESOLVED");
-    const isCurrentRecipient = ticket.holderId === userId;
-
-    if (ticket.status === "RESOLVED") {
-      return {
-        success: true,
-        message: "This ticket has already been resolved and is no longer actionable",
-        data: {
-          canEscalate: false,
-          canReassign: false,
-          canResolve: false,
-          hasReassignment,
-          hasResolution,
-        },
-      };
-    }
-
-    if (!isCurrentRecipient) {
-      return {
-        success: true,
-        message: "Ticket escalation status retrieved",
-        data: {
-          canEscalate: false,
-          canReassign: false,
-          canResolve: false,
-          hasReassignment,
-          hasResolution,
-        },
-      };
-    }
-
-    if (role === ImplementerRole.ADMIN) {
-      return {
-        success: true,
-        message: "You can resolve or reassign this ticket as you are the current recipient",
-        data: {
-          canEscalate: false,
-          canReassign: true,
-          canResolve: true,
-          hasReassignment,
-          hasResolution,
-        },
-      };
-    }
+    const isHolder = ticket.status !== "RESOLVED" && ticket.holderId === callerUserId;
 
     return {
       success: true,
-      message: "You can act on this ticket as you are the current escalation recipient",
+      message: "Ticket escalation status retrieved",
       data: {
-        canEscalate: true,
-        canReassign: true,
-        canResolve: true,
+        canEscalate: isHolder && role !== ImplementerRole.ADMIN,
+        canReassign: isHolder,
+        canResolve: isHolder,
         hasReassignment,
         hasResolution,
       },
@@ -487,10 +461,12 @@ export async function getTicketResolution(
   ticketId: string,
 ): Promise<ActionResponse<TicketResolution>> {
   try {
-    const { userId } = await requireAuthRole();
+    const { userId: callerUserId, implementerId } = await requireAuthRole(
+      ...Object.values(ImplementerRole),
+    );
 
-    const viewable = await findViewableTicket(ticketId, userId);
-    if (!viewable) throw new Error("You are not authorized to view this ticket's resolution");
+    const viewableTicket = await findViewableTicket(ticketId, callerUserId);
+    if (!viewableTicket) throw new Error("You are not authorized to view this ticket's resolution");
 
     const resolution = await db.query.ticketEvents.findFirst({
       where: (e, { and, eq }) => and(eq(e.ticketId, ticketId), eq(e.kind, "RESOLVED")),
@@ -498,7 +474,12 @@ export async function getTicketResolution(
       with: {
         actor: {
           with: {
-            memberships: { columns: { role: true } },
+            memberships: {
+              where: (m, { eq }) => eq(m.implementerId, implementerId),
+              orderBy: (m, { asc }) => [asc(m.id)],
+              limit: 1,
+              columns: { role: true },
+            },
           },
         },
       },
@@ -525,17 +506,20 @@ export async function getTicketReassignments(
   ticketId: string,
 ): Promise<ActionResponse<FullTicketReassignment[]>> {
   try {
-    const { userId, implementerId } = await requireAuthRole(...Object.values(ImplementerRole));
+    const { userId: callerUserId, implementerId } = await requireAuthRole(
+      ...Object.values(ImplementerRole),
+    );
 
-    const viewable = await findViewableTicket(ticketId, userId);
-    if (!viewable) throw new Error("You are not authorized to view this ticket's reassignments");
+    const viewableTicket = await findViewableTicket(ticketId, callerUserId);
+    if (!viewableTicket)
+      throw new Error("You are not authorized to view this ticket's reassignments");
 
     const reassignments = await readHandovers(ticketId, ["REASSIGNED"]);
     if (reassignments.length === 0) {
       throw new Error("No reassignments exist for this ticket");
     }
 
-    const userIds = Array.from(new Set(reassignments.flatMap((r) => [r.actorId, r.assigneeId])));
+    const userIds = reassignments.flatMap((r) => [r.actorId, r.assigneeId]);
 
     const nameMap = await getUserNamesAndRolesById(
       userIds,

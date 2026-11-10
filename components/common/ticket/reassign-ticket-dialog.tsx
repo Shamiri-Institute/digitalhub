@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -95,7 +94,6 @@ function ReassignTicketForm({
   role: ReassignmentInitiatorRole;
   close: () => void;
 }) {
-  const router = useRouter();
   const { isSaving, save } = useDialogSave();
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
 
@@ -129,7 +127,6 @@ function ReassignTicketForm({
           ? `Ticket reassigned to "${recipientName}"`
           : (result.message ?? "Ticket reassigned successfully"),
       });
-      router.refresh();
       close();
     });
   };

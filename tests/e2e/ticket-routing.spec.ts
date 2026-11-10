@@ -186,7 +186,7 @@ test("a hub coordinator reassigns to an active coordinator of the hub, who may p
   await reassign.getByRole("button", { name: /Reassign/ }).click();
   await expect(reassign).toBeHidden();
 
-  // The earlier holder keeps the ticket, and the history names both holders.
+  // The earlier holder can still see the ticket, and its history names both holders.
   const earlierMenu = await ticketMenu(page, "/hc/tickets", subject);
   await earlierMenu.getByText("View reassignment").click();
   const handover = page.getByRole("dialog", { name: "Reassignment History" });
