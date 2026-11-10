@@ -415,22 +415,24 @@ function AddClinicalCaseFields({
                         <FormItem required className="flex-1">
                           <FormLabel>Year of Birth</FormLabel>
                           <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground",
-                                )}
-                              >
-                                <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                                {field.value ? (
-                                  format(field.value, DISPLAY_DATE)
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
+                            <PopoverTrigger
+                              render={
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground",
+                                  )}
+                                >
+                                  <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                                  {field.value ? (
+                                    format(field.value, DISPLAY_DATE)
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                </Button>
+                              }
+                            />
                             <PopoverContent className="w-auto p-0">
                               <Calendar
                                 mode="single"
@@ -645,15 +647,17 @@ function AddClinicalCaseFields({
 
         <Separator className="my-6" />
         <DialogFooter className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              type="button"
-              className="text-base font-semibold leading-6 text-primary hover:text-primary"
-            >
-              Cancel
-            </Button>
-          </DialogClose>
+          <DialogClose
+            render={
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-base font-semibold leading-6 text-primary hover:text-primary"
+              >
+                Cancel
+              </Button>
+            }
+          />
           <Button type="submit" disabled={isSaving} loading={isSaving}>
             Save
           </Button>

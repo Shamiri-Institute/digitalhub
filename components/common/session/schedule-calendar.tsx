@@ -51,7 +51,7 @@ import StudentAttendance, {
 import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogPortal, DialogTrigger } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
 import { toast } from "#/components/ui/use-toast";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { fetchSessionSupervisors } from "#/lib/actions/session/session";
@@ -290,22 +290,22 @@ function CreateSessionButton({
 }) {
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Button disabled={loading} className="flex items-center gap-2 text-base">
-          <Icons.plusCircle className="h-4 w-4" />
-          <span>Schedule a session</span>
-        </Button>
-      </DialogTrigger>
-      <DialogPortal>
-        <DialogContent>
-          <ScheduleNewSession
-            toggleDialog={setDialogOpen}
-            role={role}
-            schools={schools}
-            hubSessionTypes={hubSessionTypes ?? []}
-          />
-        </DialogContent>
-      </DialogPortal>
+      <DialogTrigger
+        render={
+          <Button disabled={loading} className="flex items-center gap-2 text-base">
+            <Icons.plusCircle className="h-4 w-4" />
+            <span>Schedule a session</span>
+          </Button>
+        }
+      />
+      <DialogContent>
+        <ScheduleNewSession
+          toggleDialog={setDialogOpen}
+          role={role}
+          schools={schools}
+          hubSessionTypes={hubSessionTypes ?? []}
+        />
+      </DialogContent>
     </Dialog>
   );
 }

@@ -44,7 +44,7 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
           <DropdownMenuLabel>
             <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
           </DropdownMenuLabel>
-          <DropdownMenuItem onSelect={() => setIsOpen(true)}>Mark attendance</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setIsOpen(true)}>Mark attendance</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -130,9 +130,7 @@ function MarkClinicalAttendanceForm({
         </RadioGroup>
 
         <div className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
+          <DialogClose render={<Button variant="outline">Cancel</Button>} />
           <Button
             disabled={isSaving}
             loading={isSaving}

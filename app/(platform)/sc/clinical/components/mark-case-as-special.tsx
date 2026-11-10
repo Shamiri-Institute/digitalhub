@@ -32,13 +32,13 @@ export default function MarkCaseAsSpecial({
 }: {
   caseId: string;
   reason: string | null;
-  children: React.ReactNode;
+  children: React.ReactElement;
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="gap-0 p-0">
         <FlagCaseForm caseId={caseId} reason={reason} close={() => setDialogOpen(false)} />
       </DialogContent>

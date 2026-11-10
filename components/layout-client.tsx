@@ -35,6 +35,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLinkItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -204,14 +205,14 @@ export function LayoutClient({
     <>
       <DropdownMenuItem
         className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
-        onSelect={() => setIsProfileOpen(true)}
+        onClick={() => setIsProfileOpen(true)}
       >
         <UserRound className="size-4 text-muted-foreground" />
         My Profile
       </DropdownMenuItem>
       <DropdownMenuItem
         className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
-        onSelect={toastOnError(signOut)}
+        onClick={toastOnError(signOut)}
       >
         <LogOut className="size-4 text-muted-foreground" />
         Sign out
@@ -235,11 +236,13 @@ export function LayoutClient({
           </Link>
           <div className="lg:hidden">
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="Account menu">
-                  <Menu className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" size="icon" aria-label="Account menu">
+                    <Menu className="size-4" />
+                  </Button>
+                }
+              />
               <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] max-w-sm">
                 <DropdownMenuLabel className="flex items-center gap-4 px-4 font-normal">
                   {avatar}
@@ -302,26 +305,34 @@ export function LayoutClient({
                 <ChevronDown className="size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild>
-                  <Link href={`/${mainRoute}/reporting/expenses/fellows`}>Expenses</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`/${mainRoute}/reporting/school-reports`}>School Reports</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
-                </DropdownMenuItem>
+                <DropdownMenuLinkItem
+                  render={<Link href={`/${mainRoute}/reporting/expenses/fellows`}>Expenses</Link>}
+                />
+                <DropdownMenuLinkItem
+                  render={
+                    <Link href={`/${mainRoute}/reporting/school-reports`}>School Reports</Link>
+                  }
+                />
+                <DropdownMenuLinkItem
+                  render={
+                    <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
+                  }
+                />
                 {(mainRoute === "sc" || mainRoute === "hc") && (
-                  <DropdownMenuItem asChild>
-                    <Link href={`/${mainRoute}/reporting/monitoring-and-evaluation`}>
-                      Monitoring and Evaluation
-                    </Link>
-                  </DropdownMenuItem>
+                  <DropdownMenuLinkItem
+                    render={
+                      <Link href={`/${mainRoute}/reporting/monitoring-and-evaluation`}>
+                        Monitoring and Evaluation
+                      </Link>
+                    }
+                  />
                 )}
                 {mainRoute === "sc" && (
-                  <DropdownMenuItem asChild>
-                    <Link href={`/${mainRoute}/reporting/recordings`}>Session Recordings</Link>
-                  </DropdownMenuItem>
+                  <DropdownMenuLinkItem
+                    render={
+                      <Link href={`/${mainRoute}/reporting/recordings`}>Session Recordings</Link>
+                    }
+                  />
                 )}
               </DropdownMenuContent>
             </DropdownMenu>

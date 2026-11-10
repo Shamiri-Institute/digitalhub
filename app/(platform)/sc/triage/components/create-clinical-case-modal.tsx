@@ -85,11 +85,13 @@ function CreateClinicalCaseForm({
         </div>
       </div>
       <div className="flex justify-end gap-2 px-6 pb-6">
-        <DialogClose asChild>
-          <Button type="button" variant="ghost" className="text-primary hover:bg-info-bg">
-            Cancel
-          </Button>
-        </DialogClose>
+        <DialogClose
+          render={
+            <Button type="button" variant="ghost" className="text-primary hover:bg-info-bg">
+              Cancel
+            </Button>
+          }
+        />
         <Button type="button" disabled={!pseudonym.trim() || isSaving} onClick={handleSubmit}>
           {isSaving ? "Creating…" : "Create case"}
         </Button>

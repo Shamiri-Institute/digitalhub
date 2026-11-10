@@ -63,7 +63,7 @@ export default function PayoutActionsDropdown({ payout }: { payout: PayoutHistor
           <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
 
-        <DropdownMenuItem onSelect={downloadCSV}>Download .csv</DropdownMenuItem>
+        <DropdownMenuItem onClick={downloadCSV}>Download .csv</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -58,14 +58,14 @@ export default function CaseTerminationForm({
   children,
   clinicalCase,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   clinicalCase: ClinicalCases;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="z-10 max-w-[500px] bg-white p-5">
         <DialogHeader className="bg-white">
           <DialogTitle>Terminate Case</DialogTitle>
@@ -185,11 +185,13 @@ function CaseTerminationFields({
         />
 
         <div className="flex justify-end space-x-4">
-          <DialogClose asChild>
-            <Button variant="ghost" type="button">
-              Cancel
-            </Button>
-          </DialogClose>
+          <DialogClose
+            render={
+              <Button variant="ghost" type="button">
+                Cancel
+              </Button>
+            }
+          />
           <Button type="submit" loading={isSaving} disabled={isSaving}>
             Terminate Case
           </Button>

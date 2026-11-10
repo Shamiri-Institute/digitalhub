@@ -41,7 +41,7 @@ export default function ViewEditQualitativeFeedback({
   action,
   canAddNotes,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   sessionReport: SessionReportType["session"][number];
   action: "view" | "edit";
   canAddNotes: boolean;
@@ -81,7 +81,7 @@ export default function ViewEditQualitativeFeedback({
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
           <DialogTitle>{`${action === "view" ? "View" : "Edit"} school report`}</DialogTitle>

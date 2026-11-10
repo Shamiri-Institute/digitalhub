@@ -126,21 +126,23 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
               <TableCell className="border font-medium">{sessionType.value}</TableCell>
               <TableCell className="border">
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !dates[sessionType.key] && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {(() => {
-                        const date = dates[sessionType.key];
-                        return date ? format(date, "dd MMM yyyy") : <span>Pick a date</span>;
-                      })()}
-                    </Button>
-                  </PopoverTrigger>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dates[sessionType.key] && "text-muted-foreground",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {(() => {
+                          const date = dates[sessionType.key];
+                          return date ? format(date, "dd MMM yyyy") : <span>Pick a date</span>;
+                        })()}
+                      </Button>
+                    }
+                  />
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"

@@ -16,14 +16,14 @@ export default function ClinicalCaseSessionsAttendanceHistory({
   children,
   clinicalCase,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   clinicalCase: ClinicalCases;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="z-10 max-h-[90%] max-w-[90vw] overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
           <DialogTitle>Clinical attendance history</DialogTitle>

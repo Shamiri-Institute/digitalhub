@@ -1,7 +1,6 @@
 "use client";
 
-import * as TooltipPrimitive from "@radix-ui/react-tooltip";
-import type * as React from "react";
+import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
 
 import { cn } from "#/lib/utils";
 
@@ -13,20 +12,29 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 
 function TooltipContent({
   className,
+  side,
+  align,
   sideOffset = 4,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+}: TooltipPrimitive.Popup.Props &
+  Pick<TooltipPrimitive.Positioner.Props, "side" | "align" | "sideOffset">) {
   return (
     <TooltipPrimitive.Portal>
-      <TooltipPrimitive.Content
-        data-slot="tooltip-content"
+      <TooltipPrimitive.Positioner
+        side={side}
+        align={align}
         sideOffset={sideOffset}
-        className={cn(
-          "z-50 overflow-hidden rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground animate-in fade-in-0 motion-safe:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:motion-safe:zoom-out-95 data-[side=bottom]:motion-safe:slide-in-from-top-2 data-[side=left]:motion-safe:slide-in-from-right-2 data-[side=right]:motion-safe:slide-in-from-left-2 data-[side=top]:motion-safe:slide-in-from-bottom-2",
-          className,
-        )}
-        {...props}
-      />
+        className="z-50"
+      >
+        <TooltipPrimitive.Popup
+          data-slot="tooltip-content"
+          className={cn(
+            "overflow-hidden rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground transition-opacity duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0",
+            className,
+          )}
+          {...props}
+        />
+      </TooltipPrimitive.Positioner>
     </TooltipPrimitive.Portal>
   );
 }

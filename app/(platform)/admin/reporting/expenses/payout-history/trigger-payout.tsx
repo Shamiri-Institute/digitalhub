@@ -41,9 +41,7 @@ export default function TriggerPayout() {
   return (
     <div className="container flex w-full grow justify-end space-y-3">
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button>Manually Trigger Payout</Button>
-        </DialogTrigger>
+        <DialogTrigger render={<Button>Manually Trigger Payout</Button>} />
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Confirm Payout Trigger</DialogTitle>

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ export default function ViewEditReportDropdown({
   triggerLabel: string;
   viewLabel: string;
   editLabel: string;
-  renderDialog: (action: "view" | "edit", children: ReactNode) => ReactNode;
+  renderDialog: (action: "view" | "edit", trigger: ReactElement) => ReactNode;
 }) {
   return (
     <DropdownMenu>

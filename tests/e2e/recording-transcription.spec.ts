@@ -131,7 +131,7 @@ test("a supervisor uploads a session recording, and the dialog stays open until 
     await dialog.getByRole("button", { name: "Upload", exact: true }).click();
     await waitForWaiting(1);
     await page.keyboard.press("Escape");
-    await expect(dialog).toHaveAttribute("data-state", "open");
+    await expect(dialog).toHaveAttribute("data-open");
     await expect(dialog.getByRole("button", { name: "Close" })).toBeDisabled();
     await expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled();
   });

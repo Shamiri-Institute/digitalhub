@@ -1,38 +1,82 @@
 "use client";
 
-import * as SelectPrimitive from "@radix-ui/react-select";
+import { Select as SelectPrimitive } from "@base-ui/react/select";
 import { Check } from "lucide-react";
-import type * as React from "react";
+import * as React from "react";
 
+import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
-import { Icons } from "../icons";
 
-const Select = SelectPrimitive.Root;
+// Base UI's trigger shows the raw value unless it is given each value's label. Every caller writes
+// its items inline, so the labels are read from the <SelectItem> elements in the children.
+function itemLabels(children: React.ReactNode, labels: Record<string, React.ReactNode> = {}) {
+  React.Children.forEach(children, (child) => {
+    if (!React.isValidElement<{ value?: unknown; children?: React.ReactNode }>(child)) return;
+    if (child.type === SelectItem) {
+      labels[String(child.props.value)] = child.props.children;
+    } else {
+      itemLabels(child.props.children, labels);
+    }
+  });
+  return labels;
+}
 
-const SelectGroup = SelectPrimitive.Group;
+// A caller that passes `value` controls the select even while the value is still undefined or "",
+// which both mean nothing is chosen. No select here offers an empty choice, so a change is always
+// a picked value.
+function Select({
+  children,
+  onValueChange,
+  ...props
+}: Omit<SelectPrimitive.Root.Props<string>, "value" | "onValueChange"> & {
+  value?: string | null;
+  onValueChange?: (value: string) => void;
+}) {
+  const { value, ...rest } = props;
+  const controlled = "value" in props ? { value: value || null } : {};
+  return (
+    <SelectPrimitive.Root<string>
+      items={itemLabels(children)}
+      onValueChange={(picked) => {
+        if (picked !== null) onValueChange?.(picked);
+      }}
+      {...controlled}
+      {...rest}
+    >
+      {children}
+    </SelectPrimitive.Root>
+  );
+}
 
-const SelectValue = SelectPrimitive.Value;
+function SelectValue({ placeholder, ...props }: SelectPrimitive.Value.Props) {
+  return (
+    <SelectPrimitive.Value
+      data-slot="select-value"
+      className="data-placeholder:text-muted-foreground"
+      placeholder={placeholder}
+      {...props}
+    />
+  );
+}
 
 function SelectTrigger({
   className,
   children,
   hideIcon,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
-  hideIcon?: true;
-}) {
+}: SelectPrimitive.Trigger.Props & { hideIcon?: true }) {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       className={cn(
-        "flex h-9 w-full items-center justify-between rounded-md border border-input bg-white px-3 py-2 text-sm placeholder:text-muted-foreground aria-invalid:border-destructive disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-white px-3 py-2 text-left text-sm aria-invalid:border-destructive data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className,
       )}
       {...props}
     >
       <span className="overflow-hidden text-ellipsis whitespace-nowrap">{children}</span>
       {!hideIcon && (
-        <SelectPrimitive.Icon asChild>
+        <SelectPrimitive.Icon className="shrink-0">
           <Icons.chevronDown className="h-4 w-4 opacity-50" />
         </SelectPrimitive.Icon>
       )}
@@ -43,56 +87,42 @@ function SelectTrigger({
 function SelectContent({
   className,
   children,
-  position = "popper",
+  side,
+  align = "start",
+  sideOffset = 4,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+}: SelectPrimitive.Popup.Props &
+  Pick<SelectPrimitive.Positioner.Props, "side" | "align" | "sideOffset">) {
   return (
     <SelectPrimitive.Portal>
-      <SelectPrimitive.Content
-        data-slot="select-content"
-        className={cn(
-          "relative z-50 min-w-32 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:motion-safe:zoom-out-95 data-[state=open]:motion-safe:zoom-in-95 data-[side=bottom]:motion-safe:slide-in-from-top-2 data-[side=left]:motion-safe:slide-in-from-right-2 data-[side=right]:motion-safe:slide-in-from-left-2 data-[side=top]:motion-safe:slide-in-from-bottom-2",
-          position === "popper" &&
-            "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
-          className,
-        )}
-        position={position}
-        {...props}
+      <SelectPrimitive.Positioner
+        side={side}
+        align={align}
+        sideOffset={sideOffset}
+        alignItemWithTrigger={false}
+        className="z-50"
       >
-        <SelectPrimitive.Viewport
+        <SelectPrimitive.Popup
+          data-slot="select-content"
           className={cn(
-            "p-1",
-            position === "popper" &&
-              "h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width)",
+            "max-h-(--available-height) min-w-(--anchor-width) overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden transition-opacity duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0",
+            className,
           )}
+          {...props}
         >
-          {children}
-        </SelectPrimitive.Viewport>
-      </SelectPrimitive.Content>
+          <SelectPrimitive.List>{children}</SelectPrimitive.List>
+        </SelectPrimitive.Popup>
+      </SelectPrimitive.Positioner>
     </SelectPrimitive.Portal>
   );
 }
 
-function SelectLabel({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Label>) {
-  return (
-    <SelectPrimitive.Label
-      data-slot="select-label"
-      className={cn("px-2 py-1.5 text-base font-semibold", className)}
-      {...props}
-    />
-  );
-}
-
-function SelectItem({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Item>) {
+function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Props) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-hidden data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
         className,
       )}
       {...props}
@@ -107,26 +137,4 @@ function SelectItem({
   );
 }
 
-function SelectSeparator({
-  className,
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Separator>) {
-  return (
-    <SelectPrimitive.Separator
-      data-slot="select-separator"
-      className={cn("-mx-1 my-1 h-px bg-muted", className)}
-      {...props}
-    />
-  );
-}
-
-export {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-};
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };

@@ -45,9 +45,7 @@ export default function PublishDialog(props: PublishDialogProps) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button type="button">Publish</Button>
-      </DialogTrigger>
+      <DialogTrigger render={<Button type="button">Publish</Button>} />
       <DialogContent className="max-w-lg">
         <PublishSteps {...props} close={() => setOpen(false)} />
       </DialogContent>
@@ -157,7 +155,7 @@ function PublishSteps({
           <Label
             key={option}
             htmlFor={`prefill-${option}`}
-            className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-info-bg"
+            className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-data-checked:border-primary has-data-checked:bg-info-bg"
           >
             <RadioGroupItem id={`prefill-${option}`} value={option} className="mt-0.5" />
             <span className="space-y-1">

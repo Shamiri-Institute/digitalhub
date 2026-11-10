@@ -6,6 +6,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLinkItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "#/components/ui/dropdown-menu";
@@ -27,23 +28,25 @@ export default function SchoolTableDropdown({
           <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link
-            href={
-              role === "HUB_COORDINATOR"
-                ? `/hc/schools/${schoolRow.visibleId}/supervisors`
-                : role === "SUPERVISOR"
-                  ? `/sc/schools/${schoolRow.visibleId}/fellows`
-                  : role === "FELLOW"
-                    ? `/fel/schools/${schoolRow.visibleId}/group`
-                    : role === "ADMIN"
-                      ? `/admin/schools/${schoolRow.visibleId}/supervisors`
-                      : "#"
-            }
-          >
-            View school
-          </Link>
-        </DropdownMenuItem>
+        <DropdownMenuLinkItem
+          render={
+            <Link
+              href={
+                role === "HUB_COORDINATOR"
+                  ? `/hc/schools/${schoolRow.visibleId}/supervisors`
+                  : role === "SUPERVISOR"
+                    ? `/sc/schools/${schoolRow.visibleId}/fellows`
+                    : role === "FELLOW"
+                      ? `/fel/schools/${schoolRow.visibleId}/group`
+                      : role === "ADMIN"
+                        ? `/admin/schools/${schoolRow.visibleId}/supervisors`
+                        : "#"
+              }
+            >
+              View school
+            </Link>
+          }
+        />
         {role === "HUB_COORDINATOR" &&
           (!schoolRow.droppedOut ? (
             <div>

@@ -235,22 +235,24 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                     <FormLabel>Date of birth</FormLabel>
                     {mode !== "view" ? (
                       <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                              !field.value && "text-muted-foreground",
-                            )}
-                          >
-                            <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                            {field.value ? (
-                              format(field.value, DISPLAY_DATE)
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
+                        <PopoverTrigger
+                          render={
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                !field.value && "text-muted-foreground",
+                              )}
+                            >
+                              <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                              {field.value ? (
+                                format(field.value, DISPLAY_DATE)
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                            </Button>
+                          }
+                        />
                         <PopoverContent className="w-auto p-0">
                           <Calendar
                             mode="single"

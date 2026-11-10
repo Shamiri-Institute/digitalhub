@@ -285,17 +285,19 @@ function AddItemMenu({
 }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          aria-label={`Add item to page ${pageNumber}`}
-          className="w-full gap-2 border-dashed text-primary hover:text-primary"
-        >
-          <Plus className="h-4 w-4" />
-          Add item
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            aria-label={`Add item to page ${pageNumber}`}
+            className="w-full gap-2 border-dashed text-primary hover:text-primary"
+          >
+            <Plus className="h-4 w-4" />
+            Add item
+          </Button>
+        }
+      />
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuLabel>Questions</DropdownMenuLabel>
         {QUESTION_KINDS.map((kind) => (

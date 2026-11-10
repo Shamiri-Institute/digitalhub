@@ -320,22 +320,24 @@ export function SessionTypeRows({
               <span aria-hidden />
             ) : removeBlockedBy ? (
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-disabled
-                    aria-label={`Remove ${code}`}
-                    aria-describedby={`${field.id}-remove-blocked`}
-                    className="cursor-not-allowed text-muted-foreground opacity-50 hover:bg-transparent hover:text-muted-foreground"
-                  >
-                    <Trash2 aria-hidden className="h-4 w-4" />
-                    <span id={`${field.id}-remove-blocked`} className="sr-only">
-                      {removeBlockedBy}
-                    </span>
-                  </Button>
-                </TooltipTrigger>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-disabled
+                      aria-label={`Remove ${code}`}
+                      aria-describedby={`${field.id}-remove-blocked`}
+                      className="cursor-not-allowed text-muted-foreground opacity-50 hover:bg-transparent hover:text-muted-foreground"
+                    >
+                      <Trash2 aria-hidden className="h-4 w-4" />
+                      <span id={`${field.id}-remove-blocked`} className="sr-only">
+                        {removeBlockedBy}
+                      </span>
+                    </Button>
+                  }
+                />
                 <TooltipContent>{removeBlockedBy}</TooltipContent>
               </Tooltip>
             ) : (

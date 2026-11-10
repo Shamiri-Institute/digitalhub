@@ -45,11 +45,13 @@ export default function TriggerConfirmPayout({ dateAdded, disabled }: TriggerCon
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" disabled={disabled}>
-          {disabled ? "Confirmed" : "Confirm Payout"}
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button variant="outline" disabled={disabled}>
+            {disabled ? "Confirmed" : "Confirm Payout"}
+          </Button>
+        }
+      />
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Confirm Payout</DialogTitle>

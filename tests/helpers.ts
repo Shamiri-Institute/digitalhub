@@ -258,7 +258,7 @@ export async function expectOpenUntilWritten(
     await waitForWaiting(1);
     await page.keyboard.press("Escape");
     await page.mouse.click(1, 1);
-    await expect(dialog).toHaveAttribute("data-state", "open");
+    await expect(dialog).toHaveAttribute("data-open");
     await expect(dialog.getByRole("button", { name: "Close" })).toBeDisabled();
     await expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled();
   });

@@ -63,9 +63,7 @@ function UndoDropoutSchoolConfirm({
       </DialogHeader>
       <DialogAlertWidget label={school?.schoolName} />
       <DialogFooter className="flex justify-end">
-        <DialogClose asChild>
-          <Button variant="ghost">Cancel</Button>
-        </DialogClose>
+        <DialogClose render={<Button variant="ghost">Cancel</Button>} />
         <Button type="submit" disabled={isSaving} loading={isSaving} onClick={undoDropout}>
           Undo
         </Button>

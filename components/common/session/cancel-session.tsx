@@ -8,7 +8,6 @@ import {
   DialogClose,
   DialogContent,
   DialogHeader,
-  DialogPortal,
   DialogTitle,
   useDialogSave,
 } from "#/components/ui/dialog";
@@ -30,13 +29,11 @@ export default function CancelSession({
   return (
     <div>
       <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
-        <DialogPortal>
-          <DialogContent className="lg:w-1/3 lg:max-w-none">
-            <CancelSessionConfirm sessionId={sessionId} close={() => onOpenChange(false)}>
-              {children}
-            </CancelSessionConfirm>
-          </DialogContent>
-        </DialogPortal>
+        <DialogContent className="lg:w-1/3 lg:max-w-none">
+          <CancelSessionConfirm sessionId={sessionId} close={() => onOpenChange(false)}>
+            {children}
+          </CancelSessionConfirm>
+        </DialogContent>
       </Dialog>
     </div>
   );
@@ -91,14 +88,16 @@ function CancelSessionConfirm({
       </div>
       <Separator />
       <div className="flex justify-end gap-4">
-        <DialogClose asChild>
-          <Button
-            className="text-destructive hover:bg-destructive-bg hover:text-destructive"
-            variant="ghost"
-          >
-            Cancel
-          </Button>
-        </DialogClose>
+        <DialogClose
+          render={
+            <Button
+              className="text-destructive hover:bg-destructive-bg hover:text-destructive"
+              variant="ghost"
+            >
+              Cancel
+            </Button>
+          }
+        />
         <Button
           variant="destructive"
           loading={isSaving}

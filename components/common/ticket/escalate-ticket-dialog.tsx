@@ -156,11 +156,13 @@ function EscalateTicketForm({ ticketId, close }: { ticketId: string; close: () =
         <Separator />
 
         <DialogFooter className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button variant="ghost" type="button">
-              Cancel
-            </Button>
-          </DialogClose>
+          <DialogClose
+            render={
+              <Button variant="ghost" type="button">
+                Cancel
+              </Button>
+            }
+          />
           <Button type="submit" disabled={isSaving} loading={isSaving}>
             Escalate Ticket
           </Button>

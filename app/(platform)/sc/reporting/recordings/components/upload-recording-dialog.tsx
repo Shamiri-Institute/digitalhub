@@ -526,11 +526,13 @@ function UploadRecordingForm({
           )}
 
           <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="ghost">
-                Cancel
-              </Button>
-            </DialogClose>
+            <DialogClose
+              render={
+                <Button type="button" variant="ghost">
+                  Cancel
+                </Button>
+              }
+            />
             <Button
               type="submit"
               disabled={audioFile.status !== "ready" || isUploading || duplicateExists}

@@ -48,12 +48,14 @@ export default function AddNewSupervisor() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="flex gap-2">
-          <Plus className="h-4 w-4" />
-          Add supervisor
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button className="flex gap-2">
+            <Plus className="h-4 w-4" />
+            Add supervisor
+          </Button>
+        }
+      />
       <DialogContent className="w-2/5 max-w-none">
         <AddNewSupervisorForm close={() => setIsOpen(false)} />
       </DialogContent>
@@ -207,22 +209,24 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                   <FormItem required>
                     <FormLabel>Date of birth</FormLabel>
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {field.value ? (
-                            format(field.value, DISPLAY_DATE)
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {field.value ? (
+                              format(field.value, DISPLAY_DATE)
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        }
+                      />
                       <PopoverContent className="w-auto p-0">
                         <Calendar
                           mode="single"

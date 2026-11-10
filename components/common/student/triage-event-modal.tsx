@@ -389,18 +389,22 @@ function TriageEventForm({
           />
           <DialogFooter className="flex justify-end gap-2 pt-2">
             {readOnly ? (
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Close
-                </Button>
-              </DialogClose>
+              <DialogClose
+                render={
+                  <Button type="button" variant="outline">
+                    Close
+                  </Button>
+                }
+              />
             ) : (
               <>
-                <DialogClose asChild>
-                  <Button type="button" variant="ghost" className="text-primary hover:bg-info-bg">
-                    Cancel
-                  </Button>
-                </DialogClose>
+                <DialogClose
+                  render={
+                    <Button type="button" variant="ghost" className="text-primary hover:bg-info-bg">
+                      Cancel
+                    </Button>
+                  }
+                />
                 <Button type="submit" disabled={isSaving || loadingExistingEvent}>
                   {loadingExistingEvent ? "Loading…" : isSaving ? "Saving…" : "Save triage"}
                 </Button>

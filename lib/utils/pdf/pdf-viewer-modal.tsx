@@ -27,13 +27,8 @@ export default function PdfViewerModal({ open, onOpenChange, url, fileName }: Pd
           View PDF document{fileName ? `: ${fileName}` : ""}
         </DialogDescription>
         <div className="sticky top-0 z-10 flex justify-end p-2 md:p-4">
-          <DialogClose asChild>
-            <button
-              type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-navy-5"
-            >
-              <Icons.xIcon className="h-4 w-4" />
-            </button>
+          <DialogClose className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-navy-5">
+            <Icons.xIcon className="h-4 w-4" />
           </DialogClose>
         </div>
         <div className="min-h-0 flex-1 overflow-auto px-2 md:px-4 pb-2 md:pb-4">

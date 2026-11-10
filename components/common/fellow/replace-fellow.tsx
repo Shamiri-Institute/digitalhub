@@ -188,15 +188,17 @@ function ReplaceFellowForm({
         </div>
         <Separator className="my-6" />
         <DialogFooter className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              type="button"
-              className="text-base font-semibold leading-6 text-primary hover:text-primary"
-            >
-              Cancel
-            </Button>
-          </DialogClose>
+          <DialogClose
+            render={
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-base font-semibold leading-6 text-primary hover:text-primary"
+              >
+                Cancel
+              </Button>
+            }
+          />
           <Button type="submit" disabled={isSaving} loading={isSaving}>
             Replace
           </Button>

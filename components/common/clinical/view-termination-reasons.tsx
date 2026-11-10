@@ -23,7 +23,7 @@ interface TerminationData {
 }
 
 interface ViewTerminationReasonsProps {
-  children: React.ReactNode;
+  children: React.ReactElement;
   termination: TerminationData | null;
   pseudonym: string;
 }
@@ -37,7 +37,7 @@ export function ViewTerminationReasons({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Termination Details - {pseudonym}</DialogTitle>

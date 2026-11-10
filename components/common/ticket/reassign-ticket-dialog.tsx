@@ -203,11 +203,13 @@ function ReassignTicketForm({
         <Separator />
 
         <DialogFooter className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button variant="ghost" type="button">
-              Cancel
-            </Button>
-          </DialogClose>
+          <DialogClose
+            render={
+              <Button variant="ghost" type="button">
+                Cancel
+              </Button>
+            }
+          />
           <Button type="submit" disabled={hubMissing || isSaving} loading={isSaving}>
             Reassign Ticket
           </Button>

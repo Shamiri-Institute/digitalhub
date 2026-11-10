@@ -87,9 +87,7 @@ export default function FellowSchoolsDatatable({
           onOpenChange={(open) => setDialog(open ? { kind: "add" } : null)}
           mode={"add"}
         >
-          <DialogTrigger asChild={true}>
-            <Button>Add new fellow</Button>
-          </DialogTrigger>
+          <DialogTrigger render={<Button>Add new fellow</Button>} />
         </FellowDetailsForm>
       </div>
     ) : null;

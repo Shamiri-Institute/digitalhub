@@ -42,12 +42,14 @@ export default function ClinicalCasesTable({
       supervisorsInHub={supervisorsInHub}
       hubs={hubs}
     >
-      <DialogTrigger asChild={true}>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          New case
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            New case
+          </Button>
+        }
+      />
     </AddNewClinicalCaseForm>
   );
 

@@ -11,7 +11,6 @@ import { Checkbox } from "#/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 
@@ -76,25 +75,25 @@ export const columns = ({
           <div className="relative flex items-center">
             <span>{schools[0]?.schoolName},</span>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={`${schools.length - 1} more schools`}
-                  className="ml-2 cursor-pointer select-none rounded-sm text-primary hover:underline"
-                >
-                  +{schools.length - 1}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuContent>
-                  <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
-                    {schools.slice(1).map((school, index) => {
-                      // oxlint-disable-next-line react/no-array-index-key -- static display list
-                      return <span key={index.toString()}>{school.schoolName}</span>;
-                    })}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenuPortal>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    type="button"
+                    aria-label={`${schools.length - 1} more schools`}
+                    className="ml-2 cursor-pointer select-none rounded-sm text-primary hover:underline"
+                  >
+                    +{schools.length - 1}
+                  </button>
+                }
+              />
+              <DropdownMenuContent>
+                <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
+                  {schools.slice(1).map((school, index) => {
+                    // oxlint-disable-next-line react/no-array-index-key -- static display list
+                    return <span key={index.toString()}>{school.schoolName}</span>;
+                  })}
+                </div>
+              </DropdownMenuContent>
             </DropdownMenu>
           </div>
         );

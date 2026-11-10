@@ -58,9 +58,7 @@ export function DayView({
               {headerLabel}&#8203;
               {hasSessions && (
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="h-1.5 w-1.5 rounded-full bg-info" />
-                  </TooltipTrigger>
+                  <TooltipTrigger render={<span className="h-1.5 w-1.5 rounded-full bg-info" />} />
                   <TooltipContent side="top">{sessions.length} sessions on this day</TooltipContent>
                 </Tooltip>
               )}

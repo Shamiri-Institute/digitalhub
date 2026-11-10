@@ -12,7 +12,6 @@ import {
   DialogClose,
   DialogContent,
   DialogHeader,
-  DialogPortal,
   DialogTitle,
   useDialogSave,
 } from "#/components/ui/dialog";
@@ -48,15 +47,13 @@ export default function RescheduleSession({
   return (
     <div>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogPortal>
-          <DialogContent className="flex w-1/3 max-w-none flex-col gap-4">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">Reschedule session</DialogTitle>
-            </DialogHeader>
-            {children}
-            <RescheduleSessionForm key={session.id} session={session} onOpenChange={onOpenChange} />
-          </DialogContent>
-        </DialogPortal>
+        <DialogContent className="flex w-1/3 max-w-none flex-col gap-4">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Reschedule session</DialogTitle>
+          </DialogHeader>
+          {children}
+          <RescheduleSessionForm key={session.id} session={session} onOpenChange={onOpenChange} />
+        </DialogContent>
       </Dialog>
     </div>
   );
@@ -119,18 +116,20 @@ export function RescheduleSessionForm({
               <div>
                 <FormLabel required>Date</FormLabel>
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                        !field.value && "text-muted-foreground",
-                      )}
-                    >
-                      <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {field.value ? format(field.value, DISPLAY_DATE) : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {field.value ? format(field.value, DISPLAY_DATE) : <span>Pick a date</span>}
+                      </Button>
+                    }
+                  />
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
@@ -151,18 +150,20 @@ export function RescheduleSessionForm({
               <div>
                 <FormLabel>Start time</FormLabel>
                 <Popover open={timePicker} onOpenChange={setTimePicker}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "mt-1.5 w-full justify-start px-3 text-left font-normal active:scale-100",
-                        !field.value && "text-muted-foreground",
-                      )}
-                    >
-                      <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {field.value ? field.value : <span>Pick a time</span>}
-                    </Button>
-                  </PopoverTrigger>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "mt-1.5 w-full justify-start px-3 text-left font-normal active:scale-100",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {field.value ? field.value : <span>Pick a time</span>}
+                      </Button>
+                    }
+                  />
                   <PopoverContent className="w-auto px-4 py-3" align="start">
                     <div className="flex flex-col gap-2">
                       <span className="text-sm">Pick a start time</span>
@@ -258,11 +259,13 @@ export function RescheduleSessionForm({
         <Separator />
 
         <div className="flex justify-end gap-6">
-          <DialogClose asChild>
-            <Button variant="ghost" type="button" className="text-primary hover:text-primary">
-              Cancel
-            </Button>
-          </DialogClose>
+          <DialogClose
+            render={
+              <Button variant="ghost" type="button" className="text-primary hover:text-primary">
+                Cancel
+              </Button>
+            }
+          />
           <Button loading={isSaving} disabled={isSaving}>
             Save Changes
           </Button>

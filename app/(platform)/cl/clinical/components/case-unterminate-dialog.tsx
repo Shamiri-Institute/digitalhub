@@ -23,7 +23,7 @@ export default function CaseUnterminateDialog({
   caseId,
   pseudonym,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   caseId: string;
   pseudonym: string;
 }) {
@@ -31,7 +31,7 @@ export default function CaseUnterminateDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="w-1/3 max-w-none">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Un-terminate case - {pseudonym}</DialogTitle>
@@ -87,14 +87,16 @@ function CaseUnterminateForm({ caseId, close }: { caseId: string; close: () => v
       </div>
       <Separator />
       <div className="flex justify-end gap-4">
-        <DialogClose asChild>
-          <Button
-            className="text-destructive hover:bg-destructive-bg hover:text-destructive"
-            variant="ghost"
-          >
-            Cancel
-          </Button>
-        </DialogClose>
+        <DialogClose
+          render={
+            <Button
+              className="text-destructive hover:bg-destructive-bg hover:text-destructive"
+              variant="ghost"
+            >
+              Cancel
+            </Button>
+          }
+        />
         <Button
           variant="destructive"
           disabled={isSaving || !reason.trim()}

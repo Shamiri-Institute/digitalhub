@@ -39,7 +39,7 @@ export default function ViewEditFellowComplaints({
   fellowComplaints,
   action,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   fellowComplaints: FellowComplaintsType["complaints"][number];
   action: "view" | "edit";
 }) {
@@ -83,7 +83,7 @@ export default function ViewEditFellowComplaints({
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
           <DialogTitle>{`${action === "view" ? "View" : "Edit"} Fellow Complaint`}</DialogTitle>

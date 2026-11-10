@@ -48,15 +48,10 @@ export default function HubBreadcrumb({
           </Link>
           <span aria-hidden>/</span>
           <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="flex min-w-0 cursor-pointer items-center gap-2 rounded-sm font-semibold text-foreground"
-              >
-                <span className="max-w-64 truncate">{currentHub.hubName}</span>
-                <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                <span className="sr-only">, switch hub</span>
-              </button>
+            <PopoverTrigger className="flex min-w-0 cursor-pointer items-center gap-2 rounded-sm font-semibold text-foreground">
+              <span className="max-w-64 truncate">{currentHub.hubName}</span>
+              <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+              <span className="sr-only">, switch hub</span>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
               <Command

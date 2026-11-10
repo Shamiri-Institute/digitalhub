@@ -18,7 +18,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 
 interface TriggerFollowupDialogProps {
-  children: React.ReactNode;
+  children: React.ReactElement;
   caseId: string;
 }
 
@@ -27,7 +27,7 @@ export default function TriggerFollowupDialog({ children, caseId }: TriggerFollo
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent>
         <TriggerFollowupConfirm caseId={caseId} close={() => setDialogOpen(false)} />
       </DialogContent>
@@ -72,9 +72,7 @@ function TriggerFollowupConfirm({ caseId, close }: { caseId: string; close: () =
       </DialogHeader>
       <Separator />
       <DialogFooter>
-        <DialogClose asChild>
-          <Button variant="ghost">Cancel</Button>
-        </DialogClose>
+        <DialogClose render={<Button variant="ghost">Cancel</Button>} />
         <Button disabled={isSaving} loading={isSaving} onClick={handleConfirm}>
           Confirm
         </Button>

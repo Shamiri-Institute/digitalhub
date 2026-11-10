@@ -11,19 +11,12 @@ import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogPortal,
-  DialogTitle,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
@@ -70,31 +63,29 @@ export default function SupervisorAttendance({
   return (
     <div>
       <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
-        <DialogPortal>
-          <DialogContent className="w-5/6 max-w-none lg:w-4/5">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">
-                {role === ImplementerRole.ADMIN
-                  ? "View supervisor attendance"
-                  : "Mark supervisor attendance"}
-              </DialogTitle>
-            </DialogHeader>
-            {session && (
-              <SessionDetail
-                state={{ session }}
-                layout={"compact"}
-                withDropdown={false}
-                role={role}
-              />
-            )}
-            <SupervisorAttendanceDataTable
-              data={attendances}
-              toggleBulkMode={true}
-              session={session}
+        <DialogContent className="w-5/6 max-w-none lg:w-4/5">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              {role === ImplementerRole.ADMIN
+                ? "View supervisor attendance"
+                : "Mark supervisor attendance"}
+            </DialogTitle>
+          </DialogHeader>
+          {session && (
+            <SessionDetail
+              state={{ session }}
+              layout={"compact"}
+              withDropdown={false}
               role={role}
             />
-          </DialogContent>
-        </DialogPortal>
+          )}
+          <SupervisorAttendanceDataTable
+            data={attendances}
+            toggleBulkMode={true}
+            session={session}
+            role={role}
+          />
+        </DialogContent>
       </Dialog>
     </div>
   );
@@ -346,16 +337,14 @@ const columns = (state: {
                 +{schools.length - 1}
                 <span className="sr-only"> more schools</span>
               </DropdownMenuTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuContent>
-                  <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
-                    {schools.slice(1).map((school, index) => {
-                      // oxlint-disable-next-line react/no-array-index-key -- static display list
-                      return <span key={index.toString()}>{school}</span>;
-                    })}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenuPortal>
+              <DropdownMenuContent>
+                <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
+                  {schools.slice(1).map((school, index) => {
+                    // oxlint-disable-next-line react/no-array-index-key -- static display list
+                    return <span key={index.toString()}>{school}</span>;
+                  })}
+                </div>
+              </DropdownMenuContent>
             </DropdownMenu>
           </div>
         );
@@ -430,23 +419,21 @@ export function SupervisorAttendanceDataTableMenu({
   return (
     <DropdownMenu>
       <RowActionsTrigger label={`Actions for ${attendance?.supervisorName}`} />
-      <DropdownMenuPortal>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>
-            <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              state.setAttendance(attendance);
-              state.setMarkAttendanceDialog(true);
-            }}
-            disabled={attendance?.sessionStatus === SessionStatus.Cancelled}
-          >
-            Mark attendance
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenuPortal>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => {
+            state.setAttendance(attendance);
+            state.setMarkAttendanceDialog(true);
+          }}
+          disabled={attendance?.sessionStatus === SessionStatus.Cancelled}
+        >
+          Mark attendance
+        </DropdownMenuItem>
+      </DropdownMenuContent>
     </DropdownMenu>
   );
 }

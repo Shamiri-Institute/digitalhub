@@ -78,12 +78,14 @@ export default function MainFellowsDatatable({
           onOpenChange={(open) => setDialog(open ? { kind: "add" } : null)}
           mode={"add"}
         >
-          <DialogTrigger asChild={true}>
-            <Button variant="outline" className="bg-white">
-              <Plus className="h-4 w-4" />
-              Add new fellow
-            </Button>
-          </DialogTrigger>
+          <DialogTrigger
+            render={
+              <Button variant="outline" className="bg-white">
+                <Plus className="h-4 w-4" />
+                Add new fellow
+              </Button>
+            }
+          />
         </FellowDetailsForm>
       </div>
     );
