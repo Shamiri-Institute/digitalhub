@@ -1,7 +1,6 @@
-import { Toast } from "@base-ui/react/toast";
 import type * as React from "react";
 
-type ToastOptions = {
+export type ToastOptions = {
   title?: React.ReactNode;
   description?: React.ReactNode;
   variant?: "default" | "destructive";
@@ -9,21 +8,26 @@ type ToastOptions = {
   action?: { label: string; onClick: () => void };
 };
 
-/** The one toast store; `<Toaster />` renders it and `toast()` adds to it from anywhere. */
-const toastManager = Toast.createToastManager();
+// The toast UI is loaded after the page, so toasts raised before it is mounted wait here.
+let showToast: ((options: ToastOptions) => void) | null = null;
+const waitingToasts: ToastOptions[] = [];
 
-function toast({ title, description, variant = "default", action }: ToastOptions) {
-  const id = toastManager.add({
-    title,
-    description,
-    type: variant,
-    actionProps: action && { children: action.label, onClick: action.onClick },
-  });
-  return { id, dismiss: () => toastManager.close(id) };
+/** Called by the toast viewport once mounted; shows the toasts raised before it was. */
+function attachToastViewport(show: (options: ToastOptions) => void) {
+  showToast = show;
+  for (const options of waitingToasts.splice(0)) show(options);
+  return () => {
+    showToast = null;
+  };
+}
+
+function toast(options: ToastOptions) {
+  if (showToast) showToast(options);
+  else waitingToasts.push(options);
 }
 
 function useToast() {
-  return { toast, dismiss: (toastId?: string) => toastManager.close(toastId) };
+  return { toast };
 }
 
 /**
@@ -54,4 +58,4 @@ async function toastOnFailure(work: () => Promise<unknown>) {
   }
 }
 
-export { toast, toastManager, toastOnError, toastOnFailure, useToast };
+export { attachToastViewport, toast, toastOnError, toastOnFailure, useToast };
