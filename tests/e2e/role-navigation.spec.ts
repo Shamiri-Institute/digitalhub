@@ -94,7 +94,8 @@ function recordMissingPages(page: Page) {
   const missing: string[] = [];
   page.on("response", (response: Response) => {
     const url = new URL(response.url());
-    if (response.status() === 404 && url.origin === new URL(getUrl("")).origin) {
+    const isPageRequest = ["document", "fetch"].includes(response.request().resourceType());
+    if (response.status() === 404 && isPageRequest && url.origin === new URL(getUrl("")).origin) {
       missing.push(url.pathname);
     }
   });
