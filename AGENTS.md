@@ -18,7 +18,11 @@ and the tests that cover the change pass. Use npm only.
 ## UI
 
 - Build from `components/ui` (shadcn components, variants through `cva`) and `components/common` (feature components, `data-table.tsx`). Extend an existing component through props or composition before writing a new one.
-- `components/ui` is moving from Radix to Base UI (`@base-ui/react`). Separator, Avatar, Label, Checkbox, RadioGroup, ToggleGroup, Accordion and `FormControl` are Base UI; compose them with the `render` prop. The overlays (Dialog, Popover, DropdownMenu, Select, Tooltip, Toast) are still Radix and use `asChild`. They must move together: a Base UI popup inside a Radix modal, or the reverse, is inert.
+- `components/ui` is built on Base UI (`@base-ui/react`); there is no Radix. Compose a part with another element through its `render` prop, and put the label inside the render element (`<DialogTrigger render={<Button>Add</Button>} />`): a Server Component renders `<Button />` with its own empty children, which win over the part's.
+- Menu items take `onClick`; an item that opens a dialog nested in the menu is a `NestedDialogMenuItem`. A link item is `DropdownMenuLinkItem render={<Link />}`.
+- `Select` reads each value's label from the `SelectItem`s written inline in its children, so keep them inline. `onValueChange` receives only picked values, as a string.
+- `useDialogSave` keeps a dialog open while its save runs; the guard lives in the `Dialog` root.
+- `toast()` works from anywhere; the toast UI loads after the page.
 - Style with Tailwind classes merged through `cn()`. The design tokens (`primary`, `muted-foreground`, `destructive-bg`, `info-border`, ...) are the `@theme` colors in `app/globals.css`, documented in `DESIGN.md`; Tailwind's default palette is switched off. No arbitrary colours, no inline `style`, no new CSS files.
 - Forms use React Hook Form with Zod.
 
@@ -31,7 +35,7 @@ oxlint's `hooks-policy/justify` rule (`lint/hooks-policy.mjs`) fails any `useEff
 - Data comes from a Server Component or a server action.
 - An effect is for a real external subscription only: a DOM listener, a timer, a third-party widget.
 - Memoize only for a measured or obvious hot path, and say why in the PR. A lint rule whose only fix is memoization is not enforced.
-- A dialog's form lives in a component inside `DialogContent`, so Radix unmounts it on close and each open starts from the row's values.
+- A dialog's form lives in a component inside `DialogContent`, so Base UI unmounts it on close and each open starts from the row's values.
 - A multi-step dialog (form, then confirm) keeps its steps as state in one `Dialog`. Example: `components/common/fellow/fellow-dropout-form.tsx`.
 - Clear a dependent field (sub-county, absence reason) in the parent field's `onValueChange`. `hooks-policy/no-form-reset-in-effect` fails on `reset` or `setValue` (`form.reset`, or destructured from `useForm`) in an effect.
 
